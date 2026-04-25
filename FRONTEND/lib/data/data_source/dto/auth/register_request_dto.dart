@@ -1,0 +1,49 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'register_request_dto.g.dart';
+
+@JsonSerializable()
+class RegisterRequestDto {
+  final String name;
+  final String email;
+  final String phone;
+  final String password;
+  @JsonKey(name: 'password_confirmation')
+  final String passwordConfirmation;
+  @JsonKey(name: 'address_line_1')
+  final String? addressLine1;
+  @JsonKey(name: 'address_line_2')
+  final String? addressLine2;
+  final String? city;
+  final String? province;
+  @JsonKey(name: 'zip_code')
+  final String? zipCode;
+  final double? latitude;
+  final double? longitude;
+  @JsonKey(name: 'terms_accepted')
+  final bool termsAccepted;
+  @JsonKey(name: 'privacy_accepted')
+  final bool privacyAccepted;
+
+  const RegisterRequestDto({
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.password,
+    required this.passwordConfirmation,
+    this.addressLine1,
+    this.addressLine2,
+    this.city,
+    this.province,
+    this.zipCode,
+    this.latitude,
+    this.longitude,
+    required this.termsAccepted,
+    required this.privacyAccepted,
+  });
+
+  factory RegisterRequestDto.fromJson(Map<String, dynamic> json) =>
+      _$RegisterRequestDtoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RegisterRequestDtoToJson(this);
+}

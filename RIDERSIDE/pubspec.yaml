@@ -1,0 +1,86 @@
+name: frontend2
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+
+  # SVG Support
+  flutter_svg: ^2.0.10+1
+
+  # Image Picker
+  image_picker: ^1.0.7
+
+  # File Picker
+  file_picker: ^8.0.0+1
+  dotted_border: ^3.1.0
+  fl_chart: ^1.1.1
+
+  # Networking & Storage (Added for api_service.dart)
+  dio: ^5.9.1
+  shared_preferences: ^2.5.3
+
+  # Maps & Location
+  google_maps_flutter: ^2.5.0
+  google_maps_flutter_web: ^0.5.4+2
+  geolocator: ^10.1.0
+  permission_handler: ^11.0.1
+  url_launcher: ^6.2.1
+
+  # JSON Serialization
+  json_annotation: ^4.11.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  
+  # Code Generation
+  build_runner: ^2.4.7
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/images/register/
+    - assets/images/wallet/
+    - assets/images/mission/
+    - assets/images/navbar/riderside/
+    - assets/images/navbar/merchant/
+    - assets/images/booking/
+
+  fonts:
+    - family: TT Fors
+      fonts:
+        - asset: assets/fonts/TT Fors Trial Regular.ttf
+          weight: 400
+        - asset: assets/fonts/TT Fors Trial Medium.ttf
+          weight: 500
+        - asset: assets/fonts/TT Fors Trial DemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/TT Fors Trial Bold.ttf
+          weight: 700
+        - asset: assets/fonts/TT Fors Trial ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/TT Fors Trial Black.ttf
+          weight: 900
+        - asset: assets/fonts/TT Fors Trial Light.ttf
+          weight: 300
+        - asset: assets/fonts/TT Fors Trial ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/TT Fors Trial Thin.ttf
+          weight: 100

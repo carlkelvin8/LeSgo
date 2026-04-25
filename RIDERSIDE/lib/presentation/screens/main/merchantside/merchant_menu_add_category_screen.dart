@@ -1,0 +1,99 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
+import '../../../widgets/widgets.dart';
+import '../../../provider/main/merchantside/merchant_add_category_form_provider.dart';
+import '../../../controllers/merchantside/merchant_add_category_form_controller.dart';
+class MerchantMenuAddCategoryScreen extends ConsumerStatefulWidget {
+  const MerchantMenuAddCategoryScreen({super.key});
+
+  @override
+  ConsumerState<MerchantMenuAddCategoryScreen> createState() =>
+      _MerchantMenuAddCategoryScreenState();
+}
+
+class _MerchantMenuAddCategoryScreenState
+    extends ConsumerState<MerchantMenuAddCategoryScreen> {
+  late MerchantAddCategoryFormController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = MerchantAddCategoryFormController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final formState = ref.watch(merchantAddCategoryFormProvider);
+    final notifier = ref.read(merchantAddCategoryFormProvider.notifier);
+
+    ref.listen(merchantAddCategoryFormProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        SnackBarUtils.showError(context, next.errorMessage!);
+      }
+      // Handle success - navigate when form state shows success
+      if (next.isSubmitting == false && previous?.isSubmitting == true && next.errorMessage == null) {
+        SnackBarUtils.showSuccess(context, 'Category created successfully');
+        Navigator.pop(context);
+      }
+    });
+
+    return MerchantFormLayout(
+      formKey: _controller.formKey,
+      stickyBottomAction: MerchantFormActionButtonsSection(
+        onDiscard: () => Navigator.pop(context),
+        onSubmit: () {
+          if (_controller.formKey.currentState!.validate()) {
+            notifier.updateCategoryName(_controller.categoryNameController.text);
+            notifier.attemptSubmit();
+          }
+        },
+        submitLabel: 'Create Category',
+        isSubmitting: formState.isSubmitting,
+      ),
+      children: [
+        // Category Name
+        Text(
+          'Category Name',
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 14),
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF5F2D82),
+          ),
+        ),
+        SectionSpacer(units: 8),
+        CustomTextField(
+          hintText: 'e.g., Coffee, Appetizers, Desserts',
+          controller: _controller.categoryNameController,
+        ),
+        SectionSpacer(units: 28),
+        // Category Image Section
+        MerchantCategoryImageUploadSection(
+          onTap: () {
+            SnackBarUtils.showInfo(context, 'Image picker - Coming soon');
+          },
+        ),
+        SectionSpacer(units: 24),
+        // Live Preview
+        MerchantCategoryLivePreviewSection(
+          categoryName: _controller.categoryNameController.text,
+        ),
+        SectionSpacer(units: 32),
+        // Pro Tip
+        MerchantProTipSection(
+          tipText: 'Use clear, descriptive category names so customers can quickly find what they\'re looking for.',
+        ),
+        SectionSpacer(units: 32),
+        SectionSpacer(),
+      ],
+    );
+  }
+}

@@ -1,0 +1,136 @@
+import 'package:dio/dio.dart';
+import 'package:injectable/injectable.dart';
+import '../../core/constants/api_constants.dart';
+import '../../core/network/dio_client.dart';
+import 'dto/address/address_dto.dart';
+import 'dto/address/address_response_dto.dart';
+import 'dto/address/addresses_response_dto.dart';
+import 'dto/address/create_address_request_dto.dart';
+import 'dto/address/update_address_request_dto.dart';
+import 'dto/address/delete_address_response_dto.dart';
+
+@lazySingleton
+class AddressRemoteDataSource {
+  final DioClient _dioClient;
+
+  AddressRemoteDataSource(this._dioClient);
+
+  /// Get all addresses for the authenticated user
+  Future<AddressesResponseDto> getAddresses() async {
+    final dio = _dioClient.dio;
+    try {
+      final response = await dio.get('/v1/addresses');
+      return AddressesResponseDto.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        if (e.response?.data is Map<String, dynamic>) {
+          return AddressesResponseDto.fromJson(
+            e.response?.data as Map<String, dynamic>,
+          );
+        }
+      }
+      return AddressesResponseDto.withError(
+        e.message ?? 'An unexpected network error occurred',
+      );
+    } catch (e) {
+      return AddressesResponseDto.withError(e.toString());
+    }
+  }
+
+  /// Get a single address by ID
+  Future<AddressResponseDto> getAddress(int id) async {
+    final dio = _dioClient.dio;
+    try {
+      final response = await dio.get('/v1/addresses/$id');
+      return AddressResponseDto.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        if (e.response?.data is Map<String, dynamic>) {
+          return AddressResponseDto.fromJson(
+            e.response?.data as Map<String, dynamic>,
+          );
+        }
+      }
+      return AddressResponseDto.withError(
+        e.message ?? 'An unexpected network error occurred',
+      );
+    } catch (e) {
+      return AddressResponseDto.withError(e.toString());
+    }
+  }
+
+  /// Create a new address
+  Future<AddressResponseDto> createAddress(CreateAddressRequestDto request) async {
+    final dio = _dioClient.dio;
+    try {
+      final response = await dio.post(
+        '/v1/addresses',
+        data: request.toJson(),
+      );
+      return AddressResponseDto.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        if (e.response?.data is Map<String, dynamic>) {
+          return AddressResponseDto.fromJson(
+            e.response?.data as Map<String, dynamic>,
+          );
+        }
+      }
+      return AddressResponseDto.withError(
+        e.message ?? 'An unexpected network error occurred',
+      );
+    } catch (e) {
+      return AddressResponseDto.withError(e.toString());
+    }
+  }
+
+  /// Update an existing address
+  Future<AddressResponseDto> updateAddress(
+    int id,
+    UpdateAddressRequestDto request,
+  ) async {
+    final dio = _dioClient.dio;
+    try {
+      final response = await dio.patch(
+        '/v1/addresses/$id',
+        data: request.toJson(),
+      );
+      return AddressResponseDto.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        if (e.response?.data is Map<String, dynamic>) {
+          return AddressResponseDto.fromJson(
+            e.response?.data as Map<String, dynamic>,
+          );
+        }
+      }
+      return AddressResponseDto.withError(
+        e.message ?? 'An unexpected network error occurred',
+      );
+    } catch (e) {
+      return AddressResponseDto.withError(e.toString());
+    }
+  }
+
+  /// Delete an address
+  Future<DeleteAddressResponseDto> deleteAddress(int id) async {
+    final dio = _dioClient.dio;
+    try {
+      final response = await dio.delete('/v1/addresses/$id');
+      return DeleteAddressResponseDto.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.data != null) {
+        if (e.response?.data is Map<String, dynamic>) {
+          return DeleteAddressResponseDto.fromJson(
+            e.response?.data as Map<String, dynamic>,
+          );
+        }
+      }
+      return DeleteAddressResponseDto.withError(
+        e.message ?? 'An unexpected network error occurred',
+      );
+    } catch (e) {
+      return DeleteAddressResponseDto.withError(e.toString());
+    }
+  }
+}

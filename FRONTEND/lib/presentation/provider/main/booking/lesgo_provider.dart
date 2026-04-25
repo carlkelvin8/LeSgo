@@ -1,0 +1,595 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'lesgo_location_provider.dart';
+import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/constants/routers/app_router.dart';
+import '../../../../core/constants/routers/booking/booking_routes.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../data/data_source/order_remote_datasource.dart';
+import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
+import '../../../../data/data_source/dto/address/address_dto.dart';
+import '../profile/profile_provider.dart';
+import '../address/address_provider.dart';
+
+class LesgoState {
+  final bool isFullscreen;
+  final String paymentMethod;
+  final bool selectingDestination;
+  final bool pendingFit;
+  final bool shouldCollapseAfterFullscreen;
+  final String itemDescription;
+  final String itemWeight;
+  final AddressDto? selectedPickupAddress;
+  final AddressDto? selectedDropoffAddress;
+
+  LesgoState({
+    this.isFullscreen = false,
+    this.paymentMethod = 'cash',
+    this.selectingDestination = false,
+    this.pendingFit = false,
+    this.shouldCollapseAfterFullscreen = false,
+    this.itemDescription = '',
+    this.itemWeight = '',
+    this.selectedPickupAddress,
+    this.selectedDropoffAddress,
+  });
+
+  LesgoState copyWith({
+    bool? isFullscreen,
+    String? paymentMethod,
+    bool? selectingDestination,
+    bool? pendingFit,
+    bool? shouldCollapseAfterFullscreen,
+    String? itemDescription,
+    String? itemWeight,
+    AddressDto? selectedPickupAddress,
+    AddressDto? selectedDropoffAddress,
+    bool clearPickupAddress = false,
+    bool clearDropoffAddress = false,
+  }) {
+    return LesgoState(
+      isFullscreen: isFullscreen ?? this.isFullscreen,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      selectingDestination: selectingDestination ?? this.selectingDestination,
+      pendingFit: pendingFit ?? this.pendingFit,
+      shouldCollapseAfterFullscreen:
+          shouldCollapseAfterFullscreen ?? this.shouldCollapseAfterFullscreen,
+      itemDescription: itemDescription ?? this.itemDescription,
+      itemWeight: itemWeight ?? this.itemWeight,
+      selectedPickupAddress: clearPickupAddress ? null : (selectedPickupAddress ?? this.selectedPickupAddress),
+      selectedDropoffAddress: clearDropoffAddress ? null : (selectedDropoffAddress ?? this.selectedDropoffAddress),
+    );
+  }
+}
+
+class LesgoNotifier extends StateNotifier<LesgoState> {
+  final Ref _ref;
+  GoogleMapController? _mainMapController;
+  GoogleMapController? _overlayMapController;
+  static const double _sheetMin = 0.04;
+  static const double _sheetMax = 0.55;
+  static const double _sheetDefault =
+      0.28; // Default initial size - shows more map
+
+  LesgoNotifier(this._ref) : super(LesgoState());
+
+  void setMapController(GoogleMapController? controller) {
+    _mainMapController = controller;
+    if (controller != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => fitBoundsOrSelected(),
+      );
+    }
+  }
+
+  void setOverlayMapController(GoogleMapController? controller) {
+    _overlayMapController = controller;
+  }
+
+  GoogleMapController? get mapController => _mainMapController;
+  GoogleMapController? get overlayMapController => _overlayMapController;
+
+  double get sheetMin => _sheetMin;
+  double get sheetMax => _sheetMax;
+  double get sheetDefault => _sheetDefault;
+
+  Future<void> initialize() async {
+    final notifier = _ref.read(lesgoLocationProvider.notifier);
+    final currentState = _ref.read(lesgoLocationProvider);
+    
+    // Only reset if no locations are set, otherwise preserve existing selections
+    if (currentState.pickupLocation == null && currentState.destinationLocation == null) {
+      notifier.reset();
+    }
+    
+    // Always get current location for pickup if not already set
+    if (currentState.pickupLocation == null) {
+      await notifier.getCurrentLocation();
+    }
+  }
+
+  void cleanup() {
+    _mainMapController?.dispose();
+    _mainMapController = null;
+    // Note: We don't reset the location provider here to avoid lifecycle conflicts.
+    // The provider state can persist, and initialize() will reset it when the screen is opened again.
+  }
+
+  Future<void> fitBoundsOrSelected() async {
+    final state = _ref.read(lesgoLocationProvider);
+    final controller = _mainMapController;
+    if (controller == null) return;
+
+    final points = <LatLng>[];
+    final pickup = state.pickupLocation;
+    final dest = state.destinationLocation;
+    final selected = state.selectedLocation;
+    if (pickup != null) points.add(pickup);
+    if (dest != null) points.add(dest);
+
+    if (points.length >= 2) {
+      double minLat = points.first.latitude, maxLat = points.first.latitude;
+      double minLng = points.first.longitude, maxLng = points.first.longitude;
+      for (final p in points.skip(1)) {
+        if (p.latitude < minLat) minLat = p.latitude;
+        if (p.latitude > maxLat) maxLat = p.latitude;
+        if (p.longitude < minLng) minLng = p.longitude;
+        if (p.longitude > maxLng) maxLng = p.longitude;
+      }
+      if (minLat == maxLat) {
+        minLat -= 0.0005;
+        maxLat += 0.0005;
+      }
+      if (minLng == maxLng) {
+        minLng -= 0.0005;
+        maxLng += 0.0005;
+      }
+      final bounds = LatLngBounds(
+        southwest: LatLng(minLat, minLng),
+        northeast: LatLng(maxLat, maxLng),
+      );
+      try {
+        await controller.animateCamera(
+          CameraUpdate.newLatLngBounds(bounds, 140),
+        );
+      } on StateError {
+        // Controller was used after its GoogleMap was disposed; ignore safely.
+      } catch (_) {
+        await Future.delayed(const Duration(milliseconds: 80));
+        try {
+          await controller.animateCamera(
+            CameraUpdate.newLatLngBounds(bounds, 140),
+          );
+        } catch (_) {
+          // If it still fails, give up silently.
+        }
+      }
+    } else {
+      final target = dest ?? pickup ?? selected;
+      if (target != null) {
+        try {
+          await controller.animateCamera(CameraUpdate.newLatLng(target));
+        } catch (_) {
+          // Ignore if controller is no longer attached.
+        }
+      }
+    }
+  }
+
+  Future<void> useCurrentLocation() async {
+    await _ref.read(lesgoLocationProvider.notifier).getCurrentLocation();
+    animateToSelected();
+  }
+
+  void toggleFullscreen() {
+    state = state.copyWith(isFullscreen: !state.isFullscreen);
+
+    if (!state.isFullscreen) {
+      state = state.copyWith(
+        shouldCollapseAfterFullscreen: true,
+        pendingFit: true,
+      );
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => fitBoundsOrSelected(),
+      );
+    }
+  }
+
+  Future<void> onMapTap(LatLng latLng) async {
+    print('🔍 LesGo: onMapTap called with: $latLng, isFullscreen: ${state.isFullscreen}, selectingDestination: ${state.selectingDestination}');
+    
+    if (!state.isFullscreen)
+      return; // Block marker moves when not in fullscreen selection.
+
+    if (state.selectingDestination) {
+      print('🔍 LesGo: Updating destination to: $latLng');
+      await _ref.read(lesgoLocationProvider.notifier).updateDestination(latLng);
+    } else {
+      print('🔍 LesGo: Updating pickup to: $latLng');
+      await _ref.read(lesgoLocationProvider.notifier).updatePickup(latLng);
+    }
+    animateToSelected();
+  }
+
+  Future<void> animateToSelected() async {
+    final selected = _ref.read(lesgoLocationProvider).selectedLocation;
+    final controller = _mainMapController;
+    if (controller != null && selected != null) {
+      try {
+        await controller.animateCamera(CameraUpdate.newLatLng(selected));
+      } catch (_) {
+        // Safe-guard against controller tied to a disposed map.
+      }
+    }
+  }
+
+  Future<void> animateOverlayToLocation(LatLng location) async {
+    final controller = _overlayMapController;
+    if (controller != null) {
+      try {
+        await controller.animateCamera(
+          CameraUpdate.newLatLngZoom(location, 16.0),
+        );
+      } catch (_) {
+        // Safe-guard against controller tied to a disposed map.
+      }
+    }
+  }
+
+  Future<void> updateCamera(LesgoLocationState locationState) async {
+    final controller = _mainMapController;
+    if (controller == null) return;
+    final pickup = locationState.pickupLocation;
+    final dest = locationState.destinationLocation;
+    if (pickup != null && dest != null) {
+      final southwest = LatLng(
+        pickup.latitude < dest.latitude ? pickup.latitude : dest.latitude,
+        pickup.longitude < dest.longitude ? pickup.longitude : dest.longitude,
+      );
+      final northeast = LatLng(
+        pickup.latitude > dest.latitude ? pickup.latitude : dest.latitude,
+        pickup.longitude > dest.longitude ? pickup.longitude : dest.longitude,
+      );
+      try {
+        await controller.animateCamera(
+          CameraUpdate.newLatLngBounds(
+            LatLngBounds(southwest: southwest, northeast: northeast),
+            100,
+          ),
+        );
+      } catch (_) {
+        // Controller no longer valid; ignore.
+      }
+    } else if (pickup != null) {
+      try {
+        await controller.animateCamera(CameraUpdate.newLatLng(pickup));
+      } catch (_) {}
+    } else if (dest != null) {
+      try {
+        await controller.animateCamera(CameraUpdate.newLatLng(dest));
+      } catch (_) {}
+    } else if (locationState.selectedLocation != null) {
+      try {
+        await controller.animateCamera(
+          CameraUpdate.newLatLng(locationState.selectedLocation!),
+        );
+      } catch (_) {}
+    }
+  }
+
+  void openMapSelection() {
+    state = state.copyWith(isFullscreen: true);
+  }
+
+  void openDestinationSelection() {
+    state = state.copyWith(selectingDestination: true);
+    final dest = _ref.read(lesgoLocationProvider).destinationLocation;
+    if (dest != null) {
+      _ref.read(lesgoLocationProvider.notifier).setSelectedLocation(dest);
+      focusOn(dest);
+    }
+    openMapSelection();
+  }
+
+  void openPickupSelection() {
+    state = state.copyWith(selectingDestination: false);
+    final pickup = _ref.read(lesgoLocationProvider).pickupLocation;
+    if (pickup != null) {
+      _ref.read(lesgoLocationProvider.notifier).setSelectedLocation(pickup);
+      focusOn(pickup);
+    }
+    openMapSelection();
+  }
+
+  Future<void> confirmSelection() async {
+    print('🔍 LesGo: confirmSelection called');
+    final locationState = _ref.read(lesgoLocationProvider);
+    print('🔍 LesGo: Current location state - pickup: ${locationState.pickupLocation}, destination: ${locationState.destinationLocation}');
+    
+    // Selection already stored in provider on tap; just close overlay
+    state = state.copyWith(
+      isFullscreen: false,
+      shouldCollapseAfterFullscreen: true,
+      pendingFit: true,
+    );
+
+    // Ensure route is fetched if both locations are set
+    if (locationState.pickupLocation != null &&
+        locationState.destinationLocation != null) {
+      print('🔍 LesGo: Both locations set, fetching route');
+      await _ref.read(lesgoLocationProvider.notifier).fetchRouteIfBothSet();
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => fitBoundsOrSelected());
+    print('🔍 LesGo: confirmSelection completed');
+  }
+
+  Future<void> focusOn(LatLng? target) async {
+    if (target == null) return;
+    final controller = _mainMapController;
+    await Future.wait([
+      if (controller != null)
+        controller.animateCamera(CameraUpdate.newLatLng(target)),
+    ]);
+  }
+
+  void updatePaymentMethod(String method) {
+    state = state.copyWith(paymentMethod: method);
+  }
+
+  void selectPickupAddress(AddressDto address) {
+    print('🔍 LesGo: selectPickupAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})');
+    state = state.copyWith(selectedPickupAddress: address);
+    // Update location provider with address coordinates
+    final locationNotifier = _ref.read(lesgoLocationProvider.notifier);
+    locationNotifier.updatePickupWithAddress(
+      LatLng(address.latitude, address.longitude),
+      address.addressLine1,
+      null, // addressComponents not needed
+    );
+    print('🔍 LesGo: After updatePickupWithAddress, pickupLocation: ${_ref.read(lesgoLocationProvider).pickupLocation}');
+  }
+
+  void selectDropoffAddress(AddressDto address) {
+    print('🔍 LesGo: selectDropoffAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})');
+    state = state.copyWith(selectedDropoffAddress: address);
+    // Update location provider with address coordinates
+    final locationNotifier = _ref.read(lesgoLocationProvider.notifier);
+    locationNotifier.updateDestinationWithAddress(
+      LatLng(address.latitude, address.longitude),
+      address.addressLine1,
+      null, // addressComponents not needed
+    );
+    print('🔍 LesGo: After updateDestinationWithAddress, destinationLocation: ${_ref.read(lesgoLocationProvider).destinationLocation}');
+  }
+
+  void clearPickupAddress() {
+    state = state.copyWith(clearPickupAddress: true);
+  }
+
+  void clearDropoffAddress() {
+    state = state.copyWith(clearDropoffAddress: true);
+  }
+
+  void setPendingFit(bool value) {
+    state = state.copyWith(pendingFit: value);
+  }
+
+  void setShouldCollapseAfterFullscreen(bool value) {
+    state = state.copyWith(shouldCollapseAfterFullscreen: value);
+  }
+
+  // Handle route auto-fetching when locations change
+  void handleLocationChange(
+    LesgoLocationState? previous,
+    LesgoLocationState next,
+  ) {
+    updateCamera(next);
+
+    // Auto-fetch route when both locations are set
+    if (next.pickupLocation != null &&
+        next.destinationLocation != null &&
+        (previous?.pickupLocation != next.pickupLocation ||
+            previous?.destinationLocation != next.destinationLocation)) {
+      // Only fetch if locations changed and route is not already loading
+      if (!next.isLoadingRoute && next.routePolylines.isEmpty) {
+        _ref.read(lesgoLocationProvider.notifier).fetchRouteIfBothSet();
+      }
+    }
+  }
+
+  // Handle post-frame callbacks for pending operations
+  void handlePostFrameCallbacks() {
+    if (state.pendingFit) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setPendingFit(false);
+        fitBoundsOrSelected();
+      });
+    }
+  }
+
+  // Handle booking action with validation and API integration
+  Future<void> handleBook(BuildContext context) async {
+    print('🚀 LesGo: handleBook called!');
+    final locationState = _ref.read(lesgoLocationProvider);
+
+    // Debug logging to understand the current state
+    print('🔍 LesGo Booking Debug:');
+    print('  - destinationLocation: ${locationState.destinationLocation}');
+    print('  - destinationAddress: ${locationState.destinationAddress}');
+    print('  - pickupLocation: ${locationState.pickupLocation}');
+    print('  - pickupAddress: ${locationState.pickupAddress}');
+    print('  - selectedDropoffAddress: ${state.selectedDropoffAddress}');
+    print('  - selectedPickupAddress: ${state.selectedPickupAddress}');
+
+    // Check if destination is set (allow booking if location is set even if address is null)
+    if (locationState.destinationLocation == null && state.selectedDropoffAddress == null) {
+      // For testing purposes, create a default destination near the pickup location
+      if (locationState.pickupLocation != null) {
+        print('🔧 LesGo: Creating default destination for testing');
+        final pickup = locationState.pickupLocation!;
+        // Create a destination 0.01 degrees away (roughly 1km)
+        final defaultDestination = LatLng(
+          pickup.latitude + 0.01,
+          pickup.longitude + 0.01,
+        );
+        
+        await _ref.read(lesgoLocationProvider.notifier).updateDestination(defaultDestination);
+        
+        // Show info message
+        SnackBarUtils.showInfo(
+          context,
+          'Using default destination for testing. You can change it by tapping on the map.',
+        );
+      } else {
+        // Show helpful message and automatically open destination selection
+        SnackBarUtils.showWarning(
+          context,
+          'Please select a destination to continue booking',
+        );
+        
+        // Automatically open destination selection to help user
+        Future.delayed(const Duration(milliseconds: 500), () {
+          openDestinationSelection();
+        });
+        return;
+      }
+    }
+
+    // If we have a selected dropoff address but no destination location, update the location
+    if (locationState.destinationLocation == null && state.selectedDropoffAddress != null) {
+      final address = state.selectedDropoffAddress!;
+      await _ref.read(lesgoLocationProvider.notifier).updateDestinationWithAddress(
+        LatLng(address.latitude, address.longitude),
+        address.addressLine1,
+        null,
+      );
+    }
+
+    // If we have a selected pickup address but no pickup location, update the location
+    if (locationState.pickupLocation == null && state.selectedPickupAddress != null) {
+      final address = state.selectedPickupAddress!;
+      await _ref.read(lesgoLocationProvider.notifier).updatePickupWithAddress(
+        LatLng(address.latitude, address.longitude),
+        address.addressLine1,
+        null,
+      );
+    }
+
+    // Re-read the location state after potential updates
+    final updatedLocationState = _ref.read(lesgoLocationProvider);
+
+    // Final validation - ensure both pickup and destination are set
+    if (updatedLocationState.pickupLocation == null) {
+      SnackBarUtils.showWarning(
+        context,
+        'Please select a pickup location before booking',
+      );
+      return;
+    }
+
+    if (updatedLocationState.destinationLocation == null) {
+      SnackBarUtils.showWarning(
+        context,
+        'Please select a destination before booking',
+      );
+      return;
+    }
+
+    // Create real order via API
+    if (context.mounted) {
+      try {
+        final orderDataSource = getIt<OrderRemoteDataSource>();
+        final profileState = _ref.read(profileProvider);
+        final user = profileState.user;
+
+        final createOrderRequest = CreateOrderRequestDto(
+          serviceId: 1, // LesGo service ID
+          estimatedDistanceM: (updatedLocationState.distanceInKm != null) 
+              ? (updatedLocationState.distanceInKm! * 1000).round() 
+              : 5000,
+          pickup: OrderAddressDto(
+            address: state.selectedPickupAddress?.addressLine1 ?? 
+                     (updatedLocationState.pickupAddress?.toString() ?? 'Pickup Location'),
+            lat: state.selectedPickupAddress?.latitude ?? 
+                 (updatedLocationState.pickupLocation?.latitude ?? 8.4542),
+            lng: state.selectedPickupAddress?.longitude ?? 
+                 (updatedLocationState.pickupLocation?.longitude ?? 124.6319),
+            contactName: state.selectedPickupAddress?.contactName.isNotEmpty == true
+                ? state.selectedPickupAddress!.contactName
+                : (user?.name ?? 'Customer'),
+            contactPhone: state.selectedPickupAddress?.contactPhone.isNotEmpty == true
+                ? state.selectedPickupAddress!.contactPhone
+                : (user?.phone ?? '+639123456789'),
+          ),
+          dropoff: OrderAddressDto(
+            address: state.selectedDropoffAddress?.addressLine1 ?? 
+                     (updatedLocationState.destinationAddress?.toString() ?? 'Destination'),
+            lat: state.selectedDropoffAddress?.latitude ?? 
+                 (updatedLocationState.destinationLocation?.latitude ?? 8.4542),
+            lng: state.selectedDropoffAddress?.longitude ?? 
+                 (updatedLocationState.destinationLocation?.longitude ?? 124.6319),
+            contactName: state.selectedDropoffAddress?.contactName.isNotEmpty == true
+                ? state.selectedDropoffAddress!.contactName
+                : (user?.name ?? 'Customer'),
+            contactPhone: state.selectedDropoffAddress?.contactPhone.isNotEmpty == true
+                ? state.selectedDropoffAddress!.contactPhone
+                : (user?.phone ?? '+639123456789'),
+          ),
+          notes: 'LesGo delivery booking',
+          paymentMethod: state.paymentMethod,
+          meta: {
+            'item_description': state.itemDescription,
+            'item_weight': state.itemWeight,
+            'distance_km': updatedLocationState.distanceInKm,
+            'duration_seconds': updatedLocationState.durationInSeconds,
+            'order_type': 'lesgo',
+          },
+        );
+
+        print('🔵 LesGo: Creating order with API...');
+        final response = await orderDataSource.createOrder(createOrderRequest);
+        print('🟢 LesGo: Order created successfully - ID: ${response.data.id}');
+
+        final orderId = response.data.id.toString();
+
+        AppRouter.pushReplacement(
+          context,
+          BookingRoutes.driverFinding,
+          arguments: {
+            'orderId': orderId,
+            'orderType': 'LesGo',
+            'orderData': {
+              'pickupAddress': updatedLocationState.pickupAddress?.toString(),
+              'dropoffAddress': updatedLocationState.destinationAddress?.toString(),
+              'itemDescription': state.itemDescription,
+              'itemWeight': state.itemWeight,
+              'paymentMethod': state.paymentMethod,
+              'fare': 100.0, // Calculate actual fare
+            },
+          },
+        );
+      } catch (e) {
+        print('🔴 LesGo: Error creating order - $e');
+        if (context.mounted) {
+          SnackBarUtils.showError(context, 'Failed to create booking: $e');
+        }
+      }
+    }
+  }
+
+  // Collapse sheet helper
+  void collapseSheet(DraggableScrollableController controller) {
+    if (!controller.isAttached) return;
+    controller.animateTo(
+      sheetMin,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
+  }
+}
+
+final lesgoProvider = StateNotifierProvider<LesgoNotifier, LesgoState>((ref) {
+  return LesgoNotifier(ref);
+});
