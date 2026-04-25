@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/data_source/chat_remote_datasource.dart';
 import '../../../data/data_source/dto/chat/message_dto.dart';
-import '../../../core/di/injection.dart';
+import '../../../core/network/dio_client.dart';
 
 // Chat state
 class ChatState {
@@ -48,8 +50,15 @@ class ChatState {
 // Chat provider
 class ChatNotifier extends StateNotifier<ChatState> {
   final ChatRemoteDataSource _chatDataSource;
+  Timer? _pollTimer;
 
   ChatNotifier(this._chatDataSource) : super(const ChatState());
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
 
   // Load conversations
   Future<void> loadConversations() async {
@@ -78,6 +87,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final conversation = await _chatDataSource.getOrCreateConversation(orderId);
       state = state.copyWith(currentConversation: conversation);
       await loadMessages(conversation.id);
+      _startPolling();
       return conversation;
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -86,13 +96,14 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   // Load messages for conversation
-  Future<void> loadMessages(int conversationId) async {
-    state = state.copyWith(isLoading: true, error: null);
+  Future<void> loadMessages(int conversationId, {bool silent = false}) async {
+    if (!silent) state = state.copyWith(isLoading: true, error: null);
     
     try {
       final messages = await _chatDataSource.getMessages(conversationId);
+      if (!mounted) return;
       state = state.copyWith(
-        messages: messages, // API sends descending (newest first), which matches reverse ListView
+        messages: messages,
         isLoading: false,
       );
       
@@ -100,10 +111,13 @@ class ChatNotifier extends StateNotifier<ChatState> {
       await _chatDataSource.markAsRead(conversationId);
       await loadUnreadCount();
     } catch (e) {
-      state = state.copyWith(
-        error: e.toString(),
-        isLoading: false,
-      );
+      if (!mounted) return;
+      if (!silent) {
+        state = state.copyWith(
+          error: e.toString(),
+          isLoading: false,
+        );
+      }
     }
   }
 
@@ -124,16 +138,22 @@ class ChatNotifier extends StateNotifier<ChatState> {
         state.currentConversation!.id,
         request,
       );
+      if (!mounted) return false;
       
-      // Add message to current list
-      final updatedMessages = [...state.messages, newMessage];
-      state = state.copyWith(
-        messages: updatedMessages,
-        isSending: false,
-      );
-      
+      // Reload messages to get server-side data (id, timestamps, etc.)
+      await loadMessages(state.currentConversation!.id, silent: true);
+      if (!mounted) return false;
+
+      // If reload failed, at least add the returned message
+      if (!state.messages.any((m) => m.id == newMessage.id)) {
+        final updatedMessages = [newMessage, ...state.messages];
+        state = state.copyWith(messages: updatedMessages);
+      }
+
+      state = state.copyWith(isSending: false);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         error: e.toString(),
         isSending: false,
@@ -170,6 +190,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
   // Clear current conversation
   void clearCurrentConversation() {
+    _pollTimer?.cancel();
     state = state.copyWith(
       currentConversation: null,
       messages: [],
@@ -180,16 +201,31 @@ class ChatNotifier extends StateNotifier<ChatState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  // Start polling every 5 seconds
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted && state.currentConversation != null) {
+        loadMessages(state.currentConversation!.id, silent: true);
+      }
+    });
+  }
 }
+
+// Data source provider
+final chatDataSourceProvider = Provider<ChatRemoteDataSource>((ref) {
+  return ChatRemoteDataSource(DioClient());
+});
 
 // Provider - per-order family so each order has its own chat state
 final chatProvider = StateNotifierProvider.family<ChatNotifier, ChatState, int>((ref, orderId) {
-  return ChatNotifier(getIt<ChatRemoteDataSource>());
+  return ChatNotifier(ref.watch(chatDataSourceProvider));
 });
 
 // Keep a simple global provider for backward compat (uses orderId 0)
 final chatProviderGlobal = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
-  return ChatNotifier(getIt<ChatRemoteDataSource>());
+  return ChatNotifier(ref.watch(chatDataSourceProvider));
 });
 
 // Unread count provider (for badge)

@@ -31,6 +31,7 @@ class ChatState {
     bool? isLoading,
     bool? isSending,
     String? error,
+    bool clearError = false,
     ConversationDto? currentConversation,
     List<MessageDto>? messages,
     int? unreadCount,
@@ -38,7 +39,7 @@ class ChatState {
     return ChatState(
       isLoading: isLoading ?? this.isLoading,
       isSending: isSending ?? this.isSending,
-      error: error,
+      error: clearError ? null : (error ?? this.error),
       currentConversation: currentConversation ?? this.currentConversation,
       messages: messages ?? this.messages,
       unreadCount: unreadCount ?? this.unreadCount,
@@ -62,7 +63,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Get or create conversation for order
   Future<void> getOrCreateConversation(int orderId) async {
     if (!mounted) return;
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
 
     try {
       final conversation = await _chatDataSource.getOrCreateConversation(orderId);
@@ -92,7 +93,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     if (!mounted || state.currentConversation == null) return;
 
     if (!silent) {
-      state = state.copyWith(isLoading: true, error: null);
+      state = state.copyWith(isLoading: true, clearError: true);
     }
 
     try {

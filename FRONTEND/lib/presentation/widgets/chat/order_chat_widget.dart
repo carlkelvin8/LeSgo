@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
 
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
@@ -80,7 +79,6 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
     final success = await chatNotifier.sendMessage(message);
     
     if (success) {
-      // Scroll to bottom after sending
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom();
       });
@@ -91,61 +89,9 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
     }
   }
 
-  Future<void> _sendLocation() async {
-    try {
-      // Check location permission
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          if (mounted) {
-            SnackBarUtils.showError(context, 'Location permission denied');
-          }
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          SnackBarUtils.showError(context, 'Location permission permanently denied');
-        }
-        return;
-      }
-
-      // Get current location
-      final position = await Geolocator.getCurrentPosition();
-      
-      // Send location message
-      final chatNotifier = ref.read(chatProvider(widget.orderId).notifier);
-      final success = await chatNotifier.sendLocation(
-        position.latitude,
-        position.longitude,
-      );
-      
-      if (success) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToBottom();
-        });
-        if (mounted) {
-          SnackBarUtils.showSuccess(context, 'Location shared');
-        }
-      } else {
-        if (mounted) {
-          SnackBarUtils.showError(context, 'Failed to share location');
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        SnackBarUtils.showError(context, 'Failed to get location: $e');
-      }
-    }
-  }
-
   void _onLocationTap(Map<String, dynamic>? metadata) {
     if (metadata == null) return;
-    
     try {
-      // Parse location metadata and show on map
       final lat = metadata['latitude'];
       final lng = metadata['longitude'];
       if (lat != null && lng != null) {
@@ -188,7 +134,6 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
           // Input — always allow typing; send is blocked internally if no conversation
           ChatInputWidget(
             onSendMessage: _sendMessage,
-            onSendLocation: _sendLocation,
             isLoading: chatState.isSending,
             enabled: true,
           ),
