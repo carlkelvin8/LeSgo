@@ -1,7 +1,8 @@
 class AddressValidator {
   static String? houseNumberStreet(String? value) {
+    // Make this optional since GPS can't determine exact house number
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your house number and street name';
+      return null; // Allow empty
     }
     if (value.trim().length < 3) {
       return 'Address must be at least 3 characters';
