@@ -244,41 +244,81 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        print('🔵 LocationProvider: Geocoding success - ${place.locality}');
+        print('🔵 LocationProvider: Geocoding success');
+        print('🔵 LocationProvider: - locality: ${place.locality}');
+        print('🔵 LocationProvider: - subLocality: ${place.subLocality}');
+        print('🔵 LocationProvider: - administrativeArea: ${place.administrativeArea}');
+        print('🔵 LocationProvider: - thoroughfare: ${place.thoroughfare}');
+        print('🔵 LocationProvider: - subThoroughfare: ${place.subThoroughfare}');
 
         final streetName = place.thoroughfare ?? place.street ?? '';
         final houseNumber = place.subThoroughfare ?? '';
         final houseNumberStreet =
             houseNumber.isNotEmpty && streetName.isNotEmpty
             ? '$houseNumber $streetName'
-            : streetName;
+            : streetName.isNotEmpty ? streetName : null;
+
+        final barangay = place.subLocality ?? place.locality ?? '';
+        final city = place.locality ?? place.subAdministrativeArea ?? '';
+        final province = place.administrativeArea ?? '';
+        
+        final cityProvince = city.isNotEmpty && province.isNotEmpty
+            ? '$city, $province'
+            : city.isNotEmpty
+            ? city
+            : province.isNotEmpty
+            ? province
+            : 'Philippines';
 
         final address = LocationAddress(
-          houseNumberStreet: houseNumberStreet.isNotEmpty ? houseNumberStreet : null,
-          subdivisionBarangay: place.subLocality ?? place.locality ?? 'Barangay',
-          cityProvince: '${place.locality ?? 'Cagayan de Oro'}, ${place.administrativeArea ?? 'Misamis Oriental'}',
-          zipCode: place.postalCode ?? '9000',
+          houseNumberStreet: houseNumberStreet,
+          subdivisionBarangay: barangay.isNotEmpty ? barangay : null,
+          cityProvince: cityProvince,
+          zipCode: place.postalCode,
         );
 
+        print('🔵 LocationProvider: Created address - $cityProvince');
         return address;
       } else {
         print('🔴 LocationProvider: Geocoding returned empty results');
         return _getDefaultAddress(location);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('🔴 LocationProvider: Geocoding error - $e');
+      print('🔴 LocationProvider: Stack trace - $stackTrace');
       return _getDefaultAddress(location);
     }
   }
 
   LocationAddress _getDefaultAddress(LatLng location) {
-    print('🔵 LocationProvider: Using default address');
+    print('🔵 LocationProvider: Using default address for ${location.latitude}, ${location.longitude}');
+    
+    // Determine default city based on coordinates
+    String defaultCity = 'Philippines';
+    String defaultBarangay = 'Barangay';
+    String defaultZip = '';
+    
+    // Metro Manila area (rough bounds)
+    if (location.latitude >= 14.4 && location.latitude <= 14.8 &&
+        location.longitude >= 120.9 && location.longitude <= 121.2) {
+      defaultCity = 'Metro Manila, Philippines';
+      defaultBarangay = 'Barangay';
+      defaultZip = '1000';
+    }
+    // Cagayan de Oro area
+    else if (location.latitude >= 8.3 && location.latitude <= 8.6 &&
+        location.longitude >= 124.5 && location.longitude <= 124.8) {
+      defaultCity = 'Cagayan de Oro, Misamis Oriental';
+      defaultBarangay = 'Barangay';
+      defaultZip = '9000';
+    }
+    
     return LocationAddress(
       houseNumberStreet: null,
-      subdivisionBarangay: 'Barangay',
-      cityProvince: 'Cagayan de Oro, Misamis Oriental',
-      zipCode: '9000',
-      landmark: 'Near coordinates: ${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}',
+      subdivisionBarangay: defaultBarangay,
+      cityProvince: defaultCity,
+      zipCode: defaultZip,
+      landmark: 'Coordinates: ${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
     );
   }
 }
