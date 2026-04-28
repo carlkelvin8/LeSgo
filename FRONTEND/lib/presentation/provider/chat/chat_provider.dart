@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/data_source/chat_remote_datasource.dart';
 import '../../../data/data_source/dto/chat/message_dto.dart';
-import '../../../core/network/dio_client.dart';
+import '../../../core/di/injection.dart';
 
 // Chat state
 class ChatState {
@@ -215,7 +215,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
 // Data source provider
 final chatDataSourceProvider = Provider<ChatRemoteDataSource>((ref) {
-  return ChatRemoteDataSource(DioClient());
+  return getIt<ChatRemoteDataSource>();
 });
 
 // Provider - per-order family so each order has its own chat state
