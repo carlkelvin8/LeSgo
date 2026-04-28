@@ -61,8 +61,14 @@ class LocationControllers {
     // Then try to get actual location
     await ref.read(locationProvider.notifier).getCurrentLocation();
     print('🔵 LocationController: Got current location');
-    updateFormFromProvider(ref);
-    print('🔵 LocationController: Updated form from provider');
+    
+    // Check if still mounted before updating form
+    try {
+      updateFormFromProvider(ref);
+      print('🔵 LocationController: Updated form from provider');
+    } catch (e) {
+      print('🔴 LocationController: Error updating form - $e');
+    }
   }
 
   void _setDefaultFormValues() {
@@ -198,7 +204,21 @@ class LocationControllers {
     cityController.dispose();
     zipCodeController.dispose();
     landmarkController.dispose();
-    mapController?.dispose();
-    fullscreenMapController?.dispose();
+    
+    // Safely dispose map controllers
+    try {
+      mapController?.dispose();
+    } catch (e) {
+      print('🔴 LocationController: Error disposing mapController - $e');
+    }
+    
+    try {
+      fullscreenMapController?.dispose();
+    } catch (e) {
+      print('🔴 LocationController: Error disposing fullscreenMapController - $e');
+    }
+    
+    mapController = null;
+    fullscreenMapController = null;
   }
 }
