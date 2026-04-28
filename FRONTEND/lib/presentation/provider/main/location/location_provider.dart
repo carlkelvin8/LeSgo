@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
+import '../../../../core/constants/api_constants.dart';
 
 class LocationState {
   final LatLng? currentLocation;
@@ -234,9 +237,18 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   Future<LocationAddress?> _getAddressFromLocation(LatLng location) async {
     try {
-      print('🔵 LocationProvider: Trying reverse geocoding...');
+      print('🔵 LocationProvider: Trying Google Geocoding API first...');
       
-      // Try using geocoding package first
+      // Try Google Geocoding API first for better results
+      final googleAddress = await _getAddressFromGoogleAPI(location);
+      if (googleAddress != null) {
+        print('🔵 LocationProvider: Google API success');
+        return googleAddress;
+      }
+      
+      print('🔵 LocationProvider: Falling back to geocoding package...');
+      
+      // Fallback to geocoding package
       List<Placemark> placemarks = await placemarkFromCoordinates(
         location.latitude,
         location.longitude,
@@ -288,6 +300,104 @@ class LocationNotifier extends StateNotifier<LocationState> {
       print('🔴 LocationProvider: Stack trace - $stackTrace');
       return _getDefaultAddress(location);
     }
+  }
+
+  Future<LocationAddress?> _getAddressFromGoogleAPI(LatLng location) async {
+    try {
+      final url = 'https://maps.googleapis.com/maps/api/geocode/json'
+          '?latlng=${location.latitude},${location.longitude}'
+          '&key=${ApiConstants.googleMapsApiKey}';
+
+      print('🔵 LocationProvider: Calling Google Geocoding API...');
+      
+      final response = await http.get(Uri.parse(url)).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('🔴 LocationProvider: Google API timeout');
+          throw Exception('Timeout');
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['status'] == 'OK' && data['results'] != null && data['results'].isNotEmpty) {
+          final result = data['results'][0];
+          final addressComponents = result['address_components'] as List<dynamic>?;
+          
+          if (addressComponents != null) {
+            String? streetNumber;
+            String? route;
+            String? sublocality;
+            String? locality;
+            String? adminArea1; // Province
+            String? adminArea2; // City
+            String? postalCode;
+            
+            for (var component in addressComponents) {
+              final types = component['types'] as List<dynamic>?;
+              final longName = component['long_name'] as String?;
+              
+              if (types != null && longName != null) {
+                if (types.contains('street_number')) {
+                  streetNumber = longName;
+                } else if (types.contains('route')) {
+                  route = longName;
+                } else if (types.contains('sublocality') || types.contains('sublocality_level_1')) {
+                  sublocality = longName;
+                } else if (types.contains('locality')) {
+                  locality = longName;
+                } else if (types.contains('administrative_area_level_1')) {
+                  adminArea1 = longName;
+                } else if (types.contains('administrative_area_level_2')) {
+                  adminArea2 = longName;
+                } else if (types.contains('postal_code')) {
+                  postalCode = longName;
+                }
+              }
+            }
+            
+            // Build street address
+            String? houseNumberStreet;
+            if (streetNumber != null && route != null) {
+              houseNumberStreet = '$streetNumber $route';
+            } else if (route != null) {
+              houseNumberStreet = route;
+            }
+            
+            // Build city/province
+            String cityProvince = '';
+            if (locality != null && adminArea1 != null) {
+              cityProvince = '$locality, $adminArea1';
+            } else if (adminArea2 != null && adminArea1 != null) {
+              cityProvince = '$adminArea2, $adminArea1';
+            } else if (locality != null) {
+              cityProvince = locality;
+            } else if (adminArea1 != null) {
+              cityProvince = adminArea1;
+            }
+            
+            final address = LocationAddress(
+              houseNumberStreet: houseNumberStreet,
+              subdivisionBarangay: sublocality,
+              cityProvince: cityProvince.isNotEmpty ? cityProvince : 'Philippines',
+              zipCode: postalCode,
+            );
+            
+            print('🔵 LocationProvider: Google API address - $cityProvince');
+            return address;
+          }
+        } else {
+          print('🔴 LocationProvider: Google API error: ${data['status']}');
+        }
+      } else {
+        print('🔴 LocationProvider: Google API HTTP error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('🔴 LocationProvider: Google API exception: $e');
+    }
+    
+    return null;
   }
 
   LocationAddress _getDefaultAddress(LatLng location) {
