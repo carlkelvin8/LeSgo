@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location for delivery tracking and navigation.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to your location for delivery tracking and navigation.</string>
+	<key>GMSApiKey</key>
+	<string>AIzaSyD3A8EoUI7NPPh3SNsxh_ZxxYKSZUzlsg4</string>
 </dict>
 </plist>
