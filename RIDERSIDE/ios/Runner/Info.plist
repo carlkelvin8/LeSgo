@@ -50,6 +50,6 @@
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app needs access to your location for delivery tracking and navigation.</string>
 	<key>GMSApiKey</key>
-	<string>AIzaSyD3A8EoUI7NPPh3SNsxh_ZxxYKSZUzlsg4</string>
+	<string>AIzaSyBekzwaPQ9H0Zu3y7XOyUkrM-ny4XdVZXA</string>
 </dict>
 </plist>

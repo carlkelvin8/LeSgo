@@ -8,6 +8,7 @@ import '../../../core/utils/utils.dart';
 import '../../../core/constants/routers/register/register_routes.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/constants/routers/app_router.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -124,7 +125,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              // TODO: Navigate to forgot password screen
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ForgotPasswordScreen(),
+                                ),
+                              );
                             },
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,

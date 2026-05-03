@@ -6,6 +6,7 @@ import '../../../../widgets/widgets.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import 'rider_bookings_map_view.dart';
+import '../../../../widgets/test/google_maps_debug_test.dart';
 
 class RiderBookingsView extends ConsumerStatefulWidget {
   const RiderBookingsView({super.key});
@@ -45,6 +46,23 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
                         ),
                       ),
                       const SizedBox(width: 12),
+                      // Debug button for Google Maps testing
+                      if (!kIsWeb)
+                        Expanded(
+                          child: _buildViewToggleButton(
+                            icon: Icons.bug_report,
+                            label: 'Debug Maps',
+                            isSelected: false,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const GoogleMapsDebugTest(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       Expanded(
                         child: _buildViewToggleButton(
                           icon: Icons.list,

@@ -93,11 +93,11 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
       userAddress = _selectedAddress!.addressLine1;
       dropoffLat = _selectedAddress!.latitude;
       dropoffLng = _selectedAddress!.longitude;
-      contactName = _selectedAddress!.contactName.isNotEmpty 
-          ? _selectedAddress!.contactName 
+      contactName = _selectedAddress!.contactName?.isNotEmpty == true 
+          ? _selectedAddress!.contactName! 
           : (profileState.user?.name ?? 'Customer');
-      contactPhone = _selectedAddress!.contactPhone.isNotEmpty 
-          ? _selectedAddress!.contactPhone 
+      contactPhone = _selectedAddress!.contactPhone?.isNotEmpty == true 
+          ? _selectedAddress!.contactPhone! 
           : (profileState.user?.phone ?? '+639123456789');
     } else {
       userAddress = profileState.address1.isNotEmpty 
@@ -320,14 +320,14 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       final dropoffLat = _selectedAddress?.latitude ?? 8.4542;
                       final dropoffLng = _selectedAddress?.longitude ?? 124.6319;
                       
-                      final dropoffContactName = _selectedAddress?.contactName.isNotEmpty == true
-                          ? _selectedAddress!.contactName
+                      final dropoffContactName = _selectedAddress?.contactName?.isNotEmpty == true
+                          ? _selectedAddress!.contactName!
                           : (user?.name ?? (profileState.name.isNotEmpty 
                               ? profileState.name 
                               : 'Customer'));
                       
-                      final dropoffContactPhone = _selectedAddress?.contactPhone.isNotEmpty == true
-                          ? _selectedAddress!.contactPhone
+                      final dropoffContactPhone = _selectedAddress?.contactPhone?.isNotEmpty == true
+                          ? _selectedAddress!.contactPhone!
                           : (user?.phone ?? '+639123456789');
 
                       // Prepare order items

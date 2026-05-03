@@ -16,7 +16,7 @@ class LocationControllers {
   GoogleMapController? fullscreenMapController;
   bool isFullscreen = false;
   bool _shouldMoveCameraOnExit = false;
-  bool isDefault = false;
+  bool isDefault = true; // Default to true so new addresses become the default
 
   LocationControllers()
     : formKey = GlobalKey<FormState>(),

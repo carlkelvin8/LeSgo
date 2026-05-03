@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -73,14 +74,31 @@ class LesrideLocationState {
 }
 
 class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
+  Timer? _routeDebounceTimer;
+  
   LesrideLocationNotifier() : super(LesrideLocationState());
+
+  @override
+  void dispose() {
+    _routeDebounceTimer?.cancel();
+    super.dispose();
+  }
 
   void reset() {
     state = LesrideLocationState(
-      routePolylines: {},
+      routePolylines: <Polyline>{}, // Explicitly clear polylines
       distanceInKm: null,
       durationInSeconds: null,
+      // Clear all locations to force fresh initialization
+      currentLocation: null,
+      selectedLocation: null,
+      pickupLocation: null,
+      destinationLocation: null,
+      address: null,
+      pickupAddress: null,
+      destinationAddress: null,
     );
+    print('🔄 LesRide: State reset - all polylines cleared');
   }
 
   Future<void> getCurrentLocation() async {
@@ -107,10 +125,28 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15), // Increased timeout
         ),
+      ).timeout(
+        const Duration(seconds: 15), // Increased timeout for better detection
+        onTimeout: () {
+          // Use default location (Manila) if timeout
+          throw Exception('Location request timed out');
+        },
       );
 
       final location = LatLng(position.latitude, position.longitude);
+      
+      // Check if location is in Philippines (rough bounds check)
+      bool isInPhilippines = (location.latitude >= 4.0 && location.latitude <= 21.0) &&
+                            (location.longitude >= 116.0 && location.longitude <= 127.0);
+      
+      if (!isInPhilippines) {
+        print('⚠️ Lesride: Detected location outside Philippines: $location, using Manila default');
+        throw Exception('Location outside Philippines bounds');
+      }
+      
+      print('✅ Lesride: Detected Philippines location: $location');
 
       final address = await _getAddressFromLocation(location);
 
@@ -123,12 +159,22 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         isLoading: false,
       );
 
-      // Fetch route if destination is already set
-      if (state.destinationLocation != null) {
-        await fetchRoute(location, state.destinationLocation!);
-      }
+      // DON'T fetch route here - only fetch when user confirms location
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      print('⚠️ Lesride: Error getting location, using Manila default: $e');
+      // Use default location (Manila, Philippines) - more central location
+      final defaultLocation = const LatLng(14.5995, 120.9842); // Manila coordinates
+      final address = await _getAddressFromLocation(defaultLocation);
+      
+      state = state.copyWith(
+        currentLocation: defaultLocation,
+        selectedLocation: defaultLocation,
+        pickupLocation: defaultLocation,
+        pickupAddress: address,
+        address: address,
+        isLoading: false,
+        error: null, // Clear error to allow user to continue
+      );
     }
   }
 
@@ -147,21 +193,23 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
       pickupAddress: address,
       address: address,
       isLoading: false,
+      // IMPORTANT: Clear route data when pickup changes
+      routePolylines: {},
+      distanceInKm: null,
+      durationInSeconds: null,
+      isLoadingRoute: false,
     );
-    // Fetch route if destination is already set
-    if (state.destinationLocation != null) {
-      await fetchRoute(location, state.destinationLocation!);
-    } else {
-      // Clear route if destination is removed
-      state = state.copyWith(
-        routePolylines: {},
-        distanceInKm: null,
-        durationInSeconds: null,
-      );
-    }
+    // DON'T fetch route here - only fetch when user confirms location
+    print('🚗 Lesride: Pickup updated, route cleared. User must confirm to calculate route.');
   }
 
   Future<void> updateDestination(LatLng location) async {
+    print('🚗 Lesride: updateDestination called with: $location');
+    print('🚗 Lesride: Stack trace: ${StackTrace.current}');
+    
+    // Cancel any pending route calculations to prevent loops
+    _routeDebounceTimer?.cancel();
+    
     state = state.copyWith(selectedLocation: location, isLoading: true);
     final address = await _getAddressFromLocation(location);
     state = state.copyWith(
@@ -169,11 +217,14 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
       destinationAddress: address,
       address: address,
       isLoading: false,
+      // IMPORTANT: Clear route data when destination changes
+      routePolylines: {},
+      distanceInKm: null,
+      durationInSeconds: null,
+      isLoadingRoute: false,
     );
-    // Fetch route if pickup is already set
-    if (state.pickupLocation != null) {
-      await fetchRoute(state.pickupLocation!, location);
-    }
+    // DON'T fetch route here - only fetch when user confirms location
+    print('🚗 Lesride: Destination updated, route cleared. User must confirm to calculate route.');
   }
 
   Future<void> updateDestinationWithAddress(
@@ -181,6 +232,11 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
     String? formattedAddress,
     Map<String, String>? addressComponents,
   ) async {
+    print('🚗 updateDestinationWithAddress called with: $location');
+    
+    // Cancel any pending route calculations to prevent loops
+    _routeDebounceTimer?.cancel();
+    
     state = state.copyWith(selectedLocation: location, isLoading: true);
     LocationAddress? address;
 
@@ -204,11 +260,15 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
       destinationAddress: address,
       address: address,
       isLoading: false,
+      // Clear route data when destination changes
+      routePolylines: {},
+      distanceInKm: null,
+      durationInSeconds: null,
+      isLoadingRoute: false,
     );
-    // Fetch route if pickup is already set
-    if (state.pickupLocation != null) {
-      await fetchRoute(state.pickupLocation!, location);
-    }
+    // DON'T fetch route here - only fetch when user confirms location
+    // Route will be fetched in confirmSelection() or when explicitly called
+    print('🚗 Lesride: Destination updated with address, route cleared.');
   }
 
   Future<void> updatePickupWithAddress(
@@ -240,17 +300,13 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
       address: address,
       isLoading: false,
     );
-    // Fetch route if destination is already set
-    if (state.destinationLocation != null) {
-      await fetchRoute(location, state.destinationLocation!);
-    } else {
-      // Clear route if destination is removed
-      state = state.copyWith(
-        routePolylines: {},
-        distanceInKm: null,
-        durationInSeconds: null,
-      );
-    }
+    // DON'T fetch route here - only fetch when user confirms location
+    // Clear route since pickup changed
+    state = state.copyWith(
+      routePolylines: {},
+      distanceInKm: null,
+      durationInSeconds: null,
+    );
   }
 
   LocationAddress? _parseAddressComponents(Map<String, String> components) {
@@ -352,18 +408,85 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
     }
   }
 
-  /// Fetches route between current pickup and destination if both are set
-  Future<void> fetchRouteIfBothSet() async {
-    if (state.pickupLocation != null && state.destinationLocation != null) {
-      await fetchRoute(state.pickupLocation!, state.destinationLocation!);
+  /// Debug method to test route calculation with Manila locations
+  Future<void> testRouteWithManilaLocations() async {
+    print('🧪 Testing route with Manila locations...');
+    
+    // Set test locations in Manila
+    final pickup = const LatLng(14.5995, 120.9842); // Manila City Hall
+    final destination = const LatLng(14.6042, 120.9822); // Intramuros
+    
+    print('🧪 Setting pickup: $pickup');
+    print('🧪 Setting destination: $destination');
+    
+    state = state.copyWith(
+      pickupLocation: pickup,
+      destinationLocation: destination,
+      pickupAddress: LocationAddress(
+        houseNumberStreet: null,
+        subdivisionBarangay: 'Ermita',
+        cityProvince: 'Manila, Metro Manila',
+        zipCode: '1000',
+      ),
+      destinationAddress: LocationAddress(
+        houseNumberStreet: null,
+        subdivisionBarangay: 'Intramuros',
+        cityProvince: 'Manila, Metro Manila',
+        zipCode: '1002',
+      ),
+    );
+    
+    // Force route calculation
+    print('🧪 Forcing route calculation...');
+    await fetchRoute(pickup, destination, forceAllow: true);
+    
+    // Debug result
+    print('🧪 Test complete - polylines: ${state.routePolylines.length}');
+    if (state.routePolylines.isNotEmpty) {
+      final polyline = state.routePolylines.first;
+      print('🧪 Polyline color: ${polyline.color}, points: ${polyline.points.length}');
     }
   }
 
-  Future<void> fetchRoute(LatLng origin, LatLng destination) async {
+  /// Fetches route between current pickup and destination if both are set
+  Future<void> fetchRouteIfBothSet({bool forceAllow = false}) async {
+    print('🔍 Lesride: fetchRouteIfBothSet called with forceAllow: $forceAllow');
+    print('🔍 Lesride: Stack trace: ${StackTrace.current}');
+    
+    if (state.pickupLocation != null && state.destinationLocation != null) {
+      await fetchRoute(state.pickupLocation!, state.destinationLocation!, forceAllow: forceAllow);
+    } else {
+      print('🔍 Lesride: Missing locations - pickup: ${state.pickupLocation != null}, destination: ${state.destinationLocation != null}');
+    }
+  }
+
+  Future<void> fetchRoute(LatLng origin, LatLng destination, {bool forceAllow = false}) async {
+    // STRICT: ONLY allow route fetching if explicitly forced AND not from automatic triggers
+    if (!forceAllow) {
+      print('🚫 Lesride: Route fetch BLOCKED - must be from manual confirmation only');
+      return;
+    }
+    
+    // Additional check: prevent rapid successive calls
+    if (state.isLoadingRoute) {
+      print('🚫 Lesride: Route fetch BLOCKED - already loading');
+      return;
+    }
+    
+    print('✅ Lesride: Route fetch ALLOWED from manual confirmation');
+    
+    // Cancel any existing debounce timer
+    _routeDebounceTimer?.cancel();
+    
     if (origin == destination) {
       state = state.copyWith(routePolylines: {}, isLoadingRoute: false);
       return;
     }
+
+    await _performRouteCalculation(origin, destination);
+  }
+
+  Future<void> _performRouteCalculation(LatLng origin, LatLng destination) async {
 
     state = state.copyWith(isLoadingRoute: true, error: null);
 
@@ -377,10 +500,93 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         return;
       }
 
-      // Temporarily disable directions API to avoid CORS issues
-      // TODO: Implement proper directions API integration
+      // Use backend proxy to get directions
+      final originStr = '${origin.latitude},${origin.longitude}';
+      final destinationStr = '${destination.latitude},${destination.longitude}';
       
-      // For now, just calculate straight-line distance
+      final url = Uri.parse(
+        '${ApiConstants.baseUrl}/v1/google-places/directions'
+        '?origin=$originStr&destination=$destinationStr',
+      );
+
+      print('🚗 Fetching route from: $url');
+      final response = await http.get(url);
+      print('🚗 Response status: ${response.statusCode}');
+      print('🚗 Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('🚗 Decoded data status: ${data['status']}');
+        
+        if (data['status'] == 'OK' && data['routes'] != null && (data['routes'] as List).isNotEmpty) {
+          final route = data['routes'][0];
+          final polylineEncoded = route['overview_polyline']['points'];
+          print('🚗 Polyline encoded: ${polylineEncoded.substring(0, 50)}...');
+          final List<LatLng> polylinePoints = _decodePolyline(polylineEncoded);
+          print('🚗 Decoded ${polylinePoints.length} points');
+
+          // Get distance and duration from the route
+          final leg = route['legs'][0];
+          final distanceInMeters = leg['distance']['value'];
+          final durationInSeconds = leg['duration']['value'];
+          print('🚗 Distance: ${distanceInMeters}m, Duration: ${durationInSeconds}s');
+
+          // Use ALL decoded polyline points for accurate route following roads
+          print('🚗 Using all ${polylinePoints.length} points for accurate road-following route');
+
+          // Create polyline that follows actual roads
+          final polyline = Polyline(
+            polylineId: const PolylineId('route'),
+            points: polylinePoints, // Use ALL decoded points from Google Directions
+            color: const Color(0xFF1976D2), // Blue color for visibility
+            width: 6, // Medium thickness
+            geodesic: true, // Enable geodesic for proper road curvature
+            patterns: [], // Solid line
+          );
+
+          state = state.copyWith(
+            routePolylines: {polyline},
+            distanceInKm: distanceInMeters / 1000.0,
+            durationInSeconds: durationInSeconds,
+            isLoadingRoute: false,
+            error: null,
+          );
+          print('🚗 Route updated successfully with ${polylinePoints.length} road-following points!');
+        } else {
+          print('🚗 No valid route found, using fallback');
+          // Fallback to straight line if no route found
+          final double distanceInKm = Geolocator.distanceBetween(
+            origin.latitude,
+            origin.longitude,
+            destination.latitude,
+            destination.longitude,
+          ) / 1000.0;
+
+          // Fallback: Use straight line only if no route data available
+          final polyline = Polyline(
+            polylineId: const PolylineId('route'),
+            points: [origin, destination],
+            color: const Color(0xFF1976D2), // Blue color
+            width: 6, // Medium thickness
+            geodesic: true, // Enable geodesic
+            patterns: [PatternItem.dash(20), PatternItem.gap(10)], // Dashed for fallback
+          );
+
+          state = state.copyWith(
+            routePolylines: {polyline},
+            distanceInKm: distanceInKm,
+            durationInSeconds: (distanceInKm * 180).round(),
+            isLoadingRoute: false,
+            error: null,
+          );
+        }
+      } else {
+        throw Exception('Failed to fetch route: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching route: $e');
+      
+      // Fallback to straight line on error
       final double distanceInKm = Geolocator.distanceBetween(
         origin.latitude,
         origin.longitude,
@@ -388,25 +594,23 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         destination.longitude,
       ) / 1000.0;
 
-      // Create a simple straight line polyline
+      // Fallback: Use straight line on error
       final polyline = Polyline(
         polylineId: const PolylineId('route'),
         points: [origin, destination],
-        color: const Color(0xFF7C3AED),
-        width: 6,
-        patterns: [PatternItem.dash(20), PatternItem.gap(10)], // Dashed line to indicate it's not a real route
-        geodesic: true,
+        color: const Color(0xFF1976D2), // Blue color
+        width: 6, // Medium thickness
+        geodesic: true, // Enable geodesic
+        patterns: [PatternItem.dash(20), PatternItem.gap(10)], // Dashed for error
       );
 
       state = state.copyWith(
         routePolylines: {polyline},
         distanceInKm: distanceInKm,
-        durationInSeconds: (distanceInKm * 180).round(), // Rough estimate: 3 min per km = 180 sec per km
+        durationInSeconds: (distanceInKm * 180).round(),
         isLoadingRoute: false,
-        error: null,
+        error: e.toString(),
       );
-    } catch (e) {
-      state = state.copyWith(isLoadingRoute: false, error: e.toString());
     }
   }
 
@@ -419,39 +623,60 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
     int lat = 0;
     int lng = 0;
 
-    while (index < len) {
-      // Decode latitude
-      int shift = 0;
-      int result = 0;
-      int b;
-      do {
-        if (index >= len) break;
-        b = encoded.codeUnitAt(index++) - 63;
-        result += (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20 && index < len);
-      int dlat = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
-      lat += dlat;
+    try {
+      while (index < len) {
+        // Decode latitude
+        int shift = 0;
+        int result = 0;
+        int b;
+        do {
+          if (index >= len) break;
+          b = encoded.codeUnitAt(index++) - 63;
+          result += (b & 0x1f) << shift;
+          shift += 5;
+        } while (b >= 0x20 && index < len);
+        int dlat = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
+        lat += dlat;
 
-      // Decode longitude
-      shift = 0;
-      result = 0;
-      do {
-        if (index >= len) break;
-        b = encoded.codeUnitAt(index++) - 63;
-        result += (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20 && index < len);
-      int dlng = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
-      lng += dlng;
+        // Decode longitude
+        shift = 0;
+        result = 0;
+        do {
+          if (index >= len) break;
+          b = encoded.codeUnitAt(index++) - 63;
+          result += (b & 0x1f) << shift;
+          shift += 5;
+        } while (b >= 0x20 && index < len);
+        int dlng = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
+        lng += dlng;
 
-      points.add(LatLng(lat / 1e5, lng / 1e5));
+        // Add decoded point
+        final latLng = LatLng(lat / 1e5, lng / 1e5);
+        points.add(latLng);
+      }
+      
+      print('🗺️ Successfully decoded ${points.length} route points');
+      if (points.length >= 2) {
+        print('🗺️ Route from ${points.first} to ${points.last}');
+      }
+    } catch (e) {
+      print('🔴 Error decoding polyline: $e');
     }
+    
     return points;
   }
 
   Future<LocationAddress?> _getAddressFromLocation(LatLng location) async {
     try {
+      print('🔍 LesrideLocation: Reverse geocoding for: $location');
+      
+      // Try Google Geocoding API first (more reliable and detailed)
+      final googleAddress = await _getAddressFromGoogleAPI(location);
+      if (googleAddress != null) {
+        return googleAddress;
+      }
+      
+      // Fallback to geocoding package
       List<Placemark> placemarks = await placemarkFromCoordinates(
         location.latitude,
         location.longitude,
@@ -479,8 +704,127 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         return address;
       }
     } catch (e) {
-      // Handle geocoding errors silently
+      print('🔴 LesrideLocation: Geocoding error: $e');
     }
+    return null;
+  }
+
+  Future<LocationAddress?> _getAddressFromGoogleAPI(LatLng location) async {
+    try {
+      // Check if we have a Google Maps API key
+      if (ApiConstants.googleMapsApiKey.isEmpty || 
+          ApiConstants.googleMapsApiKey == 'YOUR_GOOGLE_MAPS_API_KEY') {
+        print('🔴 LesrideLocation: No Google Maps API key configured');
+        return null;
+      }
+
+      final url = 'https://maps.googleapis.com/maps/api/geocode/json'
+          '?latlng=${location.latitude},${location.longitude}'
+          '&key=${ApiConstants.googleMapsApiKey}';
+
+      print('🔍 LesrideLocation: Calling Google Geocoding API...');
+      
+      final response = await http.get(Uri.parse(url)).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('🔴 LesrideLocation: Google API timeout');
+          throw Exception('Timeout');
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        print('🔍 LesrideLocation: Google API response status: ${data['status']}');
+        
+        if (data['status'] == 'OK' && data['results'] != null && data['results'].isNotEmpty) {
+          final results = data['results'] as List<dynamic>;
+          
+          // Try to find the most detailed result (with route/street information)
+          dynamic bestResult;
+          int bestScore = 0;
+          
+          for (var result in results) {
+            final types = result['types'] as List<dynamic>?;
+            final addressComponents = result['address_components'] as List<dynamic>?;
+            int score = 0;
+            
+            // Prioritize results with street/route information
+            if (types != null) {
+              if (types.contains('street_address')) score += 100;
+              if (types.contains('premise')) score += 90;
+              if (types.contains('route')) score += 80;
+              if (types.contains('sublocality')) score += 70;
+              if (types.contains('locality')) score += 50;
+              // Deprioritize plus_code only results
+              if (types.contains('plus_code') && types.length == 1) score -= 50;
+            }
+            
+            // Check if it has route/street in address components
+            if (addressComponents != null) {
+              for (var component in addressComponents) {
+                final componentTypes = component['types'] as List<dynamic>?;
+                if (componentTypes != null) {
+                  if (componentTypes.contains('route')) score += 30;
+                  if (componentTypes.contains('street_number')) score += 20;
+                  if (componentTypes.contains('sublocality_level_1')) score += 15;
+                  if (componentTypes.contains('sublocality_level_2')) score += 10;
+                }
+              }
+            }
+            
+            if (score > bestScore) {
+              bestScore = score;
+              bestResult = result;
+            }
+          }
+          
+          // Use the best result found
+          if (bestResult != null) {
+            final formattedAddress = bestResult['formatted_address'] as String?;
+            
+            print('🔍 LesrideLocation: Using best result with score $bestScore: $formattedAddress');
+            
+            // Use formatted address parsing
+            if (formattedAddress != null && formattedAddress.isNotEmpty) {
+              // Use the most detailed part of the formatted address
+              final addressParts = formattedAddress.split(',').map((e) => e.trim()).toList();
+              
+              // Remove "Philippines" if it's the last part
+              if (addressParts.isNotEmpty && addressParts.last.toLowerCase().contains('philippines')) {
+                addressParts.removeLast();
+              }
+              
+              // Take the first 2-3 most specific parts
+              String detailedAddress;
+              if (addressParts.length >= 3) {
+                detailedAddress = addressParts.take(3).join(', ');
+              } else if (addressParts.length >= 2) {
+                detailedAddress = addressParts.take(2).join(', ');
+              } else {
+                detailedAddress = addressParts.isNotEmpty ? addressParts[0] : formattedAddress;
+              }
+              
+              print('🔍 LesrideLocation: Using detailed address: $detailedAddress');
+              
+              return LocationAddress(
+                houseNumberStreet: null,
+                subdivisionBarangay: null,
+                cityProvince: detailedAddress,
+                zipCode: null,
+              );
+            }
+          }
+        } else {
+          print('🔴 LesrideLocation: Google API error: ${data['status']}');
+        }
+      } else {
+        print('🔴 LesrideLocation: Google API HTTP error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('🔴 LesrideLocation: Google API exception: $e');
+    }
+    
     return null;
   }
 }

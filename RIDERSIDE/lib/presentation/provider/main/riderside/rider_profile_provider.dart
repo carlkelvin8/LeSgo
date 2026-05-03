@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../core/services/api_service.dart';
@@ -77,7 +78,8 @@ class RiderProfileNotifier extends StateNotifier<RiderProfileState> {
         if (picPath.startsWith('http://') || picPath.startsWith('https://')) {
           profilePicUrl = picPath;
         } else {
-          profilePicUrl = 'http://127.0.0.1:8000/serve-image.php?path=$picPath';
+          String baseImageUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
+          profilePicUrl = '$baseImageUrl/serve-image.php?path=$picPath';
         }
       }
 

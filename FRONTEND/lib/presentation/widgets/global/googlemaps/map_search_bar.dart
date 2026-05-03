@@ -55,22 +55,50 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
       _showResults = true;
     });
 
-    // For now, disable search to avoid CORS issues
-    // TODO: Implement proper Places API integration
-    setState(() {
-      _searchResults = [];
-      _isSearching = false;
-      _showResults = false;
-    });
-    
-    // Show a message that search is temporarily disabled
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Search temporarily disabled. Please tap on the map to select location.'),
-          duration: Duration(seconds: 2),
-        ),
+    try {
+      // Use backend proxy to avoid CORS issues
+      final url = Uri.parse(
+        '${ApiConstants.baseUrl}/v1/google-places/autocomplete'
+        '?input=${Uri.encodeComponent(query)}',
       );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['status'] == 'OK') {
+          final predictions = data['predictions'] as List;
+          
+          setState(() {
+            _searchResults = predictions.map((prediction) {
+              return {
+                'place_id': prediction['place_id'],
+                'description': prediction['description'],
+                'main_text': prediction['structured_formatting']['main_text'],
+                'secondary_text': prediction['structured_formatting']['secondary_text'],
+              };
+            }).toList();
+            _isSearching = false;
+          });
+        } else {
+          setState(() {
+            _searchResults = [];
+            _isSearching = false;
+          });
+        }
+      } else {
+        setState(() {
+          _searchResults = [];
+          _isSearching = false;
+        });
+      }
+    } catch (e) {
+      print('Error searching places: $e');
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
     }
   }
 
@@ -78,11 +106,112 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
     _searchController.text = place['description'];
     setState(() {
       _showResults = false;
+      _isSearching = true;
     });
     _focusNode.unfocus();
 
-    // For now, disable place selection to avoid CORS issues
-    // TODO: Implement proper Places API integration
+    try {
+      // Get place details using backend proxy
+      final placeId = place['place_id'];
+      final url = Uri.parse(
+        '${ApiConstants.baseUrl}/v1/google-places/details'
+        '?place_id=$placeId',
+      );
+
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['status'] == 'OK') {
+          final result = data['result'];
+          final geometry = result['geometry'];
+          final location = geometry['location'];
+          final lat = location['lat'];
+          final lng = location['lng'];
+          
+          final latLng = LatLng(lat, lng);
+          final formattedAddress = result['formatted_address'];
+          
+          // Parse address components
+          final addressComponents = <String, String>{};
+          final components = result['address_components'] as List;
+          
+          for (var component in components) {
+            final types = component['types'] as List;
+            final longName = component['long_name'];
+            
+            if (types.contains('street_number')) {
+              addressComponents['street_number'] = longName;
+            } else if (types.contains('route')) {
+              addressComponents['route'] = longName;
+            } else if (types.contains('locality')) {
+              addressComponents['city'] = longName;
+            } else if (types.contains('administrative_area_level_1')) {
+              addressComponents['province'] = longName;
+            } else if (types.contains('country')) {
+              addressComponents['country'] = longName;
+            } else if (types.contains('postal_code')) {
+              addressComponents['postal_code'] = longName;
+            } else if (types.contains('sublocality') || types.contains('sublocality_level_1')) {
+              addressComponents['barangay'] = longName;
+            }
+          }
+          
+          // Animate to location if callback provided
+          if (widget.onAnimateToLocation != null) {
+            await widget.onAnimateToLocation!(latLng);
+          }
+          
+          // Call the callback with location and address
+          widget.onPlaceSelected(latLng, formattedAddress, addressComponents);
+          
+          setState(() {
+            _isSearching = false;
+          });
+        } else {
+          setState(() {
+            _isSearching = false;
+          });
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to get place details: ${data['status']}'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      } else {
+        setState(() {
+          _isSearching = false;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to get place details'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error getting place details: $e');
+      setState(() {
+        _isSearching = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -96,8 +225,8 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
             left: ResponsiveUtils.spacing(context, 16),
             right: ResponsiveUtils.spacing(
               context,
-              64,
-            ), // Space for close button (40px button + 16px spacing + 8px gap)
+              80, // Increased from 64 for better spacing with close button
+            ),
           ),
           height: 40, // Match X button height exactly
           decoration: BoxDecoration(
@@ -113,56 +242,59 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
             ],
           ),
           alignment: Alignment.center,
-          child: TextField(
-            controller: _searchController,
-            focusNode: _focusNode,
-            onChanged: _searchPlaces,
-            textAlignVertical: TextAlignVertical.center,
-            decoration: InputDecoration(
-              hintText: 'Search place',
-              hintStyle: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 16),
-                color: Colors.grey[600],
-              ),
-              prefixIcon: const Icon(Icons.search, color: Color(0xFF5F2D82)),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.grey),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _searchResults = [];
-                          _showResults = false;
-                        });
-                      },
-                    )
-                  : _isSearching
-                  ? const Padding(
-                      padding: EdgeInsets.all(12.0),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Color(0xFF5F2D82),
+          child: IgnorePointer(
+            ignoring: false, // Allow interactions with the search bar
+            child: TextField(
+              controller: _searchController,
+              focusNode: _focusNode,
+              onChanged: _searchPlaces,
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                hintText: 'Search place',
+                hintStyle: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 16),
+                  color: Colors.grey[600],
+                ),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF5F2D82)),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchResults = [];
+                            _showResults = false;
+                          });
+                        },
+                      )
+                    : _isSearching
+                    ? const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF5F2D82),
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  : null,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: ResponsiveUtils.spacing(context, 16),
-                vertical: 0,
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveUtils.spacing(context, 16),
+                  vertical: 0,
+                ),
+                isDense: true,
               ),
-              isDense: true,
-            ),
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              height: 1.0, // Remove extra line height
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 16),
+                height: 1.0, // Remove extra line height
+              ),
             ),
           ),
         ),
@@ -172,8 +304,8 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
               left: ResponsiveUtils.spacing(context, 16),
               right: ResponsiveUtils.spacing(
                 context,
-                64,
-              ), // Space for close button
+                80, // Match search bar margin
+              ),
               top: ResponsiveUtils.spacing(context, 4),
             ),
             decoration: BoxDecoration(

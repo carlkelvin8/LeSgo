@@ -76,7 +76,13 @@ class ProfileEditSection extends ConsumerWidget {
       child: SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: () => controllers.updateProfile(context, ref),
+          onPressed: () {
+            print('🔵 ProfileEditSection: Save Profile button pressed');
+            print('🔵 ProfileEditSection: Stack trace:');
+            print(StackTrace.current);
+            controllers.updateProfile(context, ref);
+          },
+          autofocus: false, // Prevent auto-focus
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF5F2D82),
             padding: EdgeInsets.symmetric(

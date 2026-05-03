@@ -92,11 +92,23 @@ class ProfileHeader extends StatelessWidget {
                 ),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 16)),
-              GestureDetector(
-                onTap: onImageTap,
-                child: SizedBox(
+              InkWell(
+                onTap: onImageTap != null
+                    ? () {
+                        print('🔵 ProfileHeader: Profile image tapped!');
+                        print('🔵 ProfileHeader: Calling onImageTap callback...');
+                        onImageTap!();
+                      }
+                    : null,
+                // Prevent tap from propagating to widgets below
+                excludeFromSemantics: false,
+                child: Container(
                   width: ResponsiveUtils.spacing(context, 90),
                   height: ResponsiveUtils.spacing(context, 90),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blue, width: 2), // Debug border
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: profileImageUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
@@ -104,13 +116,45 @@ class ProfileHeader extends StatelessWidget {
                               ? Image.network(
                                   profileImageUrl!,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
+                                  width: ResponsiveUtils.spacing(context, 90),
+                                  height: ResponsiveUtils.spacing(context, 90),
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) {
+                                      print('🔵 ProfileHeader: Image loaded successfully from: $profileImageUrl');
+                                      return child;
+                                    }
+                                    print('🔵 ProfileHeader: Loading image from: $profileImageUrl');
                                     return Container(
-                                      color: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.person,
-                                        color: Colors.grey,
-                                        size: 40,
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Color(0xFF5F2D82),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    print('🔴 ProfileHeader: Failed to load image from: $profileImageUrl');
+                                    print('🔴 ProfileHeader: Error: $error');
+                                    return Container(
+                                      color: Colors.red[100],
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.error,
+                                            color: Colors.red,
+                                            size: 40,
+                                          ),
+                                          Text(
+                                            'Error',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.red[900],
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     );
                                   },
@@ -118,7 +162,11 @@ class ProfileHeader extends StatelessWidget {
                               : Image.file(
                                   File(profileImageUrl!),
                                   fit: BoxFit.cover,
+                                  width: ResponsiveUtils.spacing(context, 90),
+                                  height: ResponsiveUtils.spacing(context, 90),
                                   errorBuilder: (context, error, stackTrace) {
+                                    print('🔴 ProfileHeader: Failed to load image file: $profileImageUrl');
+                                    print('🔴 ProfileHeader: Error: $error');
                                     return Container(
                                       color: Colors.grey[300],
                                       child: const Icon(

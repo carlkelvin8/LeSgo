@@ -1,21 +1,23 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart';
 
-const String _baseUrl = 'http://127.0.0.1:8000/api';
 const String _tokenKey = 'rider_token';
 
 class ApiService {
-  static final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
-    ),
-  )..interceptors.add(
+  static String get _baseUrl => kIsWeb ? 'http://127.0.0.1:8000/api' : 'http://10.0.2.2:8000/api';
+  
+  static final Dio _dio = Dio()..interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Set base URL dynamically
+          options.baseUrl = _baseUrl;
+          options.connectTimeout = const Duration(seconds: 15);
+          options.receiveTimeout = const Duration(seconds: 15);
+          options.headers['Accept'] = 'application/json';
+          options.headers['Content-Type'] = 'application/json';
+          
           final token = await getToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
@@ -143,13 +145,67 @@ class ApiService {
     return res.data as Map<String, dynamic>;
   }
 
-  /// PATCH /v1/drivers/{id}/location
+  /// POST /v1/tracking/driver/location - Update driver location for tracking
   static Future<void> updateDriverLocation(
       int driverProfileId, double lat, double lng) async {
-    await _dio.patch(
-      '/v1/drivers/$driverProfileId/location',
-      data: {'last_latitude': lat, 'last_longitude': lng},
-    );
+    try {
+      await _dio.post(
+        '/v1/tracking/driver/location',
+        data: {
+          'driver_id': driverProfileId,
+          'latitude': lat,
+          'longitude': lng,
+          'status': 'online',
+        },
+      );
+      print('✅ Driver location updated: $lat, $lng');
+    } catch (e) {
+      print('❌ Error updating driver location: $e');
+      rethrow;
+    }
+  }
+
+  /// GET /v1/tracking/order/{id}/live - Get live order tracking data
+  static Future<Map<String, dynamic>?> getLiveOrderTracking(int orderId) async {
+    try {
+      final res = await _dio.get('/v1/tracking/order/$orderId/live');
+      return res.data as Map<String, dynamic>;
+    } catch (e) {
+      print('❌ Error getting live tracking: $e');
+      return null;
+    }
+  }
+
+  /// GET /v1/tracking/order/{id}/eta - Get order ETA
+  static Future<Map<String, dynamic>?> getOrderETA(int orderId) async {
+    try {
+      final res = await _dio.get('/v1/tracking/order/$orderId/eta');
+      return res.data as Map<String, dynamic>;
+    } catch (e) {
+      print('❌ Error getting ETA: $e');
+      return null;
+    }
+  }
+
+  /// GET /v1/tracking/route - Get route polyline between two points
+  static Future<Map<String, dynamic>?> getRoute({
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
+  }) async {
+    try {
+      final res = await _dio.get('/v1/tracking/route', queryParameters: {
+        'origin_lat': originLat,
+        'origin_lng': originLng,
+        'dest_lat': destLat,
+        'dest_lng': destLng,
+      });
+      return res.data as Map<String, dynamic>;
+    } catch (e) {
+      print('❌ Error getting route: $e');
+      return null;
+    }
   }
 
   /// GET /v1/auth/me

@@ -5,6 +5,7 @@ import '../../../core/di/injection.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/entities/auth/login/login_request.dart';
 import '../../../data/data_source/user_remote_datasource.dart';
+import '../../../data/data_source/auth_remote_datasource.dart';
 import '../../../domain/repository/user_repository.dart';
 import '../../../domain/use_cases/login_usecase.dart';
 import '../../../domain/use_cases/logout_usecase.dart';
@@ -115,6 +116,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 // -----------------------------------------------------------------------------
 // Dependency Injection Providers
 // -----------------------------------------------------------------------------
+
+final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
+  return getIt<AuthRemoteDataSource>();
+});
 
 final userRemoteDataSourceProvider = Provider<UserRemoteDataSource>((ref) {
   return getIt<UserRemoteDataSource>();

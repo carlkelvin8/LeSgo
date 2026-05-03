@@ -282,9 +282,9 @@ class _AddressItem extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (address.contactName.isNotEmpty)
+                  if (address.contactName?.isNotEmpty == true)
                     Text(
-                      '${address.contactName} · ${address.contactPhone}',
+                      '${address.contactName ?? ''} · ${address.contactPhone ?? ''}',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 11),

@@ -273,6 +273,8 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
   }
 
   Future<void> confirmSelection() async {
+    print('🔵 LesRide: confirmSelection() called - this is the ONLY place routes should be calculated');
+    
     // Selection already stored in provider on tap; just close overlay
     state = state.copyWith(
       isFullscreen: false,
@@ -280,11 +282,20 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
       pendingFit: true,
     );
 
-    // Ensure route is fetched if both locations are set
+    // ONLY fetch route here - nowhere else
     final locationState = _ref.read(lesrideLocationProvider);
+    print('🔵 LesRide: confirmSelection - pickup: ${locationState.pickupLocation}, destination: ${locationState.destinationLocation}');
+    
     if (locationState.pickupLocation != null &&
         locationState.destinationLocation != null) {
-      await _ref.read(lesrideLocationProvider.notifier).fetchRouteIfBothSet();
+      print('🔵 LesRide: Calling fetchRouteIfBothSet - MANUAL CONFIRMATION');
+      await _ref.read(lesrideLocationProvider.notifier).fetchRouteIfBothSet(forceAllow: true);
+      
+      // Debug: Check if route was created
+      final updatedState = _ref.read(lesrideLocationProvider);
+      print('🔵 LesRide: After route fetch - polylines: ${updatedState.routePolylines.length}');
+    } else {
+      print('🔵 LesRide: Missing locations for route calculation');
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => fitBoundsOrSelected());
@@ -318,16 +329,8 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
   ) {
     updateCamera(next);
 
-    // Auto-fetch route when both locations are set
-    if (next.pickupLocation != null &&
-        next.destinationLocation != null &&
-        (previous?.pickupLocation != next.pickupLocation ||
-            previous?.destinationLocation != next.destinationLocation)) {
-      // Only fetch if locations changed and route is not already loading
-      if (!next.isLoadingRoute && next.routePolylines.isEmpty) {
-        _ref.read(lesrideLocationProvider.notifier).fetchRouteIfBothSet();
-      }
-    }
+    // DON'T auto-fetch route on location change
+    // Route will be fetched only when user confirms location via confirmSelection()
   }
 
   // Handle post-frame callbacks for pending operations

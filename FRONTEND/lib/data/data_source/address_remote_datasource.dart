@@ -63,12 +63,23 @@ class AddressRemoteDataSource {
   Future<AddressResponseDto> createAddress(CreateAddressRequestDto request) async {
     final dio = _dioClient.dio;
     try {
+      print('🔵 AddressRemoteDataSource: Creating address...');
+      print('🔵 AddressRemoteDataSource: Request data: ${request.toJson()}');
+      
       final response = await dio.post(
         '/v1/addresses',
         data: request.toJson(),
       );
+      
+      print('🔵 AddressRemoteDataSource: Response status: ${response.statusCode}');
+      print('🔵 AddressRemoteDataSource: Response data: ${response.data}');
+      
       return AddressResponseDto.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
+      print('🔴 AddressRemoteDataSource: DioException - ${e.message}');
+      print('🔴 AddressRemoteDataSource: Response: ${e.response?.data}');
+      print('🔴 AddressRemoteDataSource: Status code: ${e.response?.statusCode}');
+      
       if (e.response != null && e.response?.data != null) {
         if (e.response?.data is Map<String, dynamic>) {
           return AddressResponseDto.fromJson(
@@ -80,6 +91,7 @@ class AddressRemoteDataSource {
         e.message ?? 'An unexpected network error occurred',
       );
     } catch (e) {
+      print('🔴 AddressRemoteDataSource: Exception - $e');
       return AddressResponseDto.withError(e.toString());
     }
   }

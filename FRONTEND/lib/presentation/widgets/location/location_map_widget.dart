@@ -65,7 +65,7 @@ class LocationMapWidget extends ConsumerWidget {
       onMapCreated: onMapCreated,
       initialCameraPosition: CameraPosition(
         target:
-            locationState.selectedLocation ?? const LatLng(14.5995, 120.9842),
+            locationState.selectedLocation ?? const LatLng(8.4542, 124.6319), // Cagayan de Oro default
         zoom: 16.0,
       ),
       onTap: onMapTap,

@@ -315,10 +315,11 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     );
 
     // Ensure route is fetched if both locations are set
+    // IMPORTANT: Pass forceAllow: true to allow route fetching from confirmation
     if (locationState.pickupLocation != null &&
         locationState.destinationLocation != null) {
-      print('🔍 LesGo: Both locations set, fetching route');
-      await _ref.read(lesgoLocationProvider.notifier).fetchRouteIfBothSet();
+      print('🔍 LesGo: Both locations set, fetching route with forceAllow: true');
+      await _ref.read(lesgoLocationProvider.notifier).fetchRouteIfBothSet(forceAllow: true);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => fitBoundsOrSelected());
@@ -387,16 +388,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   ) {
     updateCamera(next);
 
-    // Auto-fetch route when both locations are set
-    if (next.pickupLocation != null &&
-        next.destinationLocation != null &&
-        (previous?.pickupLocation != next.pickupLocation ||
-            previous?.destinationLocation != next.destinationLocation)) {
-      // Only fetch if locations changed and route is not already loading
-      if (!next.isLoadingRoute && next.routePolylines.isEmpty) {
-        _ref.read(lesgoLocationProvider.notifier).fetchRouteIfBothSet();
-      }
-    }
+    // DON'T auto-fetch route on location change
+    // Route will be fetched only when user confirms location via confirmSelection()
   }
 
   // Handle post-frame callbacks for pending operations
@@ -516,11 +509,11 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
                  (updatedLocationState.pickupLocation?.latitude ?? 8.4542),
             lng: state.selectedPickupAddress?.longitude ?? 
                  (updatedLocationState.pickupLocation?.longitude ?? 124.6319),
-            contactName: state.selectedPickupAddress?.contactName.isNotEmpty == true
-                ? state.selectedPickupAddress!.contactName
+            contactName: state.selectedPickupAddress?.contactName?.isNotEmpty == true
+                ? state.selectedPickupAddress!.contactName!
                 : (user?.name ?? 'Customer'),
-            contactPhone: state.selectedPickupAddress?.contactPhone.isNotEmpty == true
-                ? state.selectedPickupAddress!.contactPhone
+            contactPhone: state.selectedPickupAddress?.contactPhone?.isNotEmpty == true
+                ? state.selectedPickupAddress!.contactPhone!
                 : (user?.phone ?? '+639123456789'),
           ),
           dropoff: OrderAddressDto(
@@ -530,11 +523,11 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
                  (updatedLocationState.destinationLocation?.latitude ?? 8.4542),
             lng: state.selectedDropoffAddress?.longitude ?? 
                  (updatedLocationState.destinationLocation?.longitude ?? 124.6319),
-            contactName: state.selectedDropoffAddress?.contactName.isNotEmpty == true
-                ? state.selectedDropoffAddress!.contactName
+            contactName: state.selectedDropoffAddress?.contactName?.isNotEmpty == true
+                ? state.selectedDropoffAddress!.contactName!
                 : (user?.name ?? 'Customer'),
-            contactPhone: state.selectedDropoffAddress?.contactPhone.isNotEmpty == true
-                ? state.selectedDropoffAddress!.contactPhone
+            contactPhone: state.selectedDropoffAddress?.contactPhone?.isNotEmpty == true
+                ? state.selectedDropoffAddress!.contactPhone!
                 : (user?.phone ?? '+639123456789'),
           ),
           notes: 'LesGo delivery booking',

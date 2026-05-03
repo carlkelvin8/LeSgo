@@ -11,9 +11,12 @@ import '../../../../domain/entities/rider_booking.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../provider/main/riderside/rider_history_provider.dart';
+import '../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../core/services/api_service.dart';
 import 'map/rider_map_screen.dart';
 import '../../../widgets/chat/rider_chat_button.dart';
+import '../../../widgets/test/simple_map_test.dart';
+import '../../../widgets/test/ultra_simple_map.dart';
 
 class RiderBookingDetailScreen extends ConsumerStatefulWidget {
   final RiderBooking booking;
@@ -49,6 +52,38 @@ class _RiderBookingDetailScreenState
     _currentStatus = widget.booking.currentStatus;
     _currentApiStatus = widget.currentApiStatus;
     _fetchLatestStatus();
+    
+    // Resume order auto-refresh when entering detail screen
+    ref.read(riderOrdersProvider.notifier).resumeAutoRefresh();
+    print('🔄 Resumed order auto-refresh in booking detail screen');
+    
+    // Ensure location tracking is active for delivery tracking
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // Refresh location to ensure we have current position
+        ref.read(riderLocationProvider.notifier).refreshLocation();
+        print('📍 Refreshed location for booking detail tracking');
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    print('🗑️ RiderBookingDetailScreen dispose called');
+    
+    // Clean up map controller
+    try {
+      _mapController?.dispose();
+    } catch (e) {
+      print('⚠️ Error disposing map controller: $e');
+    }
+    _mapController = null;
+    
+    // Don't stop location tracking or auto-refresh here - let them continue
+    // for other screens. The providers will manage their own lifecycle.
+    
+    super.dispose();
+    print('✅ RiderBookingDetailScreen disposed successfully');
   }
 
   // Fetch the latest status from API
@@ -612,7 +647,8 @@ class _RiderBookingDetailScreenState
       return path;
     }
     // Use serve-image.php for CORS support
-    return 'http://127.0.0.1:8000/serve-image.php?path=$path';
+    String baseImageUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
+    return '$baseImageUrl/serve-image.php?path=$path';
   }
 
   // Pick images from gallery or camera
@@ -978,17 +1014,19 @@ class _RiderBookingDetailScreenState
       );
     }
     
-    // Show map for delivery status
+    // Show REAL Google Maps for delivery tracking
     if (_currentStatus == BookingStatus.forDelivery ||
         _currentStatus == BookingStatus.onTheWay ||
         _currentStatus == BookingStatus.onTheWayGoing) {
-      print('🗺️ Showing map section');
+      print('🗺️ Showing REAL Google Maps for status: $_currentStatus');
+      
       return Container(
-        height: ResponsiveUtils.imageHeight(context, 250),
+        height: ResponsiveUtils.imageHeight(context, 300),
         margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
-          color: Colors.grey.shade200,
+          color: Colors.blue.shade50,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.blue.shade200, width: 2),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
@@ -1001,76 +1039,132 @@ class _RiderBookingDetailScreenState
           borderRadius: BorderRadius.circular(12),
           child: Stack(
             children: [
-              // Google Maps
+              // REAL GOOGLE MAPS
               GoogleMap(
                 initialCameraPosition: CameraPosition(
-                  target: LatLng(
-                    widget.booking.pickupLat ?? 8.4542,
-                    widget.booking.pickupLng ?? 124.6319,
-                  ),
-                  zoom: 14,
+                  target: widget.booking.pickupLat != null && widget.booking.pickupLng != null
+                      ? LatLng(widget.booking.pickupLat!, widget.booking.pickupLng!)
+                      : const LatLng(8.4542, 124.6319), // Default to Cagayan de Oro
+                  zoom: 13,
                 ),
+                
+                // Enable all interactive gestures
+                zoomGesturesEnabled: true,
+                scrollGesturesEnabled: true,
+                tiltGesturesEnabled: true,
+                rotateGesturesEnabled: true,
+                
+                // Disable built-in controls
+                zoomControlsEnabled: false,
+                myLocationButtonEnabled: false,
+                mapToolbarEnabled: false,
+                compassEnabled: true,
+                
+                // Enable location
+                myLocationEnabled: true,
+                
+                // Add markers and polylines
                 markers: _buildMapMarkers(),
                 polylines: _buildMapPolylines(),
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                mapToolbarEnabled: false,
-                compassEnabled: false,
-                rotateGesturesEnabled: false,
-                scrollGesturesEnabled: false,
-                tiltGesturesEnabled: false,
-                zoomGesturesEnabled: false,
+                
                 onMapCreated: (controller) {
                   if (mounted) {
                     _mapController = controller;
                     _mapReady = true;
+                    
+                    // Fit bounds to show pickup and dropoff
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _fitBounds();
+                      Future.delayed(const Duration(milliseconds: 500), () {
+                        if (mounted) {
+                          _fitBounds();
+                        }
+                      });
                     });
+                    
+                    print('🗺️ Booking detail Google Maps created successfully');
                   }
                 },
-                onTap: (_) {
-                  // Navigate to full map screen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => RiderMapScreen(
-                        orderId: int.parse(widget.booking.id),
-                      ),
-                    ),
-                  );
+                
+                onTap: (LatLng position) {
+                  print('🗺️ Booking detail map tapped at: ${position.latitude}, ${position.longitude}');
                 },
               ),
               
-              // Tap overlay hint
+              // Live tracking indicator
               Positioned(
-                bottom: 8,
-                right: 8,
+                top: 8,
+                left: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.fullscreen,
-                        color: Colors.white,
-                        size: 16,
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                       SizedBox(width: 4),
                       Text(
-                        'Tap to expand',
+                        'LIVE TRACKING',
                         style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 11),
                           color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              
+              // Tap to expand
+              Positioned(
+                bottom: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RiderMapScreen(
+                          orderId: int.parse(widget.booking.id),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.fullscreen,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'View Full Map',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: 11,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1086,6 +1180,41 @@ class _RiderBookingDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Watch location provider to ensure tracking continues
+    final locationState = ref.watch(riderLocationProvider);
+    
+    // Watch orders provider for real-time updates
+    final ordersState = ref.watch(riderOrdersProvider);
+    
+    // Listen for order updates to refresh status
+    ref.listen<RiderOrdersState>(riderOrdersProvider, (previous, next) {
+      if (previous != next) {
+        // Check if our current order has been updated
+        final currentOrderId = int.tryParse(widget.booking.id);
+        if (currentOrderId != null) {
+          final updatedOrder = next.activeOrder;
+          if (updatedOrder != null && updatedOrder.id == currentOrderId) {
+            print('🔄 Order #${currentOrderId} status updated: ${updatedOrder.status}');
+            // Update local status to match API
+            if (mounted && updatedOrder.status != _currentApiStatus) {
+              setState(() {
+                _currentApiStatus = updatedOrder.status;
+                // Map API status to BookingStatus
+                _currentStatus = _mapApiStatusToBookingStatus(updatedOrder.status, updatedOrder.serviceId);
+              });
+            }
+          }
+        }
+      }
+    });
+    
+    // Log location tracking status
+    if (locationState.hasLocation) {
+      print('📍 Location tracking active: ${locationState.latitude}, ${locationState.longitude}');
+    } else if (locationState.error != null) {
+      print('❌ Location tracking error: ${locationState.error}');
+    }
+    
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(

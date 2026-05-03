@@ -11,7 +11,7 @@ import 'notifier/submit_notifier.dart';
 class RegisterNotifier extends StateNotifier<RegisterState>
     with TermsNotifier, PersonalInfoNotifier, VerificationNotifier, OtpNotifier, AddressNotifier, SubmitNotifier {
   RegisterNotifier() : super(RegisterState(
-    selectedLocation: const LatLng(14.5995, 120.9842), 
+    selectedLocation: const LatLng(8.4542, 124.6319), // Cagayan de Oro default
   ));
 }
 

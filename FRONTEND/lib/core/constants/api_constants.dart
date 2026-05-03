@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiConstants {
   static const String googleMapsApiKey =
-      'AIzaSyD3A8EoUI7NPPh3SNsxh_ZxxYKSZUzlsg4';
+      'AIzaSyBekzwaPQ9H0Zu3y7XOyUkrM-ny4XdVZXA';
 
   // API Base
   // - Web browser: 127.0.0.1 (localhost)

@@ -93,6 +93,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       if (response.success && response.data != null) {
         final user = response.data!;
         print('🔵 ProfileProvider: User fields - id: ${user.id}, name: "${user.name}", email: ${user.email}, phone: ${user.phone}');
+        print('🔵 ProfileProvider: Profile photo URL from API: ${user.profilePhoto}');
         state = state.copyWith(
           user: user,
           name: user.name,
@@ -106,7 +107,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           address2: user.addressLine2 ?? '',
           isLoading: false,
         );
-        print('🔵 ProfileProvider: State updated - name: "${state.name}", email: ${state.email}');
+        print('🔵 ProfileProvider: State updated - name: "${state.name}", email: ${state.email}, profileImageUrl: ${state.profileImageUrl}');
       } else {
         print('🔴 ProfileProvider: Failed - success: ${response.success}, data is null: ${response.data == null}');
         state = state.copyWith(isLoading: false, error: 'Failed to load profile');
@@ -145,17 +146,43 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       final response = await userDataSource.updateMe(request);
 
       if (response.success && response.data != null) {
-        state = state.copyWith(
-          user: response.data,
-          name: response.data!.name,
-          email: response.data!.email,
-          phone: response.data!.phone ?? state.phone,
-          birthdate: response.data!.dateOfBirth ?? state.birthdate,
-          profileImageUrl: response.data!.profilePhoto,
-          address1: response.data!.addressLine1 ?? address1 ?? state.address1,
-          address2: response.data!.addressLine2 ?? address2 ?? state.address2,
+        final userData = response.data!;
+        print('🔵 ProfileProvider: Update successful - profilePhoto from API: ${userData.profilePhoto}');
+        
+        // Create a new state with all updated fields
+        // IMPORTANT: Use null for profileImageUrl if API returns null
+        final newState = state.copyWith(
+          user: userData,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone ?? state.phone,
+          birthdate: userData.dateOfBirth ?? state.birthdate,
+          address1: userData.addressLine1 ?? address1 ?? state.address1,
+          address2: userData.addressLine2 ?? address2 ?? state.address2,
           isUpdating: false,
         );
+        
+        // Handle profileImageUrl separately to allow setting it to null
+        if (userData.profilePhoto != null) {
+          state = newState.copyWith(profileImageUrl: userData.profilePhoto);
+        } else {
+          // Create a completely new state with null profileImageUrl
+          state = ProfileState(
+            user: newState.user,
+            name: newState.name,
+            email: newState.email,
+            phone: newState.phone,
+            birthdate: newState.birthdate,
+            profileImageUrl: null, // Explicitly set to null
+            address1: newState.address1,
+            address2: newState.address2,
+            referralCode: state.referralCode,
+            points: state.points,
+            isUpdating: false,
+          );
+        }
+        
+        print('🔵 ProfileProvider: State updated - profileImageUrl: ${state.profileImageUrl}');
         if (context != null && context.mounted) {
           SnackBarUtils.showSuccess(context, 'Profile updated successfully');
         }
@@ -183,6 +210,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   }
 
   Future<void> updateProfileImage(dynamic imageFile) async {
+    print('🔵 ProfileProvider: Starting updateProfileImage...');
     state = state.copyWith(isUpdating: true);
     try {
       String base64Image;
@@ -190,9 +218,11 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
       // Handle both XFile (from image_picker) and String path
       if (imageFile is String) {
+        print('🔵 ProfileProvider: Image is String path');
         localPath = imageFile;
         if (kIsWeb) {
           // If it's a string on web, it's a blob URL - can't upload
+          print('🔵 ProfileProvider: Web blob URL, using local path');
           state = state.copyWith(profileImageUrl: localPath, isUpdating: false);
           return;
         }
@@ -201,6 +231,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         final mime = ext == 'png' ? 'image/png' : 'image/jpeg';
         base64Image = 'data:$mime;base64,${base64Encode(bytes)}';
       } else {
+        print('🔵 ProfileProvider: Image is XFile');
         // XFile - works on both web and mobile
         localPath = imageFile.path;
         final bytes = await imageFile.readAsBytes();
@@ -208,23 +239,32 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         final name = imageFile.name.toLowerCase();
         final mime = name.endsWith('.png') ? 'image/png' : 'image/jpeg';
         base64Image = 'data:$mime;base64,${base64Encode(bytes)}';
+        print('🔵 ProfileProvider: Base64 length: ${base64Image.length}');
       }
 
+      print('🔵 ProfileProvider: Calling API to update profile photo...');
       final userDataSource = getIt<UserRemoteDataSource>();
       final request = UpdateUserRequestDto(profilePhoto: base64Image);
       final response = await userDataSource.updateMe(request);
 
+      print('🔵 ProfileProvider: API response - success: ${response.success}');
       if (response.success && response.data != null) {
+        print('🔵 ProfileProvider: Profile photo URL from API: ${response.data!.profilePhoto}');
         // Use the URL returned by the API (stored on server)
         state = state.copyWith(
+          user: response.data,
           profileImageUrl: response.data!.profilePhoto ?? localPath,
           isUpdating: false,
         );
+        print('🔵 ProfileProvider: Profile image updated successfully');
       } else {
+        print('🔴 ProfileProvider: API failed, using local path');
         // Optimistically show local image even if upload failed
         state = state.copyWith(profileImageUrl: localPath, isUpdating: false);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('🔴 ProfileProvider: Error updating profile image - $e');
+      print('🔴 ProfileProvider: Stack trace - $stackTrace');
       // On error, keep the current image
       state = state.copyWith(isUpdating: false);
     }

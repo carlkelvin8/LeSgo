@@ -144,4 +144,68 @@ class AuthRemoteDataSource {
       rethrow;
     }
   }
+
+  // ============================================================================
+  // FORGOT PASSWORD METHODS
+  // ============================================================================
+
+  /// Send password reset OTP to email
+  Future<Map<String, dynamic>> sendPasswordResetOtp(String email) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/forgot-password/send-otp',
+        data: {'email': email},
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Resend password reset OTP
+  Future<Map<String, dynamic>> resendPasswordResetOtp(String email) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/forgot-password/resend-otp',
+        data: {'email': email},
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Verify password reset OTP
+  Future<Map<String, dynamic>> verifyPasswordResetOtp(String email, String otp) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/forgot-password/verify-otp',
+        data: {
+          'email': email,
+          'otp': otp,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Reset password with OTP
+  Future<Map<String, dynamic>> resetPassword(String email, String otp, String password) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/forgot-password/reset',
+        data: {
+          'email': email,
+          'otp': otp,
+          'password': password,
+          'password_confirmation': password,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

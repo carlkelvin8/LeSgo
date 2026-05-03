@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
+import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
 import '../../../../../core/services/api_service.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 import '../rider_booking_detail_screen.dart';
@@ -214,8 +215,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     
     if (positions.isEmpty) {
       return LatLngBounds(
-        southwest: const LatLng(14.5, 120.9),
-        northeast: const LatLng(14.7, 121.1),
+        southwest: const LatLng(8.4, 124.6), // Cagayan de Oro area
+        northeast: const LatLng(8.5, 124.7),
       );
     }
     
@@ -252,32 +253,65 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   }
 
   Widget _buildMapView() {
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        target: _currentPosition != null
-            ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
-            : const LatLng(14.5995, 120.9842), // Manila center
-        zoom: 14,
+    print('🗺️ Building map view with position: $_currentPosition');
+    print('🔑 Google Maps API Key: AIzaSyA0s1a7phLN0iaD6-MjnwqfpJFhYhmyNjU');
+    
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.red, width: 2), // Debug border
       ),
-      markers: _markers,
-      polylines: _polylines,
-      myLocationEnabled: true,
-      myLocationButtonEnabled: false,
-      zoomControlsEnabled: false,
-      mapToolbarEnabled: false,
-      compassEnabled: true,
-      onMapCreated: (controller) {
-        if (mounted) {
-          _mapController = controller;
-          _mapReady = true;
-          _updateMarkers();
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_markers.isNotEmpty) {
-              _fitBounds();
-            }
-          });
-        }
-      },
+      child: GoogleMap(
+        mapType: MapType.normal,
+        initialCameraPosition: CameraPosition(
+          target: _currentPosition != null
+              ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+              : const LatLng(8.4542, 124.6319), // Cagayan de Oro default
+          zoom: 14,
+        ),
+        
+        // CRITICAL: Enable ALL interactive gestures
+        zoomGesturesEnabled: true,
+        scrollGesturesEnabled: true,
+        tiltGesturesEnabled: true,
+        rotateGesturesEnabled: true,
+        
+        // Disable built-in controls to use custom ones
+        zoomControlsEnabled: false,
+        myLocationButtonEnabled: false,
+        mapToolbarEnabled: false,
+        compassEnabled: true,
+        
+        // Enable location features
+        myLocationEnabled: true,
+        
+        // Add markers and polylines
+        markers: _markers,
+        polylines: _polylines,
+        
+        onMapCreated: (controller) {
+          if (mounted) {
+            _mapController = controller;
+            _mapReady = true;
+            _updateMarkers();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_markers.isNotEmpty) {
+                _fitBounds();
+              }
+            });
+            print('🗺️ Bookings Map created and ready');
+            print('🔑 Google Maps API Key: AIzaSyA0s1a7phLN0iaD6-MjnwqfpJFhYhmyNjU');
+            print('📍 Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+          }
+        },
+        
+        onTap: (LatLng position) {
+          print('🗺️ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
+        },
+        
+        onCameraMove: (CameraPosition position) {
+          print('📷 Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
+        },
+      ),
     );
   }
 
@@ -895,40 +929,54 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
             right: 16,
             child: Column(
               children: [
-                // Recenter button
-                FloatingActionButton.small(
-                  heroTag: 'recenter',
-                  onPressed: _centerMapOnCurrentLocation,
-                  backgroundColor: Colors.white,
-                  child: const Icon(
-                    Icons.my_location,
-                    color: Color(0xFF5F2D82),
-                  ),
+                // Zoom Controls
+                MapZoomControls(
+                  mapController: _mapController,
+                  onCenterMap: _centerMapOnCurrentLocation,
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: 12),
                 
                 // Refresh button
-                FloatingActionButton.small(
-                  heroTag: 'refresh',
-                  onPressed: () {
-                    ref.read(riderOrdersProvider.notifier).loadOrders();
-                  },
-                  backgroundColor: Colors.white,
-                  child: ordersState.isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              const Color(0xFF5F2D82),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(24),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(24),
+                      onTap: () {
+                        ref.read(riderOrdersProvider.notifier).loadOrders();
+                      },
+                      child: ordersState.isLoading
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  const Color(0xFF5F2D82),
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.refresh,
+                              color: Color(0xFF5F2D82),
+                              size: 24,
                             ),
-                          ),
-                        )
-                      : const Icon(
-                          Icons.refresh,
-                          color: Color(0xFF5F2D82),
-                        ),
+                    ),
+                  ),
                 ),
               ],
             ),

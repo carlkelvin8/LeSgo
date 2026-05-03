@@ -310,7 +310,7 @@ class _AddressTile extends StatelessWidget {
           ),
 
           // Contact
-          if (address.contactName.isNotEmpty) ...[
+          if (address.contactName?.isNotEmpty == true) ...[
             const SizedBox(height: 4),
             Row(
               children: [
@@ -321,7 +321,7 @@ class _AddressTile extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${address.contactName} · ${address.contactPhone}',
+                  '${address.contactName ?? ''} · ${address.contactPhone ?? ''}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 12,

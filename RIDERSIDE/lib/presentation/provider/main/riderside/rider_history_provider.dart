@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/api_service.dart';
 import '../../../../../domain/entities/rider_booking.dart';
@@ -351,7 +352,8 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
       return path;
     }
     // Use serve-image.php for CORS support
-    return 'http://127.0.0.1:8000/serve-image.php?path=$path';
+    String baseImageUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
+    return '$baseImageUrl/serve-image.php?path=$path';
   }
 }
 

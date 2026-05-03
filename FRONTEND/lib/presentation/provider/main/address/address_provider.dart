@@ -111,6 +111,14 @@ class AddressNotifier extends StateNotifier<AddressState> {
     state = state.copyWith(isCreating: true, error: null);
 
     try {
+      print('🔵 AddressProvider: Creating address...');
+      print('🔵 AddressProvider: - userId: $userId');
+      print('🔵 AddressProvider: - label: $label');
+      print('🔵 AddressProvider: - addressLine1: $addressLine1');
+      print('🔵 AddressProvider: - addressLine2: $addressLine2');
+      print('🔵 AddressProvider: - latitude: $latitude');
+      print('🔵 AddressProvider: - longitude: $longitude');
+      
       final addressDataSource = getIt<AddressRemoteDataSource>();
       final request = CreateAddressRequestDto(
         label: label,
@@ -124,9 +132,12 @@ class AddressNotifier extends StateNotifier<AddressState> {
         isDefault: isDefault,
       );
 
+      print('🔵 AddressProvider: Calling API...');
       final response = await addressDataSource.createAddress(request);
+      print('🔵 AddressProvider: Response - success: ${response.success}, error: ${response.error}');
 
       if (response.success && response.data != null) {
+        print('🔵 AddressProvider: Address created successfully');
         // Reload addresses to get updated list
         await loadAddresses(userId);
 
@@ -137,6 +148,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         }
         return true;
       } else {
+        print('🔴 AddressProvider: Failed - ${response.error}');
         state = state.copyWith(
           isCreating: false,
           error: response.error ?? 'Failed to create address',
@@ -151,6 +163,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         return false;
       }
     } catch (e) {
+      print('🔴 AddressProvider: Exception - $e');
       state = state.copyWith(
         isCreating: false,
         error: e.toString(),

@@ -80,6 +80,14 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       routePolylines: {},
       distanceInKm: null,
       durationInSeconds: null,
+      // Clear all locations to force fresh initialization
+      currentLocation: null,
+      selectedLocation: null,
+      pickupLocation: null,
+      destinationLocation: null,
+      address: null,
+      pickupAddress: null,
+      destinationAddress: null,
     );
   }
 
@@ -108,6 +116,12 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
         ),
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          // Use default location if timeout
+          throw Exception('Location request timed out');
+        },
       );
 
       final location = LatLng(position.latitude, position.longitude);
@@ -125,13 +139,22 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         isLoading: false,
       );
 
-      // Fetch route if destination is already set
-      if (state.destinationLocation != null) {
-        await fetchRoute(location, state.destinationLocation!);
-      }
+      // DON'T fetch route here - only fetch when user confirms location
     } catch (e) {
-      print('🔴 LesgoLocation: Error getting current location: $e');
-      state = state.copyWith(isLoading: false, error: e.toString());
+      print('⚠️ LesgoLocation: Error getting location, using default: $e');
+      // Use default location (Cagayan de Oro City)
+      final defaultLocation = const LatLng(8.4542, 124.6319);
+      final address = await _getAddressFromLocation(defaultLocation);
+      
+      state = state.copyWith(
+        currentLocation: defaultLocation,
+        selectedLocation: defaultLocation,
+        pickupLocation: defaultLocation,
+        pickupAddress: address,
+        address: address,
+        isLoading: false,
+        error: null, // Clear error to allow user to continue
+      );
     }
   }
 
@@ -143,25 +166,24 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
   }
 
   Future<void> updatePickup(LatLng location) async {
+    print('🔍 LesgoLocation: updatePickup called with: $location');
     state = state.copyWith(selectedLocation: location, isLoading: true);
     final address = await _getAddressFromLocation(location);
+    print('🔍 LesgoLocation: Pickup address fetched: ${address?.toString()}');
     state = state.copyWith(
       pickupLocation: location,
       pickupAddress: address,
       address: address,
       isLoading: false,
     );
-    // Fetch route if destination is already set
-    if (state.destinationLocation != null) {
-      await fetchRoute(location, state.destinationLocation!);
-    } else {
-      // Clear route if destination is removed
-      state = state.copyWith(
-        routePolylines: {},
-        distanceInKm: null,
-        durationInSeconds: null,
-      );
-    }
+    print('🔍 LesgoLocation: Pickup updated - pickupLocation: ${state.pickupLocation}, pickupAddress: ${state.pickupAddress}');
+    // DON'T fetch route here - only fetch when user confirms location
+    // Clear route since pickup changed
+    state = state.copyWith(
+      routePolylines: {},
+      distanceInKm: null,
+      durationInSeconds: null,
+    );
   }
 
   Future<void> updateDestination(LatLng location) async {
@@ -175,12 +197,15 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       destinationAddress: address,
       address: address,
       isLoading: false,
+      // IMPORTANT: Clear route data when destination changes
+      routePolylines: {},
+      distanceInKm: null,
+      durationInSeconds: null,
+      isLoadingRoute: false,
     );
     print('🔍 LesgoLocation: Destination updated - destinationLocation: ${state.destinationLocation}');
-    // Fetch route if pickup is already set
-    if (state.pickupLocation != null) {
-      await fetchRoute(state.pickupLocation!, location);
-    }
+    // DON'T fetch route here - only fetch when user confirms location
+    print('🔍 LesGo: Destination updated, route cleared. User must confirm to calculate route.');
   }
 
   Future<void> updateDestinationWithAddress(
@@ -214,10 +239,9 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       isLoading: false,
     );
     print('🔍 LesgoLocation: After setting state, destinationLocation: ${state.destinationLocation}');
-    // Fetch route if pickup is already set
-    if (state.pickupLocation != null) {
-      await fetchRoute(state.pickupLocation!, location);
-    }
+    print('🔍 LesgoLocation: Pickup location: ${state.pickupLocation}');
+    // DON'T fetch route here - only fetch when user confirms location
+    // Route will be fetched in confirmSelection() or when explicitly called
   }
 
   Future<void> updatePickupWithAddress(
@@ -249,17 +273,13 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       address: address,
       isLoading: false,
     );
-    // Fetch route if destination is already set
-    if (state.destinationLocation != null) {
-      await fetchRoute(location, state.destinationLocation!);
-    } else {
-      // Clear route if destination is removed
-      state = state.copyWith(
-        routePolylines: {},
-        distanceInKm: null,
-        durationInSeconds: null,
-      );
-    }
+    // DON'T fetch route here - only fetch when user confirms location
+    // Clear route since pickup changed
+    state = state.copyWith(
+      routePolylines: {},
+      distanceInKm: null,
+      durationInSeconds: null,
+    );
   }
 
   LocationAddress? _parseAddressComponents(Map<String, String> components) {
@@ -362,13 +382,22 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
   }
 
   /// Fetches route between current pickup and destination if both are set
-  Future<void> fetchRouteIfBothSet() async {
+  Future<void> fetchRouteIfBothSet({bool forceAllow = false}) async {
     if (state.pickupLocation != null && state.destinationLocation != null) {
-      await fetchRoute(state.pickupLocation!, state.destinationLocation!);
+      await fetchRoute(state.pickupLocation!, state.destinationLocation!, forceAllow: forceAllow);
     }
   }
 
-  Future<void> fetchRoute(LatLng origin, LatLng destination) async {
+  Future<void> fetchRoute(LatLng origin, LatLng destination, {bool forceAllow = false}) async {
+    // ONLY allow route fetching if explicitly forced (from confirmSelection)
+    if (!forceAllow) {
+      print('🚫 Lesgo: Route fetch blocked - not from confirmation');
+      print('🚫 Lesgo: Stack trace: ${StackTrace.current}');
+      return;
+    }
+    
+    print('✅ Lesgo: Route fetch ALLOWED - forceAllow=$forceAllow');
+    
     if (origin == destination) {
       state = state.copyWith(routePolylines: {}, isLoadingRoute: false);
       return;
@@ -378,8 +407,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
 
     try {
       // Check if API key is configured
-      if (ApiConstants.googleMapsApiKey.isEmpty ||
-          ApiConstants.googleMapsApiKey == 'YOUR_GOOGLE_MAPS_API_KEY') {
+      if (ApiConstants.googleMapsApiKey.isEmpty) {
         state = state.copyWith(
           isLoadingRoute: false,
           error: 'Google Maps API key not configured',
@@ -387,10 +415,86 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         return;
       }
 
-      // Temporarily disable directions API to avoid CORS issues
-      // TODO: Implement proper directions API integration
+      // Use backend proxy to get directions
+      final originStr = '${origin.latitude},${origin.longitude}';
+      final destinationStr = '${destination.latitude},${destination.longitude}';
       
-      // For now, just calculate straight-line distance
+      final url = Uri.parse(
+        '${ApiConstants.baseUrl}/v1/google-places/directions'
+        '?origin=$originStr&destination=$destinationStr',
+      );
+
+      print('🚗 Lesgo: Fetching route from: $url');
+      final response = await http.get(url);
+      print('🚗 Lesgo: Response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('🚗 Lesgo: Decoded data status: ${data['status']}');
+        
+        if (data['status'] == 'OK' && data['routes'] != null && (data['routes'] as List).isNotEmpty) {
+          final route = data['routes'][0];
+          final polylineEncoded = route['overview_polyline']['points'];
+          print('🚗 Lesgo: Polyline encoded length: ${polylineEncoded.length}');
+          final List<LatLng> polylinePoints = _decodePolyline(polylineEncoded);
+          print('🚗 Lesgo: Decoded ${polylinePoints.length} points');
+
+          // Get distance and duration from the route
+          final leg = route['legs'][0];
+          final distanceInMeters = leg['distance']['value'];
+          final durationInSeconds = leg['duration']['value'];
+          print('🚗 Lesgo: Distance: ${distanceInMeters}m, Duration: ${durationInSeconds}s');
+
+          final polyline = Polyline(
+            polylineId: const PolylineId('route'),
+            points: polylinePoints,
+            color: const Color(0xFF1976D2), // Blue color for consistency
+            width: 6, // Medium thickness
+            geodesic: true,
+          );
+
+          state = state.copyWith(
+            routePolylines: {polyline},
+            distanceInKm: distanceInMeters / 1000.0,
+            durationInSeconds: durationInSeconds,
+            isLoadingRoute: false,
+            error: null,
+          );
+          print('🚗 Lesgo: Route updated successfully with ${polylinePoints.length} points!');
+        } else {
+          print('🚗 Lesgo: No valid route found, using fallback');
+          // Fallback to straight line if no route found
+          final double distanceInKm = Geolocator.distanceBetween(
+            origin.latitude,
+            origin.longitude,
+            destination.latitude,
+            destination.longitude,
+          ) / 1000.0;
+
+          final polyline = Polyline(
+            polylineId: const PolylineId('route'),
+            points: [origin, destination],
+            color: const Color(0xFF1976D2), // Darker blue
+            width: 8, // Thicker line
+            patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+            geodesic: true,
+          );
+
+          state = state.copyWith(
+            routePolylines: {polyline},
+            distanceInKm: distanceInKm,
+            durationInSeconds: (distanceInKm * 180).round(),
+            isLoadingRoute: false,
+            error: null,
+          );
+        }
+      } else {
+        throw Exception('Failed to fetch route: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('🔴 Lesgo: Error fetching route: $e');
+      
+      // Fallback to straight line on error
       final double distanceInKm = Geolocator.distanceBetween(
         origin.latitude,
         origin.longitude,
@@ -398,25 +502,22 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         destination.longitude,
       ) / 1000.0;
 
-      // Create a simple straight line polyline
       final polyline = Polyline(
         polylineId: const PolylineId('route'),
         points: [origin, destination],
-        color: const Color(0xFF7C3AED),
-        width: 6,
-        patterns: [PatternItem.dash(20), PatternItem.gap(10)], // Dashed line to indicate it's not a real route
+        color: const Color(0xFF1976D2), // Darker blue
+        width: 8, // Thicker line
+        patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         geodesic: true,
       );
 
       state = state.copyWith(
         routePolylines: {polyline},
         distanceInKm: distanceInKm,
-        durationInSeconds: (distanceInKm * 180).round(), // Rough estimate: 3 min per km = 180 sec per km
+        durationInSeconds: (distanceInKm * 180).round(),
         isLoadingRoute: false,
-        error: null,
+        error: e.toString(),
       );
-    } catch (e) {
-      state = state.copyWith(isLoadingRoute: false, error: e.toString());
     }
   }
 
@@ -588,53 +689,96 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         
-        print('🔍 LesgoLocation: Google API response: ${json.encode(data)}');
+        print('🔍 LesgoLocation: Google API response status: ${data['status']}');
         
         if (data['status'] == 'OK' && data['results'] != null && data['results'].isNotEmpty) {
-          final result = data['results'][0];
-          final formattedAddress = result['formatted_address'] as String?;
-          final addressComponents = result['address_components'] as List<dynamic>?;
+          final results = data['results'] as List<dynamic>;
           
-          print('🔍 LesgoLocation: Google API formatted address: $formattedAddress');
-          print('🔍 LesgoLocation: Google API address components: ${json.encode(addressComponents)}');
+          // Try to find the most detailed result (with route/street information)
+          dynamic bestResult;
+          int bestScore = 0;
           
-          // Try to extract detailed address from components first
-          if (addressComponents != null) {
-            final detailedAddress = _extractDetailedAddressFromComponents(addressComponents);
-            if (detailedAddress != null) {
-              print('🔍 LesgoLocation: Using detailed address from components: $detailedAddress');
-              return detailedAddress;
+          for (var result in results) {
+            final types = result['types'] as List<dynamic>?;
+            final addressComponents = result['address_components'] as List<dynamic>?;
+            int score = 0;
+            
+            // Prioritize results with street/route information
+            if (types != null) {
+              if (types.contains('street_address')) score += 100;
+              if (types.contains('premise')) score += 90;
+              if (types.contains('route')) score += 80;
+              if (types.contains('sublocality')) score += 70;
+              if (types.contains('locality')) score += 50;
+              // Deprioritize plus_code only results
+              if (types.contains('plus_code') && types.length == 1) score -= 50;
+            }
+            
+            // Check if it has route/street in address components
+            if (addressComponents != null) {
+              for (var component in addressComponents) {
+                final componentTypes = component['types'] as List<dynamic>?;
+                if (componentTypes != null) {
+                  if (componentTypes.contains('route')) score += 30;
+                  if (componentTypes.contains('street_number')) score += 20;
+                  if (componentTypes.contains('sublocality_level_1')) score += 15;
+                  if (componentTypes.contains('sublocality_level_2')) score += 10;
+                }
+              }
+            }
+            
+            if (score > bestScore) {
+              bestScore = score;
+              bestResult = result;
             }
           }
           
-          // Fallback to formatted address parsing
-          if (formattedAddress != null && formattedAddress.isNotEmpty) {
-            // Use the most detailed part of the formatted address
-            final addressParts = formattedAddress.split(',').map((e) => e.trim()).toList();
+          // Use the best result found
+          if (bestResult != null) {
+            final formattedAddress = bestResult['formatted_address'] as String?;
+            final addressComponents = bestResult['address_components'] as List<dynamic>?;
             
-            // Remove "Philippines" if it's the last part
-            if (addressParts.isNotEmpty && addressParts.last.toLowerCase().contains('philippines')) {
-              addressParts.removeLast();
+            print('🔍 LesgoLocation: Using best result with score $bestScore: $formattedAddress');
+            print('🔍 LesgoLocation: Address components: ${json.encode(addressComponents)}');
+            
+            // Try to extract detailed address from components first
+            if (addressComponents != null) {
+              final detailedAddress = _extractDetailedAddressFromComponents(addressComponents);
+              if (detailedAddress != null) {
+                print('🔍 LesgoLocation: Using detailed address from components');
+                return detailedAddress;
+              }
             }
             
-            // Take the first 2-3 most specific parts
-            String detailedAddress;
-            if (addressParts.length >= 3) {
-              detailedAddress = addressParts.take(3).join(', ');
-            } else if (addressParts.length >= 2) {
-              detailedAddress = addressParts.take(2).join(', ');
-            } else {
-              detailedAddress = addressParts.isNotEmpty ? addressParts[0] : formattedAddress;
+            // Fallback to formatted address parsing
+            if (formattedAddress != null && formattedAddress.isNotEmpty) {
+              // Use the most detailed part of the formatted address
+              final addressParts = formattedAddress.split(',').map((e) => e.trim()).toList();
+              
+              // Remove "Philippines" if it's the last part
+              if (addressParts.isNotEmpty && addressParts.last.toLowerCase().contains('philippines')) {
+                addressParts.removeLast();
+              }
+              
+              // Take the first 2-3 most specific parts
+              String detailedAddress;
+              if (addressParts.length >= 3) {
+                detailedAddress = addressParts.take(3).join(', ');
+              } else if (addressParts.length >= 2) {
+                detailedAddress = addressParts.take(2).join(', ');
+              } else {
+                detailedAddress = addressParts.isNotEmpty ? addressParts[0] : formattedAddress;
+              }
+              
+              print('🔍 LesgoLocation: Using detailed address from formatted: $detailedAddress');
+              
+              return LocationAddress(
+                houseNumberStreet: null,
+                subdivisionBarangay: null,
+                cityProvince: detailedAddress,
+                zipCode: null,
+              );
             }
-            
-            print('🔍 LesgoLocation: Using detailed address from formatted: $detailedAddress');
-            
-            return LocationAddress(
-              houseNumberStreet: null,
-              subdivisionBarangay: null,
-              cityProvince: detailedAddress,
-              zipCode: null,
-            );
           }
         } else {
           print('🔴 LesgoLocation: Google API error: ${data['status']}');

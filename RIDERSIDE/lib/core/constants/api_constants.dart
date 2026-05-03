@@ -1,6 +1,13 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConstants {
-  // Base URL
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  // Base URL - Android emulator uses 10.0.2.2 to access host machine
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://127.0.0.1:8000/api';
+    }
+    return 'http://10.0.2.2:8000/api'; // Android emulator
+  }
 
   // Chat endpoints
   static const String chatConversations = '/v1/chat/conversations';

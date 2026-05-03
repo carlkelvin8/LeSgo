@@ -9,9 +9,9 @@ class AddressDto {
   final int userId;
   final String label;
   @JsonKey(name: 'contact_name')
-  final String contactName;
+  final String? contactName;
   @JsonKey(name: 'contact_phone')
-  final String contactPhone;
+  final String? contactPhone;
   @JsonKey(name: 'address_line1')
   final String addressLine1;
   @JsonKey(name: 'address_line2')
@@ -30,8 +30,8 @@ class AddressDto {
     required this.id,
     required this.userId,
     required this.label,
-    required this.contactName,
-    required this.contactPhone,
+    this.contactName,
+    this.contactPhone,
     required this.addressLine1,
     this.addressLine2,
     required this.country,

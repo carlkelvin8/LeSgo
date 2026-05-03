@@ -240,63 +240,81 @@ class LocationNotifier extends StateNotifier<LocationState> {
       print('🔵 LocationProvider: Trying Google Geocoding API first...');
       
       // Try Google Geocoding API first for better results
-      final googleAddress = await _getAddressFromGoogleAPI(location);
-      if (googleAddress != null) {
-        print('🔵 LocationProvider: Google API success');
-        return googleAddress;
+      try {
+        final googleAddress = await _getAddressFromGoogleAPI(location);
+        if (googleAddress != null) {
+          print('🔵 LocationProvider: Google API success');
+          return googleAddress;
+        }
+      } catch (e) {
+        print('🔴 LocationProvider: Google API failed - $e');
       }
       
       print('🔵 LocationProvider: Falling back to geocoding package...');
       
-      // Fallback to geocoding package
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        location.latitude,
-        location.longitude,
-      );
-
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        print('🔵 LocationProvider: Geocoding success');
-        print('🔵 LocationProvider: - locality: ${place.locality}');
-        print('🔵 LocationProvider: - subLocality: ${place.subLocality}');
-        print('🔵 LocationProvider: - administrativeArea: ${place.administrativeArea}');
-        print('🔵 LocationProvider: - thoroughfare: ${place.thoroughfare}');
-        print('🔵 LocationProvider: - subThoroughfare: ${place.subThoroughfare}');
-
-        final streetName = place.thoroughfare ?? place.street ?? '';
-        final houseNumber = place.subThoroughfare ?? '';
-        final houseNumberStreet =
-            houseNumber.isNotEmpty && streetName.isNotEmpty
-            ? '$houseNumber $streetName'
-            : streetName.isNotEmpty ? streetName : null;
-
-        final barangay = place.subLocality ?? place.locality ?? '';
-        final city = place.locality ?? place.subAdministrativeArea ?? '';
-        final province = place.administrativeArea ?? '';
-        
-        final cityProvince = city.isNotEmpty && province.isNotEmpty
-            ? '$city, $province'
-            : city.isNotEmpty
-            ? city
-            : province.isNotEmpty
-            ? province
-            : 'Philippines';
-
-        final address = LocationAddress(
-          houseNumberStreet: houseNumberStreet,
-          subdivisionBarangay: barangay.isNotEmpty ? barangay : null,
-          cityProvince: cityProvince,
-          zipCode: place.postalCode,
+      // Fallback to geocoding package with better error handling
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          location.latitude,
+          location.longitude,
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            print('🔴 LocationProvider: Geocoding timeout');
+            return <Placemark>[];
+          },
         );
 
-        print('🔵 LocationProvider: Created address - $cityProvince');
-        return address;
-      } else {
-        print('🔴 LocationProvider: Geocoding returned empty results');
-        return _getDefaultAddress(location);
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          print('🔵 LocationProvider: Geocoding success');
+          print('🔵 LocationProvider: - locality: ${place.locality}');
+          print('🔵 LocationProvider: - subLocality: ${place.subLocality}');
+          print('🔵 LocationProvider: - administrativeArea: ${place.administrativeArea}');
+          print('🔵 LocationProvider: - thoroughfare: ${place.thoroughfare}');
+          print('🔵 LocationProvider: - subThoroughfare: ${place.subThoroughfare}');
+
+          final streetName = place.thoroughfare ?? place.street ?? '';
+          final houseNumber = place.subThoroughfare ?? '';
+          final houseNumberStreet =
+              houseNumber.isNotEmpty && streetName.isNotEmpty
+              ? '$houseNumber $streetName'
+              : streetName.isNotEmpty ? streetName : null;
+
+          final barangay = place.subLocality ?? place.locality ?? '';
+          final city = place.locality ?? place.subAdministrativeArea ?? '';
+          final province = place.administrativeArea ?? '';
+          
+          final cityProvince = city.isNotEmpty && province.isNotEmpty
+              ? '$city, $province'
+              : city.isNotEmpty
+              ? city
+              : province.isNotEmpty
+              ? province
+              : 'Philippines';
+
+          final address = LocationAddress(
+            houseNumberStreet: houseNumberStreet,
+            subdivisionBarangay: barangay.isNotEmpty ? barangay : null,
+            cityProvince: cityProvince,
+            zipCode: place.postalCode,
+          );
+
+          print('🔵 LocationProvider: Created address - $cityProvince');
+          return address;
+        } else {
+          print('🔴 LocationProvider: Geocoding returned empty results');
+        }
+      } catch (e) {
+        print('🔴 LocationProvider: Geocoding package error - $e');
       }
+      
+      // Always return default address as fallback
+      print('🔵 LocationProvider: Using default address');
+      return _getDefaultAddress(location);
+      
     } catch (e, stackTrace) {
-      print('🔴 LocationProvider: Geocoding error - $e');
+      print('🔴 LocationProvider: Unexpected error - $e');
       print('🔴 LocationProvider: Stack trace - $stackTrace');
       return _getDefaultAddress(location);
     }

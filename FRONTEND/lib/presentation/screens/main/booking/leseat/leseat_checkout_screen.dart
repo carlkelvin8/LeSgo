@@ -55,8 +55,8 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                     address.addressLine1,
                     address.latitude,
                     address.longitude,
-                    address.contactName,
-                    address.contactPhone,
+                    address.contactName ?? '',
+                    address.contactPhone ?? '',
                   );
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(

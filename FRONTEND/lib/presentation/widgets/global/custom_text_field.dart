@@ -8,6 +8,8 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
+  final bool enabled;
+  final int? maxLength;
 
   const CustomTextField({
     super.key,
@@ -17,6 +19,8 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffixIcon,
     this.validator,
+    this.enabled = true,
+    this.maxLength,
   });
 
   @override
@@ -28,6 +32,8 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
+      enabled: enabled,
+      maxLength: maxLength,
       style: TextStyle(
         fontFamily: 'TT Fors',
         fontSize: fontSize,
@@ -40,6 +46,7 @@ class CustomTextField extends StatelessWidget {
           fontSize: fontSize * 0.9,
         ),
         suffixIcon: suffixIcon,
+        counterText: maxLength != null ? null : '',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -52,8 +59,12 @@ class CustomTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: Color(0xFF6B4EFF), width: 2),
         ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey[200]!),
+        ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: enabled ? Colors.white : Colors.grey[100],
         contentPadding: EdgeInsets.symmetric(
           horizontal: padding,
           vertical: padding,
