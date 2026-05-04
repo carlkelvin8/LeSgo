@@ -1,25 +1,36 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/utils/helpers/fakedata.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 
-class MerchantProfileInfoSection extends StatelessWidget {
+class MerchantProfileInfoSection extends ConsumerWidget {
   const MerchantProfileInfoSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _info(context, 'Restaurant:', merchantProfileInfoData['restaurant']!),
-        _info(context, 'Contact:', merchantProfileInfoData['contact']!),
-        _info(context, 'Address:', merchantProfileInfoData['address']!),
-        _info(
-          context,
-          'Referral Code:',
-          merchantProfileInfoData['referralCode']!,
-          valueColor: const Color(0xFFC320D6),
-        ),
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(merchantProfileProvider);
+
+    return profileAsync.when(
+      loading: () => const SizedBox(height: 100),
+      error: (_, __) => const SizedBox(height: 100),
+      data: (profile) {
+        if (profile == null) return const SizedBox(height: 100);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _info(context, 'Restaurant:', profile.name),
+            _info(context, 'Contact:', profile.supportPhone ?? 'Not set'),
+            _info(context, 'Email:', profile.supportEmail ?? 'Not set'),
+            _info(
+              context,
+              'Referral Code:',
+              profile.referralCode ?? 'LESGO${profile.name.toUpperCase().replaceAll(' ', '')}',
+              valueColor: const Color(0xFFC320D6),
+            ),
+          ],
+        );
+      },
     );
   }
 

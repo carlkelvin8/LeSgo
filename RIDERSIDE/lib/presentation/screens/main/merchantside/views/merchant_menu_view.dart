@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/utils/helpers/fakedata.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../widgets/widgets.dart';
+import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../merchant_menu_edit_item_screen.dart';
 
-class MerchantMenuView extends StatelessWidget {
+class MerchantMenuView extends ConsumerWidget {
   const MerchantMenuView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
+    final menuAsync = ref.watch(merchantMenuProvider);
+    final selectedCategory = ref.watch(selectedCategoryProvider);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -29,25 +32,60 @@ class MerchantMenuView extends StatelessWidget {
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ...merchantFoodCategories.asMap().entries.map(
-                  (entry) => Padding(
-                    padding: EdgeInsets.only(
-                      right: ResponsiveUtils.spacing(context, 10),
+          
+          // Categories
+          menuAsync.when(
+            data: (menu) {
+              if (menu == null || menu.categories.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    // "All" category
+                    Padding(
+                      padding: EdgeInsets.only(
+                        right: ResponsiveUtils.spacing(context, 10),
+                      ),
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(selectedCategoryProvider.notifier).state = null;
+                        },
+                        child: MerchantFoodCategoryChip(
+                          label: 'All',
+                          icon: '🍽️',
+                          isSelected: selectedCategory == null,
+                        ),
+                      ),
                     ),
-                    child: MerchantFoodCategoryChip(
-                      label: entry.value['label']!,
-                      icon: entry.value['icon']!,
-                      isSelected: entry.key == 0,
+                    // Category chips
+                    ...menu.categories.map(
+                      (category) => Padding(
+                        padding: EdgeInsets.only(
+                          right: ResponsiveUtils.spacing(context, 10),
+                        ),
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(selectedCategoryProvider.notifier).state = category.id;
+                          },
+                          child: MerchantFoodCategoryChip(
+                            label: category.name,
+                            icon: category.iconEmoji ?? '🍴',
+                            isSelected: selectedCategory == category.id,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => Text('Error loading categories: $error'),
           ),
+          
           SizedBox(height: ResponsiveUtils.spacing(context, 14)),
           const Divider(height: 1, color: Color(0xFFE4E4E7)),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -61,29 +99,83 @@ class MerchantMenuView extends StatelessWidget {
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          
+          // Menu Items
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 14)),
-              itemCount: merchantFoodMenuItems.length,
-              itemBuilder: (context, index) {
-                final item = merchantFoodMenuItems[index];
-                return MerchantMenuItemCard(
-                  name: item['name']!,
-                  description: item['description']!,
-                  price: item['price']!,
-                  category: item['category'],
-                  onEditTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MerchantMenuEditItemScreen(
-                          initialItem: item,
-                        ),
-                      ),
-                    );
+            child: menuAsync.when(
+              data: (menu) {
+                if (menu == null) {
+                  return const Center(child: Text('No menu data available'));
+                }
+                
+                // Get filtered items
+                final allItems = menu.categories
+                    .expand((cat) => cat.availableItems ?? [])
+                    .toList();
+                
+                final filteredItems = selectedCategory == null
+                    ? allItems
+                    : allItems.where((item) => item.menuCategoryId == selectedCategory).toList();
+                
+                if (filteredItems.isEmpty) {
+                  return const Center(child: Text('No menu items found'));
+                }
+                
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(merchantMenuProvider);
                   },
+                  child: ListView.builder(
+                    padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 14)),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
+                      return MerchantMenuItemCard(
+                        name: item.name,
+                        description: item.description ?? '',
+                        price: 'PHP ${item.price.toStringAsFixed(2)}',
+                        category: menu.categories
+                            .firstWhere((cat) => cat.id == item.menuCategoryId)
+                            .name,
+                        onEditTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => MerchantMenuEditItemScreen(
+                                initialItem: {
+                                  'id': item.id.toString(),
+                                  'name': item.name,
+                                  'description': item.description ?? '',
+                                  'price': item.price.toStringAsFixed(2),
+                                  'category': menu.categories
+                                      .firstWhere((cat) => cat.id == item.menuCategoryId)
+                                      .name,
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 );
               },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Error loading menu: $error'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.invalidate(merchantMenuProvider);
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

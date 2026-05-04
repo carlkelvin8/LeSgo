@@ -19,12 +19,24 @@ class ApiService {
           options.headers['Content-Type'] = 'application/json';
           
           final token = await getToken();
+          print('🔒 Interceptor: Making request to ${options.path}');
+          print('🔒 Interceptor: Token available: ${token != null}');
+          
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            print('🔒 Interceptor: Authorization header set');
+          } else {
+            print('🔒 Interceptor: No token, skipping Authorization header');
           }
+          
           handler.next(options);
         },
         onError: (error, handler) {
+          print('🔒 Interceptor: Request error: ${error.message}');
+          if (error.response != null) {
+            print('🔒 Interceptor: Response status: ${error.response?.statusCode}');
+            print('🔒 Interceptor: Response data: ${error.response?.data}');
+          }
           handler.next(error);
         },
       ),
@@ -34,12 +46,20 @@ class ApiService {
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    final token = prefs.getString(_tokenKey);
+    print('🔐 getToken: ${token != null ? "Token found" : "No token"}');
+    return token;
   }
 
   static Future<void> saveToken(String token) async {
+    print('🔐 saveToken called with token: ${token.substring(0, 20)}...');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
+    print('🔐 Token saved successfully');
+    
+    // Verify it was saved
+    final saved = prefs.getString(_tokenKey);
+    print('🔐 Verification - Token retrieved: ${saved != null ? "YES" : "NO"}');
   }
 
   static Future<void> clearToken() async {
@@ -50,11 +70,23 @@ class ApiService {
   /// Login and return token
   static Future<Map<String, dynamic>> login(
       String email, String password) async {
-    final res = await _dio.post('/v1/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
-    return res.data as Map<String, dynamic>;
+    print('🌐 API: Calling POST /v1/auth/login');
+    print('🌐 API: Email: $email');
+    
+    try {
+      final res = await _dio.post('/v1/auth/login', data: {
+        'email': email,
+        'password': password,
+      });
+      
+      print('🌐 API: Login response status: ${res.statusCode}');
+      print('🌐 API: Login response data: ${res.data}');
+      
+      return res.data as Map<String, dynamic>;
+    } catch (e) {
+      print('🌐 API: Login request failed: $e');
+      rethrow;
+    }
   }
 
   /// GET /v1/orders — scoped by role (driver sees only their orders)

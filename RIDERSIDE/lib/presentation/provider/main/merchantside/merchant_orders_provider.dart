@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/utils/helpers/fakedata.dart';
+import '../../../../data/data_source/dto/merchant/order_dto.dart';
+import '../../auth/rider_auth_provider.dart';
+import 'merchant_profile_provider.dart';
 
 enum MerchantOrderFilter { all, pending, pickUp, forDelivery, delivered }
 
@@ -18,6 +20,22 @@ extension MerchantOrderFilterX on MerchantOrderFilter {
         return 'Delivered';
     }
   }
+  
+  /// Map filter to API status
+  String? get apiStatus {
+    switch (this) {
+      case MerchantOrderFilter.all:
+        return null;
+      case MerchantOrderFilter.pending:
+        return 'pending';
+      case MerchantOrderFilter.pickUp:
+        return 'accepted';
+      case MerchantOrderFilter.forDelivery:
+        return 'picked_up';
+      case MerchantOrderFilter.delivered:
+        return 'completed';
+    }
+  }
 }
 
 final merchantOrderFiltersProvider = Provider<List<MerchantOrderFilter>>((ref) {
@@ -29,50 +47,38 @@ final selectedMerchantOrderFilterProvider =
   return MerchantOrderFilter.all;
 });
 
-final merchantOrdersProvider = Provider<List<Map<String, dynamic>>>((ref) {
-  const statusCycle = ['accept', 'pickup', 'delivery', 'delivered'];
-
-  return merchantFoodMenuItems.asMap().entries.map((entry) {
-    final index = entry.key;
-    final item = entry.value;
-    final statusType = statusCycle[index % statusCycle.length];
-    final statusLabel = switch (statusType) {
-      'accept' => 'Accept',
-      'pickup' => 'For Pick Up',
-      'delivery' => 'For Delivery',
-      'delivered' => 'Delivered',
-      _ => 'Accept',
-    };
-
-    return <String, dynamic>{
-      'orderId': '#53472${920 + index}',
-      'itemName': item['name']!,
-      'price': item['price']!,
-      'customerName': 'Juan Dela Cruz',
-      'address': 'Libertad, Claveria, Cagayan',
-      'statusType': statusType,
-      'statusLabel': statusLabel,
-    };
-  }).toList();
+/// Provider for merchant orders from API
+final merchantOrdersProvider = FutureProvider.autoDispose<List<OrderDto>>((ref) async {
+  // Get partner_id from auth state
+  final authState = ref.watch(riderAuthProvider);
+  final partnerId = authState.user?.partnerId;
+  final filter = ref.watch(selectedMerchantOrderFilterProvider);
+  
+  if (partnerId == null) {
+    print('❌ merchantOrdersProvider - No partner_id available');
+    return [];
+  }
+  
+  print('📋 merchantOrdersProvider - Using partner_id: $partnerId');
+  
+  try {
+    final dataSource = ref.read(merchantDataSourceProvider);
+    final orders = await dataSource.getPartnerOrders(partnerId, status: filter.apiStatus);
+    print('✅ Loaded ${orders.length} orders for partner $partnerId (filter: ${filter.label})');
+    return orders;
+  } catch (e) {
+    print('❌ Error loading merchant orders: $e');
+    rethrow;
+  }
 });
 
-final filteredMerchantOrdersProvider = Provider<List<Map<String, dynamic>>>((ref) {
-  final selected = ref.watch(selectedMerchantOrderFilterProvider);
-  final orders = ref.watch(merchantOrdersProvider);
-
-  if (selected == MerchantOrderFilter.all) {
-    return orders;
-  }
-
-  final targetStatusType = switch (selected) {
-    MerchantOrderFilter.pending => 'accept',
-    MerchantOrderFilter.pickUp => 'pickup',
-    MerchantOrderFilter.forDelivery => 'delivery',
-    MerchantOrderFilter.delivered => 'delivered',
-    MerchantOrderFilter.all => '',
-  };
-
-  return orders
-      .where((order) => order['statusType'] == targetStatusType)
-      .toList();
+/// Provider for filtered orders (for backward compatibility with UI)
+final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
+  final ordersAsync = ref.watch(merchantOrdersProvider);
+  
+  return ordersAsync.when(
+    data: (orders) => orders,
+    loading: () => [],
+    error: (_, __) => [],
+  );
 });

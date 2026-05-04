@@ -1,12 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../data/data_source/merchant_remote_datasource.dart';
+import '../../../provider/auth/rider_auth_provider.dart';
+import 'merchant_profile_provider.dart';
+import 'merchant_menu_provider.dart';
 
 class MerchantAddCategoryFormState {
   final String categoryName;
+  final String iconEmoji;
   final bool isSubmitting;
   final String? errorMessage;
 
   MerchantAddCategoryFormState({
     required this.categoryName,
+    this.iconEmoji = '🍴',
     this.isSubmitting = false,
     this.errorMessage,
   });
@@ -15,11 +21,13 @@ class MerchantAddCategoryFormState {
 
   MerchantAddCategoryFormState copyWith({
     String? categoryName,
+    String? iconEmoji,
     bool? isSubmitting,
     String? errorMessage,
   }) {
     return MerchantAddCategoryFormState(
       categoryName: categoryName ?? this.categoryName,
+      iconEmoji: iconEmoji ?? this.iconEmoji,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       errorMessage: errorMessage,
     );
@@ -27,11 +35,20 @@ class MerchantAddCategoryFormState {
 }
 
 class MerchantAddCategoryFormNotifier extends StateNotifier<MerchantAddCategoryFormState> {
-  MerchantAddCategoryFormNotifier({String? categoryName})
-      : super(MerchantAddCategoryFormState(categoryName: categoryName ?? ''));
+  final Ref _ref;
+
+  MerchantAddCategoryFormNotifier(this._ref, {String? categoryName, String? iconEmoji})
+      : super(MerchantAddCategoryFormState(
+          categoryName: categoryName ?? '',
+          iconEmoji: iconEmoji ?? '🍴',
+        ));
 
   void updateCategoryName(String value) {
     state = state.copyWith(categoryName: value);
+  }
+
+  void updateIconEmoji(String value) {
+    state = state.copyWith(iconEmoji: value);
   }
 
   Future<bool> attemptSubmit() async {
@@ -43,16 +60,41 @@ class MerchantAddCategoryFormNotifier extends StateNotifier<MerchantAddCategoryF
     state = state.copyWith(isSubmitting: true, errorMessage: null);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(milliseconds: 800));
+      // Get partner_id from auth state
+      final authState = _ref.read(riderAuthProvider);
+      final partnerId = authState.user?.partnerId;
+      
+      if (partnerId == null) {
+        state = state.copyWith(
+          isSubmitting: false,
+          errorMessage: 'Partner ID not found. Please login again.',
+        );
+        return false;
+      }
+
+      print('🔍 Creating category for partner_id: $partnerId');
+      
+      final dataSource = _ref.read(merchantDataSourceProvider);
+      final request = CreateMenuCategoryRequest(
+        name: state.categoryName,
+        iconEmoji: state.iconEmoji,
+      );
+      
+      await dataSource.createMenuCategory(partnerId, request);
+      print('✅ Menu category created successfully');
+      
+      // Refresh menu providers
+      _ref.invalidate(merchantMenuProvider);
+      _ref.invalidate(merchantMenuItemsProvider);
 
       // Success
       state = state.copyWith(isSubmitting: false);
       return true;
     } catch (e) {
+      print('❌ Error creating category: $e');
       state = state.copyWith(
         isSubmitting: false,
-        errorMessage: 'Failed to create category. Please try again.',
+        errorMessage: 'Failed to create category: ${e.toString()}',
       );
       return false;
     }
@@ -65,5 +107,5 @@ class MerchantAddCategoryFormNotifier extends StateNotifier<MerchantAddCategoryF
 
 final merchantAddCategoryFormProvider =
     StateNotifierProvider<MerchantAddCategoryFormNotifier, MerchantAddCategoryFormState>((ref) {
-  return MerchantAddCategoryFormNotifier();
+  return MerchantAddCategoryFormNotifier(ref);
 });

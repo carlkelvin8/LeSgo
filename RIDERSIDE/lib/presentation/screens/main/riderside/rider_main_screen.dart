@@ -9,16 +9,56 @@ import 'views/rider_mission_view.dart';
 import 'views/rider_bookings_view.dart';
 import 'views/rider_inbox_view.dart';
 import '../../../provider/auth/auth_provider.dart';
+import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 
 // Actually, RegisterScaffold is specific to registration. Standard Scaffold is better for Main Screen.
 
-class RiderMainScreen extends ConsumerWidget {
+class RiderMainScreen extends ConsumerStatefulWidget {
   const RiderMainScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RiderMainScreen> createState() => _RiderMainScreenState();
+}
+
+class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Check authentication on screen load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthentication();
+    });
+  }
+
+  void _checkAuthentication() {
+    final authState = ref.read(riderAuthProvider);
+    print('🔐 RiderMainScreen: Checking authentication');
+    print('🔐 Is logged in: ${authState.isLoggedIn}');
+    print('🔐 User: ${authState.user?.email}');
+    
+    if (!authState.isLoggedIn || authState.user == null) {
+      print('❌ Not authenticated, redirecting to login');
+      // Not authenticated, redirect to login
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final user = authState.user;
+          if (user != null && user.isMerchant) {
+            ref.read(authViewProvider.notifier).state = AuthView.merchantLogin;
+          } else {
+            ref.read(authViewProvider.notifier).state = AuthView.riderLogin;
+          }
+          AppRouter.pushReplacement(context, AuthRoutes.auth);
+        }
+      });
+    } else {
+      print('✅ Authenticated as: ${authState.user!.email}, Role: ${authState.user!.role}');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final navStack = ref.watch(riderNavProvider);
     final currentNav = navStack.last;
     final isMission = currentNav == RiderNavType.mission;
@@ -97,9 +137,13 @@ class RiderMainScreen extends ConsumerWidget {
       title: 'Logout',
       message: 'Are you sure you want to logout?',
       confirmLabel: 'Logout',
-      onConfirm: () {
-        ref.read(authViewProvider.notifier).state = AuthView.welcome;
-        AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
+      onConfirm: () async {
+        // Logout and clear token
+        await ref.read(riderAuthProvider.notifier).logout();
+        if (context.mounted) {
+          ref.read(authViewProvider.notifier).state = AuthView.welcome;
+          AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
+        }
       },
     );
   }

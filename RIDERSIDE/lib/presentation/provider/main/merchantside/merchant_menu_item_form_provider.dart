@@ -1,6 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../data/data_source/merchant_remote_datasource.dart';
+import '../../../provider/auth/rider_auth_provider.dart';
+import 'merchant_profile_provider.dart';
+import 'merchant_menu_provider.dart';
 
 class MerchantMenuItemFormInput {
+  final int? itemId; // For edit mode
   final String? itemName;
   final String? price;
   final String? description;
@@ -13,6 +18,7 @@ class MerchantMenuItemFormInput {
   String? get variationLabels => null;
 
   const MerchantMenuItemFormInput({
+    this.itemId,
     this.itemName,
     this.price,
     this.description,
@@ -22,7 +28,8 @@ class MerchantMenuItemFormInput {
   });
 
   const MerchantMenuItemFormInput.add()
-      : itemName = '',
+      : itemId = null,
+        itemName = '',
         price = '0.00',
         description = '',
         category = 'Pizza',
@@ -31,6 +38,7 @@ class MerchantMenuItemFormInput {
 
   factory MerchantMenuItemFormInput.edit(Map<String, String>? initialItem) {
     return MerchantMenuItemFormInput(
+      itemId: initialItem?['id'] != null ? int.tryParse(initialItem!['id']!) : null,
       itemName: initialItem?['itemName'] ?? initialItem?['name'],
       price: initialItem?['price'],
       description: initialItem?['description'],
@@ -38,10 +46,13 @@ class MerchantMenuItemFormInput {
     );
   }
 
+  bool get isEditMode => itemId != null;
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is MerchantMenuItemFormInput &&
+        other.itemId == itemId &&
         other.itemName == itemName &&
         other.price == price &&
         other.description == description &&
@@ -52,6 +63,7 @@ class MerchantMenuItemFormInput {
 
   @override
   int get hashCode => Object.hash(
+        itemId,
         itemName,
         price,
         description,
@@ -108,14 +120,20 @@ class MerchantMenuItemFormState {
 }
 
 class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormState> {
-  MerchantMenuItemFormNotifier({
+  final Ref _ref;
+  final int? _itemId; // For edit mode
+  
+  MerchantMenuItemFormNotifier(
+    this._ref, {
+    int? itemId,
     String? itemName,
     String? price,
     String? description,
     String? category,
     List<String>? selectedTags,
     bool? liveOnMenu,
-  }) : super(
+  }) : _itemId = itemId,
+       super(
     MerchantMenuItemFormState(
       itemName: itemName ?? '',
       price: price ?? '0.00',
@@ -165,16 +183,86 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
     state = state.copyWith(isSubmitting: true, errorMessage: null);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(milliseconds: 800));
-
+      // Parse price
+      final priceValue = double.tryParse(state.price);
+      if (priceValue == null || priceValue <= 0) {
+        state = state.copyWith(
+          isSubmitting: false,
+          errorMessage: 'Invalid price value.',
+        );
+        return false;
+      }
+      
+      final dataSource = _ref.read(merchantDataSourceProvider);
+      
+      if (_itemId != null) {
+        // Edit mode - update existing item
+        final request = UpdateMenuItemRequest(
+          name: state.itemName,
+          description: state.description.isEmpty ? null : state.description,
+          price: priceValue,
+          isAvailable: state.liveOnMenu,
+        );
+        
+        await dataSource.updateMenuItem(_itemId!, request);
+        print('✅ Menu item updated successfully');
+      } else {
+        // Add mode - create new item
+        // Get partner_id from auth state
+        final authState = _ref.read(riderAuthProvider);
+        final partnerId = authState.user?.partnerId;
+        
+        if (partnerId == null) {
+          state = state.copyWith(
+            isSubmitting: false,
+            errorMessage: 'Partner ID not found. Please login again.',
+          );
+          return false;
+        }
+        
+        print('🔍 Using partner_id from auth: $partnerId');
+        
+        // Get menu to find category ID by name
+        final menuAsync = await _ref.read(merchantMenuProvider.future);
+        if (menuAsync == null) {
+          state = state.copyWith(
+            isSubmitting: false,
+            errorMessage: 'Failed to load menu categories.',
+          );
+          return false;
+        }
+        
+        // Find category by name
+        final category = menuAsync.categories.firstWhere(
+          (cat) => cat.name == state.category,
+          orElse: () => menuAsync.categories.first,
+        );
+        
+        // Create request
+        final request = CreateMenuItemRequest(
+          menuCategoryId: category.id,
+          name: state.itemName,
+          description: state.description.isEmpty ? null : state.description,
+          price: priceValue,
+          isAvailable: state.liveOnMenu,
+        );
+        
+        await dataSource.createMenuItem(partnerId, request);
+        print('✅ Menu item created successfully');
+      }
+      
+      // Refresh menu providers
+      _ref.invalidate(merchantMenuProvider);
+      _ref.invalidate(merchantMenuItemsProvider);
+      
       // Success
       state = state.copyWith(isSubmitting: false);
       return true;
     } catch (e) {
+      print('❌ Error saving menu item: $e');
       state = state.copyWith(
         isSubmitting: false,
-        errorMessage: 'Failed to save item. Please try again.',
+        errorMessage: 'Failed to save item: ${e.toString()}',
       );
       return false;
     }
@@ -191,6 +279,8 @@ final merchantMenuItemFormProvider =
   initialInput,
 ) {
   return MerchantMenuItemFormNotifier(
+    ref,
+    itemId: initialInput.itemId,
     itemName: initialInput.itemName,
     price: initialInput.price,
     description: initialInput.description,

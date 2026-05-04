@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/auth/auth_provider.dart';
+import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
@@ -22,15 +23,53 @@ class MerchantMainScreen extends ConsumerStatefulWidget {
 }
 
 class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Check authentication after a short delay to allow state to settle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _checkAuthentication();
+        }
+      });
+    });
+  }
+
+  void _checkAuthentication() {
+    final authState = ref.read(riderAuthProvider);
+    print('🔐 MerchantMainScreen: Checking authentication');
+    print('🔐 Is logged in: ${authState.isLoggedIn}');
+    print('🔐 User: ${authState.user?.email}');
+    print('🔐 Partner ID: ${authState.user?.partnerId}');
+    
+    if (!authState.isLoggedIn || authState.user == null) {
+      print('❌ Not authenticated, redirecting to login');
+      // Not authenticated, redirect to login
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(authViewProvider.notifier).state = AuthView.merchantLogin;
+          AppRouter.pushReplacement(context, AuthRoutes.auth);
+        }
+      });
+    } else {
+      print('✅ Authenticated as: ${authState.user!.email}, Partner ID: ${authState.user!.partnerId}');
+    }
+  }
+
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showConfirmDialog(
       context: context,
       title: 'Logout',
       message: 'Are you sure you want to logout?',
       confirmLabel: 'Logout',
-      onConfirm: () {
-        ref.read(authViewProvider.notifier).state = AuthView.welcome;
-        AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
+      onConfirm: () async {
+        // Logout and clear token
+        await ref.read(riderAuthProvider.notifier).logout();
+        if (mounted) {
+          ref.read(authViewProvider.notifier).state = AuthView.welcome;
+          AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
+        }
       },
     );
   }

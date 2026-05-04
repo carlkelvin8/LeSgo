@@ -10,7 +10,7 @@ class MerchantEditInformationActionBar extends StatelessWidget {
   });
 
   final VoidCallback onCancel;
-  final VoidCallback onSave;
+  final VoidCallback? onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class MerchantEditInformationActionBar extends StatelessWidget {
           secondaryLabel: 'Cancel',
           onSecondaryPressed: onCancel,
           primaryLabel: 'Save Changes',
-          onPrimaryPressed: onSave,
+          onPrimaryPressed: onSave ?? () {},
         ),
       ),
     );

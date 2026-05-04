@@ -27,22 +27,49 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
   }
 
   Future<void> _handleLogin() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
+    print('🔐 LOGIN BUTTON PRESSED');
+    
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      print('❌ Form validation failed');
+      return;
+    }
 
     final email = _emailController.text.trim();
     final password = _passwordController.text;
+    
+    print('🔐 Attempting login with email: $email');
 
     // Perform actual authentication
     final success = await ref.read(riderAuthProvider.notifier).login(email, password);
+    
+    print('🔐 Login result: ${success ? "SUCCESS" : "FAILED"}');
 
     if (!mounted) return;
 
     if (success) {
-      // Navigate to RiderMainScreen
-      AppRouter.pushReplacement(context, MainRoutes.riderMain);
+      print('✅ Login successful, checking user role');
+      
+      // Get user info to determine which screen to navigate to
+      final user = ref.read(riderAuthProvider).user;
+      print('🔐 User role: ${user?.role}, Is merchant: ${user?.isMerchant}');
+      
+      // Wait a bit to ensure state is updated
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      if (!mounted) return;
+      
+      // Navigate based on user role
+      if (user != null && user.isMerchant) {
+        print('🔐 Navigating to Merchant Main Screen');
+        AppRouter.pushReplacement(context, MainRoutes.merchantMain);
+      } else {
+        print('🔐 Navigating to Rider Main Screen');
+        AppRouter.pushReplacement(context, MainRoutes.riderMain);
+      }
     } else {
       // Show error message
       final error = ref.read(riderAuthProvider).error ?? 'Login failed';
+      print('❌ Login failed with error: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),

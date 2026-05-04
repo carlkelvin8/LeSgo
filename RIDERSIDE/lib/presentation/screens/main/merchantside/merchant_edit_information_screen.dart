@@ -1,60 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
-import '../../../controllers/merchantside/merchant_edit_information_controller.dart';
+import '../../../provider/main/merchantside/merchant_edit_profile_provider.dart';
 import '../../../widgets/widgets.dart';
 
-class MerchantEditInformationScreen extends StatefulWidget {
+class MerchantEditInformationScreen extends ConsumerStatefulWidget {
   const MerchantEditInformationScreen({super.key});
 
   @override
-  State<MerchantEditInformationScreen> createState() =>
+  ConsumerState<MerchantEditInformationScreen> createState() =>
       _MerchantEditInformationScreenState();
 }
 
 class _MerchantEditInformationScreenState
-    extends State<MerchantEditInformationScreen> {
-  late final MerchantEditInformationController _controller;
-
-  Future<void> _saveChanges() async {
-    final isSaved = _controller.saveChanges();
-    if (!mounted) return;
-
-    if (!isSaved) {
-      SnackBarUtils.showError(context, 'Please complete all required fields');
-      return;
-    }
-
-    SnackBarUtils.showSuccess(context, 'Information updated successfully');
-    Navigator.pop(context);
-  }
+    extends ConsumerState<MerchantEditInformationScreen> {
+  late final TextEditingController _restaurantController;
+  late final TextEditingController _contactController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _referralController;
 
   @override
   void initState() {
     super.initState();
-    _controller = MerchantEditInformationController();
+    _restaurantController = TextEditingController();
+    _contactController = TextEditingController();
+    _emailController = TextEditingController();
+    _referralController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _restaurantController.dispose();
+    _contactController.dispose();
+    _emailController.dispose();
+    _referralController.dispose();
     super.dispose();
   }
 
+  Future<void> _saveChanges() async {
+    final notifier = ref.read(merchantEditProfileProvider.notifier);
+    final success = await notifier.attemptSave();
+
+    if (!mounted) return;
+
+    if (success) {
+      SnackBarUtils.showSuccess(context, 'Information updated successfully');
+      Navigator.pop(context);
+    } else {
+      final errorMessage = ref.read(merchantEditProfileProvider).errorMessage;
+      SnackBarUtils.showError(
+        context,
+        errorMessage ?? 'Failed to update information',
+      );
+    }
+  }
+
   Future<void> _copyReferralCode() async {
-    await Clipboard.setData(ClipboardData(text: _controller.referralController.text));
+    final referralCode = ref.read(merchantEditProfileProvider).referralCode;
+    await Clipboard.setData(ClipboardData(text: referralCode));
     if (!mounted) return;
     SnackBarUtils.showInfo(context, 'Referral code copied');
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(merchantEditProfileProvider);
+
+    // Update controllers when state changes
+    if (_restaurantController.text != state.restaurantName) {
+      _restaurantController.text = state.restaurantName;
+    }
+    if (_contactController.text != state.contactNumber) {
+      _contactController.text = state.contactNumber;
+    }
+    if (_emailController.text != state.email) {
+      _emailController.text = state.email;
+    }
+    if (_referralController.text != state.referralCode) {
+      _referralController.text = state.referralCode;
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       bottomNavigationBar: MerchantEditInformationActionBar(
         onCancel: () => Navigator.pop(context),
-        onSave: _saveChanges,
+        onSave: state.isSubmitting ? null : _saveChanges,
       ),
       body: SafeArea(
         child: Column(
@@ -75,27 +107,36 @@ class _MerchantEditInformationScreenState
                   children: [
                     Center(
                       child: MerchantEditInformationHeaderSection(
-                        restaurantName: _controller.restaurantName,
+                        restaurantName: state.restaurantName,
                         onCameraTap: () {},
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 26)),
                     MerchantEditInformationField(
                       label: 'RESTAURANT NAME',
-                      controller: _controller.restaurantController,
+                      controller: _restaurantController,
+                      onChanged: (value) => ref
+                          .read(merchantEditProfileProvider.notifier)
+                          .updateRestaurantName(value),
                     ),
                     MerchantEditInformationField(
                       label: 'CONTACT NUMBER',
-                      controller: _controller.contactController,
+                      controller: _contactController,
                       keyboardType: TextInputType.phone,
+                      onChanged: (value) => ref
+                          .read(merchantEditProfileProvider.notifier)
+                          .updateContactNumber(value),
                     ),
                     MerchantEditInformationField(
-                      label: 'ADDRESS',
-                      controller: _controller.addressController,
-                      maxLines: 4,
+                      label: 'EMAIL',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      onChanged: (value) => ref
+                          .read(merchantEditProfileProvider.notifier)
+                          .updateEmail(value),
                     ),
                     MerchantReferralCodeField(
-                      controller: _controller.referralController,
+                      controller: _referralController,
                       onCopyTap: _copyReferralCode,
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 6)),
@@ -114,6 +155,13 @@ class _MerchantEditInformationScreenState
                         ),
                       ),
                     ),
+                    if (state.isSubmitting)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
                   ],
                 ),
               ),

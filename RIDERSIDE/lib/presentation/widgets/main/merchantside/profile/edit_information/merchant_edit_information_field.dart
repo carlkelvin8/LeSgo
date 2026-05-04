@@ -8,12 +8,14 @@ class MerchantEditInformationField extends StatelessWidget {
     required this.controller,
     this.keyboardType,
     this.maxLines = 1,
+    this.onChanged,
   });
 
   final String label;
   final TextEditingController controller;
   final TextInputType? keyboardType;
   final int maxLines;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +46,7 @@ class MerchantEditInformationField extends StatelessWidget {
               controller: controller,
               keyboardType: keyboardType,
               maxLines: maxLines,
+              onChanged: onChanged,
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 15),
