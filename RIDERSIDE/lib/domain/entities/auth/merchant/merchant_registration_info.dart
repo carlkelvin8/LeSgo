@@ -6,6 +6,8 @@ class MerchantRegistrationInfo {
   final String contactNumber;
   final String address;
   final String zipCode;
+  final String password;
+  final String confirmPassword;
 
   const MerchantRegistrationInfo({
     required this.restaurantName,
@@ -15,6 +17,8 @@ class MerchantRegistrationInfo {
     required this.contactNumber,
     required this.address,
     required this.zipCode,
+    required this.password,
+    required this.confirmPassword,
   });
 
   bool get isValid =>
@@ -24,7 +28,10 @@ class MerchantRegistrationInfo {
       email.isNotEmpty &&
       contactNumber.isNotEmpty &&
       address.isNotEmpty &&
-      zipCode.isNotEmpty;
+      zipCode.isNotEmpty &&
+      password.isNotEmpty &&
+      confirmPassword.isNotEmpty &&
+      password == confirmPassword;
 
   MerchantRegistrationInfo copyWith({
     String? restaurantName,
@@ -34,6 +41,8 @@ class MerchantRegistrationInfo {
     String? contactNumber,
     String? address,
     String? zipCode,
+    String? password,
+    String? confirmPassword,
   }) {
     return MerchantRegistrationInfo(
       restaurantName: restaurantName ?? this.restaurantName,
@@ -43,6 +52,8 @@ class MerchantRegistrationInfo {
       contactNumber: contactNumber ?? this.contactNumber,
       address: address ?? this.address,
       zipCode: zipCode ?? this.zipCode,
+      password: password ?? this.password,
+      confirmPassword: confirmPassword ?? this.confirmPassword,
     );
   }
 
@@ -55,6 +66,8 @@ class MerchantRegistrationInfo {
       contactNumber: '',
       address: '',
       zipCode: '',
+      password: '',
+      confirmPassword: '',
     );
   }
 
@@ -67,6 +80,8 @@ class MerchantRegistrationInfo {
       'contactNumber': contactNumber,
       'address': address,
       'zipCode': zipCode,
+      'password': password,
+      'password_confirmation': confirmPassword,
     };
   }
 
@@ -79,6 +94,8 @@ class MerchantRegistrationInfo {
       contactNumber: json['contactNumber'] ?? '',
       address: json['address'] ?? '',
       zipCode: json['zipCode'] ?? '',
+      password: json['password'] ?? '',
+      confirmPassword: json['password_confirmation'] ?? '',
     );
   }
 
@@ -98,7 +115,9 @@ class MerchantRegistrationInfo {
         other.email == email &&
         other.contactNumber == contactNumber &&
         other.address == address &&
-        other.zipCode == zipCode;
+        other.zipCode == zipCode &&
+        other.password == password &&
+        other.confirmPassword == confirmPassword;
   }
 
   @override
@@ -109,6 +128,8 @@ class MerchantRegistrationInfo {
         email.hashCode ^
         contactNumber.hashCode ^
         address.hashCode ^
-        zipCode.hashCode;
+        zipCode.hashCode ^
+        password.hashCode ^
+        confirmPassword.hashCode;
   }
 }

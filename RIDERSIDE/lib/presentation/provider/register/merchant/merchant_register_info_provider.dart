@@ -130,6 +130,14 @@ class MerchantRegisterInfoNotifier
     state = state.copyWith(info: state.info.copyWith(zipCode: value));
   }
 
+  void updatePassword(String value) {
+    state = state.copyWith(info: state.info.copyWith(password: value));
+  }
+
+  void updateConfirmPassword(String value) {
+    state = state.copyWith(info: state.info.copyWith(confirmPassword: value));
+  }
+
   Future<void> uploadSelfie() async {
     state = state.copyWith(isSelfieLoading: true, clearError: true);
     try {

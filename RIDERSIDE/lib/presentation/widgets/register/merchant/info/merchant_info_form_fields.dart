@@ -11,6 +11,8 @@ class MerchantInfoFormFields extends StatelessWidget {
   final TextEditingController contactNumberController;
   final TextEditingController addressController;
   final TextEditingController zipCodeController;
+  final TextEditingController passwordController;
+  final TextEditingController confirmPasswordController;
 
   const MerchantInfoFormFields({
     super.key,
@@ -21,6 +23,8 @@ class MerchantInfoFormFields extends StatelessWidget {
     required this.contactNumberController,
     required this.addressController,
     required this.zipCodeController,
+    required this.passwordController,
+    required this.confirmPasswordController,
   });
 
   @override
@@ -90,6 +94,34 @@ class MerchantInfoFormFields extends StatelessWidget {
           validator: (value) =>
               value == null || value.isEmpty ? 'Zip Code is required' : null,
           keyboardType: TextInputType.number,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+        _buildSectionLabel(context, 'Password'),
+        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+        CustomTextField(
+          controller: passwordController,
+          hintText: 'Enter your password',
+          obscureText: true,
+          validator: RegisterValidator.password,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+        _buildSectionLabel(context, 'Confirm Password'),
+        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+        CustomTextField(
+          controller: confirmPasswordController,
+          hintText: 'Re-enter your password',
+          obscureText: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please confirm your password';
+            }
+            if (value != passwordController.text) {
+              return 'Passwords do not match';
+            }
+            return null;
+          },
         ),
       ],
     );

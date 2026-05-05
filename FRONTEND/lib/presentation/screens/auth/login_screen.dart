@@ -4,7 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/auth/controller/login.controller.notifier.dart';
 import '../../widgets/widgets.dart';
+import '../../widgets/common/common_widgets.dart';
 import '../../../core/utils/utils.dart';
+import '../../../core/utils/validators.dart';
 import '../../../core/constants/routers/register/register_routes.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/constants/routers/app_router.dart';
@@ -86,32 +88,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 48)),
          
-                      CustomTextField(
+                      // Email/Phone field with real-time validation
+                      ValidatedTextField(
+                        label: 'Email/Phone',
+                        hint: 'Enter your email or phone number',
                         controller: _controllers.emailController,
-                        labelText: 'Email/Phone',
-                        keyboardType: TextInputType.emailAddress,
                         validator: Validators.emailOrPhone,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                        required: true,
+                        enabled: !authState.isLoading,
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 20)),
 
-                      CustomTextField(
+                      // Password field with show/hide toggle
+                      PasswordField(
+                        label: 'Password',
+                        hint: 'Enter your password',
                         controller: _controllers.passwordController,
-                        labelText: 'Password',
-                        obscureText: _controllers.obscurePassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _controllers.obscurePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: Colors.grey[600],
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _controllers.togglePasswordVisibility();
-                            });
-                          },
-                        ),
-                        validator: Validators.password,
+                        required: true,
+                        enabled: !authState.isLoading,
+                        validator: (value) {
+                          // For login, just check if password is not empty
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          return null;
+                        },
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                       Row(

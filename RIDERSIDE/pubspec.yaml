@@ -30,6 +30,10 @@ dependencies:
   # Networking & Storage (Added for api_service.dart)
   dio: ^5.9.1
   shared_preferences: ^2.5.3
+  
+  # Security
+  flutter_secure_storage: ^9.0.0
+  crypto: ^3.0.3
 
   # Maps & Location
   google_maps_flutter: ^2.5.0

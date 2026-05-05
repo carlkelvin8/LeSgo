@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
-
-const String _tokenKey = 'rider_token';
+import 'secure_storage_service.dart';
 
 class ApiService {
-  static String get _baseUrl => kIsWeb ? 'http://127.0.0.1:8000/api' : 'http://10.0.2.2:8000/api';
+  static String get _baseUrl => kReleaseMode
+      ? 'https://api.lesgo.com/api' // Production HTTPS
+      : (kIsWeb ? 'http://127.0.0.1:8000/api' : 'http://10.0.2.2:8000/api');
   
   static final Dio _dio = Dio()..interceptors.add(
       InterceptorsWrapper(
@@ -29,14 +29,25 @@ class ApiService {
             print('🔒 Interceptor: No token, skipping Authorization header');
           }
           
+          // Add device ID for security
+          final deviceId = await SecureStorageService.getDeviceId();
+          options.headers['X-Device-ID'] = deviceId;
+          
           handler.next(options);
         },
-        onError: (error, handler) {
+        onError: (error, handler) async {
           print('🔒 Interceptor: Request error: ${error.message}');
           if (error.response != null) {
             print('🔒 Interceptor: Response status: ${error.response?.statusCode}');
             print('🔒 Interceptor: Response data: ${error.response?.data}');
           }
+          
+          // Handle 401 Unauthorized - token expired
+          if (error.response?.statusCode == 401) {
+            print('🔒 Interceptor: 401 Unauthorized - token may be expired');
+            await clearToken();
+          }
+          
           handler.next(error);
         },
       ),
@@ -45,26 +56,30 @@ class ApiService {
   static Dio get dio => _dio;
 
   static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_tokenKey);
+    final token = await SecureStorageService.getToken();
     print('🔐 getToken: ${token != null ? "Token found" : "No token"}');
     return token;
   }
 
-  static Future<void> saveToken(String token) async {
+  static Future<void> saveToken(String token, {int expiresIn = 3600}) async {
     print('🔐 saveToken called with token: ${token.substring(0, 20)}...');
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    print('🔐 Token saved successfully');
+    
+    final expiresAt = DateTime.now().add(Duration(seconds: expiresIn));
+    await SecureStorageService.saveToken(
+      token: token,
+      expiresAt: expiresAt,
+    );
+    
+    print('🔐 Token saved securely with expiry: $expiresAt');
     
     // Verify it was saved
-    final saved = prefs.getString(_tokenKey);
+    final saved = await SecureStorageService.getToken();
     print('🔐 Verification - Token retrieved: ${saved != null ? "YES" : "NO"}');
   }
 
   static Future<void> clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
+    await SecureStorageService.clearAuth();
+    print('🔐 Token cleared from secure storage');
   }
 
   /// Login and return token
@@ -74,9 +89,12 @@ class ApiService {
     print('🌐 API: Email: $email');
     
     try {
+      final deviceId = await SecureStorageService.getDeviceId();
+      
       final res = await _dio.post('/v1/auth/login', data: {
         'email': email,
         'password': password,
+        'device_id': deviceId,
       });
       
       print('🌐 API: Login response status: ${res.statusCode}');

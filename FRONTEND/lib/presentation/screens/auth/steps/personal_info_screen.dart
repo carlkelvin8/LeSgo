@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/widgets.dart';
+import '../../../widgets/common/common_widgets.dart';
 import '../../../provider/register/controller/personal_info.controller.notifier.dart';
 import '../../../../core/utils/validators/register_validator.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/constants/routers/register/register_routes.dart';
 import '../../../../core/constants/routers/app_router.dart';
@@ -69,24 +71,35 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
-                            CustomTextField(
+                            // First Name with real-time validation
+                            ValidatedTextField(
+                              label: 'First Name',
+                              hint: 'Enter your first name',
                               controller: _controllers.firstNameController,
-                              labelText: 'First Name',
-                              validator: RegisterValidator.firstName,
+                              validator: (value) => Validators.name(value, fieldName: 'First name'),
+                              textCapitalization: TextCapitalization.words,
+                              prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                              required: true,
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 16),
                             ),
 
-                            CustomTextField(
+                            // Last Name with real-time validation
+                            ValidatedTextField(
+                              label: 'Last Name',
+                              hint: 'Enter your last name',
                               controller: _controllers.lastNameController,
-                              labelText: 'Last Name',
-                              validator: RegisterValidator.lastName,
+                              validator: (value) => Validators.name(value, fieldName: 'Last name'),
+                              textCapitalization: TextCapitalization.words,
+                              prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                              required: true,
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 16),
                             ),
 
+                            // Birthday field (keep existing widget)
                             BirthdayField(
                               controller: _controllers.birthdayController,
                               labelText: 'Birthday',
@@ -97,43 +110,52 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               height: ResponsiveUtils.spacing(context, 16),
                             ),
 
-                            CustomTextField(
+                            // Email with real-time validation
+                            ValidatedTextField(
+                              label: 'Email',
+                              hint: 'Enter your email address',
                               controller: _controllers.emailController,
-                              labelText: 'Email',
+                              validator: Validators.email,
                               keyboardType: TextInputType.emailAddress,
-                              validator: RegisterValidator.email,
+                              prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[600]),
+                              required: true,
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 16),
                             ),
 
-                            CustomTextField(
+                            // Password with strength indicator
+                            PasswordField(
+                              label: 'Password',
+                              hint: 'Create a strong password',
                               controller: _controllers.passwordController,
-                              labelText: 'Password',
-                              obscureText: true,
-                              validator: RegisterValidator.password,
+                              showStrengthIndicator: true,
+                              required: true,
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 16),
                             ),
 
-                            CustomTextField(
+                            // Confirm Password
+                            PasswordConfirmField(
+                              label: 'Confirm Password',
+                              hint: 'Re-enter your password',
                               controller: _controllers.confirmPasswordController,
-                              labelText: 'Confirm Password',
-                              obscureText: true,
-                              validator: (value) => RegisterValidator.confirmPassword(
-                                value,
-                                _controllers.passwordController.text,
-                              ),
+                              passwordController: _controllers.passwordController,
+                              required: true,
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 16),
                             ),
 
-                            CustomTextField(
+                            // Referral Code (optional)
+                            ValidatedTextField(
+                              label: 'Referral Code',
+                              hint: 'Enter referral code (optional)',
                               controller: _controllers.referralCodeController,
-                              labelText: 'Referral Code',
                               validator: RegisterValidator.referralCode,
+                              prefixIcon: Icon(Icons.card_giftcard_outlined, color: Colors.grey[600]),
+                              required: false,
                             ),
                           ],
                         ),

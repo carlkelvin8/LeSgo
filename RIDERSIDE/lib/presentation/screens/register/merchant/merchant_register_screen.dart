@@ -29,6 +29,8 @@ class _MerchantRegisterScreenState
   final _contactNumberController = TextEditingController();
   final _addressController = TextEditingController();
   final _zipCodeController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   @override
   void initState() {
@@ -68,6 +70,16 @@ class _MerchantRegisterScreenState
           .read(merchantRegisterInfoProvider.notifier)
           .updateZipCode(_zipCodeController.text);
     });
+    _passwordController.addListener(() {
+      ref
+          .read(merchantRegisterInfoProvider.notifier)
+          .updatePassword(_passwordController.text);
+    });
+    _confirmPasswordController.addListener(() {
+      ref
+          .read(merchantRegisterInfoProvider.notifier)
+          .updateConfirmPassword(_confirmPasswordController.text);
+    });
   }
 
   @override
@@ -79,6 +91,8 @@ class _MerchantRegisterScreenState
     _contactNumberController.dispose();
     _addressController.dispose();
     _zipCodeController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -141,6 +155,8 @@ class _MerchantRegisterScreenState
               contactNumberController: _contactNumberController,
               addressController: _addressController,
               zipCodeController: _zipCodeController,
+              passwordController: _passwordController,
+              confirmPasswordController: _confirmPasswordController,
             ),
 
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),

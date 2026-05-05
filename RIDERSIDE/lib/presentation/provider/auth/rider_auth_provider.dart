@@ -118,9 +118,11 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       
       final token = data['token'] as String?;
       final userData = data['user'] ?? data['data'];
+      final expiresIn = data['expires_in'] as int? ?? 3600; // Default 1 hour
       
       print('🔐 Token extracted: ${token != null ? "${token.substring(0, 20)}..." : "NULL"}');
       print('🔐 User data extracted: $userData');
+      print('🔐 Token expires in: $expiresIn seconds');
 
       if (token == null || userData == null) {
         print('❌ Token or user data is null');
@@ -145,8 +147,8 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
         return false;
       }
 
-      print('🔐 Calling ApiService.saveToken...');
-      await ApiService.saveToken(token);
+      print('🔐 Calling ApiService.saveToken with expiry...');
+      await ApiService.saveToken(token, expiresIn: expiresIn);
       print('🔐 Token saved, verifying...');
       
       // Verify token was saved
