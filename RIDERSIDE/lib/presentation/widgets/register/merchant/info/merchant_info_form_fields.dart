@@ -102,8 +102,12 @@ class MerchantInfoFormFields extends StatelessWidget {
         CustomTextField(
           controller: passwordController,
           hintText: 'Enter your password',
-          obscureText: true,
-          validator: RegisterValidator.password,
+          isPassword: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Password is required';
+            if (value.length < 8) return 'Password must be at least 8 characters';
+            return null;
+          },
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
@@ -112,7 +116,7 @@ class MerchantInfoFormFields extends StatelessWidget {
         CustomTextField(
           controller: confirmPasswordController,
           hintText: 'Re-enter your password',
-          obscureText: true,
+          isPassword: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please confirm your password';

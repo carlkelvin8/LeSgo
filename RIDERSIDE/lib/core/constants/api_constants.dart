@@ -1,12 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConstants {
-  // Base URL - Android emulator uses 10.0.2.2 to access host machine
+  // Base URL - Production
   static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://127.0.0.1:8000/api';
-    }
-    return 'http://10.0.2.2:8000/api'; // Android emulator
+    return 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
   }
 
   // Chat endpoints

@@ -7,33 +7,33 @@ part of 'partner_dto.dart';
 // **************************************************************************
 
 PartnerDto _$PartnerDtoFromJson(Map<String, dynamic> json) => PartnerDto(
-  id: (json['id'] as num).toInt(),
-  name: json['name'] as String,
-  legalName: json['legal_name'] as String?,
-  slug: json['slug'] as String?,
-  logoUrl: json['logo_url'] as String?,
-  coverImageUrl: json['cover_image_url'] as String?,
-  description: json['description'] as String?,
-  category: json['category'] as String?,
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-  cuisineTypes: (json['cuisine_types'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
-  rating: (json['rating'] as num?)?.toDouble(),
-  totalReviews: (json['total_reviews'] as num?)?.toInt(),
-  deliveryFee: (json['delivery_fee'] as num?)?.toDouble(),
-  minOrderAmount: (json['min_order_amount'] as num?)?.toInt(),
-  estimatedDeliveryMinutes: (json['estimated_delivery_minutes'] as num?)
-      ?.toInt(),
-  isOpen: json['is_open'] as bool?,
-  isFeatured: json['is_featured'] as bool?,
-  status: json['status'] as String?,
-  acceptsOnlinePayment: json['accepts_online_payment'] as bool?,
-  openingHours: json['opening_hours'] as Map<String, dynamic>?,
-  supportPhone: json['support_phone'] as String?,
-  supportEmail: json['support_email'] as String?,
-  referralCode: json['referral_code'] as String?,
-);
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      legalName: json['legal_name'] as String?,
+      slug: json['slug'] as String?,
+      logoUrl: json['logo_url'] as String?,
+      coverImageUrl: json['cover_image_url'] as String?,
+      description: json['description'] as String?,
+      category: json['category'] as String?,
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      cuisineTypes: (json['cuisine_types'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      rating: (json['rating'] as num?)?.toDouble(),
+      totalReviews: (json['total_reviews'] as num?)?.toInt(),
+      deliveryFee: (json['delivery_fee'] as num?)?.toDouble(),
+      minOrderAmount: (json['min_order_amount'] as num?)?.toInt(),
+      estimatedDeliveryMinutes:
+          (json['estimated_delivery_minutes'] as num?)?.toInt(),
+      isOpen: json['is_open'] as bool?,
+      isFeatured: json['is_featured'] as bool?,
+      status: json['status'] as String?,
+      acceptsOnlinePayment: json['accepts_online_payment'] as bool?,
+      openingHours: json['opening_hours'] as Map<String, dynamic>?,
+      supportPhone: json['support_phone'] as String?,
+      supportEmail: json['support_email'] as String?,
+      referralCode: json['referral_code'] as String?,
+    );
 
 Map<String, dynamic> _$PartnerDtoToJson(PartnerDto instance) =>
     <String, dynamic>{

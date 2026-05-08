@@ -7,7 +7,7 @@ import '../../../../../data/data_source/auth_remote_datasource.dart';
 import '../../../../../data/data_source/dto/auth/register_driver_request_dto.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/services/secure_storage_service.dart';
-import '../rider_phone_verification_provider.dart';
+import 'rider_phone_verification_provider.dart';
 
 // Register Info State
 class RegisterInfoState {

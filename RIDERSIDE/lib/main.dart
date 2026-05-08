@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/constants/routers/app_router.dart';
 import 'core/constants/routers/auth/auth_routes.dart';
+import 'core/di/injection.dart';
 import 'core/network/dio_client.dart';
 
 void main() async {
@@ -17,6 +18,9 @@ void main() async {
   // Check if token exists
   final existingToken = prefs.getString('rider_token');
   print('🔍 Existing token check: ${existingToken != null ? "Token found" : "No token"}');
+  
+  // Initialize dependency injection
+  await configureDependencies();
   
   // Initialize DioClient
   DioClient().initialize();

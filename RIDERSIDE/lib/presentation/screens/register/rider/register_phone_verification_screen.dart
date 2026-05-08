@@ -99,6 +99,7 @@ class _RegisterPhoneVerificationScreenState
             isPhoneNumberValid: verificationState.isPhoneNumberValid,
             onSendOTP: _sendOTP,
             onResendOTP: _resendOTP,
+            devOtp: verificationState.devOtp,
           ),
 
           SizedBox(height: ResponsiveUtils.spacing(context, 32)),

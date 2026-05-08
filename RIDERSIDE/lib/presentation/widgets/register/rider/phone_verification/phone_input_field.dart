@@ -37,7 +37,7 @@ class PhoneInputField extends StatelessWidget {
           child: TextField(
             controller: controller,
             keyboardType: TextInputType.phone,
-            maxLength: 10,
+            maxLength: 11,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
             ],

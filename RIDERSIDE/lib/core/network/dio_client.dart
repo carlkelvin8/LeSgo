@@ -14,9 +14,9 @@ class DioClient {
   void initialize() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: kIsWeb ? 'http://127.0.0.1:8000/api' : 'http://10.0.2.2:8000/api',
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
+        baseUrl: 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api',
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

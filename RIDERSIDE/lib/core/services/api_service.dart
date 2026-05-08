@@ -13,8 +13,8 @@ class ApiService {
         onRequest: (options, handler) async {
           // Set base URL dynamically
           options.baseUrl = _baseUrl;
-          options.connectTimeout = const Duration(seconds: 15);
-          options.receiveTimeout = const Duration(seconds: 15);
+          options.connectTimeout = const Duration(seconds: 30);
+          options.receiveTimeout = const Duration(seconds: 30);
           options.headers['Accept'] = 'application/json';
           options.headers['Content-Type'] = 'application/json';
           

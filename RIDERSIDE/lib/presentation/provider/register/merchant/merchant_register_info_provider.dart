@@ -328,8 +328,10 @@ class MerchantRegisterInfoNotifier
 
       // Store token if registration successful
       if (response.success && response.token != null) {
-        final secureStorage = getIt<SecureStorageService>();
-        await secureStorage.saveToken(response.token!);
+        await SecureStorageService.saveToken(
+          token: response.token!,
+          expiresAt: DateTime.now().add(const Duration(days: 30)),
+        );
         
         state = state.copyWith(
           isSubmitted: true,

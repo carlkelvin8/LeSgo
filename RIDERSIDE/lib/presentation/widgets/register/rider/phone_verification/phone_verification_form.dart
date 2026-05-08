@@ -17,6 +17,7 @@ class PhoneVerificationForm extends StatelessWidget {
   final bool isPhoneNumberValid;
   final VoidCallback onSendOTP;
   final VoidCallback onResendOTP;
+  final String? devOtp;
 
   const PhoneVerificationForm({
     super.key,
@@ -27,6 +28,7 @@ class PhoneVerificationForm extends StatelessWidget {
     required this.isPhoneNumberValid,
     required this.onSendOTP,
     required this.onResendOTP,
+    this.devOtp,
   });
 
   @override
@@ -51,7 +53,7 @@ class PhoneVerificationForm extends StatelessWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
           ResendOTPButton(onPressed: onResendOTP),
           SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-          const VerificationCodeSection(),
+          VerificationCodeSection(devOtp: devOtp),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           OTPInputBoxes(controllers: otpControllers),
           SizedBox(height: ResponsiveUtils.spacing(context, 40)),

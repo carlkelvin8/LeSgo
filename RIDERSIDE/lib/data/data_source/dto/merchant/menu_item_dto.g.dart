@@ -7,27 +7,27 @@ part of 'menu_item_dto.dart';
 // **************************************************************************
 
 MenuItemDto _$MenuItemDtoFromJson(Map<String, dynamic> json) => MenuItemDto(
-  id: (json['id'] as num).toInt(),
-  partnerId: (json['partner_id'] as num).toInt(),
-  menuCategoryId: (json['menu_category_id'] as num).toInt(),
-  name: json['name'] as String,
-  description: json['description'] as String?,
-  imageUrl: json['image_url'] as String?,
-  price: (json['price'] as num).toDouble(),
-  originalPrice: (json['original_price'] as num?)?.toDouble(),
-  unit: json['unit'] as String?,
-  isAvailable: json['is_available'] as bool,
-  isPopular: json['is_popular'] as bool?,
-  isFeatured: json['is_featured'] as bool?,
-  isBestSeller: json['is_best_seller'] as bool?,
-  requiresPrescription: json['requires_prescription'] as bool?,
-  sortOrder: (json['sort_order'] as num?)?.toInt(),
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-  options: json['options'] as Map<String, dynamic>?,
-  category: json['category'] == null
-      ? null
-      : MenuCategoryDto.fromJson(json['category'] as Map<String, dynamic>),
-);
+      id: (json['id'] as num).toInt(),
+      partnerId: (json['partner_id'] as num).toInt(),
+      menuCategoryId: (json['menu_category_id'] as num).toInt(),
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      imageUrl: json['image_url'] as String?,
+      price: (json['price'] as num).toDouble(),
+      originalPrice: (json['original_price'] as num?)?.toDouble(),
+      unit: json['unit'] as String?,
+      isAvailable: json['is_available'] as bool,
+      isPopular: json['is_popular'] as bool?,
+      isFeatured: json['is_featured'] as bool?,
+      isBestSeller: json['is_best_seller'] as bool?,
+      requiresPrescription: json['requires_prescription'] as bool?,
+      sortOrder: (json['sort_order'] as num?)?.toInt(),
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      options: json['options'] as Map<String, dynamic>?,
+      category: json['category'] == null
+          ? null
+          : MenuCategoryDto.fromJson(json['category'] as Map<String, dynamic>),
+    );
 
 Map<String, dynamic> _$MenuItemDtoToJson(MenuItemDto instance) =>
     <String, dynamic>{

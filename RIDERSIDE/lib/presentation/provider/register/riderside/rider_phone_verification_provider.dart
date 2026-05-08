@@ -10,6 +10,7 @@ class PhoneVerificationState {
   final bool isLoading;
   final String? errorMessage;
   final bool isVerified;
+  final String? devOtp; // Only in fallback/dev mode - shows OTP for testing
 
   const PhoneVerificationState({
     this.phoneNumber = '',
@@ -17,6 +18,7 @@ class PhoneVerificationState {
     this.isLoading = false,
     this.errorMessage,
     this.isVerified = false,
+    this.devOtp,
   });
 
   PhoneVerificationState copyWith({
@@ -26,6 +28,7 @@ class PhoneVerificationState {
     String? errorMessage,
     bool clearError = false,
     bool? isVerified,
+    String? devOtp,
   }) {
     return PhoneVerificationState(
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -33,11 +36,17 @@ class PhoneVerificationState {
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       isVerified: isVerified ?? this.isVerified,
+      devOtp: devOtp ?? this.devOtp,
     );
   }
 
   // Helper method to check if phone number is valid
-  bool get isPhoneNumberValid => phoneNumber.length == 10;
+  // Accept 10 digits (9xxxxxxxxx) or 11 digits starting with 0 (09xxxxxxxxx)
+  bool get isPhoneNumberValid {
+    if (phoneNumber.length == 10) return true;
+    if (phoneNumber.length == 11 && phoneNumber.startsWith('0')) return true;
+    return false;
+  }
 }
 
 class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
@@ -63,13 +72,26 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
       final authDataSource = getIt<AuthRemoteDataSource>();
       
       // Format phone number to international format (+63)
-      final formattedPhone = '+63${state.phoneNumber}';
+      // Strip leading 0 if present (e.g. 09171234567 -> 9171234567 -> +639171234567)
+      String phone = state.phoneNumber;
+      if (phone.startsWith('0')) {
+        phone = phone.substring(1);
+      }
+      final formattedPhone = '+63$phone';
       
       // Call backend OTP API
       final response = await authDataSource.sendOtp(formattedPhone);
       
       if (response.success) {
-        state = state.copyWith(otpSent: true, isLoading: false);
+        // In fallback/dev mode, backend returns the OTP in the response
+        state = state.copyWith(
+          otpSent: true,
+          isLoading: false,
+          devOtp: response.otp, // null in production, actual OTP in dev fallback
+        );
+        if (response.otp != null) {
+          print('🔑 DEV MODE - OTP Code: ${response.otp}');
+        }
       } else {
         throw Exception(response.message);
       }
@@ -82,11 +104,16 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
         errorMessage = e.message!;
       }
       
+      // Debug logging
+      print('❌ OTP Send DioError: ${e.type} - ${e.message}');
+      print('❌ Response: ${e.response?.statusCode} - ${e.response?.data}');
+      
       state = state.copyWith(
         isLoading: false,
         errorMessage: errorMessage,
       );
     } catch (e) {
+      print('❌ OTP Send Error: $e');
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Failed to send OTP: ${e.toString()}',
@@ -102,7 +129,12 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
       final authDataSource = getIt<AuthRemoteDataSource>();
       
       // Format phone number to international format (+63)
-      final formattedPhone = '+63${state.phoneNumber}';
+      // Strip leading 0 if present
+      String phone = state.phoneNumber;
+      if (phone.startsWith('0')) {
+        phone = phone.substring(1);
+      }
+      final formattedPhone = '+63$phone';
       
       // Call backend OTP API (resend is same as send)
       final response = await authDataSource.sendOtp(formattedPhone);
@@ -146,7 +178,12 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
       final authDataSource = getIt<AuthRemoteDataSource>();
       
       // Format phone number to international format (+63)
-      final formattedPhone = '+63${state.phoneNumber}';
+      // Strip leading 0 if present
+      String phone = state.phoneNumber;
+      if (phone.startsWith('0')) {
+        phone = phone.substring(1);
+      }
+      final formattedPhone = '+63$phone';
       
       // Call backend OTP verification API
       final response = await authDataSource.verifyOtp(formattedPhone, otp);
