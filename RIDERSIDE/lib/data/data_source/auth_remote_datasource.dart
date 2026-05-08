@@ -6,11 +6,82 @@ import 'dto/auth/register_merchant_request_dto.dart';
 import 'dto/auth/register_merchant_response_dto.dart';
 import 'dto/auth/login_request_dto.dart';
 import 'dto/auth/login_response_dto.dart';
+import 'dto/auth/otp_response_dto.dart';
 
 class AuthRemoteDataSource {
   final DioClient _dioClient;
 
   AuthRemoteDataSource(this._dioClient);
+
+  // ============================================================================
+  // OTP METHODS
+  // ============================================================================
+
+  /// Send OTP verification code to phone number
+  Future<OtpResponseDto> sendOtp(String phoneNumber, {String channel = 'sms'}) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/otp/send',
+        data: {
+          'phone_number': phoneNumber,
+          'channel': channel,
+        },
+      );
+
+      return OtpResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Verify OTP code for phone number
+  Future<OtpResponseDto> verifyOtp(String phoneNumber, String otp) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/otp/verify',
+        data: {
+          'phone_number': phoneNumber,
+          'otp': otp,
+        },
+      );
+
+      return OtpResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Cancel pending OTP verification
+  Future<OtpResponseDto> cancelOtp(String phoneNumber) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/otp/cancel',
+        data: {
+          'phone_number': phoneNumber,
+        },
+      );
+
+      return OtpResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Check if phone number is verified
+  Future<OtpResponseDto> checkOtpVerification(String phoneNumber) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/otp/check',
+        data: {
+          'phone_number': phoneNumber,
+        },
+      );
+
+      return OtpResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
 
   // ============================================================================
   // DRIVER REGISTRATION
