@@ -22,7 +22,7 @@ class _RegisterPhoneVerificationScreenState
   @override
   void initState() {
     super.initState();
-    _otpControllers = List.generate(4, (index) => TextEditingController());
+    _otpControllers = List.generate(6, (index) => TextEditingController());
     _phoneController.addListener(() {
       ref
           .read(phoneVerificationProvider.notifier)

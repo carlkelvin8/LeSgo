@@ -135,8 +135,8 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
 
   // Verify OTP
   Future<bool> verifyOTP(String otp) async {
-    if (otp.length != 4) {
-      state = state.copyWith(errorMessage: 'Please enter a valid 4-digit OTP');
+    if (otp.length != 6) {
+      state = state.copyWith(errorMessage: 'Please enter a valid 6-digit OTP');
       return false;
     }
 

@@ -76,7 +76,7 @@ class _OTPInputBoxesState extends State<OTPInputBoxes> {
   @override
   void initState() {
     super.initState();
-    _focusNodes = List.generate(4, (index) => FocusNode());
+    _focusNodes = List.generate(widget.controllers.length, (index) => FocusNode());
   }
 
   @override
@@ -88,7 +88,7 @@ class _OTPInputBoxesState extends State<OTPInputBoxes> {
   }
 
   void _onOtpChanged(int index, String value) {
-    if (value.length == 1 && index < 3) {
+    if (value.length == 1 && index < widget.controllers.length - 1) {
       _focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
@@ -100,7 +100,7 @@ class _OTPInputBoxesState extends State<OTPInputBoxes> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(
-        4,
+        widget.controllers.length,
         (index) => OTPInputBox(
           controller: widget.controllers[index],
           focusNode: _focusNodes[index],
