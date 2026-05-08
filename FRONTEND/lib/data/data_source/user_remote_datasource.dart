@@ -17,13 +17,17 @@ class UserRemoteDataSource {
   Future<UserDto> login(LoginRequestDto requestDto) async {
     final dio = _dioClient.dio;
     try {
+      print('🔵 UserRemoteDataSource: Attempting login to ${ApiConstants.loginEndpoint}');
       final response = await dio.post(
-        '${ApiConstants.baseUrl}${ApiConstants.loginEndpoint}',
+        ApiConstants.loginEndpoint,
         data: requestDto.toJson(),
       );
 
+      print('🟢 UserRemoteDataSource: Login successful');
       return UserDto.fromJson(response.data);
     } on DioException catch (e) {
+      print('🔴 UserRemoteDataSource: DioException - ${e.message}');
+      print('🔴 Response: ${e.response?.data}');
       if (e.response != null && e.response?.data != null) {
         if (e.response?.data is Map<String, dynamic>) {
           return UserDto.fromJson(e.response?.data as Map<String, dynamic>);
@@ -33,6 +37,7 @@ class UserRemoteDataSource {
         e.message ?? 'An unexpected network error occurred',
       );
     } catch (e) {
+      print('🔴 UserRemoteDataSource: Exception - $e');
       return UserDto.withError(e.toString());
     }
   }
@@ -41,7 +46,7 @@ class UserRemoteDataSource {
     final dio = _dioClient.dio;
     try {
       final response = await dio.post(
-        '${ApiConstants.baseUrl}${ApiConstants.logoutEndpoint}',
+        ApiConstants.logoutEndpoint,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 

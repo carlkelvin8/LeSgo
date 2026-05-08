@@ -4,14 +4,9 @@ class ApiConstants {
   static const String googleMapsApiKey =
       'AIzaSyBekzwaPQ9H0Zu3y7XOyUkrM-ny4XdVZXA';
 
-  // API Base
-  // - Web browser: 127.0.0.1 (localhost)
-  // - Android emulator: 10.0.2.2 (routes to host machine)
+  // API Base URL - Production
   static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://127.0.0.1:8000/api';
-    }
-    return 'http://10.0.2.2:8000/api';
+    return 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
   }
 
   static const String loginEndpoint = '/v1/auth/login';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/utils.dart';
+import '../../../core/utils/validators.dart';
 import '../../provider/auth/forgot_password_provider.dart';
 import '../../widgets/widgets.dart';
 
