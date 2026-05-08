@@ -4,6 +4,10 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../../domain/entities/auth/merchant/merchant_documents.dart';
 import '../../../../../domain/entities/auth/merchant/merchant_registration_info.dart';
+import '../../../../../data/data_source/auth_remote_datasource.dart';
+import '../../../../../data/data_source/dto/auth/register_merchant_request_dto.dart';
+import '../../../../../core/di/injection.dart';
+import '../../../../../core/services/secure_storage_service.dart';
 
 // Merchant Register Info State
 class MerchantRegisterInfoState {
@@ -300,15 +304,45 @@ class MerchantRegisterInfoNotifier
     state = state.copyWith(isSubmitting: true);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      // Create registration request
+      final registerRequest = RegisterMerchantRequestDto(
+        name: '${state.info.ownerFirstName} ${state.info.ownerLastName}',
+        email: state.info.email,
+        phone: state.info.contactNumber,
+        password: state.info.password,
+        passwordConfirmation: state.info.confirmPassword,
+        role: 'partner_admin',
+        restaurantName: state.info.restaurantName,
+        zipCode: state.info.zipCode,
+        selfiePath: state.documents.selfiePath,
+        validIdPath: state.documents.validIdPath,
+        digitalSignaturePath: state.documents.digitalSignaturePath,
+        barangayPermitPath: state.documents.barangayPermitPath,
+        mayorsPermitPath: state.documents.mayorsPermitPath,
+        dtiPermitPath: state.documents.dtiPermitPath,
+      );
 
-      // TODO: Implement actual backend submission
-      state = state.copyWith(isSubmitted: true);
+      // Call registration API
+      final authDataSource = getIt<AuthRemoteDataSource>();
+      final response = await authDataSource.registerMerchant(registerRequest);
+
+      // Store token if registration successful
+      if (response.success && response.token != null) {
+        final secureStorage = getIt<SecureStorageService>();
+        await secureStorage.saveToken(response.token!);
+        
+        state = state.copyWith(
+          isSubmitted: true,
+          isSubmitting: false,
+        );
+      } else {
+        throw Exception(response.message);
+      }
     } catch (e) {
-      state = state.copyWith(errorMessage: 'Submission failed: $e');
-    } finally {
-      state = state.copyWith(isSubmitting: false);
+      state = state.copyWith(
+        errorMessage: 'Submission failed: $e',
+        isSubmitting: false,
+      );
     }
   }
 }

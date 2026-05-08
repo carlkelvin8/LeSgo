@@ -3,6 +3,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../../domain/entities/auth/rider/rider_registration_info.dart';
 import '../../../../../domain/entities/auth/rider/rider_documents.dart';
+import '../../../../../data/data_source/auth_remote_datasource.dart';
+import '../../../../../data/data_source/dto/auth/register_driver_request_dto.dart';
+import '../../../../../core/di/injection.dart';
+import '../../../../../core/services/secure_storage_service.dart';
+import '../rider_phone_verification_provider.dart';
 
 // Register Info State
 class RegisterInfoState {
@@ -392,10 +397,38 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     try {
       state = state.copyWith(isSubmitting: true, clearError: true);
 
-      // TODO: Implement API call to submit registration data
-      await Future.delayed(const Duration(seconds: 2));
+      // Get phone number from phone verification provider
+      // Note: In a complete implementation, password and license number
+      // should be collected in the registration flow
+      final phoneNumber = '+639171234567'; // TODO: Get from phone verification provider
+      final password = 'TempPassword123!'; // TODO: Collect from UI
+      final licenseNumber = 'N01-12-345678'; // TODO: Collect from UI
 
-      state = state.copyWith(isSubmitting: false, isSubmitted: true);
+      // Create registration request
+      final registerRequest = RegisterDriverRequestDto(
+        name: '${state.registrationInfo.firstName} ${state.registrationInfo.lastName}',
+        email: state.registrationInfo.email,
+        phoneNumber: phoneNumber,
+        password: password,
+        passwordConfirmation: password,
+        licenseNumber: licenseNumber,
+      );
+
+      // Call registration API
+      final authDataSource = getIt<AuthRemoteDataSource>();
+      final response = await authDataSource.registerDriver(registerRequest);
+
+      // Store token if registration successful
+      if (response.success && response.data?.user != null) {
+        // Note: Token is not returned in driver registration response
+        // User needs to login after registration
+        state = state.copyWith(
+          isSubmitting: false,
+          isSubmitted: true,
+        );
+      } else {
+        throw Exception(response.message);
+      }
     } catch (e) {
       state = state.copyWith(
         isSubmitting: false,
