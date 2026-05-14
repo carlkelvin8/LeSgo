@@ -177,7 +177,12 @@ class OrderRemoteDataSource {
       if (dto.data != null) {
         _orderCache[dto.data.id] = {
           'meta': requestData['meta'],
-          'items': requestData['items'],
+          'items': request.items?.map((e) {
+            final json = e.toJson();
+            json['id'] = 0; // Mock ID since it's not saved by backend yet
+            json['order_id'] = dto.data!.id;
+            return json;
+          }).toList(),
         };
       }
       

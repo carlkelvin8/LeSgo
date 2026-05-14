@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_profile_provider.dart';
+import '../../../../screens/main/riderside/rider_edit_profile_screen.dart';
 
 class RiderProfileInfoSection extends ConsumerWidget {
   const RiderProfileInfoSection({super.key});
@@ -76,7 +77,40 @@ class RiderProfileInfoSection extends ConsumerWidget {
             context,
             'Referral Code:',
             profileState.referralCode.isNotEmpty ? profileState.referralCode : 'Not set',
-            valueColor: const Color(0xFFC320D6), // Custom vibrant purple from design
+            valueColor: const Color(0xFFC320D6),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+          // Edit Profile Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const RiderEditProfileScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF5F2D82)),
+              label: Text(
+                'Edit Profile',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF5F2D82),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF5F2D82), width: 1.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: EdgeInsets.symmetric(
+                  vertical: ResponsiveUtils.spacing(context, 12),
+                ),
+              ),
+            ),
           ),
         ],
       ),

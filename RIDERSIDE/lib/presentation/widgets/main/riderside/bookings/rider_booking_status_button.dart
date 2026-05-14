@@ -82,6 +82,12 @@ class RiderBookingStatusButton extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
+      case BookingStatus.cancelled:
+        return const LinearGradient(
+          colors: [Color(0xFFEF5350), Color(0xFFEF9A9A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
     }
   }
 

@@ -6,7 +6,6 @@ import '../../../../widgets/widgets.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import 'rider_bookings_map_view.dart';
-import '../../../../widgets/test/google_maps_debug_test.dart';
 
 class RiderBookingsView extends ConsumerStatefulWidget {
   const RiderBookingsView({super.key});
@@ -16,7 +15,7 @@ class RiderBookingsView extends ConsumerStatefulWidget {
 }
 
 class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
-  bool _showMapView = false; // Default to list view for web compatibility
+  bool _showMapView = false;
 
   @override
   Widget build(BuildContext context) {
@@ -24,14 +23,11 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
 
     return Column(
       children: [
-        // Top Header + Duty toggle section with view switcher
         Container(
           color: Colors.white,
           child: Column(
             children: [
               const RiderBookingsHeader(),
-              
-              // View Toggle (hide map option on web)
               if (!kIsWeb)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -46,23 +42,6 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Debug button for Google Maps testing
-                      if (!kIsWeb)
-                        Expanded(
-                          child: _buildViewToggleButton(
-                            icon: Icons.bug_report,
-                            label: 'Debug Maps',
-                            isSelected: false,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const GoogleMapsDebugTest(),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
                       Expanded(
                         child: _buildViewToggleButton(
                           icon: Icons.list,
@@ -77,8 +56,6 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
             ],
           ),
         ),
-
-        // Content based on selected view
         Expanded(
           child: _showMapView && !kIsWeb
               ? const RiderBookingsMapView()

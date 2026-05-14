@@ -30,6 +30,8 @@ enum BookingStatus {
   driverHasArrived,
   inProgress,
   complete,
+  // Cancelled
+  cancelled,
 }
 
 extension BookingStatusX on BookingStatus {
@@ -57,6 +59,8 @@ extension BookingStatusX on BookingStatus {
         return 'In Progress';
       case BookingStatus.complete:
         return 'Complete';
+      case BookingStatus.cancelled:
+        return 'Cancelled';
     }
   }
 
@@ -70,6 +74,8 @@ extension BookingStatusX on BookingStatus {
         return 'Upload picture';
       case BookingStatus.complete:
         return 'Upload picture';
+      case BookingStatus.cancelled:
+        return null;
       default:
         return null;
     }
@@ -125,6 +131,7 @@ class RiderBooking {
   final BookingCategory category;
   final String billingAmount;
   final String billingMethod;
+  final String? deliveryFee;
   final BookingStatus currentStatus;
   final List<String>? proofOfDeliveryUrls;
   final String? customerPhone;
@@ -148,6 +155,7 @@ class RiderBooking {
     this.category = BookingCategory.lesRide,
     this.billingAmount = 'PHP 0.00',
     this.billingMethod = 'Cash on Delivery',
+    this.deliveryFee,
     this.currentStatus = BookingStatus.pending,
     this.proofOfDeliveryUrls,
     this.customerPhone,

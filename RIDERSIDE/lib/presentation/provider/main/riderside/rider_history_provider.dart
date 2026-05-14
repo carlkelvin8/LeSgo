@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/api_service.dart';
 import '../../../../../domain/entities/rider_booking.dart';
@@ -34,17 +33,16 @@ class RiderHistoryState {
   List<RiderBooking> get filteredBookings {
     if (selectedFilter == 'All') return allBookings;
     
-    // Map filter to booking status
-    BookingStatus? targetStatus;
     if (selectedFilter == 'Completed') {
-      targetStatus = BookingStatus.complete;
+      return allBookings.where((b) => b.currentStatus == BookingStatus.complete).toList();
     } else if (selectedFilter == 'Processing') {
-      targetStatus = BookingStatus.onTheWayGoing;
-    }
-    // Note: Cancelled doesn't have a BookingStatus equivalent yet
-    
-    if (targetStatus != null) {
-      return allBookings.where((b) => b.currentStatus == targetStatus).toList();
+      return allBookings.where((b) => 
+        b.currentStatus == BookingStatus.onTheWayGoing ||
+        b.currentStatus == BookingStatus.inProgress ||
+        b.currentStatus == BookingStatus.forDelivery
+      ).toList();
+    } else if (selectedFilter == 'Cancelled') {
+      return allBookings.where((b) => b.currentStatus == BookingStatus.cancelled).toList();
     }
     
     return allBookings;
@@ -60,10 +58,13 @@ class RiderHistoryState {
     for (final booking in allBookings) {
       if (booking.currentStatus == BookingStatus.complete) {
         counts['Completed'] = counts['Completed']! + 1;
-      } else if (booking.currentStatus == BookingStatus.onTheWayGoing) {
+      } else if (booking.currentStatus == BookingStatus.onTheWayGoing ||
+                 booking.currentStatus == BookingStatus.inProgress ||
+                 booking.currentStatus == BookingStatus.forDelivery) {
         counts['Processing'] = counts['Processing']! + 1;
+      } else if (booking.currentStatus == BookingStatus.cancelled) {
+        counts['Cancelled'] = counts['Cancelled']! + 1;
       }
-      // Add cancelled count if needed
     }
     return counts;
   }
@@ -141,7 +142,7 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
     try {
       print('📊 Fetching rider history from API...');
       
-      // Fetch completed and cancelled orders
+      // Fetch completed and cancelled orders for history list
       final ordersRaw = await ApiService.getOrders(perPage: 100);
       print('📦 Received ${ordersRaw.length} orders from API');
 
@@ -164,7 +165,8 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
           } else if (apiStatus == 'picked_up') {
             bookingStatus = BookingStatus.onTheWayGoing;
           } else {
-            bookingStatus = BookingStatus.complete; // Default for cancelled
+            // cancelled
+            bookingStatus = BookingStatus.cancelled;
             cancelledCount++;
           }
 
@@ -304,21 +306,28 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
       print('✅ Processed ${bookings.length} history bookings');
       print('   Completed: $completedCount, Cancelled: $cancelledCount');
 
-      // Calculate performance stars (based on completion rate)
-      final totalOrders = bookings.length;
+      // Get driver rating from profile API
       int stars = 0;
-      if (totalOrders > 0) {
-        final completionRate = completedCount / totalOrders;
-        if (completionRate >= 0.95) {
-          stars = 5;
-        } else if (completionRate >= 0.85) {
-          stars = 4;
-        } else if (completionRate >= 0.75) {
-          stars = 3;
-        } else if (completionRate >= 0.60) {
-          stars = 2;
-        } else {
-          stars = 1;
+      try {
+        final meData = await ApiService.getMe();
+        final dp = (meData['user'] ?? meData)['driver_profile'] as Map<String, dynamic>?;
+        final rating = dp?['rating'];
+        if (rating != null) {
+          final ratingValue = rating is num ? rating.toDouble() : double.tryParse(rating.toString()) ?? 0.0;
+          // Convert 0-5 rating to stars (round to nearest integer)
+          stars = ratingValue.round().clamp(0, 5);
+          print('⭐ Driver rating: $ratingValue → $stars stars');
+        }
+      } catch (e) {
+        print('⚠️ Could not fetch driver rating: $e');
+        // Fallback: calculate from completion rate
+        if (bookings.isNotEmpty) {
+          final completionRate = completedCount / bookings.length;
+          if (completionRate >= 0.95) stars = 5;
+          else if (completionRate >= 0.85) stars = 4;
+          else if (completionRate >= 0.75) stars = 3;
+          else if (completionRate >= 0.60) stars = 2;
+          else stars = 1;
         }
       }
 
@@ -351,9 +360,9 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    // Use serve-image.php for CORS support
-    String baseImageUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
-    return '$baseImageUrl/serve-image.php?path=$path';
+    // Use production API for image serving
+    const baseUrl = 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud';
+    return '$baseUrl/storage/$path';
   }
 }
 

@@ -378,7 +378,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       final response = await dataSource.trackOrder(orderId);
 
       if (response['success'] == true) {
-        final tracking = response['data'];
+        final trackingData = response['data']['data'] ?? response['data']; // Handle nested data if present
 
         // Extract locations (mock data)
         final pickupLoc = const LatLng(8.4542, 124.6319);
@@ -386,22 +386,23 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
         // Extract driver info
         DriverInfo? driverInfo;
-        if (tracking.driver != null) {
+        final driverProfile = trackingData['driver_profile'];
+        if (driverProfile != null) {
+          final user = driverProfile['user'];
           driverInfo = DriverInfo(
-            name: tracking.driver!.name,
-            phone: tracking.driver!.phone,
-            vehicleNumber: tracking.driver!.vehicleNumber,
-            vehicleType: tracking.driver!.vehicleType,
-            photoUrl: tracking.driver!.photoUrl,
-            rating: tracking.driver!.rating,
+            name: user?['name'] ?? 'Driver',
+            phone: user?['phone'] ?? driverProfile['phone_number'],
+            vehicleNumber: driverProfile['plate_number'],
+            vehicleType: driverProfile['vehicle_type'],
+            photoUrl: user?['avatar'],
+            rating: 5.0, // Mock rating for now
           );
         }
 
         state = state.copyWith(
-          tracking: tracking,
           pickupLocation: pickupLoc,
           dropoffLocation: dropoffLoc,
-          orderStatus: tracking.status,
+          orderStatus: trackingData['status'] ?? 'pending',
           driverInfo: driverInfo,
           isLoading: false,
         );

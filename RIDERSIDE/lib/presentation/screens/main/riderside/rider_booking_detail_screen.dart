@@ -442,6 +442,7 @@ class _RiderBookingDetailScreenState
       case BookingStatus.cooking:
       case BookingStatus.toBuy:
       case BookingStatus.pending:
+      case BookingStatus.cancelled:
         print('ℹ️ Status ${newStatus.label} is informational only');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

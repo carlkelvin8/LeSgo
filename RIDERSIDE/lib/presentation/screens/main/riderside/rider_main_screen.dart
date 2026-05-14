@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../provider/main/riderside/rider_main_nav_provider.dart';
+import '../../../provider/main/riderside/rider_mission_provider.dart';
+import '../../../provider/main/riderside/rider_history_provider.dart';
+import '../../../provider/main/riderside/rider_profile_provider.dart';
+import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../widgets/widgets.dart';
 import 'views/rider_profile_view.dart';
 import 'views/rider_wallet_view.dart';
@@ -29,6 +33,8 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
     // Check authentication on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAuthentication();
+      // Force reload orders now that we are authenticated
+      ref.read(riderOrdersProvider.notifier).loadOrders();
     });
   }
 
@@ -62,6 +68,30 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
     final navStack = ref.watch(riderNavProvider);
     final currentNav = navStack.last;
     final isMission = currentNav == RiderNavType.mission;
+
+    // Refresh data when switching to a tab
+    ref.listen<List<RiderNavType>>(riderNavProvider, (previous, next) {
+      final prevTab = previous?.last;
+      final newTab = next.last;
+      if (prevTab == newTab) return;
+
+      switch (newTab) {
+        case RiderNavType.bookings:
+          ref.read(riderOrdersProvider.notifier).loadOrders();
+          break;
+        case RiderNavType.mission:
+          ref.read(riderMissionProvider.notifier).loadMissions();
+          break;
+        case RiderNavType.history:
+          ref.read(riderHistoryProvider.notifier).loadHistory();
+          break;
+        case RiderNavType.profile:
+          ref.read(riderProfileProvider.notifier).loadProfile();
+          break;
+        default:
+          break;
+      }
+    });
 
     return PopScope(
       // Allow the system to close the app only when we're at the root tab
@@ -138,6 +168,8 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
       message: 'Are you sure you want to logout?',
       confirmLabel: 'Logout',
       onConfirm: () async {
+        // Stop order polling before logout
+        ref.read(riderOrdersProvider.notifier).reset();
         // Logout and clear token
         await ref.read(riderAuthProvider.notifier).logout();
         if (context.mounted) {

@@ -73,10 +73,25 @@ class RiderBookingDetailInfo extends StatelessWidget {
                 : 'N/A',
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          if (booking.deliveryFee != null) ...[
+            _InfoRow(
+              label: 'Delivery Fee:',
+              value: '${booking.deliveryFee}',
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          ],
           _InfoRow(
-            label: 'Billing:',
+            label: 'Total Billing:',
             value: '${booking.billingAmount}\n${booking.billingMethod}',
           ),
+          
+          if (booking.items != null && booking.items!.isNotEmpty) ...[
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            _InfoRow(
+              label: 'Items:',
+              value: booking.items!.join('\n'),
+            ),
+          ],
           
           // Proof of Delivery Section
           if (booking.proofOfDeliveryUrls != null && booking.proofOfDeliveryUrls!.isNotEmpty) ...[

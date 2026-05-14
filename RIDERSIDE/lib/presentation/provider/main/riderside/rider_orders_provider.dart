@@ -26,6 +26,9 @@ class RiderOrder {
   final String paymentMethod;
   final String? notes;
   final int? driverId;
+  final double? totalAmount;
+  final double itemsTotal;
+  final List<String> parsedItems;
 
   RiderOrder({
     required this.id,
@@ -47,11 +50,17 @@ class RiderOrder {
     required this.paymentMethod,
     this.notes,
     this.driverId,
+    this.totalAmount,
+    this.itemsTotal = 0.0,
+    this.parsedItems = const [],
   });
 
   // Get the price to display (always show full fare so customer and rider see same price)
   double get displayEarnings => estimatedFare;
   
+  // Get the total amount including items
+  double get displayTotalAmount => (totalAmount != null && totalAmount! > 0 ? totalAmount! : estimatedFare) + itemsTotal;
+
   // Get the actual driver earnings (what driver will receive after commission)
   double get driverEarnings => driverShare ?? (estimatedFare * 0.85); // 85% if not calculated yet
 
@@ -124,6 +133,43 @@ class RiderOrder {
       return 0.0;
     }
 
+    List<String> extractedItems = [];
+    double calculatedItemsTotal = 0.0;
+    
+    if (j['lesbuy_items'] is List && (j['lesbuy_items'] as List).isNotEmpty) {
+      for (var item in j['lesbuy_items']) {
+        final name = item['name'] ?? 'Item';
+        final qtyStr = item['quantity']?.toString() ?? '1';
+        final qty = int.tryParse(qtyStr) ?? 1;
+        final price = item['actual_price'] ?? item['estimated_price'] ?? item['price'];
+        final double priceVal = _d(price);
+        calculatedItemsTotal += (priceVal * qty);
+        if (priceVal > 0) {
+          extractedItems.add('${qty}x $name (PHP ${(priceVal * qty).toStringAsFixed(2)})');
+        } else {
+          extractedItems.add('${qty}x $name');
+        }
+      }
+    } else if (j['meta'] is Map && j['meta']['items'] is List && (j['meta']['items'] as List).isNotEmpty) {
+      for (var item in j['meta']['items']) {
+        final name = item['name'] ?? 'Item';
+        final qtyStr = item['quantity']?.toString() ?? '1';
+        final qty = int.tryParse(qtyStr) ?? 1;
+        final price = item['actual_price'] ?? item['estimated_price'] ?? item['price'];
+        final double priceVal = _d(price);
+        calculatedItemsTotal += (priceVal * qty);
+        if (priceVal > 0) {
+          extractedItems.add('${qty}x $name (PHP ${(priceVal * qty).toStringAsFixed(2)})');
+        } else {
+          extractedItems.add('${qty}x $name');
+        }
+      }
+    } else if (j['item_description'] != null && j['item_description'].toString().isNotEmpty) {
+      extractedItems.add(j['item_description'].toString());
+    } else if (j['notes'] != null && j['notes'].toString().isNotEmpty) {
+      extractedItems.add(j['notes'].toString());
+    }
+
     return RiderOrder(
       id: j['id'] as int,
       serviceId: j['service_id'] as int? ?? 1,
@@ -144,6 +190,9 @@ class RiderOrder {
       paymentMethod: j['payment_method'] as String? ?? 'cash',
       notes: j['notes'] as String?,
       driverId: j['driver_id'] as int?,
+      totalAmount: j['total_amount'] != null ? _d(j['total_amount']) : null,
+      itemsTotal: calculatedItemsTotal,
+      parsedItems: extractedItems,
     );
   }
 
@@ -168,6 +217,9 @@ class RiderOrder {
       paymentMethod: paymentMethod,
       notes: notes,
       driverId: driverId ?? this.driverId,
+      totalAmount: totalAmount,
+      itemsTotal: itemsTotal,
+      parsedItems: parsedItems,
     );
   }
 }
@@ -235,8 +287,8 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   Timer? _autoRefreshTimer;
   
   RiderOrdersNotifier() : super(RiderOrdersState()) {
-    loadOrders();
-    _startAutoRefresh();
+    // Don't auto-load on construction — wait for explicit loadOrders() call
+    // after the user is authenticated (called from RiderMainScreen.initState)
   }
 
   @override
@@ -246,6 +298,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   }
 
   void _startAutoRefresh() {
+    _autoRefreshTimer?.cancel();
     // Auto-refresh every 10 seconds to check for new orders
     _autoRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       loadOrders(silent: true);
@@ -254,11 +307,18 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
   void stopAutoRefresh() {
     _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = null;
   }
 
   void resumeAutoRefresh() {
     _autoRefreshTimer?.cancel();
     _startAutoRefresh();
+  }
+
+  /// Reset state and stop timer (called on logout)
+  void reset() {
+    stopAutoRefresh();
+    state = RiderOrdersState();
   }
 
   Future<void> loadOrders({bool silent = false}) async {
@@ -313,6 +373,11 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         isRefreshing: false,
         clearActiveOrder: active.isEmpty,
       );
+
+      // Start auto-refresh after first successful load
+      if (_autoRefreshTimer == null || !_autoRefreshTimer!.isActive) {
+        _startAutoRefresh();
+      }
     } catch (e) {
       print('❌ Error loading orders: $e');
       state = state.copyWith(

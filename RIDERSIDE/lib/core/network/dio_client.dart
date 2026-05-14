@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/secure_storage_service.dart';
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();
@@ -41,7 +41,7 @@ class DioClient {
   }
 
   Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('rider_token');
+    // Read from SecureStorageService (same place ApiService saves it)
+    return await SecureStorageService.getToken();
   }
 }

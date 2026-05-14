@@ -5,8 +5,8 @@ import 'secure_storage_service.dart';
 
 class ApiService {
   static String get _baseUrl => kReleaseMode
-      ? 'https://api.lesgo.com/api' // Production HTTPS
-      : (kIsWeb ? 'http://127.0.0.1:8000/api' : 'http://10.0.2.2:8000/api');
+      ? 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api'
+      : 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
   
   static final Dio _dio = Dio()..interceptors.add(
       InterceptorsWrapper(
@@ -261,6 +261,12 @@ class ApiService {
   /// GET /v1/auth/me
   static Future<Map<String, dynamic>> getMe() async {
     final res = await _dio.get('/v1/auth/me');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// PUT /v1/auth/me - Update user profile
+  static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    final res = await _dio.put('/v1/auth/me', data: data);
     return res.data as Map<String, dynamic>;
   }
 
