@@ -12,6 +12,7 @@ class OrderChatWidget extends ConsumerStatefulWidget {
   final String orderType; // 'leseat', 'lesgo', 'lesbuy'
   final bool showHeader;
   final double? height;
+  final String? driverName;
 
   const OrderChatWidget({
     super.key,
@@ -19,6 +20,7 @@ class OrderChatWidget extends ConsumerStatefulWidget {
     required this.orderType,
     this.showHeader = true,
     this.height,
+    this.driverName,
   });
 
   @override
@@ -143,6 +145,10 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final chatState = ref.watch(chatProvider(widget.orderId));
+    final driverName = widget.driverName ?? 
+                      chatState.currentConversation?.driver?.name;
+    
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
@@ -168,7 +174,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
           
           // Title
           Text(
-            'Chat with Driver',
+            driverName != null ? 'Chat with $driverName' : 'Chat with Driver',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),

@@ -58,12 +58,54 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.getOrder(int.parse(widget.orderId));
       if (mounted && response.success && response.data != null) {
+        final order = response.data!;
+        final fb = order.fareBreakdown;
+        final meta = order.meta;
+
+        // Calculate subtotal from lesbuy_items if available
+        double subtotal = 0.0;
+        
+        // Use the new helper methods for production compatibility
+        final items = order.effectiveItems;
+        if (items.isNotEmpty) {
+          for (final item in items) {
+            final itemPrice = item.actualPrice ?? item.estimatedPrice ?? 0.0;
+            final itemQuantity = item.quantity;
+            subtotal += itemPrice * itemQuantity;
+          }
+          print('🟢 LesBuy: Calculated subtotal from effective items: $subtotal');
+        } else {
+          // Fallback to widget.orderData, then meta
+          subtotal = _safeToDouble(widget.orderData?['subtotal']);
+          if (subtotal == 0) subtotal = _safeToDouble(meta?['subtotal']);
+          print('🟢 LesBuy: Calculated subtotal from fallback: $subtotal');
+        }
+
+        // Use effective delivery fee
+        final deliveryFee = order.effectiveDeliveryFee;
+
+        // Use effective total amount
+        final grandTotal = order.effectiveTotalAmount;
+
         setState(() {
-          _currentOrderData = response.data!.toJson();
+          _currentOrderData = {
+            ...order.toJson(),
+            'subtotal': subtotal,
+            'deliveryFee': deliveryFee,
+            'total': grandTotal,
+          };
         });
+
+        print('🟢 LesBuy tracking: subtotal=$subtotal, delivery=$deliveryFee, total=$grandTotal');
       }
     } catch (e) {
       print('Failed to fetch current order data: $e');
+      // Fall back to widget.orderData on error
+      if (mounted && widget.orderData != null) {
+        setState(() {
+          _currentOrderData = widget.orderData;
+        });
+      }
     }
   }
 
@@ -656,23 +698,35 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
   }
 
   Widget _buildOrderItemsSection(BuildContext context, Map<String, dynamic> orderData) {
-    // Handle different possible types for items fields
-    final storeItemsData = orderData['storeItems'];
-    final manualItemsData = orderData['manualItems'];
-    
+    // Try to get items from current order data (which should have lesbuy_items)
     List<dynamic> storeItems = [];
     List<dynamic> manualItems = [];
     
-    if (storeItemsData is List<dynamic>) {
-      storeItems = storeItemsData;
-    } else if (storeItemsData != null) {
-      storeItems = [storeItemsData];
-    }
-    
-    if (manualItemsData is List<dynamic>) {
-      manualItems = manualItemsData;
-    } else if (manualItemsData != null) {
-      manualItems = [manualItemsData];
+    // First check if we have lesbuy_items in the current order data
+    final lesbuyItems = orderData['lesbuy_items'];
+    if (lesbuyItems is List && lesbuyItems.isNotEmpty) {
+      // Convert lesbuy_items to store items format
+      storeItems = lesbuyItems.map((item) => {
+        'productName': item['name'] ?? 'Item',
+        'price': item['actual_price'] ?? item['estimated_price'] ?? 0.0,
+        'quantity': item['quantity'] ?? 1,
+      }).toList();
+    } else {
+      // Fallback to the original storeItems and manualItems fields
+      final storeItemsData = orderData['storeItems'];
+      final manualItemsData = orderData['manualItems'];
+      
+      if (storeItemsData is List<dynamic>) {
+        storeItems = storeItemsData;
+      } else if (storeItemsData != null) {
+        storeItems = [storeItemsData];
+      }
+      
+      if (manualItemsData is List<dynamic>) {
+        manualItems = manualItemsData;
+      } else if (manualItemsData != null) {
+        manualItems = [manualItemsData];
+      }
     }
 
     return Column(
@@ -690,26 +744,39 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
 
         // Store Items
-        ...storeItems.map((item) => _buildOrderItem(
-          context,
-          item['productName'] ?? 'Item',
-          'Php ${item['price']?.toStringAsFixed(2) ?? '0.00'}',
-          item['quantity'] ?? 1,
-        )),
+        ...storeItems.map((item) {
+          final itemName = item['productName'] ?? 'Item';
+          final itemPrice = _safeToDouble(item['price']);
+          final itemQuantity = _safeToInt(item['quantity']);
+          final itemTotal = itemPrice * itemQuantity;
+          
+          return _buildOrderItem(
+            context,
+            itemName,
+            'Php ${itemPrice.toStringAsFixed(2)}',
+            itemQuantity,
+            itemTotal: itemTotal,
+          );
+        }),
 
         // Manual Items
-        ...manualItems.map((item) => _buildOrderItem(
-          context,
-          item['name'] ?? 'Manual Item',
-          'Php 0.00', // Manual items don't have price
-          item['quantity'] ?? 1,
-          isManual: true,
-        )),
+        ...manualItems.map((item) {
+          final itemName = item['name'] ?? 'Manual Item';
+          final itemQuantity = _safeToInt(item['quantity']);
+          
+          return _buildOrderItem(
+            context,
+            itemName,
+            'Php 0.00', // Manual items don't have price
+            itemQuantity,
+            isManual: true,
+          );
+        }),
       ],
     );
   }
 
-  Widget _buildOrderItem(BuildContext context, String name, String price, int quantity, {bool isManual = false}) {
+  Widget _buildOrderItem(BuildContext context, String name, String price, int quantity, {bool isManual = false, double? itemTotal}) {
     return Container(
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
@@ -755,26 +822,28 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                       fontSize: ResponsiveUtils.fontSize(context, 12),
                       color: Colors.orange[700],
                     ),
+                  )
+                else if (quantity > 1)
+                  Text(
+                    '$price x $quantity',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey[600],
+                    ),
                   ),
               ],
             ),
           ),
           Text(
-            price,
+            itemTotal != null && quantity > 1 && !isManual
+                ? 'Php ${itemTotal.toStringAsFixed(2)}'
+                : price,
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w600,
               color: Colors.black87,
-            ),
-          ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-          Text(
-            'x$quantity',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey[600],
             ),
           ),
         ],
@@ -783,9 +852,9 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
   }
 
   Widget _buildOrderSummary(BuildContext context, Map<String, dynamic> orderData) {
-    final subtotal = orderData['subtotal'] ?? 0.0;
-    final deliveryFee = orderData['deliveryFee'] ?? 50.0;
-    final total = orderData['total'] ?? (subtotal + deliveryFee);
+    final subtotal = _safeToDouble(orderData['subtotal']);
+    final deliveryFee = _safeToDouble(orderData['deliveryFee']);
+    final total = _safeToDouble(orderData['total']);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -840,6 +909,26 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
         ],
       ),
     );
+  }
+
+  // Helper method to safely convert values to double
+  double _safeToDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  // Helper method to safely convert values to int
+  int _safeToInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value) ?? 1;
+    }
+    return 1;
   }
 
   String _getStatusText(String status) {

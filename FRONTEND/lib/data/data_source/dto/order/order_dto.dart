@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import '../user/user_dto.dart';
+import 'lesbuy_item_dto.dart';
 
 part 'order_dto.g.dart';
 
@@ -103,8 +104,15 @@ class OrderDto {
   final double estimatedFare;
   @JsonKey(name: 'actual_fare', fromJson: _parseDoubleNullable)
   final double? actualFare;
+  @JsonKey(name: 'total_amount', fromJson: _parseDoubleNullable)
+  final double? totalAmount;
+  @JsonKey(name: 'delivery_fee', fromJson: _parseDoubleNullable)
+  final double? deliveryFee;
+  @JsonKey(name: 'service_type')
+  final String? serviceType;
   @JsonKey(name: 'fare_breakdown')
   final Map<String, dynamic>? fareBreakdown;
+  final Map<String, dynamic>? meta;
   @JsonKey(name: 'payment_method')
   final String paymentMethod;
   @JsonKey(name: 'payment_status')
@@ -125,6 +133,8 @@ class OrderDto {
   final String? updatedAt;
   @JsonKey(name: 'driver_profile')
   final DriverProfileDto? driverProfile;
+  @JsonKey(name: 'lesbuy_items')
+  final List<LesbuyItemDto>? lesbuyItems;
 
   OrderDto({
     required this.id,
@@ -157,7 +167,11 @@ class OrderDto {
     this.actualDistanceM,
     required this.estimatedFare,
     this.actualFare,
+    this.totalAmount,
+    this.deliveryFee,
+    this.serviceType,
     this.fareBreakdown,
+    this.meta,
     required this.paymentMethod,
     required this.paymentStatus,
     this.cancelReason,
@@ -168,10 +182,96 @@ class OrderDto {
     this.createdAt,
     this.updatedAt,
     this.driverProfile,
+    this.lesbuyItems,
   });
 
   factory OrderDto.fromJson(Map<String, dynamic> json) =>
       _$OrderDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$OrderDtoToJson(this);
+
+  // Helper methods for production compatibility
+  String get effectiveServiceType {
+    if (serviceType != null) return serviceType!;
+    
+    // Fallback based on service_id
+    switch (serviceId) {
+      case 1:
+        return 'lesgo';
+      case 2:
+        return 'lesride';
+      case 3:
+        return 'leseat';
+      case 4:
+        return 'lesbuy';
+      case 5:
+        return 'lestransport';
+      default:
+        return 'unknown';
+    }
+  }
+
+  double get effectiveTotalAmount {
+    if (totalAmount != null && totalAmount! > 0) return totalAmount!;
+    
+    // Calculate from items if available
+    double itemsTotal = 0.0;
+    if (lesbuyItems != null && lesbuyItems!.isNotEmpty) {
+      for (final item in lesbuyItems!) {
+        final price = item.actualPrice ?? item.estimatedPrice ?? 0.0;
+        itemsTotal += price * item.quantity;
+      }
+    }
+    
+    // Add delivery fee
+    final delivery = deliveryFee ?? estimatedFare;
+    return itemsTotal + delivery;
+  }
+
+  double get effectiveDeliveryFee {
+    return deliveryFee ?? estimatedFare;
+  }
+
+  List<LesbuyItemDto> get effectiveItems {
+    if (lesbuyItems != null && lesbuyItems!.isNotEmpty) {
+      return lesbuyItems!;
+    }
+    
+    // Create mock items from meta or item_description for production
+    if (meta != null && meta!['items'] != null) {
+      try {
+        final itemsData = meta!['items'] as List;
+        return itemsData.map((item) => LesbuyItemDto(
+          id: 0,
+          orderId: id,
+          name: item['name'] ?? 'Unknown Item',
+          quantity: int.tryParse(item['quantity']?.toString() ?? '1') ?? 1,
+          unit: 'pcs',
+          estimatedPrice: _parseDouble(item['estimated_price'] ?? item['price']),
+          actualPrice: _parseDouble(item['actual_price'] ?? item['price']),
+          imageUrl: null,
+        )).toList();
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
+    
+    // Fallback: create a single item from item_description
+    if (itemDescription != null && itemDescription!.isNotEmpty) {
+      return [
+        LesbuyItemDto(
+          id: 0,
+          orderId: id,
+          name: itemDescription!,
+          quantity: 1,
+          unit: 'pcs',
+          estimatedPrice: estimatedFare,
+          actualPrice: estimatedFare,
+          imageUrl: null,
+        )
+      ];
+    }
+    
+    return [];
+  }
 }

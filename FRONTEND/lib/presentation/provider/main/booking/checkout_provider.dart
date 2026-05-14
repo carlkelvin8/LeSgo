@@ -4,6 +4,7 @@ import '../../../../domain/entities/booking/leseat/order_item.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
 import '../../../../data/data_source/dto/order/order_response_dto.dart';
+import '../../../../data/data_source/dto/order/estimate_request_dto.dart';
 import '../../../../core/di/injection.dart';
 import 'restaurant_detail_provider.dart';
 import '../profile/profile_provider.dart';
@@ -64,10 +65,39 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       deliveryAddress: userAddress,
       items: List<OrderItem>.from(cartItems),
       subtotal: subtotal,
-      deliveryFee: 50.00, // TODO: Calculate based on distance
+      deliveryFee: 0.00, // Will be updated by _fetchDeliveryFee
     );
 
     state = state.copyWith(order: order);
+
+    // Fetch real delivery fee from estimate API
+    _fetchDeliveryFee();
+  }
+
+  /// Fetch delivery fee from the fare estimate API
+  Future<void> _fetchDeliveryFee() async {
+    try {
+      final deliveryFee = await _orderDataSource.getFareEstimateRaw(
+        serviceId: 3,
+        estimatedDistanceM: 5000,
+        pickupLat: 8.4542,
+        pickupLng: 124.6319,
+        dropoffLat: 8.4542,
+        dropoffLng: 124.6319,
+      );
+
+      if (state.order != null && deliveryFee != null) {
+        final updatedOrder = state.order!.copyWith(deliveryFee: deliveryFee);
+        state = state.copyWith(order: updatedOrder);
+        print('🟢 Checkout: Delivery fee fetched: PHP $deliveryFee');
+      }
+    } catch (e) {
+      print('⚠️ Checkout: Could not fetch delivery fee, using default PHP 50: $e');
+      if (state.order != null) {
+        final updatedOrder = state.order!.copyWith(deliveryFee: 50.00);
+        state = state.copyWith(order: updatedOrder);
+      }
+    }
   }
 
   void updateItemQuantity(String itemId, int quantity) {
@@ -187,7 +217,14 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
           'subtotal': order.subtotal,
           'delivery_fee': order.deliveryFee,
           'total': order.total,
+          'grand_total': order.total, // food subtotal + delivery fee
           'order_type': 'leseat',
+          'items': order.items.map((item) => {
+            'name': item.name,
+            'price': item.price,
+            'quantity': item.quantity,
+            'total': item.total,
+          }).toList(),
         },
       );
 

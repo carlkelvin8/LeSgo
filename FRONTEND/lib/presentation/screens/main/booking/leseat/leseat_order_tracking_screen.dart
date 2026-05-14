@@ -58,12 +58,71 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.getOrder(int.parse(widget.orderId));
       if (mounted && response.success && response.data != null) {
+        final order = response.data!;
+        final fb = order.fareBreakdown;
+        final meta = order.meta;
+
+        print('===== ORDER DEBUG =====');
+        print('Server Order JSON: ${order.toJson()}');
+        print('Order Data from widget: ${widget.orderData}');
+        print('======================');
+
+        // Food subtotal: calculate from lesbuy_items if available
+        double foodSubtotal = 0.0;
+        
+        // Use the new helper methods for production compatibility
+        final items = order.effectiveItems;
+        if (items.isNotEmpty) {
+          for (final item in items) {
+            final itemPrice = item.actualPrice ?? item.estimatedPrice ?? 0.0;
+            final itemQuantity = item.quantity;
+            foodSubtotal += itemPrice * itemQuantity;
+          }
+        } else {
+          // Fallback to widget.orderData, then meta
+          foodSubtotal = _safeToDouble(widget.orderData?['subtotal']);
+          if (foodSubtotal == 0) foodSubtotal = _safeToDouble(meta?['subtotal']);
+        }
+
+        // Use effective delivery fee
+        final deliveryFee = order.effectiveDeliveryFee;
+
+        // Use effective total amount
+        final grandTotal = order.effectiveTotalAmount;
+
+        // Restaurant name — backend stores it in pickup_contact_name for LesEat
+        final restaurantName = widget.orderData?['restaurantName']
+            ?? meta?['restaurant_name']
+            ?? order.pickupContactName
+            ?? 'Restaurant';
+
         setState(() {
-          _currentOrderData = response.data!.toJson();
+          _currentOrderData = {
+            'restaurantName': restaurantName,
+            'subtotal': foodSubtotal,
+            'deliveryFee': deliveryFee,
+            'total': grandTotal,
+            'deliveryAddress': order.dropoffAddress,
+            'estimated_fare': order.estimatedFare,
+            'status': order.status,
+            'lesbuy_items': order.effectiveItems.map((item) => {
+              'id': item.id,
+              'name': item.name,
+              'quantity': item.quantity,
+              'estimated_price': item.estimatedPrice,
+              'actual_price': item.actualPrice,
+            }).toList() ?? [],
+          };
         });
       }
     } catch (e) {
       print('Failed to fetch current order data: $e');
+      // Fall back to widget.orderData on error
+      if (mounted && widget.orderData != null) {
+        setState(() {
+          _currentOrderData = widget.orderData;
+        });
+      }
     }
   }
 
@@ -690,26 +749,38 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
   }
 
   Widget _buildOrderItemsSection(BuildContext context, Map<String, dynamic> orderData) {
-    // Handle different possible types for items field
-    final itemsData = orderData['items'];
+    // Try to get items from current order data (which should have lesbuy_items)
     List<dynamic> items = [];
     
-    if (itemsData is List<dynamic>) {
-      items = itemsData;
-    } else if (itemsData is int) {
-      // If items is an integer, it might be a count - create placeholder items
-      items = List.generate(itemsData, (index) => {
-        'name': 'Item ${index + 1}',
-        'price': 0.0,
-        'quantity': 1,
-      });
-    } else if (itemsData != null) {
-      // If it's some other type, try to convert to string and create a single item
-      items = [{
-        'name': itemsData.toString(),
-        'price': 0.0,
-        'quantity': 1,
-      }];
+    // First check if we have lesbuy_items in the current order data
+    final lesbuyItems = orderData['lesbuy_items'];
+    if (lesbuyItems is List && lesbuyItems.isNotEmpty) {
+      items = lesbuyItems.map((item) => {
+        'name': item['name'] ?? 'Item',
+        'price': item['actual_price'] ?? item['estimated_price'] ?? 0.0,
+        'quantity': item['quantity'] ?? 1,
+      }).toList();
+    } else {
+      // Fallback to the original items field
+      final itemsData = orderData['items'];
+      
+      if (itemsData is List<dynamic>) {
+        items = itemsData;
+      } else if (itemsData is int) {
+        // If items is an integer, it might be a count - create placeholder items
+        items = List.generate(itemsData, (index) => {
+          'name': 'Item ${index + 1}',
+          'price': 0.0,
+          'quantity': 1,
+        });
+      } else if (itemsData != null) {
+        // If it's some other type, try to convert to string and create a single item
+        items = [{
+          'name': itemsData.toString(),
+          'price': 0.0,
+          'quantity': 1,
+        }];
+      }
     }
 
     return Column(
@@ -727,17 +798,25 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
 
         // Order Items
-        ...items.map((item) => _buildOrderItem(
-          context,
-          item['name']?.toString() ?? 'Item',
-          'Php ${_safeToDouble(item['price']).toStringAsFixed(2)}',
-          _safeToInt(item['quantity']),
-        )),
+        ...items.map((item) {
+          final itemName = item['name']?.toString() ?? 'Item';
+          final itemPrice = _safeToDouble(item['price']);
+          final itemQuantity = _safeToInt(item['quantity']);
+          final itemTotal = itemPrice * itemQuantity;
+          
+          return _buildOrderItem(
+            context,
+            itemName,
+            'Php ${itemPrice.toStringAsFixed(2)}',
+            itemQuantity,
+            itemTotal: itemTotal,
+          );
+        }),
       ],
     );
   }
 
-  Widget _buildOrderItem(BuildContext context, String name, String price, int quantity) {
+  Widget _buildOrderItem(BuildContext context, String name, String price, int quantity, {double? itemTotal}) {
     return Container(
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
@@ -763,27 +842,34 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 12)),
           Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 14),
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 14),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                if (quantity > 1)
+                  Text(
+                    '$price x $quantity',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey[600],
+                    ),
+                  ),
+              ],
             ),
           ),
           Text(
-            'x$quantity',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey[600],
-            ),
-          ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-          Text(
-            price,
+            itemTotal != null && quantity > 1 
+                ? 'Php ${itemTotal.toStringAsFixed(2)}'
+                : price,
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),

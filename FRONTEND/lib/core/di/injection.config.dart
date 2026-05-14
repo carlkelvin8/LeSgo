@@ -28,6 +28,8 @@ import 'package:lesgo/data/data_source/address_remote_datasource.dart' as _i940;
 import 'package:lesgo/data/data_source/auth_remote_datasource.dart' as _i677;
 import 'package:lesgo/data/data_source/distance_remote_datasource.dart' as _i20;
 import 'package:lesgo/data/data_source/geofence_remote_datasource.dart' as _i74;
+import 'package:lesgo/data/data_source/missions_remote_datasource.dart'
+    as _i675;
 import 'package:lesgo/data/data_source/order_remote_datasource.dart' as _i189;
 import 'package:lesgo/data/data_source/partner_remote_datasource.dart'
     as _i1024;
@@ -133,6 +135,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i677.AuthRemoteDataSource>(
       () => _i677.AuthRemoteDataSource(gh<_i214.DioClient>()),
+    );
+    gh.factory<_i675.MissionsRemoteDataSource>(
+      () => _i675.MissionsRemoteDataSource(gh<_i214.DioClient>()),
     );
     gh.lazySingleton<_i962.UserRepository>(
       () => _i937.UserRepositoryImpl(

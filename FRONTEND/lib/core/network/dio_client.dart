@@ -32,8 +32,24 @@ class DioClient {
           }
           return handler.next(options);
         },
+        onResponse: (response, handler) {
+          print('🟢 DioClient: Response ${response.statusCode} from ${response.requestOptions.path}');
+          print('🟢 DioClient: Response data type: ${response.data.runtimeType}');
+          if (response.data is Map) {
+            final dataMap = response.data as Map;
+            print('🟢 DioClient: Response keys: ${dataMap.keys.toList()}');
+            if (dataMap.containsKey('data') && dataMap['data'] is List) {
+              print('🟢 DioClient: Data array length: ${(dataMap['data'] as List).length}');
+            }
+          }
+          return handler.next(response);
+        },
         onError: (error, handler) {
           print('🔴 DioClient: Error ${error.response?.statusCode} on ${error.requestOptions.path}');
+          print('🔴 DioClient: Error type: ${error.type}');
+          print('🔴 DioClient: Error message: ${error.message}');
+          print('🔴 DioClient: Error response: ${error.response?.data}');
+          
           // Handle 401 errors by clearing token
           if (error.response?.statusCode == 401) {
             print('🔴 DioClient: 401 Unauthorized - clearing token');

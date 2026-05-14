@@ -87,6 +87,10 @@ class ConversationDto {
   final MessageDto? lastMessage;
   @JsonKey(name: 'unread_count')
   final int unreadCount;
+  
+  // Driver and customer information
+  final UserInfoDto? customer;
+  final UserInfoDto? driver;
 
   const ConversationDto({
     required this.id,
@@ -98,10 +102,31 @@ class ConversationDto {
     this.endedAt,
     this.lastMessage,
     this.unreadCount = 0,
+    this.customer,
+    this.driver,
   });
 
   factory ConversationDto.fromJson(Map<String, dynamic> json) => _$ConversationDtoFromJson(json);
   Map<String, dynamic> toJson() => _$ConversationDtoToJson(this);
+}
+
+@JsonSerializable()
+class UserInfoDto {
+  final int id;
+  final String name;
+  final String email;
+  @JsonKey(name: 'profile_photo_url')
+  final String? profilePhotoUrl;
+
+  const UserInfoDto({
+    required this.id,
+    required this.name,
+    required this.email,
+    this.profilePhotoUrl,
+  });
+
+  factory UserInfoDto.fromJson(Map<String, dynamic> json) => _$UserInfoDtoFromJson(json);
+  Map<String, dynamic> toJson() => _$UserInfoDtoToJson(this);
 }
 
 @JsonSerializable()

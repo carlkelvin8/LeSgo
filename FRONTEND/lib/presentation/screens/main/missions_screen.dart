@@ -86,17 +86,53 @@ class MissionsScreen extends ConsumerWidget {
                 SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: missionsState.missions.length,
-                    itemBuilder: (context, index) {
-                      final mission = missionsState.missions[index];
-                      return MissionCard(
-                        mission: mission,
-                        onTap: () {
-                        },
-                      );
-                    },
-                  ),
+                  child: missionsState.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        )
+                      : missionsState.missions.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'No missions available',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize: ResponsiveUtils.fontSize(context, 16),
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      ref.read(missionsProvider.notifier).refreshMissions();
+                                    },
+                                    child: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              onRefresh: () async {
+                                await ref.read(missionsProvider.notifier).refreshMissions();
+                              },
+                              child: ListView.builder(
+                                itemCount: missionsState.missions.length,
+                                itemBuilder: (context, index) {
+                                  final mission = missionsState.missions[index];
+                                  return MissionCard(
+                                    mission: mission,
+                                    onTap: () {
+                                      // Handle mission tap if needed
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
                 ),
               ],
             ),

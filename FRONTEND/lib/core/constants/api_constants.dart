@@ -4,9 +4,19 @@ class ApiConstants {
   static const String googleMapsApiKey =
       'AIzaSyBekzwaPQ9H0Zu3y7XOyUkrM-ny4XdVZXA';
 
-  // API Base URL - Production
+  // API Base URL - Force Production for testing
   static String get baseUrl {
+    // Force production API for testing
     return 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
+    
+    // Original logic (commented out)
+    // if (kDebugMode) {
+    //   // Development - Local server
+    //   return 'http://10.0.2.2:8000/api'; // Android emulator localhost
+    // } else {
+    //   // Production - Laravel Cloud server
+    //   return 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
+    // }
   }
 
   static const String loginEndpoint = '/v1/auth/login';

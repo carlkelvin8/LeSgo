@@ -266,7 +266,13 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                           'orderType': 'LesEat',
                           'orderData': {
                             'restaurantName': order.restaurantName,
-                            'items': order.items.length,
+                            'items': order.items.map((item) => {
+                              'name': item.name,
+                              'price': item.price,
+                              'quantity': item.quantity,
+                            }).toList(),
+                            'subtotal': order.subtotal,
+                            'deliveryFee': order.deliveryFee,
                             'total': order.total,
                             'deliveryAddress': order.deliveryAddress,
                           },

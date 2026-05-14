@@ -55,19 +55,67 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
           filteredTransactions: [],
           isLoading: true,
         )) {
+    print('🔵 TransactionsNotifier: Constructor called');
     _loadTransactions();
   }
 
   Future<void> _loadTransactions() async {
+    print('🔵 TransactionsNotifier: _loadTransactions called');
+    
     try {
       state = state.copyWith(isLoading: true, clearError: true);
+      print('🔵 Transactions: State updated to loading');
       
-      print('🔵 Transactions: Fetching orders from API...');
-      final response = await _orderDataSource.getOrders(perPage: 100);
+      print('🔵 Transactions: Starting API call...');
+      print('🔵 Transactions: DataSource: ${_orderDataSource.runtimeType}');
       
+      final response = await _orderDataSource.getOrders(perPage: 10); // Reduced from 100 to 10
+      print('🟢 Transactions: API call successful!');
       print('🟢 Transactions: Got ${response.data.length} orders');
       
+      if (response.data.isEmpty) {
+        print('⚠️ Transactions: No orders returned from API');
+        state = state.copyWith(
+          transactions: [],
+          filteredTransactions: [],
+          isLoading: false,
+        );
+        return;
+      }
+      
+      print('🔍 Transactions: First order ID: ${response.data.first.id}');
+      print('🔍 Transactions: Processing ${response.data.length} orders...');
+      
       final transactions = response.data.map((orderDto) {
+        // Use the new helper methods for production compatibility
+        final items = orderDto.effectiveItems;
+        double itemsSubtotal = 0.0;
+        
+        // Calculate subtotal from effective items
+        if (items.isNotEmpty) {
+          for (final item in items) {
+            final itemPrice = item.actualPrice ?? item.estimatedPrice ?? 0.0;
+            itemsSubtotal += itemPrice * item.quantity;
+          }
+        }
+        
+        // Use effective delivery fee and total amount
+        final deliveryFee = orderDto.effectiveDeliveryFee;
+        final displayAmount = orderDto.effectiveTotalAmount;
+
+        // Map effective items to transaction items
+        List<TransactionItem>? transactionItems;
+        if (items.isNotEmpty) {
+          transactionItems = items.map((item) {
+            return TransactionItem(
+              name: item.name,
+              quantity: item.quantity,
+              price: item.actualPrice ?? item.estimatedPrice,
+              unit: item.unit,
+            );
+          }).toList();
+        }
+
         return Transaction(
           id: orderDto.id.toString(),
           serviceName: _getServiceName(orderDto.serviceId),
@@ -75,11 +123,14 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
           date: orderDto.createdAt ?? DateTime.now().toIso8601String(),
           pickupLocation: orderDto.pickupAddress,
           dropoffLocation: orderDto.dropoffAddress,
-          amount: (orderDto.actualFare ?? orderDto.estimatedFare),
+          amount: displayAmount,
           status: _mapOrderStatus(orderDto.status),
           rawStatus: orderDto.status,
+          items: transactionItems,
         );
       }).toList();
+      
+      print('🟢 Transactions: Mapped ${transactions.length} transactions');
       
       state = state.copyWith(
         transactions: transactions,
@@ -87,10 +138,16 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         isLoading: false,
       );
       
+      print('🟢 Transactions: State updated with ${transactions.length} transactions');
+      
       // Apply current filters
       _applyFilters();
+      
     } catch (e) {
       print('🔴 Transactions: Error fetching orders - $e');
+      print('🔴 Transactions: Error type: ${e.runtimeType}');
+      print('🔴 Transactions: Stack trace: ${StackTrace.current}');
+      
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -207,10 +264,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   }
 
   Future<void> refreshTransactions() async {
+    print('🔵 Transactions: Manual refresh triggered');
     await _loadTransactions();
   }
 }
 
 final transactionsProvider = StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
+  print('🔵 TransactionsProvider: Creating new TransactionsNotifier');
   return TransactionsNotifier();
 });

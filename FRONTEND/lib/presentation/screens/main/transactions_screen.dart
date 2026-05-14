@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/main/transactions/transactions_provider.dart';
 import '../../widgets/widgets.dart';
@@ -29,6 +30,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     // Active orders go to tracking screen; completed/cancelled show a summary
     final isActive = transaction.status == TransactionStatus.pending;
     final orderId = transaction.id;
+    double itemsTotal = 0.0;
+    List<Map<String, dynamic>> items = [];
+    if (transaction.items != null) {
+      for (final item in transaction.items!) {
+        itemsTotal += (item.price ?? 0.0) * item.quantity;
+        items.add({
+          'name': item.name,
+          'price': item.price ?? 0.0,
+          'quantity': item.quantity,
+          'total': (item.price ?? 0.0) * item.quantity,
+        });
+      }
+    }
+    final double deliveryFee = transaction.amount > itemsTotal ? transaction.amount - itemsTotal : 0.0;
+
     final orderData = <String, dynamic>{
       'id': int.tryParse(orderId) ?? 0,
       'status': transaction.rawStatus,
@@ -36,6 +52,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       'actual_fare': transaction.amount,
       'pickup_address': transaction.pickupLocation,
       'dropoff_address': transaction.dropoffLocation,
+      // For LesEat: pickup is restaurant name
+      'restaurantName': transaction.serviceId == 3 ? transaction.pickupLocation : null,
+      // Fare breakdown for LesGo/LesRide tracking screen
+      'baseFee': transaction.amount > 0 ? 40.0 : 0.0,
+      'distanceFee': transaction.amount > 40.0 ? transaction.amount - 40.0 : 0.0,
+      'total': transaction.amount,
+      'subtotal': itemsTotal,
+      'deliveryFee': deliveryFee,
+      'paymentMethod': 'Cash',
+      'items': items,
     };
 
     if (isActive) {
@@ -148,30 +174,182 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     const SizedBox(height: 20),
                     const Divider(),
                     const SizedBox(height: 12),
-
-                    // Amount
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    
+                    // Items section for LesBuy/LesEat
+                    if (transaction.items != null && transaction.items!.isNotEmpty) ...[
+                      const Text(
+                        'Items',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
-                        Text(
-                          'PHP ${transaction.amount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF5F2D82),
-                          ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...transaction.items!.map((item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${item.name} ${item.unit != null ? '(${item.unit})' : ''}',
+                                style: const TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${item.quantity}x',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            if (item.price != null) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                'PHP ${(item.price! * item.quantity).toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF5F2D82),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ],
-                    ),
+                      )).toList(),
+                    ],
+                    
+                    // Amount breakdown for LesBuy/LesEat orders
+                    if (transaction.items != null && transaction.items!.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 12),
+                      
+                      // Calculate subtotal from items
+                      Builder(
+                        builder: (context) {
+                          final itemsTotal = transaction.items!.fold<double>(
+                            0.0, 
+                            (sum, item) => sum + ((item.price ?? 0.0) * item.quantity)
+                          );
+                          final deliveryFee = transaction.amount - itemsTotal;
+                          
+                          return Column(
+                            children: [
+                              // Subtotal
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Subtotal',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  Text(
+                                    'PHP ${itemsTotal.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              
+                              // Delivery Fee
+                              if (deliveryFee > 0) ...[
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Delivery Fee',
+                                      style: TextStyle(
+                                        fontFamily: 'TT Fors',
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    Text(
+                                      'PHP ${deliveryFee.toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                        fontFamily: 'TT Fors',
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                const Divider(),
+                                const SizedBox(height: 8),
+                              ],
+                              
+                              // Total
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Total',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'PHP ${transaction.amount.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF5F2D82),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ] else ...[
+                      // For orders without items, show simple total
+                      const SizedBox(height: 8),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'PHP ${transaction.amount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF5F2D82),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    
                     const SizedBox(height: 20),
 
                     // Status
@@ -289,6 +467,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           title: 'Order History',
                         ),
                       ),
+                      // Test button for debugging
+                      if (kDebugMode)
+                        IconButton(
+                          icon: const Icon(Icons.refresh, color: Colors.blue),
+                          onPressed: () {
+                            print('🔵 Manual refresh button pressed');
+                            ref.read(transactionsProvider.notifier).refreshTransactions();
+                          },
+                        ),
                       // Filter toggle button
                       IconButton(
                         icon: Icon(
@@ -411,35 +598,78 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
                       ),
                     )
-                  : transactions.isEmpty
-                      ? _buildEmptyState(context, hasActiveFilters)
-                      : RefreshIndicator(
-                          onRefresh: () => ref.read(transactionsProvider.notifier).refreshTransactions(),
-                          color: const Color(0xFF5F2D82),
-                          child: ListView.builder(
-                            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-                            itemCount: transactions.length,
-                            itemBuilder: (context, index) {
-                              final transaction = transactions[index];
-                              return TransactionListItem(
-                                transaction: transaction,
-                                index: index + 1,
-                                onTap: () => _openOrderDetail(context, transaction),
-                                onReorder: () async {
-                                  await ref.read(transactionsProvider.notifier).reorderTransaction(transaction.id);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Order placed successfully!'),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                  }
+                  : transactionsState.error != null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 64,
+                                color: Colors.red[400],
+                              ),
+                              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                              Text(
+                                'Error loading orders',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 16),
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                              Text(
+                                transactionsState.error!,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                                  color: Colors.grey[600],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                              ElevatedButton(
+                                onPressed: () {
+                                  ref.read(transactionsProvider.notifier).refreshTransactions();
                                 },
-                              );
-                            },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF5F2D82),
+                                ),
+                                child: const Text('Retry'),
+                              ),
+                            ],
                           ),
-                        ),
+                        )
+                      : transactions.isEmpty
+                          ? _buildEmptyState(context, hasActiveFilters)
+                          : RefreshIndicator(
+                              onRefresh: () => ref.read(transactionsProvider.notifier).refreshTransactions(),
+                              color: const Color(0xFF5F2D82),
+                              child: ListView.builder(
+                                padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+                                itemCount: transactions.length,
+                                itemBuilder: (context, index) {
+                                  final transaction = transactions[index];
+                                  return TransactionListItem(
+                                    transaction: transaction,
+                                    index: index + 1,
+                                    onTap: () => _openOrderDetail(context, transaction),
+                                    onReorder: () async {
+                                      await ref.read(transactionsProvider.notifier).reorderTransaction(transaction.id);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Order placed successfully!'),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
             ),
           ],
         ),

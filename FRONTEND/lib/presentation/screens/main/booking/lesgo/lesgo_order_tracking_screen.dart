@@ -38,6 +38,7 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
   bool _mapReady = false;
   bool _isCancelling = false;
   Timer? _statusPollTimer;
+  Map<String, dynamic>? _fetchedOrderData; // Fetched from API
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
       ref.read(liveTrackingProvider(int.parse(widget.orderId)).notifier).setContext(context);
       _fitBounds();
     });
+    _fetchOrderData();
     _startStatusPolling();
   }
 
@@ -67,12 +69,43 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
         final trackingState = ref.read(liveTrackingProvider(int.parse(widget.orderId)));
         if (trackingState.isOrderActive) {
           ref.read(liveTrackingProvider(int.parse(widget.orderId)).notifier).refreshTracking();
+          _fetchOrderData(); // Refresh fare data too
         } else {
-          // Stop polling if order is completed/cancelled
           _statusPollTimer?.cancel();
         }
       }
     });
+  }
+
+  Future<void> _fetchOrderData() async {
+    try {
+      final dataSource = getIt<OrderRemoteDataSource>();
+      final response = await dataSource.getOrder(int.parse(widget.orderId));
+      if (response.success && response.data != null && mounted) {
+        final order = response.data!;
+        final fb = order.fareBreakdown;
+        setState(() {
+          _fetchedOrderData = {
+            'id': order.id,
+            'status': order.status,
+            'estimated_fare': order.estimatedFare,
+            'actual_fare': order.actualFare,
+            'pickup_address': order.pickupAddress,
+            'dropoff_address': order.dropoffAddress,
+            'baseFee': fb?['base_fare'] ?? order.estimatedFare,
+            'distanceFee': fb?['distance_fare'] ?? 0.0,
+            'serviceFee': fb?['service_fee'] ?? 0.0,
+            'total': fb?['total'] ?? order.actualFare ?? order.estimatedFare,
+            'paymentMethod': order.paymentMethod,
+            'itemDescription': order.itemDescription,
+            'estimatedWeightKg': order.estimatedWeightKg,
+          };
+        });
+      }
+    } catch (e) {
+      // Fall back to widget.orderData if fetch fails
+      print('⚠️ LesgoTracking: Could not fetch order data: $e');
+    }
   }
 
   void _fitBounds() {
@@ -197,7 +230,8 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
   @override
   Widget build(BuildContext context) {
     final trackingState = ref.watch(liveTrackingProvider(int.parse(widget.orderId)));
-    final orderData = widget.orderData ?? {};
+    // Use API-fetched data if available, fall back to passed orderData
+    final orderData = _fetchedOrderData ?? widget.orderData ?? {};
 
     // Listen for tracking state changes to update map
     ref.listen<LiveTrackingState>(
@@ -938,10 +972,17 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
     );
   }
   Widget _buildOrderSummary(BuildContext context, Map<String, dynamic> orderData) {
-    final baseFee = orderData['baseFee'] ?? 0.0;
-    final distanceFee = orderData['distanceFee'] ?? 0.0;
-    final total = orderData['total'] ?? 0.0;
-    final paymentMethod = orderData['paymentMethod'] ?? 'Cash';
+    final _toDouble = (dynamic v) {
+      if (v == null) return 0.0;
+      if (v is num) return v.toDouble();
+      return double.tryParse(v.toString()) ?? 0.0;
+    };
+
+    final baseFee = _toDouble(orderData['baseFee']);
+    final distanceFee = _toDouble(orderData['distanceFee']);
+    final serviceFee = _toDouble(orderData['serviceFee']);
+    final total = _toDouble(orderData['total']);
+    final paymentMethod = (orderData['paymentMethod'] ?? orderData['payment_method'] ?? 'Cash').toString();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -968,6 +1009,10 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
               _buildSummaryRow(context, 'Base Fee', 'Php ${baseFee.toStringAsFixed(2)}'),
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               _buildSummaryRow(context, 'Distance Fee', 'Php ${distanceFee.toStringAsFixed(2)}'),
+              if (serviceFee > 0) ...[
+                SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                _buildSummaryRow(context, 'Service Fee', 'Php ${serviceFee.toStringAsFixed(2)}'),
+              ],
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               Divider(color: Colors.grey[300]),
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),

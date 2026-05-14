@@ -59,7 +59,11 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
   actualDistanceM: (json['actual_distance_m'] as num?)?.toInt(),
   estimatedFare: _parseDouble(json['estimated_fare']),
   actualFare: _parseDoubleNullable(json['actual_fare']),
+  totalAmount: _parseDoubleNullable(json['total_amount']),
+  deliveryFee: _parseDoubleNullable(json['delivery_fee']),
+  serviceType: json['service_type'] as String?,
   fareBreakdown: json['fare_breakdown'] as Map<String, dynamic>?,
+  meta: json['meta'] as Map<String, dynamic>?,
   paymentMethod: json['payment_method'] as String,
   paymentStatus: json['payment_status'] as String,
   cancelReason: json['cancel_reason'] as String?,
@@ -74,6 +78,9 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       : DriverProfileDto.fromJson(
           json['driver_profile'] as Map<String, dynamic>,
         ),
+  lesbuyItems: (json['lesbuy_items'] as List<dynamic>?)
+      ?.map((e) => LesbuyItemDto.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$OrderDtoToJson(OrderDto instance) => <String, dynamic>{
@@ -107,7 +114,11 @@ Map<String, dynamic> _$OrderDtoToJson(OrderDto instance) => <String, dynamic>{
   'actual_distance_m': instance.actualDistanceM,
   'estimated_fare': instance.estimatedFare,
   'actual_fare': instance.actualFare,
+  'total_amount': instance.totalAmount,
+  'delivery_fee': instance.deliveryFee,
+  'service_type': instance.serviceType,
   'fare_breakdown': instance.fareBreakdown,
+  'meta': instance.meta,
   'payment_method': instance.paymentMethod,
   'payment_status': instance.paymentStatus,
   'cancel_reason': instance.cancelReason,
@@ -118,4 +129,5 @@ Map<String, dynamic> _$OrderDtoToJson(OrderDto instance) => <String, dynamic>{
   'created_at': instance.createdAt,
   'updated_at': instance.updatedAt,
   'driver_profile': instance.driverProfile,
+  'lesbuy_items': instance.lesbuyItems,
 };

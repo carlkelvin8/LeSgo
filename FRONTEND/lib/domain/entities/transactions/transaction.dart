@@ -8,6 +8,7 @@ class Transaction {
   final double amount;
   final TransactionStatus status;
   final String rawStatus;
+  final List<TransactionItem>? items; // Added for item details
 
   Transaction({
     required this.id,
@@ -19,6 +20,21 @@ class Transaction {
     required this.amount,
     required this.status,
     required this.rawStatus,
+    this.items,
+  });
+}
+
+class TransactionItem {
+  final String name;
+  final int quantity;
+  final double? price;
+  final String? unit;
+
+  TransactionItem({
+    required this.name,
+    required this.quantity,
+    this.price,
+    this.unit,
   });
 }
 

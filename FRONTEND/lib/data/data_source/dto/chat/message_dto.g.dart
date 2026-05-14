@@ -46,6 +46,12 @@ ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
           ? null
           : MessageDto.fromJson(json['latest_message'] as Map<String, dynamic>),
       unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
+      customer: json['customer'] == null
+          ? null
+          : UserInfoDto.fromJson(json['customer'] as Map<String, dynamic>),
+      driver: json['driver'] == null
+          ? null
+          : UserInfoDto.fromJson(json['driver'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
@@ -59,6 +65,23 @@ Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
       'ended_at': instance.endedAt,
       'latest_message': instance.lastMessage,
       'unread_count': instance.unreadCount,
+      'customer': instance.customer,
+      'driver': instance.driver,
+    };
+
+UserInfoDto _$UserInfoDtoFromJson(Map<String, dynamic> json) => UserInfoDto(
+  id: (json['id'] as num).toInt(),
+  name: json['name'] as String,
+  email: json['email'] as String,
+  profilePhotoUrl: json['profile_photo_url'] as String?,
+);
+
+Map<String, dynamic> _$UserInfoDtoToJson(UserInfoDto instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'email': instance.email,
+      'profile_photo_url': instance.profilePhotoUrl,
     };
 
 SendMessageRequestDto _$SendMessageRequestDtoFromJson(

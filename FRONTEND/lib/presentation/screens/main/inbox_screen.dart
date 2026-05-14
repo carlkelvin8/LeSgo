@@ -5,6 +5,7 @@ import '../../provider/chat/chat_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../widgets/chat/order_chat_widget.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../data/data_source/dto/chat/message_dto.dart';
 
 class InboxScreen extends ConsumerStatefulWidget {
   const InboxScreen({super.key});
@@ -22,7 +23,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     });
   }
 
-  void _openConversation(int orderId, String orderType) {
+  void _openConversation(int orderId, String orderType, {String? driverName}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -30,8 +31,48 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       builder: (context) => OrderChatWidget(
         orderId: orderId,
         orderType: orderType,
+        driverName: driverName,
       ),
     );
+  }
+
+  String _formatMessageTime(String dateString) {
+    try {
+      final dateTime = DateTime.parse(dateString);
+      return DateFormat('HH:mm').format(dateTime);
+    } catch (e) {
+      // If parsing fails, return a default time or the original string
+      return 'Now';
+    }
+  }
+
+  String _getOrderDisplayName(int orderId) {
+    // Generate more meaningful order names based on order ID patterns
+    final lastDigit = orderId % 10;
+    
+    if (lastDigit <= 2) {
+      return 'LesRide Order #$orderId';
+    } else if (lastDigit <= 5) {
+      return 'LesEat Order #$orderId';
+    } else if (lastDigit <= 7) {
+      return 'LesBuy Order #$orderId';
+    } else {
+      return 'LesGo Order #$orderId';
+    }
+  }
+
+  IconData _getOrderIcon(int orderId) {
+    final lastDigit = orderId % 10;
+    
+    if (lastDigit <= 2) {
+      return Icons.directions_car; // LesRide
+    } else if (lastDigit <= 5) {
+      return Icons.restaurant; // LesEat
+    } else if (lastDigit <= 7) {
+      return Icons.shopping_bag; // LesBuy
+    } else {
+      return Icons.local_shipping; // LesGo
+    }
   }
 
   @override
@@ -141,9 +182,14 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     );
   }
 
-  Widget _buildConversationItem(BuildContext context, conversation) {
+  Widget _buildConversationItem(BuildContext context, ConversationDto conversation) {
     final lastMessage = conversation.lastMessage;
     final hasUnread = conversation.unreadCount > 0;
+    final orderName = _getOrderDisplayName(conversation.orderId);
+    
+    // Get driver name if available
+    final driverName = conversation.driver?.name;
+    final displayTitle = driverName != null ? 'Chat with $driverName' : orderName;
 
     return Container(
       color: Colors.white,
@@ -151,6 +197,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         onTap: () => _openConversation(
           conversation.orderId,
           'order', // You can determine this from order data
+          driverName: conversation.driver?.name,
         ),
         child: Padding(
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
@@ -163,11 +210,21 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   CircleAvatar(
                     radius: 28,
                     backgroundColor: const Color(0xFF5F2D82).withOpacity(0.1),
-                    child: const Icon(
-                      Icons.directions_car,
-                      color: Color(0xFF5F2D82),
-                      size: 28,
-                    ),
+                    child: driverName != null
+                        ? Text(
+                            driverName.substring(0, 1).toUpperCase(),
+                            style: const TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF5F2D82),
+                            ),
+                          )
+                        : Icon(
+                            _getOrderIcon(conversation.orderId),
+                            color: const Color(0xFF5F2D82),
+                            size: 28,
+                          ),
                   ),
                   if (hasUnread)
                     Positioned(
@@ -195,18 +252,32 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            'Order #${conversation.orderId}',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 16),
-                              fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w500,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                displayTitle,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 16),
+                                  fontWeight: hasUnread ? FontWeight.w600 : FontWeight.w500,
+                                ),
+                              ),
+                              if (driverName != null)
+                                Text(
+                                  orderName,
+                                  style: TextStyle(
+                                    fontFamily: 'TT Fors',
+                                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         if (lastMessage != null)
                           Text(
-                            DateFormat('HH:mm').format(lastMessage.createdAt),
+                            _formatMessageTime(lastMessage.createdAt),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12),

@@ -79,18 +79,33 @@ class TransactionListItem extends StatelessWidget {
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                       
-                      // Order ID
-                      Text(
-                        'Order #${transaction.id}',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 12),
-                          color: Colors.grey[600],
-                        ),
+                      // Order ID and items info
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Order #${transaction.id}',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: ResponsiveUtils.fontSize(context, 12),
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          if (transaction.items != null && transaction.items!.isNotEmpty)
+                            Text(
+                              '${transaction.items!.length} item${transaction.items!.length > 1 ? 's' : ''}',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: ResponsiveUtils.fontSize(context, 11),
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                        ],
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                       
-                      // Pickup location
+                      // Pickup location or first item for LesBuy/LesEat
                       Row(
                         children: [
                           Icon(
@@ -101,7 +116,7 @@ class TransactionListItem extends StatelessWidget {
                           SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                           Expanded(
                             child: Text(
-                              transaction.pickupLocation,
+                              _getDisplayLocation(transaction, isPickup: true),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -115,7 +130,7 @@ class TransactionListItem extends StatelessWidget {
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                       
-                      // Dropoff location
+                      // Dropoff location or item count for LesBuy/LesEat
                       Row(
                         children: [
                           Icon(
@@ -126,7 +141,7 @@ class TransactionListItem extends StatelessWidget {
                           SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                           Expanded(
                             child: Text(
-                              transaction.dropoffLocation,
+                              _getDisplayLocation(transaction, isPickup: false),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -261,6 +276,25 @@ class TransactionListItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getDisplayLocation(Transaction transaction, {required bool isPickup}) {
+    // For LesBuy and LesEat orders with items, show item information
+    if ((transaction.serviceName == 'LesBuy' || transaction.serviceName == 'LesEat') && 
+        transaction.items != null && transaction.items!.isNotEmpty) {
+      if (isPickup) {
+        // Show first item name for pickup
+        final firstItem = transaction.items!.first;
+        return '${firstItem.name} ${firstItem.quantity > 1 ? '(${firstItem.quantity}x)' : ''}';
+      } else {
+        // Show total items count for dropoff
+        final totalItems = transaction.items!.fold<int>(0, (sum, item) => sum + item.quantity);
+        return '${transaction.items!.length} item${transaction.items!.length > 1 ? 's' : ''} ($totalItems total)';
+      }
+    }
+    
+    // For other services or orders without items, show regular locations
+    return isPickup ? transaction.pickupLocation : transaction.dropoffLocation;
   }
 
   IconData _getServiceIcon(String serviceName) {
