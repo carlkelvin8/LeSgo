@@ -380,9 +380,14 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       if (response['success'] == true) {
         final trackingData = response['data']['data'] ?? response['data']; // Handle nested data if present
 
-        // Extract locations (mock data)
-        final pickupLoc = const LatLng(8.4542, 124.6319);
-        final dropoffLoc = const LatLng(8.4600, 124.6400);
+        // Extract real locations with fallback to mock data
+        final double pLat = double.tryParse(trackingData['pickup_lat']?.toString() ?? '') ?? 8.4542;
+        final double pLng = double.tryParse(trackingData['pickup_lng']?.toString() ?? '') ?? 124.6319;
+        final double dLat = double.tryParse(trackingData['dropoff_lat']?.toString() ?? '') ?? 8.4600;
+        final double dLng = double.tryParse(trackingData['dropoff_lng']?.toString() ?? '') ?? 124.6400;
+
+        final pickupLoc = LatLng(pLat, pLng);
+        final dropoffLoc = LatLng(dLat, dLng);
 
         // Extract driver info
         DriverInfo? driverInfo;
@@ -433,10 +438,11 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
       if (response['success'] == true) {
         final data = response['data'] as Map<String, dynamic>;
-        final location = LatLng(
-          data['currentLatitude'] ?? 8.4542,
-          data['currentLongitude'] ?? 124.6319,
-        );
+        
+        final double lat = double.tryParse(data['current_latitude']?.toString() ?? data['currentLatitude']?.toString() ?? '') ?? 8.4542;
+        final double lng = double.tryParse(data['current_longitude']?.toString() ?? data['currentLongitude']?.toString() ?? '') ?? 124.6319;
+        
+        final location = LatLng(lat, lng);
 
         state = state.copyWith(
           driverLocation: location,
@@ -467,6 +473,11 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         } else if (data['estimatedArrivalMinutes'] != null) {
           final minutes = data['estimatedArrivalMinutes'] as num;
           eta = '${minutes.round()} minutes';
+        } else if (data['estimated_arrival'] != null) {
+          eta = data['estimated_arrival'] as String;
+        } else if (data['minutes_remaining'] != null) {
+          final minutes = data['minutes_remaining'] as num;
+          eta = '${minutes.round()} minutes';
         }
         
         // Extract distance
@@ -474,6 +485,9 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         if (data['distanceKm'] != null) {
           final distKm = data['distanceKm'] as num;
           distance = '${distKm.toStringAsFixed(1)} km';
+        } else if (data['distance_remaining_m'] != null) {
+          final distM = data['distance_remaining_m'] as num;
+          distance = '${(distM / 1000).toStringAsFixed(1)} km';
         }
         
         state = state.copyWith(

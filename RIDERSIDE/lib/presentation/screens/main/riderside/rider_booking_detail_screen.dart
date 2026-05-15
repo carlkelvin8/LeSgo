@@ -815,7 +815,7 @@ class _RiderBookingDetailScreenState
   }
 
   // Build dynamic content based on current status
-  Widget _buildStatusContent(BuildContext context) {
+  Widget _buildStatusContent(BuildContext context, RiderLocationState locationState) {
     print('🎨 Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
     
     // Show upload section for certain statuses
@@ -1065,8 +1065,8 @@ class _RiderBookingDetailScreenState
                 myLocationEnabled: true,
                 
                 // Add markers and polylines
-                markers: _buildMapMarkers(),
-                polylines: _buildMapPolylines(),
+                markers: _buildMapMarkers(locationState),
+                polylines: _buildMapPolylines(locationState),
                 
                 onMapCreated: (controller) {
                   if (mounted) {
@@ -1270,7 +1270,7 @@ class _RiderBookingDetailScreenState
                         Divider(color: Colors.grey.shade200, height: 1),
                         
                         // Dynamic content based on status
-                        _buildStatusContent(context),
+                        _buildStatusContent(context, locationState),
                         
                         Padding(
                           padding: EdgeInsets.symmetric(
@@ -1348,9 +1348,20 @@ class _RiderBookingDetailScreenState
     );
   }
 
-  // Build map markers for pickup and dropoff
-  Set<Marker> _buildMapMarkers() {
+  // Build map markers for pickup and dropoff and driver
+  Set<Marker> _buildMapMarkers(RiderLocationState locationState) {
     final markers = <Marker>{};
+    
+    // Driver marker
+    if (locationState.hasLocation) {
+      markers.add(Marker(
+        markerId: const MarkerId('driver_location'),
+        position: LatLng(locationState.latitude!, locationState.longitude!),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        infoWindow: const InfoWindow(title: 'Your Location'),
+        zIndex: 2,
+      ));
+    }
     
     // Pickup marker
     if (widget.booking.pickupLat != null && widget.booking.pickupLng != null) {
@@ -1381,31 +1392,47 @@ class _RiderBookingDetailScreenState
     return markers;
   }
 
-  // Build polyline between pickup and dropoff
-  Set<Polyline> _buildMapPolylines() {
+  // Build polyline between pickup and dropoff and driver
+  Set<Polyline> _buildMapPolylines(RiderLocationState locationState) {
     final polylines = <Polyline>{};
     
     if (widget.booking.pickupLat != null && 
         widget.booking.pickupLng != null &&
         widget.booking.dropoffLat != null && 
         widget.booking.dropoffLng != null) {
+        
+      // Draw route between pickup and dropoff
       polylines.add(Polyline(
-        polylineId: const PolylineId('route'),
+        polylineId: const PolylineId('route_pickup_dropoff'),
         points: [
-          LatLng(
-            widget.booking.pickupLat!,
-            widget.booking.pickupLng!,
-          ),
-          LatLng(
-            widget.booking.dropoffLat!,
-            widget.booking.dropoffLng!,
-          ),
+          LatLng(widget.booking.pickupLat!, widget.booking.pickupLng!),
+          LatLng(widget.booking.dropoffLat!, widget.booking.dropoffLng!),
         ],
         color: const Color(0xFF5F2D82),
         width: 4,
-        // Remove patterns for web compatibility
-        // patterns: [PatternItem.dash(20), PatternItem.gap(10)],
       ));
+      
+      // If driver location is available, draw a line from driver to current destination
+      if (locationState.hasLocation) {
+        final driverLoc = LatLng(locationState.latitude!, locationState.longitude!);
+        LatLng destLoc;
+        
+        // If en route to pickup
+        if (_currentStatus == BookingStatus.onTheWay || _currentStatus == BookingStatus.driverHasArrived || _currentStatus == BookingStatus.toBuy || _currentStatus == BookingStatus.cooking) {
+          destLoc = LatLng(widget.booking.pickupLat!, widget.booking.pickupLng!);
+        } else {
+          // If en route to dropoff
+          destLoc = LatLng(widget.booking.dropoffLat!, widget.booking.dropoffLng!);
+        }
+        
+        polylines.add(Polyline(
+          polylineId: const PolylineId('route_driver_to_dest'),
+          points: [driverLoc, destLoc],
+          color: Colors.blue,
+          width: 4,
+          patterns: [PatternItem.dash(10), PatternItem.gap(10)],
+        ));
+      }
     }
     
     return polylines;
