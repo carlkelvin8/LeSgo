@@ -120,6 +120,24 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   Widget build(BuildContext context) {
     final trackingState = ref.watch(liveTrackingProvider(widget.orderId));
 
+    // Listen for driver location changes to auto-follow
+    ref.listen<LiveTrackingState>(liveTrackingProvider(widget.orderId), (previous, next) {
+      if (previous?.driverLocation != next.driverLocation && next.driverLocation != null) {
+        if (_mapController != null && _mapReady) {
+          _mapController!.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: next.driverLocation!,
+                zoom: 16.5,
+                bearing: next.driverHeading ?? 0.0,
+                tilt: 45.0, // Add some tilt for a cool 3D navigation effect
+              ),
+            ),
+          );
+        }
+      }
+    });
+
     return Scaffold(
       body: Stack(
         children: [

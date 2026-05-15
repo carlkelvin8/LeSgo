@@ -21,7 +21,7 @@ class RiderUser {
   });
 
   bool get isDriver => role == 'driver';
-  bool get isMerchant => role == 'merchant' || role == 'partner';
+  bool get isMerchant => role == 'merchant' || role == 'partner' || role == 'partner_admin';
 
   factory RiderUser.fromJson(Map<String, dynamic> json) {
     final dp = json['driver_profile'];

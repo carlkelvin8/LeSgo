@@ -26,6 +26,7 @@ class LiveTrackingState {
   final String orderStatus;
   final DriverInfo? driverInfo;
   final bool isTracking;
+  final double? driverHeading;
 
   LiveTrackingState({
     this.tracking,
@@ -42,6 +43,7 @@ class LiveTrackingState {
     this.orderStatus = 'pending',
     this.driverInfo,
     this.isTracking = false,
+    this.driverHeading = 0.0,
   });
 
   LiveTrackingState copyWith({
@@ -59,6 +61,7 @@ class LiveTrackingState {
     String? orderStatus,
     DriverInfo? driverInfo,
     bool? isTracking,
+    double? driverHeading,
   }) {
     return LiveTrackingState(
       tracking: tracking ?? this.tracking,
@@ -75,6 +78,7 @@ class LiveTrackingState {
       orderStatus: orderStatus ?? this.orderStatus,
       driverInfo: driverInfo ?? this.driverInfo,
       isTracking: isTracking ?? this.isTracking,
+      driverHeading: driverHeading ?? this.driverHeading,
     );
   }
 
@@ -443,9 +447,21 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         final double lng = double.tryParse(data['current_longitude']?.toString() ?? data['currentLongitude']?.toString() ?? '') ?? 124.6319;
         
         final location = LatLng(lat, lng);
+        
+        double heading = state.driverHeading ?? 0.0;
+        if (state.driverLocation != null && 
+            (state.driverLocation!.latitude != lat || state.driverLocation!.longitude != lng)) {
+          heading = Geolocator.bearingBetween(
+            state.driverLocation!.latitude,
+            state.driverLocation!.longitude,
+            lat,
+            lng,
+          );
+        }
 
         state = state.copyWith(
           driverLocation: location,
+          driverHeading: heading,
           eta: data['estimatedArrival'] ?? '15 minutes',
         );
 
@@ -588,7 +604,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
           title: state.driverInfo?.name ?? 'Driver',
           snippet: state.eta != null ? 'ETA: ${state.eta}' : null,
         ),
-        rotation: 0, // TODO: Calculate bearing from movement
+        rotation: state.driverHeading ?? 0.0,
+        anchor: const Offset(0.5, 0.5), // Center the marker for proper rotation
       ));
     }
 

@@ -130,13 +130,33 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
   }
 
   void _startPeriodicUpdates() {
-    // Update location every 30 seconds
-    _updateTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
-      if (state.hasLocation && !state.isUpdating) {
+    // Update location every 5 seconds for real-time tracking
+    _updateTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      if (!state.isUpdating) {
         try {
           final position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.best,
+            desiredAccuracy: LocationAccuracy.bestForNavigation,
           );
+          
+          // Smart GPS Filtering: Ignore inaccurate locations (> 30m accuracy)
+          if (position.accuracy > 30.0) {
+            print('⚠️ Ignored inaccurate GPS reading: accuracy ${position.accuracy.toStringAsFixed(1)}m');
+            return;
+          }
+          
+          // Smart GPS Filtering: Ignore tiny jitter movements
+          if (state.hasLocation) {
+            final distance = Geolocator.distanceBetween(
+              state.latitude!, state.longitude!,
+              position.latitude, position.longitude,
+            );
+            
+            // Only update if moved more than 2 meters
+            if (distance < 2.0) {
+              return;
+            }
+          }
+          
           await _sendLocationToBackend(position.latitude, position.longitude);
           
           state = state.copyWith(
