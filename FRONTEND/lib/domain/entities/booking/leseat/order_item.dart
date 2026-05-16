@@ -4,6 +4,8 @@ class OrderItem {
   final String imagePath;
   final double price;
   final int quantity;
+  final String? restaurantId;
+  final String? restaurantName;
 
   OrderItem({
     required this.id,
@@ -11,6 +13,8 @@ class OrderItem {
     required this.imagePath,
     required this.price,
     required this.quantity,
+    this.restaurantId,
+    this.restaurantName,
   });
 
   double get total => price * quantity;
@@ -21,6 +25,8 @@ class OrderItem {
     String? imagePath,
     double? price,
     int? quantity,
+    String? restaurantId,
+    String? restaurantName,
   }) {
     return OrderItem(
       id: id ?? this.id,
@@ -28,6 +34,8 @@ class OrderItem {
       imagePath: imagePath ?? this.imagePath,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
+      restaurantId: restaurantId ?? this.restaurantId,
+      restaurantName: restaurantName ?? this.restaurantName,
     );
   }
 }

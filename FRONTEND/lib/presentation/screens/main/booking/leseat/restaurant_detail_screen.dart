@@ -30,6 +30,7 @@ class _RestaurantDetailScreenState
           .loadRestaurantDetails(
             widget.restaurant.id,
             widget.restaurant.categories,
+            restaurantName: widget.restaurant.name,
           );
     });
   }
@@ -100,7 +101,9 @@ class _RestaurantDetailScreenState
                       ),
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: (detailState.selectedCategoryId == 'popular' || detailState.selectedCategoryId == null)
+                        child:
+                            (detailState.selectedCategoryId == 'popular' ||
+                                detailState.selectedCategoryId == null)
                             ? Row(
                                 children: [
                                   Icon(
@@ -108,12 +111,17 @@ class _RestaurantDetailScreenState
                                     size: ResponsiveUtils.fontSize(context, 20),
                                     color: Colors.orange,
                                   ),
-                                  SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                                  SizedBox(
+                                    width: ResponsiveUtils.spacing(context, 8),
+                                  ),
                                   Text(
                                     'Popular Items',
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
-                                      fontSize: ResponsiveUtils.fontSize(context, 20),
+                                      fontSize: ResponsiveUtils.fontSize(
+                                        context,
+                                        20,
+                                      ),
                                       fontWeight: FontWeight.w700,
                                       color: Colors.black87,
                                     ),
@@ -124,7 +132,10 @@ class _RestaurantDetailScreenState
                                 detailState.selectedCategoryName ?? 'Items',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 20),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    20,
+                                  ),
                                   fontWeight: FontWeight.w700,
                                   color: Colors.black87,
                                 ),
@@ -183,7 +194,9 @@ class _RestaurantDetailScreenState
                 // Restaurant Info Card - Positioned to overlay middle of header
                 // Top edge at middle of header, extends down into body
                 Positioned(
-                  top: headerHeight * 0.45, // Adjusted to match LesBuy StoreDetailScreen
+                  top:
+                      headerHeight *
+                      0.45, // Adjusted to match LesBuy StoreDetailScreen
                   left: ResponsiveUtils.horizontalPadding(context),
                   right: ResponsiveUtils.horizontalPadding(context),
                   child: RestaurantInfoCard(
@@ -211,9 +224,9 @@ class _RestaurantDetailScreenState
               total: detailState.cartTotal,
               onViewCart: () {
                 // Initialize checkout with cart data
-                ref.read(checkoutProvider.notifier).initializeFromCart(
-                  widget.restaurant.name,
-                );
+                ref
+                    .read(checkoutProvider.notifier)
+                    .initializeFromCart(widget.restaurant.name);
                 AppRouter.push(context, BookingRoutes.leseatCheckout);
               },
             )

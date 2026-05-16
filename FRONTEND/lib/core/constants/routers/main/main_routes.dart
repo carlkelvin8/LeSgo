@@ -6,6 +6,7 @@ class MainRoutes {
   static const String profile = '/profile';
   static const String transactions = '/transactions';
   static const String favorites = '/favorites';
+  static const String offers = '/offers';
   static const String missions = '/missions';
   static const String settings = '/settings';
   static const String faqs = '/faqs';
@@ -13,6 +14,6 @@ class MainRoutes {
   static const String setLocation = '/set-location';
   static const String addressManagement = '/address-management';
   static const String addressDemo = '/address-demo';
-  
+
   MainRoutes._();
 }

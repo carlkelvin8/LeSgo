@@ -39,9 +39,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
     final profileState = ref.watch(profileProvider);
 
     // Get user name and address
-    final userName = profileState.name.isNotEmpty 
-        ? profileState.name 
-        : 'Guest';
+    final userName = profileState.name.isNotEmpty ? profileState.name : 'Guest';
     final userAddress = profileState.address1.isNotEmpty
         ? profileState.address1
         : 'No address set';
@@ -49,7 +47,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: BookingServiceHeader(
-        title: 'LeSeat',
+        title: 'LesEat',
         action: IconButton(
           icon: Icon(
             Icons.shopping_cart_outlined,
@@ -69,15 +67,12 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            SizedBox(height: ResponsiveUtils.spacing(context, 4)),
 
             // Location Header
-            LocationHeaderSection(
-              userName: userName,
-              address: userAddress,
-            ),
+            LocationHeaderSection(userName: userName, address: userAddress),
 
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            SizedBox(height: ResponsiveUtils.spacing(context, 10)),
 
             // Search Field
             LeseatSearchField(
@@ -85,7 +80,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
               onChanged: (value) => leseatNotifier.updateSearchQuery(value),
             ),
 
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            SizedBox(height: ResponsiveUtils.spacing(context, 10)),
 
             // Categories
             CategoryListSection(
@@ -96,7 +91,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
               },
             ),
 
-            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            SizedBox(height: ResponsiveUtils.spacing(context, 2)),
 
             // Banner
             const LeseatBanner(),
@@ -104,7 +99,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
             // Section Header
             const SectionHeader(title: 'Explore restaurants'),
 
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
 
             // Restaurant List
             Expanded(

@@ -6,14 +6,15 @@ import 'presentation/screens/main/home_screen.dart';
 import 'presentation/screens/main/address_management_screen.dart';
 import 'presentation/screens/main/settings_screen.dart';
 import 'presentation/screens/main/profile_screen.dart';
+import 'presentation/screens/main/offers_screen.dart';
 import 'core/constants/routers/main/main_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize dependency injection
   await configureDependencies();
-  
+
   runApp(const ProviderScope(child: LesGoApp()));
 }
 
@@ -34,9 +35,11 @@ class LesGoApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
-        MainRoutes.addressManagement: (context) => const AddressManagementScreen(),
+        MainRoutes.addressManagement: (context) =>
+            const AddressManagementScreen(),
         MainRoutes.settings: (context) => const SettingsScreen(),
         MainRoutes.profile: (context) => const ProfileScreen(),
+        MainRoutes.offers: (context) => const OffersScreen(),
       },
     );
   }
@@ -93,7 +96,7 @@ class LesGoHomePage extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Main Content
             Expanded(
               child: Container(
@@ -120,7 +123,7 @@ class LesGoHomePage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Service Cards
                       Expanded(
                         child: GridView.count(
@@ -154,12 +157,15 @@ class LesGoHomePage extends StatelessWidget {
                               title: 'Addresses',
                               subtitle: 'Manage addresses',
                               color: const Color(0xFF5F2D82),
-                              onTap: () => Navigator.pushNamed(context, MainRoutes.addressManagement),
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                MainRoutes.addressManagement,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      
+
                       // Bottom Navigation
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -175,12 +181,18 @@ class LesGoHomePage extends StatelessWidget {
                             _NavButton(
                               icon: Icons.person,
                               label: 'Profile',
-                              onTap: () => Navigator.pushNamed(context, MainRoutes.profile),
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                MainRoutes.profile,
+                              ),
                             ),
                             _NavButton(
                               icon: Icons.settings,
                               label: 'Settings',
-                              onTap: () => Navigator.pushNamed(context, MainRoutes.settings),
+                              onTap: () => Navigator.pushNamed(
+                                context,
+                                MainRoutes.settings,
+                              ),
                             ),
                           ],
                         ),
@@ -195,7 +207,7 @@ class LesGoHomePage extends StatelessWidget {
       ),
     );
   }
-  
+
   void _showComingSoon(BuildContext context, String service) {
     showDialog(
       context: context,
@@ -247,11 +259,7 @@ class _ServiceCard extends StatelessWidget {
                 color: color,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                size: 32,
-                color: Colors.white,
-              ),
+              child: Icon(icon, size: 32, color: Colors.white),
             ),
             const SizedBox(height: 12),
             Text(

@@ -57,8 +57,12 @@ class LesgoState {
           shouldCollapseAfterFullscreen ?? this.shouldCollapseAfterFullscreen,
       itemDescription: itemDescription ?? this.itemDescription,
       itemWeight: itemWeight ?? this.itemWeight,
-      selectedPickupAddress: clearPickupAddress ? null : (selectedPickupAddress ?? this.selectedPickupAddress),
-      selectedDropoffAddress: clearDropoffAddress ? null : (selectedDropoffAddress ?? this.selectedDropoffAddress),
+      selectedPickupAddress: clearPickupAddress
+          ? null
+          : (selectedPickupAddress ?? this.selectedPickupAddress),
+      selectedDropoffAddress: clearDropoffAddress
+          ? null
+          : (selectedDropoffAddress ?? this.selectedDropoffAddress),
     );
   }
 }
@@ -96,17 +100,18 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
 
   Future<void> initialize() async {
     final notifier = _ref.read(lesgoLocationProvider.notifier);
-    final currentState = _ref.read(lesgoLocationProvider);
-    
-    // Only reset if no locations are set, otherwise preserve existing selections
-    if (currentState.pickupLocation == null && currentState.destinationLocation == null) {
-      notifier.reset();
-    }
-    
-    // Always get current location for pickup if not already set
-    if (currentState.pickupLocation == null) {
-      await notifier.getCurrentLocation();
-    }
+
+    notifier.reset();
+    state = state.copyWith(
+      isFullscreen: false,
+      selectingDestination: true,
+      pendingFit: true,
+      shouldCollapseAfterFullscreen: false,
+      clearPickupAddress: true,
+      clearDropoffAddress: true,
+    );
+
+    await notifier.getCurrentLocation();
   }
 
   void cleanup() {
@@ -197,8 +202,10 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   }
 
   Future<void> onMapTap(LatLng latLng) async {
-    print('🔍 LesGo: onMapTap called with: $latLng, isFullscreen: ${state.isFullscreen}, selectingDestination: ${state.selectingDestination}');
-    
+    print(
+      '🔍 LesGo: onMapTap called with: $latLng, isFullscreen: ${state.isFullscreen}, selectingDestination: ${state.selectingDestination}',
+    );
+
     if (!state.isFullscreen)
       return; // Block marker moves when not in fullscreen selection.
 
@@ -305,12 +312,14 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   Future<void> confirmSelection() async {
     print('🔍 LesGo: confirmSelection called');
     final locationState = _ref.read(lesgoLocationProvider);
-    print('🔍 LesGo: Current location state - pickup: ${locationState.pickupLocation}, destination: ${locationState.destinationLocation}');
-    
+    print(
+      '🔍 LesGo: Current location state - pickup: ${locationState.pickupLocation}, destination: ${locationState.destinationLocation}',
+    );
+
     // Selection already stored in provider on tap; just close overlay
     state = state.copyWith(
       isFullscreen: false,
-      shouldCollapseAfterFullscreen: true,
+      shouldCollapseAfterFullscreen: false,
       pendingFit: true,
     );
 
@@ -318,8 +327,12 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     // IMPORTANT: Pass forceAllow: true to allow route fetching from confirmation
     if (locationState.pickupLocation != null &&
         locationState.destinationLocation != null) {
-      print('🔍 LesGo: Both locations set, fetching route with forceAllow: true');
-      await _ref.read(lesgoLocationProvider.notifier).fetchRouteIfBothSet(forceAllow: true);
+      print(
+        '🔍 LesGo: Both locations set, fetching route with forceAllow: true',
+      );
+      await _ref
+          .read(lesgoLocationProvider.notifier)
+          .fetchRouteIfBothSet(forceAllow: true);
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => fitBoundsOrSelected());
@@ -340,7 +353,9 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   }
 
   void selectPickupAddress(AddressDto address) {
-    print('🔍 LesGo: selectPickupAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})');
+    print(
+      '🔍 LesGo: selectPickupAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
+    );
     state = state.copyWith(selectedPickupAddress: address);
     // Update location provider with address coordinates
     final locationNotifier = _ref.read(lesgoLocationProvider.notifier);
@@ -349,11 +364,15 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       address.addressLine1,
       null, // addressComponents not needed
     );
-    print('🔍 LesGo: After updatePickupWithAddress, pickupLocation: ${_ref.read(lesgoLocationProvider).pickupLocation}');
+    print(
+      '🔍 LesGo: After updatePickupWithAddress, pickupLocation: ${_ref.read(lesgoLocationProvider).pickupLocation}',
+    );
   }
 
   void selectDropoffAddress(AddressDto address) {
-    print('🔍 LesGo: selectDropoffAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})');
+    print(
+      '🔍 LesGo: selectDropoffAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
+    );
     state = state.copyWith(selectedDropoffAddress: address);
     // Update location provider with address coordinates
     final locationNotifier = _ref.read(lesgoLocationProvider.notifier);
@@ -362,7 +381,9 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       address.addressLine1,
       null, // addressComponents not needed
     );
-    print('🔍 LesGo: After updateDestinationWithAddress, destinationLocation: ${_ref.read(lesgoLocationProvider).destinationLocation}');
+    print(
+      '🔍 LesGo: After updateDestinationWithAddress, destinationLocation: ${_ref.read(lesgoLocationProvider).destinationLocation}',
+    );
   }
 
   void clearPickupAddress() {
@@ -417,7 +438,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print('  - selectedPickupAddress: ${state.selectedPickupAddress}');
 
     // Check if destination is set (allow booking if location is set even if address is null)
-    if (locationState.destinationLocation == null && state.selectedDropoffAddress == null) {
+    if (locationState.destinationLocation == null &&
+        state.selectedDropoffAddress == null) {
       // For testing purposes, create a default destination near the pickup location
       if (locationState.pickupLocation != null) {
         print('🔧 LesGo: Creating default destination for testing');
@@ -427,9 +449,11 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
           pickup.latitude + 0.01,
           pickup.longitude + 0.01,
         );
-        
-        await _ref.read(lesgoLocationProvider.notifier).updateDestination(defaultDestination);
-        
+
+        await _ref
+            .read(lesgoLocationProvider.notifier)
+            .updateDestination(defaultDestination);
+
         // Show info message
         SnackBarUtils.showInfo(
           context,
@@ -441,7 +465,7 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
           context,
           'Please select a destination to continue booking',
         );
-        
+
         // Automatically open destination selection to help user
         Future.delayed(const Duration(milliseconds: 500), () {
           openDestinationSelection();
@@ -451,23 +475,29 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     }
 
     // If we have a selected dropoff address but no destination location, update the location
-    if (locationState.destinationLocation == null && state.selectedDropoffAddress != null) {
+    if (locationState.destinationLocation == null &&
+        state.selectedDropoffAddress != null) {
       final address = state.selectedDropoffAddress!;
-      await _ref.read(lesgoLocationProvider.notifier).updateDestinationWithAddress(
-        LatLng(address.latitude, address.longitude),
-        address.addressLine1,
-        null,
-      );
+      await _ref
+          .read(lesgoLocationProvider.notifier)
+          .updateDestinationWithAddress(
+            LatLng(address.latitude, address.longitude),
+            address.addressLine1,
+            null,
+          );
     }
 
     // If we have a selected pickup address but no pickup location, update the location
-    if (locationState.pickupLocation == null && state.selectedPickupAddress != null) {
+    if (locationState.pickupLocation == null &&
+        state.selectedPickupAddress != null) {
       final address = state.selectedPickupAddress!;
-      await _ref.read(lesgoLocationProvider.notifier).updatePickupWithAddress(
-        LatLng(address.latitude, address.longitude),
-        address.addressLine1,
-        null,
-      );
+      await _ref
+          .read(lesgoLocationProvider.notifier)
+          .updatePickupWithAddress(
+            LatLng(address.latitude, address.longitude),
+            address.addressLine1,
+            null,
+          );
     }
 
     // Re-read the location state after potential updates
@@ -499,34 +529,47 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
 
         final createOrderRequest = CreateOrderRequestDto(
           serviceId: 1, // LesGo service ID
-          estimatedDistanceM: (updatedLocationState.distanceInKm != null) 
-              ? (updatedLocationState.distanceInKm! * 1000).round() 
+          estimatedDistanceM: (updatedLocationState.distanceInKm != null)
+              ? (updatedLocationState.distanceInKm! * 1000).round()
               : 5000,
           pickup: OrderAddressDto(
-            address: state.selectedPickupAddress?.addressLine1 ?? 
-                     (updatedLocationState.pickupAddress?.toString() ?? 'Pickup Location'),
-            lat: state.selectedPickupAddress?.latitude ?? 
-                 (updatedLocationState.pickupLocation?.latitude ?? 8.4542),
-            lng: state.selectedPickupAddress?.longitude ?? 
-                 (updatedLocationState.pickupLocation?.longitude ?? 124.6319),
-            contactName: state.selectedPickupAddress?.contactName?.isNotEmpty == true
+            address:
+                state.selectedPickupAddress?.addressLine1 ??
+                (updatedLocationState.pickupAddress?.toString() ??
+                    'Pickup Location'),
+            lat:
+                state.selectedPickupAddress?.latitude ??
+                (updatedLocationState.pickupLocation?.latitude ?? 8.4542),
+            lng:
+                state.selectedPickupAddress?.longitude ??
+                (updatedLocationState.pickupLocation?.longitude ?? 124.6319),
+            contactName:
+                state.selectedPickupAddress?.contactName?.isNotEmpty == true
                 ? state.selectedPickupAddress!.contactName!
                 : (user?.name ?? 'Customer'),
-            contactPhone: state.selectedPickupAddress?.contactPhone?.isNotEmpty == true
+            contactPhone:
+                state.selectedPickupAddress?.contactPhone?.isNotEmpty == true
                 ? state.selectedPickupAddress!.contactPhone!
                 : (user?.phone ?? '+639123456789'),
           ),
           dropoff: OrderAddressDto(
-            address: state.selectedDropoffAddress?.addressLine1 ?? 
-                     (updatedLocationState.destinationAddress?.toString() ?? 'Destination'),
-            lat: state.selectedDropoffAddress?.latitude ?? 
-                 (updatedLocationState.destinationLocation?.latitude ?? 8.4542),
-            lng: state.selectedDropoffAddress?.longitude ?? 
-                 (updatedLocationState.destinationLocation?.longitude ?? 124.6319),
-            contactName: state.selectedDropoffAddress?.contactName?.isNotEmpty == true
+            address:
+                state.selectedDropoffAddress?.addressLine1 ??
+                (updatedLocationState.destinationAddress?.toString() ??
+                    'Destination'),
+            lat:
+                state.selectedDropoffAddress?.latitude ??
+                (updatedLocationState.destinationLocation?.latitude ?? 8.4542),
+            lng:
+                state.selectedDropoffAddress?.longitude ??
+                (updatedLocationState.destinationLocation?.longitude ??
+                    124.6319),
+            contactName:
+                state.selectedDropoffAddress?.contactName?.isNotEmpty == true
                 ? state.selectedDropoffAddress!.contactName!
                 : (user?.name ?? 'Customer'),
-            contactPhone: state.selectedDropoffAddress?.contactPhone?.isNotEmpty == true
+            contactPhone:
+                state.selectedDropoffAddress?.contactPhone?.isNotEmpty == true
                 ? state.selectedDropoffAddress!.contactPhone!
                 : (user?.phone ?? '+639123456789'),
           ),
@@ -555,7 +598,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
             'orderType': 'LesGo',
             'orderData': {
               'pickupAddress': updatedLocationState.pickupAddress?.toString(),
-              'dropoffAddress': updatedLocationState.destinationAddress?.toString(),
+              'dropoffAddress': updatedLocationState.destinationAddress
+                  ?.toString(),
               'itemDescription': state.itemDescription,
               'itemWeight': state.itemWeight,
               'paymentMethod': state.paymentMethod,

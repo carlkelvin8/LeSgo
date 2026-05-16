@@ -17,7 +17,7 @@ class BookingState {
   static final List<BookingService> _defaultServices = [
     BookingService(
       id: '1',
-      name: 'LeSeat',
+      name: 'LesEat',
       description: 'Order your favorite menu from different restaurants!',
       iconPath: 'assets/images/book/Leseat.svg',
       type: ServiceType.leseat,
@@ -25,7 +25,8 @@ class BookingState {
     BookingService(
       id: '2',
       name: 'LesBuy',
-      description: 'Everything? Medicine? School supplies? Anything with LesBuy',
+      description:
+          'Everything? Medicine? School supplies? Anything with LesBuy',
       iconPath: 'assets/images/book/Lesbuy.svg',
       type: ServiceType.lesbuy,
     ),
@@ -88,20 +89,16 @@ class BookingNotifier extends StateNotifier<BookingState> {
     try {
       // Simulate API call
       await Future.delayed(const Duration(milliseconds: 500));
-      
-      state = state.copyWith(
-        isLoading: false,
-        error: null,
-      );
+
+      state = state.copyWith(isLoading: false, error: null);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 }
 
-final bookingProvider = StateNotifierProvider<BookingNotifier, BookingState>((ref) {
+final bookingProvider = StateNotifierProvider<BookingNotifier, BookingState>((
+  ref,
+) {
   return BookingNotifier();
 });

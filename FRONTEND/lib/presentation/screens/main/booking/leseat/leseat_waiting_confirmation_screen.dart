@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
 class LeseatWaitingConfirmationScreen extends ConsumerStatefulWidget {
@@ -31,10 +30,10 @@ class _LeseatWaitingConfirmationScreenState
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
-          onPressed: () => context.pop(),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'LeSeat',
+          'LesEat',
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 20),
@@ -90,7 +89,9 @@ class _LeseatWaitingConfirmationScreenState
 
                   // Status Card
                   Container(
-                    padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
+                    padding: EdgeInsets.all(
+                      ResponsiveUtils.spacing(context, 20),
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -107,7 +108,10 @@ class _LeseatWaitingConfirmationScreenState
                                 'Waiting for Restaurant\nConfirmation',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 18),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    18,
+                                  ),
                                   fontWeight: FontWeight.w700,
                                   color: Colors.black,
                                 ),
@@ -238,37 +242,27 @@ class _LeseatWaitingConfirmationScreenState
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Cancel Order?',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
         ),
         content: Text(
           'Are you sure you want to cancel this order?',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-          ),
+          style: TextStyle(fontFamily: 'TT Fors'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'No',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontFamily: 'TT Fors', color: Colors.grey),
             ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              context.pop(); // Go back to previous screen
+              Navigator.pop(context); // Go back to previous screen
               // TODO: Call API to cancel order
             },
             child: Text(

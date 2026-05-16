@@ -5,15 +5,12 @@ import '../../../../core/utils/responsive_utils.dart';
 class LeseatBanner extends StatelessWidget {
   final VoidCallback? onTap;
 
-  const LeseatBanner({
-    super.key,
-    this.onTap,
-  });
+  const LeseatBanner({super.key, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final borderRadius = ResponsiveUtils.spacing(context, 16);
-    final bannerHeight = ResponsiveUtils.imageHeight(context, 120);
+    final bannerHeight = ResponsiveUtils.imageHeight(context, 96);
 
     return GestureDetector(
       onTap: onTap,
@@ -22,7 +19,7 @@ class LeseatBanner extends StatelessWidget {
         width: double.infinity,
         margin: EdgeInsets.symmetric(
           horizontal: ResponsiveUtils.spacing(context, 16),
-          vertical: ResponsiveUtils.spacing(context, 16),
+          vertical: ResponsiveUtils.spacing(context, 8),
         ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),

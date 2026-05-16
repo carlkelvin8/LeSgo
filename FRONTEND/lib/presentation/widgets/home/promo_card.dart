@@ -4,16 +4,28 @@ import '../../../core/utils/responsive_utils.dart';
 
 class PromoCard extends StatelessWidget {
   final String title;
+  final String? subtitle;
+  final String? badge;
+  final Color? accentColor;
   final String? imageUrl;
   final VoidCallback? onTap;
 
-  const PromoCard({super.key, required this.title, this.imageUrl, this.onTap});
+  const PromoCard({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.badge,
+    this.accentColor,
+    this.imageUrl,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final width = ResponsiveUtils.screenWidth(context) * 0.7; // Wider card
     final margin = ResponsiveUtils.spacing(context, 16);
     final borderRadius = ResponsiveUtils.spacing(context, 20); // More rounded
+    final color = accentColor ?? const Color(0xFF5F2D82);
 
     return GestureDetector(
       onTap: onTap,
@@ -24,21 +36,70 @@ class PromoCard extends StatelessWidget {
           context,
           child: Container(
             padding: EdgeInsets.all(16),
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Stack(
               children: [
-                Icon(Icons.local_offer, color: Colors.grey[400], size: 40),
-                SizedBox(height: 12),
-                Text(
-                  title.toUpperCase(),
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Icon(
+                    Icons.arrow_outward,
                     color: Colors.grey[400],
+                    size: 18,
                   ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(Icons.local_offer, color: color, size: 24),
+                    ),
+                    const Spacer(),
+                    if (badge != null) ...[
+                      Text(
+                        badge!,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 11),
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 16),
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 11),
+                          color: Colors.grey[500],
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -62,7 +123,7 @@ class PromoCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F4F7), // Light grey/blue
+        color: const Color(0xFFF7F7FA),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
           color: Colors.grey[300]!,

@@ -97,47 +97,47 @@ class _AddressBottomSheetState extends ConsumerState<_AddressBottomSheet> {
           Expanded(
             child: addressState.isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF5F2D82),
-                    ),
+                    child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
                   )
                 : addressState.addresses.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.location_off_outlined,
-                                size: 48, color: Colors.grey[300]),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No saved addresses.\nAdd one in your profile.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.location_off_outlined,
+                          size: 48,
+                          color: Colors.grey[300],
                         ),
-                      )
-                    : ListView.separated(
-                        controller: scrollController,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: addressState.addresses.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 12),
-                        itemBuilder: (_, i) {
-                          final addr = addressState.addresses[i];
-                          final isSelected =
-                              addressState.selectedAddress?.id == addr.id;
-                          return _AddressTile(
-                            address: addr,
-                            isSelected: isSelected,
-                            onTap: () => Navigator.pop(context, addr),
-                          );
-                        },
-                      ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No saved addresses.\nAdd one in your profile.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            color: Colors.grey[500],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: addressState.addresses.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (_, i) {
+                      final addr = addressState.addresses[i];
+                      final isSelected =
+                          addressState.selectedAddress?.id == addr.id;
+                      return _AddressTile(
+                        address: addr,
+                        isSelected: isSelected,
+                        onTap: () => Navigator.pop(context, addr),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -168,9 +168,7 @@ class _AddressTile extends StatelessWidget {
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFF5F2D82)
-                : Colors.grey[200]!,
+            color: isSelected ? const Color(0xFF5F2D82) : Colors.grey[200]!,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -186,9 +184,7 @@ class _AddressTile extends StatelessWidget {
               ),
               child: Icon(
                 address.isDefault ? Icons.home : Icons.location_on_outlined,
-                color: isSelected
-                    ? const Color(0xFF5F2D82)
-                    : Colors.grey[600],
+                color: isSelected ? const Color(0xFF5F2D82) : Colors.grey[600],
                 size: 20,
               ),
             ),
@@ -244,9 +240,10 @@ class _AddressTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (address.contactName.isNotEmpty)
+                  if ((address.contactName?.isNotEmpty ?? false) ||
+                      (address.contactPhone?.isNotEmpty ?? false))
                     Text(
-                      '${address.contactName} · ${address.contactPhone}',
+                      '${address.contactName ?? ''} - ${address.contactPhone ?? ''}',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 11,

@@ -30,19 +30,13 @@ class BookingService {
   }
 }
 
-enum ServiceType {
-  leseat,
-  lesbuy,
-  lesgo,
-  lesport,
-  lesride,
-}
+enum ServiceType { leseat, lesbuy, lesgo, lesport, lesride }
 
 extension ServiceTypeExtension on ServiceType {
   String get displayName {
     switch (this) {
       case ServiceType.leseat:
-        return 'LeSeat';
+        return 'LesEat';
       case ServiceType.lesbuy:
         return 'LesBuy';
       case ServiceType.lesgo:

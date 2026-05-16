@@ -18,7 +18,7 @@ class CategoryListSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: ResponsiveUtils.spacing(context, 90),
+      height: ResponsiveUtils.spacing(context, 76),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(
@@ -31,7 +31,7 @@ class CategoryListSection extends StatelessWidget {
 
           return Padding(
             padding: EdgeInsets.only(
-              right: ResponsiveUtils.spacing(context, 16),
+              right: ResponsiveUtils.spacing(context, 12),
             ),
             child: CategoryChip(
               category: category,

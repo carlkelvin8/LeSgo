@@ -51,13 +51,18 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
   /// Initialize order from cart data
   void initializeFromCart(String restaurantName) {
     final restaurantState = ref.read(restaurantDetailProvider);
-    final cartItems = restaurantState.cartItems;
+    final cartItems = restaurantState.cartItems.map((item) {
+      return item.restaurantName == null
+          ? item.copyWith(restaurantName: restaurantName)
+          : item;
+    }).toList();
     final profileState = ref.read(profileProvider);
 
     final subtotal = cartItems.fold<double>(0, (sum, item) => sum + item.total);
 
     // Get user address from profile or use default
-    final userAddress = profileState.user?.addressLine1 ?? 'Brgy 6, Claveria, Cagayan';
+    final userAddress =
+        profileState.user?.addressLine1 ?? 'Brgy 6, Claveria, Cagayan';
 
     final order = Order(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -92,7 +97,9 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         print('🟢 Checkout: Delivery fee fetched: PHP $deliveryFee');
       }
     } catch (e) {
-      print('⚠️ Checkout: Could not fetch delivery fee, using default PHP 50: $e');
+      print(
+        '⚠️ Checkout: Could not fetch delivery fee, using default PHP 50: $e',
+      );
       if (state.order != null) {
         final updatedOrder = state.order!.copyWith(deliveryFee: 50.00);
         state = state.copyWith(order: updatedOrder);
@@ -169,9 +176,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
   ) {
     if (state.order == null) return;
 
-    final updatedOrder = state.order!.copyWith(
-      deliveryAddress: address,
-    );
+    final updatedOrder = state.order!.copyWith(deliveryAddress: address);
 
     state = state.copyWith(order: updatedOrder);
   }
@@ -185,16 +190,21 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       final order = state.order!;
       final profileState = ref.read(profileProvider);
       final user = profileState.user;
+      final restaurantNames = _restaurantNames(order);
+      final restaurantLabel = restaurantNames.isEmpty
+          ? order.restaurantName
+          : restaurantNames.join(', ');
 
       // Create order request DTO
       final createOrderRequest = CreateOrderRequestDto(
         serviceId: 3, // LesEat service ID
-        estimatedDistanceM: 5000, // 5km default, TODO: calculate actual distance
+        estimatedDistanceM:
+            5000, // 5km default, TODO: calculate actual distance
         pickup: OrderAddressDto(
-          address: order.restaurantName, // Restaurant address
+          address: restaurantLabel, // Restaurant address
           lat: 8.4542, // Default Cagayan de Oro coordinates
           lng: 124.6319,
-          contactName: order.restaurantName,
+          contactName: restaurantLabel,
           contactPhone: '+639123456789', // Default restaurant phone
         ),
         dropoff: OrderAddressDto(
@@ -206,44 +216,71 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         ),
         notes: 'LesEat order: ${order.items.length} items',
         paymentMethod: 'cash', // Use 'cash' instead of 'cod'
-        items: order.items.map((item) => OrderItemDto(
-          name: item.name,
-          quantity: item.quantity,
-          estimatedPrice: item.price,
-          notes: null, // OrderItem doesn't have specialInstructions
-        )).toList(),
+        items: order.items
+            .map(
+              (item) => OrderItemDto(
+                name: item.name,
+                quantity: item.quantity,
+                estimatedPrice: item.price,
+                notes: null, // OrderItem doesn't have specialInstructions
+              ),
+            )
+            .toList(),
         meta: {
-          'restaurant_name': order.restaurantName,
+          'restaurant_name': restaurantLabel,
+          'restaurants': restaurantNames,
           'subtotal': order.subtotal,
           'delivery_fee': order.deliveryFee,
           'total': order.total,
           'grand_total': order.total, // food subtotal + delivery fee
           'order_type': 'leseat',
-          'items': order.items.map((item) => {
-            'name': item.name,
-            'price': item.price,
-            'quantity': item.quantity,
-            'total': item.total,
-          }).toList(),
+          'items': order.items
+              .map(
+                (item) => {
+                  'name': item.name,
+                  'price': item.price,
+                  'quantity': item.quantity,
+                  'total': item.total,
+                  'restaurant_id': item.restaurantId,
+                  'restaurant_name':
+                      item.restaurantName ?? order.restaurantName,
+                },
+              )
+              .toList(),
         },
       );
 
       print('🔵 Checkout: Creating order with API...');
       final response = await _orderDataSource.createOrder(createOrderRequest);
-      
-      print('🟢 Checkout: Order created successfully - ID: ${response.data.id}');
-      
+
+      print(
+        '🟢 Checkout: Order created successfully - ID: ${response.data.id}',
+      );
+
       state = state.copyWith(
         isLoading: false,
         createdOrderId: response.data.id,
       );
-      
+
       return true;
     } catch (e) {
       print('🔴 Checkout: Error creating order - $e');
       state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
+  }
+
+  List<String> _restaurantNames(Order order) {
+    final names = <String>[];
+    for (final item in order.items) {
+      final name = item.restaurantName?.trim().isNotEmpty == true
+          ? item.restaurantName!.trim()
+          : order.restaurantName;
+      if (!names.contains(name)) {
+        names.add(name);
+      }
+    }
+    return names;
   }
 }
 

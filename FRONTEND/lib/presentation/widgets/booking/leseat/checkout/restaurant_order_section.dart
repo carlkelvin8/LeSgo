@@ -21,6 +21,9 @@ class RestaurantOrderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemCount = items.fold<int>(0, (sum, item) => sum + item.quantity);
+    final subtotal = items.fold<double>(0, (sum, item) => sum + item.total);
+
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       margin: EdgeInsets.symmetric(
@@ -33,27 +36,78 @@ class RestaurantOrderSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            restaurantName,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: ResponsiveUtils.spacing(context, 34),
+                height: ResponsiveUtils.spacing(context, 34),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEDDFD),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.storefront,
+                  color: const Color(0xFF5F2D82),
+                  size: ResponsiveUtils.fontSize(context, 18),
+                ),
+              ),
+              SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      restaurantName,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 16),
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 2)),
+                    Text(
+                      '$itemCount item${itemCount == 1 ? '' : 's'} from this restaurant',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                'PHP ${subtotal.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF5F2D82),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: ResponsiveUtils.spacing(context, 12),
+            ),
+            child: Divider(height: 1, color: Colors.grey[200]),
+          ),
 
           // Order Items
-          ...items.map((item) => OrderItemCard(
-                item: item,
-                onQuantityChanged: (newQuantity) {
-                  onQuantityChanged(item.id, newQuantity);
-                },
-                onRemove: () {
-                  onRemove(item.id);
-                },
-              )),
+          ...items.map(
+            (item) => OrderItemCard(
+              item: item,
+              onQuantityChanged: (newQuantity) {
+                onQuantityChanged(item.id, newQuantity);
+              },
+              onRemove: () {
+                onRemove(item.id);
+              },
+            ),
+          ),
 
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
 
@@ -74,9 +128,7 @@ class RestaurantOrderSection extends StatelessWidget {
                 color: const Color(0xFF5F2D82),
               ),
             ),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-            ),
+            style: TextButton.styleFrom(padding: EdgeInsets.zero),
           ),
         ],
       ),

@@ -74,7 +74,8 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
 
       // Build address lines
       final houseNumberStreet = address['houseNumberStreet']?.toString() ?? '';
-      final subdivisionBarangay = address['subdivisionBarangay']?.toString() ?? '';
+      final subdivisionBarangay =
+          address['subdivisionBarangay']?.toString() ?? '';
       final cityProvince = address['cityProvince']?.toString() ?? '';
       final zipCode = address['zipCode']?.toString() ?? '';
 
@@ -111,19 +112,23 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
       print('🔵 SetLocationScreen: - addressLine2: $addressLine2');
 
       // Save address to backend
-      final success = await ref.read(addressProvider.notifier).createAddress(
-        userId: userId,
-        label: address['landmark']?.toString().isNotEmpty == true
-            ? address['landmark']
-            : 'My Location',
-        contactName: authState.user?.name ?? 'User',
-        contactPhone: '', // Phone number not available in User entity
-        addressLine1: addressLine1.isNotEmpty ? addressLine1 : 'Selected Location',
-        addressLine2: addressLine2.isNotEmpty ? addressLine2 : null,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        isDefault: address['isDefault'] ?? false,
-      );
+      final success = await ref
+          .read(addressProvider.notifier)
+          .createAddress(
+            userId: userId,
+            label: address['landmark']?.toString().isNotEmpty == true
+                ? address['landmark']
+                : 'My Location',
+            contactName: authState.user?.name ?? 'User',
+            contactPhone: '', // Phone number not available in User entity
+            addressLine1: addressLine1.isNotEmpty
+                ? addressLine1
+                : 'Selected Location',
+            addressLine2: addressLine2.isNotEmpty ? addressLine2 : null,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            isDefault: address['isDefault'] ?? false,
+          );
 
       if (!mounted) return;
 
@@ -178,47 +183,59 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
                   },
                 ),
 
-                LocationMapSection(
-                  key: ValueKey(_controllers.isFullscreen),
-                  mapController: _controllers.mapController,
-                  showPickupDestination: false,
-                  onMapCreated: (controller) {
-                    _controllers.onMapCreated(controller);
-                    Future.delayed(const Duration(milliseconds: 50), () {
-                      _controllers.moveSmallMapToMarker(ref);
-                    });
-                  },
-                  onUseCurrentLocation: () =>
-                      _controllers.handleUseCurrentLocation(context, ref),
-                  onToggleFullscreen: () {
-                    _controllers.toggleFullscreen(ref);
-                    setState(() {});
-                  },
-                  onMapTap: (location) =>
-                      _controllers.handleMapTap(location, ref, context),
-                ),
-
-                Builder(
-                  builder: (context) {
-                    return SizedBox(
-                      height: ResponsiveUtils.spacing(context, 16),
-                    );
-                  },
-                ),
-
-                LocationFormSection(
-                  controllers: _controllers,
-                  onDefaultChanged: () {
-                    setState(() {
-                      _controllers.setIsDefault(!_controllers.isDefault);
-                    });
-                  },
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.only(
+                      bottom: ResponsiveUtils.spacing(context, 110),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        LocationMapSection(
+                          key: ValueKey(_controllers.isFullscreen),
+                          mapController: _controllers.mapController,
+                          showPickupDestination: false,
+                          onMapCreated: (controller) {
+                            _controllers.onMapCreated(controller);
+                            Future.delayed(
+                              const Duration(milliseconds: 50),
+                              () {
+                                _controllers.moveSmallMapToMarker(ref);
+                              },
+                            );
+                          },
+                          onUseCurrentLocation: () => _controllers
+                              .handleUseCurrentLocation(context, ref),
+                          onToggleFullscreen: () {
+                            _controllers.toggleFullscreen(ref);
+                            setState(() {});
+                          },
+                          onMapTap: (location) =>
+                              _controllers.handleMapTap(location, ref, context),
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                        LocationFormSection(
+                          controllers: _controllers,
+                          onDefaultChanged: () {
+                            setState(() {
+                              _controllers.setIsDefault(
+                                !_controllers.isDefault,
+                              );
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
 
             LocationBottomButton(
-              onPressed: (_isSaving || locationState.isLoading) ? null : _onContinue,
+              onPressed: (_isSaving || locationState.isLoading)
+                  ? null
+                  : _onContinue,
               isLoading: _isSaving || locationState.isLoading,
             ),
 

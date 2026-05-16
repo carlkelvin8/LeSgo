@@ -56,15 +56,15 @@ class PaymentGatewayState {
   }
 
   bool get hasActiveInvoice => currentInvoice != null;
-  
-  bool get isInvoicePaid => 
+
+  bool get isInvoicePaid =>
       currentInvoice?.status.toLowerCase() == 'paid' ||
       currentInvoice?.status.toLowerCase() == 'completed';
-  
-  bool get isInvoicePending => 
+
+  bool get isInvoicePending =>
       currentInvoice?.status.toLowerCase() == 'pending';
-  
-  bool get isInvoiceExpired => 
+
+  bool get isInvoiceExpired =>
       currentInvoice?.status.toLowerCase() == 'expired';
 }
 
@@ -73,14 +73,14 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
   PaymentGatewayNotifier(this.ref) : super(PaymentGatewayState());
 
-  String? get _token {
+  bool get _isAuthenticated {
     final authState = ref.read(authProvider);
-    return authState.token;
+    return authState.isAuthenticated;
   }
 
   /// Validate wallet balance
   Future<bool> validateWalletBalance({BuildContext? context}) async {
-    if (_token == null) {
+    if (!_isAuthenticated) {
       if (context != null && context.mounted) {
         SnackBarUtils.showError(context, 'Please login first');
       }
@@ -91,7 +91,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
     try {
       final gatewayDataSource = getIt<PaymentGatewayRemoteDataSource>();
-      final validation = await gatewayDataSource.validateWalletBalance(_token!);
+      final validation = await gatewayDataSource.validateWalletBalance();
 
       state = state.copyWith(
         walletValidation: validation,
@@ -119,7 +119,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
   /// Get wallet threshold
   Future<void> getWalletThreshold({BuildContext? context}) async {
-    if (_token == null) {
+    if (!_isAuthenticated) {
       if (context != null && context.mounted) {
         SnackBarUtils.showError(context, 'Please login first');
       }
@@ -130,17 +130,11 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
     try {
       final gatewayDataSource = getIt<PaymentGatewayRemoteDataSource>();
-      final threshold = await gatewayDataSource.getWalletThreshold(_token!);
+      final threshold = await gatewayDataSource.getWalletThreshold();
 
-      state = state.copyWith(
-        walletThreshold: threshold,
-        isLoading: false,
-      );
+      state = state.copyWith(walletThreshold: threshold, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
 
       if (context != null && context.mounted) {
         SnackBarUtils.showError(
@@ -161,7 +155,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
     Map<String, dynamic>? metadata,
     BuildContext? context,
   }) async {
-    if (_token == null) {
+    if (!_isAuthenticated) {
       if (context != null && context.mounted) {
         SnackBarUtils.showError(context, 'Please login first');
       }
@@ -181,10 +175,10 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
         metadata: metadata,
       );
 
-      final response = await gatewayDataSource.createInvoice(_token!, request);
+      final response = await gatewayDataSource.createInvoice(request);
 
-      if (response.success && response.data?.invoice != null) {
-        final invoice = response.data!.invoice!;
+      if (response.success) {
+        final invoice = response.data;
         state = state.copyWith(
           currentInvoice: invoice,
           invoiceUrl: invoice.invoiceUrl,
@@ -198,22 +192,19 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
       } else {
         state = state.copyWith(
           isCreatingInvoice: false,
-          error: response.error ?? 'Failed to create invoice',
+          error: response.message ?? 'Failed to create invoice',
         );
 
         if (context != null && context.mounted) {
           SnackBarUtils.showError(
             context,
-            response.error ?? 'Failed to create invoice',
+            response.message ?? 'Failed to create invoice',
           );
         }
         return null;
       }
     } catch (e) {
-      state = state.copyWith(
-        isCreatingInvoice: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isCreatingInvoice: false, error: e.toString());
 
       if (context != null && context.mounted) {
         SnackBarUtils.showError(
@@ -230,7 +221,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
     required String invoiceId,
     BuildContext? context,
   }) async {
-    if (_token == null) {
+    if (!_isAuthenticated) {
       if (context != null && context.mounted) {
         SnackBarUtils.showError(context, 'Please login first');
       }
@@ -241,10 +232,10 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
     try {
       final gatewayDataSource = getIt<PaymentGatewayRemoteDataSource>();
-      final response = await gatewayDataSource.getInvoiceStatus(_token!, invoiceId);
+      final response = await gatewayDataSource.getInvoiceStatus(invoiceId);
 
-      if (response.success && response.data?.invoice != null) {
-        final invoice = response.data!.invoice!;
+      if (response.success) {
+        final invoice = response.data;
         state = state.copyWith(
           currentInvoice: invoice,
           isCheckingStatus: false,
@@ -253,22 +244,19 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
       } else {
         state = state.copyWith(
           isCheckingStatus: false,
-          error: response.error ?? 'Failed to check invoice status',
+          error: response.message ?? 'Failed to check invoice status',
         );
 
         if (context != null && context.mounted) {
           SnackBarUtils.showError(
             context,
-            response.error ?? 'Failed to check invoice status',
+            response.message ?? 'Failed to check invoice status',
           );
         }
         return null;
       }
     } catch (e) {
-      state = state.copyWith(
-        isCheckingStatus: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isCheckingStatus: false, error: e.toString());
 
       if (context != null && context.mounted) {
         SnackBarUtils.showError(
@@ -290,10 +278,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
       amount: amount,
       description: 'Wallet Top-up - ₱${amount.toStringAsFixed(2)}',
       paymentMethod: paymentMethod,
-      metadata: {
-        'type': 'wallet_topup',
-        'amount': amount,
-      },
+      metadata: {'type': 'wallet_topup', 'amount': amount},
       context: context,
     );
   }
@@ -320,10 +305,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
   /// Clear current invoice
   void clearInvoice() {
-    state = state.copyWith(
-      currentInvoice: null,
-      invoiceUrl: null,
-    );
+    state = state.copyWith(currentInvoice: null, invoiceUrl: null);
   }
 
   /// Reset state
@@ -334,5 +316,5 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
 final paymentGatewayProvider =
     StateNotifierProvider<PaymentGatewayNotifier, PaymentGatewayState>((ref) {
-  return PaymentGatewayNotifier(ref);
-});
+      return PaymentGatewayNotifier(ref);
+    });

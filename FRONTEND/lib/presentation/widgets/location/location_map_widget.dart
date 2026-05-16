@@ -65,7 +65,8 @@ class LocationMapWidget extends ConsumerWidget {
       onMapCreated: onMapCreated,
       initialCameraPosition: CameraPosition(
         target:
-            locationState.selectedLocation ?? const LatLng(8.4542, 124.6319), // Cagayan de Oro default
+            locationState.selectedLocation ??
+            const LatLng(8.4542, 124.6319), // Cagayan de Oro default
         zoom: 16.0,
       ),
       onTap: onMapTap,
@@ -74,6 +75,10 @@ class LocationMapWidget extends ConsumerWidget {
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
+      scrollGesturesEnabled: isFullscreen,
+      zoomGesturesEnabled: isFullscreen,
+      rotateGesturesEnabled: isFullscreen,
+      tiltGesturesEnabled: isFullscreen,
       // Temporarily disable advanced markers to fix booking issue
       // markerType: GoogleMapMarkerType.advancedMarker,
     );

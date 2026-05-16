@@ -22,9 +22,9 @@ class LeseatState {
     this.searchQuery = '',
     this.isLoading = false,
     this.error,
-  })  : categories = categories ?? _defaultCategories,
-        restaurants = restaurants ?? [],
-        filteredRestaurants = filteredRestaurants ?? [];
+  }) : categories = categories ?? _defaultCategories,
+       restaurants = restaurants ?? [],
+       filteredRestaurants = filteredRestaurants ?? [];
 
   static final List<FoodCategory> _defaultCategories = [
     FoodCategory(
@@ -96,7 +96,7 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
 
     try {
       print('🔵 LeseatProvider: Loading restaurants from API...');
-      
+
       final response = await _partnerDataSource.getPartners(
         category: 'restaurant',
         perPage: 50,
@@ -136,16 +136,6 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
     // Build cuisine string
     final cuisineStr = partner.cuisineTypes?.join(' • ') ?? 'Restaurant';
 
-    // Build opening hours string
-    String openingHours = '9:00 AM - 9:00 PM'; // Default
-    if (partner.openingHours != null && partner.openingHours!.isNotEmpty) {
-      // Try to extract today's hours (simplified)
-      final firstDay = partner.openingHours!.values.first;
-      if (firstDay is Map && firstDay.containsKey('open') && firstDay.containsKey('close')) {
-        openingHours = '${firstDay['open']} - ${firstDay['close']}';
-      }
-    }
-
     return Restaurant(
       id: partner.id.toString(),
       name: partner.name,
@@ -155,8 +145,8 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
       reviewCount: partner.totalReviews ?? 0,
       categories: categories,
       cuisine: cuisineStr,
-      openingHours: openingHours,
-      isNew: partner.isFeatured,
+      openingHours: '9:00 AM - 9:00 PM',
+      isNew: partner.isFeatured ?? false,
     );
   }
 
@@ -190,7 +180,7 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
       filtered = filtered.where((restaurant) {
         return restaurant.name.toLowerCase().contains(query) ||
             restaurant.address.toLowerCase().contains(query) ||
-            restaurant.cuisine.toLowerCase().contains(query);
+            (restaurant.cuisine?.toLowerCase().contains(query) ?? false);
       }).toList();
     }
 
@@ -211,7 +201,9 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
   }
 }
 
-final leseatProvider = StateNotifierProvider<LeseatNotifier, LeseatState>((ref) {
+final leseatProvider = StateNotifierProvider<LeseatNotifier, LeseatState>((
+  ref,
+) {
   final partnerDataSource = getIt<PartnerRemoteDataSource>();
   return LeseatNotifier(partnerDataSource);
 });

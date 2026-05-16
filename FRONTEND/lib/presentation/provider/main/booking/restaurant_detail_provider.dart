@@ -11,6 +11,8 @@ class RestaurantDetailState {
   final List<MenuItem> filteredMenuItems;
   final String? selectedCategoryId;
   final List<OrderItem> cartItems;
+  final String? activeRestaurantId;
+  final String? activeRestaurantName;
   final bool isLoading;
   final String? error;
 
@@ -20,6 +22,8 @@ class RestaurantDetailState {
     List<MenuItem>? filteredMenuItems,
     this.selectedCategoryId,
     List<OrderItem>? cartItems,
+    this.activeRestaurantId,
+    this.activeRestaurantName,
     this.isLoading = false,
     this.error,
   }) : menuCategories = menuCategories ?? _defaultMenuCategories,
@@ -55,6 +59,8 @@ class RestaurantDetailState {
     List<MenuItem>? filteredMenuItems,
     String? selectedCategoryId,
     List<OrderItem>? cartItems,
+    String? activeRestaurantId,
+    String? activeRestaurantName,
     bool? isLoading,
     String? error,
   }) {
@@ -64,6 +70,8 @@ class RestaurantDetailState {
       filteredMenuItems: filteredMenuItems ?? this.filteredMenuItems,
       selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
       cartItems: cartItems ?? this.cartItems,
+      activeRestaurantId: activeRestaurantId ?? this.activeRestaurantId,
+      activeRestaurantName: activeRestaurantName ?? this.activeRestaurantName,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -71,55 +79,71 @@ class RestaurantDetailState {
 }
 
 class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
-  final PartnerRemoteDataSource _partnerDataSource = getIt<PartnerRemoteDataSource>();
+  final PartnerRemoteDataSource _partnerDataSource =
+      getIt<PartnerRemoteDataSource>();
 
   RestaurantDetailNotifier() : super(RestaurantDetailState());
 
   Future<void> loadRestaurantDetails(
     String restaurantId,
-    List<String> restaurantCategories,
-  ) async {
-    state = state.copyWith(isLoading: true, error: null);
+    List<String> restaurantCategories, {
+    String? restaurantName,
+  }) async {
+    state = state.copyWith(
+      activeRestaurantId: restaurantId,
+      activeRestaurantName: restaurantName,
+      isLoading: true,
+      error: null,
+    );
 
     try {
       print('🔵 RestaurantDetail: Loading menu for restaurant $restaurantId');
-      
-      final response = await _partnerDataSource.getPartnerMenu(int.parse(restaurantId));
-      
+
+      final response = await _partnerDataSource.getPartnerMenu(
+        int.parse(restaurantId),
+      );
+
       // Convert categories
       final menuCategories = [
         FoodCategory(id: 'popular', name: 'Popular', iconPath: ''),
-        ...response.data.categories.map((catDto) => FoodCategory(
-          id: catDto.id.toString(),
-          name: catDto.name,
-          iconPath: '',
-        )),
+        ...response.data.categories.map(
+          (catDto) => FoodCategory(
+            id: catDto.id.toString(),
+            name: catDto.name,
+            iconPath: '',
+          ),
+        ),
       ];
-      
+
       // Convert menu items
       final allMenuItems = <MenuItem>[];
       for (final catDto in response.data.categories) {
         if (catDto.availableItems != null) {
           for (final itemDto in catDto.availableItems!) {
-            allMenuItems.add(MenuItem(
-              id: itemDto.id.toString(),
-              name: itemDto.name,
-              description: itemDto.description ?? '',
-              price: itemDto.price,
-              imagePath: itemDto.imageUrl ?? 'assets/images/book/leseat/Pizza.svg',
-              categoryId: catDto.id.toString(),
-              isPopular: itemDto.isPopular ?? false,
-            ));
+            allMenuItems.add(
+              MenuItem(
+                id: itemDto.id.toString(),
+                name: itemDto.name,
+                description: itemDto.description ?? '',
+                price: itemDto.price,
+                imagePath:
+                    itemDto.imageUrl ?? 'assets/images/book/leseat/Pizza.svg',
+                categoryId: catDto.id.toString(),
+                isPopular: itemDto.isPopular ?? false,
+              ),
+            );
           }
         }
       }
-      
+
       print('🟢 RestaurantDetail: Loaded ${allMenuItems.length} menu items');
-      
+
       state = state.copyWith(
         menuCategories: menuCategories,
         menuItems: allMenuItems,
-        filteredMenuItems: allMenuItems.where((item) => item.isPopular).toList(),
+        filteredMenuItems: allMenuItems
+            .where((item) => item.isPopular)
+            .toList(),
         selectedCategoryId: 'popular',
         isLoading: false,
         error: null,
@@ -149,8 +173,13 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
   }
 
   void addToCart(MenuItem item) {
+    final restaurantId = state.activeRestaurantId;
+    final cartItemId = restaurantId != null
+        ? '$restaurantId:${item.id}'
+        : item.id;
+
     final existingItemIndex = state.cartItems.indexWhere(
-      (cartItem) => cartItem.id == item.id,
+      (cartItem) => cartItem.id == cartItemId,
     );
 
     List<OrderItem> updatedCart;
@@ -165,11 +194,13 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
       updatedCart = [
         ...state.cartItems,
         OrderItem(
-          id: item.id,
+          id: cartItemId,
           name: item.name,
           imagePath: item.imagePath,
           price: item.price,
           quantity: 1,
+          restaurantId: restaurantId,
+          restaurantName: state.activeRestaurantName,
         ),
       ];
     }

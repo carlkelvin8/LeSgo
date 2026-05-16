@@ -7,24 +7,27 @@ part of 'partner_dto.dart';
 // **************************************************************************
 
 PartnerDto _$PartnerDtoFromJson(Map<String, dynamic> json) => PartnerDto(
-  id: (json['id'] as num).toInt(),
-  name: json['name'] as String,
+  id: _parseInt(json['id']),
+  name: json['name']?.toString() ?? 'Unknown Partner',
   logoUrl: json['logo_url'] as String?,
   coverImageUrl: json['cover_image_url'] as String?,
   description: json['description'] as String?,
   category: json['category'] as String?,
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-  cuisineTypes: (json['cuisine_types'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
-  rating: (json['rating'] as num?)?.toDouble(),
-  totalReviews: (json['total_reviews'] as num?)?.toInt(),
-  deliveryFee: (json['delivery_fee'] as num?)?.toDouble(),
-  minOrderAmount: (json['min_order_amount'] as num?)?.toInt(),
-  estimatedDeliveryMinutes: (json['estimated_delivery_minutes'] as num?)
-      ?.toInt(),
-  isOpen: json['is_open'] as bool?,
-  isFeatured: json['is_featured'] as bool?,
+  tags: _parseStringList(json['tags']),
+  cuisineTypes: _parseStringList(json['cuisine_types']),
+  rating: _parseDoubleNullable(json['rating']),
+  totalReviews: json['total_reviews'] == null
+      ? null
+      : _parseInt(json['total_reviews']),
+  deliveryFee: _parseDoubleNullable(json['delivery_fee']),
+  minOrderAmount: json['min_order_amount'] == null
+      ? null
+      : _parseInt(json['min_order_amount']),
+  estimatedDeliveryMinutes: json['estimated_delivery_minutes'] == null
+      ? null
+      : _parseInt(json['estimated_delivery_minutes']),
+  isOpen: _parseBoolNullable(json['is_open']),
+  isFeatured: _parseBoolNullable(json['is_featured']),
   status: json['status'] as String?,
 );
 
@@ -69,13 +72,13 @@ Map<String, dynamic> _$PartnersResponseDtoToJson(
 
 PaginationMetaDto _$PaginationMetaDtoFromJson(Map<String, dynamic> json) =>
     PaginationMetaDto(
-      total: (json['total'] as num).toInt(),
-      perPage: (json['per_page'] as num).toInt(),
-      currentPage: (json['current_page'] as num).toInt(),
-      lastPage: (json['last_page'] as num).toInt(),
-      from: (json['from'] as num).toInt(),
-      to: (json['to'] as num).toInt(),
-      hasMore: json['has_more'] as bool,
+      total: _parseInt(json['total']),
+      perPage: _parseInt(json['per_page'], 20),
+      currentPage: _parseInt(json['current_page'], 1),
+      lastPage: _parseInt(json['last_page'], 1),
+      from: _parseInt(json['from']),
+      to: _parseInt(json['to']),
+      hasMore: _parseBool(json['has_more']),
     );
 
 Map<String, dynamic> _$PaginationMetaDtoToJson(PaginationMetaDto instance) =>
@@ -95,10 +98,10 @@ PaginatedPartnersDto _$PaginatedPartnersDtoFromJson(
   data: (json['data'] as List<dynamic>)
       .map((e) => PartnerDto.fromJson(e as Map<String, dynamic>))
       .toList(),
-  currentPage: (json['current_page'] as num).toInt(),
-  lastPage: (json['last_page'] as num).toInt(),
-  perPage: (json['per_page'] as num).toInt(),
-  total: (json['total'] as num).toInt(),
+  currentPage: _parseInt(json['current_page'], 1),
+  lastPage: _parseInt(json['last_page'], 1),
+  perPage: _parseInt(json['per_page'], 20),
+  total: _parseInt(json['total']),
 );
 
 Map<String, dynamic> _$PaginatedPartnersDtoToJson(
@@ -112,19 +115,21 @@ Map<String, dynamic> _$PaginatedPartnersDtoToJson(
 };
 
 MenuItemDto _$MenuItemDtoFromJson(Map<String, dynamic> json) => MenuItemDto(
-  id: (json['id'] as num).toInt(),
-  partnerId: (json['partner_id'] as num).toInt(),
-  menuCategoryId: (json['menu_category_id'] as num?)?.toInt(),
-  name: json['name'] as String,
+  id: _parseInt(json['id']),
+  partnerId: _parseInt(json['partner_id']),
+  menuCategoryId: json['menu_category_id'] == null
+      ? null
+      : _parseInt(json['menu_category_id']),
+  name: json['name']?.toString() ?? 'Menu Item',
   description: json['description'] as String?,
   imageUrl: json['image_url'] as String?,
-  price: (json['price'] as num).toDouble(),
-  originalPrice: (json['original_price'] as num?)?.toDouble(),
+  price: _parseDouble(json['price']),
+  originalPrice: _parseDoubleNullable(json['original_price']),
   unit: json['unit'] as String?,
-  isAvailable: json['is_available'] as bool?,
-  isPopular: json['is_popular'] as bool?,
-  isFeatured: json['is_featured'] as bool?,
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  isAvailable: _parseBoolNullable(json['is_available']),
+  isPopular: _parseBoolNullable(json['is_popular']),
+  isFeatured: _parseBoolNullable(json['is_featured']),
+  tags: _parseStringList(json['tags']),
 );
 
 Map<String, dynamic> _$MenuItemDtoToJson(MenuItemDto instance) =>
@@ -146,8 +151,8 @@ Map<String, dynamic> _$MenuItemDtoToJson(MenuItemDto instance) =>
 
 MenuCategoryDto _$MenuCategoryDtoFromJson(Map<String, dynamic> json) =>
     MenuCategoryDto(
-      id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
+      id: _parseInt(json['id']),
+      name: json['name']?.toString() ?? 'Menu',
       description: json['description'] as String?,
       availableItems: (json['available_items'] as List<dynamic>?)
           ?.map((e) => MenuItemDto.fromJson(e as Map<String, dynamic>))

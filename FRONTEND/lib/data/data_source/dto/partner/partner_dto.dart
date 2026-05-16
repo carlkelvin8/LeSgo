@@ -2,6 +2,51 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'partner_dto.g.dart';
 
+int _parseInt(dynamic value, [int fallback = 0]) {
+  if (value == null) return fallback;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+double? _parseDoubleNullable(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+double _parseDouble(dynamic value, [double fallback = 0.0]) {
+  return _parseDoubleNullable(value) ?? fallback;
+}
+
+bool? _parseBoolNullable(dynamic value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    final normalized = value.toLowerCase();
+    if (normalized == 'true' || normalized == '1') return true;
+    if (normalized == 'false' || normalized == '0') return false;
+  }
+  return null;
+}
+
+bool _parseBool(dynamic value, [bool fallback = false]) {
+  return _parseBoolNullable(value) ?? fallback;
+}
+
+List<String>? _parseStringList(dynamic value) {
+  if (value is List) {
+    return value
+        .where((item) => item != null)
+        .map((item) => item.toString())
+        .toList();
+  }
+  return null;
+}
+
 @JsonSerializable()
 class PartnerDto {
   final int id;
@@ -49,7 +94,8 @@ class PartnerDto {
     this.status,
   });
 
-  factory PartnerDto.fromJson(Map<String, dynamic> json) => _$PartnerDtoFromJson(json);
+  factory PartnerDto.fromJson(Map<String, dynamic> json) =>
+      _$PartnerDtoFromJson(json);
   Map<String, dynamic> toJson() => _$PartnerDtoToJson(this);
 }
 
@@ -59,13 +105,10 @@ class PartnersResponseDto {
   final List<PartnerDto> data;
   final PaginationMetaDto? meta;
 
-  PartnersResponseDto({
-    required this.success,
-    required this.data,
-    this.meta,
-  });
+  PartnersResponseDto({required this.success, required this.data, this.meta});
 
-  factory PartnersResponseDto.fromJson(Map<String, dynamic> json) => _$PartnersResponseDtoFromJson(json);
+  factory PartnersResponseDto.fromJson(Map<String, dynamic> json) =>
+      _$PartnersResponseDtoFromJson(json);
   Map<String, dynamic> toJson() => _$PartnersResponseDtoToJson(this);
 }
 
@@ -93,7 +136,8 @@ class PaginationMetaDto {
     required this.hasMore,
   });
 
-  factory PaginationMetaDto.fromJson(Map<String, dynamic> json) => _$PaginationMetaDtoFromJson(json);
+  factory PaginationMetaDto.fromJson(Map<String, dynamic> json) =>
+      _$PaginationMetaDtoFromJson(json);
   Map<String, dynamic> toJson() => _$PaginationMetaDtoToJson(this);
 }
 
@@ -117,7 +161,8 @@ class PaginatedPartnersDto {
     required this.total,
   });
 
-  factory PaginatedPartnersDto.fromJson(Map<String, dynamic> json) => _$PaginatedPartnersDtoFromJson(json);
+  factory PaginatedPartnersDto.fromJson(Map<String, dynamic> json) =>
+      _$PaginatedPartnersDtoFromJson(json);
   Map<String, dynamic> toJson() => _$PaginatedPartnersDtoToJson(this);
 }
 
@@ -160,7 +205,8 @@ class MenuItemDto {
     this.tags,
   });
 
-  factory MenuItemDto.fromJson(Map<String, dynamic> json) => _$MenuItemDtoFromJson(json);
+  factory MenuItemDto.fromJson(Map<String, dynamic> json) =>
+      _$MenuItemDtoFromJson(json);
   Map<String, dynamic> toJson() => _$MenuItemDtoToJson(this);
 }
 
@@ -179,7 +225,8 @@ class MenuCategoryDto {
     this.availableItems,
   });
 
-  factory MenuCategoryDto.fromJson(Map<String, dynamic> json) => _$MenuCategoryDtoFromJson(json);
+  factory MenuCategoryDto.fromJson(Map<String, dynamic> json) =>
+      _$MenuCategoryDtoFromJson(json);
   Map<String, dynamic> toJson() => _$MenuCategoryDtoToJson(this);
 }
 
@@ -188,12 +235,10 @@ class PartnerMenuResponseDto {
   final bool success;
   final PartnerMenuDataDto data;
 
-  PartnerMenuResponseDto({
-    required this.success,
-    required this.data,
-  });
+  PartnerMenuResponseDto({required this.success, required this.data});
 
-  factory PartnerMenuResponseDto.fromJson(Map<String, dynamic> json) => _$PartnerMenuResponseDtoFromJson(json);
+  factory PartnerMenuResponseDto.fromJson(Map<String, dynamic> json) =>
+      _$PartnerMenuResponseDtoFromJson(json);
   Map<String, dynamic> toJson() => _$PartnerMenuResponseDtoToJson(this);
 }
 
@@ -202,11 +247,9 @@ class PartnerMenuDataDto {
   final PartnerDto partner;
   final List<MenuCategoryDto> categories;
 
-  PartnerMenuDataDto({
-    required this.partner,
-    required this.categories,
-  });
+  PartnerMenuDataDto({required this.partner, required this.categories});
 
-  factory PartnerMenuDataDto.fromJson(Map<String, dynamic> json) => _$PartnerMenuDataDtoFromJson(json);
+  factory PartnerMenuDataDto.fromJson(Map<String, dynamic> json) =>
+      _$PartnerMenuDataDtoFromJson(json);
   Map<String, dynamic> toJson() => _$PartnerMenuDataDtoToJson(this);
 }

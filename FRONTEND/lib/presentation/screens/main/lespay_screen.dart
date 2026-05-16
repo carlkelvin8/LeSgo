@@ -19,9 +19,7 @@ class LespayScreen extends ConsumerWidget {
           children: [
             Padding(
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: const AuthHeader(
-                title: 'LesPay',
-              ),
+              child: const AuthHeader(title: 'LesPay'),
             ),
 
             WalletCard(
@@ -33,15 +31,22 @@ class LespayScreen extends ConsumerWidget {
 
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
-            const Expanded(
-              child: Column(
-                children: [
-                  CustomDivider(),
-                  LespayActionsSection(),
-                  CustomDivider(),
-                  SectionHeader(title: 'Link Account'),
-                  LinkAccountsSection(),
-                ],
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.only(
+                  bottom: ResponsiveUtils.spacing(context, 24),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    CustomDivider(),
+                    LespayActionsSection(),
+                    CustomDivider(),
+                    SectionHeader(title: 'Link Account'),
+                    LinkAccountsSection(),
+                  ],
+                ),
               ),
             ),
           ],

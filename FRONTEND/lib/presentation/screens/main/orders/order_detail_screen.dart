@@ -14,10 +14,7 @@ import '../../../../core/di/injection.dart';
 class OrderDetailScreen extends ConsumerStatefulWidget {
   final int orderId;
 
-  const OrderDetailScreen({
-    super.key,
-    required this.orderId,
-  }) : super(key: key);
+  const OrderDetailScreen({super.key, required this.orderId});
 
   @override
   ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
@@ -52,9 +49,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   Future<void> _loadRoute(OrderDto order) async {
     if (_isLoadingRoute) return;
-    
+
     setState(() => _isLoadingRoute = true);
-    
+
     try {
       final trackingDataSource = getIt<TrackingRemoteDataSource>();
       final result = await trackingDataSource.getRoute(
@@ -63,7 +60,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         order.dropoffLat,
         order.dropoffLng,
       );
-      
+
       if (result['success'] == true && result['data'] != null) {
         final polylineData = result['data']['polyline'];
         if (polylineData is List && polylineData.isNotEmpty) {
@@ -73,7 +70,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               (point['lng'] as num).toDouble(),
             );
           }).toList();
-          
+
           if (mounted) {
             setState(() {
               _routePolyline = points;
@@ -153,8 +150,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   Future<void> _handleReorder() async {
     setState(() => _isReordering = true);
 
-    final success =
-        await ref.read(orderHistoryProvider.notifier).reorder(widget.orderId);
+    final success = await ref
+        .read(orderHistoryProvider.notifier)
+        .reorder(widget.orderId);
 
     if (mounted) {
       setState(() => _isReordering = false);
@@ -205,17 +203,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       icon: const Icon(Icons.arrow_back),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    const Expanded(
-                      child: AuthHeader(title: 'Order Details'),
-                    ),
+                    const Expanded(child: AuthHeader(title: 'Order Details')),
                   ],
                 ),
               ),
-              const Expanded(
-                child: Center(
-                  child: Text('Order not found'),
-                ),
-              ),
+              const Expanded(child: Center(child: Text('Order not found'))),
             ],
           ),
         ),
@@ -237,9 +229,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                     icon: const Icon(Icons.arrow_back),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  const Expanded(
-                    child: AuthHeader(title: 'Order Details'),
-                  ),
+                  const Expanded(child: AuthHeader(title: 'Order Details')),
                 ],
               ),
             ),
@@ -396,11 +386,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            _getStatusIcon(order.status),
-            color: statusColor,
-            size: 32,
-          ),
+          Icon(_getStatusIcon(order.status), color: statusColor, size: 32),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -433,8 +419,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   }
 
   Widget _buildOrderInfo(OrderDto order) {
-    final createdAt = DateTime.parse(order.createdAt);
-    final formattedDate = DateFormat('MMMM dd, yyyy • hh:mm a').format(createdAt);
+    final createdAt = DateTime.tryParse(
+      order.createdAt ?? order.updatedAt ?? '',
+    );
+    final formattedDate = createdAt != null
+        ? DateFormat('MMMM dd, yyyy • hh:mm a').format(createdAt)
+        : 'Date unavailable';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -502,11 +492,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  Container(
-                    width: 2,
-                    height: 40,
-                    color: Colors.grey[300],
-                  ),
+                  Container(width: 2, height: 40, color: Colors.grey[300]),
                   Container(
                     width: 10,
                     height: 10,
@@ -531,7 +517,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       ),
                     ),
                     Text(
-                      order.pickupAddress?.address ?? 'N/A',
+                      order.pickupAddress,
                       style: const TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 14,
@@ -547,7 +533,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       ),
                     ),
                     Text(
-                      order.dropoffAddress?.address ?? 'N/A',
+                      order.dropoffAddress,
                       style: const TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 14,
@@ -832,10 +818,6 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 scrollGesturesEnabled: false,
                 tiltGesturesEnabled: false,
                 zoomGesturesEnabled: false,
-                rotateGesturesEnabled: false,
-                scrollGesturesEnabled: false,
-                tiltGesturesEnabled: false,
-                zoomGesturesEnabled: false,
               ),
               // Loading indicator
               if (_isLoadingRoute)
@@ -927,29 +909,33 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   Set<Marker> _buildMapMarkers(OrderDto order) {
     final markers = <Marker>{};
-    
+
     // Pickup marker (green)
-    markers.add(Marker(
-      markerId: const MarkerId('pickup'),
-      position: LatLng(order.pickupLat, order.pickupLng),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      infoWindow: const InfoWindow(title: 'Pickup Location'),
-    ));
-    
+    markers.add(
+      Marker(
+        markerId: const MarkerId('pickup'),
+        position: LatLng(order.pickupLat, order.pickupLng),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        infoWindow: const InfoWindow(title: 'Pickup Location'),
+      ),
+    );
+
     // Dropoff marker (red)
-    markers.add(Marker(
-      markerId: const MarkerId('dropoff'),
-      position: LatLng(order.dropoffLat, order.dropoffLng),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      infoWindow: const InfoWindow(title: 'Dropoff Location'),
-    ));
-    
+    markers.add(
+      Marker(
+        markerId: const MarkerId('dropoff'),
+        position: LatLng(order.dropoffLat, order.dropoffLng),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: const InfoWindow(title: 'Dropoff Location'),
+      ),
+    );
+
     return markers;
   }
 
   Set<Polyline> _buildMapPolylines(OrderDto order) {
     final polylines = <Polyline>{};
-    
+
     // Use actual route if available, otherwise fallback to straight line
     final points = _routePolyline.isNotEmpty
         ? _routePolyline
@@ -957,18 +943,20 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             LatLng(order.pickupLat, order.pickupLng),
             LatLng(order.dropoffLat, order.dropoffLng),
           ];
-    
-    polylines.add(Polyline(
-      polylineId: const PolylineId('route'),
-      points: points,
-      color: const Color(0xFF5F2D82),
-      width: 4,
-      // Use solid line for actual route, dashed for straight line
-      patterns: _routePolyline.isEmpty 
-          ? [PatternItem.dash(20), PatternItem.gap(10)]
-          : [],
-    ));
-    
+
+    polylines.add(
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: points,
+        color: const Color(0xFF5F2D82),
+        width: 4,
+        // Use solid line for actual route, dashed for straight line
+        patterns: _routePolyline.isEmpty
+            ? [PatternItem.dash(20), PatternItem.gap(10)]
+            : [],
+      ),
+    );
+
     return polylines;
   }
 }

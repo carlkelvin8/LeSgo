@@ -4,6 +4,8 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../data/data_source/dto/address/address_dto.dart';
+import '../../../../../domain/entities/booking/leseat/order.dart';
+import '../../../../../domain/entities/booking/leseat/order_item.dart';
 import '../../../../provider/main/booking/checkout_provider.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
@@ -13,7 +15,8 @@ class LeseatCheckoutScreen extends ConsumerStatefulWidget {
   const LeseatCheckoutScreen({super.key});
 
   @override
-  ConsumerState<LeseatCheckoutScreen> createState() => _LeseatCheckoutScreenState();
+  ConsumerState<LeseatCheckoutScreen> createState() =>
+      _LeseatCheckoutScreenState();
 }
 
 class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
@@ -51,13 +54,15 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                     _selectedAddress = address;
                   });
                   // Update checkout provider with new address
-                  ref.read(checkoutProvider.notifier).updateDeliveryAddress(
-                    address.addressLine1,
-                    address.latitude,
-                    address.longitude,
-                    address.contactName ?? '',
-                    address.contactPhone ?? '',
-                  );
+                  ref
+                      .read(checkoutProvider.notifier)
+                      .updateDeliveryAddress(
+                        address.addressLine1,
+                        address.latitude,
+                        address.longitude,
+                        address.contactName ?? '',
+                        address.contactPhone ?? '',
+                      );
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -96,6 +101,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     }
 
     final bool isCartEmpty = order.items.isEmpty;
+    final restaurantGroups = _groupItemsByRestaurant(order);
     // If empty, force totals to 0
     final subtotal = isCartEmpty ? 0.0 : order.subtotal;
     final deliveryFee = isCartEmpty
@@ -124,7 +130,9 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
 
                     // Delivery Address
                     DeliveryAddressSection(
-                      address: _selectedAddress?.addressLine1 ?? order.deliveryAddress,
+                      address:
+                          _selectedAddress?.addressLine1 ??
+                          order.deliveryAddress,
                       onTap: () {
                         _showAddressSelector(context, ref);
                       },
@@ -176,19 +184,28 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                         ),
                       )
                     else
-                      RestaurantOrderSection(
-                        restaurantName: order.restaurantName,
-                        items: order.items,
-                        onQuantityChanged: (itemId, newQuantity) {
-                          checkoutNotifier.updateItemQuantity(
-                            itemId,
-                            newQuantity,
-                          );
-                        },
-                        onRemove: (itemId) {
-                          checkoutNotifier.removeItem(itemId);
-                        },
-                        onAddMoreItems: () => Navigator.pop(context),
+                      Column(
+                        children: [
+                          for (final group in restaurantGroups) ...[
+                            RestaurantOrderSection(
+                              restaurantName: group.restaurantName,
+                              items: group.items,
+                              onQuantityChanged: (itemId, newQuantity) {
+                                checkoutNotifier.updateItemQuantity(
+                                  itemId,
+                                  newQuantity,
+                                );
+                              },
+                              onRemove: (itemId) {
+                                checkoutNotifier.removeItem(itemId);
+                              },
+                              onAddMoreItems: () => Navigator.pop(context),
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 12),
+                            ),
+                          ],
+                        ],
                       ),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -254,9 +271,10 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                     final success = await checkoutNotifier.placeOrder();
                     if (success && context.mounted) {
                       final checkoutState = ref.read(checkoutProvider);
-                      final orderId = checkoutState.createdOrderId?.toString() ?? 
-                                     'ORDER_${DateTime.now().millisecondsSinceEpoch}';
-                      
+                      final orderId =
+                          checkoutState.createdOrderId?.toString() ??
+                          'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+
                       // Navigate to driver finding screen with real order ID
                       AppRouter.pushReplacement(
                         context,
@@ -265,12 +283,19 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                           'orderId': orderId,
                           'orderType': 'LesEat',
                           'orderData': {
-                            'restaurantName': order.restaurantName,
-                            'items': order.items.map((item) => {
-                              'name': item.name,
-                              'price': item.price,
-                              'quantity': item.quantity,
-                            }).toList(),
+                            'restaurantName': restaurantGroups
+                                .map((group) => group.restaurantName)
+                                .join(', '),
+                            'items': order.items
+                                .map(
+                                  (item) => {
+                                    'name': item.name,
+                                    'price': item.price,
+                                    'quantity': item.quantity,
+                                    'restaurantName': item.restaurantName,
+                                  },
+                                )
+                                .toList(),
                             'subtotal': order.subtotal,
                             'deliveryFee': order.deliveryFee,
                             'total': order.total,
@@ -285,4 +310,41 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
       ),
     );
   }
+
+  List<_RestaurantOrderGroup> _groupItemsByRestaurant(Order order) {
+    final groupedItems = <String, List<OrderItem>>{};
+    final groupNames = <String, String>{};
+
+    for (final item in order.items) {
+      final restaurantName = item.restaurantName?.trim().isNotEmpty == true
+          ? item.restaurantName!.trim()
+          : order.restaurantName;
+      final restaurantKey = item.restaurantId?.trim().isNotEmpty == true
+          ? item.restaurantId!.trim()
+          : restaurantName;
+
+      groupedItems.putIfAbsent(restaurantKey, () => []);
+      groupedItems[restaurantKey]!.add(item);
+      groupNames[restaurantKey] = restaurantName;
+    }
+
+    return groupedItems.entries
+        .map((entry) {
+          return _RestaurantOrderGroup(
+            restaurantName: groupNames[entry.key] ?? order.restaurantName,
+            items: entry.value,
+          );
+        })
+        .toList(growable: false);
+  }
+}
+
+class _RestaurantOrderGroup {
+  final String restaurantName;
+  final List<OrderItem> items;
+
+  const _RestaurantOrderGroup({
+    required this.restaurantName,
+    required this.items,
+  });
 }

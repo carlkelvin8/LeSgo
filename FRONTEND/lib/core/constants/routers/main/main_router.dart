@@ -6,6 +6,7 @@ import '../../../../presentation/screens/main/inbox_screen.dart';
 import '../../../../presentation/screens/main/profile_screen.dart';
 import '../../../../presentation/screens/main/transactions_screen.dart';
 import '../../../../presentation/screens/main/favorites_screen.dart';
+import '../../../../presentation/screens/main/offers_screen.dart';
 import '../../../../presentation/screens/main/missions_screen.dart';
 import '../../../../presentation/screens/main/settings_screen.dart';
 import '../../../../presentation/screens/main/faqs_screen.dart';
@@ -19,18 +20,19 @@ class MainRouter {
   static final Map<String, WidgetBuilder> _routes = {
     MainRoutes.home: (_) => const HomeScreen(),
     MainRoutes.bookNow: (_) => const BookingScreen(),
-    
+
     MainRoutes.lespay: (_) => const LespayScreen(),
     MainRoutes.inbox: (_) => const InboxScreen(),
     MainRoutes.profile: (_) => const ProfileScreen(),
     MainRoutes.transactions: (_) => const TransactionsScreen(),
     MainRoutes.favorites: (_) => const FavoritesScreen(),
+    MainRoutes.offers: (_) => const OffersScreen(),
     MainRoutes.missions: (_) => const MissionsScreen(),
-    
+
     MainRoutes.settings: (_) => const SettingsScreen(),
     MainRoutes.faqs: (_) => const FaqsScreen(),
     MainRoutes.about: (_) => const AboutScreen(),
-    
+
     MainRoutes.setLocation: (_) => const SetLocationScreen(),
     MainRoutes.addressManagement: (_) => const AddressManagementScreen(),
     MainRoutes.addressDemo: (_) => const AddressDemoScreen(),
@@ -39,29 +41,30 @@ class MainRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     final builder = _routes[settings.name];
     if (builder != null) {
-      return MaterialPageRoute(
-        builder: builder,
-        settings: settings,
-      );
+      return MaterialPageRoute(builder: builder, settings: settings);
     }
     return null;
   }
-  
-  static Future<T?> push<T>(BuildContext context, String routeName, {Object? arguments}) {
-    return Navigator.pushNamed<T>(
-      context,
-      routeName,
-      arguments: arguments,
-    );
+
+  static Future<T?> push<T>(
+    BuildContext context,
+    String routeName, {
+    Object? arguments,
+  }) {
+    return Navigator.pushNamed<T>(context, routeName, arguments: arguments);
   }
-  
-  static Future<T?> pushReplacement<T, TO>(BuildContext context, String routeName, {Object? arguments}) {
+
+  static Future<T?> pushReplacement<T, TO>(
+    BuildContext context,
+    String routeName, {
+    Object? arguments,
+  }) {
     return Navigator.pushReplacementNamed<T, TO>(
       context,
       routeName,
       arguments: arguments,
     );
   }
-  
+
   MainRouter._();
 }

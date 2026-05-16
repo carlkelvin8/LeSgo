@@ -17,30 +17,23 @@ class LocationFormSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
-    return Expanded(
-      child: Form(
-        key: controllers.formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            horizontalPadding,
-            horizontalPadding,
-            90.0,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AddressFormFields(
-                houseNumberController: controllers.houseNumberController,
-                subdivisionController: controllers.subdivisionController,
-                cityController: controllers.cityController,
-                zipCodeController: controllers.zipCodeController,
-                landmarkController: controllers.landmarkController,
-                isDefault: controllers.isDefault,
-                onDefaultChanged: (value) => onDefaultChanged(),
-              ),
-            ],
-          ),
+    return Form(
+      key: controllers.formKey,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AddressFormFields(
+              houseNumberController: controllers.houseNumberController,
+              subdivisionController: controllers.subdivisionController,
+              cityController: controllers.cityController,
+              zipCodeController: controllers.zipCodeController,
+              landmarkController: controllers.landmarkController,
+              isDefault: controllers.isDefault,
+              onDefaultChanged: (value) => onDefaultChanged(),
+            ),
+          ],
         ),
       ),
     );

@@ -58,27 +58,38 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                   children: [
                     const AuthHeader(title: 'SIGN UP'),
 
-                    Center(
-                      child: SvgPicture.asset(
-                        'assets/images/register/7.svg',
-                        height: ResponsiveUtils.imageHeight(context, 250),
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-
                     Expanded(
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
+                            Center(
+                              child: SvgPicture.asset(
+                                'assets/images/register/7.svg',
+                                height: ResponsiveUtils.imageHeight(
+                                  context,
+                                  250,
+                                ),
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 32),
+                            ),
+
                             // First Name with real-time validation
                             ValidatedTextField(
                               label: 'First Name',
                               hint: 'Enter your first name',
                               controller: _controllers.firstNameController,
-                              validator: (value) => Validators.name(value, fieldName: 'First name'),
+                              validator: (value) => Validators.name(
+                                value,
+                                fieldName: 'First name',
+                              ),
                               textCapitalization: TextCapitalization.words,
-                              prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                              prefixIcon: Icon(
+                                Icons.person_outline,
+                                color: Colors.grey[600],
+                              ),
                               required: true,
                             ),
                             SizedBox(
@@ -90,9 +101,15 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               label: 'Last Name',
                               hint: 'Enter your last name',
                               controller: _controllers.lastNameController,
-                              validator: (value) => Validators.name(value, fieldName: 'Last name'),
+                              validator: (value) => Validators.name(
+                                value,
+                                fieldName: 'Last name',
+                              ),
                               textCapitalization: TextCapitalization.words,
-                              prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                              prefixIcon: Icon(
+                                Icons.person_outline,
+                                color: Colors.grey[600],
+                              ),
                               required: true,
                             ),
                             SizedBox(
@@ -117,7 +134,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               controller: _controllers.emailController,
                               validator: Validators.email,
                               keyboardType: TextInputType.emailAddress,
-                              prefixIcon: Icon(Icons.email_outlined, color: Colors.grey[600]),
+                              prefixIcon: Icon(
+                                Icons.email_outlined,
+                                color: Colors.grey[600],
+                              ),
                               required: true,
                             ),
                             SizedBox(
@@ -140,8 +160,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                             PasswordConfirmField(
                               label: 'Confirm Password',
                               hint: 'Re-enter your password',
-                              controller: _controllers.confirmPasswordController,
-                              passwordController: _controllers.passwordController,
+                              controller:
+                                  _controllers.confirmPasswordController,
+                              passwordController:
+                                  _controllers.passwordController,
                               required: true,
                             ),
                             SizedBox(
@@ -154,7 +176,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               hint: 'Enter referral code (optional)',
                               controller: _controllers.referralCodeController,
                               validator: RegisterValidator.referralCode,
-                              prefixIcon: Icon(Icons.card_giftcard_outlined, color: Colors.grey[600]),
+                              prefixIcon: Icon(
+                                Icons.card_giftcard_outlined,
+                                color: Colors.grey[600],
+                              ),
                               required: false,
                             ),
                           ],

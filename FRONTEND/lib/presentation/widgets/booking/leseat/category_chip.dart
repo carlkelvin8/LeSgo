@@ -17,9 +17,9 @@ class CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconSize = ResponsiveUtils.fontSize(context, 32);
-    final fontSize = ResponsiveUtils.fontSize(context, 12);
-    final padding = ResponsiveUtils.spacing(context, 8);
+    final iconSize = ResponsiveUtils.fontSize(context, 28);
+    final fontSize = ResponsiveUtils.fontSize(context, 11);
+    final padding = ResponsiveUtils.spacing(context, 7);
 
     return GestureDetector(
       onTap: onTap,
@@ -27,14 +27,16 @@ class CategoryChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: ResponsiveUtils.spacing(context, 64),
-            height: ResponsiveUtils.spacing(context, 64),
+            width: ResponsiveUtils.spacing(context, 56),
+            height: ResponsiveUtils.spacing(context, 56),
             padding: EdgeInsets.all(padding),
             decoration: BoxDecoration(
               color: isSelected ? const Color(0xFFE8E0F0) : Colors.grey[100],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? const Color(0xFF5F2D82) : Colors.transparent,
+                color: isSelected
+                    ? const Color(0xFF5F2D82)
+                    : Colors.transparent,
                 width: 2,
               ),
             ),
@@ -45,7 +47,7 @@ class CategoryChip extends StatelessWidget {
               fit: BoxFit.contain,
             ),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+          SizedBox(height: ResponsiveUtils.spacing(context, 3)),
           Text(
             category.name,
             style: TextStyle(

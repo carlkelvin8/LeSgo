@@ -11,11 +11,8 @@ class OrderCard extends StatefulWidget {
   final OrderDto order;
   final VoidCallback onTap;
 
-  const OrderCard({
-    Key? key,
-    required this.order,
-    required this.onTap,
-  }) : super(key: key);
+  const OrderCard({Key? key, required this.order, required this.onTap})
+    : super(key: key);
 
   @override
   State<OrderCard> createState() => _OrderCardState();
@@ -35,9 +32,9 @@ class _OrderCardState extends State<OrderCard> {
 
   Future<void> _loadRoute() async {
     if (_isLoadingRoute) return;
-    
+
     setState(() => _isLoadingRoute = true);
-    
+
     try {
       final trackingDataSource = getIt<TrackingRemoteDataSource>();
       final result = await trackingDataSource.getRoute(
@@ -46,7 +43,7 @@ class _OrderCardState extends State<OrderCard> {
         widget.order.dropoffLat,
         widget.order.dropoffLng,
       );
-      
+
       if (result['success'] == true && result['data'] != null) {
         final polylineData = result['data']['polyline'];
         if (polylineData is List && polylineData.isNotEmpty) {
@@ -56,7 +53,7 @@ class _OrderCardState extends State<OrderCard> {
               (point['lng'] as num).toDouble(),
             );
           }).toList();
-          
+
           if (mounted) {
             setState(() {
               _routePolyline = points;
@@ -161,27 +158,31 @@ class _OrderCardState extends State<OrderCard> {
 
   Set<Marker> _buildMapMarkers() {
     final markers = <Marker>{};
-    
+
     // Pickup marker (green)
-    markers.add(Marker(
-      markerId: const MarkerId('pickup'),
-      position: LatLng(widget.order.pickupLat, widget.order.pickupLng),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-    ));
-    
+    markers.add(
+      Marker(
+        markerId: const MarkerId('pickup'),
+        position: LatLng(widget.order.pickupLat, widget.order.pickupLng),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      ),
+    );
+
     // Dropoff marker (red)
-    markers.add(Marker(
-      markerId: const MarkerId('dropoff'),
-      position: LatLng(widget.order.dropoffLat, widget.order.dropoffLng),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-    ));
-    
+    markers.add(
+      Marker(
+        markerId: const MarkerId('dropoff'),
+        position: LatLng(widget.order.dropoffLat, widget.order.dropoffLng),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      ),
+    );
+
     return markers;
   }
 
   Set<Polyline> _buildMapPolylines() {
     final polylines = <Polyline>{};
-    
+
     // Use actual route if available, otherwise fallback to straight line
     final points = _routePolyline.isNotEmpty
         ? _routePolyline
@@ -189,29 +190,35 @@ class _OrderCardState extends State<OrderCard> {
             LatLng(widget.order.pickupLat, widget.order.pickupLng),
             LatLng(widget.order.dropoffLat, widget.order.dropoffLng),
           ];
-    
-    polylines.add(Polyline(
-      polylineId: const PolylineId('route'),
-      points: points,
-      color: const Color(0xFF5F2D82),
-      width: 3,
-      // Use solid line for actual route, dashed for straight line
-      patterns: _routePolyline.isEmpty 
-          ? [PatternItem.dash(15), PatternItem.gap(8)]
-          : [],
-    ));
-    
+
+    polylines.add(
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: points,
+        color: const Color(0xFF5F2D82),
+        width: 3,
+        // Use solid line for actual route, dashed for straight line
+        patterns: _routePolyline.isEmpty
+            ? [PatternItem.dash(15), PatternItem.gap(8)]
+            : [],
+      ),
+    );
+
     return polylines;
   }
 
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(widget.order.status);
-    final createdAt = DateTime.parse(widget.order.createdAt);
-    final formattedDate = DateFormat('MMM dd, yyyy • hh:mm a').format(createdAt);
+    final createdAt = DateTime.tryParse(
+      widget.order.createdAt ?? widget.order.updatedAt ?? '',
+    );
+    final formattedDate = createdAt != null
+        ? DateFormat('MMM dd, yyyy • hh:mm a').format(createdAt)
+        : 'Date unavailable';
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -307,7 +314,8 @@ class _OrderCardState extends State<OrderCard> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => LiveTrackingScreen(orderId: widget.order.id),
+                      builder: (_) =>
+                          LiveTrackingScreen(orderId: widget.order.id),
                     ),
                   );
                 },
@@ -324,8 +332,12 @@ class _OrderCardState extends State<OrderCard> {
                         GoogleMap(
                           initialCameraPosition: CameraPosition(
                             target: LatLng(
-                              (widget.order.pickupLat + widget.order.dropoffLat) / 2,
-                              (widget.order.pickupLng + widget.order.dropoffLng) / 2,
+                              (widget.order.pickupLat +
+                                      widget.order.dropoffLat) /
+                                  2,
+                              (widget.order.pickupLng +
+                                      widget.order.dropoffLng) /
+                                  2,
                             ),
                             zoom: 13,
                           ),
@@ -379,7 +391,10 @@ class _OrderCardState extends State<OrderCard> {
                                   'Tap to track',
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
-                                    fontSize: ResponsiveUtils.fontSize(context, 10),
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      10,
+                                    ),
                                     color: Colors.white,
                                   ),
                                 ),
@@ -409,11 +424,7 @@ class _OrderCardState extends State<OrderCard> {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    Container(
-                      width: 2,
-                      height: 20,
-                      color: Colors.grey[300],
-                    ),
+                    Container(width: 2, height: 20, color: Colors.grey[300]),
                     Container(
                       width: 8,
                       height: 8,
@@ -461,11 +472,7 @@ class _OrderCardState extends State<OrderCard> {
             // Footer row
             Row(
               children: [
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: Colors.grey[500],
-                ),
+                Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
                 const SizedBox(width: 4),
                 Text(
                   formattedDate,

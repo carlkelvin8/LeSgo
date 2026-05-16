@@ -44,13 +44,10 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
 
     try {
       final trackingDataSource = getIt<TrackingRemoteDataSource>();
-      final response = await trackingDataSource.trackOrder(orderId);
+      final response = await trackingDataSource.getOrderTracking(orderId);
 
       if (response.success) {
-        state = state.copyWith(
-          tracking: response.data,
-          isLoading: false,
-        );
+        state = state.copyWith(tracking: response.data, isLoading: false);
 
         // Also load ETA
         await loadEta(orderId);
@@ -61,10 +58,7 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
         );
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -74,8 +68,35 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
       final trackingDataSource = getIt<TrackingRemoteDataSource>();
       final response = await trackingDataSource.getEta(orderId);
 
-      if (response.success) {
-        state = state.copyWith(eta: response.data);
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
+        state = state.copyWith(
+          eta: EtaDto(
+            estimatedArrival:
+                data['estimated_arrival']?.toString() ??
+                data['estimatedArrival']?.toString() ??
+                '15 minutes',
+            minutesRemaining:
+                (data['minutes_remaining'] ??
+                        data['estimatedArrivalMinutes'] ??
+                        15)
+                    as int,
+            distanceRemainingM:
+                (data['distance_remaining_m'] ??
+                        ((data['distanceKm'] as num?) ?? 2.5) * 1000)
+                    .round(),
+            currentLatitude:
+                ((data['current_latitude'] ?? data['currentLatitude'] ?? 8.4542)
+                        as num)
+                    .toDouble(),
+            currentLongitude:
+                ((data['current_longitude'] ??
+                            data['currentLongitude'] ??
+                            124.6319)
+                        as num)
+                    .toDouble(),
+          ),
+        );
       }
     } catch (e) {
       // Silently fail for ETA
@@ -92,14 +113,30 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
     try {
       final trackingDataSource = getIt<TrackingRemoteDataSource>();
       final response = await trackingDataSource.getRoute(
-        fromLat: fromLat,
-        fromLng: fromLng,
-        toLat: toLat,
-        toLng: toLng,
+        fromLat,
+        fromLng,
+        toLat,
+        toLng,
       );
 
-      if (response.success) {
-        state = state.copyWith(route: response.data);
+      if (response['success'] == true && response['data'] != null) {
+        final data = response['data'] as Map<String, dynamic>;
+        final rawPoints = data['polyline'] as List? ?? [];
+        final points = rawPoints.map((point) {
+          final map = point as Map<String, dynamic>;
+          return RoutePointDto(
+            latitude: ((map['latitude'] ?? map['lat']) as num).toDouble(),
+            longitude: ((map['longitude'] ?? map['lng']) as num).toDouble(),
+          );
+        }).toList();
+
+        state = state.copyWith(
+          route: RouteDto(
+            points: points,
+            distanceM: ((data['distance']?['value'] ?? 0) as num).round(),
+            durationS: ((data['duration']?['value'] ?? 0) as num).round(),
+          ),
+        );
       }
     } catch (e) {
       // Silently fail for route
@@ -112,7 +149,8 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
   }
 }
 
-final trackingProvider =
-    StateNotifierProvider<TrackingNotifier, TrackingState>((ref) {
-  return TrackingNotifier();
-});
+final trackingProvider = StateNotifierProvider<TrackingNotifier, TrackingState>(
+  (ref) {
+    return TrackingNotifier();
+  },
+);

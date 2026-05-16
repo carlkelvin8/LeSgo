@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
-// import '../../../provider/review/review_provider.dart'; // Temporarily commented out
-import '../../../widgets/widgets.dart';
+import '../../../provider/review/review_provider.dart';
+import '../../../widgets/review/review_card.dart';
 
 /// Screen to display reviews for a specific item (restaurant, store, driver)
 class ReviewsListScreen extends ConsumerStatefulWidget {
@@ -27,7 +27,9 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
     super.initState();
     // Load reviews on init
     Future.microtask(() {
-      ref.read(reviewProvider.notifier).loadReviews(
+      ref
+          .read(reviewProvider.notifier)
+          .loadReviews(
             reviewableType: widget.reviewableType,
             reviewableId: widget.reviewableId,
           );
@@ -62,100 +64,98 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
         child: reviewState.isLoading
             ? const Center(child: CircularProgressIndicator())
             : reviewState.error != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.grey.shade400,
-                        ),
-                        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                        Text(
-                          'Failed to load reviews',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 16),
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                        ElevatedButton(
-                          onPressed: () {
-                            ref.read(reviewProvider.notifier).loadReviews(
-                                  reviewableType: widget.reviewableType,
-                                  reviewableId: widget.reviewableId,
-                                );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                          ),
-                          child: const Text('Retry'),
-                        ),
-                      ],
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.grey.shade400,
                     ),
-                  )
-                : reviewState.reviews.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.rate_review_outlined,
-                              size: 64,
-                              color: Colors.grey.shade400,
-                            ),
-                            SizedBox(
-                              height: ResponsiveUtils.spacing(context, 16),
-                            ),
-                            Text(
-                              'No reviews yet',
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 16),
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            SizedBox(
-                              height: ResponsiveUtils.spacing(context, 8),
-                            ),
-                            Text(
-                              'Be the first to leave a review!',
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: () async {
-                          await ref.read(reviewProvider.notifier).loadReviews(
-                                reviewableType: widget.reviewableType,
-                                reviewableId: widget.reviewableId,
-                              );
-                        },
-                        child: ListView.builder(
-                          padding: EdgeInsets.all(
-                            ResponsiveUtils.spacing(context, 16),
-                          ),
-                          itemCount: reviewState.reviews.length,
-                          itemBuilder: (context, index) {
-                            final review = reviewState.reviews[index];
-                            return ReviewCard(
-                              review: review,
-                              onHelpful: () {
-                                ref
-                                    .read(reviewProvider.notifier)
-                                    .markHelpful(review.id);
-                              },
-                            );
-                          },
-                        ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    Text(
+                      'Failed to load reviews',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 16),
+                        color: Colors.grey.shade600,
                       ),
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref
+                            .read(reviewProvider.notifier)
+                            .loadReviews(
+                              reviewableType: widget.reviewableType,
+                              reviewableId: widget.reviewableId,
+                            );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5F2D82),
+                      ),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              )
+            : reviewState.reviews.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.rate_review_outlined,
+                      size: 64,
+                      color: Colors.grey.shade400,
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    Text(
+                      'No reviews yet',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 16),
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                    Text(
+                      'Be the first to leave a review!',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 14),
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : RefreshIndicator(
+                onRefresh: () async {
+                  await ref
+                      .read(reviewProvider.notifier)
+                      .loadReviews(
+                        reviewableType: widget.reviewableType,
+                        reviewableId: widget.reviewableId,
+                      );
+                },
+                child: ListView.builder(
+                  padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+                  itemCount: reviewState.reviews.length,
+                  itemBuilder: (context, index) {
+                    final review = reviewState.reviews[index];
+                    return ReviewCard(
+                      review: review,
+                      onHelpful: () {
+                        ref
+                            .read(reviewProvider.notifier)
+                            .markHelpful(review.id);
+                      },
+                    );
+                  },
+                ),
+              ),
       ),
     );
   }

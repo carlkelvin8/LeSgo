@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
 import '../../../data/data_source/dto/tracking/tracking_dto.dart';
@@ -84,8 +85,8 @@ class LiveTrackingState {
 
   bool get hasDriverLocation => driverLocation != null;
   bool get hasRoute => polylines.isNotEmpty;
-  bool get isOrderActive => 
-      orderStatus != 'completed' && 
+  bool get isOrderActive =>
+      orderStatus != 'completed' &&
       orderStatus != 'cancelled' &&
       orderStatus != 'failed';
 }
@@ -139,10 +140,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       Colors.green,
       Icons.location_on,
     );
-    _dropoffIcon = await _createCustomMarkerIcon(
-      Colors.red,
-      Icons.location_on,
-    );
+    _dropoffIcon = await _createCustomMarkerIcon(Colors.red, Icons.location_on);
   }
 
   Future<BitmapDescriptor> _createCustomMarkerIcon(
@@ -180,7 +178,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
     if (state.isTracking) return;
 
     state = state.copyWith(isTracking: true);
-    
+
     // Initial load
     loadTracking();
 
@@ -190,26 +188,22 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
     }
 
     // Fallback: Poll location every 10 seconds (less frequent since WebSocket is primary)
-    _locationTimer = Timer.periodic(
-      Duration(seconds: _useWebSocket ? 10 : 5),
-      (_) {
-        if (state.isOrderActive) {
-          loadDriverLocation();
-        } else {
-          stopTracking();
-        }
-      },
-    );
+    _locationTimer = Timer.periodic(Duration(seconds: _useWebSocket ? 10 : 5), (
+      _,
+    ) {
+      if (state.isOrderActive) {
+        loadDriverLocation();
+      } else {
+        stopTracking();
+      }
+    });
 
     // Poll ETA every 30 seconds (less frequent since WebSocket provides updates)
-    _etaTimer = Timer.periodic(
-      Duration(seconds: _useWebSocket ? 30 : 15),
-      (_) {
-        if (state.isOrderActive) {
-          loadEta();
-        }
-      },
-    );
+    _etaTimer = Timer.periodic(Duration(seconds: _useWebSocket ? 30 : 15), (_) {
+      if (state.isOrderActive) {
+        loadEta();
+      }
+    });
   }
 
   /// Set up WebSocket tracking for real-time updates
@@ -267,12 +261,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         final newLocation = LatLng(lat, lng);
 
         // Update state with new location
-        state = state.copyWith(
-          driverLocation: newLocation,
-        );
+        state = state.copyWith(driverLocation: newLocation);
 
         _updateMarkers();
-        
+
         // Reload route with new driver location
         loadRoute();
 
@@ -292,10 +284,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
       final newStatus = data['new_status'] as String?;
       final previousStatus = state.orderStatus;
-      
+
       if (newStatus != null && newStatus != previousStatus) {
         state = state.copyWith(orderStatus: newStatus);
-        
+
         debugPrint('📊 Order status updated via WebSocket: $newStatus');
 
         // Show appropriate notification based on status change
@@ -347,16 +339,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         break;
       case 'completed':
       case 'delivered':
-        NotificationHelper.showOrderDelivered(
-          _context!,
-          orderId: orderIdStr,
-        );
+        NotificationHelper.showOrderDelivered(_context!, orderId: orderIdStr);
         break;
       case 'cancelled':
-        NotificationHelper.showOrderCancelled(
-          _context!,
-          orderId: orderIdStr,
-        );
+        NotificationHelper.showOrderCancelled(_context!, orderId: orderIdStr);
         break;
     }
   }
@@ -365,12 +351,12 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
     _locationTimer?.cancel();
     _etaTimer?.cancel();
     _orderEventSubscription?.cancel();
-    
+
     // Unsubscribe from WebSocket
     if (_useWebSocket) {
       _webSocketService.unsubscribeFromOrder(orderId);
     }
-    
+
     state = state.copyWith(isTracking: false);
   }
 
@@ -382,13 +368,23 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       final response = await dataSource.trackOrder(orderId);
 
       if (response['success'] == true) {
-        final trackingData = response['data']['data'] ?? response['data']; // Handle nested data if present
+        final trackingData =
+            response['data']['data'] ??
+            response['data']; // Handle nested data if present
 
         // Extract real locations with fallback to mock data
-        final double pLat = double.tryParse(trackingData['pickup_lat']?.toString() ?? '') ?? 8.4542;
-        final double pLng = double.tryParse(trackingData['pickup_lng']?.toString() ?? '') ?? 124.6319;
-        final double dLat = double.tryParse(trackingData['dropoff_lat']?.toString() ?? '') ?? 8.4600;
-        final double dLng = double.tryParse(trackingData['dropoff_lng']?.toString() ?? '') ?? 124.6400;
+        final double pLat =
+            double.tryParse(trackingData['pickup_lat']?.toString() ?? '') ??
+            8.4542;
+        final double pLng =
+            double.tryParse(trackingData['pickup_lng']?.toString() ?? '') ??
+            124.6319;
+        final double dLat =
+            double.tryParse(trackingData['dropoff_lat']?.toString() ?? '') ??
+            8.4600;
+        final double dLng =
+            double.tryParse(trackingData['dropoff_lng']?.toString() ?? '') ??
+            124.6400;
 
         final pickupLoc = LatLng(pLat, pLng);
         final dropoffLoc = LatLng(dLat, dLng);
@@ -426,10 +422,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         );
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -442,15 +435,28 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
       if (response['success'] == true) {
         final data = response['data'] as Map<String, dynamic>;
-        
-        final double lat = double.tryParse(data['current_latitude']?.toString() ?? data['currentLatitude']?.toString() ?? '') ?? 8.4542;
-        final double lng = double.tryParse(data['current_longitude']?.toString() ?? data['currentLongitude']?.toString() ?? '') ?? 124.6319;
-        
+
+        final double lat =
+            double.tryParse(
+              data['current_latitude']?.toString() ??
+                  data['currentLatitude']?.toString() ??
+                  '',
+            ) ??
+            8.4542;
+        final double lng =
+            double.tryParse(
+              data['current_longitude']?.toString() ??
+                  data['currentLongitude']?.toString() ??
+                  '',
+            ) ??
+            124.6319;
+
         final location = LatLng(lat, lng);
-        
+
         double heading = state.driverHeading ?? 0.0;
-        if (state.driverLocation != null && 
-            (state.driverLocation!.latitude != lat || state.driverLocation!.longitude != lng)) {
+        if (state.driverLocation != null &&
+            (state.driverLocation!.latitude != lat ||
+                state.driverLocation!.longitude != lng)) {
           heading = Geolocator.bearingBetween(
             state.driverLocation!.latitude,
             state.driverLocation!.longitude,
@@ -481,7 +487,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
       if (response['success'] == true) {
         final data = response['data'] as Map<String, dynamic>;
-        
+
         // Extract ETA
         String? eta;
         if (data['estimatedArrival'] != null) {
@@ -495,7 +501,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
           final minutes = data['minutes_remaining'] as num;
           eta = '${minutes.round()} minutes';
         }
-        
+
         // Extract distance
         String? distance;
         if (data['distanceKm'] != null) {
@@ -505,11 +511,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
           final distM = data['distance_remaining_m'] as num;
           distance = '${(distM / 1000).toStringAsFixed(1)} km';
         }
-        
-        state = state.copyWith(
-          eta: eta,
-          distance: distance,
-        );
+
+        state = state.copyWith(eta: eta, distance: distance);
       }
     } catch (e) {
       debugPrint('❌ Failed to load ETA: $e');
@@ -533,10 +536,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
       if (response['success'] == true) {
         final data = response['data'];
-        
+
         // Parse polyline points from API response
         List<LatLng> polylinePoints = [];
-        
+
         if (data['polyline'] != null && data['polyline'] is List) {
           polylinePoints = (data['polyline'] as List).map((point) {
             return LatLng(
@@ -548,10 +551,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
         // If no polyline points, create a simple straight line
         if (polylinePoints.isEmpty) {
-          polylinePoints = [
-            state.driverLocation!,
-            state.dropoffLocation!,
-          ];
+          polylinePoints = [state.driverLocation!, state.dropoffLocation!];
         }
 
         final polyline = Polyline(
@@ -565,13 +565,17 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         // Extract distance and duration
         String? distance;
         String? duration;
-        
+
         if (data['distance'] != null) {
-          distance = data['distance']['text'] ?? '${(data['distance']['value'] / 1000).toStringAsFixed(1)} km';
+          distance =
+              data['distance']['text'] ??
+              '${(data['distance']['value'] / 1000).toStringAsFixed(1)} km';
         }
-        
+
         if (data['duration'] != null) {
-          duration = data['duration']['text'] ?? '${(data['duration']['value'] / 60).round()} mins';
+          duration =
+              data['duration']['text'] ??
+              '${(data['duration']['value'] / 60).round()} mins';
         }
 
         state = state.copyWith(
@@ -594,47 +598,52 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
     // Add driver marker
     if (state.driverLocation != null) {
-      markers.add(Marker(
-        markerId: const MarkerId('driver'),
-        position: state.driverLocation!,
-        icon: _driverIcon ?? BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueBlue,
+      markers.add(
+        Marker(
+          markerId: const MarkerId('driver'),
+          position: state.driverLocation!,
+          icon:
+              _driverIcon ??
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          infoWindow: InfoWindow(
+            title: state.driverInfo?.name ?? 'Driver',
+            snippet: state.eta != null ? 'ETA: ${state.eta}' : null,
+          ),
+          rotation: state.driverHeading ?? 0.0,
+          anchor: const Offset(
+            0.5,
+            0.5,
+          ), // Center the marker for proper rotation
         ),
-        infoWindow: InfoWindow(
-          title: state.driverInfo?.name ?? 'Driver',
-          snippet: state.eta != null ? 'ETA: ${state.eta}' : null,
-        ),
-        rotation: state.driverHeading ?? 0.0,
-        anchor: const Offset(0.5, 0.5), // Center the marker for proper rotation
-      ));
+      );
     }
 
     // Add pickup marker
     if (state.pickupLocation != null) {
-      markers.add(Marker(
-        markerId: const MarkerId('pickup'),
-        position: state.pickupLocation!,
-        icon: _pickupIcon ?? BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueGreen,
+      markers.add(
+        Marker(
+          markerId: const MarkerId('pickup'),
+          position: state.pickupLocation!,
+          icon:
+              _pickupIcon ??
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          infoWindow: const InfoWindow(title: 'Pickup Location'),
         ),
-        infoWindow: const InfoWindow(
-          title: 'Pickup Location',
-        ),
-      ));
+      );
     }
 
     // Add dropoff marker
     if (state.dropoffLocation != null) {
-      markers.add(Marker(
-        markerId: const MarkerId('dropoff'),
-        position: state.dropoffLocation!,
-        icon: _dropoffIcon ?? BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueRed,
+      markers.add(
+        Marker(
+          markerId: const MarkerId('dropoff'),
+          position: state.dropoffLocation!,
+          icon:
+              _dropoffIcon ??
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: const InfoWindow(title: 'Dropoff Location'),
         ),
-        infoWindow: const InfoWindow(
-          title: 'Dropoff Location',
-        ),
-      ));
+      );
     }
 
     state = state.copyWith(markers: markers);
@@ -676,7 +685,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
   }
 }
 
-final liveTrackingProvider = StateNotifierProvider.family<
-    LiveTrackingNotifier, LiveTrackingState, int>((ref, orderId) {
-  return LiveTrackingNotifier(orderId);
-});
+final liveTrackingProvider =
+    StateNotifierProvider.family<LiveTrackingNotifier, LiveTrackingState, int>((
+      ref,
+      orderId,
+    ) {
+      return LiveTrackingNotifier(orderId);
+    });
