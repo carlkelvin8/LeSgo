@@ -5,6 +5,7 @@ import 'package:lesgo/core/utils/snackbar_utils.dart';
 import 'package:lesgo/core/services/google_auth_service.dart';
 import 'package:lesgo/core/di/injection.dart';
 import 'package:lesgo/core/network/dio_client.dart';
+import 'package:lesgo/core/di/local_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../auth_provider.dart';
 import '../../../../core/constants/routers/main/main_routes.dart';
@@ -21,6 +22,19 @@ class LoginControllers {
     : formKey = GlobalKey<FormState>(),
       emailController = TextEditingController(),
       passwordController = TextEditingController();
+
+  Future<void> loadCredentials(WidgetRef ref) async {
+    final localStorage = getIt<LocalStorageService>();
+    final credentials = localStorage.getSavedCredentials();
+    if (credentials != null) {
+      emailController.text = credentials['email']!;
+      passwordController.text = credentials['password']!;
+      // Need to defer this to avoid modifying provider during build
+      Future.microtask(() {
+        ref.read(authProvider.notifier).toggleRememberMe(true);
+      });
+    }
+  }
 
   void togglePasswordVisibility() {
     obscurePassword = !obscurePassword;
@@ -43,6 +57,15 @@ class LoginControllers {
     if (!context.mounted) return false;
 
     if (authState.isAuthenticated) {
+      if (authState.rememberMe) {
+        await getIt<LocalStorageService>().saveCredentials(
+          loginRequest.email,
+          loginRequest.password,
+        );
+      } else {
+        await getIt<LocalStorageService>().clearCredentials();
+      }
+
       SnackBarUtils.showSuccess(
         context,
         authState.successMessage ?? 'Login successful!',

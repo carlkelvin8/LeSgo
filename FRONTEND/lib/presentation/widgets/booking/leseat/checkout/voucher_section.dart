@@ -3,9 +3,17 @@ import '../../../../../core/utils/responsive_utils.dart';
 
 class VoucherSection extends StatelessWidget {
   final VoidCallback? onApplyTap;
+  final VoidCallback? onRemoveTap;
   final bool enabled;
+  final String? appliedVoucher;
 
-  const VoucherSection({super.key, this.onApplyTap, this.enabled = true});
+  const VoucherSection({
+    super.key, 
+    this.onApplyTap, 
+    this.onRemoveTap,
+    this.enabled = true,
+    this.appliedVoucher,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +42,7 @@ class VoucherSection extends StatelessWidget {
               SizedBox(width: ResponsiveUtils.spacing(context, 12)),
               Expanded(
                 child: Text(
-                  'Apply Voucher',
+                  appliedVoucher ?? 'Apply Voucher',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -43,11 +51,21 @@ class VoucherSection extends StatelessWidget {
                   ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.grey[600],
-                size: ResponsiveUtils.fontSize(context, 20),
-              ),
+              if (appliedVoucher != null && onRemoveTap != null)
+                GestureDetector(
+                  onTap: onRemoveTap,
+                  child: Icon(
+                    Icons.close,
+                    color: Colors.red,
+                    size: ResponsiveUtils.fontSize(context, 20),
+                  ),
+                )
+              else
+                Icon(
+                  Icons.chevron_right,
+                  color: Colors.grey[600],
+                  size: ResponsiveUtils.fontSize(context, 20),
+                ),
             ],
           ),
         ),

@@ -8,6 +8,7 @@ class Order {
   final double subtotal;
   final double deliveryFee;
   final double discount;
+  final String? voucherCode;
 
   Order({
     required this.id,
@@ -17,6 +18,7 @@ class Order {
     required this.subtotal,
     required this.deliveryFee,
     this.discount = 0,
+    this.voucherCode,
   });
 
   double get total => subtotal + deliveryFee - discount;
@@ -31,6 +33,7 @@ class Order {
     double? subtotal,
     double? deliveryFee,
     double? discount,
+    String? voucherCode,
   }) {
     return Order(
       id: id ?? this.id,
@@ -40,6 +43,7 @@ class Order {
       subtotal: subtotal ?? this.subtotal,
       deliveryFee: deliveryFee ?? this.deliveryFee,
       discount: discount ?? this.discount,
+      voucherCode: voucherCode ?? this.voucherCode,
     );
   }
 }

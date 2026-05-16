@@ -4,6 +4,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 class OrderSummarySection extends StatelessWidget {
   final double subtotal;
   final double delivery;
+  final double discount;
   final double total;
   final int itemCount;
 
@@ -11,6 +12,7 @@ class OrderSummarySection extends StatelessWidget {
     super.key,
     required this.subtotal,
     required this.delivery,
+    this.discount = 0,
     required this.total,
     required this.itemCount,
   });
@@ -52,6 +54,15 @@ class OrderSummarySection extends StatelessWidget {
             'Delivery',
             'PHP ${delivery.toStringAsFixed(2)}',
           ),
+          if (discount > 0) ...[
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            _buildSummaryRow(
+              context,
+              'Discount',
+              '-PHP ${discount.toStringAsFixed(2)}',
+              isDiscount: true,
+            ),
+          ],
           
           Padding(
             padding: EdgeInsets.symmetric(
@@ -76,6 +87,7 @@ class OrderSummarySection extends StatelessWidget {
     String label,
     String value, {
     bool isTotal = false,
+    bool isDiscount = false,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -86,7 +98,7 @@ class OrderSummarySection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
             fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
-            color: isTotal ? Colors.black87 : Colors.grey[600],
+            color: isDiscount ? Colors.red : (isTotal ? Colors.black87 : Colors.grey[600]),
           ),
         ),
         Text(
@@ -95,7 +107,7 @@ class OrderSummarySection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
             fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-            color: Colors.black87,
+            color: isDiscount ? Colors.red : Colors.black87,
           ),
         ),
       ],

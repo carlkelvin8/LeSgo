@@ -14,11 +14,13 @@ CreateOrderRequestDto _$CreateOrderRequestDtoFromJson(
   pickup: OrderAddressDto.fromJson(json['pickup'] as Map<String, dynamic>),
   dropoff: OrderAddressDto.fromJson(json['dropoff'] as Map<String, dynamic>),
   notes: json['notes'] as String?,
-  paymentMethod: json['payment_method'] as String,
+  paymentMethod: json['payment_method'] as String? ?? 'cash',
   items: (json['items'] as List<dynamic>?)
       ?.map((e) => OrderItemDto.fromJson(e as Map<String, dynamic>))
       .toList(),
   meta: json['meta'] as Map<String, dynamic>?,
+  voucherCode: json['voucher_code'] as String?,
+  discountAmount: (json['discount_amount'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$CreateOrderRequestDtoToJson(
@@ -32,6 +34,8 @@ Map<String, dynamic> _$CreateOrderRequestDtoToJson(
   'payment_method': instance.paymentMethod,
   'items': instance.items,
   'meta': instance.meta,
+  'voucher_code': instance.voucherCode,
+  'discount_amount': instance.discountAmount,
 };
 
 OrderAddressDto _$OrderAddressDtoFromJson(Map<String, dynamic> json) =>

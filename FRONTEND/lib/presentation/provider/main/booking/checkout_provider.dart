@@ -155,11 +155,29 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
     // Mock voucher logic
     double discount = 0;
-    if (voucherCode.toUpperCase() == 'SAVE10') {
+    final code = voucherCode.toUpperCase();
+    if (code == 'SAVE10') {
       discount = state.order!.subtotal * 0.1;
+    } else if (code == 'LUNCHFREE') {
+      discount = state.order!.deliveryFee;
+    } else {
+      discount = 20.0; // Flat discount for testing
     }
 
-    final updatedOrder = state.order!.copyWith(discount: discount);
+    final updatedOrder = state.order!.copyWith(
+      discount: discount,
+      voucherCode: code,
+    );
+    state = state.copyWith(order: updatedOrder);
+  }
+
+  void removeVoucher() {
+    if (state.order == null) return;
+
+    final updatedOrder = state.order!.copyWith(
+      discount: 0,
+      voucherCode: null,
+    );
     state = state.copyWith(order: updatedOrder);
   }
 
@@ -226,13 +244,17 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
               ),
             )
             .toList(),
+        voucherCode: order.voucherCode,
+        discountAmount: order.discount,
         meta: {
           'restaurant_name': restaurantLabel,
           'restaurants': restaurantNames,
           'subtotal': order.subtotal,
           'delivery_fee': order.deliveryFee,
+          'discount': order.discount,
+          'voucher_code': order.voucherCode,
           'total': order.total,
-          'grand_total': order.total, // food subtotal + delivery fee
+          'grand_total': order.total, // food subtotal + delivery fee - discount
           'order_type': 'leseat',
           'items': order.items
               .map(

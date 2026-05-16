@@ -17,6 +17,10 @@ class CreateOrderRequestDto {
   final List<OrderItemDto>? items;
   @JsonKey(name: 'meta')
   final Map<String, dynamic>? meta;
+  @JsonKey(name: 'voucher_code')
+  final String? voucherCode;
+  @JsonKey(name: 'discount_amount')
+  final double? discountAmount;
 
   CreateOrderRequestDto({
     required this.serviceId,
@@ -24,9 +28,11 @@ class CreateOrderRequestDto {
     required this.pickup,
     required this.dropoff,
     this.notes,
-    required this.paymentMethod,
+    this.paymentMethod = 'cash',
     this.items,
     this.meta,
+    this.voucherCode,
+    this.discountAmount,
   });
 
   factory CreateOrderRequestDto.fromJson(Map<String, dynamic> json) =>

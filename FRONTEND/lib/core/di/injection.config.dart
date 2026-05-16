@@ -44,6 +44,7 @@ import 'package:lesgo/data/data_source/social_remote_datasource.dart' as _i162;
 import 'package:lesgo/data/data_source/tracking_remote_datasource.dart'
     as _i657;
 import 'package:lesgo/data/data_source/user_remote_datasource.dart' as _i761;
+import 'package:lesgo/data/data_source/voucher_remote_datasource.dart' as _i767;
 import 'package:lesgo/data/repositoryImpl/user_repository_impl.dart' as _i937;
 import 'package:lesgo/domain/repository/user_repository.dart' as _i962;
 import 'package:lesgo/domain/use_cases/login_usecase.dart' as _i720;
@@ -132,6 +133,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i761.UserRemoteDataSource>(
       () => _i761.UserRemoteDataSource(gh<_i214.DioClient>()),
+    );
+    gh.lazySingleton<_i767.VoucherRemoteDataSource>(
+      () => _i767.VoucherRemoteDataSource(gh<_i214.DioClient>()),
     );
     gh.factory<_i677.AuthRemoteDataSource>(
       () => _i677.AuthRemoteDataSource(gh<_i214.DioClient>()),

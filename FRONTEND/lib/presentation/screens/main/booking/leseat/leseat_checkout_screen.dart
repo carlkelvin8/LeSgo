@@ -80,6 +80,95 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     );
   }
 
+  void _showVoucherDialog(BuildContext context, WidgetRef ref) {
+    final voucherController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Enter Voucher Code',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 18),
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    TextField(
+                      controller: voucherController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: InputDecoration(
+                        hintText: 'e.g. SAVE10',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFF5F2D82), width: 2),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+                    PrimaryButton(
+                      text: 'Apply',
+                      backgroundColor: const Color(0xFF5F2D82),
+                      onPressed: () {
+                        final code = voucherController.text.trim();
+                        if (code.isNotEmpty) {
+                          ref.read(checkoutProvider.notifier).applyVoucher(code);
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Voucher applied'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final checkoutState = ref.watch(checkoutProvider);
@@ -229,8 +318,12 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
             // Fixed Voucher Section
             VoucherSection(
               enabled: !isCartEmpty,
+              appliedVoucher: order.voucherCode,
               onApplyTap: () {
-                // TODO: Navigate to voucher selection
+                _showVoucherDialog(context, ref);
+              },
+              onRemoveTap: () {
+                checkoutNotifier.removeVoucher();
               },
             ),
 
@@ -238,6 +331,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
             OrderSummarySection(
               subtotal: subtotal,
               delivery: deliveryFee,
+              discount: order.discount,
               total: total,
               itemCount: isCartEmpty ? 0 : order.totalItems,
             ),

@@ -26,6 +26,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     _controllers = LoginControllers();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controllers.loadCredentials(ref);
+    });
   }
 
   @override
