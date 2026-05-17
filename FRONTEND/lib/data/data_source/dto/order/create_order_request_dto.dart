@@ -6,6 +6,8 @@ part 'create_order_request_dto.g.dart';
 class CreateOrderRequestDto {
   @JsonKey(name: 'service_id')
   final int serviceId;
+  @JsonKey(name: 'partner_id')
+  final int? partnerId;
   @JsonKey(name: 'estimated_distance_m')
   final int estimatedDistanceM;
   final OrderAddressDto pickup;
@@ -24,6 +26,7 @@ class CreateOrderRequestDto {
 
   CreateOrderRequestDto({
     required this.serviceId,
+    this.partnerId,
     required this.estimatedDistanceM,
     required this.pickup,
     required this.dropoff,

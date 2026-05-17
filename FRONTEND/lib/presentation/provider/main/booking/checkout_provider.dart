@@ -213,9 +213,15 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
           ? order.restaurantName
           : restaurantNames.join(', ');
 
+      // Get partner ID from the first item
+      final partnerId = order.items.isNotEmpty && order.items.first.restaurantId != null
+          ? int.tryParse(order.items.first.restaurantId!)
+          : null;
+
       // Create order request DTO
       final createOrderRequest = CreateOrderRequestDto(
         serviceId: 3, // LesEat service ID
+        partnerId: partnerId,
         estimatedDistanceM:
             5000, // 5km default, TODO: calculate actual distance
         pickup: OrderAddressDto(
