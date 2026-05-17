@@ -2,11 +2,19 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'order_dto.g.dart';
 
+double? _parseDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
 @JsonSerializable()
 class OrderDto {
   final int id;
   @JsonKey(name: 'reference_number')
-  final String referenceNumber;
+  final String? referenceNumber;
   @JsonKey(name: 'customer_id')
   final int userId;
   @JsonKey(name: 'driver_id')
@@ -18,35 +26,35 @@ class OrderDto {
   final String status;
   @JsonKey(name: 'pickup_address')
   final String pickupAddress;
-  @JsonKey(name: 'pickup_lat')
+  @JsonKey(name: 'pickup_lat', fromJson: _parseDouble)
   final double? pickupLat;
-  @JsonKey(name: 'pickup_lng')
+  @JsonKey(name: 'pickup_lng', fromJson: _parseDouble)
   final double? pickupLng;
   @JsonKey(name: 'dropoff_address')
   final String dropoffAddress;
-  @JsonKey(name: 'dropoff_lat')
+  @JsonKey(name: 'dropoff_lat', fromJson: _parseDouble)
   final double? dropoffLat;
-  @JsonKey(name: 'dropoff_lng')
+  @JsonKey(name: 'dropoff_lng', fromJson: _parseDouble)
   final double? dropoffLng;
-  @JsonKey(name: 'distance_km')
-  final double? distanceKm;
+  @JsonKey(name: 'estimated_distance_m')
+  final int? distanceKm;
   @JsonKey(name: 'estimated_duration_minutes')
   final int? estimatedDurationMinutes;
-  @JsonKey(name: 'base_fare')
+  @JsonKey(name: 'base_fare', fromJson: _parseDouble)
   final double? baseFare;
-  @JsonKey(name: 'distance_fare')
+  @JsonKey(name: 'distance_fare', fromJson: _parseDouble)
   final double? distanceFare;
-  @JsonKey(name: 'service_fee')
+  @JsonKey(name: 'service_fee', fromJson: _parseDouble)
   final double? serviceFee;
-  @JsonKey(name: 'total_fare')
+  @JsonKey(name: 'total_fare', fromJson: _parseDouble)
   final double? totalFare;
-  @JsonKey(name: 'estimated_fare')
+  @JsonKey(name: 'estimated_fare', fromJson: _parseDouble)
   final double? estimatedFare;
   @JsonKey(name: 'payment_method')
   final String paymentMethod;
   @JsonKey(name: 'payment_status')
   final String paymentStatus;
-  @JsonKey(name: 'special_instructions')
+  @JsonKey(name: 'notes')
   final String? specialInstructions;
   @JsonKey(name: 'created_at')
   final String createdAt;
@@ -56,15 +64,16 @@ class OrderDto {
   // Relationships
   @JsonKey(name: 'customer')
   final UserDto? user;
+  @JsonKey(name: 'driver_profile')
   final DriverDto? driver;
   final OrderPartnerDto? partner;
   final ServiceDto? service;
-  @JsonKey(name: 'order_items')
+  @JsonKey(name: 'lesbuy_items')
   final List<OrderItemDto>? orderItems;
   
   OrderDto({
     required this.id,
-    required this.referenceNumber,
+    this.referenceNumber,
     required this.userId,
     this.driverId,
     this.partnerId,
@@ -107,15 +116,15 @@ class OrderItemDto {
   final int orderId;
   @JsonKey(name: 'menu_item_id')
   final int? menuItemId;
-  @JsonKey(name: 'item_name')
+  @JsonKey(name: 'name')
   final String itemName;
   @JsonKey(name: 'item_description')
   final String? itemDescription;
   final int quantity;
-  @JsonKey(name: 'unit_price')
-  final double unitPrice;
-  @JsonKey(name: 'total_price')
-  final double totalPrice;
+  @JsonKey(name: 'estimated_price', fromJson: _parseDouble)
+  final double? unitPrice;
+  @JsonKey(name: 'actual_price', fromJson: _parseDouble)
+  final double? totalPrice;
   final String? options;
   
   OrderItemDto({
@@ -125,8 +134,8 @@ class OrderItemDto {
     required this.itemName,
     this.itemDescription,
     required this.quantity,
-    required this.unitPrice,
-    required this.totalPrice,
+    this.unitPrice,
+    this.totalPrice,
     this.options,
   });
   

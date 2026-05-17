@@ -8,7 +8,7 @@ part of 'order_dto.dart';
 
 OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       id: (json['id'] as num).toInt(),
-      referenceNumber: json['reference_number'] as String,
+      referenceNumber: json['reference_number'] as String?,
       userId: ((json['customer_id'] ?? json['user_id']) as num).toInt(),
       driverId: (json['driver_id'] as num?)?.toInt(),
       partnerId: (json['partner_id'] as num?)?.toInt(),
@@ -20,7 +20,7 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       dropoffAddress: json['dropoff_address'] as String,
       dropoffLat: json['dropoff_lat'] != null ? double.tryParse(json['dropoff_lat'].toString()) : null,
       dropoffLng: json['dropoff_lng'] != null ? double.tryParse(json['dropoff_lng'].toString()) : null,
-      distanceKm: json['distance_km'] != null ? double.tryParse(json['distance_km'].toString()) : null,
+      distanceKm: json['estimated_distance_m'] != null ? int.tryParse(json['estimated_distance_m'].toString()) : null,
       estimatedDurationMinutes:
           json['estimated_duration_minutes'] != null ? int.tryParse(json['estimated_duration_minutes'].toString()) : null,
       baseFare: json['base_fare'] != null ? double.tryParse(json['base_fare'].toString()) : null,
@@ -30,22 +30,22 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       estimatedFare: json['estimated_fare'] != null ? double.tryParse(json['estimated_fare'].toString()) : null,
       paymentMethod: json['payment_method'] as String,
       paymentStatus: json['payment_status'] as String,
-      specialInstructions: json['special_instructions'] as String?,
+      specialInstructions: json['notes'] as String?,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
       user: json['customer'] == null
           ? null
           : UserDto.fromJson(json['customer'] as Map<String, dynamic>),
-      driver: json['driver'] == null
+      driver: json['driver_profile'] == null
           ? null
-          : DriverDto.fromJson(json['driver'] as Map<String, dynamic>),
+          : DriverDto.fromJson(json['driver_profile'] as Map<String, dynamic>),
       partner: json['partner'] == null
           ? null
           : OrderPartnerDto.fromJson(json['partner'] as Map<String, dynamic>),
       service: json['service'] == null
           ? null
           : ServiceDto.fromJson(json['service'] as Map<String, dynamic>),
-      orderItems: ((json['order_items'] ?? json['lesbuy_items']) as List<dynamic>?)
+      orderItems: ((json['lesbuy_items']) as List<dynamic>?)
           ?.map((e) => OrderItemDto.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
@@ -87,11 +87,11 @@ OrderItemDto _$OrderItemDtoFromJson(Map<String, dynamic> json) => OrderItemDto(
       id: (json['id'] as num).toInt(),
       orderId: (json['order_id'] as num).toInt(),
       menuItemId: (json['menu_item_id'] as num?)?.toInt(),
-      itemName: json['item_name'] as String,
+      itemName: json['name'] as String,
       itemDescription: json['item_description'] as String?,
       quantity: (json['quantity'] as num).toInt(),
-      unitPrice: json['unit_price'] != null ? double.tryParse(json['unit_price'].toString()) ?? 0.0 : 0.0,
-      totalPrice: json['total_price'] != null ? double.tryParse(json['total_price'].toString()) ?? 0.0 : 0.0,
+      unitPrice: json['estimated_price'] != null ? double.tryParse(json['estimated_price'].toString()) : null,
+      totalPrice: json['actual_price'] != null ? double.tryParse(json['actual_price'].toString()) : null,
       options: json['options'] as String?,
     );
 
