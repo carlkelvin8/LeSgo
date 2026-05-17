@@ -47,24 +47,24 @@ final selectedMerchantOrderFilterProvider =
   return MerchantOrderFilter.all;
 });
 
-/// Provider for merchant orders from API
+/// Provider for all merchant orders from API
 final merchantOrdersProvider = FutureProvider.autoDispose<List<OrderDto>>((ref) async {
   // Get partner_id from auth state
   final authState = ref.watch(riderAuthProvider);
   final partnerId = authState.user?.partnerId;
-  final filter = ref.watch(selectedMerchantOrderFilterProvider);
   
   if (partnerId == null) {
     print('❌ merchantOrdersProvider - No partner_id available');
     return [];
   }
   
-  print('📋 merchantOrdersProvider - Using partner_id: $partnerId');
+  print('📋 merchantOrdersProvider - Fetching ALL orders for partner: $partnerId');
   
   try {
     final dataSource = ref.read(merchantDataSourceProvider);
-    final orders = await dataSource.getPartnerOrders(partnerId, status: filter.apiStatus);
-    print('✅ Loaded ${orders.length} orders for partner $partnerId (filter: ${filter.label})');
+    // Fetch ALL orders without status filter
+    final orders = await dataSource.getPartnerOrders(partnerId);
+    print('✅ Loaded ${orders.length} total orders for partner $partnerId');
     return orders;
   } catch (e) {
     print('❌ Error loading merchant orders: $e');
@@ -72,12 +72,34 @@ final merchantOrdersProvider = FutureProvider.autoDispose<List<OrderDto>>((ref) 
   }
 });
 
-/// Provider for filtered orders (for backward compatibility with UI)
+/// Provider for filtered orders (local filtering)
 final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
   final ordersAsync = ref.watch(merchantOrdersProvider);
+  final filter = ref.watch(selectedMerchantOrderFilterProvider);
   
   return ordersAsync.when(
-    data: (orders) => orders,
+    data: (orders) {
+      if (filter == MerchantOrderFilter.all) {
+        return orders;
+      }
+      
+      return orders.where((order) {
+        final status = order.status.toLowerCase();
+        switch (filter) {
+          case MerchantOrderFilter.pending:
+            return status == 'pending';
+          case MerchantOrderFilter.pickUp:
+            // For Pick Up should include both searching_driver (preparing) and accepted (driver assigned)
+            return status == 'searching_driver' || status == 'accepted';
+          case MerchantOrderFilter.forDelivery:
+            return status == 'picked_up' || status == 'in_progress' || status == 'driver_arrived_at_pickup';
+          case MerchantOrderFilter.delivered:
+            return status == 'completed';
+          default:
+            return true;
+        }
+      }).toList();
+    },
     loading: () => [],
     error: (_, __) => [],
   );

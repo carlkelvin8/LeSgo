@@ -11,9 +11,12 @@ class MerchantOrdersView extends ConsumerWidget {
     switch (status.toLowerCase()) {
       case 'pending':
         return 'Accept';
+      case 'searching_driver':
       case 'accepted':
         return 'For Pick Up';
       case 'picked_up':
+      case 'in_progress':
+      case 'driver_arrived_at_pickup':
         return 'For Delivery';
       case 'completed':
         return 'Delivered';
@@ -26,9 +29,12 @@ class MerchantOrdersView extends ConsumerWidget {
     switch (status.toLowerCase()) {
       case 'pending':
         return 'accept';
+      case 'searching_driver':
       case 'accepted':
         return 'pickup';
       case 'picked_up':
+      case 'in_progress':
+      case 'driver_arrived_at_pickup':
         return 'delivery';
       case 'completed':
         return 'delivered';
@@ -118,7 +124,25 @@ class MerchantOrdersView extends ConsumerWidget {
                   ],
                 ),
               ),
-              data: (orders) {
+              data: (allOrders) {
+                // Apply local filtering
+                final orders = allOrders.where((order) {
+                  final status = order.status.toLowerCase();
+                  switch (selectedFilter) {
+                    case MerchantOrderFilter.pending:
+                      return status == 'pending';
+                    case MerchantOrderFilter.pickUp:
+                      return status == 'searching_driver' || status == 'accepted';
+                    case MerchantOrderFilter.forDelivery:
+                      return status == 'picked_up' || status == 'in_progress' || status == 'driver_arrived_at_pickup';
+                    case MerchantOrderFilter.delivered:
+                      return status == 'completed';
+                    case MerchantOrderFilter.all:
+                    default:
+                      return true;
+                  }
+                }).toList();
+
                 if (orders.isEmpty) {
                   return Center(
                     child: Column(
