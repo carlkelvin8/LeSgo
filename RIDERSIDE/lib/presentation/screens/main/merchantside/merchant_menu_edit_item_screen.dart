@@ -4,6 +4,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../widgets/widgets.dart';
 import '../../../provider/main/merchantside/merchant_menu_item_form_provider.dart';
 import '../../../controllers/merchantside/merchant_menu_item_form_controller.dart';
+import 'package:image_picker/image_picker.dart';
 
 class MerchantMenuEditItemScreen extends ConsumerStatefulWidget {
   final Map<String, String>? initialItem;
@@ -22,23 +23,51 @@ class _MerchantMenuEditItemScreenState
     extends ConsumerState<MerchantMenuEditItemScreen> {
   late MerchantMenuItemFormController _controller;
   late MerchantMenuItemFormInput _formInput;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     _formInput = MerchantMenuItemFormInput.edit(widget.initialItem);
     _controller = MerchantMenuItemFormController(
-      initialItemName: widget.initialItem?['itemName'] ?? 'Sun Sets Pizza',
+      initialItemName: widget.initialItem?['itemName'] ?? widget.initialItem?['name'] ?? 'Sun Sets Pizza',
       initialPrice: widget.initialItem?['price'] ?? '300.00',
       initialDescription: widget.initialItem?['description'] ??
           'Pepperoni, Hawaiian, All Meat. Our signature sunset crust with a triple-meat blend and premium mozzarella.',
     );
+    
+    // Defer the image path update until after the widget builds
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialItem?['imageUrl'] != null) {
+        final formProvider = merchantMenuItemFormProvider(_formInput);
+        ref.read(formProvider.notifier).updateImagePath(widget.initialItem!['imageUrl']);
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(MerchantMenuItemFormNotifier notifier) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        notifier.updateImagePath(image.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarUtils.showError(context, 'Failed to pick image');
+      }
+    }
   }
 
   @override
@@ -71,8 +100,11 @@ class _MerchantMenuEditItemScreenState
         isSubmitting: formState.isSubmitting,
       ),
       children: [
-        // Hero Section
-        MerchantItemHeroSection(),
+        // Image Upload Section
+        MerchantItemImageUploadSection(
+          uploadedImagePath: formState.imagePath,
+          onTap: () => _pickImage(notifier),
+        ),
         SectionSpacer(units: 20),
         // Item Name
         MerchantItemNameSection(

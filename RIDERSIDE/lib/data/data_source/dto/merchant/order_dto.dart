@@ -7,7 +7,7 @@ class OrderDto {
   final int id;
   @JsonKey(name: 'reference_number')
   final String referenceNumber;
-  @JsonKey(name: 'user_id')
+  @JsonKey(name: 'customer_id')
   final int userId;
   @JsonKey(name: 'driver_id')
   final int? driverId;
@@ -33,13 +33,15 @@ class OrderDto {
   @JsonKey(name: 'estimated_duration_minutes')
   final int? estimatedDurationMinutes;
   @JsonKey(name: 'base_fare')
-  final double baseFare;
+  final double? baseFare;
   @JsonKey(name: 'distance_fare')
-  final double distanceFare;
+  final double? distanceFare;
   @JsonKey(name: 'service_fee')
-  final double serviceFee;
+  final double? serviceFee;
   @JsonKey(name: 'total_fare')
-  final double totalFare;
+  final double? totalFare;
+  @JsonKey(name: 'estimated_fare')
+  final double? estimatedFare;
   @JsonKey(name: 'payment_method')
   final String paymentMethod;
   @JsonKey(name: 'payment_status')
@@ -52,6 +54,7 @@ class OrderDto {
   final String updatedAt;
   
   // Relationships
+  @JsonKey(name: 'customer')
   final UserDto? user;
   final DriverDto? driver;
   final OrderPartnerDto? partner;
@@ -75,10 +78,11 @@ class OrderDto {
     this.dropoffLng,
     this.distanceKm,
     this.estimatedDurationMinutes,
-    required this.baseFare,
-    required this.distanceFare,
-    required this.serviceFee,
-    required this.totalFare,
+    this.baseFare,
+    this.distanceFare,
+    this.serviceFee,
+    this.totalFare,
+    this.estimatedFare,
     required this.paymentMethod,
     required this.paymentStatus,
     this.specialInstructions,

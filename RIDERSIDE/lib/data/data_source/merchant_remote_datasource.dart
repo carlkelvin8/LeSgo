@@ -104,12 +104,26 @@ class MerchantRemoteDataSource {
   /// Create menu item
   Future<MenuItemDto> createMenuItem(int partnerId, CreateMenuItemRequest request) async {
     try {
+      dynamic data;
+      
+      if (request.imagePath != null) {
+        // Use FormData for file upload
+        final formData = FormData.fromMap(request.toJson());
+        formData.files.add(MapEntry(
+          'image',
+          await MultipartFile.fromFile(request.imagePath!),
+        ));
+        data = formData;
+      } else {
+        data = request.toJson();
+      }
+      
       final response = await _dio.post(
         '/v1/partners/$partnerId/menu-items',
-        data: request.toJson(),
+        data: data,
       );
-      final data = response.data['data'] ?? response.data;
-      return MenuItemDto.fromJson(data as Map<String, dynamic>);
+      final responseData = response.data['data'] ?? response.data;
+      return MenuItemDto.fromJson(responseData as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to create menu item: ${ApiService.extractError(e)}');
     }
@@ -118,12 +132,35 @@ class MerchantRemoteDataSource {
   /// Update menu item
   Future<MenuItemDto> updateMenuItem(int itemId, UpdateMenuItemRequest request) async {
     try {
-      final response = await _dio.patch(
-        '/v1/menu-items/$itemId',
-        data: request.toJson(),
-      );
-      final data = response.data['data'] ?? response.data;
-      return MenuItemDto.fromJson(data as Map<String, dynamic>);
+      dynamic data;
+      
+      if (request.imagePath != null) {
+        // Use FormData for file upload
+        // For PATCH with files in Laravel, we need to spoof it via POST with _method=PATCH
+        final map = request.toJson();
+        map['_method'] = 'PATCH';
+        final formData = FormData.fromMap(map);
+        formData.files.add(MapEntry(
+          'image',
+          await MultipartFile.fromFile(request.imagePath!),
+        ));
+        data = formData;
+        
+        final response = await _dio.post(
+          '/v1/menu-items/$itemId',
+          data: data,
+        );
+        final responseData = response.data['data'] ?? response.data;
+        return MenuItemDto.fromJson(responseData as Map<String, dynamic>);
+      } else {
+        data = request.toJson();
+        final response = await _dio.patch(
+          '/v1/menu-items/$itemId',
+          data: data,
+        );
+        final responseData = response.data['data'] ?? response.data;
+        return MenuItemDto.fromJson(responseData as Map<String, dynamic>);
+      }
     } catch (e) {
       throw Exception('Failed to update menu item: ${ApiService.extractError(e)}');
     }
@@ -205,6 +242,7 @@ class CreateMenuItemRequest {
   final String? description;
   final double price;
   final String? imageUrl;
+  final String? imagePath; // Added for file upload
   final bool isAvailable;
   
   CreateMenuItemRequest({
@@ -213,6 +251,7 @@ class CreateMenuItemRequest {
     this.description,
     required this.price,
     this.imageUrl,
+    this.imagePath,
     this.isAvailable = true,
   });
   
@@ -222,7 +261,7 @@ class CreateMenuItemRequest {
     if (description != null) 'description': description,
     'price': price,
     if (imageUrl != null) 'image_url': imageUrl,
-    'is_available': isAvailable,
+    'is_available': isAvailable ? 1 : 0, // Form data requires integer/string for booleans in Laravel sometimes
   };
 }
 
@@ -231,6 +270,7 @@ class UpdateMenuItemRequest {
   final String? description;
   final double? price;
   final String? imageUrl;
+  final String? imagePath; // Added for file upload
   final bool? isAvailable;
   
   UpdateMenuItemRequest({
@@ -238,6 +278,7 @@ class UpdateMenuItemRequest {
     this.description,
     this.price,
     this.imageUrl,
+    this.imagePath,
     this.isAvailable,
   });
   
@@ -247,7 +288,7 @@ class UpdateMenuItemRequest {
     if (description != null) map['description'] = description;
     if (price != null) map['price'] = price;
     if (imageUrl != null) map['image_url'] = imageUrl;
-    if (isAvailable != null) map['is_available'] = isAvailable;
+    if (isAvailable != null) map['is_available'] = isAvailable! ? 1 : 0;
     return map;
   }
 }

@@ -5,6 +5,8 @@ import '../../../widgets/widgets.dart';
 import '../../../provider/main/merchantside/merchant_menu_item_form_provider.dart';
 import '../../../controllers/merchantside/merchant_menu_item_form_controller.dart';
 
+import 'package:image_picker/image_picker.dart';
+
 class MerchantMenuAddItemScreen extends ConsumerStatefulWidget {
   const MerchantMenuAddItemScreen({super.key});
 
@@ -16,6 +18,7 @@ class MerchantMenuAddItemScreen extends ConsumerStatefulWidget {
 class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemScreen> {
   static const _addInput = MerchantMenuItemFormInput.add();
   late MerchantMenuItemFormController _controller;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -27,6 +30,25 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(MerchantMenuItemFormNotifier notifier) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        notifier.updateImagePath(image.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarUtils.showError(context, 'Failed to pick image');
+      }
+    }
   }
 
   @override
@@ -64,9 +86,8 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
       children: [
         // Image Upload Section
         MerchantItemImageUploadSection(
-          onTap: () {
-            SnackBarUtils.showInfo(context, 'Image picker - Coming soon');
-          },
+          uploadedImagePath: formState.imagePath,
+          onTap: () => _pickImage(notifier),
         ),
         SectionSpacer(units: 20),
         // Item Name

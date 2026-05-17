@@ -28,6 +28,7 @@ class RiderOrder {
   final int? driverId;
   final double? totalAmount;
   final double itemsTotal;
+  final double discount;
   final List<String> parsedItems;
 
   RiderOrder({
@@ -52,14 +53,15 @@ class RiderOrder {
     this.driverId,
     this.totalAmount,
     this.itemsTotal = 0.0,
+    this.discount = 0.0,
     this.parsedItems = const [],
   });
 
   // Get the price to display (always show full fare so customer and rider see same price)
   double get displayEarnings => estimatedFare;
   
-  // Get the total amount including items
-  double get displayTotalAmount => (totalAmount != null && totalAmount! > 0 ? totalAmount! : estimatedFare) + itemsTotal;
+  // Get the total amount including items and subtracting discount
+  double get displayTotalAmount => (totalAmount != null && totalAmount! > 0 ? totalAmount! : estimatedFare) + itemsTotal - discount;
 
   // Get the actual driver earnings (what driver will receive after commission)
   double get driverEarnings => driverShare ?? (estimatedFare * 0.85); // 85% if not calculated yet
@@ -170,6 +172,13 @@ class RiderOrder {
       extractedItems.add(j['notes'].toString());
     }
 
+    double extractedDiscount = 0.0;
+    if (j['discount_amount'] != null) {
+      extractedDiscount = _d(j['discount_amount']);
+    } else if (j['meta'] is Map && j['meta']['discount'] != null) {
+      extractedDiscount = _d(j['meta']['discount']);
+    }
+
     return RiderOrder(
       id: j['id'] as int,
       serviceId: j['service_id'] as int? ?? 1,
@@ -192,6 +201,7 @@ class RiderOrder {
       driverId: j['driver_id'] as int?,
       totalAmount: j['total_amount'] != null ? _d(j['total_amount']) : null,
       itemsTotal: calculatedItemsTotal,
+      discount: extractedDiscount,
       parsedItems: extractedItems,
     );
   }
@@ -219,6 +229,7 @@ class RiderOrder {
       driverId: driverId ?? this.driverId,
       totalAmount: totalAmount,
       itemsTotal: itemsTotal,
+      discount: discount,
       parsedItems: parsedItems,
     );
   }

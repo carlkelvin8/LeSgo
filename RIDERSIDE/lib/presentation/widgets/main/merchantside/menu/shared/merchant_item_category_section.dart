@@ -89,7 +89,7 @@ class MerchantItemCategorySection extends ConsumerWidget {
                 );
               }
 
-              final categoryNames = menu.categories.map((cat) => cat.name).toList();
+              final categoryNames = menu.categories.map((cat) => cat.name).toSet().toList();
               final hasSelected = categoryNames.contains(selectedCategory);
 
               return DropdownButton<String>(

@@ -82,6 +82,7 @@ class MerchantMenuItemFormState {
   final bool liveOnMenu;
   final bool isSubmitting;
   final String? errorMessage;
+  final String? imagePath;
 
   MerchantMenuItemFormState({
     required this.itemName,
@@ -92,6 +93,7 @@ class MerchantMenuItemFormState {
     required this.liveOnMenu,
     this.isSubmitting = false,
     this.errorMessage,
+    this.imagePath,
   });
 
   bool get isValid => itemName.isNotEmpty && price.isNotEmpty && price != '0.00';
@@ -105,6 +107,7 @@ class MerchantMenuItemFormState {
     bool? liveOnMenu,
     bool? isSubmitting,
     String? errorMessage,
+    String? imagePath,
   }) {
     return MerchantMenuItemFormState(
       itemName: itemName ?? this.itemName,
@@ -115,6 +118,7 @@ class MerchantMenuItemFormState {
       liveOnMenu: liveOnMenu ?? this.liveOnMenu,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       errorMessage: errorMessage,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 }
@@ -174,6 +178,10 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
     state = state.copyWith(liveOnMenu: value);
   }
 
+  void updateImagePath(String? path) {
+    state = state.copyWith(imagePath: path);
+  }
+
   Future<bool> attemptSubmit() async {
     if (!state.isValid) {
       state = state.copyWith(errorMessage: 'Please fill in all required fields');
@@ -202,6 +210,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           description: state.description.isEmpty ? null : state.description,
           price: priceValue,
           isAvailable: state.liveOnMenu,
+          imagePath: state.imagePath,
         );
         
         await dataSource.updateMenuItem(_itemId!, request);
@@ -245,6 +254,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           description: state.description.isEmpty ? null : state.description,
           price: priceValue,
           isAvailable: state.liveOnMenu,
+          imagePath: state.imagePath,
         );
         
         await dataSource.createMenuItem(partnerId, request);

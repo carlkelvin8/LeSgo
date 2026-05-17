@@ -9,32 +9,33 @@ part of 'order_dto.dart';
 OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       id: (json['id'] as num).toInt(),
       referenceNumber: json['reference_number'] as String,
-      userId: (json['user_id'] as num).toInt(),
+      userId: ((json['customer_id'] ?? json['user_id']) as num).toInt(),
       driverId: (json['driver_id'] as num?)?.toInt(),
       partnerId: (json['partner_id'] as num?)?.toInt(),
       serviceId: (json['service_id'] as num).toInt(),
       status: json['status'] as String,
       pickupAddress: json['pickup_address'] as String,
-      pickupLat: (json['pickup_lat'] as num?)?.toDouble(),
-      pickupLng: (json['pickup_lng'] as num?)?.toDouble(),
+      pickupLat: json['pickup_lat'] != null ? double.tryParse(json['pickup_lat'].toString()) : null,
+      pickupLng: json['pickup_lng'] != null ? double.tryParse(json['pickup_lng'].toString()) : null,
       dropoffAddress: json['dropoff_address'] as String,
-      dropoffLat: (json['dropoff_lat'] as num?)?.toDouble(),
-      dropoffLng: (json['dropoff_lng'] as num?)?.toDouble(),
-      distanceKm: (json['distance_km'] as num?)?.toDouble(),
+      dropoffLat: json['dropoff_lat'] != null ? double.tryParse(json['dropoff_lat'].toString()) : null,
+      dropoffLng: json['dropoff_lng'] != null ? double.tryParse(json['dropoff_lng'].toString()) : null,
+      distanceKm: json['distance_km'] != null ? double.tryParse(json['distance_km'].toString()) : null,
       estimatedDurationMinutes:
-          (json['estimated_duration_minutes'] as num?)?.toInt(),
-      baseFare: (json['base_fare'] as num).toDouble(),
-      distanceFare: (json['distance_fare'] as num).toDouble(),
-      serviceFee: (json['service_fee'] as num).toDouble(),
-      totalFare: (json['total_fare'] as num).toDouble(),
+          json['estimated_duration_minutes'] != null ? int.tryParse(json['estimated_duration_minutes'].toString()) : null,
+      baseFare: json['base_fare'] != null ? double.tryParse(json['base_fare'].toString()) : null,
+      distanceFare: json['distance_fare'] != null ? double.tryParse(json['distance_fare'].toString()) : null,
+      serviceFee: json['service_fee'] != null ? double.tryParse(json['service_fee'].toString()) : null,
+      totalFare: json['total_fare'] != null ? double.tryParse(json['total_fare'].toString()) : null,
+      estimatedFare: json['estimated_fare'] != null ? double.tryParse(json['estimated_fare'].toString()) : null,
       paymentMethod: json['payment_method'] as String,
       paymentStatus: json['payment_status'] as String,
       specialInstructions: json['special_instructions'] as String?,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
-      user: json['user'] == null
+      user: json['customer'] == null
           ? null
-          : UserDto.fromJson(json['user'] as Map<String, dynamic>),
+          : UserDto.fromJson(json['customer'] as Map<String, dynamic>),
       driver: json['driver'] == null
           ? null
           : DriverDto.fromJson(json['driver'] as Map<String, dynamic>),
@@ -44,7 +45,7 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       service: json['service'] == null
           ? null
           : ServiceDto.fromJson(json['service'] as Map<String, dynamic>),
-      orderItems: (json['order_items'] as List<dynamic>?)
+      orderItems: ((json['order_items'] ?? json['lesbuy_items']) as List<dynamic>?)
           ?.map((e) => OrderItemDto.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
@@ -69,6 +70,7 @@ Map<String, dynamic> _$OrderDtoToJson(OrderDto instance) => <String, dynamic>{
       'distance_fare': instance.distanceFare,
       'service_fee': instance.serviceFee,
       'total_fare': instance.totalFare,
+      'estimated_fare': instance.estimatedFare,
       'payment_method': instance.paymentMethod,
       'payment_status': instance.paymentStatus,
       'special_instructions': instance.specialInstructions,
@@ -88,8 +90,8 @@ OrderItemDto _$OrderItemDtoFromJson(Map<String, dynamic> json) => OrderItemDto(
       itemName: json['item_name'] as String,
       itemDescription: json['item_description'] as String?,
       quantity: (json['quantity'] as num).toInt(),
-      unitPrice: (json['unit_price'] as num).toDouble(),
-      totalPrice: (json['total_price'] as num).toDouble(),
+      unitPrice: json['unit_price'] != null ? double.tryParse(json['unit_price'].toString()) ?? 0.0 : 0.0,
+      totalPrice: json['total_price'] != null ? double.tryParse(json['total_price'].toString()) ?? 0.0 : 0.0,
       options: json['options'] as String?,
     );
 

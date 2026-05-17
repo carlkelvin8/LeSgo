@@ -172,7 +172,7 @@ class MerchantOrdersView extends ConsumerWidget {
                             child: MerchantOrderCard(
                               orderId: '#${order.referenceNumber}',
                               itemName: itemNames,
-                              price: order.totalFare.toStringAsFixed(2),
+                              price: (order.totalFare ?? order.estimatedFare ?? 0.0).toStringAsFixed(2),
                               customerName: order.user?.name ?? 'Customer',
                               address: order.dropoffAddress,
                             ),
