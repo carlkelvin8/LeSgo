@@ -183,7 +183,7 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
   }
 }
 
-final leseatProvider = StateNotifierProvider<LeseatNotifier, LeseatState>((
+final leseatProvider = StateNotifierProvider.autoDispose<LeseatNotifier, LeseatState>((
   ref,
 ) {
   return LeseatNotifier();

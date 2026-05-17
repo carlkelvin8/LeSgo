@@ -392,6 +392,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                                 .toList(),
                             'subtotal': order.subtotal,
                             'deliveryFee': order.deliveryFee,
+                            'discount': order.discount,
                             'total': order.total,
                             'deliveryAddress': order.deliveryAddress,
                           },

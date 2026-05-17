@@ -237,6 +237,6 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
 }
 
 final restaurantDetailProvider =
-    StateNotifierProvider<RestaurantDetailNotifier, RestaurantDetailState>(
+    StateNotifierProvider.autoDispose<RestaurantDetailNotifier, RestaurantDetailState>(
       (ref) => RestaurantDetailNotifier(),
     );
