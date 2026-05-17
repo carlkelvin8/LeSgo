@@ -82,3 +82,24 @@ final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
     error: (_, __) => [],
   );
 });
+
+final merchantOrderActionProvider = Provider((ref) {
+  return MerchantOrderActionNotifier(ref);
+});
+
+class MerchantOrderActionNotifier {
+  final Ref ref;
+  MerchantOrderActionNotifier(this.ref);
+
+  Future<void> acceptOrder(int orderId) async {
+    try {
+      final dataSource = ref.read(merchantDataSourceProvider);
+      // For merchants, accepting an order means transitioning from 'pending' to 'searching_driver'
+      await dataSource.updateOrderStatus(orderId, 'searching_driver');
+      // Refresh the orders list
+      ref.invalidate(merchantOrdersProvider);
+    } catch (e) {
+      rethrow;
+    }
+  }
+}

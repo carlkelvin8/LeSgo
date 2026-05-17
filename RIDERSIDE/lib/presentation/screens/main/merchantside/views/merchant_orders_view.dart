@@ -180,9 +180,53 @@ class MerchantOrdersView extends ConsumerWidget {
                           SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                           SizedBox(
                             width: ResponsiveUtils.spacing(context, 82),
-                            child: MerchantOrderStatusPanel(
-                              statusType: _getStatusType(order.status),
-                              statusLabel: _getStatusLabel(order.status),
+                            child: GestureDetector(
+                              onTap: order.status.toLowerCase() == 'pending'
+                                  ? () async {
+                                      // Show confirmation dialog
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Accept Order?'),
+                                          content: const Text('This will accept the order and start searching for a driver. Proceed?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, false),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () => Navigator.pop(context, true),
+                                              child: const Text('Accept'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirm == true) {
+                                        try {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Accepting order...')),
+                                          );
+                                          await ref.read(merchantOrderActionProvider).acceptOrder(order.id);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Order accepted successfully!')),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Failed to accept order: $e')),
+                                            );
+                                          }
+                                        }
+                                      }
+                                    }
+                                  : null,
+                              child: MerchantOrderStatusPanel(
+                                statusType: _getStatusType(order.status),
+                                statusLabel: _getStatusLabel(order.status),
+                              ),
                             ),
                           ),
                         ],
