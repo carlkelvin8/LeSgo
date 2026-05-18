@@ -3,7 +3,9 @@ import '../../../../presentation/screens/main/riderside/rider_main_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_booking_detail_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_history_detail_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_main_screen.dart';
+import '../../../../presentation/screens/main/merchantside/merchant_order_detail_screen.dart';
 import '../../../../domain/entities/rider_booking.dart';
+import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import 'main_routes.dart';
 
 class MainRouter {
@@ -18,6 +20,14 @@ class MainRouter {
       final booking = settings.arguments as RiderBooking;
       return MaterialPageRoute(
         builder: (_) => RiderBookingDetailScreen(booking: booking),
+        settings: settings,
+      );
+    }
+
+    if (settings.name == MainRoutes.merchantOrderDetail) {
+      final order = settings.arguments as OrderDto;
+      return MaterialPageRoute(
+        builder: (_) => MerchantOrderDetailScreen(order: order),
         settings: settings,
       );
     }

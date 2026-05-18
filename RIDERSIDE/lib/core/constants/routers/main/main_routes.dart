@@ -3,6 +3,7 @@ class MainRoutes {
   static const String riderBookingDetail = '/rider/booking-detail';
   static const String riderHistoryDetail = '/rider/history-detail';
   static const String merchantMain = '/merchant/main';
+  static const String merchantOrderDetail = '/merchant/order-detail';
 
   MainRoutes._();
 }

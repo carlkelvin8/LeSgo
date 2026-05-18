@@ -337,6 +337,18 @@ class ApiService {
     return res.data as Map<String, dynamic>;
   }
 
+  /// GET /v1/merchant/missions - Get merchant missions
+  static Future<Map<String, dynamic>> getMerchantMissions() async {
+    final res = await _dio.get('/v1/merchant/missions');
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// POST /v1/merchant/missions/{id}/claim - Claim merchant mission reward
+  static Future<Map<String, dynamic>> claimMerchantMissionReward(int missionId) async {
+    final res = await _dio.post('/v1/merchant/missions/$missionId/claim');
+    return res.data as Map<String, dynamic>;
+  }
+
   static String extractError(dynamic e) {
     if (e is DioException) {
       final msg = e.response?.data?['message'];
