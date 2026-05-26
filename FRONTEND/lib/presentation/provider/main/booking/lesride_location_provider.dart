@@ -8,6 +8,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/utils/booking_geo_utils.dart';
 
 class LesrideLocationState {
   final LatLng? currentLocation;
@@ -163,7 +164,7 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
     } catch (e) {
       print('⚠️ Lesride: Error getting location, using Manila default: $e');
       // Use default location (Manila, Philippines) - more central location
-      final defaultLocation = const LatLng(14.5995, 120.9842); // Manila coordinates
+      final defaultLocation = BookingGeoUtils.defaultLatLng;
       final address = await _getAddressFromLocation(defaultLocation);
       
       state = state.copyWith(
@@ -310,8 +311,9 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
   }
 
   LocationAddress? _parseAddressComponents(Map<String, String> components) {
-    final houseNumber = components['houseNumber'] ?? '';
-    final streetName = components['streetName'] ?? '';
+    final houseNumber =
+        components['houseNumber'] ?? components['street_number'] ?? '';
+    final streetName = components['streetName'] ?? components['route'] ?? '';
     final houseNumberStreet = houseNumber.isNotEmpty && streetName.isNotEmpty
         ? '$houseNumber $streetName'
         : streetName.isNotEmpty
@@ -413,7 +415,7 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
     print('🧪 Testing route with Manila locations...');
     
     // Set test locations in Manila
-    final pickup = const LatLng(14.5995, 120.9842); // Manila City Hall
+    final pickup = BookingGeoUtils.defaultLatLng;
     final destination = const LatLng(14.6042, 120.9822); // Intramuros
     
     print('🧪 Setting pickup: $pickup');

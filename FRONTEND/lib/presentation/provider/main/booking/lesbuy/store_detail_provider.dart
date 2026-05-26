@@ -5,6 +5,7 @@ import '../../../../../data/data_source/partner_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
 
 class StoreDetailState {
+  final String? partnerStoreId;
   final String? storeName;
   final List<Product> products;
   final List<Product> filteredProducts;
@@ -16,6 +17,7 @@ class StoreDetailState {
   final String? error;
 
   StoreDetailState({
+    this.partnerStoreId,
     this.storeName,
     this.products = const [],
     this.filteredProducts = const [],
@@ -28,6 +30,7 @@ class StoreDetailState {
   });
 
   StoreDetailState copyWith({
+    String? partnerStoreId,
     String? storeName,
     List<Product>? products,
     List<Product>? filteredProducts,
@@ -39,6 +42,7 @@ class StoreDetailState {
     String? error,
   }) {
     return StoreDetailState(
+      partnerStoreId: partnerStoreId ?? this.partnerStoreId,
       storeName: storeName ?? this.storeName,
       products: products ?? this.products,
       filteredProducts: filteredProducts ?? this.filteredProducts,
@@ -94,6 +98,7 @@ class StoreDetailNotifier extends StateNotifier<StoreDetailState> {
       print('🟢 StoreDetail: Loaded ${allProducts.length} products');
 
       state = state.copyWith(
+        partnerStoreId: storeId,
         storeName: storeName,
         products: allProducts,
         categories: allCategories,

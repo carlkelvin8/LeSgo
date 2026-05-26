@@ -60,8 +60,13 @@ dependencies:
   json_annotation: ^4.11.0
   intl: ^0.19.0
   url_launcher: ^6.3.1
+  webview_flutter: ^4.10.0
   uuid: ^4.5.1
   timeago: ^3.6.1
+  crypto: ^3.0.6
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:

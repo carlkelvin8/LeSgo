@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/order_contact_actions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/booking/booking_routes.dart';
@@ -125,7 +126,24 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
               textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(width: 48), // Balance the back button
+          if (int.tryParse(widget.orderId) != null &&
+              int.tryParse(widget.orderId)! > 0)
+            IconButton(
+              onPressed: () {
+                final orderId = int.parse(widget.orderId);
+                OrderContactActions.openOrderChat(
+                  context,
+                  orderId: orderId,
+                  orderType: widget.orderType,
+                  driverName: ref.read(driverFindingProvider).driverName,
+                );
+              },
+              icon: const Icon(Icons.chat_bubble_outline),
+              color: const Color(0xFF5F2D82),
+              tooltip: 'Message',
+            )
+          else
+            const SizedBox(width: 48),
         ],
       ),
     );
@@ -206,6 +224,37 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w600,
               color: Colors.white,
+            ),
+          ),
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+        OutlinedButton(
+          onPressed: () {
+            final orderId = int.tryParse(widget.orderId) ?? 0;
+            OrderContactActions.openOrderChat(
+              context,
+              orderId: orderId,
+              orderType: widget.orderType,
+              driverName: state.driverName,
+            );
+          },
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFF5F2D82)),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveUtils.spacing(context, 32),
+              vertical: ResponsiveUtils.spacing(context, 16),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text(
+            'Message Driver',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 16),
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF5F2D82),
             ),
           ),
         ),

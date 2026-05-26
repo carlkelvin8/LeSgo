@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../../widgets/widgets.dart';
+import '../merchant_order_detail_screen.dart';
 
 class MerchantOrdersView extends ConsumerWidget {
   const MerchantOrdersView({super.key});
@@ -186,6 +187,15 @@ class MerchantOrdersView extends ConsumerWidget {
                     final itemNames = order.orderItems
                         ?.map((item) => item.itemName)
                         .join(', ') ?? 'Order Items';
+                        
+                    double itemSubtotal = 0;
+                    if (order.orderItems != null) {
+                      for (var item in order.orderItems!) {
+                        itemSubtotal += (item.unitPrice ?? 0.0) * (item.quantity);
+                      }
+                    }
+                    final double deliveryFee = order.estimatedFare ?? order.totalFare ?? order.distanceFare ?? 0.0;
+                    final double totalAmount = itemSubtotal + deliveryFee;
                     
                     return Padding(
                       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 18)),
@@ -193,12 +203,24 @@ class MerchantOrdersView extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Expanded(
-                            child: MerchantOrderCard(
-                              orderId: '#${order.referenceNumber}',
-                              itemName: itemNames,
-                              price: (order.totalFare ?? order.estimatedFare ?? 0.0).toStringAsFixed(2),
-                              customerName: order.user?.name ?? 'Customer',
-                              address: order.dropoffAddress,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => MerchantOrderDetailScreen(
+                                      order: order,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: MerchantOrderCard(
+                                orderId: '#${order.referenceNumber}',
+                                itemName: itemNames,
+                                price: totalAmount.toStringAsFixed(2),
+                                customerName: order.user?.name ?? 'Customer',
+                                address: order.dropoffAddress,
+                              ),
                             ),
                           ),
                           SizedBox(width: ResponsiveUtils.spacing(context, 8)),

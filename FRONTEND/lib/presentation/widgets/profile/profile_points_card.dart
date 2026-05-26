@@ -4,10 +4,12 @@ import '../../../core/utils/responsive_utils.dart';
 
 class ProfilePointsCard extends StatelessWidget {
   final int points;
+  final VoidCallback? onTap;
 
   const ProfilePointsCard({
     super.key,
     required this.points,
+    this.onTap,
   });
 
   @override
@@ -25,7 +27,9 @@ class ProfilePointsCard extends StatelessWidget {
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        Container(
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
           width: double.infinity,
           height: ResponsiveUtils.spacing(context, 158),
           decoration: BoxDecoration(
@@ -72,6 +76,19 @@ class ProfilePointsCard extends StatelessWidget {
             ],
           ),
         ),
+        ),
+        if (onTap != null) ...[
+          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+          Text(
+            'Tap to redeem — coming soon',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 11),
+              color: Colors.grey[600],
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
       ],
     );
   }

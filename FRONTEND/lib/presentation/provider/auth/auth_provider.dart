@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:injectable/injectable.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/di/local_storage_service.dart';
 import '../../../core/di/injection.dart';
 import '../../../domain/entities/user.dart';
@@ -80,14 +81,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         successMessage: 'Login successful!',
       );
     } catch (e) {
-      String errorMessage = e.toString();
-      if (errorMessage.startsWith('Exception: ')) {
-        errorMessage = errorMessage.substring(11);
-      }
-
       state = state.copyWith(
         isLoading: false,
-        error: errorMessage,
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Login failed. Check email and password.',
+          fallbackTl: 'Hindi makapag-log in. Suriin ang email at password.',
+        ),
         clearSuccessMessage: true,
       );
     }

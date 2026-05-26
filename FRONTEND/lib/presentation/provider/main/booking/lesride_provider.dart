@@ -9,6 +9,9 @@ import '../../../../core/di/injection.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
 import '../profile/profile_provider.dart';
+import '../../../../core/services/service_area_checker.dart';
+import '../../../../core/utils/booking_geo_utils.dart';
+import '../../../../core/utils/lespay_order_payment.dart';
 import '../../../widgets/widgets.dart';
 
 class LesrideState {
@@ -274,16 +277,25 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
 
   Future<void> confirmSelection() async {
     print('🔵 LesRide: confirmSelection() called - this is the ONLY place routes should be calculated');
-    
-    // Selection already stored in provider on tap; just close overlay
+
+    final locationNotifier = _ref.read(lesrideLocationProvider.notifier);
+    var locationState = _ref.read(lesrideLocationProvider);
+    final pin = locationState.selectedLocation;
+    if (pin != null) {
+      if (state.selectingDestination) {
+        await locationNotifier.updateDestination(pin);
+      } else {
+        await locationNotifier.updatePickup(pin);
+      }
+      locationState = _ref.read(lesrideLocationProvider);
+    }
+
     state = state.copyWith(
       isFullscreen: false,
       shouldCollapseAfterFullscreen: true,
       pendingFit: true,
     );
 
-    // ONLY fetch route here - nowhere else
-    final locationState = _ref.read(lesrideLocationProvider);
     print('🔵 LesRide: confirmSelection - pickup: ${locationState.pickupLocation}, destination: ${locationState.destinationLocation}');
     
     if (locationState.pickupLocation != null &&
@@ -366,13 +378,31 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
     );
 
     if (confirmed == true) {
-      // User confirmed booking - create real order via API
       if (context.mounted) {
         try {
           final orderDataSource = getIt<OrderRemoteDataSource>();
           final locationState = _ref.read(lesrideLocationProvider);
           final profileState = _ref.read(profileProvider);
           final user = profileState.user;
+
+          final pickup = locationState.pickupLocation ??
+              BookingGeoUtils.defaultLatLng;
+          final dropoff = locationState.destinationLocation ??
+              BookingGeoUtils.defaultLatLng;
+
+          final serviceArea = await ServiceAreaChecker.checkBookingPoints(
+            pickupLat: pickup.latitude,
+            pickupLng: pickup.longitude,
+            dropoffLat: dropoff.latitude,
+            dropoffLng: dropoff.longitude,
+          );
+          if (!serviceArea.isAvailable) {
+            SnackBarUtils.showWarning(
+              context,
+              '${serviceArea.messageEn}\n${serviceArea.messageTl}',
+            );
+            return;
+          }
 
           final createOrderRequest = CreateOrderRequestDto(
             serviceId: 2, // LesRide service ID
@@ -381,15 +411,15 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
                 : 5000,
             pickup: OrderAddressDto(
               address: locationState.pickupAddress?.toString() ?? 'Pickup Location',
-              lat: locationState.pickupLocation?.latitude ?? 8.4542,
-              lng: locationState.pickupLocation?.longitude ?? 124.6319,
+              lat: pickup.latitude,
+              lng: pickup.longitude,
               contactName: user?.name ?? 'Customer',
               contactPhone: user?.phone ?? '+639123456789',
             ),
             dropoff: OrderAddressDto(
               address: locationState.destinationAddress?.toString() ?? 'Destination',
-              lat: locationState.destinationLocation?.latitude ?? 8.4542,
-              lng: locationState.destinationLocation?.longitude ?? 124.6319,
+              lat: dropoff.latitude,
+              lng: dropoff.longitude,
               contactName: user?.name ?? 'Customer',
               contactPhone: user?.phone ?? '+639123456789',
             ),
@@ -407,6 +437,12 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
           print('🔵 LesRide: Creating order with API...');
           final response = await orderDataSource.createOrder(createOrderRequest);
           print('🟢 LesRide: Order created successfully - ID: ${response.data.id}');
+
+          await applyLesPayWalletDeduction(
+            _ref,
+            paymentMethod: state.paymentMethod,
+            amount: response.data.estimatedFare,
+          );
 
           final orderId = response.data.id.toString();
 
@@ -427,7 +463,12 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
         } catch (e) {
           print('🔴 LesRide: Error creating order - $e');
           if (context.mounted) {
-            SnackBarUtils.showError(context, 'Failed to create booking: $e');
+            SnackBarUtils.showErrorFrom(
+              context,
+              e,
+              fallbackEn: 'Could not create your LesRide booking.',
+              fallbackTl: 'Hindi makagawa ng LesRide booking.',
+            );
           }
         }
       }

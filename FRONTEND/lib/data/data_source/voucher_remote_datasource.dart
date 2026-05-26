@@ -3,7 +3,8 @@ import 'package:injectable/injectable.dart';
 import '../../core/network/dio_client.dart';
 import 'dto/voucher/available_vouchers_response_dto.dart';
 import 'dto/voucher/validate_voucher_request_dto.dart';
-import 'dto/voucher/validate_voucher_response_dto.dart';
+import 'dto/voucher/validate_voucher_response_dto.dart'
+    show ValidateVoucherDataDto, ValidateVoucherResponseDto;
 
 @lazySingleton
 class VoucherRemoteDataSource {
@@ -32,9 +33,19 @@ class VoucherRemoteDataSource {
         '/v1/vouchers/validate',
         data: request.toJson(),
       );
-      return ValidateVoucherResponseDto.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final body = response.data as Map<String, dynamic>;
+      // API may return { success, message, data: { valid, ... } }
+      if (body['data'] is Map<String, dynamic> &&
+          body['data'].containsKey('valid')) {
+        return ValidateVoucherResponseDto(
+          success: body['success'] as bool? ?? true,
+          message: body['message'] as String? ?? '',
+          data: ValidateVoucherDataDto.fromJson(
+            body['data'] as Map<String, dynamic>,
+          ),
+        );
+      }
+      return ValidateVoucherResponseDto.fromJson(body);
     } catch (e) {
       throw Exception('Failed to validate voucher: $e');
     }

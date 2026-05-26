@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/constants/routers/app_router.dart';
+import '../../provider/main/profile/profile_provider.dart';
+import 'invite_friends_sheet.dart';
 
-class ProfileQuickActionsSection extends StatelessWidget {
+class ProfileQuickActionsSection extends ConsumerWidget {
   const ProfileQuickActionsSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(profileProvider);
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Padding(
@@ -33,6 +37,21 @@ class ProfileQuickActionsSection extends StatelessWidget {
             ),
             child: Column(
               children: [
+                _QuickActionTile(
+                  icon: Icons.person_add_outlined,
+                  title: 'Invite friends',
+                  subtitle: 'Share your referral code',
+                  onTap: () => InviteFriendsSheet.show(
+                    context,
+                    referralCode: profile.referralCode,
+                    userName: profile.name,
+                  ),
+                ),
+                Divider(
+                  height: 1,
+                  color: Colors.grey.shade200,
+                  indent: 56,
+                ),
                 _QuickActionTile(
                   icon: Icons.location_on_outlined,
                   title: 'Saved Addresses',

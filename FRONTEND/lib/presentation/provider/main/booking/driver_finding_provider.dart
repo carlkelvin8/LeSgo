@@ -70,8 +70,9 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
         final order = orderResponse.data;
         
         if (order.driverId != null) {
-          // Driver already assigned
-          final driverName = 'Driver #${order.driverId}';
+          final driverName = order.driverProfile?.user?.name?.isNotEmpty == true
+              ? order.driverProfile!.user!.name
+              : 'Driver #${order.driverId}';
           state = state.copyWith(
             isSearching: false,
             driverFound: true,

@@ -82,6 +82,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ProfileRewardsSection(
                       referralCode: profileState.referralCode,
                       points: profileState.points,
+                      userName: profileState.name,
                     ),
                     
                     SizedBox(height: ResponsiveUtils.spacing(context, 40)),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
+import '../../../../core/utils/order_contact_actions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
@@ -194,7 +195,9 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
       backgroundColor: Colors.transparent,
       builder: (context) => OrderChatWidget(
         orderId: widget.orderId,
-        orderType: 'order',
+        orderType: OrderContactActions.normalizeOrderType(
+          order?.serviceType ?? 'leseat',
+        ),
       ),
     );
   }

@@ -13,11 +13,11 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       driverId: (json['driver_id'] as num?)?.toInt(),
       partnerId: (json['partner_id'] as num?)?.toInt(),
       serviceId: (json['service_id'] as num).toInt(),
-      status: json['status'] as String,
-      pickupAddress: json['pickup_address'] as String,
+      status: json['status'] as String? ?? 'pending',
+      pickupAddress: json['pickup_address'] as String? ?? '',
       pickupLat: json['pickup_lat'] != null ? double.tryParse(json['pickup_lat'].toString()) : null,
       pickupLng: json['pickup_lng'] != null ? double.tryParse(json['pickup_lng'].toString()) : null,
-      dropoffAddress: json['dropoff_address'] as String,
+      dropoffAddress: json['dropoff_address'] as String? ?? '',
       dropoffLat: json['dropoff_lat'] != null ? double.tryParse(json['dropoff_lat'].toString()) : null,
       dropoffLng: json['dropoff_lng'] != null ? double.tryParse(json['dropoff_lng'].toString()) : null,
       distanceKm: json['estimated_distance_m'] != null ? int.tryParse(json['estimated_distance_m'].toString()) : null,
@@ -28,11 +28,11 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       serviceFee: json['service_fee'] != null ? double.tryParse(json['service_fee'].toString()) : null,
       totalFare: json['total_fare'] != null ? double.tryParse(json['total_fare'].toString()) : null,
       estimatedFare: json['estimated_fare'] != null ? double.tryParse(json['estimated_fare'].toString()) : null,
-      paymentMethod: json['payment_method'] as String,
-      paymentStatus: json['payment_status'] as String,
+      paymentMethod: json['payment_method'] as String? ?? 'cash',
+      paymentStatus: json['payment_status'] as String? ?? 'pending',
       specialInstructions: json['notes'] as String?,
-      createdAt: json['created_at'] as String,
-      updatedAt: json['updated_at'] as String,
+      createdAt: json['created_at'] as String? ?? '',
+      updatedAt: json['updated_at'] as String? ?? '',
       user: json['customer'] == null
           ? null
           : UserDto.fromJson(json['customer'] as Map<String, dynamic>),
@@ -87,7 +87,7 @@ OrderItemDto _$OrderItemDtoFromJson(Map<String, dynamic> json) => OrderItemDto(
       id: (json['id'] as num).toInt(),
       orderId: (json['order_id'] as num).toInt(),
       menuItemId: (json['menu_item_id'] as num?)?.toInt(),
-      itemName: json['name'] as String,
+      itemName: json['name'] as String? ?? 'Item',
       itemDescription: json['item_description'] as String?,
       quantity: (json['quantity'] as num).toInt(),
       unitPrice: json['estimated_price'] != null ? double.tryParse(json['estimated_price'].toString()) : null,
@@ -110,8 +110,8 @@ Map<String, dynamic> _$OrderItemDtoToJson(OrderItemDto instance) =>
 
 UserDto _$UserDtoFromJson(Map<String, dynamic> json) => UserDto(
       id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
-      email: json['email'] as String,
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
       phoneNumber: json['phone_number'] as String?,
     );
 
@@ -124,7 +124,7 @@ Map<String, dynamic> _$UserDtoToJson(UserDto instance) => <String, dynamic>{
 
 DriverDto _$DriverDtoFromJson(Map<String, dynamic> json) => DriverDto(
       id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
+      name: json['name'] as String? ?? '',
       phoneNumber: json['phone_number'] as String?,
     );
 
@@ -138,7 +138,7 @@ Map<String, dynamic> _$DriverDtoToJson(DriverDto instance) =>
 OrderPartnerDto _$OrderPartnerDtoFromJson(Map<String, dynamic> json) =>
     OrderPartnerDto(
       id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
+      name: json['name'] as String? ?? '',
       logoUrl: json['logo_url'] as String?,
     );
 
@@ -151,7 +151,7 @@ Map<String, dynamic> _$OrderPartnerDtoToJson(OrderPartnerDto instance) =>
 
 ServiceDto _$ServiceDtoFromJson(Map<String, dynamic> json) => ServiceDto(
       id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
+      name: json['name'] as String? ?? '',
       slug: json['slug'] as String?,
     );
 

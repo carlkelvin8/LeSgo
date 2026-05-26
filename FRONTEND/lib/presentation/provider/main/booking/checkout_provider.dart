@@ -1,319 +1,855 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../domain/entities/booking/leseat/order.dart';
+
 import '../../../../domain/entities/booking/leseat/order_item.dart';
+
 import '../../../../data/data_source/order_remote_datasource.dart';
+
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
-import '../../../../data/data_source/dto/order/order_response_dto.dart';
-import '../../../../data/data_source/dto/order/estimate_request_dto.dart';
+
+import '../../../../data/data_source/dto/voucher/validate_voucher_request_dto.dart';
+
 import '../../../../core/di/injection.dart';
+
+import '../../../../core/services/service_area_checker.dart';
+import '../../../../core/utils/booking_geo_utils.dart';
+
+import '../../../../core/utils/lespay_order_payment.dart';
+
+import '../../../../data/data_source/voucher_remote_datasource.dart';
+
 import 'restaurant_detail_provider.dart';
+
 import '../profile/profile_provider.dart';
 
+import '../address/address_provider.dart';
+
+
+
 class CheckoutState {
+
   final Order? order;
+
   final bool isLoading;
+
   final String? error;
+
   final String? selectedPaymentMethod;
-  final int? createdOrderId; // Add this to track the created order
+
+  final int? createdOrderId;
+
+  final double dropoffLat;
+
+  final double dropoffLng;
+
+  final double pickupLat;
+
+  final double pickupLng;
+
+  final int estimatedDistanceM;
+
+  final bool isLoadingFare;
+
+  final bool isValidatingVoucher;
+
+  final String? voucherError;
+
+
 
   CheckoutState({
+
     this.order,
+
     this.isLoading = false,
+
     this.error,
+
     this.selectedPaymentMethod,
+
     this.createdOrderId,
+
+    this.dropoffLat = BookingGeoUtils.defaultLat,
+
+    this.dropoffLng = BookingGeoUtils.defaultLng,
+
+    this.pickupLat = BookingGeoUtils.defaultLat,
+
+    this.pickupLng = BookingGeoUtils.defaultLng,
+
+    this.estimatedDistanceM = 5000,
+
+    this.isLoadingFare = false,
+
+    this.isValidatingVoucher = false,
+
+    this.voucherError,
+
   });
 
+
+
   CheckoutState copyWith({
+
     Order? order,
+
     bool? isLoading,
+
     String? error,
+
     String? selectedPaymentMethod,
+
     int? createdOrderId,
+
+    double? dropoffLat,
+
+    double? dropoffLng,
+
+    double? pickupLat,
+
+    double? pickupLng,
+
+    int? estimatedDistanceM,
+
+    bool? isLoadingFare,
+
+    bool? isValidatingVoucher,
+
+    String? voucherError,
+
+    bool clearVoucherError = false,
+
   }) {
+
     return CheckoutState(
+
       order: order ?? this.order,
+
       isLoading: isLoading ?? this.isLoading,
+
       error: error,
+
       selectedPaymentMethod:
+
           selectedPaymentMethod ?? this.selectedPaymentMethod,
+
       createdOrderId: createdOrderId ?? this.createdOrderId,
+
+      dropoffLat: dropoffLat ?? this.dropoffLat,
+
+      dropoffLng: dropoffLng ?? this.dropoffLng,
+
+      pickupLat: pickupLat ?? this.pickupLat,
+
+      pickupLng: pickupLng ?? this.pickupLng,
+
+      estimatedDistanceM: estimatedDistanceM ?? this.estimatedDistanceM,
+
+      isLoadingFare: isLoadingFare ?? this.isLoadingFare,
+
+      isValidatingVoucher: isValidatingVoucher ?? this.isValidatingVoucher,
+
+      voucherError:
+
+          clearVoucherError ? null : (voucherError ?? this.voucherError),
+
     );
+
   }
+
 }
 
+
+
 class CheckoutNotifier extends StateNotifier<CheckoutState> {
+
   final Ref ref;
+
   final OrderRemoteDataSource _orderDataSource = getIt<OrderRemoteDataSource>();
+
+  final VoucherRemoteDataSource _voucherDataSource =
+
+      getIt<VoucherRemoteDataSource>();
+
+
 
   CheckoutNotifier(this.ref) : super(CheckoutState());
 
+
+
   /// Initialize order from cart data
+
   void initializeFromCart(String restaurantName) {
+
     final restaurantState = ref.read(restaurantDetailProvider);
+
     final cartItems = restaurantState.cartItems.map((item) {
+
       return item.restaurantName == null
+
           ? item.copyWith(restaurantName: restaurantName)
+
           : item;
+
     }).toList();
+
     final profileState = ref.read(profileProvider);
+
+    final addressState = ref.read(addressProvider);
+
+
 
     final subtotal = cartItems.fold<double>(0, (sum, item) => sum + item.total);
 
-    // Get user address from profile or use default
-    final userAddress =
+
+
+    var dropoffLat = BookingGeoUtils.defaultLat;
+
+    var dropoffLng = BookingGeoUtils.defaultLng;
+
+    var deliveryAddress =
+
         profileState.user?.addressLine1 ?? 'Brgy 6, Claveria, Cagayan';
 
+
+
+    final defaultAddr = addressState.defaultAddress;
+
+    if (defaultAddr != null) {
+
+      dropoffLat = defaultAddr.latitude;
+
+      dropoffLng = defaultAddr.longitude;
+
+      deliveryAddress = defaultAddr.addressLine1;
+
+    }
+
+
+
     final order = Order(
+
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+
       restaurantName: restaurantName,
-      deliveryAddress: userAddress,
+
+      deliveryAddress: deliveryAddress,
+
       items: List<OrderItem>.from(cartItems),
+
       subtotal: subtotal,
-      deliveryFee: 0.00, // Will be updated by _fetchDeliveryFee
+
+      deliveryFee: 0.00,
+
     );
 
-    state = state.copyWith(order: order);
 
-    // Fetch real delivery fee from estimate API
-    _fetchDeliveryFee();
+
+    state = state.copyWith(
+
+      order: order,
+
+      selectedPaymentMethod: state.selectedPaymentMethod ?? 'cash',
+
+      dropoffLat: dropoffLat,
+
+      dropoffLng: dropoffLng,
+
+      clearVoucherError: true,
+
+    );
+
+
+
+    _resolvePickupCoordinates(restaurantState.activeRestaurantId);
+
+    refreshDeliveryFee();
+
   }
 
-  /// Fetch delivery fee from the fare estimate API
-  Future<void> _fetchDeliveryFee() async {
+
+
+  void _resolvePickupCoordinates(String? partnerIdStr) {
+
+    // Restaurant pickup hub — use service default until partner branches expose coords.
+
+    state = state.copyWith(
+
+      pickupLat: BookingGeoUtils.defaultLat,
+
+      pickupLng: BookingGeoUtils.defaultLng,
+
+    );
+
+  }
+
+
+
+  Future<void> refreshDeliveryFee() async {
+
+    if (state.order == null) return;
+
+
+
+    final distanceM = BookingGeoUtils.distanceMeters(
+
+      lat1: state.pickupLat,
+
+      lng1: state.pickupLng,
+
+      lat2: state.dropoffLat,
+
+      lng2: state.dropoffLng,
+
+    );
+
+
+
+    state = state.copyWith(isLoadingFare: true, estimatedDistanceM: distanceM);
+
+
+
     try {
+
       final deliveryFee = await _orderDataSource.getFareEstimateRaw(
+
         serviceId: 3,
-        estimatedDistanceM: 5000,
-        pickupLat: 8.4542,
-        pickupLng: 124.6319,
-        dropoffLat: 8.4542,
-        dropoffLng: 124.6319,
+
+        estimatedDistanceM: distanceM,
+
+        pickupLat: state.pickupLat,
+
+        pickupLng: state.pickupLng,
+
+        dropoffLat: state.dropoffLat,
+
+        dropoffLng: state.dropoffLng,
+
       );
+
+
 
       if (state.order != null && deliveryFee != null) {
+
         final updatedOrder = state.order!.copyWith(deliveryFee: deliveryFee);
-        state = state.copyWith(order: updatedOrder);
-        print('🟢 Checkout: Delivery fee fetched: PHP $deliveryFee');
+
+        state = state.copyWith(order: updatedOrder, isLoadingFare: false);
+
+      } else {
+
+        state = state.copyWith(isLoadingFare: false);
+
       }
-    } catch (e) {
-      print(
-        '⚠️ Checkout: Could not fetch delivery fee, using default PHP 50: $e',
-      );
+
+    } catch (_) {
+
       if (state.order != null) {
+
         final updatedOrder = state.order!.copyWith(deliveryFee: 50.00);
-        state = state.copyWith(order: updatedOrder);
+
+        state = state.copyWith(order: updatedOrder, isLoadingFare: false);
+
+      } else {
+
+        state = state.copyWith(isLoadingFare: false);
+
       }
+
     }
+
   }
+
+
 
   void updateItemQuantity(String itemId, int quantity) {
+
     if (state.order == null) return;
+
+
 
     final updatedItems = state.order!.items.map((item) {
+
       if (item.id == itemId) {
+
         return item.copyWith(quantity: quantity);
+
       }
+
       return item;
+
     }).toList();
 
+
+
     final subtotal = updatedItems.fold<double>(
+
       0,
+
       (sum, item) => sum + item.total,
+
     );
+
+
 
     final updatedOrder = state.order!.copyWith(
+
       items: updatedItems,
+
       subtotal: subtotal,
+
     );
 
+
+
     state = state.copyWith(order: updatedOrder);
+
   }
+
+
 
   void removeItem(String itemId) {
+
     if (state.order == null) return;
+
+
 
     final updatedItems = state.order!.items
+
         .where((item) => item.id != itemId)
+
         .toList();
 
+
+
     final subtotal = updatedItems.fold<double>(
+
       0,
+
       (sum, item) => sum + item.total,
+
     );
 
+
+
     final updatedOrder = state.order!.copyWith(
+
       items: updatedItems,
+
       subtotal: subtotal,
+
     );
 
-    state = state.copyWith(order: updatedOrder);
-  }
 
-  void applyVoucher(String voucherCode) {
-    if (state.order == null) return;
-
-    // Mock voucher logic
-    double discount = 0;
-    final code = voucherCode.toUpperCase();
-    if (code == 'SAVE10') {
-      discount = state.order!.subtotal * 0.1;
-    } else if (code == 'LUNCHFREE') {
-      discount = state.order!.deliveryFee;
-    } else {
-      discount = 20.0; // Flat discount for testing
-    }
-
-    final updatedOrder = state.order!.copyWith(
-      discount: discount,
-      voucherCode: code,
-    );
-    state = state.copyWith(order: updatedOrder);
-  }
-
-  void removeVoucher() {
-    if (state.order == null) return;
-
-    final updatedOrder = state.order!.copyWith(
-      discount: 0,
-      voucherCode: null,
-    );
-    state = state.copyWith(order: updatedOrder);
-  }
-
-  void selectPaymentMethod(String method) {
-    state = state.copyWith(selectedPaymentMethod: method);
-  }
-
-  void updateDeliveryAddress(
-    String address,
-    double lat,
-    double lng,
-    String contactName,
-    String contactPhone,
-  ) {
-    if (state.order == null) return;
-
-    final updatedOrder = state.order!.copyWith(deliveryAddress: address);
 
     state = state.copyWith(order: updatedOrder);
+
   }
 
-  Future<bool> placeOrder() async {
-    if (state.order == null) return false;
 
-    state = state.copyWith(isLoading: true, error: null);
+
+  Future<String?> applyVoucher(String voucherCode) async {
+
+    if (state.order == null) return 'Cart is empty';
+
+
+
+    final trimmed = voucherCode.trim();
+
+    if (trimmed.isEmpty) return 'Enter a voucher code';
+
+
+
+    state = state.copyWith(isValidatingVoucher: true, clearVoucherError: true);
+
+
 
     try {
-      final order = state.order!;
-      final profileState = ref.read(profileProvider);
-      final user = profileState.user;
-      final restaurantNames = _restaurantNames(order);
-      final restaurantLabel = restaurantNames.isEmpty
-          ? order.restaurantName
-          : restaurantNames.join(', ');
 
-      // Get partner ID from the first item
-      final partnerId = order.items.isNotEmpty && order.items.first.restaurantId != null
-          ? int.tryParse(order.items.first.restaurantId!)
-          : null;
+      final orderValue = state.order!.subtotal + state.order!.deliveryFee;
 
-      // Create order request DTO
-      final createOrderRequest = CreateOrderRequestDto(
-        serviceId: 3, // LesEat service ID
-        partnerId: partnerId,
-        estimatedDistanceM:
-            5000, // 5km default, TODO: calculate actual distance
-        pickup: OrderAddressDto(
-          address: restaurantLabel, // Restaurant address
-          lat: 8.4542, // Default Cagayan de Oro coordinates
-          lng: 124.6319,
-          contactName: restaurantLabel,
-          contactPhone: '+639123456789', // Default restaurant phone
+      final response = await _voucherDataSource.validateVoucher(
+
+        ValidateVoucherRequestDto(
+
+          voucherCode: trimmed,
+
+          orderValue: orderValue,
+
         ),
-        dropoff: OrderAddressDto(
-          address: order.deliveryAddress,
-          lat: 8.4542, // TODO: Get actual coordinates from user address
-          lng: 124.6319,
-          contactName: user?.name ?? 'Customer',
-          contactPhone: user?.phone ?? '+639123456789',
-        ),
-        notes: 'LesEat order: ${order.items.length} items',
-        paymentMethod: 'cash', // Use 'cash' instead of 'cod'
-        items: order.items
-            .map(
-              (item) => OrderItemDto(
-                name: item.name,
-                quantity: item.quantity,
-                estimatedPrice: item.price,
-                notes: null, // OrderItem doesn't have specialInstructions
-              ),
-            )
-            .toList(),
-        voucherCode: order.voucherCode,
-        discountAmount: order.discount,
-        meta: {
-          'restaurant_name': restaurantLabel,
-          'restaurants': restaurantNames,
-          'subtotal': order.subtotal,
-          'delivery_fee': order.deliveryFee,
-          'discount': order.discount,
-          'voucher_code': order.voucherCode,
-          'total': order.total,
-          'grand_total': order.total, // food subtotal + delivery fee - discount
-          'order_type': 'leseat',
-          'items': order.items
-              .map(
-                (item) => {
-                  'name': item.name,
-                  'price': item.price,
-                  'quantity': item.quantity,
-                  'total': item.total,
-                  'restaurant_id': item.restaurantId,
-                  'restaurant_name':
-                      item.restaurantName ?? order.restaurantName,
-                },
-              )
-              .toList(),
-        },
+
       );
 
-      print('🔵 Checkout: Creating order with API...');
-      final response = await _orderDataSource.createOrder(createOrderRequest);
 
-      print(
-        '🟢 Checkout: Order created successfully - ID: ${response.data.id}',
+
+      final data = response.data;
+
+      if (!data.valid) {
+
+        final msg = data.error ?? response.message;
+
+        state = state.copyWith(
+
+          isValidatingVoucher: false,
+
+          voucherError: msg,
+
+        );
+
+        return msg;
+
+      }
+
+
+
+      final discount = data.discountAmount ?? 0;
+
+      final updatedOrder = state.order!.copyWith(
+
+        discount: discount,
+
+        voucherCode: trimmed.toUpperCase(),
+
       );
 
       state = state.copyWith(
-        isLoading: false,
-        createdOrderId: response.data.id,
+
+        order: updatedOrder,
+
+        isValidatingVoucher: false,
+
+        clearVoucherError: true,
+
       );
 
-      return true;
+      return null;
+
     } catch (e) {
-      print('🔴 Checkout: Error creating order - $e');
-      state = state.copyWith(isLoading: false, error: e.toString());
-      return false;
+
+      final msg = e.toString().replaceFirst('Exception: ', '');
+
+      state = state.copyWith(
+
+        isValidatingVoucher: false,
+
+        voucherError: msg,
+
+      );
+
+      return msg;
+
     }
+
   }
+
+
+
+  void removeVoucher() {
+
+    if (state.order == null) return;
+
+
+
+    final updatedOrder = state.order!.copyWith(
+
+      discount: 0,
+
+      voucherCode: null,
+
+    );
+
+    state = state.copyWith(order: updatedOrder, clearVoucherError: true);
+
+  }
+
+
+
+  void selectPaymentMethod(String method) {
+
+    state = state.copyWith(selectedPaymentMethod: method);
+
+  }
+
+
+
+  void updateDeliveryAddress(
+
+    String address,
+
+    double lat,
+
+    double lng,
+
+    String contactName,
+
+    String contactPhone,
+
+  ) {
+
+    if (state.order == null) return;
+
+
+
+    final updatedOrder = state.order!.copyWith(deliveryAddress: address);
+
+
+
+    state = state.copyWith(
+
+      order: updatedOrder,
+
+      dropoffLat: lat,
+
+      dropoffLng: lng,
+
+    );
+
+    refreshDeliveryFee();
+
+  }
+
+
+
+  Future<bool> placeOrder() async {
+
+    if (state.order == null) return false;
+
+
+
+    state = state.copyWith(isLoading: true, error: null);
+
+
+
+    try {
+      final serviceArea = await ServiceAreaChecker.checkCoordinates(
+        latitude: state.dropoffLat,
+        longitude: state.dropoffLng,
+      );
+      if (!serviceArea.isAvailable) {
+        state = state.copyWith(
+          isLoading: false,
+          error: '${serviceArea.messageEn}\n${serviceArea.messageTl}',
+        );
+        return false;
+      }
+
+      final order = state.order!;
+
+      final profileState = ref.read(profileProvider);
+
+      final user = profileState.user;
+
+      final restaurantNames = _restaurantNames(order);
+
+      final restaurantLabel = restaurantNames.isEmpty
+
+          ? order.restaurantName
+
+          : restaurantNames.join(', ');
+
+
+
+      final partnerId = order.items.isNotEmpty &&
+
+              order.items.first.restaurantId != null
+
+          ? int.tryParse(order.items.first.restaurantId!)
+
+          : null;
+
+
+
+      final createOrderRequest = CreateOrderRequestDto(
+
+        serviceId: 3,
+
+        partnerId: partnerId,
+
+        estimatedDistanceM: state.estimatedDistanceM,
+
+        pickup: OrderAddressDto(
+
+          address: restaurantLabel,
+
+          lat: state.pickupLat,
+
+          lng: state.pickupLng,
+
+          contactName: restaurantLabel,
+
+          contactPhone: '+639123456789',
+
+        ),
+
+        dropoff: OrderAddressDto(
+
+          address: order.deliveryAddress,
+
+          lat: state.dropoffLat,
+
+          lng: state.dropoffLng,
+
+          contactName: user?.name ?? 'Customer',
+
+          contactPhone: user?.phone ?? '+639123456789',
+
+        ),
+
+        notes: 'LesEat order: ${order.items.length} items',
+
+        paymentMethod: state.selectedPaymentMethod ?? 'cash',
+
+        items: order.items
+
+            .map(
+
+              (item) => OrderItemDto(
+
+                name: item.name,
+
+                quantity: item.quantity,
+
+                estimatedPrice: item.price,
+
+                notes: null,
+
+              ),
+
+            )
+
+            .toList(),
+
+        voucherCode: order.voucherCode,
+
+        discountAmount: order.discount,
+
+        meta: {
+
+          'restaurant_name': restaurantLabel,
+
+          'restaurants': restaurantNames,
+
+          'subtotal': order.subtotal,
+
+          'delivery_fee': order.deliveryFee,
+
+          'discount': order.discount,
+
+          'voucher_code': order.voucherCode,
+
+          'total': order.total,
+
+          'grand_total': order.total,
+
+          'order_type': 'leseat',
+
+          'items': order.items
+
+              .map(
+
+                (item) => {
+
+                  'name': item.name,
+
+                  'price': item.price,
+
+                  'quantity': item.quantity,
+
+                  'total': item.total,
+
+                  'restaurant_id': item.restaurantId,
+
+                  'restaurant_name':
+
+                      item.restaurantName ?? order.restaurantName,
+
+                },
+
+              )
+
+              .toList(),
+
+        },
+
+      );
+
+
+
+      final response = await _orderDataSource.createOrder(createOrderRequest);
+
+
+
+      await applyLesPayWalletDeduction(
+
+        ref,
+
+        paymentMethod: state.selectedPaymentMethod ?? 'cash',
+
+        amount: order.total,
+
+      );
+
+
+
+      state = state.copyWith(
+
+        isLoading: false,
+
+        createdOrderId: response.data.id,
+
+      );
+
+
+
+      return true;
+
+    } catch (e) {
+
+      state = state.copyWith(isLoading: false, error: e.toString());
+
+      return false;
+
+    }
+
+  }
+
+
 
   List<String> _restaurantNames(Order order) {
+
     final names = <String>[];
+
     for (final item in order.items) {
+
       final name = item.restaurantName?.trim().isNotEmpty == true
+
           ? item.restaurantName!.trim()
+
           : order.restaurantName;
+
       if (!names.contains(name)) {
+
         names.add(name);
+
       }
+
     }
+
     return names;
+
   }
+
 }
 
+
+
 final checkoutProvider = StateNotifierProvider<CheckoutNotifier, CheckoutState>(
+
   (ref) {
+
     return CheckoutNotifier(ref);
+
   },
+
 );
+
+

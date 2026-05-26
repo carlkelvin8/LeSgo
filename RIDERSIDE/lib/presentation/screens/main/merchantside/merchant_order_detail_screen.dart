@@ -265,7 +265,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                         style: TextStyle(fontFamily: 'TT Fors', color: Colors.black54),
                       ),
                       Text(
-                        'PHP ${order.distanceFare?.toStringAsFixed(2) ?? '0.00'}',
+                        'PHP ${(order.estimatedFare ?? order.totalFare ?? order.distanceFare ?? 0.0).toStringAsFixed(2)}',
                         style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -275,7 +275,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Total Fare',
+                        'Total Amount',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -283,7 +283,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        'PHP ${(order.estimatedFare ?? order.totalFare ?? 0.0).toStringAsFixed(2)}',
+                        'PHP ${(itemSubtotal + (order.estimatedFare ?? order.totalFare ?? order.distanceFare ?? 0.0)).toStringAsFixed(2)}',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -431,6 +431,24 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                                   color: Colors.grey.shade600,
                                 ),
                               ),
+                              if (order.driver?.vehicleType != null || order.driver?.plateNumber != null) ...[
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.motorcycle, size: 12, color: Colors.grey.shade600),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${order.driver?.vehicleType ?? 'Vehicle'} • ${order.driver?.plateNumber ?? 'No Plate'}'.toUpperCase(),
+                                      style: TextStyle(
+                                        fontFamily: 'TT Fors',
+                                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),

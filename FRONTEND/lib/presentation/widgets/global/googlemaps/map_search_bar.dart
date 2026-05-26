@@ -143,8 +143,10 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
             
             if (types.contains('street_number')) {
               addressComponents['street_number'] = longName;
+              addressComponents['houseNumber'] = longName;
             } else if (types.contains('route')) {
               addressComponents['route'] = longName;
+              addressComponents['streetName'] = longName;
             } else if (types.contains('locality')) {
               addressComponents['city'] = longName;
             } else if (types.contains('administrative_area_level_1')) {

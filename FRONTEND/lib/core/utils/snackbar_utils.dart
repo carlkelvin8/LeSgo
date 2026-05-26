@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'api_error_mapper.dart';
+
 class SnackBarUtils {
   static void showSuccess(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -12,10 +14,28 @@ class SnackBarUtils {
     );
   }
 
+  /// Shows a user-friendly message; never displays raw Dio/technical errors.
+  static void showErrorFrom(
+    BuildContext context,
+    Object? error, {
+    String? fallbackEn,
+    String? fallbackTl,
+  }) {
+    showError(
+      context,
+      ApiErrorMapper.message(
+        error,
+        fallbackEn: fallbackEn,
+        fallbackTl: fallbackTl,
+      ),
+    );
+  }
+
   static void showError(BuildContext context, String message) {
+    final safe = ApiErrorMapper.message(message);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(safe),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(milliseconds: 1500),

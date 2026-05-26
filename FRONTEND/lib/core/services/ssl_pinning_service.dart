@@ -1,75 +1,73 @@
 import 'dart:io';
+
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 
-/// Service for SSL Certificate Pinning
-/// Prevents man-in-the-middle attacks by validating server certificates
+import '../constants/api_constants.dart';
+
+/// SSL certificate pinning for production API hosts.
 @lazySingleton
 class SslPinningService {
-  /// Certificate fingerprints (SHA-256) for your API server
-  /// TODO: Replace with your actual certificate fingerprints
+  /// SHA-256 fingerprints (colon-separated, uppercase) for pinned hosts.
+  /// Production: lesgo-api-feature-auth-secmes.free.laravel.cloud
   static const List<String> _certificateFingerprints = [
-    // Example: 'AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99',
-    // Add your production certificate fingerprints here
+    '3E:EB:26:92:E6:27:BE:9A:10:2A:7A:46:86:9A:A4:28:A6:DF:1D:24:E5:52:F1:5C:70:B7:EA:3B:44:74:EB:D8',
   ];
 
-  /// Configure SSL pinning for Dio client
+  static const Set<String> _pinnedHosts = {
+    'lesgo-api-feature-auth-secmes.free.laravel.cloud',
+  };
+
   void configureSslPinning(Dio dio) {
     if (kDebugMode) {
-      debugPrint('🔒 SSL Pinning: Disabled in debug mode');
+      debugPrint('🔒 SSL Pinning: skipped in debug mode');
       return;
     }
 
-    debugPrint('🔒 Configuring SSL Certificate Pinning...');
+    debugPrint('🔒 Configuring SSL certificate pinning...');
 
     (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
       final client = HttpClient();
-      
-      client.badCertificateCallback = (X509Certificate cert, String host, int port) {
-        // In production, validate certificate fingerprint
+      client.badCertificateCallback =
+          (X509Certificate cert, String host, int port) {
+        if (!_pinnedHosts.contains(host)) {
+          return true;
+        }
         if (_certificateFingerprints.isEmpty) {
-          debugPrint('⚠️ No certificate fingerprints configured');
-          return true; // Allow in development
+          debugPrint('⚠️ SSL Pinning: no fingerprints configured for $host');
+          return false;
         }
-
-        final certFingerprint = _getCertificateFingerprint(cert);
-        final isValid = _certificateFingerprints.contains(certFingerprint);
-
+        final fingerprint = _sha256Fingerprint(cert);
+        final isValid = _certificateFingerprints.contains(fingerprint);
         if (!isValid) {
-          debugPrint('❌ SSL Pinning Failed: Invalid certificate');
-          debugPrint('   Host: $host:$port');
-          debugPrint('   Fingerprint: $certFingerprint');
-        } else {
-          debugPrint('✅ SSL Pinning: Certificate validated');
+          debugPrint('❌ SSL Pinning failed for $host:$port');
+          debugPrint('   Got:      $fingerprint');
+          debugPrint('   Expected: ${_certificateFingerprints.first}');
         }
-
         return isValid;
       };
-
       return client;
     };
   }
 
-  /// Get certificate fingerprint (SHA-256)
-  String _getCertificateFingerprint(X509Certificate cert) {
-    // Convert certificate to SHA-256 fingerprint
-    final bytes = cert.der;
-    final fingerprint = bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join(':').toUpperCase();
-    return fingerprint;
+  static String _sha256Fingerprint(X509Certificate cert) {
+    final digest = sha256.convert(cert.der);
+    return digest.bytes
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join(':')
+        .toUpperCase();
   }
 
-  /// Validate if certificate fingerprint matches
   bool validateCertificate(String fingerprint) {
-    return _certificateFingerprints.contains(fingerprint);
+    return _certificateFingerprints.contains(fingerprint.toUpperCase());
   }
 
-  /// Add certificate fingerprint (for testing)
-  static void addCertificateFingerprint(String fingerprint) {
-    if (!_certificateFingerprints.contains(fingerprint)) {
-      // In production, this should be immutable
-      debugPrint('⚠️ Adding certificate fingerprint: $fingerprint');
-    }
+  /// Host derived from [ApiConstants.baseUrl] for documentation/tests.
+  static String get pinnedApiHost {
+    final uri = Uri.parse(ApiConstants.baseUrl);
+    return uri.host;
   }
 }

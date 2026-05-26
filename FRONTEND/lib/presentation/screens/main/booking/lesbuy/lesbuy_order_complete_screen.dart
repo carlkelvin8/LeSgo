@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/di/injection.dart';
+import '../../../../../core/services/customer_satisfaction_service.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
-import '../../../../widgets/widgets.dart';
+import '../../../../../data/data_source/order_remote_datasource.dart';
+import '../../../../widgets/review/rating_dialog.dart';
 
 class LesbuyOrderCompleteScreen extends ConsumerStatefulWidget {
   final String orderId;
@@ -25,6 +28,33 @@ class _LesbuyOrderCompleteScreenState extends ConsumerState<LesbuyOrderCompleteS
   int _rating = 5;
   final TextEditingController _feedbackController = TextEditingController();
   bool _hasSubmittedReview = false;
+  int? _driverId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOrderMeta();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        getIt<CustomerSatisfactionService>().onOrderCompleted(context);
+      }
+    });
+  }
+
+  Future<void> _loadOrderMeta() async {
+    final orderId = int.tryParse(widget.orderId) ?? 0;
+    if (orderId <= 0) return;
+    _driverId = widget.orderData?['driver_id'] as int? ??
+        widget.orderData?['driverId'] as int?;
+    try {
+      final response =
+          await getIt<OrderRemoteDataSource>().getOrder(orderId);
+      if (!mounted || !response.success) return;
+      setState(() {
+        _driverId = response.data.driverId ?? _driverId;
+      });
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -43,32 +73,33 @@ class _LesbuyOrderCompleteScreenState extends ConsumerState<LesbuyOrderCompleteS
       return;
     }
 
-    // TODO: Show rating dialog for driver (temporarily disabled)
-    // final result = await showRatingDialog(
-    //   context: context,
-    //   title: 'Rate Your Driver',
-    //   subtitle: 'How was your delivery experience?',
-    //   reviewableType: 'order',
-    //   reviewableId: int.tryParse(widget.orderId) ?? 0,
-    //   onSuccess: () {
-    //     setState(() {
-    //       _hasSubmittedReview = true;
-    //     });
-    //   },
-    // );
+    final orderId = int.tryParse(widget.orderId) ?? 0;
+    if (orderId <= 0) return;
 
-    // if (result == true && mounted) {
-    //   // Navigate back to home after successful review
-    //   Future.delayed(const Duration(seconds: 1), () {
-    //     if (mounted) {
-    //       Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-    //     }
-    //   });
-    // }
-    
-    // Temporarily just navigate back
-    if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    final result = await showRatingDialog(
+      context: context,
+      title: 'Rate Your Order',
+      subtitle: 'How was your shopping and delivery?',
+      reviewableType: 'order',
+      reviewableId: orderId,
+      onSuccess: () {
+        if (mounted) setState(() => _hasSubmittedReview = true);
+      },
+    );
+
+    if (result != true || !mounted) return;
+
+    setState(() => _hasSubmittedReview = true);
+
+    final driverId = _driverId;
+    if (driverId != null && driverId > 0) {
+      await showRatingDialog(
+        context: context,
+        title: 'Rate Your Driver',
+        subtitle: 'How was your delivery experience?',
+        reviewableType: 'driver',
+        reviewableId: driverId,
+      );
     }
   }
 

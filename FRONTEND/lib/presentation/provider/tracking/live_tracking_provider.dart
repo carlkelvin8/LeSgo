@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
 import '../../../data/data_source/dto/tracking/tracking_dto.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/utils/booking_geo_utils.dart';
 import '../../../core/services/websocket_service.dart';
 import '../../../core/utils/notification_helper.dart';
 import 'dart:async';
@@ -198,10 +199,11 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       }
     });
 
-    // Poll ETA every 30 seconds (less frequent since WebSocket provides updates)
-    _etaTimer = Timer.periodic(Duration(seconds: _useWebSocket ? 30 : 15), (_) {
+  // Poll ETA frequently for live countdown
+    _etaTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (state.isOrderActive) {
         loadEta();
+        _refreshDynamicEta();
       }
     });
   }
@@ -264,9 +266,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         state = state.copyWith(driverLocation: newLocation);
 
         _updateMarkers();
+        _refreshDynamicEta();
 
-        // Reload route with new driver location
         loadRoute();
+        loadEta();
 
         debugPrint('📍 Driver location updated via WebSocket: $lat, $lng');
       }
@@ -375,10 +378,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         // Extract real locations with fallback to mock data
         final double pLat =
             double.tryParse(trackingData['pickup_lat']?.toString() ?? '') ??
-            8.4542;
+            BookingGeoUtils.defaultLat;
         final double pLng =
             double.tryParse(trackingData['pickup_lng']?.toString() ?? '') ??
-            124.6319;
+            BookingGeoUtils.defaultLng;
         final double dLat =
             double.tryParse(trackingData['dropoff_lat']?.toString() ?? '') ??
             8.4600;
@@ -442,14 +445,14 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
                   data['currentLatitude']?.toString() ??
                   '',
             ) ??
-            8.4542;
+            BookingGeoUtils.defaultLat;
         final double lng =
             double.tryParse(
               data['current_longitude']?.toString() ??
                   data['currentLongitude']?.toString() ??
                   '',
             ) ??
-            124.6319;
+            BookingGeoUtils.defaultLng;
 
         final location = LatLng(lat, lng);
 
@@ -468,10 +471,11 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         state = state.copyWith(
           driverLocation: location,
           driverHeading: heading,
-          eta: data['estimatedArrival'] ?? '15 minutes',
         );
 
         _updateMarkers();
+        _refreshDynamicEta();
+        loadEta();
       }
     } catch (e) {
       // Silently fail - don't disrupt tracking
@@ -513,11 +517,41 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         }
 
         state = state.copyWith(eta: eta, distance: distance);
+      } else {
+        _refreshDynamicEta();
       }
     } catch (e) {
       debugPrint('❌ Failed to load ETA: $e');
-      // Silently fail - don't disrupt tracking
+      _refreshDynamicEta();
     }
+  }
+
+  /// Recompute ETA from driver → dropoff distance (updates every location tick).
+  void _refreshDynamicEta() {
+    if (!state.isOrderActive) return;
+    final computed = _computeEtaFromDriverPosition();
+    if (computed != null) {
+      state = state.copyWith(eta: computed);
+    }
+  }
+
+  String? _computeEtaFromDriverPosition() {
+    final driver = state.driverLocation;
+    final target = state.dropoffLocation ?? state.pickupLocation;
+    if (driver == null || target == null) return state.eta;
+
+    final meters = Geolocator.distanceBetween(
+      driver.latitude,
+      driver.longitude,
+      target.latitude,
+      target.longitude,
+    );
+
+    if (meters < 80) return 'Arriving now / Paparating na';
+
+    final km = meters / 1000;
+  final minutes = (km / 35 * 60).ceil().clamp(1, 180);
+    return '$minutes min';
   }
 
   Future<void> loadRoute() async {

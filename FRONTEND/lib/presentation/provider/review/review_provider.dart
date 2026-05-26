@@ -5,6 +5,7 @@ import '../../../data/data_source/dto/review/review_dto.dart';
 import '../../../data/data_source/dto/review/create_review_request_dto.dart';
 import '../../../data/data_source/dto/review/reviews_response_dto.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/snackbar_utils.dart';
 
 class ReviewState {
@@ -72,7 +73,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
       state = state.copyWith(
         reviews: [],
         isLoading: false,
-        error: e.toString(),
+        error: ApiErrorMapper.message(e),
       );
     }
   }
@@ -146,11 +147,11 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
     } catch (e) {
       state = state.copyWith(
         isSubmitting: false,
-        error: e.toString(),
+        error: ApiErrorMapper.message(e),
       );
 
       if (context != null && context.mounted) {
-        SnackBarUtils.showError(context, 'Error: ${e.toString()}');
+        SnackBarUtils.showErrorFrom(context, e);
       }
       return false;
     }

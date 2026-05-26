@@ -3,14 +3,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/main/transactions/transactions_provider.dart';
 import '../../widgets/widgets.dart';
+import '../../widgets/common/payment_status_badge.dart';
+import '../../../core/services/order_receipt_service.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/snackbar_utils.dart';
 import '../../../domain/entities/transactions/transaction.dart';
 import 'booking/leseat/leseat_order_tracking_screen.dart';
 import 'booking/lesbuy/lesbuy_order_tracking_screen.dart';
 import 'booking/lesgo/lesgo_order_tracking_screen.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
-  const TransactionsScreen({super.key});
+  /// `order` | `wallet` — pre-filter when opened from LesPay, etc.
+  final String? initialKindFilter;
+
+  const TransactionsScreen({super.key, this.initialKindFilter});
 
   @override
   ConsumerState<TransactionsScreen> createState() => _TransactionsScreenState();
@@ -19,6 +25,19 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _showFilters = false;
+  bool _sharingReceipt = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialKindFilter != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref
+            .read(transactionsProvider.notifier)
+            .filterByKind(widget.initialKindFilter);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -26,7 +45,26 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     super.dispose();
   }
 
+  Future<void> _downloadReceipt(Transaction transaction) async {
+    if (_sharingReceipt) return;
+    setState(() => _sharingReceipt = true);
+    try {
+      await OrderReceiptService.shareTransactionReceipt(transaction);
+    } catch (e) {
+      if (mounted) {
+        SnackBarUtils.showError(context, 'Could not generate receipt. Try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _sharingReceipt = false);
+    }
+  }
+
   void _openOrderDetail(BuildContext context, Transaction transaction) {
+    if (transaction.isWallet) {
+      _showWalletDetailSheet(context, transaction);
+      return;
+    }
+
     // Active orders go to tracking screen; completed/cancelled show a summary
     final isActive = transaction.status == TransactionStatus.pending;
     final orderId = transaction.id;
@@ -357,7 +395,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Status',
+                          'Order status',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 14,
@@ -377,11 +415,155 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Payment',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: 14,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        PaymentStatusBadge(status: transaction.paymentStatus),
+                      ],
+                    ),
+                    if (transaction.paymentMethod != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Method',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            transaction.paymentMethod!,
+                            style: const TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _sharingReceipt
+                            ? null
+                            : () {
+                                Navigator.pop(context);
+                                _downloadReceipt(transaction);
+                              },
+                        icon: _sharingReceipt
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.picture_as_pdf_outlined),
+                        label: const Text('Download receipt (PDF)'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF5F2D82),
+                          side: const BorderSide(color: Color(0xFF5F2D82)),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showWalletDetailSheet(BuildContext context, Transaction transaction) {
+    final isCredit = transaction.isWalletCredit ?? true;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              transaction.walletDescription ?? 'LesPay',
+              style: const TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _formatDate(transaction.date),
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: 13,
+                color: Colors.grey[500],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${isCredit ? '+' : '-'}PHP ${transaction.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: isCredit ? Colors.green.shade700 : Colors.red.shade700,
+                  ),
+                ),
+                PaymentStatusBadge(status: transaction.paymentStatus),
+              ],
+            ),
+            if (transaction.walletReference?.isNotEmpty == true) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Ref: ${transaction.walletReference}',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: _sharingReceipt
+                  ? null
+                  : () {
+                      Navigator.pop(context);
+                      _downloadReceipt(transaction);
+                    },
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              label: const Text('Download receipt (PDF)'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF5F2D82),
+                side: const BorderSide(color: Color(0xFF5F2D82)),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -447,6 +629,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     final transactions = transactionsState.filteredTransactions;
     final hasActiveFilters = transactionsState.selectedService != null ||
         transactionsState.selectedStatus != null ||
+        transactionsState.selectedKind != null ||
+        transactionsState.selectedPaymentStatus != null ||
         transactionsState.searchQuery.isNotEmpty;
 
     return Scaffold(
@@ -464,7 +648,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     children: [
                       const Expanded(
                         child: AuthHeader(
-                          title: 'Order History',
+                          title: 'Transactions',
                         ),
                       ),
                       // Test button for debugging
@@ -496,7 +680,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Search by order ID or location...',
+                      hintText: 'Search orders, LesPay, reference...',
                       hintStyle: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -561,7 +745,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 child: Row(
                   children: [
                     Text(
-                      '${transactions.length} ${transactions.length == 1 ? 'order' : 'orders'} found',
+                      '${transactions.length} ${transactions.length == 1 ? 'transaction' : 'transactions'} found',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -610,7 +794,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                               ),
                               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                               Text(
-                                'Error loading orders',
+                                'Error loading transactions',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -681,6 +865,64 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          'Type',
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 12),
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildFilterChip(context, 'All', state.selectedKind == null, () {
+              ref.read(transactionsProvider.notifier).filterByKind(null);
+            }),
+            _buildFilterChip(context, 'Orders', state.selectedKind == 'order', () {
+              ref.read(transactionsProvider.notifier).filterByKind('order');
+            }),
+            _buildFilterChip(context, 'LesPay', state.selectedKind == 'wallet', () {
+              ref.read(transactionsProvider.notifier).filterByKind('wallet');
+            }),
+          ],
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        Text(
+          'Payment',
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 12),
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _buildFilterChip(context, 'All', state.selectedPaymentStatus == null, () {
+              ref.read(transactionsProvider.notifier).filterByPaymentStatus(null);
+            }),
+            _buildFilterChip(context, 'Paid', state.selectedPaymentStatus == 'paid', () {
+              ref.read(transactionsProvider.notifier).filterByPaymentStatus('paid');
+            }),
+            _buildFilterChip(context, 'Pending', state.selectedPaymentStatus == 'pending', () {
+              ref.read(transactionsProvider.notifier).filterByPaymentStatus('pending');
+            }),
+            _buildFilterChip(context, 'Failed', state.selectedPaymentStatus == 'failed', () {
+              ref.read(transactionsProvider.notifier).filterByPaymentStatus('failed');
+            }),
+            _buildFilterChip(context, 'Refunded', state.selectedPaymentStatus == 'refunded', () {
+              ref.read(transactionsProvider.notifier).filterByPaymentStatus('refunded');
+            }),
+          ],
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
         // Service filter
         Text(
           'Service',
@@ -782,6 +1024,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       spacing: 8,
       runSpacing: 8,
       children: [
+        if (state.selectedKind != null)
+          _buildActiveChip(context, state.selectedKind == 'wallet' ? 'LesPay' : 'Orders', () {
+            ref.read(transactionsProvider.notifier).filterByKind(null);
+          }),
+        if (state.selectedPaymentStatus != null)
+          _buildActiveChip(context, state.selectedPaymentStatus!, () {
+            ref.read(transactionsProvider.notifier).filterByPaymentStatus(null);
+          }),
         if (state.selectedService != null)
           _buildActiveChip(context, state.selectedService!, () {
             ref.read(transactionsProvider.notifier).filterByService(null);
@@ -849,7 +1099,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           Text(
-            hasFilters ? 'No orders found' : 'No orders yet',
+            hasFilters ? 'No transactions found' : 'No transactions yet',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -861,7 +1111,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           Text(
             hasFilters
                 ? 'Try adjusting your filters'
-                : 'Your order history will appear here',
+                : 'Orders and LesPay wallet activity will appear here',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),

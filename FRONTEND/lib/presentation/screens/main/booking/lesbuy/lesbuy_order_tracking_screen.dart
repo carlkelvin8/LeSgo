@@ -211,14 +211,16 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
   }
 
   void _rateOrder() {
-    // Navigate to order completion screen
+    final data = Map<String, dynamic>.from(
+      _currentOrderData ?? widget.orderData ?? {},
+    );
     AppRouter.pushReplacement(
       context,
       BookingRoutes.lesbuyOrderComplete,
       arguments: {
         'orderId': widget.orderId,
         'orderType': widget.orderType,
-        'orderData': widget.orderData,
+        'orderData': data,
       },
     );
   }

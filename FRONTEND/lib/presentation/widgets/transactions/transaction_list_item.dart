@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../domain/entities/transactions/transaction.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../common/payment_status_badge.dart';
 
 class TransactionListItem extends StatelessWidget {
   final Transaction transaction;
@@ -39,17 +40,23 @@ class TransactionListItem extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Service icon
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _getServiceColor(transaction.serviceName).withOpacity(0.1),
+                    color: (transaction.isWallet
+                            ? const Color(0xFF5F2D82)
+                            : _getServiceColor(transaction.serviceName))
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    _getServiceIcon(transaction.serviceName),
-                    color: _getServiceColor(transaction.serviceName),
+                    transaction.isWallet
+                        ? Icons.account_balance_wallet_outlined
+                        : _getServiceIcon(transaction.serviceName),
+                    color: transaction.isWallet
+                        ? const Color(0xFF5F2D82)
+                        : _getServiceColor(transaction.serviceName),
                     size: 20,
                   ),
                 ),
@@ -60,12 +67,11 @@ class TransactionListItem extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Service name and status
                       Row(
                         children: [
                           Expanded(
                             child: Text(
-                              transaction.serviceName,
+                              transaction.displayTitle,
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -74,17 +80,25 @@ class TransactionListItem extends StatelessWidget {
                               ),
                             ),
                           ),
-                          _buildStatusBadge(context, transaction.status, transaction.rawStatus),
+                          if (transaction.isOrder)
+                            _buildStatusBadge(
+                              context,
+                              transaction.status,
+                              transaction.rawStatus,
+                            )
+                          else
+                            PaymentStatusBadge(
+                              status: transaction.paymentStatus,
+                              compact: true,
+                            ),
                         ],
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                      
-                      // Order ID and items info
                       Row(
                         children: [
                           Expanded(
                             child: Text(
-                              'Order #${transaction.id}',
+                              transaction.displaySubtitle,
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -92,7 +106,9 @@ class TransactionListItem extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (transaction.items != null && transaction.items!.isNotEmpty)
+                          if (transaction.isOrder &&
+                              transaction.items != null &&
+                              transaction.items!.isNotEmpty)
                             Text(
                               '${transaction.items!.length} item${transaction.items!.length > 1 ? 's' : ''}',
                               style: TextStyle(
@@ -103,56 +119,66 @@ class TransactionListItem extends StatelessWidget {
                             ),
                         ],
                       ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                      
-                      // Pickup location or first item for LesBuy/LesEat
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.circle,
-                            size: 8,
-                            color: Colors.green,
-                          ),
-                          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                          Expanded(
-                            child: Text(
-                              _getDisplayLocation(transaction, isPickup: true),
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 12),
-                                color: Colors.grey[700],
+                      if (transaction.isOrder) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                        Row(
+                          children: [
+                            const Icon(Icons.circle, size: 8, color: Colors.green),
+                            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                            Expanded(
+                              child: Text(
+                                _getDisplayLocation(transaction, isPickup: true),
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                                  color: Colors.grey[700],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                      
-                      // Dropoff location or item count for LesBuy/LesEat
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.circle,
-                            size: 8,
-                            color: Colors.red,
-                          ),
-                          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                          Expanded(
-                            child: Text(
-                              _getDisplayLocation(transaction, isPickup: false),
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 12),
-                                color: Colors.grey[700],
+                          ],
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                        Row(
+                          children: [
+                            const Icon(Icons.circle, size: 8, color: Colors.red),
+                            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                            Expanded(
+                              child: Text(
+                                _getDisplayLocation(transaction, isPickup: false),
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                                  color: Colors.grey[700],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
+                          ],
+                        ),
+                      ] else if (transaction.walletReference?.isNotEmpty == true) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                        Text(
+                          transaction.walletReference!,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 12),
+                            color: Colors.grey[600],
                           ),
-                        ],
-                      ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      if (transaction.isOrder &&
+                          transaction.paymentStatus != PaymentStatus.paid) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                        PaymentStatusBadge(
+                          status: transaction.paymentStatus,
+                          compact: true,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -170,17 +196,25 @@ class TransactionListItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'PHP ${transaction.amount.toStringAsFixed(2)}',
+                  transaction.isWallet
+                      ? '${(transaction.isWalletCredit ?? true) ? '+' : '-'}PHP ${transaction.amount.toStringAsFixed(2)}'
+                      : 'PHP ${transaction.amount.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 18),
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF5F2D82),
+                    color: transaction.isWallet
+                        ? ((transaction.isWalletCredit ?? true)
+                            ? Colors.green.shade700
+                            : Colors.red.shade700)
+                        : const Color(0xFF5F2D82),
                   ),
                 ),
                 
-                // Reorder button (only for completed orders)
-                if (transaction.status == TransactionStatus.completed && onReorder != null)
+                if (transaction.isOrder &&
+                    transaction.status == TransactionStatus.completed &&
+                    transaction.paymentStatus != PaymentStatus.failed &&
+                    onReorder != null)
                   OutlinedButton.icon(
                     onPressed: onReorder,
                     icon: const Icon(Icons.refresh, size: 16),

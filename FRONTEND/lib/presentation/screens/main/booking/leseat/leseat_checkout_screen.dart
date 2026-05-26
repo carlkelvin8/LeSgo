@@ -9,6 +9,8 @@ import '../../../../../domain/entities/booking/leseat/order_item.dart';
 import '../../../../provider/main/booking/checkout_provider.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
+import '../../../../widgets/payment/booking_payment_method_section.dart';
+import '../../../../widgets/booking/leseat/checkout/voucher_bottom_sheet.dart';
 import '../../../../widgets/widgets.dart';
 
 class LeseatCheckoutScreen extends ConsumerStatefulWidget {
@@ -80,93 +82,30 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     );
   }
 
-  void _showVoucherDialog(BuildContext context, WidgetRef ref) {
-    final voucherController = TextEditingController();
+  Future<void> _showVoucherDialog(BuildContext context, WidgetRef ref) async {
+    final code = await showVoucherBottomSheet(context);
+    if (code == null || !context.mounted) return;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+    final error = await ref.read(checkoutProvider.notifier).applyVoucher(code);
+    if (!context.mounted) return;
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
         ),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Enter Voucher Code',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 18),
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    TextField(
-                      controller: voucherController,
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: InputDecoration(
-                        hintText: 'e.g. SAVE10',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF5F2D82), width: 2),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                    PrimaryButton(
-                      text: 'Apply',
-                      backgroundColor: const Color(0xFF5F2D82),
-                      onPressed: () {
-                        final code = voucherController.text.trim();
-                        if (code.isNotEmpty) {
-                          ref.read(checkoutProvider.notifier).applyVoucher(code);
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Voucher applied'),
-                              backgroundColor: Colors.green,
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                  ],
-                ),
-              ),
-            ],
-          ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voucher applied'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -300,13 +239,12 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
                     // Payment Method Section
-                    PaymentMethodSelector(
-                      selectedMethod: 'cash',
-                      onMethodChanged: (method) {
-                        // Payment method changed - currently only COD supported
-                        print('Payment method changed to: $method');
-                      },
+                    BookingPaymentMethodSection(
+                      selectedMethod:
+                          checkoutState.selectedPaymentMethod ?? 'cash',
+                      onMethodChanged: checkoutNotifier.selectPaymentMethod,
                       enabled: !isCartEmpty,
+                      minimumAmount: isCartEmpty ? null : total,
                     ),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),

@@ -5,6 +5,7 @@ import '../../../core/utils/responsive_utils.dart';
 class LespayMenuItem extends StatelessWidget {
   final String iconPath;
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
   final Color? backgroundColor;
   final Color? iconColor;
@@ -15,6 +16,7 @@ class LespayMenuItem extends StatelessWidget {
     super.key,
     required this.iconPath,
     required this.title,
+    this.subtitle,
     required this.onTap,
     this.backgroundColor,
     this.iconColor,
@@ -88,14 +90,30 @@ class LespayMenuItem extends StatelessWidget {
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 16)),
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 16),
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 16),
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    SizedBox(height: ResponsiveUtils.spacing(context, 2)),
+                    Text(
+                      subtitle!,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             Icon(

@@ -20,6 +20,7 @@ import 'package:lesgo/core/services/favorites_service.dart' as _i808;
 import 'package:lesgo/core/services/fcm_service.dart' as _i407;
 import 'package:lesgo/core/services/notification_service.dart' as _i1010;
 import 'package:lesgo/core/services/permission_service.dart' as _i680;
+import 'package:lesgo/core/services/promo_notification_service.dart' as _i579;
 import 'package:lesgo/core/services/rate_limiter_service.dart' as _i758;
 import 'package:lesgo/core/services/secure_storage_service.dart' as _i155;
 import 'package:lesgo/core/services/session_timeout_service.dart' as _i946;
@@ -45,6 +46,8 @@ import 'package:lesgo/data/data_source/tracking_remote_datasource.dart'
     as _i657;
 import 'package:lesgo/data/data_source/user_remote_datasource.dart' as _i761;
 import 'package:lesgo/data/data_source/voucher_remote_datasource.dart' as _i767;
+import 'package:lesgo/data/data_source/wallet_remote_datasource.dart' as _i339;
+import 'package:lesgo/data/data_source/xendit_remote_datasource.dart' as _i78;
 import 'package:lesgo/data/repositoryImpl/user_repository_impl.dart' as _i937;
 import 'package:lesgo/domain/repository/user_repository.dart' as _i962;
 import 'package:lesgo/domain/use_cases/login_usecase.dart' as _i720;
@@ -77,6 +80,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i758.RateLimiterService(),
     );
     gh.lazySingleton<_i373.SslPinningService>(() => _i373.SslPinningService());
+    gh.lazySingleton<_i78.XenditRemoteDataSource>(
+      () => _i78.XenditRemoteDataSource(),
+    );
     gh.lazySingleton<_i584.LocalStorageService>(
       () => _i584.LocalStorageService(gh<_i460.SharedPreferences>()),
     );
@@ -87,7 +93,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i155.SecureStorageService(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i214.DioClient>(
-      () => _i214.DioClient(gh<_i584.LocalStorageService>()),
+      () => _i214.DioClient(
+        gh<_i584.LocalStorageService>(),
+        gh<_i758.RateLimiterService>(),
+      ),
     );
     gh.lazySingleton<_i946.SessionTimeoutService>(
       () => _i946.SessionTimeoutService(gh<_i155.SecureStorageService>()),
@@ -137,11 +146,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i767.VoucherRemoteDataSource>(
       () => _i767.VoucherRemoteDataSource(gh<_i214.DioClient>()),
     );
+    gh.lazySingleton<_i339.WalletRemoteDataSource>(
+      () => _i339.WalletRemoteDataSource(gh<_i214.DioClient>()),
+    );
     gh.factory<_i677.AuthRemoteDataSource>(
       () => _i677.AuthRemoteDataSource(gh<_i214.DioClient>()),
     );
     gh.factory<_i675.MissionsRemoteDataSource>(
       () => _i675.MissionsRemoteDataSource(gh<_i214.DioClient>()),
+    );
+    gh.lazySingleton<_i579.PromoNotificationService>(
+      () => _i579.PromoNotificationService(
+        gh<_i407.FcmService>(),
+        gh<_i1010.NotificationService>(),
+        gh<_i460.SharedPreferences>(),
+      ),
     );
     gh.lazySingleton<_i962.UserRepository>(
       () => _i937.UserRepositoryImpl(

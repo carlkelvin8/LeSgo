@@ -7,6 +7,7 @@ import '../../../../data/data_source/user_remote_datasource.dart';
 import '../../../../data/data_source/dto/user/user_profile_dto.dart';
 import '../../../../data/data_source/dto/user/update_user_request_dto.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/referral_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 
 class ProfileState {
@@ -101,7 +102,11 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           phone: user.phone ?? '',
           birthdate: user.dateOfBirth ?? '',
           profileImageUrl: user.profilePhoto,
-          referralCode: user.referralCode ?? '',
+          referralCode: ReferralUtils.displayCode(
+            user.referralCode,
+            user.id,
+            name: user.name,
+          ),
           points: user.points ?? 0,
           address1: user.addressLine1 ?? '',
           address2: user.addressLine2 ?? '',

@@ -4,83 +4,127 @@ import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
+import '../../../../../core/utils/booking_geo_utils.dart';
+import '../../../../../core/utils/lespay_order_payment.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../data/data_source/dto/order/create_order_request_dto.dart';
+import '../../../../provider/main/booking/lesbuy/lesbuy_checkout_provider.dart';
 import '../../../../provider/main/booking/lesbuy/manual_order_provider.dart';
 import '../../../../provider/main/profile/profile_provider.dart';
+import '../../../../provider/main/address/address_provider.dart';
+import '../../../../widgets/payment/booking_payment_method_section.dart';
 import '../../../../widgets/widgets.dart';
 
-class ManualOrderScreen extends ConsumerWidget {
+class ManualOrderScreen extends ConsumerStatefulWidget {
   final bool fromCart;
 
   const ManualOrderScreen({super.key, this.fromCart = false});
 
-  // Direct checkout function for manual orders
+  @override
+  ConsumerState<ManualOrderScreen> createState() => _ManualOrderScreenState();
+}
+
+class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
+  String _paymentMethod = 'cash';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(lesbuyCheckoutProvider.notifier).initialize(storePartnerId: null);
+      final userId = ref.read(profileProvider).user?.id;
+      if (userId != null) {
+        ref.read(addressProvider.notifier).loadAddresses(userId);
+      }
+    });
+  }
+
   Future<void> _directCheckout(
     BuildContext context,
-    WidgetRef ref,
     ManualOrderState manualOrderState,
   ) async {
     try {
       final orderDataSource = getIt<OrderRemoteDataSource>();
       final profileState = ref.read(profileProvider);
+      final addressState = ref.read(addressProvider);
       final user = profileState.user;
 
-      // Prepare order items from manual order
-      final orderItems = manualOrderState.items.map((item) => OrderItemDto(
-        name: item.name,
-        quantity: item.quantity,
-        estimatedPrice: 0.0, // Manual items don't have price
-        notes: item.description,
-      )).toList();
+      var dropoffLat = BookingGeoUtils.defaultLat;
+      var dropoffLng = BookingGeoUtils.defaultLng;
+      var dropoffAddress = user?.addressLine1 ??
+          (profileState.address1.isNotEmpty
+              ? profileState.address1
+              : 'Brgy 6, Claveria, Cagayan');
 
-      final deliveryFee = 50.0;
-      final total = deliveryFee; // Only delivery fee for manual orders
+      final defaultAddr = addressState.defaultAddress;
+      if (defaultAddr != null) {
+        dropoffLat = defaultAddr.latitude;
+        dropoffLng = defaultAddr.longitude;
+        dropoffAddress = defaultAddr.addressLine1;
+      }
+
+      await ref.read(lesbuyCheckoutProvider.notifier).refreshDeliveryFee(
+            dropoffLat: dropoffLat,
+            dropoffLng: dropoffLng,
+          );
+      final quote = ref.read(lesbuyCheckoutProvider);
+      final deliveryFee = quote.deliveryFee;
+      final total = deliveryFee;
+
+      final orderItems = manualOrderState.items
+          .map(
+            (item) => OrderItemDto(
+              name: item.name,
+              quantity: item.quantity,
+              estimatedPrice: 0.0,
+              notes: item.description,
+            ),
+          )
+          .toList();
 
       final createOrderRequest = CreateOrderRequestDto(
-        serviceId: 4, // LesBuy service ID
-        estimatedDistanceM: 5000, // 5km default
+        serviceId: 4,
+        estimatedDistanceM: quote.estimatedDistanceM,
         pickup: OrderAddressDto(
           address: 'Manual Order Pickup',
-          lat: 8.4542, // Default Cagayan de Oro coordinates
-          lng: 124.6319,
+          lat: quote.pickupLat,
+          lng: quote.pickupLng,
           contactName: 'LesBuy Store',
           contactPhone: '+639123456789',
         ),
         dropoff: OrderAddressDto(
-          address: user?.addressLine1 ?? (profileState.address1.isNotEmpty 
-              ? profileState.address1 
-              : 'Brgy 6, Claveria, Cagayan'),
-          lat: 8.4542,
-          lng: 124.6319,
-          contactName: user?.name ?? (profileState.name.isNotEmpty 
-              ? profileState.name 
-              : 'Customer'),
+          address: dropoffAddress,
+          lat: dropoffLat,
+          lng: dropoffLng,
+          contactName: user?.name ??
+              (profileState.name.isNotEmpty ? profileState.name : 'Customer'),
           contactPhone: user?.phone ?? '+639123456789',
         ),
         notes: 'Manual LesBuy order: ${orderItems.length} items',
-        paymentMethod: 'cash',
+        paymentMethod: _paymentMethod,
         items: orderItems,
         meta: {
           'subtotal': 0.0,
           'delivery_fee': deliveryFee,
           'total': total,
+          'grand_total': total,
           'order_type': 'lesbuy_manual',
         },
       );
 
-      print('🔵 Manual LesBuy: Creating order with API...');
       final response = await orderDataSource.createOrder(createOrderRequest);
-      print('🟢 Manual LesBuy: Order created successfully - ID: ${response.data.id}');
+
+      await applyLesPayWalletDeduction(
+        ref,
+        paymentMethod: _paymentMethod,
+        amount: total,
+      );
 
       if (context.mounted) {
         final orderId = response.data.id.toString();
-        
-        // Clear the manual order items
         ref.read(manualOrderProvider.notifier).clearAll();
-        
-        // Navigate to driver finding screen
+
         AppRouter.pushReplacement(
           context,
           BookingRoutes.driverFinding,
@@ -88,19 +132,23 @@ class ManualOrderScreen extends ConsumerWidget {
             'orderId': orderId,
             'orderType': 'LesBuy Manual',
             'orderData': {
-              'manualItems': manualOrderState.items.map((item) => {
-                'name': item.name,
-                'quantity': item.quantity,
-                'description': item.description,
-              }).toList(),
+              'manualItems': manualOrderState.items
+                  .map(
+                    (item) => {
+                      'name': item.name,
+                      'quantity': item.quantity,
+                      'description': item.description,
+                    },
+                  )
+                  .toList(),
               'total': total,
               'deliveryFee': deliveryFee,
+              'paymentMethod': _paymentMethod,
             },
           },
         );
       }
     } catch (e) {
-      print('🔴 Manual LesBuy: Error creating order - $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -113,31 +161,28 @@ class ManualOrderScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final manualOrderState = ref.watch(manualOrderProvider);
     final manualOrderNotifier = ref.read(manualOrderProvider.notifier);
+    final lesbuyCheckout = ref.watch(lesbuyCheckoutProvider);
     final bool isEmpty = manualOrderState.items.isEmpty;
+    final deliveryFee = lesbuyCheckout.deliveryFee;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             BookingServiceHeader(
               title: 'Manual Order',
               action: const SizedBox.shrink(),
             ),
-
-            // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-
-                    // Info Section with Icon
                     Container(
                       margin: EdgeInsets.symmetric(
                         horizontal: ResponsiveUtils.horizontalPadding(context),
@@ -152,7 +197,6 @@ class ManualOrderScreen extends ConsumerWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Icon
                           Container(
                             width: 32,
                             height: 32,
@@ -167,7 +211,6 @@ class ManualOrderScreen extends ConsumerWidget {
                             ),
                           ),
                           SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-                          // Text
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,10 +248,7 @@ class ManualOrderScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-
-                    // Add New Item Form
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: ResponsiveUtils.horizontalPadding(context),
@@ -223,12 +263,8 @@ class ManualOrderScreen extends ConsumerWidget {
                         },
                       ),
                     ),
-
                     SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-
-                    // Empty State or Items List
                     if (isEmpty) ...[
-                      // Empty State
                       Center(
                         child: Padding(
                           padding: EdgeInsets.symmetric(
@@ -241,7 +277,6 @@ class ManualOrderScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Shopping bag icon
                               Icon(
                                 Icons.shopping_bag_outlined,
                                 size: 80,
@@ -250,7 +285,6 @@ class ManualOrderScreen extends ConsumerWidget {
                               SizedBox(
                                 height: ResponsiveUtils.spacing(context, 16),
                               ),
-                              // "Your list is empty" heading
                               Text(
                                 'Your list is empty',
                                 style: TextStyle(
@@ -266,7 +300,6 @@ class ManualOrderScreen extends ConsumerWidget {
                               SizedBox(
                                 height: ResponsiveUtils.spacing(context, 8),
                               ),
-                              // Message
                               Text(
                                 'Start adding items above to build\nyour custom order!',
                                 textAlign: TextAlign.center,
@@ -285,7 +318,6 @@ class ManualOrderScreen extends ConsumerWidget {
                         ),
                       ),
                     ] else ...[
-                      // Your List Section
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: ResponsiveUtils.horizontalPadding(
@@ -348,15 +380,10 @@ class ManualOrderScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-
-                      // Items List
                       Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: ResponsiveUtils.horizontalPadding(
-                            context,
-                          ),
+                          horizontal: ResponsiveUtils.horizontalPadding(context),
                         ),
                         child: Column(
                           children: manualOrderState.items.map((item) {
@@ -375,7 +402,29 @@ class ManualOrderScreen extends ConsumerWidget {
                           }).toList(),
                         ),
                       ),
-
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                      BookingPaymentMethodSection(
+                        selectedMethod: _paymentMethod,
+                        onMethodChanged: (method) {
+                          setState(() => _paymentMethod = method);
+                        },
+                        enabled: !isEmpty,
+                        minimumAmount: isEmpty ? null : deliveryFee,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: ResponsiveUtils.horizontalPadding(context),
+                          vertical: ResponsiveUtils.spacing(context, 8),
+                        ),
+                        child: Text(
+                          'Estimated delivery fee: ₱${deliveryFee.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 13),
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 80)),
                     ],
                   ],
@@ -385,8 +434,6 @@ class ManualOrderScreen extends ConsumerWidget {
           ],
         ),
       ),
-
-      // Bottom Confirm Button - Always visible
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
@@ -403,7 +450,6 @@ class ManualOrderScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Price disclaimer
               Text(
                 '📋 Prices are estimated. Final amount determined by rider.',
                 textAlign: TextAlign.center,
@@ -414,10 +460,8 @@ class ManualOrderScreen extends ConsumerWidget {
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-              // Button Options
               Row(
                 children: [
-                  // Add to Cart Button (Outlined style)
                   Expanded(
                     child: SizedBox(
                       height: ResponsiveUtils.buttonHeight(context),
@@ -425,14 +469,12 @@ class ManualOrderScreen extends ConsumerWidget {
                         onPressed: isEmpty
                             ? null
                             : () {
-                                // Move items from "Your List" to confirmed checkout items
                                 manualOrderNotifier.confirmItems();
-
                                 SnackBarUtils.showSuccess(
                                   context,
                                   'Added ${manualOrderState.totalItems} items to checkout!',
                                 );
-                                if (fromCart) {
+                                if (widget.fromCart) {
                                   Navigator.pop(context);
                                 } else {
                                   Navigator.pushReplacementNamed(
@@ -467,7 +509,6 @@ class ManualOrderScreen extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-                  // Direct Checkout Button
                   Expanded(
                     child: PrimaryButton(
                       text: 'Checkout Now',
@@ -477,8 +518,7 @@ class ManualOrderScreen extends ConsumerWidget {
                       onPressed: isEmpty
                           ? null
                           : () async {
-                              // Direct checkout without going to cart
-                              await _directCheckout(context, ref, manualOrderState);
+                              await _directCheckout(context, manualOrderState);
                             },
                     ),
                   ),

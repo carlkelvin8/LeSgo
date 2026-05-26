@@ -1,6 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../../core/di/injection.dart';
+import '../../../../../core/utils/order_contact_actions.dart';
+import '../../../../../core/utils/order_status_mapper.dart';
+import '../../../../widgets/review/rating_dialog.dart';
+import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
@@ -26,21 +33,134 @@ class LeseatOrderStatusScreen extends ConsumerStatefulWidget {
 }
 
 class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScreen> {
-  String _currentStatus = 'cooking'; // cooking, ready_for_pickup, on_the_way, completed
+  String _currentStatus = 'cooking';
   int _rating = 0;
   final TextEditingController _reviewController = TextEditingController();
+  Timer? _statusPollTimer;
+  Map<String, dynamic>? _liveOrderData;
+
+  int get _orderIdInt => int.tryParse(widget.orderId) ?? 0;
 
   @override
   void initState() {
     super.initState();
-    // TODO: Fetch actual order status from API
-    _currentStatus = widget.orderData?['status'] ?? 'cooking';
+    _liveOrderData = widget.orderData != null
+        ? Map<String, dynamic>.from(widget.orderData!)
+        : null;
+    _currentStatus = OrderStatusMapper.toLesEatUiStatus(
+      _liveOrderData?['status']?.toString(),
+    );
+    _fetchOrderStatus();
+    _startStatusPolling();
   }
 
   @override
   void dispose() {
+    _statusPollTimer?.cancel();
     _reviewController.dispose();
     super.dispose();
+  }
+
+  void _startStatusPolling() {
+    _statusPollTimer?.cancel();
+    _statusPollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      _fetchOrderStatus();
+    });
+  }
+
+  Future<void> _fetchOrderStatus() async {
+    if (_orderIdInt <= 0) return;
+    try {
+      final response =
+          await getIt<OrderRemoteDataSource>().getOrder(_orderIdInt);
+      if (!mounted || !response.success) return;
+
+      final order = response.data;
+      final meta = order.meta;
+      final uiStatus = OrderStatusMapper.toLesEatUiStatus(order.status);
+
+      setState(() {
+        _currentStatus = uiStatus;
+        _liveOrderData = {
+          if (_liveOrderData != null) ..._liveOrderData!,
+          'status': order.status,
+          'restaurantName': _liveOrderData?['restaurantName'] ??
+              meta?['restaurant_name'] ??
+              order.pickupContactName,
+          'deliveryAddress': order.dropoffAddress,
+          'subtotal': meta?['subtotal'] ?? _liveOrderData?['subtotal'],
+          'deliveryFee': order.effectiveDeliveryFee,
+          'total': order.effectiveTotalAmount,
+          'dropoff_lat': order.dropoffLat,
+          'dropoff_lng': order.dropoffLng,
+          'pickup_contact_phone': order.pickupContactPhone,
+          'driver_id': order.driverId,
+          'driver_name': order.driverProfile?.user?.name ??
+              (order.driverId != null ? 'Driver #${order.driverId}' : null),
+          'driver_phone': meta?['driver_phone']?.toString(),
+        };
+      });
+
+      if (OrderStatusMapper.isTerminal(order.status)) {
+        _statusPollTimer?.cancel();
+      }
+    } catch (e) {
+      debugPrint('LesEat status poll failed: $e');
+    }
+  }
+
+  Map<String, dynamic> get _orderData =>
+      _liveOrderData ?? widget.orderData ?? {};
+
+  String get _orderTypeKey =>
+      OrderContactActions.normalizeOrderType(widget.orderType);
+
+  void _contactRestaurant() {
+    OrderContactActions.showContactOptions(
+      context,
+      orderId: _orderIdInt,
+      orderType: _orderTypeKey,
+      phone: OrderContactActions.phoneFromOrderData(_orderData),
+    );
+  }
+
+  void _contactDriver() {
+    OrderContactActions.showContactOptions(
+      context,
+      orderId: _orderIdInt,
+      orderType: _orderTypeKey,
+      phone: OrderContactActions.phoneFromOrderData(_orderData, driver: true),
+      driverName: _orderData['driver_name']?.toString(),
+      preferDriver: true,
+    );
+  }
+
+  Future<void> _submitOrderReview() async {
+    if (_orderIdInt <= 0) return;
+
+    final result = await showRatingDialog(
+      context: context,
+      title: 'Rate Your Order',
+      subtitle: 'How was your order?',
+      reviewableType: 'order',
+      reviewableId: _orderIdInt,
+    );
+
+    if (result != true || !mounted) return;
+
+    final driverId = _orderData['driver_id'] as int?;
+    if (driverId != null && driverId > 0) {
+      await showRatingDialog(
+        context: context,
+        title: 'Rate Your Driver',
+        subtitle: 'How was your delivery experience?',
+        reviewableType: 'driver',
+        reviewableId: driverId,
+      );
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
   }
 
   @override
@@ -106,6 +226,8 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
       case 'completed':
       case 'delivered':
         return _buildCompletedView(context);
+      case 'cancelled':
+        return _buildCookingView(context);
       default:
         return _buildCookingView(context);
     }
@@ -113,7 +235,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
 
   // View 1: Cooking Status
   Widget _buildCookingView(BuildContext context) {
-    final orderData = widget.orderData ?? {};
+    final orderData = _orderData;
     final restaurantName = orderData['restaurantName'] ?? 'Restaurant';
     final address = orderData['deliveryAddress'] ?? 'No address';
     final items = orderData['items'] as List<OrderItem>? ?? [];
@@ -249,12 +371,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                // TODO: Contact restaurant
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Contact restaurant feature coming soon')),
-                );
-              },
+              onPressed: _contactRestaurant,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
                 padding: EdgeInsets.symmetric(
@@ -282,7 +399,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
 
   // View 2: Ready for Delivery (with map)
   Widget _buildReadyForDeliveryView(BuildContext context) {
-    final orderData = widget.orderData ?? {};
+    final orderData = _orderData;
     final restaurantName = orderData['restaurantName'] ?? 'Restaurant';
     final address = orderData['deliveryAddress'] ?? 'No address';
     final items = orderData['items'] as List<OrderItem>? ?? [];
@@ -294,8 +411,11 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
           height: ResponsiveUtils.spacing(context, 300),
           color: Colors.grey[200],
           child: GoogleMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(8.4542, 124.6319),
+            initialCameraPosition: CameraPosition(
+              target: LatLng(
+                (orderData['dropoff_lat'] as num?)?.toDouble() ?? 8.4542,
+                (orderData['dropoff_lng'] as num?)?.toDouble() ?? 124.6319,
+              ),
               zoom: 14,
             ),
             myLocationEnabled: true,
@@ -407,11 +527,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Contact restaurant feature coming soon')),
-                      );
-                    },
+                    onPressed: _contactRestaurant,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF5F2D82),
                       padding: EdgeInsets.symmetric(
@@ -439,11 +555,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Contact driver feature coming soon')),
-                      );
-                    },
+                    onPressed: _contactDriver,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey[600],
                       padding: EdgeInsets.symmetric(
@@ -474,7 +586,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
 
   // View 3: Order Complete (with rating)
   Widget _buildCompletedView(BuildContext context) {
-    final orderData = widget.orderData ?? {};
+    final orderData = _orderData;
     final restaurantName = orderData['restaurantName'] ?? 'Restaurant';
 
     return SingleChildScrollView(
@@ -614,26 +726,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_rating == 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please select a rating'),
-                            backgroundColor: Colors.orange,
-                          ),
-                        );
-                        return;
-                      }
-                      // TODO: Submit rating
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Thank you for your feedback!'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                      // Navigate to home or order summary
-                      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-                    },
+                    onPressed: _submitOrderReview,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey[600],
                       padding: EdgeInsets.symmetric(

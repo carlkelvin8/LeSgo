@@ -78,17 +78,27 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState?.validate() ?? false) {
-                  final amount = double.parse(_amountController.text);
-                  ref.read(lespayProvider.notifier).withdraw(amount);
-                  Navigator.of(context).pop();
-                  SnackBarUtils.showSuccess(
-                    context,
-                    'Withdrawal of Php ${amount.toStringAsFixed(2)} successful!',
-                  );
-                }
-              },
+              onPressed: lespayState.isLoading
+                  ? null
+                  : () async {
+                      if (!(_formKey.currentState?.validate() ?? false)) return;
+
+                      final amount = double.parse(_amountController.text);
+                      await ref.read(lespayProvider.notifier).withdraw(amount);
+
+                      if (!context.mounted) return;
+                      Navigator.of(context).pop();
+
+                      final error = ref.read(lespayProvider).error;
+                      if (error != null) {
+                        SnackBarUtils.showError(context, error);
+                      } else {
+                        SnackBarUtils.showSuccess(
+                          context,
+                          'Withdrawal of Php ${amount.toStringAsFixed(2)} submitted.',
+                        );
+                      }
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
                 foregroundColor: Colors.white,

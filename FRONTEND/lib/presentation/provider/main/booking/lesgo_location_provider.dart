@@ -7,6 +7,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/utils/booking_geo_utils.dart';
 
 class LesgoLocationState {
   final LatLng? currentLocation;
@@ -143,7 +144,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
     } catch (e) {
       print('⚠️ LesgoLocation: Error getting location, using default: $e');
       // Use default location (Cagayan de Oro City)
-      final defaultLocation = const LatLng(8.4542, 124.6319);
+      final defaultLocation = BookingGeoUtils.defaultLatLng;
       final address = await _getAddressFromLocation(defaultLocation);
       
       state = state.copyWith(
@@ -283,8 +284,9 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
   }
 
   LocationAddress? _parseAddressComponents(Map<String, String> components) {
-    final houseNumber = components['houseNumber'] ?? '';
-    final streetName = components['streetName'] ?? '';
+    final houseNumber =
+        components['houseNumber'] ?? components['street_number'] ?? '';
+    final streetName = components['streetName'] ?? components['route'] ?? '';
     final houseNumberStreet = houseNumber.isNotEmpty && streetName.isNotEmpty
         ? '$houseNumber $streetName'
         : streetName.isNotEmpty

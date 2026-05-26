@@ -11,6 +11,9 @@ import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
 import '../../../../data/data_source/dto/address/address_dto.dart';
 import '../profile/profile_provider.dart';
 import '../address/address_provider.dart';
+import '../../../../core/services/service_area_checker.dart';
+import '../../../../core/utils/booking_geo_utils.dart';
+import '../../../../core/utils/lespay_order_payment.dart';
 
 class LesgoState {
   final bool isFullscreen;
@@ -311,10 +314,19 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
 
   Future<void> confirmSelection() async {
     print('🔍 LesGo: confirmSelection called');
-    final locationState = _ref.read(lesgoLocationProvider);
-    print(
-      '🔍 LesGo: Current location state - pickup: ${locationState.pickupLocation}, destination: ${locationState.destinationLocation}',
-    );
+    final locationNotifier = _ref.read(lesgoLocationProvider.notifier);
+    var locationState = _ref.read(lesgoLocationProvider);
+
+    // Sync map pin → pickup/destination + reverse geocode address text
+    final pin = locationState.selectedLocation;
+    if (pin != null) {
+      if (state.selectingDestination) {
+        await locationNotifier.updateDestination(pin);
+      } else {
+        await locationNotifier.updatePickup(pin);
+      }
+      locationState = _ref.read(lesgoLocationProvider);
+    }
 
     // Selection already stored in provider on tap; just close overlay
     state = state.copyWith(
@@ -357,12 +369,15 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       '🔍 LesGo: selectPickupAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
     );
     state = state.copyWith(selectedPickupAddress: address);
-    // Update location provider with address coordinates
+    final coords = BookingGeoUtils.resolveCoords(
+      lat: address.latitude,
+      lng: address.longitude,
+    );
     final locationNotifier = _ref.read(lesgoLocationProvider.notifier);
     locationNotifier.updatePickupWithAddress(
-      LatLng(address.latitude, address.longitude),
+      coords,
       address.addressLine1,
-      null, // addressComponents not needed
+      null,
     );
     print(
       '🔍 LesGo: After updatePickupWithAddress, pickupLocation: ${_ref.read(lesgoLocationProvider).pickupLocation}',
@@ -374,12 +389,15 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       '🔍 LesGo: selectDropoffAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
     );
     state = state.copyWith(selectedDropoffAddress: address);
-    // Update location provider with address coordinates
+    final coords = BookingGeoUtils.resolveCoords(
+      lat: address.latitude,
+      lng: address.longitude,
+    );
     final locationNotifier = _ref.read(lesgoLocationProvider.notifier);
     locationNotifier.updateDestinationWithAddress(
-      LatLng(address.latitude, address.longitude),
+      coords,
       address.addressLine1,
-      null, // addressComponents not needed
+      null,
     );
     print(
       '🔍 LesGo: After updateDestinationWithAddress, destinationLocation: ${_ref.read(lesgoLocationProvider).destinationLocation}',
@@ -520,6 +538,23 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       return;
     }
 
+    final pickup = updatedLocationState.pickupLocation!;
+    final dropoff = updatedLocationState.destinationLocation!;
+
+    final serviceArea = await ServiceAreaChecker.checkBookingPoints(
+      pickupLat: pickup.latitude,
+      pickupLng: pickup.longitude,
+      dropoffLat: dropoff.latitude,
+      dropoffLng: dropoff.longitude,
+    );
+    if (!serviceArea.isAvailable) {
+      SnackBarUtils.showWarning(
+        context,
+        '${serviceArea.messageEn}\n${serviceArea.messageTl}',
+      );
+      return;
+    }
+
     // Create real order via API
     if (context.mounted) {
       try {
@@ -533,16 +568,11 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
               ? (updatedLocationState.distanceInKm! * 1000).round()
               : 5000,
           pickup: OrderAddressDto(
-            address:
+            address: updatedLocationState.pickupAddress?.toString() ??
                 state.selectedPickupAddress?.addressLine1 ??
-                (updatedLocationState.pickupAddress?.toString() ??
-                    'Pickup Location'),
-            lat:
-                state.selectedPickupAddress?.latitude ??
-                (updatedLocationState.pickupLocation?.latitude ?? 8.4542),
-            lng:
-                state.selectedPickupAddress?.longitude ??
-                (updatedLocationState.pickupLocation?.longitude ?? 124.6319),
+                'Pickup Location',
+            lat: pickup.latitude,
+            lng: pickup.longitude,
             contactName:
                 state.selectedPickupAddress?.contactName?.isNotEmpty == true
                 ? state.selectedPickupAddress!.contactName!
@@ -553,17 +583,11 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
                 : (user?.phone ?? '+639123456789'),
           ),
           dropoff: OrderAddressDto(
-            address:
+            address: updatedLocationState.destinationAddress?.toString() ??
                 state.selectedDropoffAddress?.addressLine1 ??
-                (updatedLocationState.destinationAddress?.toString() ??
-                    'Destination'),
-            lat:
-                state.selectedDropoffAddress?.latitude ??
-                (updatedLocationState.destinationLocation?.latitude ?? 8.4542),
-            lng:
-                state.selectedDropoffAddress?.longitude ??
-                (updatedLocationState.destinationLocation?.longitude ??
-                    124.6319),
+                'Destination',
+            lat: dropoff.latitude,
+            lng: dropoff.longitude,
             contactName:
                 state.selectedDropoffAddress?.contactName?.isNotEmpty == true
                 ? state.selectedDropoffAddress!.contactName!
@@ -588,6 +612,12 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
         final response = await orderDataSource.createOrder(createOrderRequest);
         print('🟢 LesGo: Order created successfully - ID: ${response.data.id}');
 
+        await applyLesPayWalletDeduction(
+          _ref,
+          paymentMethod: state.paymentMethod,
+          amount: response.data.estimatedFare,
+        );
+
         final orderId = response.data.id.toString();
 
         AppRouter.pushReplacement(
@@ -610,7 +640,12 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       } catch (e) {
         print('🔴 LesGo: Error creating order - $e');
         if (context.mounted) {
-          SnackBarUtils.showError(context, 'Failed to create booking: $e');
+          SnackBarUtils.showErrorFrom(
+            context,
+            e,
+            fallbackEn: 'Could not create your LesGo booking.',
+            fallbackTl: 'Hindi makagawa ng LesGo booking.',
+          );
         }
       }
     }

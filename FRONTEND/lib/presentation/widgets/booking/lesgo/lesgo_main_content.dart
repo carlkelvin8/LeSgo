@@ -31,12 +31,25 @@ class LesgoMainContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lesgoState = ref.watch(lesgoProvider);
-    final locationState = ref.watch(lesgoLocationProvider);
+    final isFullscreen = ref.watch(
+      lesgoProvider.select((s) => s.isFullscreen),
+    );
+    final shouldCollapse = ref.watch(
+      lesgoProvider.select((s) => s.shouldCollapseAfterFullscreen),
+    );
+    final paymentMethod = ref.watch(
+      lesgoProvider.select((s) => s.paymentMethod),
+    );
+    final selectingDestination = ref.watch(
+      lesgoProvider.select((s) => s.selectingDestination),
+    );
+    final pickupAddress = ref.watch(
+      lesgoLocationProvider.select((s) => s.pickupAddress),
+    );
     final notifier = ref.read(lesgoProvider.notifier);
 
     // Handle post-frame callbacks
-    if (lesgoState.shouldCollapseAfterFullscreen && !lesgoState.isFullscreen) {
+    if (shouldCollapse && !isFullscreen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifier.setShouldCollapseAfterFullscreen(false);
         onCollapseSheet();
@@ -51,7 +64,7 @@ class LesgoMainContent extends ConsumerWidget {
 
     return Stack(
       children: [
-        if (!lesgoState.isFullscreen)
+        if (!isFullscreen)
           Positioned.fill(
             child: LesgoMapPanel(
               height: mapHeight,
@@ -61,18 +74,20 @@ class LesgoMainContent extends ConsumerWidget {
               onMapTap: (latLng) => notifier.onMapTap(latLng),
             ),
           ),
-        if (!lesgoState.isFullscreen)
+        if (!isFullscreen)
           DraggableScrollableSheet(
             controller: sheetController,
             initialChildSize: sheetDefault,
             minChildSize: sheetMin,
             maxChildSize: sheetMax,
+            snap: true,
+            snapAnimationDuration: const Duration(milliseconds: 200),
             builder: (context, scrollController) {
               return LesgoDetailsPanel(
-                locationState: locationState,
+                locationState: ref.read(lesgoLocationProvider),
                 onChangeCurrent: () => notifier.openPickupSelection(),
                 onChangeDestination: () => notifier.openDestinationSelection(),
-                paymentMethod: lesgoState.paymentMethod,
+                paymentMethod: paymentMethod,
                 onPaymentChanged: (val) {
                   if (val != null) {
                     notifier.updatePaymentMethod(val);
@@ -87,7 +102,7 @@ class LesgoMainContent extends ConsumerWidget {
               );
             },
           ),
-        if (lesgoState.isFullscreen)
+        if (isFullscreen)
           Stack(
             children: [
               FullscreenMapOverlay(
@@ -120,8 +135,8 @@ class LesgoMainContent extends ConsumerWidget {
                   ),
                 ),
               ),
-              if (locationState.isLoading &&
-                  locationState.pickupAddress == null)
+              if (ref.watch(lesgoLocationProvider.select((s) => s.isLoading)) &&
+                  pickupAddress == null)
                 Positioned.fill(
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
@@ -163,19 +178,19 @@ class LesgoMainContent extends ConsumerWidget {
                 ),
             ],
           ),
-        if (lesgoState.isFullscreen)
+        if (isFullscreen)
           Positioned(
             top: ResponsiveUtils.spacing(context, 16),
             left: 0,
             right: 0,
             child: MapSearchBar(
-              isSelectingDestination: lesgoState.selectingDestination,
+              isSelectingDestination: selectingDestination,
               onPlaceSelected:
                   (latLng, formattedAddress, addressComponents) async {
                     final locationNotifier = ref.read(
                       lesgoLocationProvider.notifier,
                     );
-                    if (lesgoState.selectingDestination) {
+                    if (selectingDestination) {
                       await locationNotifier.updateDestinationWithAddress(
                         latLng,
                         formattedAddress,
@@ -193,7 +208,7 @@ class LesgoMainContent extends ConsumerWidget {
                   notifier.animateOverlayToLocation(latLng),
             ),
           ),
-        if (lesgoState.isFullscreen)
+        if (isFullscreen)
           Positioned(
             left: 16,
             right: 16,

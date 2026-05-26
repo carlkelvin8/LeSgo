@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesride_location_provider.dart';
+import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/marker_utils.dart';
 
 class LesrideMapWidget extends ConsumerStatefulWidget {
@@ -26,37 +27,16 @@ class LesrideMapWidget extends ConsumerStatefulWidget {
   ConsumerState<LesrideMapWidget> createState() => _LesrideMapWidgetState();
 }
 
-class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
-    with TickerProviderStateMixin {
+class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
   GoogleMapController? _mapController;
   BitmapDescriptor? _purpleMarker;
   BitmapDescriptor? _redMarker;
   BitmapDescriptor? _roseMarker;
-  
-  // Animation controllers for pulsing effect
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadMarkers();
-    
-    // Initialize pulse animation for pickup marker
-    _pulseController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-    _pulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-    
-    // Start pulsing animation
-    _pulseController.repeat(reverse: true);
   }
 
   Future<void> _loadMarkers() async {
@@ -74,41 +54,43 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
 
   @override
   void dispose() {
-    // Don't dispose the controller here - it's managed by GoogleMap widget
-    // _mapController?.dispose();
-    _pulseController.dispose();
+    _mapController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final locationState = ref.watch(lesrideLocationProvider);
-    
-    // Debug: Log polylines state
-    print('🗺️ LesrideMapWidget: Building with ${locationState.routePolylines.length} polylines');
-    if (locationState.routePolylines.isNotEmpty) {
-      final polyline = locationState.routePolylines.first;
-      print('🗺️ LesrideMapWidget: Polyline has ${polyline.points.length} points, color: ${polyline.color}');
-      
-      // Check if there are multiple polylines
-      if (locationState.routePolylines.length > 1) {
-        print('🚨 LesrideMapWidget: WARNING - Multiple polylines detected!');
-        for (var poly in locationState.routePolylines) {
-          print('🚨 Polyline: ${poly.polylineId.value}, color: ${poly.color}, points: ${poly.points.length}');
-        }
-      }
-    }
+    final pickup = ref.watch(
+      lesrideLocationProvider.select((s) => s.pickupLocation),
+    );
+    final destination = ref.watch(
+      lesrideLocationProvider.select((s) => s.destinationLocation),
+    );
+    final selected = ref.watch(
+      lesrideLocationProvider.select((s) => s.selectedLocation),
+    );
+    final polylines = ref.watch(
+      lesrideLocationProvider.select((s) => s.routePolylines),
+    );
+    final isLoadingRoute = ref.watch(
+      lesrideLocationProvider.select((s) => s.isLoadingRoute),
+    );
+    final distanceKm = ref.watch(
+      lesrideLocationProvider.select((s) => s.distanceInKm),
+    );
+    final durationSec = ref.watch(
+      lesrideLocationProvider.select((s) => s.durationInSeconds),
+    );
 
     final markers = <Marker>{};
     
     // IMPORTANT: Only show markers if we have valid locations
     // This prevents showing stale markers during updates
-    if (widget.showPickupDestination && locationState.pickupLocation != null && _purpleMarker != null) {
-      print('🎨 LesrideMapWidget: Adding PURPLE pickup marker at ${locationState.pickupLocation}');
+    if (widget.showPickupDestination && pickup != null && _purpleMarker != null) {
       markers.add(
         Marker(
           markerId: const MarkerId('pickup'),
-          position: locationState.pickupLocation!,
+          position: pickup,
           icon: _purpleMarker!,
           infoWindow: const InfoWindow(title: 'Pickup Location'),
         ),
@@ -117,15 +99,14 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
     
     // Only show destination marker if we have a destination location
     // AND it's different from pickup (to avoid duplicate markers)
-    if (widget.showPickupDestination && 
-        locationState.destinationLocation != null && 
+    if (widget.showPickupDestination &&
+        destination != null &&
         _redMarker != null &&
-        locationState.destinationLocation != locationState.pickupLocation) {
-      print('🎨 LesrideMapWidget: Adding RED destination marker at ${locationState.destinationLocation}');
+        destination != pickup) {
       markers.add(
         Marker(
           markerId: const MarkerId('destination'),
-          position: locationState.destinationLocation!,
+          position: destination,
           icon: _redMarker!,
           infoWindow: const InfoWindow(title: 'Destination'),
         ),
@@ -134,43 +115,38 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
     
     // Only show selected marker during fullscreen selection
     // AND only if it's different from both pickup and destination
-    if (locationState.selectedLocation != null && 
-        widget.isFullscreen && 
+    if (selected != null &&
+        widget.isFullscreen &&
         _roseMarker != null &&
-        locationState.selectedLocation != locationState.pickupLocation &&
-        locationState.selectedLocation != locationState.destinationLocation) {
+        selected != pickup &&
+        selected != destination) {
       markers.add(
         Marker(
           markerId: const MarkerId('selected'),
-          position: locationState.selectedLocation!,
+          position: selected,
           icon: _roseMarker!,
           infoWindow: const InfoWindow(title: 'Selected Location'),
         ),
       );
     }
 
-    return Stack(
+    return RepaintBoundary(
+      child: Stack(
       children: [
         GoogleMap(
-          key: ValueKey('lesride_map_${locationState.pickupLocation}_${locationState.destinationLocation}_${locationState.routePolylines.length}'),
+          key: const ValueKey('lesride_map_stable'),
           mapType: MapType.normal,
           onMapCreated: (controller) {
             _mapController = controller;
             widget.onMapCreated(controller);
-            // Debug: Log polylines being passed to map
-            print('🗺️ LesrideMapWidget: Map created with ${locationState.routePolylines.length} polylines');
-            for (var polyline in locationState.routePolylines) {
-              print('🗺️ LesrideMapWidget: Polyline ${polyline.polylineId.value} has ${polyline.points.length} points, color: ${polyline.color}, width: ${polyline.width}');
-            }
           },
           initialCameraPosition: CameraPosition(
-            target:
-                locationState.selectedLocation ?? const LatLng(14.5995, 120.9842), // Manila default
+            target: selected ?? BookingGeoUtils.defaultLatLng,
             zoom: 16.0,
           ),
           onTap: widget.onMapTap,
           markers: markers,
-          polylines: locationState.routePolylines, // Re-enabled polylines
+          polylines: polylines,
           myLocationEnabled: true, // Re-enabled
           myLocationButtonEnabled: false,
           zoomControlsEnabled: true, // Enable built-in zoom controls
@@ -184,29 +160,8 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
           liteModeEnabled: false,
         ),
         
-        // Animated pulsing pickup marker overlay
-        if (locationState.pickupLocation != null && widget.showPickupDestination)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  return CustomPaint(
-                    painter: PulsingMarkerPainter(
-                      location: locationState.pickupLocation!,
-                      mapController: _mapController,
-                      pulseScale: _pulseAnimation.value,
-                      color: const Color(0xFF7B1FA2).withOpacity(0.3),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        
         // Route info overlay when both locations are set
-        if (locationState.pickupLocation != null && 
-            locationState.destinationLocation != null)
+        if (pickup != null && destination != null)
           Positioned(
             top: 16,
             left: 16,
@@ -224,7 +179,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
                   ),
                 ],
               ),
-              child: locationState.isLoadingRoute
+              child: isLoadingRoute
                   ? Row(
                       children: [
                         SizedBox(
@@ -248,7 +203,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
                         ),
                       ],
                     )
-                  : locationState.distanceInKm != null
+                  : distanceKm != null
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
@@ -273,16 +228,16 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '${locationState.distanceInKm!.toStringAsFixed(1)} km',
+                                        '${distanceKm!.toStringAsFixed(1)} km',
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.black87,
                                         ),
                                       ),
-                                      if (locationState.durationInSeconds != null)
+                                      if (durationSec != null)
                                         Text(
-                                          '${(locationState.durationInSeconds! / 60).ceil()} min estimated',
+                                          '${(durationSec! / 60).ceil()} min estimated',
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey[600],
@@ -412,15 +367,12 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
                 elevation: 4,
                 heroTag: "center_map", // Unique hero tag
                 onPressed: () {
-                  // Center map on route or current location
-                  final locationState = ref.read(lesrideLocationProvider);
-                  if (locationState.pickupLocation != null && 
-                      locationState.destinationLocation != null) {
-                    // Fit both markers
-                    _fitMarkersInView(locationState);
-                  } else if (locationState.currentLocation != null) {
-                    // Center on current location
-                    _centerOnLocation(locationState.currentLocation!);
+                  if (pickup != null && destination != null) {
+                    _fitMarkersInView(pickup, destination);
+                  } else {
+                    final current =
+                        ref.read(lesrideLocationProvider).currentLocation;
+                    if (current != null) _centerOnLocation(current);
                   }
                 },
                 child: const Icon(Icons.center_focus_strong),
@@ -443,15 +395,12 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget>
           ),
         ),
       ],
+    ),
     );
   }
 
-  // Helper method to fit markers in view
-  void _fitMarkersInView(LesrideLocationState locationState) {
+  void _fitMarkersInView(LatLng pickup, LatLng destination) {
     if (_mapController == null) return;
-    
-    final pickup = locationState.pickupLocation!;
-    final destination = locationState.destinationLocation!;
     
     final bounds = LatLngBounds(
       southwest: LatLng(

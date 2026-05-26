@@ -9,6 +9,8 @@ class PaymentMethodSelector extends StatelessWidget {
   final Function(String) onMethodChanged;
   final bool enabled;
   final double? walletBalance;
+  /// When set, LesPay is selectable only if balance >= this amount.
+  final double? minimumWalletAmount;
   final bool showWallet;
   final bool showDigitalPayments;
 
@@ -18,9 +20,16 @@ class PaymentMethodSelector extends StatelessWidget {
     required this.onMethodChanged,
     this.enabled = true,
     this.walletBalance,
+    this.minimumWalletAmount,
     this.showWallet = false,
     this.showDigitalPayments = false,
   });
+
+  bool get _walletHasSufficientBalance {
+    final balance = walletBalance ?? 0;
+    final required = minimumWalletAmount ?? 0.01;
+    return balance >= required;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,11 +93,13 @@ class PaymentMethodSelector extends StatelessWidget {
               value: 'wallet',
               title: 'LesPay Wallet',
               subtitle: walletBalance != null
-                  ? 'Balance: ₱${walletBalance!.toStringAsFixed(2)}'
+                  ? _walletHasSufficientBalance
+                      ? 'Balance: ₱${walletBalance!.toStringAsFixed(2)}'
+                      : 'Insufficient balance (₱${walletBalance!.toStringAsFixed(2)})'
                   : 'Digital wallet payment',
               icon: Icons.account_balance_wallet,
               iconColor: const Color(0xFF5F2D82),
-              enabled: enabled && (walletBalance ?? 0) > 0,
+              enabled: enabled && _walletHasSufficientBalance,
             ),
           ],
 

@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../constants/api_constants.dart';
 import '../di/local_storage_service.dart';
+import '../services/rate_limiter_service.dart';
+import 'rate_limit_interceptor.dart';
 
 @lazySingleton
 class DioClient {
@@ -21,6 +23,7 @@ class DioClient {
         ),
       ) {
     print('🔵 DioClient: Initialized');
+    dio.interceptors.add(RateLimitInterceptor(rateLimiter));
     // Add interceptor to attach token to all requests
     dio.interceptors.add(
       InterceptorsWrapper(

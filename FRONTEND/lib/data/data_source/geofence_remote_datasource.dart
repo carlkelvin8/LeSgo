@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/utils/booking_geo_utils.dart';
 import 'dto/geofence/geofence_dto.dart';
 
 @lazySingleton
@@ -18,25 +19,14 @@ class GeofenceRemoteDataSource {
           .map((item) => GeofenceDto.fromJson(item))
           .toList();
     } catch (e) {
-      // Mock response
       return [
         GeofenceDto(
           id: 1,
-          name: 'Manila City Center',
-          type: 'delivery_zone',
-          latitude: 14.5995,
-          longitude: 120.9842,
-          radiusKm: 5.0,
-          isActive: true,
-          createdAt: DateTime.now().toIso8601String(),
-        ),
-        GeofenceDto(
-          id: 2,
-          name: 'Quezon City Mall',
-          type: 'pickup_zone',
-          latitude: 14.6760,
-          longitude: 121.0437,
-          radiusKm: 2.0,
+          name: 'Cagayan de Oro Service Area',
+          type: 'service_area',
+          latitude: 8.4542,
+          longitude: 124.6319,
+          radiusKm: 40.0,
           isActive: true,
           createdAt: DateTime.now().toIso8601String(),
         ),
@@ -86,16 +76,18 @@ class GeofenceRemoteDataSource {
       });
       return LocationCheckDto.fromJson(response.data['data']);
     } catch (e) {
-      // Mock response
+      final inside = BookingGeoUtils.isInsideServiceArea(latitude, longitude);
       return LocationCheckDto(
-        insideGeofence: true,
-        geofences: [
-          GeofenceInfoDto(
-            id: 1,
-            name: 'Manila City Center',
-            type: 'delivery_zone',
-          ),
-        ],
+        insideGeofence: inside,
+        geofences: inside
+            ? [
+                GeofenceInfoDto(
+                  id: 1,
+                  name: 'Cagayan de Oro Service Area',
+                  type: 'service_area',
+                ),
+              ]
+            : [],
       );
     }
   }

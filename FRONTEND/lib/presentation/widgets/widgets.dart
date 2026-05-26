@@ -146,6 +146,7 @@ export 'lespay/lespay_menu_item.dart';
 export 'lespay/lespay_actions_section.dart';
 export 'lespay/link_accounts_section.dart';
 export 'lespay/top_up_dialog.dart';
+export 'lespay/wallet_transactions_section.dart';
 export 'lespay/withdraw_dialog.dart';
 
 // Inbox widgets
@@ -178,6 +179,7 @@ export 'location/location_fullscreen_map_overlay.dart';
 
 // Payment widgets
 export 'payment/payment_method_selector.dart';
+export 'payment/booking_payment_method_section.dart';
 
 // Review widgets
 // export 'review/rating_stars.dart';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../provider/register/register_provider.dart';
 
 class MapWidget extends ConsumerWidget {
@@ -26,7 +27,7 @@ class MapWidget extends ConsumerWidget {
     return GoogleMap(
       onMapCreated: onMapCreated,
       initialCameraPosition: CameraPosition(
-        target: registerState.selectedLocation ?? const LatLng(8.4542, 124.6319), // Cagayan de Oro default
+        target: registerState.selectedLocation ?? BookingGeoUtils.defaultLatLng,
         zoom: 16.0,
       ),
       onTap: onMapTap,

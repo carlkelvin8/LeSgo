@@ -105,6 +105,8 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
             'deliveryAddress': order.dropoffAddress,
             'estimated_fare': order.estimatedFare,
             'status': order.status,
+            'driver_id': order.driverId,
+            'pickup_contact_phone': order.pickupContactPhone,
             'lesbuy_items': order.effectiveItems.map((item) => {
               'id': item.id,
               'name': item.name,

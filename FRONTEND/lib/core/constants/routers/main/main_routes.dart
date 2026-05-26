@@ -8,6 +8,7 @@ class MainRoutes {
   static const String favorites = '/favorites';
   static const String offers = '/offers';
   static const String missions = '/missions';
+  static const String loyaltyRedeem = '/loyalty-redeem';
   static const String settings = '/settings';
   static const String faqs = '/faqs';
   static const String about = '/about';

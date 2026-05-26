@@ -4,16 +4,21 @@ import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/utils/lespay_order_payment.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../data/data_source/dto/order/create_order_request_dto.dart';
 import '../../../../../data/data_source/dto/address/address_dto.dart';
+import '../../../../provider/main/booking/lesbuy/lesbuy_checkout_provider.dart';
 import '../../../../provider/main/booking/lesbuy/manual_order_provider.dart';
 import '../../../../provider/main/booking/lesbuy/store_detail_provider.dart';
+import '../../../../widgets/booking/leseat/checkout/voucher_bottom_sheet.dart';
+import '../../../../../core/utils/booking_geo_utils.dart';
 import '../../../../provider/main/profile/profile_provider.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/booking/lesbuy/cart/manual_order_section.dart';
 import '../../../../widgets/booking/lesbuy/cart/store_order_section.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
+import '../../../../widgets/payment/booking_payment_method_section.dart';
 import '../../../../widgets/widgets.dart';
 
 class StoreCartScreen extends ConsumerStatefulWidget {
@@ -25,6 +30,41 @@ class StoreCartScreen extends ConsumerStatefulWidget {
 
 class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
   AddressDto? _selectedAddress;
+  String _paymentMethod = 'cash';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final storeState = ref.read(storeDetailProvider);
+      ref.read(lesbuyCheckoutProvider.notifier).initialize(
+            storePartnerId: storeState.partnerStoreId,
+          );
+      final userId = ref.read(profileProvider).user?.id;
+      if (userId != null) {
+        ref.read(addressProvider.notifier).loadAddresses(userId);
+      }
+    });
+  }
+
+  Future<void> _showVoucherPicker(BuildContext context) async {
+    final storeState = ref.read(storeDetailProvider);
+    final subtotal = storeState.cartTotal;
+    final code = await showVoucherBottomSheet(context);
+    if (code == null || !mounted) return;
+
+    final error = await ref
+        .read(lesbuyCheckoutProvider.notifier)
+        .applyVoucher(code, subtotal);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error ?? 'Voucher applied'),
+        backgroundColor: error != null ? Colors.red : Colors.green,
+      ),
+    );
+  }
 
   void _showAddressSelector(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
@@ -57,6 +97,10 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                   setState(() {
                     _selectedAddress = address;
                   });
+                  ref.read(lesbuyCheckoutProvider.notifier).refreshDeliveryFee(
+                        dropoffLat: address.latitude,
+                        dropoffLng: address.longitude,
+                      );
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -81,8 +125,10 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
     final manualOrderState = ref.watch(manualOrderProvider);
     final manualOrderNotifier = ref.read(manualOrderProvider.notifier);
     final profileState = ref.watch(profileProvider);
+    final lesbuyCheckout = ref.watch(lesbuyCheckoutProvider);
+    final addressState = ref.watch(addressProvider);
 
-    // Get delivery address - use selected address or fallback to profile
+    // Get delivery address - use selected address or saved default
     final String userAddress;
     final double dropoffLat;
     final double dropoffLng;
@@ -93,18 +139,29 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
       userAddress = _selectedAddress!.addressLine1;
       dropoffLat = _selectedAddress!.latitude;
       dropoffLng = _selectedAddress!.longitude;
-      contactName = _selectedAddress!.contactName?.isNotEmpty == true 
-          ? _selectedAddress!.contactName! 
+      contactName = _selectedAddress!.contactName?.isNotEmpty == true
+          ? _selectedAddress!.contactName!
           : (profileState.user?.name ?? 'Customer');
-      contactPhone = _selectedAddress!.contactPhone?.isNotEmpty == true 
-          ? _selectedAddress!.contactPhone! 
+      contactPhone = _selectedAddress!.contactPhone?.isNotEmpty == true
+          ? _selectedAddress!.contactPhone!
+          : (profileState.user?.phone ?? '+639123456789');
+    } else if (addressState.defaultAddress != null) {
+      final addr = addressState.defaultAddress!;
+      userAddress = addr.addressLine1;
+      dropoffLat = addr.latitude;
+      dropoffLng = addr.longitude;
+      contactName = addr.contactName?.isNotEmpty == true
+          ? addr.contactName!
+          : (profileState.user?.name ?? 'Customer');
+      contactPhone = addr.contactPhone?.isNotEmpty == true
+          ? addr.contactPhone!
           : (profileState.user?.phone ?? '+639123456789');
     } else {
-      userAddress = profileState.address1.isNotEmpty 
-          ? profileState.address1 
+      userAddress = profileState.address1.isNotEmpty
+          ? profileState.address1
           : (profileState.user?.addressLine1 ?? 'No address set');
-      dropoffLat = 8.4542; // Default coordinates
-      dropoffLng = 124.6319;
+      dropoffLat = BookingGeoUtils.defaultLat;
+      dropoffLng = BookingGeoUtils.defaultLng;
       contactName = profileState.user?.name ?? 'Customer';
       contactPhone = profileState.user?.phone ?? '+639123456789';
     }
@@ -114,8 +171,10 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
     final bool isManualOrderEmpty = manualOrderState.confirmedItems.isEmpty;
     final bool isCartEmpty = isStoreCartEmpty && isManualOrderEmpty;
     final subtotal = isStoreCartEmpty ? 0.0 : storeState.cartTotal;
-    final deliveryFee = isCartEmpty ? 0.0 : 50.0;
-    final total = subtotal + deliveryFee;
+    final deliveryFee =
+        isCartEmpty ? 0.0 : lesbuyCheckout.deliveryFee;
+    final discount = isCartEmpty ? 0.0 : lesbuyCheckout.discount;
+    final total = subtotal + deliveryFee - discount;
 
     // Total item count for summary
     final storeItemCount = storeState.cartItems.fold(
@@ -247,13 +306,13 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
                     // Payment Method Section
-                    PaymentMethodSelector(
-                      selectedMethod: 'cash',
+                    BookingPaymentMethodSection(
+                      selectedMethod: _paymentMethod,
                       onMethodChanged: (method) {
-                        // Payment method changed - currently only COD supported
-                        print('Payment method changed to: $method');
+                        setState(() => _paymentMethod = method);
                       },
                       enabled: !isCartEmpty,
+                      minimumAmount: isCartEmpty ? null : total,
                     ),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -265,8 +324,10 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
             // Fixed Voucher Section
             VoucherSection(
               enabled: !isCartEmpty,
-              onApplyTap: () {
-                // TODO: Navigate to voucher selection
+              appliedVoucher: lesbuyCheckout.voucherCode,
+              onApplyTap: () => _showVoucherPicker(context),
+              onRemoveTap: () {
+                ref.read(lesbuyCheckoutProvider.notifier).removeVoucher();
               },
             ),
 
@@ -274,6 +335,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
             OrderSummarySection(
               subtotal: subtotal,
               delivery: deliveryFee,
+              discount: discount,
               total: total,
               itemCount: totalItemCount,
             ),
@@ -307,28 +369,9 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                     // Create LesBuy order using API
                     try {
                       final orderDataSource = getIt<OrderRemoteDataSource>();
-                      final profileState = ref.read(profileProvider);
-                      final user = profileState.user;
-
-                      // Use selected address or fallback
-                      final dropoffAddress = _selectedAddress != null
-                          ? _selectedAddress!.addressLine1
-                          : (user?.addressLine1 ?? (profileState.address1.isNotEmpty 
-                              ? profileState.address1 
-                              : 'Brgy 6, Claveria, Cagayan'));
-                      
-                      final dropoffLat = _selectedAddress?.latitude ?? 8.4542;
-                      final dropoffLng = _selectedAddress?.longitude ?? 124.6319;
-                      
-                      final dropoffContactName = _selectedAddress?.contactName?.isNotEmpty == true
-                          ? _selectedAddress!.contactName!
-                          : (user?.name ?? (profileState.name.isNotEmpty 
-                              ? profileState.name 
-                              : 'Customer'));
-                      
-                      final dropoffContactPhone = _selectedAddress?.contactPhone?.isNotEmpty == true
-                          ? _selectedAddress!.contactPhone!
-                          : (user?.phone ?? '+639123456789');
+                      final dropoffAddress = userAddress;
+                      final dropoffContactName = contactName;
+                      final dropoffContactPhone = contactPhone;
 
                       // Prepare order items
                       final orderItems = <OrderItemDto>[];
@@ -353,13 +396,15 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                         ));
                       }
 
+                      final checkoutQuote = ref.read(lesbuyCheckoutProvider);
+
                       final createOrderRequest = CreateOrderRequestDto(
-                        serviceId: 4, // LesBuy service ID
-                        estimatedDistanceM: 5000, // 5km default
+                        serviceId: 4,
+                        estimatedDistanceM: checkoutQuote.estimatedDistanceM,
                         pickup: OrderAddressDto(
                           address: storeState.storeName ?? 'Store',
-                          lat: 8.4542, // Default Cagayan de Oro coordinates
-                          lng: 124.6319,
+                          lat: checkoutQuote.pickupLat,
+                          lng: checkoutQuote.pickupLng,
                           contactName: storeState.storeName ?? 'Store',
                           contactPhone: '+639123456789',
                         ),
@@ -371,13 +416,18 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                           contactPhone: dropoffContactPhone,
                         ),
                         notes: 'LesBuy order: ${orderItems.length} items',
-                        paymentMethod: 'cash', // Use 'cash' instead of 'cod'
+                        paymentMethod: _paymentMethod,
+                        voucherCode: checkoutQuote.voucherCode,
+                        discountAmount: discount,
                         items: orderItems,
                         meta: {
                           'store_name': storeState.storeName,
                           'subtotal': subtotal,
                           'delivery_fee': deliveryFee,
+                          'discount': discount,
+                          'voucher_code': checkoutQuote.voucherCode,
                           'total': total,
+                          'grand_total': total,
                           'order_type': 'lesbuy',
                         },
                       );
@@ -385,6 +435,12 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       print('🔵 LesBuy: Creating order with API...');
                       final response = await orderDataSource.createOrder(createOrderRequest);
                       print('🟢 LesBuy: Order created successfully - ID: ${response.data.id}');
+
+                      await applyLesPayWalletDeduction(
+                        ref,
+                        paymentMethod: _paymentMethod,
+                        amount: total,
+                      );
 
                       if (context.mounted) {
                         final orderId = response.data.id.toString();

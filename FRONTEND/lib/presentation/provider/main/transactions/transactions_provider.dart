@@ -1,15 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../domain/entities/transactions/transaction.dart';
-import '../../../../data/data_source/order_remote_datasource.dart';
+
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/payment_status_utils.dart';
+import '../../../../data/data_source/dto/order/order_dto.dart';
+import '../../../../data/data_source/dto/wallet/wallet_dto.dart';
+import '../../../../data/data_source/order_remote_datasource.dart';
+import '../../../../data/data_source/wallet_remote_datasource.dart';
+import '../../../../domain/entities/transactions/transaction.dart';
+
+/// `all` | `order` | `wallet`
+typedef TransactionKindFilter = String?;
+
+/// `paid` | `pending` | `failed` | `refunded`
+typedef PaymentStatusFilter = String?;
 
 class TransactionsState {
   final List<Transaction> transactions;
   final List<Transaction> filteredTransactions;
   final bool isLoading;
   final String? error;
-  final String? selectedService; // null = All
-  final String? selectedStatus; // null = All
+  final String? selectedService;
+  final String? selectedStatus;
+  final TransactionKindFilter selectedKind;
+  final PaymentStatusFilter selectedPaymentStatus;
   final String searchQuery;
 
   TransactionsState({
@@ -19,6 +32,8 @@ class TransactionsState {
     this.error,
     this.selectedService,
     this.selectedStatus,
+    this.selectedKind,
+    this.selectedPaymentStatus,
     this.searchQuery = '',
   });
 
@@ -29,18 +44,29 @@ class TransactionsState {
     String? error,
     String? selectedService,
     String? selectedStatus,
+    TransactionKindFilter? selectedKind,
+    PaymentStatusFilter? selectedPaymentStatus,
     String? searchQuery,
     bool clearService = false,
     bool clearStatus = false,
+    bool clearKind = false,
+    bool clearPaymentStatus = false,
     bool clearError = false,
   }) {
     return TransactionsState(
       transactions: transactions ?? this.transactions,
-      filteredTransactions: filteredTransactions ?? this.filteredTransactions,
+      filteredTransactions:
+          filteredTransactions ?? this.filteredTransactions,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : error,
-      selectedService: clearService ? null : (selectedService ?? this.selectedService),
-      selectedStatus: clearStatus ? null : (selectedStatus ?? this.selectedStatus),
+      selectedService:
+          clearService ? null : (selectedService ?? this.selectedService),
+      selectedStatus:
+          clearStatus ? null : (selectedStatus ?? this.selectedStatus),
+      selectedKind: clearKind ? null : (selectedKind ?? this.selectedKind),
+      selectedPaymentStatus: clearPaymentStatus
+          ? null
+          : (selectedPaymentStatus ?? this.selectedPaymentStatus),
       searchQuery: searchQuery ?? this.searchQuery,
     );
   }
@@ -48,106 +74,47 @@ class TransactionsState {
 
 class TransactionsNotifier extends StateNotifier<TransactionsState> {
   final OrderRemoteDataSource _orderDataSource = getIt<OrderRemoteDataSource>();
+  final WalletRemoteDataSource _walletDataSource =
+      getIt<WalletRemoteDataSource>();
 
-  TransactionsNotifier()
+  TransactionsNotifier({TransactionKindFilter initialKindFilter})
       : super(TransactionsState(
           transactions: [],
           filteredTransactions: [],
           isLoading: true,
+          selectedKind: initialKindFilter,
         )) {
-    print('🔵 TransactionsNotifier: Constructor called');
     _loadTransactions();
   }
 
   Future<void> _loadTransactions() async {
-    print('🔵 TransactionsNotifier: _loadTransactions called');
-    
     try {
       state = state.copyWith(isLoading: true, clearError: true);
-      print('🔵 Transactions: State updated to loading');
-      
-      print('🔵 Transactions: Starting API call...');
-      print('🔵 Transactions: DataSource: ${_orderDataSource.runtimeType}');
-      
-      final response = await _orderDataSource.getOrders(perPage: 10); // Reduced from 100 to 10
-      print('🟢 Transactions: API call successful!');
-      print('🟢 Transactions: Got ${response.data.length} orders');
-      
-      if (response.data.isEmpty) {
-        print('⚠️ Transactions: No orders returned from API');
-        state = state.copyWith(
-          transactions: [],
-          filteredTransactions: [],
-          isLoading: false,
-        );
-        return;
-      }
-      
-      print('🔍 Transactions: First order ID: ${response.data.first.id}');
-      print('🔍 Transactions: Processing ${response.data.length} orders...');
-      
-      final transactions = response.data.map((orderDto) {
-        // Use the new helper methods for production compatibility
-        final items = orderDto.effectiveItems;
-        double itemsSubtotal = 0.0;
-        
-        // Calculate subtotal from effective items
-        if (items.isNotEmpty) {
-          for (final item in items) {
-            final itemPrice = item.actualPrice ?? item.estimatedPrice ?? 0.0;
-            itemsSubtotal += itemPrice * item.quantity;
-          }
-        }
-        
-        // Use effective delivery fee and total amount
-        final deliveryFee = orderDto.effectiveDeliveryFee;
-        final displayAmount = orderDto.effectiveTotalAmount;
 
-        // Map effective items to transaction items
-        List<TransactionItem>? transactionItems;
-        if (items.isNotEmpty) {
-          transactionItems = items.map((item) {
-            return TransactionItem(
-              name: item.name,
-              quantity: item.quantity,
-              price: item.actualPrice ?? item.estimatedPrice,
-              unit: item.unit,
-            );
-          }).toList();
-        }
+      List<WalletTransactionDto> walletTxs = [];
+      var orderTransactions = <Transaction>[];
 
-        return Transaction(
-          id: orderDto.id.toString(),
-          serviceName: _getServiceName(orderDto.serviceId),
-          serviceId: orderDto.serviceId,
-          date: orderDto.createdAt ?? DateTime.now().toIso8601String(),
-          pickupLocation: orderDto.pickupAddress,
-          dropoffLocation: orderDto.dropoffAddress,
-          amount: displayAmount,
-          status: _mapOrderStatus(orderDto.status),
-          rawStatus: orderDto.status,
-          items: transactionItems,
-        );
-      }).toList();
-      
-      print('🟢 Transactions: Mapped ${transactions.length} transactions');
-      
+      try {
+        final ordersResponse = await _orderDataSource.getOrders(perPage: 50);
+        orderTransactions =
+            ordersResponse.data.map(_mapOrder).toList();
+      } catch (_) {}
+
+      try {
+        walletTxs = await _walletDataSource.getMyTransactions();
+      } catch (_) {}
+      final walletTransactions = walletTxs.map(_mapWallet).toList();
+
+      final merged = [...orderTransactions, ...walletTransactions]
+        ..sort((a, b) => _parseDate(b.date).compareTo(_parseDate(a.date)));
+
       state = state.copyWith(
-        transactions: transactions,
-        filteredTransactions: transactions,
+        transactions: merged,
+        filteredTransactions: merged,
         isLoading: false,
       );
-      
-      print('🟢 Transactions: State updated with ${transactions.length} transactions');
-      
-      // Apply current filters
       _applyFilters();
-      
     } catch (e) {
-      print('🔴 Transactions: Error fetching orders - $e');
-      print('🔴 Transactions: Error type: ${e.runtimeType}');
-      print('🔴 Transactions: Stack trace: ${StackTrace.current}');
-      
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -155,6 +122,68 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         filteredTransactions: [],
       );
     }
+  }
+
+  Transaction _mapOrder(OrderDto orderDto) {
+    final items = orderDto.effectiveItems;
+
+    List<TransactionItem>? transactionItems;
+    if (items.isNotEmpty) {
+      transactionItems = items
+          .map(
+            (item) => TransactionItem(
+              name: item.name,
+              quantity: item.quantity,
+              price: item.actualPrice ?? item.estimatedPrice,
+              unit: item.unit,
+            ),
+          )
+          .toList();
+    }
+
+    return Transaction(
+      id: orderDto.id.toString(),
+      kind: TransactionKind.order,
+      serviceName: _getServiceName(orderDto.serviceId),
+      serviceId: orderDto.serviceId,
+      date: orderDto.createdAt ?? DateTime.now().toIso8601String(),
+      pickupLocation: orderDto.pickupAddress,
+      dropoffLocation: orderDto.dropoffAddress,
+      amount: orderDto.effectiveTotalAmount,
+      status: _mapOrderStatus(orderDto.status),
+      rawStatus: orderDto.status,
+      paymentStatus:
+          PaymentStatusUtils.fromOrderPaymentStatus(orderDto.paymentStatus),
+      paymentMethod: orderDto.paymentMethod,
+      items: transactionItems,
+    );
+  }
+
+  Transaction _mapWallet(WalletTransactionDto dto) {
+    final isCredit = dto.type.toLowerCase() == 'credit';
+    return Transaction(
+      id: 'w-${dto.id}',
+      kind: TransactionKind.wallet,
+      serviceName: 'LesPay',
+      serviceId: 0,
+      date: dto.createdAt,
+      amount: dto.amount,
+      status: TransactionStatus.completed,
+      rawStatus: dto.type,
+      paymentStatus: PaymentStatusUtils.fromWalletTransaction(dto),
+      walletDescription:
+          dto.description.isNotEmpty ? dto.description : (isCredit ? 'Top-up' : 'Payment'),
+      walletReference: dto.reference,
+      isWalletCredit: isCredit,
+    );
+  }
+
+  void filterByKind(TransactionKindFilter kind) {
+    state = state.copyWith(
+      selectedKind: kind,
+      clearKind: kind == null,
+    );
+    _applyFilters();
   }
 
   void filterByService(String? service) {
@@ -173,6 +202,14 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     _applyFilters();
   }
 
+  void filterByPaymentStatus(PaymentStatusFilter status) {
+    state = state.copyWith(
+      selectedPaymentStatus: status,
+      clearPaymentStatus: status == null,
+    );
+    _applyFilters();
+  }
+
   void searchOrders(String query) {
     state = state.copyWith(searchQuery: query);
     _applyFilters();
@@ -182,6 +219,8 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     state = state.copyWith(
       clearService: true,
       clearStatus: true,
+      clearKind: true,
+      clearPaymentStatus: true,
       searchQuery: '',
     );
     _applyFilters();
@@ -190,30 +229,61 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   void _applyFilters() {
     var filtered = List<Transaction>.from(state.transactions);
 
-    // Filter by service
-    if (state.selectedService != null) {
-      filtered = filtered.where((t) => t.serviceName == state.selectedService).toList();
+    if (state.selectedKind == 'order') {
+      filtered = filtered.where((t) => t.isOrder).toList();
+    } else if (state.selectedKind == 'wallet') {
+      filtered = filtered.where((t) => t.isWallet).toList();
     }
 
-    // Filter by status
+    if (state.selectedService != null) {
+      filtered =
+          filtered.where((t) => t.serviceName == state.selectedService).toList();
+    }
+
     if (state.selectedStatus != null) {
       if (state.selectedStatus == 'completed') {
-        filtered = filtered.where((t) => t.status == TransactionStatus.completed).toList();
+        filtered = filtered
+            .where((t) => t.status == TransactionStatus.completed)
+            .toList();
       } else if (state.selectedStatus == 'cancelled') {
-        filtered = filtered.where((t) => t.status == TransactionStatus.cancelled).toList();
+        filtered = filtered
+            .where((t) => t.status == TransactionStatus.cancelled)
+            .toList();
       } else if (state.selectedStatus == 'pending') {
-        filtered = filtered.where((t) => t.status == TransactionStatus.pending).toList();
+        filtered = filtered
+            .where((t) => t.status == TransactionStatus.pending)
+            .toList();
       }
     }
 
-    // Search by order ID or date
+    if (state.selectedPaymentStatus != null) {
+      filtered = filtered.where((t) {
+        switch (state.selectedPaymentStatus) {
+          case 'paid':
+            return t.paymentStatus == PaymentStatus.paid;
+          case 'failed':
+            return t.paymentStatus == PaymentStatus.failed;
+          case 'refunded':
+            return t.paymentStatus == PaymentStatus.refunded;
+          case 'pending':
+            return t.paymentStatus == PaymentStatus.pending;
+          default:
+            return true;
+        }
+      }).toList();
+    }
+
     if (state.searchQuery.isNotEmpty) {
       final query = state.searchQuery.toLowerCase();
       filtered = filtered.where((t) {
         return t.id.toLowerCase().contains(query) ||
-               t.date.toLowerCase().contains(query) ||
-               t.pickupLocation.toLowerCase().contains(query) ||
-               t.dropoffLocation.toLowerCase().contains(query);
+            t.date.toLowerCase().contains(query) ||
+            t.pickupLocation.toLowerCase().contains(query) ||
+            t.dropoffLocation.toLowerCase().contains(query) ||
+            t.displayTitle.toLowerCase().contains(query) ||
+            (t.walletDescription?.toLowerCase().contains(query) ?? false) ||
+            (t.walletReference?.toLowerCase().contains(query) ?? false) ||
+            (t.paymentMethod?.toLowerCase().contains(query) ?? false);
       }).toList();
     }
 
@@ -221,17 +291,17 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   }
 
   Future<void> reorderTransaction(String orderId) async {
+    if (orderId.startsWith('w-')) return;
     try {
-      print('🔵 Transactions: Reordering order #$orderId');
       await _orderDataSource.reorderOrder(int.parse(orderId));
-      print('🟢 Transactions: Order reordered successfully');
-      
-      // Refresh transactions to show new order
       await _loadTransactions();
     } catch (e) {
-      print('🔴 Transactions: Reorder error - $e');
       state = state.copyWith(error: 'Failed to reorder: $e');
     }
+  }
+
+  Future<void> refreshTransactions() async {
+    await _loadTransactions();
   }
 
   String _getServiceName(int serviceId) {
@@ -263,13 +333,16 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     }
   }
 
-  Future<void> refreshTransactions() async {
-    print('🔵 Transactions: Manual refresh triggered');
-    await _loadTransactions();
+  DateTime _parseDate(String iso) {
+    try {
+      return DateTime.parse(iso);
+    } catch (_) {
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
   }
 }
 
-final transactionsProvider = StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
-  print('🔵 TransactionsProvider: Creating new TransactionsNotifier');
+final transactionsProvider =
+    StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
   return TransactionsNotifier();
 });

@@ -164,22 +164,38 @@ class UserDto {
   Map<String, dynamic> toJson() => _$UserDtoToJson(this);
 }
 
-@JsonSerializable()
 class DriverDto {
   final int id;
   final String name;
-  @JsonKey(name: 'phone_number')
   final String? phoneNumber;
+  final String? vehicleType;
+  final String? plateNumber;
   
   DriverDto({
     required this.id,
     required this.name,
     this.phoneNumber,
+    this.vehicleType,
+    this.plateNumber,
   });
   
-  factory DriverDto.fromJson(Map<String, dynamic> json) => 
-      _$DriverDtoFromJson(json);
-  Map<String, dynamic> toJson() => _$DriverDtoToJson(this);
+  factory DriverDto.fromJson(Map<String, dynamic> json) {
+    return DriverDto(
+      id: json['id'] as int,
+      name: (json['user'] as Map<String, dynamic>?)?['name'] as String? ?? json['name'] as String? ?? 'Driver',
+      phoneNumber: (json['user'] as Map<String, dynamic>?)?['phone_number'] as String? ?? json['phone_number'] as String?,
+      vehicleType: json['vehicle_type'] as String? ?? 'Honda Click 125i', // Fallback for testing
+      plateNumber: json['plate_number'] as String? ?? 'ABC 1234', // Fallback for testing
+    );
+  }
+  
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'phone_number': phoneNumber,
+    'vehicle_type': vehicleType,
+    'plate_number': plateNumber,
+  };
 }
 
 @JsonSerializable()

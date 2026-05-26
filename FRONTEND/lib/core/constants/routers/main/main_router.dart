@@ -8,6 +8,7 @@ import '../../../../presentation/screens/main/transactions_screen.dart';
 import '../../../../presentation/screens/main/favorites_screen.dart';
 import '../../../../presentation/screens/main/offers_screen.dart';
 import '../../../../presentation/screens/main/missions_screen.dart';
+import '../../../../presentation/screens/main/loyalty_redeem_screen.dart';
 import '../../../../presentation/screens/main/settings_screen.dart';
 import '../../../../presentation/screens/main/faqs_screen.dart';
 import '../../../../presentation/screens/main/about_screen.dart';
@@ -24,10 +25,10 @@ class MainRouter {
     MainRoutes.lespay: (_) => const LespayScreen(),
     MainRoutes.inbox: (_) => const InboxScreen(),
     MainRoutes.profile: (_) => const ProfileScreen(),
-    MainRoutes.transactions: (_) => const TransactionsScreen(),
     MainRoutes.favorites: (_) => const FavoritesScreen(),
     MainRoutes.offers: (_) => const OffersScreen(),
     MainRoutes.missions: (_) => const MissionsScreen(),
+    MainRoutes.loyaltyRedeem: (_) => const LoyaltyRedeemScreen(),
 
     MainRoutes.settings: (_) => const SettingsScreen(),
     MainRoutes.faqs: (_) => const FaqsScreen(),
@@ -39,6 +40,15 @@ class MainRouter {
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    if (settings.name == MainRoutes.transactions) {
+      final args = settings.arguments;
+      final kind =
+          args is Map<String, dynamic> ? args['kind'] as String? : null;
+      return MaterialPageRoute(
+        builder: (_) => TransactionsScreen(initialKindFilter: kind),
+        settings: settings,
+      );
+    }
     final builder = _routes[settings.name];
     if (builder != null) {
       return MaterialPageRoute(builder: builder, settings: settings);

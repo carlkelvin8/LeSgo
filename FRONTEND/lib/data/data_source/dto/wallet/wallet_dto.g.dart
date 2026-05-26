@@ -49,6 +49,7 @@ WalletTransactionDto _$WalletTransactionDtoFromJson(
   amount: (json['amount'] as num).toDouble(),
   description: json['description'] as String,
   reference: json['reference'] as String,
+  status: json['status'] as String?,
   createdAt: json['created_at'] as String,
 );
 
@@ -61,6 +62,7 @@ Map<String, dynamic> _$WalletTransactionDtoToJson(
   'amount': instance.amount,
   'description': instance.description,
   'reference': instance.reference,
+  'status': instance.status,
   'created_at': instance.createdAt,
 };
 

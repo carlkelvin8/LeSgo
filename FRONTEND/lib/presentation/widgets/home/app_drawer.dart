@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/constants/routers/app_router.dart';
+import '../../provider/main/profile/profile_provider.dart';
+import '../profile/invite_friends_sheet.dart';
 import '../widgets.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(profileProvider);
     return Drawer(
       backgroundColor: const Color(0xFF642D82),
       child: SafeArea(
@@ -42,6 +46,18 @@ class AppDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 AppRouter.push(context, MainRoutes.missions);
+              },
+            ),
+            DrawerMenuItem(
+              iconPath: 'assets/images/navbar/Profile.svg',
+              title: 'Invite friends',
+              onTap: () {
+                Navigator.pop(context);
+                InviteFriendsSheet.show(
+                  context,
+                  referralCode: profile.referralCode,
+                  userName: profile.name,
+                );
               },
             ),
 

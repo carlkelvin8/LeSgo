@@ -64,6 +64,8 @@ class WalletTransactionDto {
   final double amount;
   final String description;
   final String reference;
+  /// Optional API status: pending, paid, failed, refunded
+  final String? status;
   @JsonKey(name: 'created_at')
   final String createdAt;
 
@@ -74,6 +76,7 @@ class WalletTransactionDto {
     required this.amount,
     required this.description,
     required this.reference,
+    this.status,
     required this.createdAt,
   });
 

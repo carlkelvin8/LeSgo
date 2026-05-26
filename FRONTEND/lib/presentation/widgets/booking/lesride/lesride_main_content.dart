@@ -60,6 +60,8 @@ class LesrideMainContent extends ConsumerWidget {
             initialChildSize: sheetDefault,
             minChildSize: sheetMin,
             maxChildSize: sheetMax,
+            snap: true,
+            snapAnimationDuration: const Duration(milliseconds: 200),
             builder: (context, scrollController) {
               return LesrideDetailsPanel(
                 locationState: locationState,
