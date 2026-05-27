@@ -9,8 +9,9 @@ import 'rate_limit_interceptor.dart';
 class DioClient {
   final Dio dio;
   final LocalStorageService _localStorageService;
+  final RateLimiterService _rateLimiter;
 
-  DioClient(this._localStorageService)
+  DioClient(this._localStorageService, this._rateLimiter)
     : dio = Dio(
         BaseOptions(
           baseUrl: ApiConstants.baseUrl,
@@ -23,7 +24,7 @@ class DioClient {
         ),
       ) {
     print('🔵 DioClient: Initialized');
-    dio.interceptors.add(RateLimitInterceptor(rateLimiter));
+    dio.interceptors.add(RateLimitInterceptor(_rateLimiter));
     // Add interceptor to attach token to all requests
     dio.interceptors.add(
       InterceptorsWrapper(
@@ -52,7 +53,7 @@ class DioClient {
           print('🔴 DioClient: Error type: ${error.type}');
           print('🔴 DioClient: Error message: ${error.message}');
           print('🔴 DioClient: Error response: ${error.response?.data}');
-          
+
           // Handle 401 errors by clearing token
           if (error.response?.statusCode == 401) {
             print('🔴 DioClient: 401 Unauthorized - clearing token');

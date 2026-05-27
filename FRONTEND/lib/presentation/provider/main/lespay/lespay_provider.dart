@@ -178,7 +178,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
         return false;
       }
 
-      var creditedViaApi = false;
+      // Confirm top-up with the backend — this actually credits the wallet on the server.
       try {
         await getIt<WalletRemoteDataSource>().confirmTopUp(
           amount: checkout.walletAmount,
@@ -186,35 +186,26 @@ class LespayNotifier extends StateNotifier<LespayState> {
           xenditInvoiceId: checkout.invoiceId,
           externalReference: checkout.externalId,
         );
-        creditedViaApi = true;
       } on DioException catch (e) {
         final code = e.response?.statusCode;
-        if (code == 409) {
+        // 409 = already credited (idempotent success — treat as OK).
+        if (code != 409) {
+          final serverMsg = (e.response?.data is Map)
+              ? (e.response!.data['message'] as String? ?? '')
+              : '';
           state = state.copyWith(
             isProcessingTopUp: false,
-            error:
-                'Payment not completed yet. Finish paying on Xendit, then tap again.',
+            error: serverMsg.isNotEmpty
+                ? serverMsg
+                : 'Payment was received but could not be saved. '
+                    'Please contact support with invoice ID: ${checkout.invoiceId}',
           );
           return false;
         }
-        if (code != 404 && code != 405 && code != 502 && code != 503) {
-          rethrow;
-        }
-        debugPrint('Wallet confirm API unavailable ($code); applying local credit.');
       }
 
-      if (creditedViaApi) {
-        await loadWallet();
-      } else {
-        final newBalance = state.balance + checkout.walletAmount;
-        await _saveLocalBalance(newBalance);
-        state = state.copyWith(
-          balance: newBalance,
-          isProcessingTopUp: false,
-          clearPendingCheckout: true,
-        );
-        return true;
-      }
+      // Refresh balance from server so the display shows the real credited amount.
+      await loadWallet();
 
       state = state.copyWith(
         isProcessingTopUp: false,
@@ -274,7 +265,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
     }
   }
 
-  void refreshBalance() => loadWallet();
+  Future<void> refreshBalance() => loadWallet();
 
   Future<void> loadTransactions() async {
     state = state.copyWith(

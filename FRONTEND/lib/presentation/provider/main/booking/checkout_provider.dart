@@ -4,7 +4,11 @@ import '../../../../domain/entities/booking/leseat/order.dart';
 
 import '../../../../domain/entities/booking/leseat/order_item.dart';
 
+import 'package:dio/dio.dart';
+
 import '../../../../data/data_source/order_remote_datasource.dart';
+
+import '../../../../data/data_source/wallet_remote_datasource.dart';
 
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
 
@@ -24,6 +28,8 @@ import 'restaurant_detail_provider.dart';
 import '../profile/profile_provider.dart';
 
 import '../address/address_provider.dart';
+
+import '../lespay/lespay_provider.dart';
 
 
 
@@ -774,9 +780,46 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
 
+      // Pre-check: fetch LIVE wallet balance so stale cache never lets through
+      // a payment the server will reject.
+      if ((state.selectedPaymentMethod ?? 'cash') == 'wallet') {
+        try {
+          final wallet = await getIt<WalletRemoteDataSource>().getMyWallet();
+          // Sync provider with fresh balance so the UI is up-to-date.
+          ref.read(lespayProvider.notifier).refreshBalance();
+          if (wallet.balance < order.total) {
+            state = state.copyWith(
+              isLoading: false,
+              error: 'Insufficient LesPay balance. '
+                  'Balance: ₱${wallet.balance.toStringAsFixed(2)}, '
+                  'required: ₱${order.total.toStringAsFixed(2)}. '
+                  'Please top up your wallet first.',
+            );
+            return false;
+          }
+        } on DioException catch (e) {
+          final serverMsg = (e.response?.data is Map)
+              ? (e.response!.data['message'] as String? ?? '')
+              : '';
+          state = state.copyWith(
+            isLoading: false,
+            error: serverMsg.isNotEmpty
+                ? serverMsg
+                : 'Unable to verify your LesPay balance. '
+                    'Please try again or use Cash on Delivery.',
+          );
+          return false;
+        } catch (_) {
+          state = state.copyWith(
+            isLoading: false,
+            error: 'Unable to verify your LesPay balance. '
+                'Please try again or use Cash on Delivery.',
+          );
+          return false;
+        }
+      }
+
       final response = await _orderDataSource.createOrder(createOrderRequest);
-
-
 
       await applyLesPayWalletDeduction(
 
@@ -803,11 +846,11 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       return true;
 
     } catch (e) {
-
-      state = state.copyWith(isLoading: false, error: e.toString());
-
+      // Strip the Dart 'Exception: ' wrapper so the message is user-friendly.
+      final raw = e.toString();
+      final msg = raw.startsWith('Exception: ') ? raw.substring(11) : raw;
+      state = state.copyWith(isLoading: false, error: msg);
       return false;
-
     }
 
   }
@@ -851,5 +894,3 @@ final checkoutProvider = StateNotifierProvider<CheckoutNotifier, CheckoutState>(
   },
 
 );
-
-

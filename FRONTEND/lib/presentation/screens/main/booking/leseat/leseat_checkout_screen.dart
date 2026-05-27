@@ -301,7 +301,8 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                 ? null
                 : () async {
                     final success = await checkoutNotifier.placeOrder();
-                    if (success && context.mounted) {
+                    if (!context.mounted) return;
+                    if (success) {
                       final checkoutState = ref.read(checkoutProvider);
                       final orderId =
                           checkoutState.createdOrderId?.toString() ??
@@ -335,6 +336,20 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                             'deliveryAddress': order.deliveryAddress,
                           },
                         },
+                      );
+                    } else {
+                      final raw =
+                          ref.read(checkoutProvider).error ??
+                          'Failed to place order. Please try again.';
+                      final errorMsg = raw.startsWith('Exception: ')
+                          ? raw.substring(11)
+                          : raw;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(errorMsg),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 4),
+                        ),
                       );
                     }
                   },

@@ -230,9 +230,19 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     var filtered = List<Transaction>.from(state.transactions);
 
     if (state.selectedKind == 'order') {
-      filtered = filtered.where((t) => t.isOrder).toList();
+      // Orders only (exclude wallet events)
+      filtered = filtered
+          .where((t) => t.isOrder)
+          .toList();
     } else if (state.selectedKind == 'wallet') {
-      filtered = filtered.where((t) => t.isWallet).toList();
+      // Wallet events + orders paid with LesPay wallet
+      filtered = filtered
+          .where((t) =>
+              t.isWallet ||
+              (t.isOrder &&
+                  (t.paymentMethod?.toLowerCase() == 'wallet' ||
+                      t.paymentMethod?.toLowerCase() == 'lespay')))
+          .toList();
     }
 
     if (state.selectedService != null) {

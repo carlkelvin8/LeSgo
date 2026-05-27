@@ -6,13 +6,19 @@ part of 'wallet_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+double _$parseDouble(dynamic v) =>
+    v is num ? v.toDouble() : double.tryParse(v?.toString() ?? '') ?? 0.0;
+
+int _$parseInt(dynamic v) =>
+    v is num ? v.toInt() : int.tryParse(v?.toString() ?? '') ?? 0;
+
 WalletDto _$WalletDtoFromJson(Map<String, dynamic> json) => WalletDto(
-  id: (json['id'] as num).toInt(),
-  userId: (json['user_id'] as num).toInt(),
-  balance: (json['balance'] as num).toDouble(),
-  currency: json['currency'] as String,
-  createdAt: json['created_at'] as String,
-  updatedAt: json['updated_at'] as String,
+  id: _$parseInt(json['id']),
+  userId: _$parseInt(json['user_id']),
+  balance: _$parseDouble(json['balance']),
+  currency: (json['currency'] as String?) ?? 'PHP',
+  createdAt: (json['created_at'] as String?) ?? '',
+  updatedAt: (json['updated_at'] as String?) ?? '',
 );
 
 Map<String, dynamic> _$WalletDtoToJson(WalletDto instance) => <String, dynamic>{
@@ -43,14 +49,14 @@ Map<String, dynamic> _$WalletResponseDtoToJson(WalletResponseDto instance) =>
 WalletTransactionDto _$WalletTransactionDtoFromJson(
   Map<String, dynamic> json,
 ) => WalletTransactionDto(
-  id: (json['id'] as num).toInt(),
-  walletId: (json['wallet_id'] as num).toInt(),
-  type: json['type'] as String,
-  amount: (json['amount'] as num).toDouble(),
-  description: json['description'] as String,
-  reference: json['reference'] as String,
+  id: _$parseInt(json['id']),
+  walletId: _$parseInt(json['wallet_id']),
+  type: (json['type'] as String?) ?? 'debit',
+  amount: _$parseDouble(json['amount']),
+  description: (json['description'] as String?) ?? '',
+  reference: (json['reference'] as String?) ?? '',
   status: json['status'] as String?,
-  createdAt: json['created_at'] as String,
+  createdAt: (json['created_at'] as String?) ?? '',
 );
 
 Map<String, dynamic> _$WalletTransactionDtoToJson(

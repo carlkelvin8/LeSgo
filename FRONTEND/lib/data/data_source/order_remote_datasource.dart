@@ -11,7 +11,7 @@ import 'dto/order/estimate_response_dto.dart';
 @lazySingleton
 class OrderRemoteDataSource {
   final DioClient _dioClient;
-  
+
   // Cache to store meta and items for newly created orders as a workaround for backend dropping them
   static final Map<int, Map<String, dynamic>> _orderCache = {};
 
@@ -89,33 +89,33 @@ class OrderRemoteDataSource {
         ApiConstants.orders,
         queryParameters: queryParams,
       );
-      
+
       print('🟢 OrderRemoteDataSource: API response status: ${response.statusCode}');
       print('🟢 OrderRemoteDataSource: Response data type: ${response.data.runtimeType}');
-      
+
       if (response.data == null) {
         print('🔴 OrderRemoteDataSource: Response data is null');
         throw Exception('API returned null data');
       }
-      
+
       if (response.data is! Map) {
         print('🔴 OrderRemoteDataSource: Response data is not a Map: ${response.data}');
         throw Exception('API returned invalid data format');
       }
-      
+
       final responseMap = response.data as Map<String, dynamic>;
       print('🟢 OrderRemoteDataSource: Response keys: ${responseMap.keys.toList()}');
-      
+
       if (!responseMap.containsKey('success')) {
         print('🔴 OrderRemoteDataSource: Response missing success field');
         throw Exception('API response missing success field');
       }
-      
+
       if (!responseMap.containsKey('data')) {
         print('🔴 OrderRemoteDataSource: Response missing data field');
         throw Exception('API response missing data field');
       }
-      
+
       // Workaround: Inject cached meta/items
       if (responseMap['data'] is List) {
         final List dataList = responseMap['data'];
@@ -132,17 +132,17 @@ class OrderRemoteDataSource {
           }
         }
       }
-      
+
       final result = OrdersResponseDto.fromJson(responseMap);
       print('🟢 OrderRemoteDataSource: Parsed ${result.data.length} orders');
-      
+
       return result;
     } on DioException catch (dioError) {
       print('🔴 OrderRemoteDataSource: Dio error - ${dioError.type}');
       print('🔴 OrderRemoteDataSource: Dio message - ${dioError.message}');
       print('🔴 OrderRemoteDataSource: Dio response - ${dioError.response?.data}');
       print('🔴 OrderRemoteDataSource: Dio status code - ${dioError.response?.statusCode}');
-      
+
       if (dioError.response?.statusCode == 401) {
         throw Exception('Authentication failed. Please login again.');
       } else if (dioError.response?.statusCode == 403) {
@@ -172,7 +172,7 @@ class OrderRemoteDataSource {
       // Map "data" to the expected structure
       final responseData = Map<String, dynamic>.from(response.data);
       final dto = OrderResponseDto.fromJson(responseData);
-      
+
       // Cache meta and items locally to bypass backend dropping them
       if (dto.data != null) {
         _orderCache[dto.data.id] = {
@@ -185,13 +185,25 @@ class OrderRemoteDataSource {
           }).toList(),
         };
       }
-      
+
       return dto;
     } on DioException catch (e) {
       print('=== CREATE ORDER ERROR ===');
       print('Status: ${e.response?.statusCode}');
       print('Response data: ${e.response?.data}');
-      throw Exception('Failed to create order: ${e.response?.data ?? e.message}');
+      // Extract a readable message from the backend response
+      final responseData = e.response?.data;
+      String errorMsg;
+      if (responseData is Map) {
+        errorMsg = (responseData['message'] as String?)?.isNotEmpty == true
+            ? responseData['message'] as String
+            : (responseData['error'] as String?)?.isNotEmpty == true
+                ? responseData['error'] as String
+                : e.message ?? 'Failed to create order';
+      } else {
+        errorMsg = e.message ?? 'Failed to create order';
+      }
+      throw Exception(errorMsg);
     } catch (e) {
       throw Exception('Failed to create order: $e');
     }
@@ -203,7 +215,7 @@ class OrderRemoteDataSource {
     try {
       final response = await dio.get(ApiConstants.orderById(id));
       final responseData = Map<String, dynamic>.from(response.data);
-      
+
       // Workaround: Inject cached meta/items if backend dropped them
       if (_orderCache.containsKey(id) && responseData['data'] != null) {
         final data = responseData['data'] as Map<String, dynamic>;
@@ -215,7 +227,7 @@ class OrderRemoteDataSource {
           data['lesbuy_items'] = _orderCache[id]!['items'];
         }
       }
-      
+
       return OrderResponseDto.fromJson(responseData);
     } catch (e) {
       throw Exception('Failed to get order: $e');

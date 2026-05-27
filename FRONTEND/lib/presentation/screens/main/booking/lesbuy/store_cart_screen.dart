@@ -18,6 +18,7 @@ import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/booking/lesbuy/cart/manual_order_section.dart';
 import '../../../../widgets/booking/lesbuy/cart/store_order_section.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
+import '../../../../provider/main/lespay/lespay_provider.dart';
 import '../../../../widgets/payment/booking_payment_method_section.dart';
 import '../../../../widgets/widgets.dart';
 
@@ -366,6 +367,26 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
             onPressed: isCartEmpty
                 ? null
                 : () async {
+                    // Pre-check wallet balance before API call
+                    if (_paymentMethod == 'wallet') {
+                      final lespayBalance = ref.read(lespayProvider).balance;
+                      if (lespayBalance < total) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Insufficient LesPay balance. '
+                              'Your balance: ₱${lespayBalance.toStringAsFixed(2)}, '
+                              'required: ₱${total.toStringAsFixed(2)}. '
+                              'Please top up your wallet first.',
+                            ),
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                        return;
+                      }
+                    }
+
                     // Create LesBuy order using API
                     try {
                       final orderDataSource = getIt<OrderRemoteDataSource>();
@@ -375,7 +396,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
 
                       // Prepare order items
                       final orderItems = <OrderItemDto>[];
-                      
+
                       // Add store items
                       for (final item in storeState.cartItems) {
                         orderItems.add(OrderItemDto(
@@ -385,7 +406,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                           notes: 'Store item',
                         ));
                       }
-                      
+
                       // Add manual items
                       for (final item in manualOrderState.confirmedItems) {
                         orderItems.add(OrderItemDto(
@@ -444,7 +465,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
 
                       if (context.mounted) {
                         final orderId = response.data.id.toString();
-                        
+
                         // Navigate to driver finding screen
                         AppRouter.pushReplacement(
                           context,
@@ -473,10 +494,15 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                     } catch (e) {
                       print('🔴 LesBuy: Error creating order - $e');
                       if (context.mounted) {
+                        final raw = e.toString();
+                        final msg = raw.startsWith('Exception: ')
+                            ? raw.substring(11)
+                            : raw;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Failed to place order: $e'),
+                            content: Text(msg),
                             backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 4),
                           ),
                         );
                       }
