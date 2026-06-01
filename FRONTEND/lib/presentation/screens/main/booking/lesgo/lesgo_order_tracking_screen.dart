@@ -981,7 +981,10 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
     final baseFee = _toDouble(orderData['baseFee']);
     final distanceFee = _toDouble(orderData['distanceFee']);
     final serviceFee = _toDouble(orderData['serviceFee']);
-    final total = _toDouble(orderData['total']);
+    final fare = _toDouble(orderData['fare']);
+    final total = _toDouble(orderData['total']) > 0
+        ? _toDouble(orderData['total'])
+        : (fare > 0 ? fare : _toDouble(orderData['estimated_fare']));
     final paymentMethod = (orderData['paymentMethod'] ?? orderData['payment_method'] ?? 'Cash').toString();
 
     return Column(

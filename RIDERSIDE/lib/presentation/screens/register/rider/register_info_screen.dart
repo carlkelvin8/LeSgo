@@ -4,6 +4,7 @@ import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/register/register_routes.dart';
 import '../../../provider/register/riderside/rider_register_info_provider.dart';
+import '../../../provider/register/riderside/rider_phone_verification_provider.dart';
 import '../../../widgets/widgets.dart';
 
 class RegisterInfoScreen extends ConsumerStatefulWidget {
@@ -19,29 +20,40 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
   final _lastNameController = TextEditingController();
   final _birthdayController = TextEditingController();
   final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _licenseNumberController = TextEditingController();
+  final _licenseExpiryController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _firstNameController.addListener(() {
-      ref
-          .read(registerInfoProvider.notifier)
-          .updateFirstName(_firstNameController.text);
+      ref.read(registerInfoProvider.notifier).updateFirstName(_firstNameController.text);
     });
     _lastNameController.addListener(() {
-      ref
-          .read(registerInfoProvider.notifier)
-          .updateLastName(_lastNameController.text);
+      ref.read(registerInfoProvider.notifier).updateLastName(_lastNameController.text);
     });
     _birthdayController.addListener(() {
-      ref
-          .read(registerInfoProvider.notifier)
-          .updateBirthday(_birthdayController.text);
+      ref.read(registerInfoProvider.notifier).updateBirthday(_birthdayController.text);
     });
     _emailController.addListener(() {
-      ref
-          .read(registerInfoProvider.notifier)
-          .updateEmail(_emailController.text);
+      ref.read(registerInfoProvider.notifier).updateEmail(_emailController.text);
+    });
+    _passwordController.addListener(() {
+      ref.read(registerInfoProvider.notifier).updatePassword(_passwordController.text);
+    });
+    _confirmPasswordController.addListener(() {
+      ref.read(registerInfoProvider.notifier).updateConfirmPassword(_confirmPasswordController.text);
+    });
+    _licenseNumberController.addListener(() {
+      ref.read(registerInfoProvider.notifier).updateLicenseNumber(_licenseNumberController.text);
+    });
+    _licenseExpiryController.addListener(() {
+      final value = _licenseExpiryController.text.trim();
+      ref.read(registerInfoProvider.notifier).updateLicenseExpiryDate(
+            value.isEmpty ? null : value,
+          );
     });
   }
 
@@ -51,14 +63,16 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
     _lastNameController.dispose();
     _birthdayController.dispose();
     _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _licenseNumberController.dispose();
+    _licenseExpiryController.dispose();
     super.dispose();
   }
 
   void _handleSubmit() {
     final isFormFieldsValid = _formKey.currentState?.validate() ?? false;
-    ref
-        .read(registerInfoProvider.notifier)
-        .attemptSubmit(isFormFieldsValid: isFormFieldsValid);
+    ref.read(registerInfoProvider.notifier).attemptSubmit(isFormFieldsValid: isFormFieldsValid);
   }
 
   @override
@@ -89,18 +103,19 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
           children: [
             const InfoIllustration(),
             SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-
             InfoFormFields(
               firstNameController: _firstNameController,
               lastNameController: _lastNameController,
               birthdayController: _birthdayController,
               emailController: _emailController,
+              passwordController: _passwordController,
+              confirmPasswordController: _confirmPasswordController,
+              licenseNumberController: _licenseNumberController,
+              licenseExpiryController: _licenseExpiryController,
             ),
-
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),
             const InfoMessage(),
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-
             SelfieUploadSection(
               label: 'Selfie for Verification',
               buttonText: 'Upload',
@@ -117,7 +132,6 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
               imagePath: state.selfieWithMotorcycleImagePath,
               showError: state.hasAttemptedSubmit,
             ),
-
             DocumentUploadList(
               onUploadResume: controller.uploadResume,
               onUploadBarangayClearance: controller.uploadBarangayClearance,
@@ -139,11 +153,11 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
               digitalSignatureFilePath: state.digitalSignatureFilePath,
               showError: state.hasAttemptedSubmit,
             ),
-
             SizedBox(height: ResponsiveUtils.spacing(context, 4)),
             PrimaryButton(
-              text: 'SUBMIT',
-              onPressed: state.isSubmitting ? () {} : _handleSubmit,
+              text: state.isSubmitting ? 'SUBMITTING...' : 'SUBMIT',
+              isLoading: state.isSubmitting,
+              onPressed: state.isSubmitting ? null : _handleSubmit,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             const SubmitInfoText(),

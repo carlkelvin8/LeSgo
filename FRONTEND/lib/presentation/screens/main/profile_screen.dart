@@ -4,6 +4,7 @@ import '../../../core/utils/responsive_utils.dart';
 import '../../provider/main/profile/profile_provider.dart';
 import '../../provider/main/profile/controller/profile.controller.notifier.dart';
 import '../../widgets/widgets.dart';
+import '../../widgets/common/retry_widget.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -45,7 +46,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 color: Color(0xFF5F2D82),
               ),
             )
-          : SafeArea(
+          : profileState.error != null && profileState.user == null
+              ? RetryWidget(
+                  message: profileState.error!,
+                  isLoading: profileState.isLoading,
+                  onRetry: () =>
+                      ref.read(profileProvider.notifier).refreshProfile(),
+                )
+              : SafeArea(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -1,30 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'core/constants/routers/app_router.dart';
 import 'core/constants/routers/auth/auth_routes.dart';
 import 'core/di/injection.dart';
 import 'core/network/dio_client.dart';
+import 'core/services/push_notification_service.dart';
+import 'core/services/secure_storage_service.dart';
 
 void main() async {
-  // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize SharedPreferences early
-  print('🔧 Initializing SharedPreferences...');
-  final prefs = await SharedPreferences.getInstance();
-  print('✅ SharedPreferences initialized successfully');
-  
-  // Check if token exists
-  final existingToken = prefs.getString('rider_token');
+
+  final existingToken = await SecureStorageService.getToken();
   print('🔍 Existing token check: ${existingToken != null ? "Token found" : "No token"}');
-  
-  // Initialize dependency injection
+
   await configureDependencies();
-  
-  // Initialize DioClient
   DioClient().initialize();
-  
+  await PushNotificationService.initialize();
+
   runApp(const ProviderScope(child: LesgoApp()));
 }
 

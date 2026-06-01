@@ -16,7 +16,7 @@ class RiderDutyToggle extends ConsumerWidget {
         Switch(
           value: isOnDuty,
           onChanged: (val) {
-            ref.read(riderDutyProvider.notifier).state = val;
+            ref.read(riderDutyProvider.notifier).setOnDuty(val);
           },
           activeTrackColor: const Color(0xFF5F2D82), // Dark purple
           inactiveThumbColor: Colors.white,

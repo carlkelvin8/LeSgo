@@ -5,6 +5,9 @@ import 'main/main_router.dart';
 import 'booking/booking_router.dart';
 
 class AppRouter {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final loginRoute = LoginRouter.onGenerateRoute(settings);
     if (loginRoute != null) {

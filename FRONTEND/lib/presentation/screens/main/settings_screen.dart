@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
-import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/constants/routers/app_router.dart';
+import '../../../core/constants/routers/main/main_routes.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -35,7 +35,6 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         children: [
-          // Account Section
           _SettingsSection(
             title: 'Account',
             items: [
@@ -51,43 +50,34 @@ class SettingsScreen extends StatelessWidget {
                 subtitle: 'Update your personal details',
                 onTap: () => AppRouter.push(context, MainRoutes.profile),
               ),
+              _SettingsItem(
+                icon: Icons.security,
+                title: 'Security',
+                subtitle: '2FA, biometrics, and login activity',
+                onTap: () => AppRouter.push(context, MainRoutes.securitySettings),
+              ),
             ],
           ),
-          
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-          
-          // App Section
           _SettingsSection(
             title: 'App',
             items: [
               _SettingsItem(
                 icon: Icons.notifications_outlined,
                 title: 'Notifications',
-                subtitle: 'Manage notification preferences',
-                onTap: () {
-                  // TODO: Implement notifications settings
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Coming soon')),
-                  );
-                },
+                subtitle: 'Promotions, orders, and missions',
+                onTap: () =>
+                    AppRouter.push(context, MainRoutes.notificationSettings),
               ),
               _SettingsItem(
                 icon: Icons.language_outlined,
                 title: 'Language',
-                subtitle: 'Change app language',
-                onTap: () {
-                  // TODO: Implement language settings
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Coming soon')),
-                  );
-                },
+                subtitle: 'English or Filipino',
+                onTap: () => AppRouter.push(context, MainRoutes.languageSettings),
               ),
             ],
           ),
-          
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-          
-          // Support Section
           _SettingsSection(
             title: 'Support',
             items: [
@@ -154,7 +144,7 @@ class _SettingsSection extends StatelessWidget {
               final index = entry.key;
               final item = entry.value;
               final isLast = index == items.length - 1;
-              
+
               return Column(
                 children: [
                   item,

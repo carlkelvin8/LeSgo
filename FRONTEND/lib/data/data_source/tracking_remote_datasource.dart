@@ -1,10 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
-import 'dto/tracking/tracking_dto.dart';
 import 'dto/tracking/tracking_response_dto.dart';
-
 @lazySingleton
 class TrackingRemoteDataSource {
   final DioClient _dioClient;
@@ -33,48 +30,34 @@ class TrackingRemoteDataSource {
     }
   }
 
-  /// Track order (mock implementation)
+  /// Lightweight order fetch for tracking screens.
   Future<Map<String, dynamic>> trackOrder(int orderId) async {
     final dio = _dioClient.dio;
     try {
-      final response = await dio.get('/v1/orders/$orderId');
-      return {
-        'success': true,
-        'data': response.data,
-      };
+      final response = await dio.get(ApiConstants.orderById(orderId));
+      final body = response.data as Map<String, dynamic>;
+      return {'success': true, 'data': body['data'] ?? body};
     } catch (e) {
-      return {
-        'success': false,
-        'data': null,
-      };
+      return {'success': false, 'data': null, 'error': e.toString()};
     }
   }
 
-  /// Get ETA for an order
+  /// GET /v1/tracking/order/{id}/eta — no mock fallback on failure.
   Future<Map<String, dynamic>> getEta(int orderId) async {
     final dio = _dioClient.dio;
     try {
       final response = await dio.get('/v1/tracking/order/$orderId/eta');
+      final body = response.data as Map<String, dynamic>;
       return {
-        'success': true,
-        'data': response.data['data'],
+        'success': body['success'] ?? true,
+        'data': body['data'],
       };
     } catch (e) {
-      // Fallback to mock data if API fails
-      return {
-        'success': true,
-        'data': {
-          'estimatedArrival': '15 minutes',
-          'estimatedArrivalMinutes': 15,
-          'distanceKm': 2.5,
-          'currentLatitude': 8.4542,
-          'currentLongitude': 124.6319,
-        },
-      };
+      return {'success': false, 'data': null};
     }
   }
 
-  /// Get route between two points
+  /// GET /v1/tracking/route — no mock fallback on failure.
   Future<Map<String, dynamic>> getRoute(
     double originLat,
     double originLng,
@@ -92,26 +75,67 @@ class TrackingRemoteDataSource {
           'dest_lng': destLng,
         },
       );
+      final body = response.data as Map<String, dynamic>;
       return {
-        'success': true,
-        'data': response.data['data'],
+        'success': body['success'] ?? true,
+        'data': body['data'],
       };
     } catch (e) {
-      // Fallback to mock data if API fails
-      return {
-        'success': true,
-        'data': {
-          'distance': {
-            'value': 2500,
-            'text': '2.5 km',
-          },
-          'duration': {
-            'value': 900,
-            'text': '15 mins',
-          },
-          'polyline': [],
-        },
-      };
+      return {'success': false, 'data': null};
     }
+  }
+
+  /// Parses ETA payload into display strings + optional driver coordinates.
+  static ({
+    String? eta,
+    String? distance,
+    double? driverLat,
+    double? driverLng,
+  }) parseEtaPayload(Map<String, dynamic>? data) {
+    if (data == null) {
+      return (eta: null, distance: null, driverLat: null, driverLng: null);
+    }
+
+    String? eta;
+    if (data['estimated_arrival'] != null) {
+      eta = data['estimated_arrival'].toString();
+    } else if (data['estimatedArrival'] != null) {
+      eta = data['estimatedArrival'].toString();
+    } else if (data['estimatedArrivalMinutes'] != null) {
+      final minutes = data['estimatedArrivalMinutes'] as num;
+      eta = '${minutes.round()} min';
+    } else if (data['minutes_remaining'] != null) {
+      final minutes = data['minutes_remaining'] as num;
+      eta = '${minutes.round()} min';
+    }
+
+    String? distance;
+    if (data['distanceKm'] != null) {
+      final distKm = data['distanceKm'] as num;
+      distance = '${distKm.toStringAsFixed(1)} km';
+    } else if (data['distance_remaining_m'] != null) {
+      final distM = data['distance_remaining_m'] as num;
+      distance = '${(distM / 1000).toStringAsFixed(1)} km';
+    }
+
+    final driverLat = _parseCoord(
+      data['current_latitude'] ?? data['currentLatitude'],
+    );
+    final driverLng = _parseCoord(
+      data['current_longitude'] ?? data['currentLongitude'],
+    );
+
+    return (
+      eta: eta,
+      distance: distance,
+      driverLat: driverLat,
+      driverLng: driverLng,
+    );
+  }
+
+  static double? _parseCoord(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 }

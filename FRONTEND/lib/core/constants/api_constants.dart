@@ -63,5 +63,22 @@ class ApiConstants {
   static const String chatUnreadCount = '/v1/chat/unread-count';
   static const String chatMarkAsRead = '/v1/chat/conversations/{id}/read';
 
+  // Missions, vouchers, FAQ, loyalty
+  static const String missions = '/v1/missions';
+  static String missionClaim(int missionId) => '/v1/missions/$missionId/claim';
+  static const String vouchersAvailable = '/v1/vouchers/available';
+  static const String faqArticles = '/v1/faq/articles';
+  static const String loyaltyRewards = '/v1/loyalty/rewards';
+  static String loyaltyRedeem(int rewardId) => '/v1/loyalty/rewards/$rewardId/redeem';
+
+  // Referrals, surveys, devices, security
+  static const String referralDashboard = '/v1/referrals/dashboard';
+  static const String customerSurvey = '/v1/feedback/customer-satisfaction';
+  static const String deviceRegister = '/v1/devices/register';
+  static const String securityDashboard = '/v1/security/dashboard';
+  static const String security2faSetup = '/v1/security/2fa/setup';
+  static const String securityBiometrics = '/v1/security/biometrics';
+  static const String securityAuditLogs = '/v1/security/audit-logs';
+
   ApiConstants._();
 }

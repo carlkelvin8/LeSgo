@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../di/injection.dart';
+import '../../data/data_source/survey_remote_datasource.dart';
 import '../../presentation/widgets/survey/customer_satisfaction_dialog.dart';
 
 /// Tracks completed orders and shows a satisfaction survey after [surveyThreshold].
@@ -10,6 +12,7 @@ class CustomerSatisfactionService {
   static const _surveyCompletedKey = 'customer_survey_completed';
 
   final SharedPreferences _prefs;
+  final SurveyRemoteDataSource _surveyDs = getIt<SurveyRemoteDataSource>();
 
   CustomerSatisfactionService(this._prefs);
 
@@ -20,7 +23,6 @@ class CustomerSatisfactionService {
   bool get shouldShowSurvey =>
       completedOrdersCount >= surveyThreshold && !hasCompletedSurvey;
 
-  /// Call when an order reaches completed/delivered state.
   Future<void> onOrderCompleted(BuildContext context) async {
     final next = completedOrdersCount + 1;
     await _prefs.setInt(_completedOrdersKey, next);
@@ -34,6 +36,18 @@ class CustomerSatisfactionService {
   }
 
   Future<void> markSurveyCompleted({int? rating, String? feedback}) async {
+    if (rating != null) {
+      try {
+        await _surveyDs.submitCustomerSatisfaction(
+          rating: rating,
+          feedback: feedback,
+          completedOrdersCount: completedOrdersCount,
+        );
+      } catch (_) {
+        // Keep local completion even if backend sync fails offline.
+      }
+    }
+
     await _prefs.setBool(_surveyCompletedKey, true);
     if (rating != null) {
       await _prefs.setInt('customer_survey_rating', rating);
@@ -43,7 +57,6 @@ class CustomerSatisfactionService {
     }
   }
 
-  /// For testing / support — reset survey state.
   Future<void> resetSurveyState() async {
     await _prefs.remove(_completedOrdersKey);
     await _prefs.remove(_surveyCompletedKey);

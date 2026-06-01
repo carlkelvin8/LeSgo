@@ -9,10 +9,95 @@ import '../../../core/utils/responsive_utils.dart';
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
+  Future<void> _checkout(BuildContext context, WidgetRef ref) async {
+    final addressController = TextEditingController();
+    String paymentMethod = 'cash';
+
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Checkout'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(
+                  labelText: 'Delivery address',
+                  hintText: 'Enter delivery address',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: paymentMethod,
+                decoration: const InputDecoration(
+                  labelText: 'Payment method',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'cash', child: Text('Cash')),
+                  DropdownMenuItem(value: 'gcash', child: Text('GCash')),
+                ],
+                onChanged: (value) {
+                  if (value != null) setState(() => paymentMethod = value);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Place Order'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (proceed != true || !context.mounted) return;
+
+    final address = addressController.text.trim();
+    addressController.dispose();
+
+    if (address.isEmpty) {
+      SnackBarUtils.showError(context, 'Please enter a delivery address');
+      return;
+    }
+
+    final success = await ref.read(cartCheckoutStateProvider.notifier).checkout(
+          deliveryAddress: address,
+          paymentMethod: paymentMethod,
+        );
+
+    if (!context.mounted) return;
+
+    if (success) {
+      final orderId = ref.read(cartCheckoutStateProvider).orderId;
+      SnackBarUtils.showSuccess(
+        context,
+        orderId != null ? 'Order #$orderId placed successfully!' : 'Order placed successfully!',
+      );
+      Navigator.pop(context);
+    } else {
+      SnackBarUtils.showError(
+        context,
+        ref.read(cartCheckoutStateProvider).errorMessage ?? 'Checkout failed',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cartProvider);
-    final checkoutState = ref.watch(cartCheckoutProvider);
+    final checkoutSummary = ref.watch(cartCheckoutProvider);
+    final checkoutState = ref.watch(cartCheckoutStateProvider);
     final cartItems = cartState.items;
 
     return Scaffold(
@@ -57,10 +142,10 @@ class CartScreen extends ConsumerWidget {
               ),
             if (cartItems.isNotEmpty)
               CartPriceSummary(
-                subtotal: checkoutState.subtotal,
-                deliveryFee: checkoutState.deliveryFee,
-                itemCount: checkoutState.itemCount,
-                total: checkoutState.total,
+                subtotal: checkoutSummary.subtotal,
+                deliveryFee: checkoutSummary.deliveryFee,
+                itemCount: checkoutSummary.itemCount,
+                total: checkoutSummary.total,
               ),
           ],
         ),
@@ -76,10 +161,9 @@ class CartScreen extends ConsumerWidget {
                 ResponsiveUtils.spacing(context, 18),
               ),
               child: PrimaryButton(
-                text: 'Checkout',
-                onPressed: () {
-                  SnackBarUtils.showInfo(context, 'Checkout coming soon');
-                },
+                text: checkoutState.isSubmitting ? 'Placing order...' : 'Checkout',
+                isLoading: checkoutState.isSubmitting,
+                onPressed: checkoutState.isSubmitting ? null : () => _checkout(context, ref),
               ),
             ),
     );

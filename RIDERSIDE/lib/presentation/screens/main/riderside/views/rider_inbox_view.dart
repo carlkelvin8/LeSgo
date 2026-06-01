@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/services/push_notification_service.dart';
 import '../../../../../core/network/dio_client.dart';
 import '../../../../screens/chat/rider_chat_screen.dart';
 import '../../../../../data/data_source/chat_remote_datasource.dart';
@@ -18,6 +19,7 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
   bool _isLoading = true;
   String? _error;
   Timer? _pollTimer;
+  final Map<int, String> _lastMessageByConversation = {};
 
   @override
   void initState() {
@@ -41,6 +43,23 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
       final dataSource = ChatRemoteDataSource(DioClient());
       final conversations = await dataSource.getConversations();
       if (mounted) {
+        for (final conv in conversations) {
+          final latest = conv.latestMessage?.content ?? '';
+          final previous = _lastMessageByConversation[conv.id];
+          if (previous != null &&
+              previous != latest &&
+              latest.isNotEmpty &&
+              silent) {
+            PushNotificationService.show(
+              title: conv.customer?.name ?? 'New message',
+              body: latest,
+              payload: 'chat_${conv.id}',
+              channelId: 'lezgo_chat',
+              channelName: 'Chat Messages',
+            );
+          }
+          _lastMessageByConversation[conv.id] = latest;
+        }
         setState(() {
           _conversations = conversations;
           _isLoading = false;

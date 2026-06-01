@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/snackbar_utils.dart';
+import '../../provider/main/loyalty/loyalty_provider.dart';
+import '../../provider/main/profile/profile_provider.dart';
+import '../../widgets/common/retry_widget.dart';
 
-/// Placeholder until loyalty redemption API is live.
-class LoyaltyRedeemScreen extends StatelessWidget {
+class LoyaltyRedeemScreen extends ConsumerWidget {
   const LoyaltyRedeemScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final loyaltyState = ref.watch(loyaltyProvider);
+    final profileState = ref.watch(profileProvider);
+    final points = profileState.points;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -22,55 +30,187 @@ class LoyaltyRedeemScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.card_giftcard_outlined,
-              size: 72,
-              color: Colors.purple.shade200,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            Text(
-              'Coming soon',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 22),
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF5F2D82),
-              ),
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            Text(
-              'Loyalty redemption is on the way. Keep earning points from missions '
-              'and referrals — you\'ll be able to redeem them for vouchers and '
-              'LesPay credits here soon.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey[700],
-                height: 1.4,
-              ),
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 28)),
-            OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF5F2D82),
-                side: const BorderSide(color: Color(0xFF5F2D82)),
-                padding: EdgeInsets.symmetric(
-                  horizontal: ResponsiveUtils.spacing(context, 32),
-                  vertical: ResponsiveUtils.spacing(context, 12),
+      body: loyaltyState.isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+            )
+          : loyaltyState.error != null && loyaltyState.rewards.isEmpty
+              ? RetryWidget(
+                  message: loyaltyState.error!,
+                  isLoading: loyaltyState.isRedeeming,
+                  onRetry: () =>
+                      ref.read(loyaltyProvider.notifier).loadRewards(),
+                )
+              : RefreshIndicator(
+                  color: const Color(0xFF5F2D82),
+                  onRefresh: () =>
+                      ref.read(loyaltyProvider.notifier).loadRewards(),
+                  child: ListView(
+                    padding: EdgeInsets.all(
+                      ResponsiveUtils.spacing(context, 20),
+                    ),
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(
+                          ResponsiveUtils.spacing(context, 20),
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF5F2D82), Color(0xFFB72AC8)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Your points',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: ResponsiveUtils.fontSize(context, 14),
+                              ),
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 8),
+                            ),
+                            Text(
+                              '$points pts',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                color: Colors.white,
+                                fontSize: ResponsiveUtils.fontSize(context, 32),
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (loyaltyState.infoMessage != null) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                        Text(
+                          loyaltyState.infoMessage!,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 12),
+                            color: Colors.orange[800],
+                          ),
+                        ),
+                      ],
+                      if (loyaltyState.error != null) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                        Text(
+                          loyaltyState.error!,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 12),
+                            color: Colors.red[700],
+                          ),
+                        ),
+                      ],
+                      SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+                      Text(
+                        'Available rewards',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 18),
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF5F2D82),
+                        ),
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                      if (loyaltyState.rewards.isEmpty)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: ResponsiveUtils.spacing(context, 32),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'No rewards available yet.',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        ...loyaltyState.rewards.map((reward) {
+                          final canAfford = points >= reward.pointsCost;
+                          return Card(
+                            margin: EdgeInsets.only(
+                              bottom: ResponsiveUtils.spacing(context, 12),
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                reward.title,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${reward.description}\n${reward.pointsCost} points',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                                ),
+                              ),
+                              isThreeLine: true,
+                              trailing: FilledButton(
+                                onPressed: loyaltyState.isRedeeming ||
+                                        !canAfford ||
+                                        !loyaltyState.rewardsFromApi
+                                    ? null
+                                    : () async {
+                                        final confirmed = await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: const Text('Redeem reward?'),
+                                            content: Text(
+                                              'Spend ${reward.pointsCost} points for ${reward.title}?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, false),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              FilledButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(ctx, true),
+                                                child: const Text('Redeem'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (confirmed != true || !context.mounted) {
+                                          return;
+                                        }
+
+                                        final success = await ref
+                                            .read(loyaltyProvider.notifier)
+                                            .redeemReward(reward, points);
+                                        if (!context.mounted) return;
+                                        if (success) {
+                                          SnackBarUtils.showSuccess(
+                                            context,
+                                            'Reward redeemed successfully!',
+                                          );
+                                        }
+                                      },
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFF5F2D82),
+                                ),
+                                child: Text(canAfford ? 'Redeem' : 'Need pts'),
+                              ),
+                            ),
+                          );
+                        }),
+                    ],
+                  ),
                 ),
-              ),
-              child: const Text('Go back'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

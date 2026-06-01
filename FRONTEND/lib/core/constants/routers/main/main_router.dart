@@ -10,6 +10,10 @@ import '../../../../presentation/screens/main/offers_screen.dart';
 import '../../../../presentation/screens/main/missions_screen.dart';
 import '../../../../presentation/screens/main/loyalty_redeem_screen.dart';
 import '../../../../presentation/screens/main/settings_screen.dart';
+import '../../../../presentation/screens/main/settings/notification_settings_screen.dart';
+import '../../../../presentation/screens/main/settings/language_settings_screen.dart';
+import '../../../../presentation/screens/main/security/security_settings_screen.dart';
+import '../../../../presentation/screens/main/referral/referral_dashboard_screen.dart';
 import '../../../../presentation/screens/main/faqs_screen.dart';
 import '../../../../presentation/screens/main/about_screen.dart';
 import '../../../../presentation/screens/main/set_location_screen.dart';
@@ -31,6 +35,10 @@ class MainRouter {
     MainRoutes.loyaltyRedeem: (_) => const LoyaltyRedeemScreen(),
 
     MainRoutes.settings: (_) => const SettingsScreen(),
+    MainRoutes.notificationSettings: (_) => const NotificationSettingsScreen(),
+    MainRoutes.languageSettings: (_) => const LanguageSettingsScreen(),
+    MainRoutes.securitySettings: (_) => const SecuritySettingsScreen(),
+    MainRoutes.referralDashboard: (_) => const ReferralDashboardScreen(),
     MainRoutes.faqs: (_) => const FaqsScreen(),
     MainRoutes.about: (_) => const AboutScreen(),
 

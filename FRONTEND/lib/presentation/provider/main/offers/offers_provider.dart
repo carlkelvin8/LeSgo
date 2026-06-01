@@ -1,5 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/di/injection.dart';
+import '../../../../core/utils/api_error_mapper.dart';
+import '../../../../data/data_source/voucher_remote_datasource.dart';
+
 class Offer {
   final String id;
   final String title;
@@ -52,12 +56,14 @@ class OffersState {
   final String selectedCategory;
   final bool isLoading;
   final String? error;
+  final String? infoMessage;
 
   const OffersState({
     this.offers = const [],
     this.selectedCategory = 'All',
     this.isLoading = false,
     this.error,
+    this.infoMessage,
   });
 
   List<String> get categories {
@@ -82,12 +88,16 @@ class OffersState {
     String? selectedCategory,
     bool? isLoading,
     String? error,
+    String? infoMessage,
+    bool clearError = false,
+    bool clearInfo = false,
   }) {
     return OffersState(
       offers: offers ?? this.offers,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: clearError ? null : (error ?? this.error),
+      infoMessage: clearInfo ? null : (infoMessage ?? this.infoMessage),
     );
   }
 }
@@ -97,9 +107,41 @@ class OffersNotifier extends StateNotifier<OffersState> {
     loadOffers();
   }
 
+  final VoucherRemoteDataSource _voucherDataSource =
+      getIt<VoucherRemoteDataSource>();
+
   Future<void> loadOffers() async {
-    state = state.copyWith(isLoading: true, error: null);
-    state = state.copyWith(offers: _seedOffers, isLoading: false);
+    state = state.copyWith(isLoading: true, clearError: true, clearInfo: true);
+
+    try {
+      final response = await _voucherDataSource.getAvailableVouchers();
+      final offers = response.data.asMap().entries.map((entry) {
+        final voucher = entry.value;
+        return _mapVoucherToOffer(voucher, entry.key);
+      }).toList();
+
+      if (offers.isEmpty) {
+        state = state.copyWith(
+          offers: _seedOffers,
+          isLoading: false,
+          infoMessage: 'No active promos right now. Showing sample offers.',
+        );
+        return;
+      }
+
+      state = state.copyWith(offers: offers, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        offers: _seedOffers,
+        isLoading: false,
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not load offers from server.',
+          fallbackTl: 'Hindi ma-load ang mga offer mula sa server.',
+        ),
+        infoMessage: 'Showing saved offers while offline.',
+      );
+    }
   }
 
   void selectCategory(String category) {
@@ -134,6 +176,49 @@ class OffersNotifier extends StateNotifier<OffersState> {
     }
     return null;
   }
+}
+
+Offer _mapVoucherToOffer(dynamic voucher, int index) {
+  final code = voucher.code.toString();
+  final upper = code.toUpperCase();
+  String category = 'Promo';
+  String service = 'All Services';
+  int accent = 0xFF5F2D82;
+
+  if (upper.contains('RIDE')) {
+    category = 'Rides';
+    service = 'LesRide';
+    accent = 0xFF5F2D82;
+  } else if (upper.contains('LUNCH') || upper.contains('EAT') || upper.contains('FOOD')) {
+    category = 'Food';
+    service = 'LesEat';
+    accent = 0xFFB72AC8;
+  } else if (upper.contains('PAY') || upper.contains('WALLET')) {
+    category = 'Wallet';
+    service = 'LesPay';
+    accent = 0xFF2364AA;
+  } else if (upper.contains('SEND') || upper.contains('GO')) {
+    category = 'Delivery';
+    service = 'LesGo';
+    accent = 0xFF16846B;
+  } else if (upper.contains('BUY')) {
+    category = 'Shopping';
+    service = 'LesBuy';
+    accent = 0xFFC46A20;
+  }
+
+  return Offer(
+    id: code,
+    title: voucher.title?.toString() ?? code,
+    description: voucher.description?.toString() ?? '',
+    code: code,
+    category: category,
+    service: service,
+    expiresAt: voucher.expiresAt?.toString() ?? 'Limited time',
+    discountLabel: voucher.discountText?.toString() ?? 'SPECIAL OFFER',
+    accentColor: accent,
+    isFeatured: index < 3,
+  );
 }
 
 const _seedOffers = [

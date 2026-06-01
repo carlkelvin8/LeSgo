@@ -51,7 +51,9 @@ class MissionCard extends ConsumerWidget {
                       ),
                       if (mission.isCompleted && !mission.rewardClaimed)
                         GestureDetector(
-                          onTap: () => _claimReward(context, ref),
+                          onTap: mission.userId == 0
+                              ? null
+                              : () => _claimReward(context, ref),
                           child: Container(
                             padding: EdgeInsets.symmetric(
                               horizontal: ResponsiveUtils.spacing(context, 8),
@@ -159,22 +161,15 @@ class MissionCard extends ConsumerWidget {
   }
 
   void _claimReward(BuildContext context, WidgetRef ref) async {
-    // Temporarily disabled due to API issues
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Reward claiming is temporarily unavailable. Please try again later.'),
-        backgroundColor: Colors.orange,
-      ),
-    );
-    
-    /* TODO: Re-enable when API authentication is fixed
     try {
       await ref.read(missionsProvider.notifier).claimMission(mission.id);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Reward claimed successfully! ₱${mission.rewardValue.toStringAsFixed(0)} ${mission.rewardType}'),
+            content: Text(
+              'Reward claimed! ₱${mission.rewardValue.toStringAsFixed(0)} ${mission.rewardType}',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -189,6 +184,5 @@ class MissionCard extends ConsumerWidget {
         );
       }
     }
-    */
   }
 }

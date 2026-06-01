@@ -211,6 +211,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           price: priceValue,
           isAvailable: state.liveOnMenu,
           imagePath: state.imagePath,
+          tags: state.selectedTags.isEmpty ? null : state.selectedTags,
         );
         
         await dataSource.updateMenuItem(_itemId!, request);
@@ -255,6 +256,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           price: priceValue,
           isAvailable: state.liveOnMenu,
           imagePath: state.imagePath,
+          tags: state.selectedTags.isEmpty ? null : state.selectedTags,
         );
         
         await dataSource.createMenuItem(partnerId, request);

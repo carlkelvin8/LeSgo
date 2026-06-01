@@ -6,7 +6,10 @@ import '../../../../../domain/entities/auth/rider/rider_documents.dart';
 import '../../../../../data/data_source/auth_remote_datasource.dart';
 import '../../../../../data/data_source/dto/auth/register_driver_request_dto.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/services/api_service.dart';
 import '../../../../../core/services/secure_storage_service.dart';
+import '../../../../../core/utils/phone_utils.dart';
+import '../../../../../data/data_source/helpers/register_driver_form_builder.dart';
 import 'rider_phone_verification_provider.dart';
 
 // Register Info State
@@ -92,22 +95,19 @@ class RegisterInfoState {
   String get email => registrationInfo.email;
 
   // Presentation getters
-  String get presentationName =>
-      '${registrationInfo.firstName} ${registrationInfo.lastName}'
-          .trim()
-          .isNotEmpty
-      ? '${registrationInfo.firstName} ${registrationInfo.lastName}'
-      : 'Juan Dela Cruz';
+  String get presentationName {
+    final name =
+        '${registrationInfo.firstName} ${registrationInfo.lastName}'.trim();
+    return name.isNotEmpty ? name : '—';
+  }
 
   String get presentationBirthday => registrationInfo.birthday.isNotEmpty
       ? registrationInfo.birthday
-      : '12/18/2023';
+      : '—';
 
   String get presentationEmail => registrationInfo.email.isNotEmpty
       ? registrationInfo.email
-      : '';
-
-  String get presentationContactNumber => '';
+      : '—';
 
   String? get selfieImagePath => documents.selfieImagePath;
   String? get selfieWithMotorcycleImagePath =>
@@ -121,7 +121,10 @@ class RegisterInfoState {
 }
 
 class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
-  RegisterInfoNotifier() : super(RegisterInfoState());
+  final Ref _ref;
+  String? _verifiedPhone;
+
+  RegisterInfoNotifier(this._ref) : super(RegisterInfoState());
 
   void updateFirstName(String value) {
     state = state.copyWith(
@@ -144,6 +147,30 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
   void updateEmail(String value) {
     state = state.copyWith(
       registrationInfo: state.registrationInfo.copyWith(email: value),
+    );
+  }
+
+  void updatePassword(String value) {
+    state = state.copyWith(
+      registrationInfo: state.registrationInfo.copyWith(password: value),
+    );
+  }
+
+  void updateConfirmPassword(String value) {
+    state = state.copyWith(
+      registrationInfo: state.registrationInfo.copyWith(confirmPassword: value),
+    );
+  }
+
+  void updateLicenseNumber(String value) {
+    state = state.copyWith(
+      registrationInfo: state.registrationInfo.copyWith(licenseNumber: value),
+    );
+  }
+
+  void updateLicenseExpiryDate(String? value) {
+    state = state.copyWith(
+      registrationInfo: state.registrationInfo.copyWith(licenseExpiryDate: value),
     );
   }
 
@@ -342,7 +369,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
 
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+        allowedExtensions: ['pdf'],
       );
 
       if (result != null && result.files.single.path != null) {
@@ -397,26 +424,46 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     try {
       state = state.copyWith(isSubmitting: true, clearError: true);
 
-      // Get phone number from phone verification provider
-      // Note: In a complete implementation, password and license number
-      // should be collected in the registration flow
-      final phoneNumber = '+639171234567'; // TODO: Get from phone verification provider
-      final password = 'TempPassword123!'; // TODO: Collect from UI
-      final licenseNumber = 'N01-12-345678'; // TODO: Collect from UI
+      final phoneState = _ref.read(phoneVerificationProvider);
+      if (!phoneState.isVerified) {
+        throw Exception('Please verify your phone number first.');
+      }
 
-      // Create registration request
+      final phoneNumber = PhoneUtils.toInternational(phoneState.phoneNumber);
+      _verifiedPhone = phoneNumber;
+
+      final info = state.registrationInfo;
       final registerRequest = RegisterDriverRequestDto(
-        name: '${state.registrationInfo.firstName} ${state.registrationInfo.lastName}',
-        email: state.registrationInfo.email,
+        name: '${info.firstName} ${info.lastName}',
+        email: info.email,
         phoneNumber: phoneNumber,
-        password: password,
-        passwordConfirmation: password,
-        licenseNumber: licenseNumber,
+        password: info.password,
+        passwordConfirmation: info.confirmPassword,
+        licenseNumber: info.licenseNumber,
+        licenseExpiryDate: _formatDateForApi(info.licenseExpiryDate),
       );
 
-      // Call registration API
+      final documents = registerDriverDocumentsFromPaths(
+        selfiePath: state.documents.selfieImagePath!,
+        selfieWithMotorcyclePath: state.documents.selfieWithMotorcycleImagePath!,
+        resumePath: state.documents.resumeFilePath!,
+        barangayClearancePath: state.documents.barangayClearanceFilePath!,
+        driversLicensePath: state.documents.driversLicenseFilePath!,
+        motorcycleOrcrPath: state.documents.motorcycleORCRImagePath!,
+        scannedOrcrPath: state.documents.scannedORCRFilePath!,
+        digitalSignaturePath: state.documents.digitalSignatureFilePath!,
+      );
+
+      final documentError = validateRegisterDriverDocuments(documents);
+      if (documentError != null) {
+        throw Exception(documentError);
+      }
+
       final authDataSource = getIt<AuthRemoteDataSource>();
-      final response = await authDataSource.registerDriver(registerRequest);
+      final response = await authDataSource.registerDriver(
+        registerRequest,
+        documents: documents,
+      );
 
       // Store token if registration successful
       if (response.success && response.data?.user != null) {
@@ -432,7 +479,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isSubmitting: false,
-        errorMessage: 'Failed to submit registration: ${e.toString()}',
+        errorMessage: ApiService.extractError(e),
       );
     }
   }
@@ -442,11 +489,21 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
   }
 
   void reset() {
+    _verifiedPhone = null;
     state = RegisterInfoState();
+  }
+
+  String? get verifiedPhone => _verifiedPhone;
+
+  String? _formatDateForApi(String? mmddyyyy) {
+    if (mmddyyyy == null || mmddyyyy.isEmpty) return null;
+    final parts = mmddyyyy.split('/');
+    if (parts.length != 3) return mmddyyyy;
+    return '${parts[2]}-${parts[0].padLeft(2, '0')}-${parts[1].padLeft(2, '0')}';
   }
 }
 
 final registerInfoProvider =
     StateNotifierProvider<RegisterInfoNotifier, RegisterInfoState>((ref) {
-      return RegisterInfoNotifier();
+      return RegisterInfoNotifier(ref);
     });

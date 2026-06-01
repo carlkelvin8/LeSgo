@@ -236,27 +236,51 @@ class OrderDto {
     if (lesbuyItems != null && lesbuyItems!.isNotEmpty) {
       return lesbuyItems!;
     }
-    
-    // Create mock items from meta or item_description for production
-    if (meta != null && meta!['items'] != null) {
+
+    if (meta != null && meta!['items'] is List) {
       try {
         final itemsData = meta!['items'] as List;
-        return itemsData.map((item) => LesbuyItemDto(
-          id: 0,
-          orderId: id,
-          name: item['name'] ?? 'Unknown Item',
-          quantity: int.tryParse(item['quantity']?.toString() ?? '1') ?? 1,
-          unit: 'pcs',
-          estimatedPrice: _parseDouble(item['estimated_price'] ?? item['price']),
-          actualPrice: _parseDouble(item['actual_price'] ?? item['price']),
-          imageUrl: null,
-        )).toList();
-      } catch (e) {
-        // Ignore parsing errors
-      }
+        return itemsData.map((item) {
+          final map = item is Map
+              ? Map<String, dynamic>.from(item as Map)
+              : <String, dynamic>{'name': item.toString()};
+          return LesbuyItemDto(
+            id: int.tryParse(map['id']?.toString() ?? '') ?? 0,
+            orderId: id,
+            name: map['name']?.toString() ?? 'Item',
+            quantity: int.tryParse(map['quantity']?.toString() ?? '1') ?? 1,
+            unit: map['unit']?.toString() ?? 'pcs',
+            estimatedPrice: _parseDouble(
+              map['estimated_price'] ?? map['price'],
+            ),
+            actualPrice: _parseDouble(
+              map['actual_price'] ?? map['price'],
+            ),
+            imageUrl: map['image_url']?.toString(),
+          );
+        }).toList();
+      } catch (_) {}
     }
-    
-    // Fallback: create a single item from item_description
+
+    if (meta != null && meta!['order_items'] is List) {
+      try {
+        final itemsData = meta!['order_items'] as List;
+        return itemsData.map((item) {
+          final map = Map<String, dynamic>.from(item as Map);
+          return LesbuyItemDto(
+            id: int.tryParse(map['id']?.toString() ?? '') ?? 0,
+            orderId: id,
+            name: map['name']?.toString() ?? 'Item',
+            quantity: int.tryParse(map['quantity']?.toString() ?? '1') ?? 1,
+            unit: map['unit']?.toString() ?? 'pcs',
+            estimatedPrice: _parseDouble(map['estimated_price'] ?? map['price']),
+            actualPrice: _parseDouble(map['actual_price'] ?? map['price']),
+            imageUrl: map['image_url']?.toString(),
+          );
+        }).toList();
+      } catch (_) {}
+    }
+
     if (itemDescription != null && itemDescription!.isNotEmpty) {
       return [
         LesbuyItemDto(
@@ -266,12 +290,12 @@ class OrderDto {
           quantity: 1,
           unit: 'pcs',
           estimatedPrice: estimatedFare,
-          actualPrice: estimatedFare,
+          actualPrice: actualFare ?? estimatedFare,
           imageUrl: null,
-        )
+        ),
       ];
     }
-    
+
     return [];
   }
 }

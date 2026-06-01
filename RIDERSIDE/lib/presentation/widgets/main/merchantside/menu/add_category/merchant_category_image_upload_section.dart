@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 
@@ -40,9 +41,9 @@ class MerchantCategoryImageUploadSection extends StatelessWidget {
               ),
             ),
             child: uploadedImagePath != null
-                ? Image.asset(
-                    uploadedImagePath!,
-                    fit: BoxFit.cover,
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _buildPreview(uploadedImagePath!),
                   )
                 : Center(
                     child: Column(
@@ -78,5 +79,15 @@ class MerchantCategoryImageUploadSection extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildPreview(String path) {
+    if (path.startsWith('http')) {
+      return Image.network(path, fit: BoxFit.cover, width: double.infinity);
+    }
+    if (path.startsWith('assets/')) {
+      return Image.asset(path, fit: BoxFit.cover, width: double.infinity);
+    }
+    return Image.file(File(path), fit: BoxFit.cover, width: double.infinity);
   }
 }

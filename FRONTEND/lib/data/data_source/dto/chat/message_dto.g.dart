@@ -46,6 +46,10 @@ ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
           ? null
           : MessageDto.fromJson(json['latest_message'] as Map<String, dynamic>),
       unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
+      serviceName: json['service_name'] as String?,
+      serviceId: (json['service_id'] as num?)?.toInt(),
+      serviceType: json['service_type'] as String?,
+      order: json['order'] as Map<String, dynamic>?,
       customer: json['customer'] == null
           ? null
           : UserInfoDto.fromJson(json['customer'] as Map<String, dynamic>),
@@ -65,6 +69,10 @@ Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
       'ended_at': instance.endedAt,
       'latest_message': instance.lastMessage,
       'unread_count': instance.unreadCount,
+      'service_name': instance.serviceName,
+      'service_id': instance.serviceId,
+      'service_type': instance.serviceType,
+      'order': instance.order,
       'customer': instance.customer,
       'driver': instance.driver,
     };

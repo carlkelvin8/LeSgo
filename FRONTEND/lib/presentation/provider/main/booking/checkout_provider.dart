@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../domain/entities/booking/leseat/order.dart';
@@ -18,8 +19,7 @@ import '../../../../core/di/injection.dart';
 
 import '../../../../core/services/service_area_checker.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
-
-import '../../../../core/utils/lespay_order_payment.dart';
+import '../../../../core/utils/booking_checkout_payment.dart';
 
 import '../../../../data/data_source/voucher_remote_datasource.dart';
 
@@ -615,7 +615,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
 
-  Future<bool> placeOrder() async {
+  Future<bool> placeOrder(BuildContext context) async {
 
     if (state.order == null) return false;
 
@@ -821,17 +821,31 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
       final response = await _orderDataSource.createOrder(createOrderRequest);
 
-      await applyLesPayWalletDeduction(
+      final payAmount = response.data.effectiveTotalAmount > 0
+          ? response.data.effectiveTotalAmount
+          : order.total;
 
-        ref,
+      if (!context.mounted) {
+        state = state.copyWith(isLoading: false);
+        return false;
+      }
 
+      final paid = await completeBookingPayment(
+        context: context,
+        ref: ref,
+        orderId: response.data.id,
+        amount: payAmount,
         paymentMethod: state.selectedPaymentMethod ?? 'cash',
-
-        amount: order.total,
-
+        serviceLabel: 'LesEat',
       );
 
-
+      if (!paid) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Payment was not completed.',
+        );
+        return false;
+      }
 
       state = state.copyWith(
 

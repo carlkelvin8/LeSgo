@@ -11,7 +11,7 @@ import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
 import '../profile/profile_provider.dart';
 import '../../../../core/services/service_area_checker.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
-import '../../../../core/utils/lespay_order_payment.dart';
+import '../../../../core/utils/booking_checkout_payment.dart';
 import '../../../widgets/widgets.dart';
 
 class LesrideState {
@@ -435,14 +435,43 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
           );
 
           print('🔵 LesRide: Creating order with API...');
+
+          final estimatedFare = await orderDataSource.getFareEstimateRaw(
+                serviceId: 2,
+                estimatedDistanceM: createOrderRequest.estimatedDistanceM,
+                pickupLat: pickup.latitude,
+                pickupLng: pickup.longitude,
+                dropoffLat: dropoff.latitude,
+                dropoffLng: dropoff.longitude,
+              ) ??
+              0.0;
+
+          final walletOk = await validateWalletBalanceForOrder(
+            _ref,
+            amount: estimatedFare > 0 ? estimatedFare : 50.0,
+            paymentMethod: state.paymentMethod,
+            context: context,
+          );
+          if (!walletOk) return;
+
           final response = await orderDataSource.createOrder(createOrderRequest);
           print('🟢 LesRide: Order created successfully - ID: ${response.data.id}');
 
-          await applyLesPayWalletDeduction(
-            _ref,
+          final payAmount = response.data.effectiveTotalAmount > 0
+              ? response.data.effectiveTotalAmount
+              : response.data.estimatedFare;
+
+          if (!context.mounted) return;
+
+          final paid = await completeBookingPayment(
+            context: context,
+            ref: _ref,
+            orderId: response.data.id,
+            amount: payAmount,
             paymentMethod: state.paymentMethod,
-            amount: response.data.estimatedFare,
+            serviceLabel: 'LesRide',
           );
+          if (!paid) return;
 
           final orderId = response.data.id.toString();
 
@@ -456,7 +485,7 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
                 'pickup': locationState.pickupLocation?.toString(),
                 'destination': locationState.destinationLocation?.toString(),
                 'paymentMethod': state.paymentMethod,
-                'fare': 120.0, // Calculate actual fare
+                'fare': payAmount,
               },
             },
           );

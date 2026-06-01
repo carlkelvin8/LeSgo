@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/navigation/favorite_navigation.dart';
 import '../../../core/services/favorites_service.dart';
 import '../../provider/main/favorites/favorites_provider.dart';
 import '../../../core/constants/routers/app_router.dart';
@@ -101,15 +102,7 @@ class HomeFavoritesSection extends ConsumerWidget {
         ],
       ),
       child: InkWell(
-        onTap: () {
-          // Navigate to detail
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Opening ${favorite.name}...'),
-              duration: const Duration(seconds: 1),
-            ),
-          );
-        },
+        onTap: () => FavoriteNavigation.open(context, favorite),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),

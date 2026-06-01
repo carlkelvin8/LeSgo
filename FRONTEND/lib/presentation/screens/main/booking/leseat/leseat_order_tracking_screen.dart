@@ -5,6 +5,7 @@ import 'dart:async';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
+import '../../../../../core/utils/order_line_items_parser.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../provider/tracking/live_tracking_provider.dart';
@@ -751,39 +752,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
   }
 
   Widget _buildOrderItemsSection(BuildContext context, Map<String, dynamic> orderData) {
-    // Try to get items from current order data (which should have lesbuy_items)
-    List<dynamic> items = [];
-    
-    // First check if we have lesbuy_items in the current order data
-    final lesbuyItems = orderData['lesbuy_items'];
-    if (lesbuyItems is List && lesbuyItems.isNotEmpty) {
-      items = lesbuyItems.map((item) => {
-        'name': item['name'] ?? 'Item',
-        'price': item['actual_price'] ?? item['estimated_price'] ?? 0.0,
-        'quantity': item['quantity'] ?? 1,
-      }).toList();
-    } else {
-      // Fallback to the original items field
-      final itemsData = orderData['items'];
-      
-      if (itemsData is List<dynamic>) {
-        items = itemsData;
-      } else if (itemsData is int) {
-        // If items is an integer, it might be a count - create placeholder items
-        items = List.generate(itemsData, (index) => {
-          'name': 'Item ${index + 1}',
-          'price': 0.0,
-          'quantity': 1,
-        });
-      } else if (itemsData != null) {
-        // If it's some other type, try to convert to string and create a single item
-        items = [{
-          'name': itemsData.toString(),
-          'price': 0.0,
-          'quantity': 1,
-        }];
-      }
-    }
+    final items = OrderLineItemsParser.fromOrderDataMap(orderData);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -798,22 +767,26 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-
-        // Order Items
-        ...items.map((item) {
-          final itemName = item['name']?.toString() ?? 'Item';
-          final itemPrice = _safeToDouble(item['price']);
-          final itemQuantity = _safeToInt(item['quantity']);
-          final itemTotal = itemPrice * itemQuantity;
-          
-          return _buildOrderItem(
-            context,
-            itemName,
-            'Php ${itemPrice.toStringAsFixed(2)}',
-            itemQuantity,
-            itemTotal: itemTotal,
-          );
-        }),
+        if (items.isEmpty)
+          Text(
+            'Item details will appear once the restaurant confirms your order.',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 13),
+              color: Colors.grey[600],
+            ),
+          )
+        else
+          ...items.map((item) {
+            final itemTotal = item.price * item.quantity;
+            return _buildOrderItem(
+              context,
+              item.name,
+              'Php ${item.price.toStringAsFixed(2)}',
+              item.quantity,
+              itemTotal: itemTotal,
+            );
+          }),
       ],
     );
   }

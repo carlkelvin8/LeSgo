@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/services/push_notification_service.dart';
+import 'rider_duty_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Order model (minimal, from API)
@@ -295,12 +297,12 @@ class RiderOrdersState {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
+  final Ref _ref;
   Timer? _autoRefreshTimer;
-  
-  RiderOrdersNotifier() : super(RiderOrdersState()) {
-    // Don't auto-load on construction — wait for explicit loadOrders() call
-    // after the user is authenticated (called from RiderMainScreen.initState)
-  }
+  Set<int> _knownAvailableOrderIds = {};
+  String? _lastActiveStatus;
+
+  RiderOrdersNotifier(this._ref) : super(RiderOrdersState());
 
   @override
   void dispose() {
@@ -310,9 +312,10 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
   void _startAutoRefresh() {
     _autoRefreshTimer?.cancel();
-    // Auto-refresh every 10 seconds to check for new orders
     _autoRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      loadOrders(silent: true);
+      if (_ref.read(riderDutyProvider)) {
+        loadOrders(silent: true);
+      }
     });
   }
 
@@ -329,10 +332,15 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   /// Reset state and stop timer (called on logout)
   void reset() {
     stopAutoRefresh();
+    _knownAvailableOrderIds = {};
+    _lastActiveStatus = null;
     state = RiderOrdersState();
   }
 
   Future<void> loadOrders({bool silent = false}) async {
+    if (!_ref.read(riderDutyProvider) && silent) {
+      return;
+    }
     if (!silent) {
       state = state.copyWith(isLoading: true, clearError: true);
     } else {
@@ -377,6 +385,8 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
       print('🚗 Active orders: ${active.length}');
 
+      _notifyOrderChanges(available, active.isNotEmpty ? active.first : null);
+
       state = state.copyWith(
         availableOrders: available,
         activeOrder: active.isNotEmpty ? active.first : null,
@@ -385,8 +395,9 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         clearActiveOrder: active.isEmpty,
       );
 
-      // Start auto-refresh after first successful load
-      if (_autoRefreshTimer == null || !_autoRefreshTimer!.isActive) {
+      // Start auto-refresh after first successful load when on duty
+      if (_ref.read(riderDutyProvider) &&
+          (_autoRefreshTimer == null || !_autoRefreshTimer!.isActive)) {
         _startAutoRefresh();
       }
     } catch (e) {
@@ -516,6 +527,35 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
     state = state.copyWith(clearError: true, clearSuccess: true);
   }
 
+  void _notifyOrderChanges(List<RiderOrder> available, RiderOrder? active) {
+    final currentIds = available.map((o) => o.id).toSet();
+    final newOrders = currentIds.difference(_knownAvailableOrderIds);
+    if (_knownAvailableOrderIds.isNotEmpty && newOrders.isNotEmpty) {
+      for (final id in newOrders) {
+        final order = available.firstWhere((o) => o.id == id);
+        PushNotificationService.show(
+          title: 'New order available',
+          body: '${order.serviceName} • ${order.pickupAddress}',
+          payload: 'order_$id',
+        );
+      }
+    }
+    _knownAvailableOrderIds = currentIds;
+
+    if (active != null) {
+      if (_lastActiveStatus != null && _lastActiveStatus != active.status) {
+        PushNotificationService.show(
+          title: 'Order #${active.id} updated',
+          body: 'Status changed to ${active.status.replaceAll('_', ' ')}',
+          payload: 'order_${active.id}',
+        );
+      }
+      _lastActiveStatus = active.status;
+    } else {
+      _lastActiveStatus = null;
+    }
+  }
+
   RiderOrder? _parseOrder(Map<String, dynamic> data) {
     try {
       final orderData = data['data'] ?? data['order'];
@@ -529,4 +569,4 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
 final riderOrdersProvider =
     StateNotifierProvider<RiderOrdersNotifier, RiderOrdersState>(
-        (ref) => RiderOrdersNotifier());
+        (ref) => RiderOrdersNotifier(ref));

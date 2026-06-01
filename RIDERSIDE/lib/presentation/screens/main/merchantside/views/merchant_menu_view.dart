@@ -151,6 +151,8 @@ class MerchantMenuView extends ConsumerWidget {
                                       .firstWhere((cat) => cat.id == item.menuCategoryId)
                                       .name,
                                   if (item.imageUrl != null) 'imageUrl': item.imageUrl!,
+                                  if (item.tags != null && item.tags!.isNotEmpty)
+                                    'selectedTags': item.tags!.join(','),
                                 },
                               ),
                             ),

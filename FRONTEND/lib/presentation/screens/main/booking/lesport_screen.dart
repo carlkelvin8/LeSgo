@@ -21,7 +21,6 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
     super.initState();
     _controllers = LestransportControllers();
 
-    // Add listeners to update state
     _controllers.nameController.addListener(() {
       ref
           .read(lestransportProvider.notifier)
@@ -51,20 +50,15 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
   }
 
   Future<void> _handleBooking() async {
-    if (_controllers.validate()) {
-      final notifier = ref.read(lestransportProvider.notifier);
-      await notifier.bookTransport();
+    if (!_controllers.validate()) return;
 
-      final state = ref.read(lestransportProvider);
-      if (state.error != null) {
-        if (mounted) {
-          SnackBarUtils.showError(context, state.error!);
-        }
-      } else if (!state.isLoading) {
-        if (mounted) {
-          SnackBarUtils.showSuccess(context, 'Booking successful!');
-          Navigator.pop(context);
-        }
+    final success =
+        await ref.read(lestransportProvider.notifier).bookTransport(context);
+
+    if (!success && mounted) {
+      final error = ref.read(lestransportProvider).error;
+      if (error != null) {
+        SnackBarUtils.showError(context, error);
       }
     }
   }
@@ -83,11 +77,20 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
             constraints: BoxConstraints(maxWidth: maxWidth),
             child: Form(
               key: _controllers.formKey,
-              child: Column(
-                children: [
-                  LesportFormSection(controllers: _controllers),
-                  const LestransportSummary(),
-                ],
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    LesportFormSection(controllers: _controllers),
+                    BookingPaymentMethodSection(
+                      selectedMethod: state.paymentMethod,
+                      onMethodChanged: ref
+                          .read(lestransportProvider.notifier)
+                          .updatePaymentMethod,
+                      minimumAmount: state.totalOrder,
+                    ),
+                    const LestransportSummary(),
+                  ],
+                ),
               ),
             ),
           ),

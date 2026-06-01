@@ -13,8 +13,13 @@ class RegisterMerchantRequestDto {
   final String role;
   @JsonKey(name: 'restaurant_name')
   final String restaurantName;
+  final String? address;
   @JsonKey(name: 'zip_code')
   final String? zipCode;
+  @JsonKey(name: 'terms_accepted')
+  final bool termsAccepted;
+  @JsonKey(name: 'privacy_accepted')
+  final bool privacyAccepted;
   @JsonKey(name: 'selfie_path')
   final String? selfiePath;
   @JsonKey(name: 'valid_id_path')
@@ -36,7 +41,10 @@ class RegisterMerchantRequestDto {
     required this.passwordConfirmation,
     this.role = 'partner_admin',
     required this.restaurantName,
+    this.address,
     this.zipCode,
+    this.termsAccepted = true,
+    this.privacyAccepted = true,
     this.selfiePath,
     this.validIdPath,
     this.digitalSignaturePath,

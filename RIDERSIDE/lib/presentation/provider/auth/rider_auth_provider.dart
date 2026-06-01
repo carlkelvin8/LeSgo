@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/services/push_notification_service.dart';
 
 class RiderUser {
   final int id;
@@ -96,6 +97,8 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
         isLoading: false,
       );
       
+      await PushNotificationService.registerWithBackend();
+      
       print('✅ Auto-login successful - Partner ID in state: ${state.user?.partnerId}');
     } catch (e) {
       print('❌ Auto-login failed: $e');
@@ -160,6 +163,8 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
         isLoggedIn: true,
         isLoading: false,
       );
+
+      await PushNotificationService.registerWithBackend();
       
       print('✅✅✅ LOGIN SUCCESSFUL ✅✅✅');
       print('✅ Partner ID in state: ${state.user?.partnerId}');

@@ -135,6 +135,7 @@ class RiderBooking {
   final BookingStatus currentStatus;
   final List<String>? proofOfDeliveryUrls;
   final String? customerPhone;
+  final int? orderRating;
 
   const RiderBooking({
     required this.id,
@@ -159,5 +160,6 @@ class RiderBooking {
     this.currentStatus = BookingStatus.pending,
     this.proofOfDeliveryUrls,
     this.customerPhone,
+    this.orderRating,
   });
 }

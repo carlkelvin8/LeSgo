@@ -4,6 +4,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../widgets/widgets.dart';
 import '../../../provider/main/merchantside/merchant_menu_item_form_provider.dart';
 import '../../../controllers/merchantside/merchant_menu_item_form_controller.dart';
+import '../../../widgets/main/merchantside/menu/shared/merchant_dietary_preferences_section.dart';
 
 import 'package:image_picker/image_picker.dart';
 
@@ -116,6 +117,11 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
         MerchantItemDescriptionSection(
           controller: _controller.descriptionController,
           onChanged: notifier.updateDescription,
+        ),
+        SectionSpacer(),
+        MerchantDietaryPreferencesSection(
+          selectedTags: formState.selectedTags.toSet(),
+          onTagToggle: notifier.toggleTag,
         ),
         SectionSpacer(),
       ],

@@ -7,7 +7,9 @@ import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../domain/entities/booking/leseat/restaurant.dart';
 import '../../../../provider/main/booking/restaurant_detail_provider.dart';
 import '../../../../provider/main/booking/checkout_provider.dart';
-// import '../../reviews/reviews_list_screen.dart'; // Temporarily disabled
+import '../../../../provider/main/favorites/favorites_provider.dart';
+import '../../reviews/reviews_list_screen.dart';
+import '../../../../../core/navigation/favorite_navigation.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final Restaurant restaurant;
@@ -21,10 +23,12 @@ class RestaurantDetailScreen extends ConsumerStatefulWidget {
 
 class _RestaurantDetailScreenState
     extends ConsumerState<RestaurantDetailScreen> {
+  bool _isFavorite = false;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
       ref
           .read(restaurantDetailProvider.notifier)
           .loadRestaurantDetails(
@@ -32,7 +36,22 @@ class _RestaurantDetailScreenState
             widget.restaurant.categories,
             restaurantName: widget.restaurant.name,
           );
+      final isFav = await ref
+          .read(favoritesProvider.notifier)
+          .isFavoriteRestaurant(widget.restaurant.id);
+      if (mounted) setState(() => _isFavorite = isFav);
     });
+  }
+
+  Future<void> _toggleFavorite() async {
+    final isFav = await ref.read(favoritesProvider.notifier).toggleFavoriteRestaurant(
+          id: widget.restaurant.id,
+          name: widget.restaurant.name,
+          subtitle: widget.restaurant.address,
+          imageUrl: widget.restaurant.imagePath,
+          metadata: FavoriteNavigation.restaurantMetadata(widget.restaurant),
+        );
+    if (mounted) setState(() => _isFavorite = isFav);
   }
 
   @override
@@ -65,6 +84,29 @@ class _RestaurantDetailScreenState
             onPressed: () => Navigator.pop(context),
           ),
         ),
+        actions: [
+          Container(
+            margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorite ? Colors.red : Colors.black,
+              ),
+              onPressed: _toggleFavorite,
+            ),
+          ),
+        ],
       ),
       body: detailState.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -202,17 +244,17 @@ class _RestaurantDetailScreenState
                   child: RestaurantInfoCard(
                     restaurant: widget.restaurant,
                     onViewReviews: () {
-                      // TODO: Navigate to reviews screen (temporarily disabled)
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => ReviewsListScreen(
-                      //       title: 'Restaurant Reviews',
-                      //       reviewableType: 'partner',
-                      //       reviewableId: int.tryParse(widget.restaurant.id) ?? 0,
-                      //     ),
-                      //   ),
-                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ReviewsListScreen(
+                            title: 'Restaurant Reviews',
+                            reviewableType: 'partner',
+                            reviewableId:
+                                int.tryParse(widget.restaurant.id) ?? 0,
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),

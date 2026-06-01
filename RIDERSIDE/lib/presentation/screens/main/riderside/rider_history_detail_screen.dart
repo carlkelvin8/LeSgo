@@ -34,7 +34,9 @@ class RiderHistoryDetailScreen extends StatelessWidget {
                     children: [
                       // Top Status Section
                       RiderHistoryDetailStatus(
-                        rating: 5, // Hardcoded for UI demo
+                        rating: int.tryParse(bookingData['rating'] ?? '') ??
+                            int.tryParse(bookingData['stars'] ?? '') ??
+                            0,
                         status: bookingData['status'] ?? '',
                         statusColor: statusColor,
                         statusBackgroundColor: statusBackgroundColor,
@@ -50,6 +52,10 @@ class RiderHistoryDetailScreen extends StatelessWidget {
                       // Bottom Proof Section
                       RiderHistoryDetailProof(
                         timestamp: bookingData['timestamp'] ?? '',
+                        proofUrls: bookingData['proofUrls']
+                            ?.split('|')
+                            .where((url) => url.isNotEmpty)
+                            .toList(),
                       ),
                     ],
                   ),

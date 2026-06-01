@@ -4,7 +4,7 @@ import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/di/injection.dart';
-import '../../../../../core/utils/lespay_order_payment.dart';
+import '../../../../../core/utils/booking_checkout_payment.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../data/data_source/dto/order/create_order_request_dto.dart';
 import '../../../../../data/data_source/dto/address/address_dto.dart';
@@ -457,11 +457,21 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       final response = await orderDataSource.createOrder(createOrderRequest);
                       print('🟢 LesBuy: Order created successfully - ID: ${response.data.id}');
 
-                      await applyLesPayWalletDeduction(
-                        ref,
+                      final payAmount = response.data.effectiveTotalAmount > 0
+                          ? response.data.effectiveTotalAmount
+                          : total;
+
+                      if (!context.mounted) return;
+
+                      final paid = await completeBookingPayment(
+                        context: context,
+                        ref: ref,
+                        orderId: response.data.id,
+                        amount: payAmount,
                         paymentMethod: _paymentMethod,
-                        amount: total,
+                        serviceLabel: 'LesBuy',
                       );
+                      if (!paid) return;
 
                       if (context.mounted) {
                         final orderId = response.data.id.toString();

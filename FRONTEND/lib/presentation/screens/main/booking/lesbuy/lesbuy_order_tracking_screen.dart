@@ -5,6 +5,7 @@ import 'dart:async';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
+import '../../../../../core/utils/order_line_items_parser.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../provider/tracking/live_tracking_provider.dart';
@@ -700,36 +701,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
   }
 
   Widget _buildOrderItemsSection(BuildContext context, Map<String, dynamic> orderData) {
-    // Try to get items from current order data (which should have lesbuy_items)
-    List<dynamic> storeItems = [];
-    List<dynamic> manualItems = [];
-    
-    // First check if we have lesbuy_items in the current order data
-    final lesbuyItems = orderData['lesbuy_items'];
-    if (lesbuyItems is List && lesbuyItems.isNotEmpty) {
-      // Convert lesbuy_items to store items format
-      storeItems = lesbuyItems.map((item) => {
-        'productName': item['name'] ?? 'Item',
-        'price': item['actual_price'] ?? item['estimated_price'] ?? 0.0,
-        'quantity': item['quantity'] ?? 1,
-      }).toList();
-    } else {
-      // Fallback to the original storeItems and manualItems fields
-      final storeItemsData = orderData['storeItems'];
-      final manualItemsData = orderData['manualItems'];
-      
-      if (storeItemsData is List<dynamic>) {
-        storeItems = storeItemsData;
-      } else if (storeItemsData != null) {
-        storeItems = [storeItemsData];
-      }
-      
-      if (manualItemsData is List<dynamic>) {
-        manualItems = manualItemsData;
-      } else if (manualItemsData != null) {
-        manualItems = [manualItemsData];
-      }
-    }
+    final items = OrderLineItemsParser.fromOrderDataMap(orderData);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -744,36 +716,28 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-
-        // Store Items
-        ...storeItems.map((item) {
-          final itemName = item['productName'] ?? 'Item';
-          final itemPrice = _safeToDouble(item['price']);
-          final itemQuantity = _safeToInt(item['quantity']);
-          final itemTotal = itemPrice * itemQuantity;
-          
-          return _buildOrderItem(
-            context,
-            itemName,
-            'Php ${itemPrice.toStringAsFixed(2)}',
-            itemQuantity,
-            itemTotal: itemTotal,
-          );
-        }),
-
-        // Manual Items
-        ...manualItems.map((item) {
-          final itemName = item['name'] ?? 'Manual Item';
-          final itemQuantity = _safeToInt(item['quantity']);
-          
-          return _buildOrderItem(
-            context,
-            itemName,
-            'Php 0.00', // Manual items don't have price
-            itemQuantity,
-            isManual: true,
-          );
-        }),
+        if (items.isEmpty)
+          Text(
+            'No item details available yet. Pull to refresh or check order history.',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 13),
+              color: Colors.grey[600],
+            ),
+          )
+        else
+          ...items.map((item) {
+            final isManual = item.price <= 0;
+            final itemTotal = item.price * item.quantity;
+            return _buildOrderItem(
+              context,
+              item.name,
+              isManual ? 'Price TBD' : 'Php ${item.price.toStringAsFixed(2)}',
+              item.quantity,
+              isManual: isManual,
+              itemTotal: isManual ? null : itemTotal,
+            );
+          }),
       ],
     );
   }

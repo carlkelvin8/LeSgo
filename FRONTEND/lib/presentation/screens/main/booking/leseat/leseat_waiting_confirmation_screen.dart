@@ -1,6 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../../core/constants/routers/app_router.dart';
+import '../../../../../core/constants/routers/booking/booking_routes.dart';
+import '../../../../../core/di/injection.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/snackbar_utils.dart';
+import '../../../../../data/data_source/order_remote_datasource.dart';
+import '../../../../widgets/orders/cancel_order_dialog.dart';
 
 class LeseatWaitingConfirmationScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -21,6 +30,86 @@ class LeseatWaitingConfirmationScreen extends ConsumerStatefulWidget {
 
 class _LeseatWaitingConfirmationScreenState
     extends ConsumerState<LeseatWaitingConfirmationScreen> {
+  Timer? _pollTimer;
+  bool _isCancelling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _checkOrderStatus());
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkOrderStatus() async {
+    if (!mounted || _isCancelling) return;
+
+    try {
+      final response =
+          await getIt<OrderRemoteDataSource>().getOrder(widget.orderId);
+      if (!mounted || !response.success) return;
+
+      final status = response.data.status.toLowerCase();
+      if (status == 'cancelled') {
+        SnackBarUtils.showError(context, 'This order was cancelled.');
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        return;
+      }
+
+      if (status != 'pending' && status != 'created') {
+        if (!mounted) return;
+        AppRouter.pushReplacement(
+          context,
+          BookingRoutes.driverFinding,
+          arguments: {
+            'orderId': widget.orderId.toString(),
+            'orderType': 'LesEat',
+            'orderData': {
+              'deliveryAddress': widget.address,
+              'items': widget.orderItems,
+              'status': status,
+            },
+          },
+        );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _showCancelDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => CancelOrderDialog(
+        onConfirm: (reason) async {
+          setState(() => _isCancelling = true);
+          try {
+            await getIt<OrderRemoteDataSource>().cancelOrder(
+              widget.orderId,
+              reason,
+            );
+            if (!mounted) return;
+            Navigator.of(dialogContext).pop();
+            SnackBarUtils.showSuccess(context, 'Order cancelled.');
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          } catch (e) {
+            if (mounted) {
+              setState(() => _isCancelling = false);
+              SnackBarUtils.showErrorFrom(
+                context,
+                e,
+                fallbackEn: 'Could not cancel order.',
+                fallbackTl: 'Hindi makansela ang order.',
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,8 +118,8 @@ class _LeseatWaitingConfirmationScreenState
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
+          onPressed: _isCancelling ? null : () => Navigator.pop(context),
         ),
         title: Text(
           'LesEat',
@@ -38,18 +127,10 @@ class _LeseatWaitingConfirmationScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 20),
             fontWeight: FontWeight.w700,
-            color: Color(0xFF5F2D82),
+            color: const Color(0xFF5F2D82),
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person_outline, color: Color(0xFF5F2D82)),
-            onPressed: () {
-              // Navigate to profile
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -61,7 +142,6 @@ class _LeseatWaitingConfirmationScreenState
               ),
               child: Column(
                 children: [
-                  // Illustration
                   Container(
                     width: ResponsiveUtils.screenWidth(context) * 0.6,
                     height: ResponsiveUtils.screenWidth(context) * 0.6,
@@ -79,15 +159,13 @@ class _LeseatWaitingConfirmationScreenState
                           return Icon(
                             Icons.restaurant,
                             size: ResponsiveUtils.screenWidth(context) * 0.3,
-                            color: Color(0xFF5F2D82),
+                            color: const Color(0xFF5F2D82),
                           );
                         },
                       ),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-
-                  // Status Card
                   Container(
                     padding: EdgeInsets.all(
                       ResponsiveUtils.spacing(context, 20),
@@ -100,7 +178,6 @@ class _LeseatWaitingConfirmationScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Status Header
                         Row(
                           children: [
                             Expanded(
@@ -117,7 +194,7 @@ class _LeseatWaitingConfirmationScreenState
                                 ),
                               ),
                             ),
-                            SizedBox(
+                            const SizedBox(
                               width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
@@ -130,8 +207,6 @@ class _LeseatWaitingConfirmationScreenState
                           ],
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-
-                        // Address Section
                         Text(
                           'Address',
                           style: TextStyle(
@@ -151,12 +226,8 @@ class _LeseatWaitingConfirmationScreenState
                           ),
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-
-                        // Divider
                         Divider(color: Colors.grey.shade300),
                         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-
-                        // Your Order Section
                         Text(
                           'Your Order',
                           style: TextStyle(
@@ -167,8 +238,6 @@ class _LeseatWaitingConfirmationScreenState
                           ),
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-
-                        // Order Items
                         ...widget.orderItems.map((item) {
                           return Padding(
                             padding: EdgeInsets.only(
@@ -183,7 +252,7 @@ class _LeseatWaitingConfirmationScreenState
                               ),
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     ),
                   ),
@@ -191,17 +260,15 @@ class _LeseatWaitingConfirmationScreenState
               ),
             ),
           ),
-
-          // Cancel Button
           Container(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
-                  offset: Offset(0, -5),
+                  offset: const Offset(0, -5),
                 ),
               ],
             ),
@@ -210,67 +277,33 @@ class _LeseatWaitingConfirmationScreenState
                 width: double.infinity,
                 height: ResponsiveUtils.spacing(context, 56),
                 child: ElevatedButton(
-                  onPressed: () {
-                    _showCancelDialog(context);
-                  },
+                  onPressed: _isCancelling ? null : _showCancelDialog,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF5F2D82),
+                    backgroundColor: const Color(0xFF5F2D82),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 0,
                   ),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 16),
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: _isCancelling
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 16),
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showCancelDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Cancel Order?',
-          style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
-        ),
-        content: Text(
-          'Are you sure you want to cancel this order?',
-          style: TextStyle(fontFamily: 'TT Fors'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'No',
-              style: TextStyle(fontFamily: 'TT Fors', color: Colors.grey),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to previous screen
-              // TODO: Call API to cancel order
-            },
-            child: Text(
-              'Yes, Cancel',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                color: Color(0xFF5F2D82),
-                fontWeight: FontWeight.w700,
               ),
             ),
           ),

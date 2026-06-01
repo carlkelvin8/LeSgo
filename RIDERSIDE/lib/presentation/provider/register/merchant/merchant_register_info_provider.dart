@@ -7,7 +7,9 @@ import '../../../../../domain/entities/auth/merchant/merchant_registration_info.
 import '../../../../../data/data_source/auth_remote_datasource.dart';
 import '../../../../../data/data_source/dto/auth/register_merchant_request_dto.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/services/api_service.dart';
 import '../../../../../core/services/secure_storage_service.dart';
+import '../../../../../data/data_source/helpers/register_merchant_form_builder.dart';
 
 // Merchant Register Info State
 class MerchantRegisterInfoState {
@@ -45,16 +47,16 @@ class MerchantRegisterInfoState {
 
   // Presentation getters
   String get presentationRestaurantName =>
-      info.restaurantName.isNotEmpty ? info.restaurantName : 'Riderside Diner';
+      info.restaurantName.isNotEmpty ? info.restaurantName : '—';
 
   String get presentationAddress =>
-      info.address.isNotEmpty ? info.address : '123 Main St, Manila';
+      info.address.isNotEmpty ? info.address : '—';
 
   String get presentationEmail =>
-      info.email.isNotEmpty ? info.email : 'rider.side@example.com';
+      info.email.isNotEmpty ? info.email : '—';
 
   String get presentationContactNumber =>
-      info.contactNumber.isNotEmpty ? info.contactNumber : '+63-917-1234-567';
+      info.contactNumber.isNotEmpty ? info.contactNumber : '—';
 
   MerchantRegisterInfoState copyWith({
     MerchantRegistrationInfo? info,
@@ -313,18 +315,31 @@ class MerchantRegisterInfoNotifier
         passwordConfirmation: state.info.confirmPassword,
         role: 'partner_admin',
         restaurantName: state.info.restaurantName,
+        address: state.info.address,
         zipCode: state.info.zipCode,
-        selfiePath: state.documents.selfiePath,
-        validIdPath: state.documents.validIdPath,
-        digitalSignaturePath: state.documents.digitalSignaturePath,
-        barangayPermitPath: state.documents.barangayPermitPath,
-        mayorsPermitPath: state.documents.mayorsPermitPath,
-        dtiPermitPath: state.documents.dtiPermitPath,
+        termsAccepted: true,
+        privacyAccepted: true,
       );
 
-      // Call registration API
+      final documents = registerMerchantDocumentsFromPaths(
+        selfiePath: state.documents.selfiePath!,
+        validIdPath: state.documents.validIdPath!,
+        digitalSignaturePath: state.documents.digitalSignaturePath!,
+        barangayPermitPath: state.documents.barangayPermitPath!,
+        mayorsPermitPath: state.documents.mayorsPermitPath!,
+        dtiPermitPath: state.documents.dtiPermitPath!,
+      );
+
+      final documentError = validateRegisterMerchantDocuments(documents);
+      if (documentError != null) {
+        throw Exception(documentError);
+      }
+
       final authDataSource = getIt<AuthRemoteDataSource>();
-      final response = await authDataSource.registerMerchant(registerRequest);
+      final response = await authDataSource.registerMerchant(
+        registerRequest,
+        documents: documents,
+      );
 
       // Store token if registration successful
       if (response.success && response.token != null) {
@@ -342,7 +357,7 @@ class MerchantRegisterInfoNotifier
       }
     } catch (e) {
       state = state.copyWith(
-        errorMessage: 'Submission failed: $e',
+        errorMessage: ApiService.extractError(e),
         isSubmitting: false,
       );
     }

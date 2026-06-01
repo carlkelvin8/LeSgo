@@ -74,6 +74,8 @@ class PartnerDto {
   @JsonKey(name: 'is_featured')
   final bool? isFeatured;
   final String? status;
+  @JsonKey(name: 'opening_hours')
+  final Map<String, dynamic>? openingHours;
 
   PartnerDto({
     required this.id,
@@ -92,6 +94,7 @@ class PartnerDto {
     this.isOpen,
     this.isFeatured,
     this.status,
+    this.openingHours,
   });
 
   factory PartnerDto.fromJson(Map<String, dynamic> json) =>

@@ -3,12 +3,20 @@ class RiderRegistrationInfo {
   final String lastName;
   final String birthday;
   final String email;
+  final String password;
+  final String confirmPassword;
+  final String licenseNumber;
+  final String? licenseExpiryDate;
 
   const RiderRegistrationInfo({
     required this.firstName,
     required this.lastName,
     required this.birthday,
     required this.email,
+    required this.password,
+    required this.confirmPassword,
+    required this.licenseNumber,
+    this.licenseExpiryDate,
   });
 
   RiderRegistrationInfo copyWith({
@@ -16,12 +24,20 @@ class RiderRegistrationInfo {
     String? lastName,
     String? birthday,
     String? email,
+    String? password,
+    String? confirmPassword,
+    String? licenseNumber,
+    String? licenseExpiryDate,
   }) {
     return RiderRegistrationInfo(
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       birthday: birthday ?? this.birthday,
       email: email ?? this.email,
+      password: password ?? this.password,
+      confirmPassword: confirmPassword ?? this.confirmPassword,
+      licenseNumber: licenseNumber ?? this.licenseNumber,
+      licenseExpiryDate: licenseExpiryDate ?? this.licenseExpiryDate,
     );
   }
 
@@ -29,7 +45,11 @@ class RiderRegistrationInfo {
     return firstName.isNotEmpty &&
         lastName.isNotEmpty &&
         birthday.isNotEmpty &&
-        email.isNotEmpty;
+        email.isNotEmpty &&
+        password.isNotEmpty &&
+        confirmPassword.isNotEmpty &&
+        password == confirmPassword &&
+        licenseNumber.isNotEmpty;
   }
 
   Map<String, dynamic> toJson() {
@@ -38,6 +58,8 @@ class RiderRegistrationInfo {
       'lastName': lastName,
       'birthday': birthday,
       'email': email,
+      'licenseNumber': licenseNumber,
+      if (licenseExpiryDate != null) 'licenseExpiryDate': licenseExpiryDate,
     };
   }
 
@@ -47,6 +69,10 @@ class RiderRegistrationInfo {
       lastName: json['lastName'] as String? ?? '',
       birthday: json['birthday'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      password: '',
+      confirmPassword: '',
+      licenseNumber: json['licenseNumber'] as String? ?? '',
+      licenseExpiryDate: json['licenseExpiryDate'] as String?,
     );
   }
 
@@ -56,6 +82,9 @@ class RiderRegistrationInfo {
       lastName: '',
       birthday: '',
       email: '',
+      password: '',
+      confirmPassword: '',
+      licenseNumber: '',
     );
   }
 }

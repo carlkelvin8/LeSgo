@@ -6,6 +6,7 @@ import '../../../../presentation/screens/main/booking/leseat/leseat_checkout_scr
 import '../../../../presentation/screens/main/booking/leseat/leseat_order_tracking_screen.dart';
 import '../../../../presentation/screens/main/booking/leseat/leseat_order_status_screen.dart';
 import '../../../../presentation/screens/main/booking/leseat/leseat_order_complete_screen.dart';
+import '../../../../presentation/screens/main/booking/leseat/leseat_waiting_confirmation_screen.dart';
 import '../../../../presentation/screens/main/booking/lesbuy/lesbuy_screen.dart';
 import '../../../../presentation/screens/main/booking/lesbuy/lesbuy_order_tracking_screen.dart';
 import '../../../../presentation/screens/main/booking/lesbuy/lesbuy_order_complete_screen.dart';
@@ -146,6 +147,21 @@ class BookingRouter {
           orderId: orderId,
           orderType: orderType,
           orderData: orderData,
+        ),
+        settings: settings,
+      );
+    }
+
+    // Handle LesEat waiting for restaurant confirmation
+    if (settings.name == BookingRoutes.leseatWaitingConfirmation) {
+      final args = settings.arguments as Map<String, dynamic>;
+      return MaterialPageRoute(
+        builder: (_) => LeseatWaitingConfirmationScreen(
+          orderId: args['orderId'] as int,
+          address: args['address'] as String,
+          orderItems: (args['orderItems'] as List)
+              .map((item) => Map<String, dynamic>.from(item as Map))
+              .toList(),
         ),
         settings: settings,
       );

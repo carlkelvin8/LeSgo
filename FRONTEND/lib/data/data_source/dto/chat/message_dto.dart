@@ -87,6 +87,14 @@ class ConversationDto {
   final MessageDto? lastMessage;
   @JsonKey(name: 'unread_count')
   final int unreadCount;
+
+  @JsonKey(name: 'service_name')
+  final String? serviceName;
+  @JsonKey(name: 'service_id')
+  final int? serviceId;
+  @JsonKey(name: 'service_type')
+  final String? serviceType;
+  final Map<String, dynamic>? order;
   
   // Driver and customer information
   final UserInfoDto? customer;
@@ -102,12 +110,52 @@ class ConversationDto {
     this.endedAt,
     this.lastMessage,
     this.unreadCount = 0,
+    this.serviceName,
+    this.serviceId,
+    this.serviceType,
+    this.order,
     this.customer,
     this.driver,
   });
 
   factory ConversationDto.fromJson(Map<String, dynamic> json) => _$ConversationDtoFromJson(json);
   Map<String, dynamic> toJson() => _$ConversationDtoToJson(this);
+
+  ConversationDto copyWith({
+    int? id,
+    int? orderId,
+    int? customerId,
+    int? driverId,
+    String? status,
+    String? createdAt,
+    String? endedAt,
+    MessageDto? lastMessage,
+    int? unreadCount,
+    String? serviceName,
+    int? serviceId,
+    String? serviceType,
+    Map<String, dynamic>? order,
+    UserInfoDto? customer,
+    UserInfoDto? driver,
+  }) {
+    return ConversationDto(
+      id: id ?? this.id,
+      orderId: orderId ?? this.orderId,
+      customerId: customerId ?? this.customerId,
+      driverId: driverId ?? this.driverId,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      endedAt: endedAt ?? this.endedAt,
+      lastMessage: lastMessage ?? this.lastMessage,
+      unreadCount: unreadCount ?? this.unreadCount,
+      serviceName: serviceName ?? this.serviceName,
+      serviceId: serviceId ?? this.serviceId,
+      serviceType: serviceType ?? this.serviceType,
+      order: order ?? this.order,
+      customer: customer ?? this.customer,
+      driver: driver ?? this.driver,
+    );
+  }
 }
 
 @JsonSerializable()

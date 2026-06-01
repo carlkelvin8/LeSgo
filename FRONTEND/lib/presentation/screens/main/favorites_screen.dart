@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/main/favorites/favorites_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/navigation/favorite_navigation.dart';
 import '../../../core/services/favorites_service.dart';
 
 class FavoritesScreen extends ConsumerStatefulWidget {
@@ -267,12 +268,6 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
   }
 
   void _navigateToDetail(BuildContext context, FavoriteItem item) {
-    // TODO: Navigate to appropriate detail screen based on type and metadata
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening ${item.name}...'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    FavoriteNavigation.open(context, item);
   }
 }

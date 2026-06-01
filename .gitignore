@@ -3,3 +3,8 @@ CLAUDE/
 CONTEXT/
 token_storage_flow.md
 
+# Windows artifact / local test files
+nul
+FRONTEND/nul
+**/test_selfie.jpg
+

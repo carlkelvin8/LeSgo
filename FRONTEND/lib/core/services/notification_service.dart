@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'fcm_service.dart';
+import '../di/injection.dart';
+import '../services/app_preferences_service.dart';
 import '../../data/data_source/dto/notification/notification_dto.dart';
+import '../constants/routers/app_router.dart';
+import '../constants/routers/main/main_routes.dart';
 
 /// Notification types
 enum NotificationType {
@@ -33,6 +37,7 @@ enum NotificationType {
 @lazySingleton
 class NotificationService {
   final FcmService _fcmService;
+  final AppPreferencesService _appPrefs = getIt<AppPreferencesService>();
   final List<NotificationDto> _notifications = [];
   int _unreadCount = 0;
 
@@ -64,6 +69,22 @@ class NotificationService {
   /// Handle incoming notification
   void _handleNotification(Map<String, dynamic> message) {
     try {
+      final type = NotificationType.fromString(
+        message['type']?.toString() ?? 'system_alert',
+      );
+      if (type == NotificationType.promotional &&
+          !_appPrefs.pushPromotionsEnabled) {
+        return;
+      }
+      if ((type == NotificationType.orderAccepted ||
+              type == NotificationType.orderPickedUp ||
+              type == NotificationType.orderInTransit ||
+              type == NotificationType.orderDelivered ||
+              type == NotificationType.driverAssigned) &&
+          !_appPrefs.pushOrderUpdatesEnabled) {
+        return;
+      }
+
       final notification = _parseNotification(message);
       _notifications.insert(0, notification);
       
@@ -158,8 +179,7 @@ class NotificationService {
         }
         break;
       case NotificationType.promotional:
-        // Navigate to promotions
-        debugPrint('Navigate to promotions');
+        AppRouter.push(context, MainRoutes.offers);
         break;
       default:
         break;

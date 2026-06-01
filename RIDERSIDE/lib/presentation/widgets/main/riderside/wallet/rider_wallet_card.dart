@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
-import '../../../../../../core/utils/helpers/fakedata.dart';
+import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 
-class RiderWalletCard extends StatelessWidget {
+class RiderWalletCard extends ConsumerWidget {
   const RiderWalletCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wallet = ref.watch(riderWalletProvider);
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Padding(
@@ -33,32 +35,34 @@ class RiderWalletCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // Background SVG
               Positioned.fill(
                 child: SvgPicture.asset(
                   'assets/images/wallet/Background.svg',
                   fit: BoxFit.cover,
                 ),
               ),
-              // Card Content
               Padding(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildCardText(
-                      context,
-                      'Balance',
-                      riderWalletInfoData['Balance']!,
-                    ),
-                    const Spacer(),
-                    _buildCardText(
-                      context,
-                      'Deposit',
-                      riderWalletInfoData['Deposit']!,
-                    ),
-                  ],
-                ),
+                child: wallet.isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildCardText(
+                            context,
+                            'Balance',
+                            wallet.balanceFormatted,
+                          ),
+                          const Spacer(),
+                          _buildCardText(
+                            context,
+                            'Deposit',
+                            wallet.depositFormatted,
+                          ),
+                        ],
+                      ),
               ),
             ],
           ),

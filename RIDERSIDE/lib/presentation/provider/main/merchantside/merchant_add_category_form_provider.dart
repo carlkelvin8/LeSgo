@@ -7,12 +7,14 @@ import 'merchant_menu_provider.dart';
 class MerchantAddCategoryFormState {
   final String categoryName;
   final String iconEmoji;
+  final String? imagePath;
   final bool isSubmitting;
   final String? errorMessage;
 
   MerchantAddCategoryFormState({
     required this.categoryName,
     this.iconEmoji = '🍴',
+    this.imagePath,
     this.isSubmitting = false,
     this.errorMessage,
   });
@@ -22,12 +24,14 @@ class MerchantAddCategoryFormState {
   MerchantAddCategoryFormState copyWith({
     String? categoryName,
     String? iconEmoji,
+    String? imagePath,
     bool? isSubmitting,
     String? errorMessage,
   }) {
     return MerchantAddCategoryFormState(
       categoryName: categoryName ?? this.categoryName,
       iconEmoji: iconEmoji ?? this.iconEmoji,
+      imagePath: imagePath ?? this.imagePath,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       errorMessage: errorMessage,
     );
@@ -49,6 +53,10 @@ class MerchantAddCategoryFormNotifier extends StateNotifier<MerchantAddCategoryF
 
   void updateIconEmoji(String value) {
     state = state.copyWith(iconEmoji: value);
+  }
+
+  void updateImagePath(String? path) {
+    state = state.copyWith(imagePath: path);
   }
 
   Future<bool> attemptSubmit() async {
@@ -78,6 +86,7 @@ class MerchantAddCategoryFormNotifier extends StateNotifier<MerchantAddCategoryF
       final request = CreateMenuCategoryRequest(
         name: state.categoryName,
         iconEmoji: state.iconEmoji,
+        imagePath: state.imagePath,
       );
       
       await dataSource.createMenuCategory(partnerId, request);

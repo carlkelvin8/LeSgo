@@ -3,6 +3,7 @@ class BookingRoutes {
   static const String leseatRestaurantDetail = '/leseat/restaurant';
   static const String leseatMenuItemDetail = '/leseat/menu-item';
   static const String leseatCheckout = '/leseat/checkout';
+  static const String leseatWaitingConfirmation = '/leseat/waiting-confirmation';
   static const String leseatOrderTracking = '/leseat/order-tracking';
   static const String leseatOrderStatus = '/leseat/order-status';
   static const String leseatOrderComplete = '/leseat/order-complete';

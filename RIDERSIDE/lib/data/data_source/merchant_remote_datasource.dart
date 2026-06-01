@@ -93,9 +93,17 @@ class MerchantRemoteDataSource {
   }
   
   /// Update order status
-  Future<void> updateOrderStatus(int orderId, String status) async {
+  Future<void> updateOrderStatus(
+    int orderId,
+    String status, {
+    String? cancelReason,
+  }) async {
     try {
-      await _dio.patch('/v1/orders/$orderId/status', data: {'status': status});
+      final data = <String, dynamic>{'status': status};
+      if (cancelReason != null && cancelReason.isNotEmpty) {
+        data['cancel_reason'] = cancelReason;
+      }
+      await _dio.patch('/v1/orders/$orderId/status', data: data);
     } catch (e) {
       throw Exception('Failed to update order status: ${ApiService.extractError(e)}');
     }
@@ -105,14 +113,14 @@ class MerchantRemoteDataSource {
   Future<MenuItemDto> createMenuItem(int partnerId, CreateMenuItemRequest request) async {
     try {
       dynamic data;
-      
+
       if (request.imagePath != null) {
-        // Use FormData for file upload
         final formData = FormData.fromMap(request.toJson());
         formData.files.add(MapEntry(
           'image',
           await MultipartFile.fromFile(request.imagePath!),
         ));
+        _appendTagsToFormData(formData, request.tags);
         data = formData;
       } else {
         data = request.toJson();
@@ -144,6 +152,7 @@ class MerchantRemoteDataSource {
           'image',
           await MultipartFile.fromFile(request.imagePath!),
         ));
+        _appendTagsToFormData(formData, request.tags);
         data = formData;
         
         final response = await _dio.post(
@@ -178,12 +187,25 @@ class MerchantRemoteDataSource {
   /// Create menu category
   Future<MenuCategoryDto> createMenuCategory(int partnerId, CreateMenuCategoryRequest request) async {
     try {
+      dynamic data;
+
+      if (request.imagePath != null) {
+        final formData = FormData.fromMap(request.toJson());
+        formData.files.add(MapEntry(
+          'image',
+          await MultipartFile.fromFile(request.imagePath!),
+        ));
+        data = formData;
+      } else {
+        data = request.toJson();
+      }
+
       final response = await _dio.post(
         '/v1/partners/$partnerId/menu-categories',
-        data: request.toJson(),
+        data: data,
       );
-      final data = response.data['data'] ?? response.data;
-      return MenuCategoryDto.fromJson(data as Map<String, dynamic>);
+      final responseData = response.data['data'] ?? response.data;
+      return MenuCategoryDto.fromJson(responseData as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to create menu category: ${ApiService.extractError(e)}');
     }
@@ -227,6 +249,13 @@ class MerchantRemoteDataSource {
   }
 }
 
+void _appendTagsToFormData(FormData formData, List<String>? tags) {
+  if (tags == null || tags.isEmpty) return;
+  for (final tag in tags) {
+    formData.fields.add(MapEntry('tags[]', tag));
+  }
+}
+
 /// Response wrapper for menu endpoint
 class MenuResponse {
   final List<MenuCategoryDto> categories;
@@ -242,9 +271,10 @@ class CreateMenuItemRequest {
   final String? description;
   final double price;
   final String? imageUrl;
-  final String? imagePath; // Added for file upload
+  final String? imagePath;
   final bool isAvailable;
-  
+  final List<String>? tags;
+
   CreateMenuItemRequest({
     required this.menuCategoryId,
     required this.name,
@@ -253,16 +283,23 @@ class CreateMenuItemRequest {
     this.imageUrl,
     this.imagePath,
     this.isAvailable = true,
+    this.tags,
   });
-  
-  Map<String, dynamic> toJson() => {
-    'menu_category_id': menuCategoryId,
-    'name': name,
-    if (description != null) 'description': description,
-    'price': price,
-    if (imageUrl != null) 'image_url': imageUrl,
-    'is_available': isAvailable ? 1 : 0, // Form data requires integer/string for booleans in Laravel sometimes
-  };
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'menu_category_id': menuCategoryId,
+      'name': name,
+      if (description != null) 'description': description,
+      'price': price,
+      if (imageUrl != null) 'image_url': imageUrl,
+      'is_available': isAvailable ? 1 : 0,
+    };
+    if (tags != null && tags!.isNotEmpty && imagePath == null) {
+      map['tags'] = tags;
+    }
+    return map;
+  }
 }
 
 class UpdateMenuItemRequest {
@@ -270,9 +307,10 @@ class UpdateMenuItemRequest {
   final String? description;
   final double? price;
   final String? imageUrl;
-  final String? imagePath; // Added for file upload
+  final String? imagePath;
   final bool? isAvailable;
-  
+  final List<String>? tags;
+
   UpdateMenuItemRequest({
     this.name,
     this.description,
@@ -280,8 +318,9 @@ class UpdateMenuItemRequest {
     this.imageUrl,
     this.imagePath,
     this.isAvailable,
+    this.tags,
   });
-  
+
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
     if (name != null) map['name'] = name;
@@ -289,6 +328,9 @@ class UpdateMenuItemRequest {
     if (price != null) map['price'] = price;
     if (imageUrl != null) map['image_url'] = imageUrl;
     if (isAvailable != null) map['is_available'] = isAvailable! ? 1 : 0;
+    if (tags != null && tags!.isNotEmpty && imagePath == null) {
+      map['tags'] = tags;
+    }
     return map;
   }
 }
@@ -297,13 +339,15 @@ class CreateMenuCategoryRequest {
   final String name;
   final String? iconEmoji;
   final int? sortOrder;
-  
+  final String? imagePath;
+
   CreateMenuCategoryRequest({
     required this.name,
     this.iconEmoji,
     this.sortOrder,
+    this.imagePath,
   });
-  
+
   Map<String, dynamic> toJson() => {
     'name': name,
     if (iconEmoji != null) 'icon_emoji': iconEmoji,

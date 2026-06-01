@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/utils.dart';
 import '../../provider/auth/auth_provider.dart';
+import '../../provider/auth/forgot_password_provider.dart';
+import '../../widgets/auth/forgot_password_content.dart';
 import '../../widgets/widgets.dart';
 
 import 'package:flutter/services.dart';
@@ -19,7 +21,11 @@ class AuthScreen extends ConsumerWidget {
       canPop: isWelcome,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop && !isWelcome) {
-          if (authView == AuthView.riderLogin ||
+          if (authView == AuthView.forgotPassword) {
+            ref.read(forgotPasswordProvider.notifier).reset();
+            ref.read(authViewProvider.notifier).state =
+                ref.read(forgotPasswordReturnViewProvider);
+          } else if (authView == AuthView.riderLogin ||
               authView == AuthView.merchantLogin) {
             ref.read(authViewProvider.notifier).state = AuthView.login;
           } else {
@@ -81,6 +87,8 @@ class AuthScreen extends ConsumerWidget {
                               AuthView.merchantLogin =>
                                 const MerchantLoginContent(),
                               AuthView.riderLogin => const RiderLoginContent(),
+                              AuthView.forgotPassword =>
+                                const ForgotPasswordContent(),
                               AuthView.login => const LoginContent(),
                               AuthView.register => const RegisterContent(),
                               AuthView.welcome => const WelcomeContent(),

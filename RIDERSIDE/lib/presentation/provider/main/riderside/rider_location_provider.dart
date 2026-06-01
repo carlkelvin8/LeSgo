@@ -4,12 +4,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/services/api_service.dart';
 import '../../auth/rider_auth_provider.dart';
+import 'rider_duty_provider.dart';
 
 class RiderLocationState {
   final double? latitude;
   final double? longitude;
   final bool isLoading;
   final bool isUpdating;
+  final bool isTracking;
   final String? error;
   final DateTime? lastUpdated;
 
@@ -18,6 +20,7 @@ class RiderLocationState {
     this.longitude,
     this.isLoading = false,
     this.isUpdating = false,
+    this.isTracking = false,
     this.error,
     this.lastUpdated,
   });
@@ -27,6 +30,7 @@ class RiderLocationState {
     double? longitude,
     bool? isLoading,
     bool? isUpdating,
+    bool? isTracking,
     String? error,
     DateTime? lastUpdated,
     bool clearError = false,
@@ -36,6 +40,7 @@ class RiderLocationState {
       longitude: longitude ?? this.longitude,
       isLoading: isLoading ?? this.isLoading,
       isUpdating: isUpdating ?? this.isUpdating,
+      isTracking: isTracking ?? this.isTracking,
       error: clearError ? null : (error ?? this.error),
       lastUpdated: lastUpdated ?? this.lastUpdated,
     );
@@ -46,43 +51,53 @@ class RiderLocationState {
 
 class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
   final Ref _ref;
-  
-  RiderLocationNotifier(this._ref) : super(const RiderLocationState()) {
-    _initialize();
-  }
+
+  RiderLocationNotifier(this._ref) : super(const RiderLocationState());
 
   Timer? _updateTimer;
+  bool _starting = false;
 
-  Future<void> _initialize() async {
+  Future<void> startTracking() async {
+    if (state.isTracking || _starting) return;
+    _starting = true;
+
     await _requestPermission();
     await _getCurrentLocation();
     _startPeriodicUpdates();
+    state = state.copyWith(isTracking: true);
+    _starting = false;
+  }
+
+  void stopTracking() {
+    _updateTimer?.cancel();
+    _updateTimer = null;
+    state = state.copyWith(isTracking: false);
+    _sendOfflineStatus();
   }
 
   Future<void> _requestPermission() async {
     final status = await Permission.locationWhenInUse.request();
     if (!status.isGranted) {
-      state = state.copyWith(
-        error: 'Location permission denied',
-        clearError: false,
-      );
+      state = state.copyWith(error: 'Location permission denied');
     }
   }
 
   Future<void> _getCurrentLocation() async {
-    state = state.copyWith(isLoading: true);
+    if (!_ref.read(riderDutyProvider)) return;
+
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
       );
-      
+
       state = state.copyWith(
         latitude: position.latitude,
         longitude: position.longitude,
         lastUpdated: DateTime.now(),
         isLoading: false,
       );
-      
+
       await _sendLocationToBackend(position.latitude, position.longitude);
     } catch (e) {
       state = state.copyWith(
@@ -93,6 +108,8 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
   }
 
   Future<void> updateLocation(double latitude, double longitude) async {
+    if (!_ref.read(riderDutyProvider)) return;
+
     state = state.copyWith(isUpdating: true);
     try {
       await _sendLocationToBackend(latitude, longitude);
@@ -111,78 +128,88 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
   }
 
   Future<void> _sendLocationToBackend(double latitude, double longitude) async {
+    if (!_ref.read(riderDutyProvider)) return;
+
+    final authState = _ref.read(riderAuthProvider);
+    final driverProfileId = authState.user?.driverProfileId;
+    if (driverProfileId == null) return;
+
+    await ApiService.updateDriverLocation(
+      driverProfileId,
+      latitude,
+      longitude,
+      status: 'online',
+    );
+  }
+
+  Future<void> _sendOfflineStatus() async {
     try {
-      // Get driver profile ID from auth provider
       final authState = _ref.read(riderAuthProvider);
       final driverProfileId = authState.user?.driverProfileId;
-      
-      if (driverProfileId != null) {
+      if (driverProfileId == null) return;
+
+      if (state.hasLocation) {
         await ApiService.updateDriverLocation(
           driverProfileId,
-          latitude,
-          longitude,
+          state.latitude!,
+          state.longitude!,
+          status: 'offline',
         );
       }
     } catch (e) {
-      print('Error sending location to backend: $e');
-      // Don't update state error here - this is a background operation
+      print('Error sending offline status: $e');
     }
   }
 
   void _startPeriodicUpdates() {
-    // Update location every 5 seconds for real-time tracking
+    _updateTimer?.cancel();
     _updateTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
-      if (!state.isUpdating) {
-        try {
-          final position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.bestForNavigation,
+      if (!_ref.read(riderDutyProvider) || !state.isTracking) return;
+      if (state.isUpdating) return;
+
+      try {
+        final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.bestForNavigation,
+        );
+
+        if (position.accuracy > 30.0) return;
+
+        if (state.hasLocation) {
+          final distance = Geolocator.distanceBetween(
+            state.latitude!,
+            state.longitude!,
+            position.latitude,
+            position.longitude,
           );
-          
-          // Smart GPS Filtering: Ignore inaccurate locations (> 30m accuracy)
-          if (position.accuracy > 30.0) {
-            print('⚠️ Ignored inaccurate GPS reading: accuracy ${position.accuracy.toStringAsFixed(1)}m');
-            return;
-          }
-          
-          // Smart GPS Filtering: Ignore tiny jitter movements
-          if (state.hasLocation) {
-            final distance = Geolocator.distanceBetween(
-              state.latitude!, state.longitude!,
-              position.latitude, position.longitude,
-            );
-            
-            // Only update if moved more than 2 meters
-            if (distance < 2.0) {
-              return;
-            }
-          }
-          
-          await _sendLocationToBackend(position.latitude, position.longitude);
-          
-          state = state.copyWith(
-            latitude: position.latitude,
-            longitude: position.longitude,
-            lastUpdated: DateTime.now(),
-          );
-        } catch (e) {
-          print('Periodic location update failed: $e');
+          if (distance < 2.0) return;
         }
+
+        await _sendLocationToBackend(position.latitude, position.longitude);
+
+        state = state.copyWith(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          lastUpdated: DateTime.now(),
+        );
+      } catch (e) {
+        print('Periodic location update failed: $e');
       }
     });
   }
 
   Future<void> refreshLocation() async {
+    if (!_ref.read(riderDutyProvider)) return;
     await _getCurrentLocation();
   }
 
   @override
   void dispose() {
     _updateTimer?.cancel();
-    _updateTimer = null;
     super.dispose();
   }
 }
 
-final riderLocationProvider = StateNotifierProvider<RiderLocationNotifier, RiderLocationState>(
+final riderLocationProvider =
+    StateNotifierProvider<RiderLocationNotifier, RiderLocationState>(
   (ref) => RiderLocationNotifier(ref),
 );

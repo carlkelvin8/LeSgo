@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/order_service_labels.dart';
 import '../../../data/data_source/chat_remote_datasource.dart';
+import '../../../data/data_source/order_remote_datasource.dart';
 import '../../../data/data_source/dto/chat/message_dto.dart';
 import '../../../core/di/injection.dart';
 
@@ -50,6 +52,7 @@ class ChatState {
 // Chat provider
 class ChatNotifier extends StateNotifier<ChatState> {
   final ChatRemoteDataSource _chatDataSource;
+  final OrderRemoteDataSource _orderDataSource = getIt<OrderRemoteDataSource>();
   Timer? _pollTimer;
 
   ChatNotifier(this._chatDataSource) : super(const ChatState());
@@ -66,10 +69,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
     
     try {
       final conversations = await _chatDataSource.getConversations();
+      final enriched = await _enrichConversations(conversations);
       final unreadCount = await _chatDataSource.getUnreadCount();
       
       state = state.copyWith(
-        conversations: conversations,
+        conversations: enriched,
         unreadCount: unreadCount,
         isLoading: false,
       );
@@ -79,6 +83,47 @@ class ChatNotifier extends StateNotifier<ChatState> {
         isLoading: false,
       );
     }
+  }
+
+  Future<List<ConversationDto>> _enrichConversations(
+    List<ConversationDto> conversations,
+  ) async {
+    final enriched = <ConversationDto>[];
+
+    for (final conversation in conversations) {
+      if (_hasServiceLabel(conversation)) {
+        enriched.add(conversation);
+        continue;
+      }
+
+      try {
+        final orderResponse =
+            await _orderDataSource.getOrder(conversation.orderId);
+        if (orderResponse.success) {
+          final order = orderResponse.data;
+          enriched.add(
+            conversation.copyWith(
+              serviceId: order.serviceId,
+              serviceType: order.serviceType ?? order.effectiveServiceType,
+              serviceName: OrderServiceLabels.labelForOrder(order),
+            ),
+          );
+          continue;
+        }
+      } catch (_) {}
+
+      enriched.add(conversation);
+    }
+
+    return enriched;
+  }
+
+  bool _hasServiceLabel(ConversationDto conversation) {
+    return (conversation.serviceName != null &&
+            conversation.serviceName!.trim().isNotEmpty) ||
+        conversation.serviceId != null ||
+        (conversation.serviceType != null &&
+            conversation.serviceType!.trim().isNotEmpty);
   }
 
   // Get or create conversation for order

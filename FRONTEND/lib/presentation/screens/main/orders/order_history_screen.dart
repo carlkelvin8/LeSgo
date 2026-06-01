@@ -5,6 +5,7 @@ import '../../../widgets/widgets.dart';
 import '../../../widgets/orders/order_card.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import 'order_detail_screen.dart';
+import '../../../widgets/common/retry_widget.dart';
 
 class OrderHistoryScreen extends ConsumerWidget {
   const OrderHistoryScreen({super.key});
@@ -92,7 +93,15 @@ class OrderHistoryScreen extends ConsumerWidget {
                         color: Color(0xFF5F2D82),
                       ),
                     )
-                  : filteredOrders.isEmpty
+                  : orderState.error != null && orderState.orders.isEmpty
+                      ? RetryWidget(
+                          message: orderState.error!,
+                          isLoading: orderState.isLoading,
+                          onRetry: () => ref
+                              .read(orderHistoryProvider.notifier)
+                              .refreshOrders(),
+                        )
+                      : filteredOrders.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,

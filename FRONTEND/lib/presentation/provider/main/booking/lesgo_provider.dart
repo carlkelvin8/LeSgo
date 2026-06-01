@@ -13,7 +13,7 @@ import '../profile/profile_provider.dart';
 import '../address/address_provider.dart';
 import '../../../../core/services/service_area_checker.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
-import '../../../../core/utils/lespay_order_payment.dart';
+import '../../../../core/utils/booking_checkout_payment.dart';
 
 class LesgoState {
   final bool isFullscreen;
@@ -608,17 +608,47 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
           },
         );
 
+        final estimatedFare = await orderDataSource.getFareEstimateRaw(
+              serviceId: 1,
+              estimatedDistanceM: createOrderRequest.estimatedDistanceM,
+              pickupLat: pickup.latitude,
+              pickupLng: pickup.longitude,
+              dropoffLat: dropoff.latitude,
+              dropoffLng: dropoff.longitude,
+            ) ??
+            0.0;
+
+        final walletOk = await validateWalletBalanceForOrder(
+          _ref,
+          amount: estimatedFare > 0 ? estimatedFare : 50.0,
+          paymentMethod: state.paymentMethod,
+          context: context,
+        );
+        if (!walletOk) return;
+
         print('🔵 LesGo: Creating order with API...');
         final response = await orderDataSource.createOrder(createOrderRequest);
         print('🟢 LesGo: Order created successfully - ID: ${response.data.id}');
 
-        await applyLesPayWalletDeduction(
-          _ref,
+        final payAmount = response.data.effectiveTotalAmount > 0
+            ? response.data.effectiveTotalAmount
+            : response.data.estimatedFare;
+
+        if (!context.mounted) return;
+
+        final paid = await completeBookingPayment(
+          context: context,
+          ref: _ref,
+          orderId: response.data.id,
+          amount: payAmount,
           paymentMethod: state.paymentMethod,
-          amount: response.data.estimatedFare,
+          serviceLabel: 'LesGo',
         );
+        if (!paid) return;
 
         final orderId = response.data.id.toString();
+        final order = response.data;
+        final fb = order.fareBreakdown;
 
         AppRouter.pushReplacement(
           context,
@@ -633,7 +663,12 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
               'itemDescription': state.itemDescription,
               'itemWeight': state.itemWeight,
               'paymentMethod': state.paymentMethod,
-              'fare': 100.0, // Calculate actual fare
+              'fare': payAmount,
+              'total': payAmount,
+              'estimated_fare': order.estimatedFare,
+              'baseFee': fb?['base_fare'] ?? order.estimatedFare,
+              'distanceFee': fb?['distance_fare'] ?? 0.0,
+              'serviceFee': fb?['service_fee'] ?? 0.0,
             },
           },
         );

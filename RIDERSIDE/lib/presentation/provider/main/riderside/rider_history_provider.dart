@@ -276,7 +276,16 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
             print('⚠️ Order $orderId has no proof images');
           }
 
-          // Create RiderBooking object
+          // Extract order rating if available
+          int? orderRating;
+          final ratingRaw = order['rating'] ?? order['customer_rating'] ?? order['review_rating'];
+          if (ratingRaw != null) {
+            final ratingValue = ratingRaw is num
+                ? ratingRaw.toDouble()
+                : double.tryParse(ratingRaw.toString()) ?? 0.0;
+            orderRating = ratingValue.round().clamp(0, 5);
+          }
+
           final booking = RiderBooking(
             id: orderId.toString(),
             restaurantName: serviceName,
@@ -297,6 +306,7 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
             currentStatus: bookingStatus,
             proofOfDeliveryUrls: proofUrls,
             customerPhone: customerPhone,
+            orderRating: orderRating,
           );
 
           bookings.add(booking);

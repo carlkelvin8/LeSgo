@@ -4,6 +4,7 @@ import '../../../provider/main/riderside/rider_main_nav_provider.dart';
 import '../../../provider/main/riderside/rider_mission_provider.dart';
 import '../../../provider/main/riderside/rider_history_provider.dart';
 import '../../../provider/main/riderside/rider_profile_provider.dart';
+import '../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../widgets/widgets.dart';
 import 'views/rider_profile_view.dart';
@@ -33,8 +34,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
     // Check authentication on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAuthentication();
-      // Force reload orders now that we are authenticated
-      ref.read(riderOrdersProvider.notifier).loadOrders();
+      ref.read(riderDutyProvider.notifier);
     });
   }
 

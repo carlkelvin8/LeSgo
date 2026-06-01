@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/constants/routers/app_router.dart';
+import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import 'invite_friends_sheet.dart';
@@ -96,6 +98,11 @@ class ProfileReferralCard extends StatelessWidget {
               ),
             ),
           ),
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+        TextButton(
+          onPressed: () => AppRouter.push(context, MainRoutes.referralDashboard),
+          child: const Text('View referral rewards'),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
         Text(

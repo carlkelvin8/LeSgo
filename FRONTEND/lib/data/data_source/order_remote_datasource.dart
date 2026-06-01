@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
+import '../../core/services/order_snapshot_cache.dart';
 import 'dto/order/create_order_request_dto.dart';
 import 'dto/order/orders_response_dto.dart';
 import 'dto/order/estimate_request_dto.dart';
@@ -11,9 +11,6 @@ import 'dto/order/estimate_response_dto.dart';
 @lazySingleton
 class OrderRemoteDataSource {
   final DioClient _dioClient;
-
-  // Cache to store meta and items for newly created orders as a workaround for backend dropping them
-  static final Map<int, Map<String, dynamic>> _orderCache = {};
 
   OrderRemoteDataSource(this._dioClient);
 
@@ -123,11 +120,8 @@ class OrderRemoteDataSource {
           final item = dataList[i];
           if (item is Map<String, dynamic>) {
             final id = item['id'];
-            if (id != null && _orderCache.containsKey(id)) {
-              if (item['meta'] == null) item['meta'] = _orderCache[id]!['meta'];
-              if (item['items'] == null && _orderCache[id]!['items'] != null) {
-                item['lesbuy_items'] = _orderCache[id]!['items'];
-              }
+            if (id != null && id is int) {
+              OrderSnapshotCache.enrichOrderJson(item, id);
             }
           }
         }
@@ -172,18 +166,23 @@ class OrderRemoteDataSource {
       // Map "data" to the expected structure
       final responseData = Map<String, dynamic>.from(response.data);
       final dto = OrderResponseDto.fromJson(responseData);
+      final orderId = dto.data.id;
 
-      // Cache meta and items locally to bypass backend dropping them
-      if (dto.data != null) {
-        _orderCache[dto.data.id] = {
-          'meta': requestData['meta'],
-          'items': request.items?.map((e) {
-            final json = e.toJson();
-            json['id'] = 0; // Mock ID since it's not saved by backend yet
-            json['order_id'] = dto.data!.id;
-            return json;
-          }).toList(),
-        };
+      OrderSnapshotCache.save(orderId, {
+        'meta': requestData['meta'],
+        'items': OrderSnapshotCache.itemsFromRequest(
+          request.items?.map((e) => e.toJson()).toList(),
+          orderId,
+        ),
+        'payment_method': request.paymentMethod,
+        'request': requestData,
+      });
+
+      if (responseData['data'] is Map<String, dynamic>) {
+        OrderSnapshotCache.enrichOrderJson(
+          responseData['data'] as Map<String, dynamic>,
+          orderId,
+        );
       }
 
       return dto;
@@ -216,16 +215,9 @@ class OrderRemoteDataSource {
       final response = await dio.get(ApiConstants.orderById(id));
       final responseData = Map<String, dynamic>.from(response.data);
 
-      // Workaround: Inject cached meta/items if backend dropped them
-      if (_orderCache.containsKey(id) && responseData['data'] != null) {
+      if (responseData['data'] != null) {
         final data = responseData['data'] as Map<String, dynamic>;
-        if (data['meta'] == null) {
-          data['meta'] = _orderCache[id]!['meta'];
-        }
-        if (data['items'] == null && _orderCache[id]!['items'] != null) {
-          // Add lesbuy_items directly to data if needed, or rely on meta
-          data['lesbuy_items'] = _orderCache[id]!['items'];
-        }
+        OrderSnapshotCache.enrichOrderJson(data, id);
       }
 
       return OrderResponseDto.fromJson(responseData);

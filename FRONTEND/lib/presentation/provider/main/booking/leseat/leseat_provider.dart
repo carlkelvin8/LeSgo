@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../domain/entities/booking/leseat/restaurant.dart';
 import '../../../../../domain/entities/booking/leseat/food_category.dart';
+import '../../../../../core/utils/opening_hours_formatter.dart';
 import '../../../../../data/data_source/partner_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
 
@@ -110,7 +111,7 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
           reviewCount: partnerDto.totalReviews ?? 0,
           categories: partnerDto.tags ?? [],
           cuisine: partnerDto.cuisineTypes?.join(' • ') ?? partnerDto.category ?? 'Restaurant',
-          openingHours: '10:00 AM - 10:00 PM', // TODO: Parse from opening_hours
+          openingHours: OpeningHoursFormatter.format(partnerDto.openingHours),
           isNew: partnerDto.isFeatured ?? false,
         );
       }).toList();

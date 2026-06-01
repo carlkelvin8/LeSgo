@@ -4,6 +4,7 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../widgets/widgets.dart';
 import '../../../provider/main/merchantside/merchant_add_category_form_provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../controllers/merchantside/merchant_add_category_form_controller.dart';
 class MerchantMenuAddCategoryScreen extends ConsumerStatefulWidget {
   const MerchantMenuAddCategoryScreen({super.key});
@@ -16,6 +17,7 @@ class MerchantMenuAddCategoryScreen extends ConsumerStatefulWidget {
 class _MerchantMenuAddCategoryScreenState
     extends ConsumerState<MerchantMenuAddCategoryScreen> {
   late MerchantAddCategoryFormController _controller;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -27,6 +29,24 @@ class _MerchantMenuAddCategoryScreenState
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        ref.read(merchantAddCategoryFormProvider.notifier).updateImagePath(image.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarUtils.showError(context, 'Failed to pick image');
+      }
+    }
   }
 
   @override
@@ -77,9 +97,8 @@ class _MerchantMenuAddCategoryScreenState
         SectionSpacer(units: 28),
         // Category Image Section
         MerchantCategoryImageUploadSection(
-          onTap: () {
-            SnackBarUtils.showInfo(context, 'Image picker - Coming soon');
-          },
+          uploadedImagePath: formState.imagePath,
+          onTap: _pickImage,
         ),
         SectionSpacer(units: 24),
         // Live Preview

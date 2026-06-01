@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
 import 'dto/missions/mission_dto.dart';
 
@@ -13,7 +14,7 @@ class MissionsRemoteDataSource {
     try {
       print('🔵 MissionsRemoteDataSource: Fetching missions...');
       
-      final response = await _dioClient.dio.get('/missions');
+      final response = await _dioClient.dio.get(ApiConstants.missions);
       
       print('🟢 MissionsRemoteDataSource: Response received');
       print('🔍 Response data: ${response.data}');
@@ -37,7 +38,9 @@ class MissionsRemoteDataSource {
     try {
       print('🔵 MissionsRemoteDataSource: Claiming mission $missionId...');
       
-      final response = await _dioClient.dio.post('/missions/$missionId/claim');
+      final response = await _dioClient.dio.post(
+        ApiConstants.missionClaim(missionId),
+      );
       
       print('🟢 MissionsRemoteDataSource: Mission claimed successfully');
       

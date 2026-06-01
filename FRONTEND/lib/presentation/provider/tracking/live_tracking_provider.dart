@@ -7,6 +7,7 @@ import '../../../data/data_source/tracking_remote_datasource.dart';
 import '../../../data/data_source/dto/tracking/tracking_dto.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/utils/booking_geo_utils.dart';
+import '../../../core/utils/directions_route_service.dart';
 import '../../../core/services/websocket_service.dart';
 import '../../../core/utils/notification_helper.dart';
 import 'dart:async';
@@ -378,16 +379,20 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         // Extract real locations with fallback to mock data
         final double pLat =
             double.tryParse(trackingData['pickup_lat']?.toString() ?? '') ??
+            double.tryParse(trackingData['pickup_latitude']?.toString() ?? '') ??
             BookingGeoUtils.defaultLat;
         final double pLng =
             double.tryParse(trackingData['pickup_lng']?.toString() ?? '') ??
+            double.tryParse(trackingData['pickup_longitude']?.toString() ?? '') ??
             BookingGeoUtils.defaultLng;
         final double dLat =
             double.tryParse(trackingData['dropoff_lat']?.toString() ?? '') ??
-            8.4600;
+            double.tryParse(trackingData['dropoff_latitude']?.toString() ?? '') ??
+            pLat;
         final double dLng =
             double.tryParse(trackingData['dropoff_lng']?.toString() ?? '') ??
-            124.6400;
+            double.tryParse(trackingData['dropoff_longitude']?.toString() ?? '') ??
+            pLng;
 
         final pickupLoc = LatLng(pLat, pLng);
         final dropoffLoc = LatLng(dLat, dLng);
@@ -434,51 +439,60 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
     try {
       final dataSource = getIt<TrackingRemoteDataSource>();
-      final response = await dataSource.getEta(orderId);
+      LatLng? location;
 
-      if (response['success'] == true) {
-        final data = response['data'] as Map<String, dynamic>;
-
-        final double lat =
-            double.tryParse(
-              data['current_latitude']?.toString() ??
-                  data['currentLatitude']?.toString() ??
-                  '',
-            ) ??
-            BookingGeoUtils.defaultLat;
-        final double lng =
-            double.tryParse(
-              data['current_longitude']?.toString() ??
-                  data['currentLongitude']?.toString() ??
-                  '',
-            ) ??
-            BookingGeoUtils.defaultLng;
-
-        final location = LatLng(lat, lng);
-
-        double heading = state.driverHeading ?? 0.0;
-        if (state.driverLocation != null &&
-            (state.driverLocation!.latitude != lat ||
-                state.driverLocation!.longitude != lng)) {
-          heading = Geolocator.bearingBetween(
-            state.driverLocation!.latitude,
-            state.driverLocation!.longitude,
-            lat,
-            lng,
-          );
+      try {
+        final driverResponse = await dataSource.getDriverLocation(orderId);
+        if (driverResponse.success) {
+          final lat = driverResponse.data.currentLat;
+          final lng = driverResponse.data.currentLng;
+          if (lat != null && lng != null) {
+            location = LatLng(lat, lng);
+          }
         }
+      } catch (_) {}
 
-        state = state.copyWith(
-          driverLocation: location,
-          driverHeading: heading,
-        );
-
-        _updateMarkers();
-        _refreshDynamicEta();
-        loadEta();
+      if (location == null) {
+        final etaResponse = await dataSource.getEta(orderId);
+        if (etaResponse['success'] == true) {
+          final parsed = TrackingRemoteDataSource.parseEtaPayload(
+            etaResponse['data'] as Map<String, dynamic>?,
+          );
+          if (parsed.driverLat != null && parsed.driverLng != null) {
+            location = LatLng(parsed.driverLat!, parsed.driverLng!);
+          }
+          if (parsed.eta != null || parsed.distance != null) {
+            state = state.copyWith(
+              eta: parsed.eta ?? state.eta,
+              distance: parsed.distance ?? state.distance,
+            );
+          }
+        }
       }
+
+      if (location == null) return;
+
+      double heading = state.driverHeading ?? 0.0;
+      if (state.driverLocation != null &&
+          (state.driverLocation!.latitude != location.latitude ||
+              state.driverLocation!.longitude != location.longitude)) {
+        heading = Geolocator.bearingBetween(
+          state.driverLocation!.latitude,
+          state.driverLocation!.longitude,
+          location.latitude,
+          location.longitude,
+        );
+      }
+
+      state = state.copyWith(
+        driverLocation: location,
+        driverHeading: heading,
+      );
+
+      _updateMarkers();
+      _refreshDynamicEta();
     } catch (e) {
-      // Silently fail - don't disrupt tracking
+      debugPrint('Failed to load driver location: $e');
     }
   }
 
@@ -490,38 +504,18 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       final response = await dataSource.getEta(orderId);
 
       if (response['success'] == true) {
-        final data = response['data'] as Map<String, dynamic>;
-
-        // Extract ETA
-        String? eta;
-        if (data['estimatedArrival'] != null) {
-          eta = data['estimatedArrival'] as String;
-        } else if (data['estimatedArrivalMinutes'] != null) {
-          final minutes = data['estimatedArrivalMinutes'] as num;
-          eta = '${minutes.round()} minutes';
-        } else if (data['estimated_arrival'] != null) {
-          eta = data['estimated_arrival'] as String;
-        } else if (data['minutes_remaining'] != null) {
-          final minutes = data['minutes_remaining'] as num;
-          eta = '${minutes.round()} minutes';
-        }
-
-        // Extract distance
-        String? distance;
-        if (data['distanceKm'] != null) {
-          final distKm = data['distanceKm'] as num;
-          distance = '${distKm.toStringAsFixed(1)} km';
-        } else if (data['distance_remaining_m'] != null) {
-          final distM = data['distance_remaining_m'] as num;
-          distance = '${(distM / 1000).toStringAsFixed(1)} km';
-        }
-
-        state = state.copyWith(eta: eta, distance: distance);
+        final parsed = TrackingRemoteDataSource.parseEtaPayload(
+          response['data'] as Map<String, dynamic>?,
+        );
+        state = state.copyWith(
+          eta: parsed.eta ?? state.eta,
+          distance: parsed.distance ?? state.distance,
+        );
       } else {
         _refreshDynamicEta();
       }
     } catch (e) {
-      debugPrint('❌ Failed to load ETA: $e');
+      debugPrint('Failed to load ETA: $e');
       _refreshDynamicEta();
     }
   }
@@ -568,63 +562,113 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         state.dropoffLocation!.longitude,
       );
 
+      List<LatLng> polylinePoints = [];
+      String? distance;
+      String? duration;
+
       if (response['success'] == true) {
         final data = response['data'];
-
-        // Parse polyline points from API response
-        List<LatLng> polylinePoints = [];
-
-        if (data['polyline'] != null && data['polyline'] is List) {
-          polylinePoints = (data['polyline'] as List).map((point) {
-            return LatLng(
-              (point['latitude'] as num).toDouble(),
-              (point['longitude'] as num).toDouble(),
-            );
-          }).toList();
+        if (data is Map) {
+          polylinePoints = _parsePolylinePoints(data);
+          distance = _readDistanceText(data);
+          duration = _readDurationText(data);
         }
-
-        // If no polyline points, create a simple straight line
-        if (polylinePoints.isEmpty) {
-          polylinePoints = [state.driverLocation!, state.dropoffLocation!];
-        }
-
-        final polyline = Polyline(
-          polylineId: const PolylineId('route'),
-          points: polylinePoints,
-          color: Colors.blue,
-          width: 5,
-          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-        );
-
-        // Extract distance and duration
-        String? distance;
-        String? duration;
-
-        if (data['distance'] != null) {
-          distance =
-              data['distance']['text'] ??
-              '${(data['distance']['value'] / 1000).toStringAsFixed(1)} km';
-        }
-
-        if (data['duration'] != null) {
-          duration =
-              data['duration']['text'] ??
-              '${(data['duration']['value'] / 60).round()} mins';
-        }
-
-        state = state.copyWith(
-          polylines: {polyline},
-          distance: distance,
-          eta: duration,
-          isLoadingRoute: false,
-        );
-      } else {
-        state = state.copyWith(isLoadingRoute: false);
       }
+
+      if (polylinePoints.isEmpty) {
+        final directions = await DirectionsRouteService.fetchRoute(
+          originLat: state.driverLocation!.latitude,
+          originLng: state.driverLocation!.longitude,
+          destLat: state.dropoffLocation!.latitude,
+          destLng: state.dropoffLocation!.longitude,
+        );
+
+        if (directions != null) {
+          polylinePoints = directions.points;
+          distance ??= directions.distanceText;
+          duration ??= directions.durationText;
+        }
+      }
+
+      if (polylinePoints.isEmpty) {
+        state = state.copyWith(isLoadingRoute: false, polylines: const {});
+        return;
+      }
+
+      final polyline = Polyline(
+        polylineId: const PolylineId('route'),
+        points: polylinePoints,
+        color: const Color(0xFF1976D2),
+        width: 5,
+        geodesic: true,
+      );
+
+      state = state.copyWith(
+        polylines: {polyline},
+        distance: distance,
+        eta: duration,
+        isLoadingRoute: false,
+      );
     } catch (e) {
       debugPrint('❌ Failed to load route: $e');
-      state = state.copyWith(isLoadingRoute: false);
+      state = state.copyWith(isLoadingRoute: false, polylines: const {});
     }
+  }
+
+  List<LatLng> _parsePolylinePoints(Map<dynamic, dynamic> data) {
+    final points = <LatLng>[];
+
+    final encoded = data['encoded_polyline'] ?? data['overview_polyline'];
+    if (encoded is String && encoded.isNotEmpty) {
+      return DirectionsRouteService.decodePolyline(encoded);
+    }
+
+    if (data['polyline'] is String) {
+      return DirectionsRouteService.decodePolyline(data['polyline'] as String);
+    }
+
+    if (data['polyline'] is List) {
+      for (final point in data['polyline'] as List) {
+        if (point is Map) {
+          final lat = point['latitude'] ?? point['lat'];
+          final lng = point['longitude'] ?? point['lng'];
+          if (lat != null && lng != null) {
+            points.add(
+              LatLng(
+                (lat as num).toDouble(),
+                (lng as num).toDouble(),
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    return points;
+  }
+
+  String? _readDistanceText(Map<dynamic, dynamic> data) {
+    final distance = data['distance'];
+    if (distance is Map) {
+      return distance['text']?.toString() ??
+          '${((distance['value'] as num? ?? 0) / 1000).toStringAsFixed(1)} km';
+    }
+    if (distance is num) {
+      return '${(distance / 1000).toStringAsFixed(1)} km';
+    }
+    return null;
+  }
+
+  String? _readDurationText(Map<dynamic, dynamic> data) {
+    final duration = data['duration'];
+    if (duration is Map) {
+      return duration['text']?.toString() ??
+          '${((duration['value'] as num? ?? 0) / 60).round()} mins';
+    }
+    if (duration is num) {
+      return '${(duration / 60).round()} mins';
+    }
+    return null;
   }
 
   void _updateMarkers() {

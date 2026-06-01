@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/utils.dart';
+import '../../../../core/constants/routers/app_router.dart';
+import '../../../../core/constants/routers/register/register_routes.dart';
 import '../../../provider/register/merchant/merchant_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
 
@@ -11,12 +13,6 @@ class MerchantRegisterCompleteScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(merchantRegisterInfoProvider);
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
-
-    // Use presentation getters from state
-    final restaurantName = state.presentationRestaurantName;
-    final address = state.presentationAddress;
-    final email = state.presentationEmail;
-    final contact = state.presentationContactNumber;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -29,14 +25,14 @@ class MerchantRegisterCompleteScreen extends ConsumerWidget {
                 const MerchantCompleteHeader(),
                 const MerchantCompleteIllustration(),
                 MerchantCompleteInfoCard(
-                  restaurantName: restaurantName,
-                  address: address,
-                  email: email,
-                  contactNumber: contact,
+                  restaurantName: state.presentationRestaurantName,
+                  address: state.presentationAddress,
+                  email: state.presentationEmail,
+                  contactNumber: state.presentationContactNumber,
                 ),
                 MerchantCompleteActionButtons(
                   onProceed: () {
-                    // TODO: Navigate to payment
+                    AppRouter.push(context, RegisterRoutes.merchantPayment);
                   },
                 ),
               ],

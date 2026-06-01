@@ -10,6 +10,10 @@ class MainRoutes {
   static const String missions = '/missions';
   static const String loyaltyRedeem = '/loyalty-redeem';
   static const String settings = '/settings';
+  static const String notificationSettings = '/settings/notifications';
+  static const String languageSettings = '/settings/language';
+  static const String securitySettings = '/settings/security';
+  static const String referralDashboard = '/referral-dashboard';
   static const String faqs = '/faqs';
   static const String about = '/about';
   static const String setLocation = '/set-location';

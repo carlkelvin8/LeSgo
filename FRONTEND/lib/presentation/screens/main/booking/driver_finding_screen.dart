@@ -385,12 +385,23 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           'orderData': widget.orderData,
         },
       );
+    } else if (widget.orderType.toLowerCase().contains('lesgo')) {
+      AppRouter.pushReplacement(
+        context,
+        BookingRoutes.lesgoOrderTracking,
+        arguments: {
+          'orderId': widget.orderId,
+          'orderType': widget.orderType,
+          'orderData': widget.orderData,
+        },
+      );
     } else {
-      // Navigate to simple order tracking screen for other order types
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => SimpleOrderTrackingScreen(orderId: int.parse(widget.orderId)),
+          builder: (_) => SimpleOrderTrackingScreen(
+            orderId: int.parse(widget.orderId),
+          ),
         ),
       );
     }

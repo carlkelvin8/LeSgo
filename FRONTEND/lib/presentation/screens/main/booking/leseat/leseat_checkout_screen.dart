@@ -300,41 +300,37 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
             onPressed: isCartEmpty
                 ? null
                 : () async {
-                    final success = await checkoutNotifier.placeOrder();
+                    final success = await checkoutNotifier.placeOrder(context);
                     if (!context.mounted) return;
                     if (success) {
                       final checkoutState = ref.read(checkoutProvider);
-                      final orderId =
-                          checkoutState.createdOrderId?.toString() ??
-                          'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+                      final createdId = checkoutState.createdOrderId;
+                      if (createdId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Order was not created. Please try again.'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
 
-                      // Navigate to driver finding screen with real order ID
                       AppRouter.pushReplacement(
                         context,
-                        BookingRoutes.driverFinding,
+                        BookingRoutes.leseatWaitingConfirmation,
                         arguments: {
-                          'orderId': orderId,
-                          'orderType': 'LesEat',
-                          'orderData': {
-                            'restaurantName': restaurantGroups
-                                .map((group) => group.restaurantName)
-                                .join(', '),
-                            'items': order.items
-                                .map(
-                                  (item) => {
-                                    'name': item.name,
-                                    'price': item.price,
-                                    'quantity': item.quantity,
-                                    'restaurantName': item.restaurantName,
-                                  },
-                                )
-                                .toList(),
-                            'subtotal': order.subtotal,
-                            'deliveryFee': order.deliveryFee,
-                            'discount': order.discount,
-                            'total': order.total,
-                            'deliveryAddress': order.deliveryAddress,
-                          },
+                          'orderId': createdId,
+                          'address': order.deliveryAddress,
+                          'orderItems': order.items
+                              .map(
+                                (item) => {
+                                  'name': item.name,
+                                  'price': item.price,
+                                  'quantity': item.quantity,
+                                  'restaurantName': item.restaurantName,
+                                },
+                              )
+                              .toList(),
                         },
                       );
                     } else {

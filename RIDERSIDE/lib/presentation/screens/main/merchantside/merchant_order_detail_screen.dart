@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
+import '../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
 
 class MerchantOrderDetailScreen extends ConsumerWidget {
   final OrderDto order;
@@ -19,6 +20,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
         return 'Pending';
       case 'searching_driver':
       case 'accepted':
+      case 'ready_for_pickup':
         return 'For Pick Up';
       case 'picked_up':
       case 'in_progress':
@@ -56,7 +58,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
-    final isPending = order.status.toLowerCase() == 'pending';
+    final status = order.status.toLowerCase();
     
     // Calculate subtotals
     double itemSubtotal = 0;
@@ -466,7 +468,68 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
       ),
       // Bottom Action Button (Accept)
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: isPending ? Container(
+      floatingActionButton: _buildBottomActions(context, ref, status, horizontalPadding),
+    );
+  }
+
+  Widget? _buildBottomActions(
+    BuildContext context,
+    WidgetRef ref,
+    String status,
+    double horizontalPadding,
+  ) {
+    Future<void> run(Future<void> Function() action, String success) async {
+      try {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Updating order...')),
+        );
+        await action();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(success)),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed: $e')),
+          );
+        }
+      }
+    }
+
+    Widget actionButton({
+      required String label,
+      required Color color,
+      required VoidCallback onPressed,
+    }) {
+      return Expanded(
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 14),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (status == 'pending') {
+      return Container(
         width: double.infinity,
         padding: EdgeInsets.all(horizontalPadding),
         decoration: BoxDecoration(
@@ -479,67 +542,138 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
             ),
           ],
         ),
-        child: ElevatedButton(
-          onPressed: () async {
-            final confirm = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Accept Order?'),
-                content: const Text('This will accept the order and start searching for a driver. Proceed?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Accept'),
-                  ),
-                ],
-              ),
-            );
-
-            if (confirm == true) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Accepting order...')),
+        child: Row(
+          children: [
+            actionButton(
+              label: 'Reject',
+              color: Colors.red.shade400,
+              onPressed: () async {
+                final reason = await showMerchantCancelReasonDialog(
+                  context,
+                  title: 'Reject Order',
+                  hint: 'Why are you rejecting this order?',
                 );
-                try {
-                  await ref.read(merchantOrderActionProvider).acceptOrder(order.id);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Order accepted successfully!')),
-                    );
-                    Navigator.pop(context); // Go back to list
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to accept order: $e')),
-                    );
-                  }
+                if (reason != null && context.mounted) {
+                  await run(
+                    () => ref.read(merchantOrderActionProvider).rejectOrder(order.id, reason),
+                    'Order rejected.',
+                  );
                 }
-              }
+              },
+            ),
+            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+            actionButton(
+              label: 'Accept',
+              color: const Color(0xFF5F2D82),
+              onPressed: () async {
+                final confirm = await showMerchantConfirmDialog(
+                  context,
+                  title: 'Accept Order?',
+                  message: 'Start searching for a driver?',
+                  confirmLabel: 'Accept',
+                );
+                if (confirm && context.mounted) {
+                  await run(
+                    () => ref.read(merchantOrderActionProvider).acceptOrder(order.id),
+                    'Order accepted successfully!',
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (status == 'searching_driver' || status == 'accepted') {
+      return Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(horizontalPadding),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            actionButton(
+              label: 'Cancel',
+              color: Colors.red.shade400,
+              onPressed: () async {
+                final reason = await showMerchantCancelReasonDialog(
+                  context,
+                  title: 'Cancel Order',
+                );
+                if (reason != null && context.mounted) {
+                  await run(
+                    () => ref.read(merchantOrderActionProvider).cancelOrder(order.id, reason),
+                    'Order cancelled.',
+                  );
+                }
+              },
+            ),
+            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+            actionButton(
+              label: 'Ready for Pickup',
+              color: const Color(0xFF5F2D82),
+              onPressed: () async {
+                final confirm = await showMerchantConfirmDialog(
+                  context,
+                  title: 'Ready for Pickup?',
+                  message: 'Mark this order as ready for driver pickup?',
+                  confirmLabel: 'Mark Ready',
+                );
+                if (confirm && context.mounted) {
+                  await run(
+                    () => ref.read(merchantOrderActionProvider).markReadyForPickup(order.id),
+                    'Order marked ready for pickup!',
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (status == 'ready_for_pickup') {
+      return Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(horizontalPadding),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: actionButton(
+          label: 'Cancel Order',
+          color: Colors.red.shade400,
+          onPressed: () async {
+            final reason = await showMerchantCancelReasonDialog(
+              context,
+              title: 'Cancel Order',
+            );
+            if (reason != null && context.mounted) {
+              await run(
+                () => ref.read(merchantOrderActionProvider).cancelOrder(order.id, reason),
+                'Order cancelled.',
+              );
             }
           },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5F2D82),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: Text(
-            'Accept Order',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
         ),
-      ) : null,
-    );
+      );
+    }
+
+    return null;
   }
 }

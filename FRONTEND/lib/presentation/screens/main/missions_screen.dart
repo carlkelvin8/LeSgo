@@ -85,6 +85,22 @@ class MissionsScreen extends ConsumerWidget {
 
                 SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
+                if (missionsState.error != null)
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveUtils.spacing(context, 24),
+                      vertical: ResponsiveUtils.spacing(context, 8),
+                    ),
+                    child: Text(
+                      missionsState.error!,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                        color: Colors.orange[200],
+                      ),
+                    ),
+                  ),
+
                 Expanded(
                   child: missionsState.isLoading
                       ? const Center(

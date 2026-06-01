@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../core/network/dio_client.dart';
+import 'helpers/register_driver_form_builder.dart';
+import 'helpers/register_merchant_form_builder.dart';
 import 'dto/auth/register_driver_request_dto.dart';
 import 'dto/auth/register_driver_response_dto.dart';
 import 'dto/auth/register_merchant_request_dto.dart';
@@ -87,14 +89,22 @@ class AuthRemoteDataSource {
   // DRIVER REGISTRATION
   // ============================================================================
 
-  /// Register new driver
+  /// Register new driver with optional document uploads (multipart).
   Future<RegisterDriverResponseDto> registerDriver(
-    RegisterDriverRequestDto request,
-  ) async {
+    RegisterDriverRequestDto request, {
+    Map<String, String>? documents,
+  }) async {
     try {
+      final dynamic payload;
+      if (documents != null && documents.isNotEmpty) {
+        payload = await buildRegisterDriverFormData(request, documents);
+      } else {
+        payload = request.toJson();
+      }
+
       final response = await _dioClient.dio.post(
         '/v1/drivers/register',
-        data: request.toJson(),
+        data: payload,
       );
 
       return RegisterDriverResponseDto.fromJson(response.data);
@@ -107,14 +117,22 @@ class AuthRemoteDataSource {
   // MERCHANT REGISTRATION
   // ============================================================================
 
-  /// Register new merchant/partner
+  /// Register new merchant/partner with optional document uploads (multipart).
   Future<RegisterMerchantResponseDto> registerMerchant(
-    RegisterMerchantRequestDto request,
-  ) async {
+    RegisterMerchantRequestDto request, {
+    Map<String, String>? documents,
+  }) async {
     try {
+      final dynamic payload;
+      if (documents != null && documents.isNotEmpty) {
+        payload = await buildRegisterMerchantFormData(request, documents);
+      } else {
+        payload = request.toJson();
+      }
+
       final response = await _dioClient.dio.post(
         '/v1/auth/register',
-        data: request.toJson(),
+        data: payload,
       );
 
       return RegisterMerchantResponseDto.fromJson(response.data);
@@ -176,5 +194,53 @@ class AuthRemoteDataSource {
     } catch (e) {
       rethrow;
     }
+  }
+
+  // ============================================================================
+  // FORGOT PASSWORD
+  // ============================================================================
+
+  Future<Map<String, dynamic>> sendPasswordResetOtp(String email) async {
+    final response = await _dioClient.dio.post(
+      '/v1/auth/forgot-password/send-otp',
+      data: {'email': email},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> resendPasswordResetOtp(String email) async {
+    final response = await _dioClient.dio.post(
+      '/v1/auth/forgot-password/resend-otp',
+      data: {'email': email},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> verifyPasswordResetOtp(
+    String email,
+    String otp,
+  ) async {
+    final response = await _dioClient.dio.post(
+      '/v1/auth/forgot-password/verify-otp',
+      data: {'email': email, 'otp': otp},
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> resetPassword(
+    String email,
+    String otp,
+    String password,
+  ) async {
+    final response = await _dioClient.dio.post(
+      '/v1/auth/forgot-password/reset',
+      data: {
+        'email': email,
+        'otp': otp,
+        'password': password,
+        'password_confirmation': password,
+      },
+    );
+    return response.data as Map<String, dynamic>;
   }
 }

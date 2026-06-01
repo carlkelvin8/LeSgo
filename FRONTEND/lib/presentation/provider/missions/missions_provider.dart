@@ -218,6 +218,7 @@ class MissionsNotifier extends StateNotifier<MissionsState> {
     } catch (e) {
       print('🔴 Missions: Error claiming mission - $e');
       state = state.copyWith(error: 'Failed to claim reward: $e');
+      rethrow;
     }
   }
 

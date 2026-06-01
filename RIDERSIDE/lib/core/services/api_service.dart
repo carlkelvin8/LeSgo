@@ -197,7 +197,11 @@ class ApiService {
 
   /// POST /v1/tracking/driver/location - Update driver location for tracking
   static Future<void> updateDriverLocation(
-      int driverProfileId, double lat, double lng) async {
+    int driverProfileId,
+    double lat,
+    double lng, {
+    String status = 'online',
+  }) async {
     try {
       await _dio.post(
         '/v1/tracking/driver/location',
@@ -205,12 +209,26 @@ class ApiService {
           'driver_id': driverProfileId,
           'latitude': lat,
           'longitude': lng,
-          'status': 'online',
+          'status': status,
         },
       );
-      print('✅ Driver location updated: $lat, $lng');
     } catch (e) {
       print('❌ Error updating driver location: $e');
+      rethrow;
+    }
+  }
+
+  /// PATCH /v1/drivers/{id} - Update driver availability
+  static Future<void> updateDriverAvailability(
+    int driverProfileId,
+    bool isAvailable,
+  ) async {
+    try {
+      await _dio.patch('/v1/drivers/$driverProfileId', data: {
+        'is_available': isAvailable ? 1 : 0,
+      });
+    } catch (e) {
+      print('❌ Error updating driver availability: $e');
       rethrow;
     }
   }
@@ -347,6 +365,27 @@ class ApiService {
   static Future<Map<String, dynamic>> claimMerchantMissionReward(int missionId) async {
     final res = await _dio.post('/v1/merchant/missions/$missionId/claim');
     return res.data as Map<String, dynamic>;
+  }
+
+  /// POST /v1/orders — create a new order
+  static Future<Map<String, dynamic>> createOrder(Map<String, dynamic> data) async {
+    final res = await _dio.post('/v1/orders', data: data);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// Register device for push notifications (best-effort)
+  static Future<void> registerPushDevice({
+    required String deviceToken,
+    required String platform,
+  }) async {
+    try {
+      await _dio.post('/v1/notifications/device-token', data: {
+        'device_token': deviceToken,
+        'platform': platform,
+      });
+    } catch (_) {
+      // Endpoint may not exist yet; local notifications still work.
+    }
   }
 
   static String extractError(dynamic e) {

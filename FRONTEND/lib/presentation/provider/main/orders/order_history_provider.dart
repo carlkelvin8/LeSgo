@@ -95,14 +95,15 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
         perPage: 20,
       );
 
-      if (response.success && response.data.isNotEmpty) {
+      if (response.success) {
         final newOrders = response.data;
-        
+
         state = state.copyWith(
           orders: refresh ? newOrders : [...state.orders, ...newOrders],
           isLoading: false,
           hasMore: newOrders.length >= 20,
           currentPage: state.currentPage + 1,
+          error: null,
         );
       } else {
         state = state.copyWith(

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
 import 'dto/security/security_dto.dart';
 
@@ -9,82 +10,44 @@ class SecurityRemoteDataSource {
 
   SecurityRemoteDataSource(this._dioClient);
 
-  /// Get security dashboard
   Future<SecurityDashboardDto> getSecurityDashboard() async {
-    final dio = _dioClient.dio;
-    try {
-      final response = await dio.get('/v1/security/dashboard');
-      return SecurityDashboardDto.fromJson(response.data['data']);
-    } catch (e) {
-      // Mock response
-      return SecurityDashboardDto(
-        twoFactorEnabled: false,
-        biometricEnabled: false,
-        activeSessions: 1,
-        lastLogin: DateTime.now().toIso8601String(),
-        lastPasswordChange: DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
-      );
-    }
+    final response = await _dioClient.dio.get(ApiConstants.securityDashboard);
+    final data = response.data['data'] ?? response.data;
+    return SecurityDashboardDto.fromJson(Map<String, dynamic>.from(data as Map));
   }
 
-  /// Setup 2FA
   Future<TwoFactorSetupDto> setup2FA() async {
-    final dio = _dioClient.dio;
-    try {
-      final response = await dio.post('/v1/security/2fa/setup');
-      return TwoFactorSetupDto.fromJson(response.data['data']);
-    } catch (e) {
-      // Mock response
-      return TwoFactorSetupDto(
-        secret: 'MOCK_SECRET_KEY',
-        qrCode: 'mock_qr_code_base64',
-        backupCodes: ['123456', '789012', '345678'],
-      );
-    }
+    final response = await _dioClient.dio.post(ApiConstants.security2faSetup);
+    final data = response.data['data'] ?? response.data;
+    return TwoFactorSetupDto.fromJson(Map<String, dynamic>.from(data as Map));
   }
 
-  /// List biometrics
   Future<List<BiometricDto>> listBiometrics() async {
-    final dio = _dioClient.dio;
-    try {
-      final response = await dio.get('/v1/security/biometrics');
-      return (response.data['data'] as List)
-          .map((item) => BiometricDto.fromJson(item))
-          .toList();
-    } catch (e) {
-      // Mock response
-      return [
-        BiometricDto(
-          id: 1,
-          type: 'fingerprint',
-          deviceName: 'iPhone 13',
-          createdAt: DateTime.now().toIso8601String(),
-        ),
-      ];
-    }
+    final response = await _dioClient.dio.get(ApiConstants.securityBiometrics);
+    final list = response.data['data'] as List? ?? [];
+    return list
+        .map((item) => BiometricDto.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
-  /// Get audit logs
   Future<List<AuditLogDto>> getAuditLogs({int perPage = 20}) async {
-    final dio = _dioClient.dio;
-    try {
-      final response = await dio.get('/v1/security/audit-logs', queryParameters: {
-        'per_page': perPage,
-      });
-      return (response.data['data'] as List)
-          .map((item) => AuditLogDto.fromJson(item))
-          .toList();
-    } catch (e) {
-      // Mock response
-      return [
-        AuditLogDto(
-          id: 1,
-          action: 'login',
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0',
-          createdAt: DateTime.now().toIso8601String(),
-        ),
-      ];
+    final response = await _dioClient.dio.get(
+      ApiConstants.securityAuditLogs,
+      queryParameters: {'per_page': perPage},
+    );
+    final list = response.data['data'] as List? ?? [];
+    return list
+        .map((item) => AuditLogDto.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+}
+
+String securityErrorMessage(Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
     }
   }
+  return error.toString();
 }

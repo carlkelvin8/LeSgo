@@ -5,6 +5,8 @@ import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../domain/entities/booking/lesbuy/store.dart';
 import '../../../../provider/main/booking/lesbuy/store_detail_provider.dart';
+import '../../../../provider/main/favorites/favorites_provider.dart';
+import '../../../../../core/navigation/favorite_navigation.dart';
 import '../../../../widgets/booking/lesbuy/store/store_detail_header.dart';
 import '../../../../widgets/booking/lesbuy/store/store_info_card.dart';
 import '../../../../widgets/booking/lesbuy/store/store_category_filters.dart';
@@ -21,15 +23,31 @@ class StoreDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
+  bool _isFavorite = false;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
       ref.read(storeDetailProvider.notifier).loadStoreDetails(
         widget.store.id,
         widget.store.categories,
       );
+      final isFav =
+          await ref.read(favoritesProvider.notifier).isFavoriteStore(widget.store.id);
+      if (mounted) setState(() => _isFavorite = isFav);
     });
+  }
+
+  Future<void> _toggleFavorite() async {
+    final isFav = await ref.read(favoritesProvider.notifier).toggleFavoriteStore(
+          id: widget.store.id,
+          name: widget.store.name,
+          subtitle: widget.store.address,
+          imageUrl: widget.store.imagePath,
+          metadata: FavoriteNavigation.storeMetadata(widget.store),
+        );
+    if (mounted) setState(() => _isFavorite = isFav);
   }
 
   @override
@@ -64,6 +82,29 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
             onPressed: () => Navigator.pop(context),
           ),
         ),
+        actions: [
+          Container(
+            margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorite ? Colors.red : Colors.black,
+              ),
+              onPressed: _toggleFavorite,
+            ),
+          ),
+        ],
       ),
       body: storeState.isLoading
           ? const Center(child: CircularProgressIndicator())

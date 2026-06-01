@@ -31,6 +31,35 @@ class OffersScreen extends ConsumerWidget {
               onCategorySelected: offersNotifier.selectCategory,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            if (offersState.infoMessage != null)
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveUtils.spacing(context, 20),
+                ),
+                child: Text(
+                  offersState.infoMessage!,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    color: Colors.orange[800],
+                  ),
+                ),
+              ),
+            if (offersState.error != null)
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveUtils.spacing(context, 20),
+                  vertical: ResponsiveUtils.spacing(context, 4),
+                ),
+                child: Text(
+                  offersState.error!,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    color: Colors.red[700],
+                  ),
+                ),
+              ),
             Expanded(
               child: offersState.isLoading
                   ? const Center(
@@ -38,6 +67,13 @@ class OffersScreen extends ConsumerWidget {
                         color: Color(0xFF5F2D82),
                       ),
                     )
+                  : offersState.error != null && offersState.offers.isEmpty
+                      ? Center(
+                          child: TextButton(
+                            onPressed: offersNotifier.loadOffers,
+                            child: const Text('Retry loading offers'),
+                          ),
+                        )
                   : filteredOffers.isEmpty
                   ? const OffersEmptyState()
                   : RefreshIndicator(

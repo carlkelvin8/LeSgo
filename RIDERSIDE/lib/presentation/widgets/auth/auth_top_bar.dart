@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/utils.dart';
 import '../../provider/auth/auth_provider.dart';
+import '../../provider/auth/forgot_password_provider.dart';
 import '../widgets.dart';
 
 class AuthTopBar extends ConsumerWidget {
@@ -17,7 +18,8 @@ class AuthTopBar extends ConsumerWidget {
     Widget centerWidget = switch (authView) {
       AuthView.login => const LoginText(),
       AuthView.riderLogin ||
-      AuthView.merchantLogin => SvgPicture.asset(
+      AuthView.merchantLogin ||
+      AuthView.forgotPassword => SvgPicture.asset(
             'assets/images/Logo.svg',
             height: ResponsiveUtils.imageHeight(context, 40),
             fit: BoxFit.contain,
@@ -51,7 +53,10 @@ class AuthTopBar extends ConsumerWidget {
           showBackButton: !isWelcome,
           onBackPressed: () {
             final notifier = ref.read(authViewProvider.notifier);
-            if (authView == AuthView.riderLogin ||
+            if (authView == AuthView.forgotPassword) {
+              ref.read(forgotPasswordProvider.notifier).reset();
+              notifier.state = ref.read(forgotPasswordReturnViewProvider);
+            } else if (authView == AuthView.riderLogin ||
                 authView == AuthView.merchantLogin) {
               notifier.state = AuthView.login;
             } else {

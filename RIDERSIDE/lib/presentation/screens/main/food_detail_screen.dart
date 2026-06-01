@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/utils/helpers/fakedata.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import 'cart_screen.dart';
 import '../../provider/cart/cart_provider.dart';
@@ -26,14 +25,7 @@ class FoodDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final menuItem = merchantFoodMenuItems.where((item) {
-      return item['name'] == foodName;
-    }).cast<Map<String, String>?>().firstWhere(
-          (item) => item != null,
-          orElse: () => null,
-        );
-
-    final resolvedDescription = menuItem?['description'] ?? description;
+    final resolvedDescription = description;
 
     final input = MerchantFoodDetailInput(
       foodName: foodName,

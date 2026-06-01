@@ -4,6 +4,8 @@ import '../../../core/utils/utils.dart';
 import '../../../core/constants/routers/app_router.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
 import '../../provider/auth/rider_auth_provider.dart';
+import '../../provider/auth/auth_provider.dart';
+import '../../provider/auth/forgot_password_provider.dart';
 import '../widgets.dart';
 
 class MerchantLoginContent extends ConsumerStatefulWidget {
@@ -140,7 +142,11 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
                 onPressed: authState.isLoading
                     ? null
                     : () {
-                        // TODO: Forgot Password logic for Merchant
+                        ref.read(forgotPasswordReturnViewProvider.notifier).state =
+                            AuthView.merchantLogin;
+                        ref.read(forgotPasswordProvider.notifier).reset();
+                        ref.read(authViewProvider.notifier).state =
+                            AuthView.forgotPassword;
                       },
                 style: TextButton.styleFrom(
                   padding: EdgeInsets.zero,
