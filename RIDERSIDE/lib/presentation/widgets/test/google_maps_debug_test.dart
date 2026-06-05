@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../core/config/secrets_config.dart';
 
 class GoogleMapsDebugTest extends StatefulWidget {
   const GoogleMapsDebugTest({super.key});
@@ -72,8 +74,10 @@ class _GoogleMapsDebugTestState extends State<GoogleMapsDebugTest> {
                     _mapCreated = true;
                     _status = 'Map created successfully! ✅';
                   });
-                  print('🗺️ DEBUG: Google Maps created successfully');
-                  print('🔑 DEBUG: API Key should be: AIzaSyA0s1a7phLN0iaD6-MjnwqfpJFhYhmyNjU');
+                  if (kDebugMode) {
+                    print('🗺️ DEBUG: Google Maps created successfully');
+                    print('🔑 DEBUG: ${SecretsConfig.googleMapsConfigStatus}');
+                  }
                 },
                 
                 onTap: (LatLng position) {
@@ -101,7 +105,7 @@ class _GoogleMapsDebugTestState extends State<GoogleMapsDebugTest> {
                 Text('Debug Info:', style: TextStyle(fontWeight: FontWeight.bold)),
                 Text('Map Created: $_mapCreated'),
                 Text('Controller: ${_controller != null ? "Available" : "Null"}'),
-                Text('API Key: AIzaSyA0s1a7phLN0iaD6-MjnwqfpJFhYhmyNjU'),
+                Text('Maps config: ${SecretsConfig.googleMapsConfigStatus}'),
                 const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: _mapCreated ? () {

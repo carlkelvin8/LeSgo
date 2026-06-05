@@ -1,15 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/api_service.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../auth/rider_auth_provider.dart';
 import 'merchant_profile_provider.dart';
 
+/// Deletes a menu item and refreshes menu providers.
+Future<void> deleteMerchantMenuItem(WidgetRef ref, int itemId) async {
+  final dataSource = ref.read(merchantDataSourceProvider);
+  try {
+    await dataSource.deleteMenuItem(itemId);
+    ref.invalidate(merchantMenuProvider);
+    ref.invalidate(merchantMenuItemsProvider);
+  } catch (e) {
+    throw Exception(ApiService.extractError(e));
+  }
+}
+
 /// Provider for menu categories with items
 final merchantMenuProvider = FutureProvider.autoDispose<MenuResponse?>((ref) async {
   // Get partner_id from auth state
   final authState = ref.watch(riderAuthProvider);
-  final partnerId = authState.user?.partnerId;
-  
+  final profile = ref.watch(merchantProfileProvider).value;
+  final partnerId = authState.user?.partnerId ?? profile?.id;
+
   if (partnerId == null) {
     print('❌ merchantMenuProvider - No partner_id available');
     return null;
@@ -32,8 +46,9 @@ final merchantMenuProvider = FutureProvider.autoDispose<MenuResponse?>((ref) asy
 final merchantMenuItemsProvider = FutureProvider.autoDispose<List<MenuItemDto>>((ref) async {
   // Get partner_id from auth state
   final authState = ref.watch(riderAuthProvider);
-  final partnerId = authState.user?.partnerId;
-  
+  final profile = ref.watch(merchantProfileProvider).value;
+  final partnerId = authState.user?.partnerId ?? profile?.id;
+
   if (partnerId == null) {
     print('❌ merchantMenuItemsProvider - No partner_id available');
     return [];

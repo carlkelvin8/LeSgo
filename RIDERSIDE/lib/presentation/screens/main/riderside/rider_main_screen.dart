@@ -6,6 +6,7 @@ import '../../../provider/main/riderside/rider_history_provider.dart';
 import '../../../provider/main/riderside/rider_profile_provider.dart';
 import '../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../provider/main/riderside/rider_orders_provider.dart';
+import '../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../widgets/widgets.dart';
 import 'views/rider_profile_view.dart';
 import 'views/rider_wallet_view.dart';
@@ -87,6 +88,9 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
           break;
         case RiderNavType.profile:
           ref.read(riderProfileProvider.notifier).loadProfile();
+          break;
+        case RiderNavType.wallet:
+          ref.read(riderWalletProvider.notifier).loadWallet();
           break;
         default:
           break;

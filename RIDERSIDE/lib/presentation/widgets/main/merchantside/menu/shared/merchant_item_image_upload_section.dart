@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../common/menu_image_widget.dart';
 
 class MerchantItemImageUploadSection extends StatelessWidget {
   final VoidCallback onTap;
@@ -14,9 +14,8 @@ class MerchantItemImageUploadSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasImage = uploadedImagePath != null && uploadedImagePath!.isNotEmpty;
-    // Check if it's a network URL or a local file
-    final bool isNetworkImage = hasImage && (uploadedImagePath!.startsWith('http://') || uploadedImagePath!.startsWith('https://'));
+    final bool hasImage =
+        uploadedImagePath != null && uploadedImagePath!.trim().isNotEmpty;
 
     return Container(
       width: double.infinity,
@@ -39,15 +38,11 @@ class MerchantItemImageUploadSection extends StatelessWidget {
               ? Stack(
                   fit: StackFit.expand,
                   children: [
-                    isNetworkImage 
-                        ? Image.network(
-                            uploadedImagePath!,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(
-                            File(uploadedImagePath!),
-                            fit: BoxFit.cover,
-                          ),
+                    MenuImageWidget(
+                      source: uploadedImagePath,
+                      fit: BoxFit.cover,
+                      placeholder: _placeholder(context),
+                    ),
                     Container(
                       color: Colors.black.withOpacity(0.3),
                       child: Center(
@@ -63,11 +58,7 @@ class MerchantItemImageUploadSection extends StatelessWidget {
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.add_a_photo_outlined,
-                      size: ResponsiveUtils.fontSize(context, 48),
-                      color: const Color(0xFFBDBDBD),
-                    ),
+                    _placeholder(context),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                     Text(
                       'Tap to upload item photo',
@@ -91,6 +82,14 @@ class MerchantItemImageUploadSection extends StatelessWidget {
                 ),
         ),
       ),
+    );
+  }
+
+  Widget _placeholder(BuildContext context) {
+    return Icon(
+      Icons.add_a_photo_outlined,
+      size: ResponsiveUtils.fontSize(context, 48),
+      color: const Color(0xFFBDBDBD),
     );
   }
 }

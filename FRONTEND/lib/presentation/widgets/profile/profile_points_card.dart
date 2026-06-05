@@ -80,7 +80,7 @@ class ProfilePointsCard extends StatelessWidget {
         if (onTap != null) ...[
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           Text(
-            'Tap to redeem — coming soon',
+            'Tap to redeem points',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),

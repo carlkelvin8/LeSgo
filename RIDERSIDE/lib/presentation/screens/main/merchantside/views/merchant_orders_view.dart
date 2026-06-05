@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
+import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
@@ -152,6 +154,8 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
     final filters = ref.watch(merchantOrderFiltersProvider);
     final selectedFilter = ref.watch(selectedMerchantOrderFilterProvider);
     final ordersAsync = ref.watch(merchantOrdersProvider);
+    ref.watch(merchantMenuProvider);
+    final imageLookup = ref.watch(menuItemImageLookupProvider);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -308,6 +312,16 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                           order.estimatedFare ?? order.totalFare ?? order.distanceFare ?? 0.0;
                       final double totalAmount = itemSubtotal + deliveryFee;
                       final status = order.status.toLowerCase();
+                      String? firstItemImage;
+                      if (order.orderItems != null) {
+                        for (final item in order.orderItems!) {
+                          final resolved = imageLookup.resolve(item);
+                          if (resolved != null && resolved.isNotEmpty) {
+                            firstItemImage = resolved;
+                            break;
+                          }
+                        }
+                      }
 
                       return Padding(
                         padding: EdgeInsets.only(
@@ -329,11 +343,12 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   );
                                 },
                                 child: MerchantOrderCard(
-                                  orderId: '#${order.referenceNumber}',
+                                  orderId: '#${order.referenceNumber ?? order.id}',
                                   itemName: itemNames,
                                   price: totalAmount.toStringAsFixed(2),
                                   customerName: order.user?.name ?? 'Customer',
                                   address: order.dropoffAddress,
+                                  imageUrl: firstItemImage,
                                 ),
                               ),
                             ),

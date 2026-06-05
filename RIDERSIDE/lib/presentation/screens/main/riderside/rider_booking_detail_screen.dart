@@ -13,6 +13,8 @@ import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../provider/main/riderside/rider_history_provider.dart';
 import '../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/booking_workflow.dart';
+import '../../../../core/utils/media_url_utils.dart';
 import 'map/rider_map_screen.dart';
 import '../../../widgets/chat/rider_chat_button.dart';
 import '../../../widgets/test/simple_map_test.dart';
@@ -41,6 +43,7 @@ class _RiderBookingDetailScreenState
   bool _isFetchingStatus = false;
   final List<XFile> _selectedImages = [];
   bool _isUploadingProof = false;
+  bool _showProofUpload = false;
   final ImagePicker _imagePicker = ImagePicker();
   RiderBooking? _updatedBooking; // Store updated booking with proof URLs
   GoogleMapController? _mapController;
@@ -131,7 +134,9 @@ class _RiderBookingDetailScreenState
             // Update the booking with proof URLs
             final updatedBooking = RiderBooking(
               id: widget.booking.id,
+              serviceId: serviceId,
               restaurantName: widget.booking.restaurantName,
+              customerName: widget.booking.customerName,
               address: widget.booking.address,
               pickupAddress: widget.booking.pickupAddress,
               deliveryAddress: widget.booking.deliveryAddress,
@@ -145,9 +150,10 @@ class _RiderBookingDetailScreenState
               dropoffLat: widget.booking.dropoffLat,
               dropoffLng: widget.booking.dropoffLng,
               logoPath: widget.booking.logoPath,
-              category: widget.booking.category,
+              category: BookingWorkflow.categoryFromServiceId(serviceId),
               billingAmount: widget.booking.billingAmount,
               billingMethod: widget.booking.billingMethod,
+              deliveryFee: widget.booking.deliveryFee,
               currentStatus: _mapApiStatusToBookingStatus(apiStatus, serviceId),
               proofOfDeliveryUrls: proofUrls,
               customerPhone: widget.booking.customerPhone,
@@ -177,60 +183,8 @@ class _RiderBookingDetailScreenState
     }
   }
 
-  // Map API status to BookingStatus enum
   BookingStatus _mapApiStatusToBookingStatus(String apiStatus, int serviceId) {
-    // For LesRide (serviceId: 2)
-    if (serviceId == 2) {
-      switch (apiStatus.toLowerCase()) {
-        case 'accepted':
-          return BookingStatus.onTheWay;
-        case 'driver_arrived_at_pickup':
-          return BookingStatus.driverHasArrived;
-        case 'in_progress':
-          return BookingStatus.inProgress;
-        case 'picked_up':
-          return BookingStatus.onTheWayGoing;
-        case 'completed':
-          return BookingStatus.complete;
-        default:
-          return BookingStatus.onTheWay;
-      }
-    }
-    
-    // For LesEat (serviceId: 3)
-    if (serviceId == 3) {
-      switch (apiStatus.toLowerCase()) {
-        case 'pending':
-          return BookingStatus.pending;
-        case 'accepted':
-          return BookingStatus.cooking;
-        case 'picked_up':
-          return BookingStatus.forPickUp;
-        case 'completed':
-          return BookingStatus.delivered;
-        default:
-          return BookingStatus.pending;
-      }
-    }
-    
-    // For LesBuy (serviceId: 4)
-    if (serviceId == 4) {
-      switch (apiStatus.toLowerCase()) {
-        case 'pending':
-          return BookingStatus.pending;
-        case 'accepted':
-          return BookingStatus.toBuy;
-        case 'picked_up':
-          return BookingStatus.forDelivery;
-        case 'completed':
-          return BookingStatus.delivered;
-        default:
-          return BookingStatus.pending;
-      }
-    }
-    
-    // Default
-    return BookingStatus.pending;
+    return BookingWorkflow.mapApiStatus(apiStatus, serviceId);
   }
 
   Future<void> _handleStatusChange(BookingStatus newStatus) async {
@@ -311,8 +265,32 @@ class _RiderBookingDetailScreenState
         break;
         
       case BookingStatus.complete:
-        // LesRide: picked_up → completed
+        // LesRide: picked_up → completed (proof required at drop-off)
         if (_currentApiStatus == 'picked_up') {
+          if (!_showProofUpload) {
+            setState(() => _showProofUpload = true);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Upload proof of delivery, then tap Complete again.',
+                ),
+                backgroundColor: Color(0xFF5F2D82),
+              ),
+            );
+            return;
+          }
+          final hasProof = _selectedImages.isNotEmpty ||
+              (widget.booking.proofOfDeliveryUrls?.isNotEmpty ?? false) ||
+              (_updatedBooking?.proofOfDeliveryUrls?.isNotEmpty ?? false);
+          if (!hasProof) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please upload at least one proof photo first.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
           apiStatus = 'completed';
           statusLabel = 'Completed';
         } else {
@@ -362,8 +340,32 @@ class _RiderBookingDetailScreenState
         break;
         
       case BookingStatus.delivered:
-        // picked_up → completed
+        // picked_up → completed (proof required at drop-off)
         if (_currentApiStatus == 'picked_up') {
+          if (!_showProofUpload) {
+            setState(() => _showProofUpload = true);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Upload proof of delivery, then tap Complete again.',
+                ),
+                backgroundColor: Color(0xFF5F2D82),
+              ),
+            );
+            return;
+          }
+          final hasProof = _selectedImages.isNotEmpty ||
+              (widget.booking.proofOfDeliveryUrls?.isNotEmpty ?? false) ||
+              (_updatedBooking?.proofOfDeliveryUrls?.isNotEmpty ?? false);
+          if (!hasProof) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please upload at least one proof photo first.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
           apiStatus = 'completed';
           statusLabel = 'Completed';
         } else {
@@ -501,10 +503,16 @@ class _RiderBookingDetailScreenState
         success = await ref.read(riderOrdersProvider.notifier).markCompleted(orderId);
       }
 
-      if (success && mounted) {
+      if (success && mounted && apiStatus != null) {
         setState(() {
-          _currentStatus = newStatus;
-          _currentApiStatus = apiStatus; // Update the tracked API status
+          _currentApiStatus = apiStatus;
+          _currentStatus = _mapApiStatusToBookingStatus(
+            apiStatus!,
+            widget.booking.serviceId,
+          );
+          if (apiStatus != 'picked_up') {
+            _showProofUpload = false;
+          }
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -641,15 +649,8 @@ class _RiderBookingDetailScreenState
     return result ?? false;
   }
 
-  // Helper to build full image URL
   String _buildImageUrl(String path) {
-    // If already a full URL, return as is
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-    // Use serve-image.php for CORS support
-    String baseImageUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
-    return '$baseImageUrl/serve-image.php?path=$path';
+    return MediaUrlUtils.resolve(path) ?? path;
   }
 
   // Pick images from gallery or camera
@@ -782,6 +783,8 @@ class _RiderBookingDetailScreenState
           ),
         );
 
+        setState(() => _showProofUpload = true);
+
         // Refresh order data
         print('🔄 Refreshing order data after proof upload...');
         await _fetchLatestStatus();
@@ -814,15 +817,26 @@ class _RiderBookingDetailScreenState
     }
   }
 
+  bool _shouldShowRouteMap() {
+    final status = _currentApiStatus?.toLowerCase();
+    if (status == null) return false;
+    if (_showProofUpload) return false;
+    return status == 'accepted' ||
+        status == 'driver_arrived_at_pickup' ||
+        status == 'in_progress' ||
+        status == 'picked_up';
+  }
+
+  bool _shouldShowProofUpload() {
+    if (_showProofUpload && _currentApiStatus == 'picked_up') return true;
+    return _currentApiStatus == 'completed';
+  }
+
   // Build dynamic content based on current status
   Widget _buildStatusContent(BuildContext context, RiderLocationState locationState) {
     print('🎨 Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
     
-    // Show upload section for certain statuses
-    if (_currentStatus == BookingStatus.forPickUp ||
-        _currentStatus == BookingStatus.delivered ||
-        _currentStatus == BookingStatus.complete ||
-        _currentStatus == BookingStatus.toBuy) {
+    if (_shouldShowProofUpload()) {
       print('📤 Showing upload section');
       return Padding(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
@@ -1015,11 +1029,8 @@ class _RiderBookingDetailScreenState
       );
     }
     
-    // Show REAL Google Maps for delivery tracking
-    if (_currentStatus == BookingStatus.forDelivery ||
-        _currentStatus == BookingStatus.onTheWay ||
-        _currentStatus == BookingStatus.onTheWayGoing) {
-      print('🗺️ Showing REAL Google Maps for status: $_currentStatus');
+    if (_shouldShowRouteMap()) {
+      print('🗺️ Showing route map for API status: $_currentApiStatus');
       
       return Container(
         height: ResponsiveUtils.imageHeight(context, 300),
@@ -1200,8 +1211,13 @@ class _RiderBookingDetailScreenState
             if (mounted && updatedOrder.status != _currentApiStatus) {
               setState(() {
                 _currentApiStatus = updatedOrder.status;
-                // Map API status to BookingStatus
-                _currentStatus = _mapApiStatusToBookingStatus(updatedOrder.status, updatedOrder.serviceId);
+                _currentStatus = _mapApiStatusToBookingStatus(
+                  updatedOrder.status,
+                  updatedOrder.serviceId,
+                );
+                if (updatedOrder.status != 'picked_up') {
+                  _showProofUpload = false;
+                }
               });
             }
           }
@@ -1315,10 +1331,13 @@ class _RiderBookingDetailScreenState
                                 ],
                               ),
                               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                              RiderBookingStatusGrid(
-                                booking: widget.booking,
-                                currentStatus: _currentStatus,
-                                onStatusTap: _isUpdating ? null : _handleStatusChange,
+                              RiderBookingNextActions(
+                                category: widget.booking.category,
+                                apiStatus: _currentApiStatus,
+                                isUpdating: _isUpdating,
+                                awaitingProof: _showProofUpload,
+                                onAction:
+                                    _isUpdating ? null : _handleStatusChange,
                               ),
                             ],
                           ),
@@ -1343,7 +1362,7 @@ class _RiderBookingDetailScreenState
       ),
       floatingActionButton: FloatingRiderChatButton(
         orderId: int.tryParse(widget.booking.id) ?? 0,
-        customerName: 'Customer', // You can get this from booking data if available
+        customerName: widget.booking.customerName,
       ),
     );
   }
@@ -1417,13 +1436,12 @@ class _RiderBookingDetailScreenState
         final driverLoc = LatLng(locationState.latitude!, locationState.longitude!);
         LatLng destLoc;
         
-        // If en route to pickup
-        if (_currentStatus == BookingStatus.onTheWay || _currentStatus == BookingStatus.driverHasArrived || _currentStatus == BookingStatus.toBuy || _currentStatus == BookingStatus.cooking) {
-          destLoc = LatLng(widget.booking.pickupLat!, widget.booking.pickupLng!);
-        } else {
-          // If en route to dropoff
-          destLoc = LatLng(widget.booking.dropoffLat!, widget.booking.dropoffLng!);
-        }
+        final enRouteToPickup = _currentApiStatus == 'accepted' ||
+            _currentApiStatus == 'driver_arrived_at_pickup' ||
+            _currentApiStatus == 'in_progress';
+        destLoc = enRouteToPickup
+            ? LatLng(widget.booking.pickupLat!, widget.booking.pickupLng!)
+            : LatLng(widget.booking.dropoffLat!, widget.booking.dropoffLng!);
         
         polylines.add(Polyline(
           polylineId: const PolylineId('route_driver_to_dest'),

@@ -30,6 +30,7 @@ class Transaction {
   final PaymentStatus paymentStatus;
   final String? paymentMethod;
   final List<TransactionItem>? items;
+  final List<String> proofImages;
   /// Wallet-only fields
   final String? walletDescription;
   final String? walletReference;
@@ -49,6 +50,7 @@ class Transaction {
     this.paymentStatus = PaymentStatus.pending,
     this.paymentMethod,
     this.items,
+    this.proofImages = const [],
     this.walletDescription,
     this.walletReference,
     this.isWalletCredit,

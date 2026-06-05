@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/di/local_storage_service.dart';
 import '../../../../data/data_source/auth_remote_datasource.dart';
 import '../../../../data/data_source/dto/auth/register_request_dto.dart';
 import '../../../../domain/entities/user.dart';
@@ -45,6 +46,14 @@ mixin SubmitNotifier on StateNotifier<RegisterState> {
       // Call registration API
       final authDataSource = getIt<AuthRemoteDataSource>();
       final response = await authDataSource.register(registerRequest);
+
+      final localStorage = getIt<LocalStorageService>();
+      if (response.token != null && response.token!.isNotEmpty) {
+        await localStorage.saveToken(response.token!);
+      }
+      if (response.refreshToken != null && response.refreshToken!.isNotEmpty) {
+        await localStorage.saveRefreshToken(response.refreshToken!);
+      }
 
       // Create user from response
       final user = User(

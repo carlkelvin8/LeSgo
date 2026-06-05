@@ -14,7 +14,11 @@ class RiderWalletCard extends ConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-      child: Container(
+      child: GestureDetector(
+        onTap: wallet.isLoading
+            ? null
+            : () => ref.read(riderWalletProvider.notifier).loadWallet(),
+        child: Container(
         width: double.infinity,
         height: ResponsiveUtils.imageHeight(context, 200),
         decoration: BoxDecoration(
@@ -58,7 +62,7 @@ class RiderWalletCard extends ConsumerWidget {
                           const Spacer(),
                           _buildCardText(
                             context,
-                            'Deposit',
+                            'Total top-ups',
                             wallet.depositFormatted,
                           ),
                         ],
@@ -67,6 +71,7 @@ class RiderWalletCard extends ConsumerWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -6,9 +6,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
 import '../../../data/data_source/dto/tracking/tracking_dto.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/di/local_storage_service.dart';
 import '../../../core/utils/booking_geo_utils.dart';
+import '../../../core/utils/driver_display_utils.dart';
 import '../../../core/utils/directions_route_service.dart';
+import '../../../core/constants/polling_intervals.dart';
 import '../../../core/services/websocket_service.dart';
+import '../../../core/services/customer_satisfaction_service.dart';
 import '../../../core/utils/notification_helper.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
@@ -93,26 +97,7 @@ class LiveTrackingState {
       orderStatus != 'failed';
 }
 
-class DriverInfo {
-  final String name;
-  final String? phone;
-  final String? vehicleNumber;
-  final String? vehicleType;
-  final String? photoUrl;
-  final double? rating;
-
-  DriverInfo({
-    required this.name,
-    this.phone,
-    this.vehicleNumber,
-    this.vehicleType,
-    this.photoUrl,
-    this.rating,
-  });
-}
-
 class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
-  Timer? _locationTimer;
   Timer? _etaTimer;
   final int orderId;
   BitmapDescriptor? _driverIcon;
@@ -120,8 +105,9 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
   BitmapDescriptor? _dropoffIcon;
   StreamSubscription? _orderEventSubscription;
   final WebSocketService _webSocketService = getIt<WebSocketService>();
-  bool _useWebSocket = true; // Flag to enable/disable WebSocket
   BuildContext? _context;
+  List<LatLng> _activeRoutePoints = [];
+  static const _routeDeviationMeters = 120.0;
 
   LiveTrackingNotifier(this.orderId) : super(LiveTrackingState()) {
     _initializeIcons();
@@ -181,30 +167,14 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
     state = state.copyWith(isTracking: true);
 
-    // Initial load
     loadTracking();
+    unawaited(_setupWebSocketTracking());
 
-    // Try to use WebSocket for real-time updates
-    if (_useWebSocket) {
-      _setupWebSocketTracking();
-    }
-
-    // Fallback: Poll location every 10 seconds (less frequent since WebSocket is primary)
-    _locationTimer = Timer.periodic(Duration(seconds: _useWebSocket ? 10 : 5), (
-      _,
-    ) {
-      if (state.isOrderActive) {
-        loadDriverLocation();
-      } else {
-        stopTracking();
-      }
-    });
-
-  // Poll ETA frequently for live countdown
-    _etaTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _etaTimer = Timer.periodic(PollingIntervals.liveEta, (_) {
       if (state.isOrderActive) {
         loadEta();
-        _refreshDynamicEta();
+      } else {
+        stopTracking();
       }
     });
   }
@@ -216,18 +186,17 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       await _webSocketService.initialize();
 
       // Subscribe to order channel
-      // TODO: Get auth token from secure storage
-      await _webSocketService.subscribeToOrder(orderId, '');
+      final token = getIt<LocalStorageService>().token ?? '';
+      await _webSocketService.subscribeToOrder(orderId, token);
 
       // Listen to order events
       _orderEventSubscription = _webSocketService
           .getOrderEventStream(orderId)
           .listen(_handleOrderEvent);
 
-      debugPrint('✅ WebSocket tracking enabled for order $orderId');
+      debugPrint('✅ Live tracking WebSocket + poll fallback for order $orderId');
     } catch (e) {
-      debugPrint('⚠️ WebSocket setup failed, using polling: $e');
-      _useWebSocket = false;
+      debugPrint('⚠️ Live tracking poller setup failed: $e');
     }
   }
 
@@ -269,7 +238,9 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         _updateMarkers();
         _refreshDynamicEta();
 
-        loadRoute();
+        if (_shouldRecalculateRoute(newLocation)) {
+          loadRoute();
+        }
         loadEta();
 
         debugPrint('📍 Driver location updated via WebSocket: $lat, $lng');
@@ -292,7 +263,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       if (newStatus != null && newStatus != previousStatus) {
         state = state.copyWith(orderStatus: newStatus);
 
-        debugPrint('📊 Order status updated via WebSocket: $newStatus');
+        debugPrint('📊 Order status updated: $newStatus');
+        unawaited(loadTracking());
 
         // Show appropriate notification based on status change
         if (_context != null && _context!.mounted) {
@@ -301,6 +273,11 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
         // Stop tracking if order is completed/cancelled
         if (!state.isOrderActive) {
+          if (newStatus.toLowerCase() == 'completed') {
+            unawaited(
+              getIt<CustomerSatisfactionService>().onOrderCompletedFromTracking(),
+            );
+          }
           stopTracking();
         }
       }
@@ -352,14 +329,9 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
   }
 
   void stopTracking() {
-    _locationTimer?.cancel();
     _etaTimer?.cancel();
     _orderEventSubscription?.cancel();
-
-    // Unsubscribe from WebSocket
-    if (_useWebSocket) {
-      _webSocketService.unsubscribeFromOrder(orderId);
-    }
+    _webSocketService.unsubscribeFromOrder(orderId);
 
     state = state.copyWith(isTracking: false);
   }
@@ -397,20 +369,13 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         final pickupLoc = LatLng(pLat, pLng);
         final dropoffLoc = LatLng(dLat, dLng);
 
-        // Extract driver info
-        DriverInfo? driverInfo;
-        final driverProfile = trackingData['driver_profile'];
-        if (driverProfile != null) {
-          final user = driverProfile['user'];
-          driverInfo = DriverInfo(
-            name: user?['name'] ?? 'Driver',
-            phone: user?['phone'] ?? driverProfile['phone_number'],
-            vehicleNumber: driverProfile['plate_number'],
-            vehicleType: driverProfile['vehicle_type'],
-            photoUrl: user?['avatar'],
-            rating: 5.0, // Mock rating for now
-          );
-        }
+        final driverInfo = DriverInfo.fromDriverProfileMap(
+          trackingData['driver_profile'] is Map
+              ? Map<String, dynamic>.from(
+                  trackingData['driver_profile'] as Map,
+                )
+              : null,
+        );
 
         state = state.copyWith(
           pickupLocation: pickupLoc,
@@ -548,6 +513,23 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
     return '$minutes min';
   }
 
+  bool _shouldRecalculateRoute(LatLng driver) {
+    if (_activeRoutePoints.length < 2) return true;
+
+    var minDistance = double.infinity;
+    for (final point in _activeRoutePoints) {
+      final d = Geolocator.distanceBetween(
+        driver.latitude,
+        driver.longitude,
+        point.latitude,
+        point.longitude,
+      );
+      if (d < minDistance) minDistance = d;
+    }
+
+    return minDistance > _routeDeviationMeters;
+  }
+
   Future<void> loadRoute() async {
     if (state.driverLocation == null || state.dropoffLocation == null) return;
 
@@ -592,8 +574,11 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
       if (polylinePoints.isEmpty) {
         state = state.copyWith(isLoadingRoute: false, polylines: const {});
+        _activeRoutePoints = [];
         return;
       }
+
+      _activeRoutePoints = polylinePoints;
 
       final polyline = Polyline(
         polylineId: const PolylineId('route'),
@@ -730,6 +715,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
   Future<void> refreshTracking() async {
     await loadTracking();
   }
+
 
   LatLngBounds? getCameraBounds() {
     if (state.markers.isEmpty) return null;

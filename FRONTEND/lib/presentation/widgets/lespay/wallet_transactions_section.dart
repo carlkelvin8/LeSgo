@@ -142,8 +142,8 @@ class _TransactionTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        transaction.description.isNotEmpty
-                            ? transaction.description
+                        (transaction.description?.isNotEmpty ?? false)
+                            ? transaction.description!
                             : (isCredit ? 'Top-up' : 'Payment'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',

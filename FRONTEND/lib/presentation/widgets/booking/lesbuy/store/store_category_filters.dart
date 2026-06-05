@@ -3,12 +3,14 @@ import '../../../../../../core/utils/responsive_utils.dart';
 
 class StoreCategoryFilters extends StatelessWidget {
   final List<String> categories;
+  final Map<String, String>? categoryLabels;
   final String? selectedCategoryId;
   final Function(String) onCategorySelected;
 
   const StoreCategoryFilters({
     super.key,
     required this.categories,
+    this.categoryLabels,
     required this.selectedCategoryId,
     required this.onCategorySelected,
   });
@@ -24,10 +26,13 @@ class StoreCategoryFilters extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         children: categories.map((category) {
           final isSelected = category == selectedCategoryId;
-          final displayName = category == 'popular' 
-              ? 'Popular' 
-              : category.split('_').map((word) => 
-                  word[0].toUpperCase() + word.substring(1)).join(' ');
+          final displayName = categoryLabels?[category] ??
+              (category == 'popular'
+                  ? 'Popular'
+                  : category.split('_').map((word) {
+                      if (word.isEmpty) return word;
+                      return word[0].toUpperCase() + word.substring(1);
+                    }).join(' '));
                   
           return Padding(
             padding: EdgeInsets.only(

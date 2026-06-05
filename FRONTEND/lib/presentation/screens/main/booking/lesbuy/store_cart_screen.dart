@@ -265,15 +265,16 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                         items: storeState.cartItems,
                         onQuantityChanged: (index, newQuantity) {
                           final item = storeState.cartItems[index];
-                          if (newQuantity > item.quantity) {
-                            storeNotifier.addToCart(item.product);
-                          } else {
-                            storeNotifier.removeFromCart(item.product);
-                          }
+                          storeNotifier.updateCartItemQuantity(
+                            item.product,
+                            newQuantity,
+                          );
                         },
                         onRemove: (index) {
-                          final item = storeState.cartItems[index];
-                          storeNotifier.removeFromCart(item.product);
+                          storeNotifier.updateCartItemQuantity(
+                            storeState.cartItems[index].product,
+                            0,
+                          );
                         },
                         onAddMoreItems: () => Navigator.pop(context),
                       ),
@@ -472,6 +473,8 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                         serviceLabel: 'LesBuy',
                       );
                       if (!paid) return;
+
+                      storeNotifier.clearCart();
 
                       if (context.mounted) {
                         final orderId = response.data.id.toString();

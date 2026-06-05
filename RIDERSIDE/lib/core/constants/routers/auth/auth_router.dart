@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../presentation/screens/auth/auth_screen.dart';
+import '../../../../presentation/screens/auth/auth_startup_screen.dart';
 import 'auth_routes.dart';
 
 class AuthRouter {
   static final Map<String, WidgetBuilder> _routes = {
+    AuthRoutes.startup: (_) => const AuthStartupScreen(),
     AuthRoutes.auth: (_) => const AuthScreen(),
   };
 

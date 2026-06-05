@@ -14,30 +14,39 @@ class UserRemoteDataSource {
 
   UserRemoteDataSource(this._dioClient);
 
+  Map<String, dynamic> _normalizeAuthResponse(dynamic raw) {
+    if (raw is! Map) return {};
+    final map = Map<String, dynamic>.from(raw);
+    if (map['data'] is Map) {
+      final data = Map<String, dynamic>.from(map['data'] as Map);
+      data['success'] ??= map['success'];
+      data['message'] ??= map['message'];
+      return data;
+    }
+    return map;
+  }
+
   Future<UserDto> login(LoginRequestDto requestDto) async {
     final dio = _dioClient.dio;
     try {
-      print('🔵 UserRemoteDataSource: Attempting login to ${ApiConstants.loginEndpoint}');
       final response = await dio.post(
         ApiConstants.loginEndpoint,
         data: requestDto.toJson(),
       );
 
-      print('🟢 UserRemoteDataSource: Login successful');
-      return UserDto.fromJson(response.data);
+      return UserDto.fromJson(_normalizeAuthResponse(response.data));
     } on DioException catch (e) {
-      print('🔴 UserRemoteDataSource: DioException - ${e.message}');
-      print('🔴 Response: ${e.response?.data}');
       if (e.response != null && e.response?.data != null) {
         if (e.response?.data is Map<String, dynamic>) {
-          return UserDto.fromJson(e.response?.data as Map<String, dynamic>);
+          return UserDto.fromJson(
+            _normalizeAuthResponse(e.response?.data),
+          );
         }
       }
       return UserDto.withError(
         e.message ?? 'An unexpected network error occurred',
       );
     } catch (e) {
-      print('🔴 UserRemoteDataSource: Exception - $e');
       return UserDto.withError(e.toString());
     }
   }
@@ -72,7 +81,11 @@ class UserRemoteDataSource {
     final dio = _dioClient.dio;
     try {
       final response = await dio.get(ApiConstants.authMe);
-      return UserResponseDto.fromJson(response.data);
+      final raw = Map<String, dynamic>.from(response.data as Map);
+      if (raw['data'] is Map && raw['user'] == null) {
+        raw['user'] = raw['data'];
+      }
+      return UserResponseDto.fromJson(raw);
     } catch (e) {
       throw Exception('Failed to get user profile: $e');
     }
@@ -82,18 +95,13 @@ class UserRemoteDataSource {
   Future<UserResponseDto> updateMe(UpdateUserRequestDto request) async {
     final dio = _dioClient.dio;
     try {
-      print('🔵 UserRemoteDataSource: Updating profile...');
-      print('🔵 Request data: ${request.toJson()}');
-      
       final response = await dio.put(
         ApiConstants.authMe,
         data: request.toJson(),
       );
-      
-      print('🔵 UserRemoteDataSource: Update response - ${response.data}');
+
       return UserResponseDto.fromJson(response.data);
     } catch (e) {
-      print('🔴 UserRemoteDataSource: Update failed - $e');
       throw Exception('Failed to update profile: $e');
     }
   }

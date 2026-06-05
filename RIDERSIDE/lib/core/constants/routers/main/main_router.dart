@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../../presentation/screens/main/riderside/rider_document_verification_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_benefits_screens.dart';
+import '../../../../presentation/screens/main/riderside/rider_change_password_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_deactivate_account_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_main_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_booking_detail_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_history_detail_screen.dart';
@@ -11,6 +15,20 @@ import 'main_routes.dart';
 class MainRouter {
   static final Map<String, WidgetBuilder> _routes = {
     MainRoutes.riderMain: (_) => const RiderMainScreen(),
+    MainRoutes.riderChangePassword: (_) => const RiderChangePasswordScreen(),
+    MainRoutes.riderDeactivateAccount: (_) => const RiderDeactivateAccountScreen(),
+    MainRoutes.riderFaqs: (_) => const RiderFaqsScreen(),
+    MainRoutes.riderOffers: (_) => const RiderOffersScreen(),
+    MainRoutes.riderLoyalty: (_) => const RiderLoyaltyScreen(),
+    MainRoutes.riderReferral: (_) => const RiderReferralScreen(),
+    MainRoutes.riderSecurity: (_) => const RiderSecurityScreen(),
+    MainRoutes.riderDocuments: (_) => const RiderDocumentVerificationScreen(),
+    MainRoutes.merchantFaqs: (_) => const RiderFaqsScreen(),
+    MainRoutes.merchantOffers: (_) => const RiderOffersScreen(),
+    MainRoutes.merchantLoyalty: (_) => const RiderLoyaltyScreen(),
+    MainRoutes.merchantReferral: (_) => const RiderReferralScreen(),
+    MainRoutes.merchantSecurity: (_) => const RiderSecurityScreen(),
+    MainRoutes.merchantDocuments: (_) => const RiderDocumentVerificationScreen(),
     MainRoutes.merchantMain: (_) => const MerchantMainScreen(),
   };
 

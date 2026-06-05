@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
+import '../config/mobile_config_service.dart';
 import '../network/dio_client.dart';
 import '../constants/api_constants.dart';
 
 class GoogleAuthResult {
   final bool success;
   final String? token;
+  final String? refreshToken;
   final Map<String, dynamic>? user;
   final String? error;
   final bool isNewUser;
@@ -14,6 +16,7 @@ class GoogleAuthResult {
   GoogleAuthResult({
     required this.success,
     this.token,
+    this.refreshToken,
     this.user,
     this.error,
     this.isNewUser = false,
@@ -21,19 +24,27 @@ class GoogleAuthResult {
 }
 
 class GoogleAuthService {
-  // Use your actual Google Client ID from Google Cloud Console
-  // For Android: the Web Client ID (not Android client ID)
-  static const _webClientId =
-      'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
+  static String? get _webClientId {
+    final id = MobileConfigService.instance.googleWebClientId;
+    if (MobileConfigService.instance.isGoogleSignInConfigured) return id;
+    return null;
+  }
 
-  static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    // On Android/iOS, use the Web Client ID for server-side verification
-    serverClientId: kIsWeb ? null : _webClientId,
-    scopes: ['email', 'profile'],
-  );
+  static GoogleSignIn get _googleSignIn => GoogleSignIn(
+        serverClientId: kIsWeb ? null : _webClientId,
+        scopes: const ['email', 'profile'],
+      );
 
   /// Sign in with Google and authenticate with your backend.
   static Future<GoogleAuthResult> signIn(DioClient dioClient) async {
+    if (!MobileConfigService.instance.isGoogleSignInConfigured) {
+      return GoogleAuthResult(
+        success: false,
+        error:
+            'Google Sign-In is not configured. Set GOOGLE_WEB_CLIENT_ID in secrets.json.',
+      );
+    }
+
     try {
       // Trigger the Google sign-in flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -66,13 +77,17 @@ class GoogleAuthService {
       );
 
       final data = response.data;
+      final payload = data is Map && data['data'] is Map
+          ? Map<String, dynamic>.from(data['data'] as Map)
+          : Map<String, dynamic>.from(data as Map);
 
       if (data['success'] == true) {
         return GoogleAuthResult(
           success: true,
-          token: data['token'],
-          user: data['user'],
-          isNewUser: data['is_new_user'] ?? false,
+          token: payload['token'] ?? data['token'],
+          refreshToken: payload['refresh_token'] ?? data['refresh_token'],
+          user: payload['user'] ?? data['user'],
+          isNewUser: data['is_new_user'] ?? payload['is_new_user'] ?? false,
         );
       }
 

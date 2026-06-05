@@ -5,8 +5,6 @@ import '../../../../presentation/screens/register/rider/register_info_screen.dar
 import '../../../../presentation/screens/register/rider/register_complete_screen.dart';
 import '../../../../presentation/screens/register/merchant/merchant_register_screen.dart';
 import '../../../../presentation/screens/register/merchant/merchant_register_complete_screen.dart';
-import '../../../../presentation/screens/register/register_payment_screen.dart';
-import '../../../../presentation/provider/register/register_payment_provider.dart';
 import 'register_routes.dart';
 
 class RegisterRouter {
@@ -15,14 +13,8 @@ class RegisterRouter {
     RegisterRoutes.riderPhoneVerification: (_) => const RegisterPhoneVerificationScreen(),
     RegisterRoutes.riderInfo: (_) => const RegisterInfoScreen(),
     RegisterRoutes.riderComplete: (_) => const RegisterCompleteScreen(),
-    RegisterRoutes.riderPayment: (_) => const RegisterPaymentScreen(
-          role: RegisterPaymentRole.rider,
-        ),
     RegisterRoutes.merchantRegister: (_) => const MerchantRegisterScreen(),
     RegisterRoutes.merchantComplete: (_) => const MerchantRegisterCompleteScreen(),
-    RegisterRoutes.merchantPayment: (_) => const RegisterPaymentScreen(
-          role: RegisterPaymentRole.merchant,
-        ),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

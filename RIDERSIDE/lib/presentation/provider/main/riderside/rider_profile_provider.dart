@@ -1,7 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../../core/network/token_refresh_service.dart';
 import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/media_url_utils.dart';
+import '../../auth/rider_auth_provider.dart';
 
 class RiderProfileState {
   final String name;
@@ -56,68 +59,120 @@ class RiderProfileState {
   }
 }
 
+String? _resolveProfilePictureUrl(Map<String, dynamic> user) {
+  final photoUrl = user['profile_photo_url']?.toString();
+  if (photoUrl != null && photoUrl.isNotEmpty) {
+    return MediaUrlUtils.resolve(photoUrl) ?? photoUrl;
+  }
+
+  final picturePath = user['profile_picture']?.toString();
+  if (picturePath != null && picturePath.isNotEmpty) {
+    return MediaUrlUtils.resolve(picturePath);
+  }
+
+  return null;
+}
+
 class RiderProfileNotifier extends StateNotifier<RiderProfileState> {
-  RiderProfileNotifier() : super(const RiderProfileState()) {
-    loadProfile();
+  RiderProfileNotifier(this._ref) : super(const RiderProfileState());
+
+  final Ref _ref;
+
+  Future<Map<String, dynamic>> _fetchMe({bool allowRefresh = true}) async {
+    try {
+      return await ApiService.getMe();
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (!allowRefresh || (code != 401 && code != 500)) rethrow;
+
+      await TokenRefreshService.instance.refreshAccessToken();
+      return await ApiService.getMe();
+    }
+  }
+
+  void _applyAuthFallback({String? error}) {
+    final authUser = _ref.read(riderAuthProvider).user;
+    if (authUser == null) return;
+
+    state = state.copyWith(
+      name: authUser.name,
+      contact: authUser.phone ?? '',
+      profilePictureUrl:
+          state.profilePictureUrl ?? authUser.profilePhotoUrl,
+      isLoading: false,
+      error: error,
+    );
+  }
+
+  String _readPlateNumber(Map<String, dynamic>? driverProfile) {
+    if (driverProfile == null) return '';
+    final plate = driverProfile['plate_number']?.toString().trim();
+    if (plate != null && plate.isNotEmpty) return plate;
+    final legacy = driverProfile['vehicle_plate']?.toString().trim();
+    return legacy ?? '';
+  }
+
+  Future<String> _resolveReferralCode(Map<String, dynamic> user) async {
+    final direct = user['referral_code']?.toString().trim();
+    if (direct != null && direct.isNotEmpty) return direct;
+
+    try {
+      final dashboard = await ApiService.getReferralDashboard();
+      final data = dashboard['data'];
+      if (data is Map) {
+        final code = data['referral_code']?.toString().trim();
+        if (code != null && code.isNotEmpty) return code;
+      }
+      final topLevel = dashboard['referral_code']?.toString().trim();
+      if (topLevel != null && topLevel.isNotEmpty) return topLevel;
+    } catch (_) {}
+
+    return '';
   }
 
   Future<void> loadProfile() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final data = await ApiService.getMe();
-      // GET /v1/auth/me returns { success, user: {...} }
+      final data = await _fetchMe();
       final u = (data['user'] ?? data['data'] ?? data) as Map<String, dynamic>;
 
-      // Driver profile may be nested
       final dp = u['driver_profile'] as Map<String, dynamic>?;
-
-      // Build profile picture URL if exists
-      String? profilePicUrl;
-      if (u['profile_picture'] != null && u['profile_picture'].toString().isNotEmpty) {
-        final picPath = u['profile_picture'].toString();
-        if (picPath.startsWith('http://') || picPath.startsWith('https://')) {
-          profilePicUrl = picPath;
-        } else {
-          String baseImageUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
-          profilePicUrl = '$baseImageUrl/serve-image.php?path=$picPath';
-        }
-      }
+      final profilePicUrl = _resolveProfilePictureUrl(u);
+      final referralCode = await _resolveReferralCode(u);
 
       state = state.copyWith(
         name: u['name'] as String? ?? '',
         contact: u['phone_number'] as String? ?? '',
         address: u['address_line1'] as String? ?? '',
         vehicle: dp != null ? (dp['vehicle_type'] as String? ?? '') : '',
-        plateNumber: dp != null ? (dp['plate_number'] as String? ?? '') : '',
-        referralCode: u['referral_code'] as String? ?? '',
+        plateNumber: _readPlateNumber(dp),
+        referralCode: referralCode,
         profilePictureUrl: profilePicUrl,
         isLoading: false,
       );
     } catch (e) {
-      print('❌ Error loading profile: $e');
-      state = state.copyWith(
-        isLoading: false,
-        error: ApiService.extractError(e),
-      );
+      final authUser = _ref.read(riderAuthProvider).user;
+      if (authUser != null) {
+        _applyAuthFallback(
+          error:
+              'Could not refresh profile details. Tap Retry below or reopen this tab.',
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: ApiService.extractError(e),
+        );
+      }
     }
   }
 
   Future<bool> uploadProfilePicture(XFile imageFile) async {
     state = state.copyWith(isUploading: true, clearError: true);
     try {
-      print('📤 Uploading profile picture: ${imageFile.name}');
-      
-      // Upload using the XFile directly
-      final response = await ApiService.uploadProfilePictureFromXFile(imageFile);
-      
-      print('✅ Profile picture uploaded successfully');
-      
-      // Reload profile to get the new picture URL
+      await ApiService.uploadProfilePictureFromXFile(imageFile);
       await loadProfile();
-      
       return true;
     } catch (e) {
-      print('❌ Error uploading profile picture: $e');
       state = state.copyWith(
         isUploading: false,
         error: ApiService.extractError(e),
@@ -129,5 +184,5 @@ class RiderProfileNotifier extends StateNotifier<RiderProfileState> {
 
 final riderProfileProvider =
     StateNotifierProvider<RiderProfileNotifier, RiderProfileState>(
-      (ref) => RiderProfileNotifier(),
+      (ref) => RiderProfileNotifier(ref),
     );

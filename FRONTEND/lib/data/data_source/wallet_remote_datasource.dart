@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 
 import '../../core/network/dio_client.dart';
+import '../../core/constants/api_constants.dart';
 import 'dto/wallet/wallet_dto.dart';
 
 @lazySingleton
@@ -14,9 +15,24 @@ class WalletRemoteDataSource {
     return _parseWallet(response.data);
   }
 
+  Future<String> _transactionsPath() async {
+    try {
+      final response = await _dioClient.dio.get('/v1/auth/me');
+      final raw = response.data;
+      if (raw is Map) {
+        final data = raw['data'] ?? raw['user'] ?? raw;
+        if (data is Map && data['id'] != null) {
+          return '/v1/wallets/${data['id']}/transactions';
+        }
+      }
+    } catch (_) {}
+    return '/v1/wallets/my/transactions';
+  }
+
   Future<List<WalletTransactionDto>> getMyTransactions({String? type}) async {
+    final path = await _transactionsPath();
     final response = await _dioClient.dio.get(
-      '/v1/wallets/my/transactions',
+      path,
       queryParameters: type != null ? {'type': type} : null,
     );
     final data = response.data;
@@ -70,6 +86,34 @@ class WalletRemoteDataSource {
         'amount': amount,
         'withdrawal_method': withdrawalMethod,
       },
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getLinkedAccounts() async {
+    final response =
+        await _dioClient.dio.get(ApiConstants.walletLinkedAccounts);
+    return List<Map<String, dynamic>>.from(response.data['data'] as List);
+  }
+
+  Future<Map<String, dynamic>> linkAccount({
+    required String provider,
+    String? accountLabel,
+    String? accountLast4,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.walletLinkedAccounts,
+      data: {
+        'provider': provider,
+        if (accountLabel != null) 'account_label': accountLabel,
+        if (accountLast4 != null) 'account_last4': accountLast4,
+      },
+    );
+    return Map<String, dynamic>.from(response.data['data'] as Map);
+  }
+
+  Future<void> verifyLinkedAccount(String provider) async {
+    await _dioClient.dio.post(
+      ApiConstants.walletLinkedAccountVerify(provider),
     );
   }
 

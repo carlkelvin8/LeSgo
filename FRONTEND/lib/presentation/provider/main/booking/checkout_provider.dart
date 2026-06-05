@@ -19,6 +19,7 @@ import '../../../../core/di/injection.dart';
 
 import '../../../../core/services/service_area_checker.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/booking_checkout_payment.dart';
 
 import '../../../../data/data_source/voucher_remote_datasource.dart';
@@ -307,7 +308,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
       lng2: state.dropoffLng,
 
-    );
+    ).clamp(500, 25000);
 
 
 
@@ -335,9 +336,13 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
 
-      if (state.order != null && deliveryFee != null) {
+      final normalizedFee = _normalizeDeliveryFee(deliveryFee);
 
-        final updatedOrder = state.order!.copyWith(deliveryFee: deliveryFee);
+
+
+      if (state.order != null && normalizedFee != null) {
+
+        final updatedOrder = state.order!.copyWith(deliveryFee: normalizedFee);
 
         state = state.copyWith(order: updatedOrder, isLoadingFare: false);
 
@@ -531,7 +536,11 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
     } catch (e) {
 
-      final msg = e.toString().replaceFirst('Exception: ', '');
+      final msg = ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not apply voucher. Please try again.',
+        fallbackTl: 'Hindi ma-apply ang voucher. Subukan muli.',
+      );
 
       state = state.copyWith(
 
@@ -893,6 +902,14 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
     return names;
 
+  }
+
+  double? _normalizeDeliveryFee(double? fee) {
+    if (fee == null) return null;
+    if (fee.isNaN || fee.isInfinite || fee < 0 || fee > 500) {
+      return 49.0;
+    }
+    return fee;
   }
 
 }

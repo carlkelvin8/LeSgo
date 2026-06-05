@@ -4,6 +4,7 @@ import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/api_error_mapper.dart';
+import '../../../../core/utils/driver_display_utils.dart';
 import '../../../../core/utils/notification_helper.dart';
 
 class DriverFindingState {
@@ -11,6 +12,10 @@ class DriverFindingState {
   final bool driverFound;
   final String? driverName;
   final String? driverId;
+  final String? driverPhotoUrl;
+  final String? driverPlateNumber;
+  final String? driverPhone;
+  final double? driverRating;
   final String? error;
   final String? orderId;
 
@@ -19,15 +24,34 @@ class DriverFindingState {
     this.driverFound = false,
     this.driverName,
     this.driverId,
+    this.driverPhotoUrl,
+    this.driverPlateNumber,
+    this.driverPhone,
+    this.driverRating,
     this.error,
     this.orderId,
   });
+
+  DriverInfo? get driverInfo {
+    if (!driverFound || driverName == null) return null;
+    return DriverInfo(
+      name: driverName!,
+      phone: driverPhone,
+      vehicleNumber: driverPlateNumber,
+      photoUrl: driverPhotoUrl,
+      rating: driverRating,
+    );
+  }
 
   DriverFindingState copyWith({
     bool? isSearching,
     bool? driverFound,
     String? driverName,
     String? driverId,
+    String? driverPhotoUrl,
+    String? driverPlateNumber,
+    String? driverPhone,
+    double? driverRating,
     String? error,
     String? orderId,
     bool clearError = false,
@@ -37,6 +61,10 @@ class DriverFindingState {
       driverFound: driverFound ?? this.driverFound,
       driverName: driverName ?? this.driverName,
       driverId: driverId ?? this.driverId,
+      driverPhotoUrl: driverPhotoUrl ?? this.driverPhotoUrl,
+      driverPlateNumber: driverPlateNumber ?? this.driverPlateNumber,
+      driverPhone: driverPhone ?? this.driverPhone,
+      driverRating: driverRating ?? this.driverRating,
       error: clearError ? null : (error ?? this.error),
       orderId: orderId ?? this.orderId,
     );
@@ -94,22 +122,26 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
     int driverId,
     OrderDto order,
   ) {
-    final driverName = order.driverProfile?.user?.name?.isNotEmpty == true
-        ? order.driverProfile!.user!.name
-        : 'Driver #$driverId';
+    final driver = DriverInfo.fromOrder(order) ??
+        DriverInfo(name: 'Driver #$driverId');
 
     state = state.copyWith(
       isSearching: false,
       driverFound: true,
-      driverName: driverName,
+      driverName: driver.name,
       driverId: driverId.toString(),
+      driverPhotoUrl: driver.photoUrl,
+      driverPlateNumber: driver.vehicleNumber,
+      driverPhone: driver.phone,
+      driverRating: driver.rating,
     );
 
     if (_context != null && _context!.mounted) {
       NotificationHelper.showDriverAssigned(
         _context!,
         orderId: orderId,
-        driverName: driverName,
+        driverName: driver.name,
+        vehicleNumber: driver.vehicleNumber,
       );
     }
   }
@@ -168,13 +200,14 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
     );
   }
 
-  Future<void> cancelOrder(String orderId) async {
+  Future<bool> cancelOrder(String orderId) async {
     try {
       await _orderDataSource.cancelOrder(
         int.parse(orderId),
         'Cancelled by customer',
       );
       state = DriverFindingState();
+      return true;
     } catch (e) {
       state = state.copyWith(
         error: ApiErrorMapper.message(
@@ -183,6 +216,7 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
           fallbackTl: 'Hindi makansela ang order.',
         ),
       );
+      return false;
     }
   }
 

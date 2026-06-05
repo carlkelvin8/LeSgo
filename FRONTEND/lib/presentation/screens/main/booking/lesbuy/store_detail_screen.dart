@@ -108,7 +108,33 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
       ),
       body: storeState.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
+          : storeState.error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Failed to load products. Please try again.',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 14),
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                      TextButton(
+                        onPressed: () {
+                          ref.read(storeDetailProvider.notifier).loadStoreDetails(
+                                widget.store.id,
+                                widget.store.categories,
+                              );
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : Stack(
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -126,6 +152,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
                       ),
                       child: StoreCategoryFilters(
                         categories: storeState.categories,
+                        categoryLabels: storeState.categoryNames,
                         selectedCategoryId: storeState.selectedCategoryId,
                         onCategorySelected: (categoryId) {
                           storeNotifier.selectCategory(categoryId);

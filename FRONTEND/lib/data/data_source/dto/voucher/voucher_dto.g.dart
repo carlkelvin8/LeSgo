@@ -9,11 +9,12 @@ part of 'voucher_dto.dart';
 VoucherDto _$VoucherDtoFromJson(Map<String, dynamic> json) => VoucherDto(
   code: json['code'] as String,
   title: json['title'] as String,
-  description: json['description'] as String,
-  discountText: json['discount_text'] as String,
-  minOrder: (json['min_order'] as num).toDouble(),
-  expiresAt: json['expires_at'] as String,
-  eligible: json['eligible'] as bool,
+  description: json['description'] as String?,
+  discountText: json['discount_text'] as String?,
+  minOrder: _parseMoney(json['min_order']),
+  expiresAt: json['expires_at'] as String?,
+  eligible: _parseBool(json['eligible']),
+  claimed: json['claimed'] == null ? false : _parseBool(json['claimed']),
 );
 
 Map<String, dynamic> _$VoucherDtoToJson(VoucherDto instance) =>
@@ -25,24 +26,5 @@ Map<String, dynamic> _$VoucherDtoToJson(VoucherDto instance) =>
       'min_order': instance.minOrder,
       'expires_at': instance.expiresAt,
       'eligible': instance.eligible,
-    };
-
-VoucherDetailsDto _$VoucherDetailsDtoFromJson(Map<String, dynamic> json) =>
-    VoucherDetailsDto(
-      code: json['code'] as String,
-      title: json['title'] as String,
-      discountValue: (json['discount_value'] as num).toDouble(),
-      minOrderValue: (json['min_order_value'] as num).toDouble(),
-      maxDiscount: (json['max_discount'] as num).toDouble(),
-      expiresAt: json['expires_at'] as String,
-    );
-
-Map<String, dynamic> _$VoucherDetailsDtoToJson(VoucherDetailsDto instance) =>
-    <String, dynamic>{
-      'code': instance.code,
-      'title': instance.title,
-      'discount_value': instance.discountValue,
-      'min_order_value': instance.minOrderValue,
-      'max_discount': instance.maxDiscount,
-      'expires_at': instance.expiresAt,
+      'claimed': instance.claimed,
     };

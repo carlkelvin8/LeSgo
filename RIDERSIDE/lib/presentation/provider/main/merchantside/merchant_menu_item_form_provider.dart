@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/api_service.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import 'merchant_profile_provider.dart';
@@ -6,12 +7,14 @@ import 'merchant_menu_provider.dart';
 
 class MerchantMenuItemFormInput {
   final int? itemId; // For edit mode
+  final int? menuCategoryId;
   final String? itemName;
   final String? price;
   final String? description;
   final String? category;
   final String? selectedTags;
   final bool? liveOnMenu;
+  final String? imageUrl;
 
   // Backward-compatibility shim for hot-reload sessions that still look up this removed getter.
   @Deprecated('variationLabels has been removed')
@@ -19,30 +22,39 @@ class MerchantMenuItemFormInput {
 
   const MerchantMenuItemFormInput({
     this.itemId,
+    this.menuCategoryId,
     this.itemName,
     this.price,
     this.description,
     this.category,
     this.selectedTags,
     this.liveOnMenu,
+    this.imageUrl,
   });
 
   const MerchantMenuItemFormInput.add()
       : itemId = null,
+        menuCategoryId = null,
         itemName = '',
         price = '0.00',
         description = '',
-        category = 'Pizza',
+        category = '',
         selectedTags = null,
-        liveOnMenu = null;
+        liveOnMenu = null,
+        imageUrl = null;
 
   factory MerchantMenuItemFormInput.edit(Map<String, String>? initialItem) {
     return MerchantMenuItemFormInput(
       itemId: initialItem?['id'] != null ? int.tryParse(initialItem!['id']!) : null,
+      menuCategoryId: initialItem?['menuCategoryId'] != null
+          ? int.tryParse(initialItem!['menuCategoryId']!)
+          : null,
       itemName: initialItem?['itemName'] ?? initialItem?['name'],
       price: initialItem?['price'],
       description: initialItem?['description'],
       category: initialItem?['category'],
+      selectedTags: initialItem?['selectedTags'],
+      imageUrl: initialItem?['imageUrl'],
     );
   }
 
@@ -53,6 +65,7 @@ class MerchantMenuItemFormInput {
     if (identical(this, other)) return true;
     return other is MerchantMenuItemFormInput &&
         other.itemId == itemId &&
+        other.menuCategoryId == menuCategoryId &&
         other.itemName == itemName &&
         other.price == price &&
         other.description == description &&
@@ -64,6 +77,7 @@ class MerchantMenuItemFormInput {
   @override
   int get hashCode => Object.hash(
         itemId,
+        menuCategoryId,
         itemName,
         price,
         description,
@@ -82,7 +96,10 @@ class MerchantMenuItemFormState {
   final bool liveOnMenu;
   final bool isSubmitting;
   final String? errorMessage;
-  final String? imagePath;
+  final String? existingImageUrl;
+  final String? localImagePath;
+
+  String? get displayImageSource => localImagePath ?? existingImageUrl;
 
   MerchantMenuItemFormState({
     required this.itemName,
@@ -93,10 +110,15 @@ class MerchantMenuItemFormState {
     required this.liveOnMenu,
     this.isSubmitting = false,
     this.errorMessage,
-    this.imagePath,
+    this.existingImageUrl,
+    this.localImagePath,
   });
 
-  bool get isValid => itemName.isNotEmpty && price.isNotEmpty && price != '0.00';
+  bool get isValid =>
+      itemName.isNotEmpty &&
+      price.isNotEmpty &&
+      price != '0.00' &&
+      category.isNotEmpty;
 
   MerchantMenuItemFormState copyWith({
     String? itemName,
@@ -107,7 +129,9 @@ class MerchantMenuItemFormState {
     bool? liveOnMenu,
     bool? isSubmitting,
     String? errorMessage,
-    String? imagePath,
+    String? existingImageUrl,
+    String? localImagePath,
+    bool clearLocalImage = false,
   }) {
     return MerchantMenuItemFormState(
       itemName: itemName ?? this.itemName,
@@ -118,33 +142,40 @@ class MerchantMenuItemFormState {
       liveOnMenu: liveOnMenu ?? this.liveOnMenu,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       errorMessage: errorMessage,
-      imagePath: imagePath ?? this.imagePath,
+      existingImageUrl: existingImageUrl ?? this.existingImageUrl,
+      localImagePath:
+          clearLocalImage ? null : (localImagePath ?? this.localImagePath),
     );
   }
 }
 
 class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormState> {
   final Ref _ref;
-  final int? _itemId; // For edit mode
-  
+  final int? _itemId;
+  final int? _initialMenuCategoryId;
+
   MerchantMenuItemFormNotifier(
     this._ref, {
     int? itemId,
+    int? menuCategoryId,
     String? itemName,
     String? price,
     String? description,
     String? category,
     List<String>? selectedTags,
     bool? liveOnMenu,
+    String? imageUrl,
   }) : _itemId = itemId,
+       _initialMenuCategoryId = menuCategoryId,
        super(
     MerchantMenuItemFormState(
       itemName: itemName ?? '',
       price: price ?? '0.00',
       description: description ?? '',
-      category: category ?? 'Pizza',
+      category: category ?? '',
       selectedTags: selectedTags ?? [],
       liveOnMenu: liveOnMenu ?? true,
+      existingImageUrl: imageUrl,
     ),
   );
 
@@ -178,21 +209,45 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
     state = state.copyWith(liveOnMenu: value);
   }
 
-  void updateImagePath(String? path) {
-    state = state.copyWith(imagePath: path);
+  void updateLocalImage(String? path) {
+    if (path == null || path.isEmpty) {
+      state = state.copyWith(clearLocalImage: true);
+      return;
+    }
+    state = state.copyWith(localImagePath: path);
+  }
+
+  Future<int?> _resolveMenuCategoryId() async {
+    final menuAsync = await _ref.read(merchantMenuProvider.future);
+    if (menuAsync == null || menuAsync.categories.isEmpty) {
+      return _initialMenuCategoryId;
+    }
+
+    if (state.category.isNotEmpty) {
+      for (final category in menuAsync.categories) {
+        if (category.name == state.category) {
+          return category.id;
+        }
+      }
+    }
+
+    return _initialMenuCategoryId;
   }
 
   Future<bool> attemptSubmit() async {
     if (!state.isValid) {
-      state = state.copyWith(errorMessage: 'Please fill in all required fields');
+      state = state.copyWith(
+        errorMessage: state.category.isEmpty
+            ? 'Please select a category'
+            : 'Please fill in all required fields',
+      );
       return false;
     }
 
     state = state.copyWith(isSubmitting: true, errorMessage: null);
 
     try {
-      // Parse price
-      final priceValue = double.tryParse(state.price);
+      final priceValue = double.tryParse(state.price.replaceAll(',', '').trim());
       if (priceValue == null || priceValue <= 0) {
         state = state.copyWith(
           isSubmitting: false,
@@ -200,17 +255,27 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
         );
         return false;
       }
+
+      final menuCategoryId = await _resolveMenuCategoryId();
+      if (menuCategoryId == null) {
+        state = state.copyWith(
+          isSubmitting: false,
+          errorMessage: 'Please select a category',
+        );
+        return false;
+      }
       
       final dataSource = _ref.read(merchantDataSourceProvider);
       
       if (_itemId != null) {
-        // Edit mode - update existing item
         final request = UpdateMenuItemRequest(
+          menuCategoryId: menuCategoryId,
           name: state.itemName,
           description: state.description.isEmpty ? null : state.description,
           price: priceValue,
           isAvailable: state.liveOnMenu,
-          imagePath: state.imagePath,
+          imageUrl: state.existingImageUrl,
+          imagePath: state.localImagePath,
           tags: state.selectedTags.isEmpty ? null : state.selectedTags,
         );
         
@@ -220,7 +285,8 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
         // Add mode - create new item
         // Get partner_id from auth state
         final authState = _ref.read(riderAuthProvider);
-        final partnerId = authState.user?.partnerId;
+        final profile = _ref.read(merchantProfileProvider).value;
+        final partnerId = authState.user?.partnerId ?? profile?.id;
         
         if (partnerId == null) {
           state = state.copyWith(
@@ -232,30 +298,14 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
         
         print('🔍 Using partner_id from auth: $partnerId');
         
-        // Get menu to find category ID by name
-        final menuAsync = await _ref.read(merchantMenuProvider.future);
-        if (menuAsync == null) {
-          state = state.copyWith(
-            isSubmitting: false,
-            errorMessage: 'Failed to load menu categories.',
-          );
-          return false;
-        }
-        
-        // Find category by name
-        final category = menuAsync.categories.firstWhere(
-          (cat) => cat.name == state.category,
-          orElse: () => menuAsync.categories.first,
-        );
-        
-        // Create request
         final request = CreateMenuItemRequest(
-          menuCategoryId: category.id,
+          menuCategoryId: menuCategoryId,
           name: state.itemName,
           description: state.description.isEmpty ? null : state.description,
           price: priceValue,
           isAvailable: state.liveOnMenu,
-          imagePath: state.imagePath,
+          imageUrl: state.existingImageUrl,
+          imagePath: state.localImagePath,
           tags: state.selectedTags.isEmpty ? null : state.selectedTags,
         );
         
@@ -274,7 +324,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
       print('❌ Error saving menu item: $e');
       state = state.copyWith(
         isSubmitting: false,
-        errorMessage: 'Failed to save item: ${e.toString()}',
+        errorMessage: ApiService.extractError(e),
       );
       return false;
     }
@@ -293,11 +343,13 @@ final merchantMenuItemFormProvider =
   return MerchantMenuItemFormNotifier(
     ref,
     itemId: initialInput.itemId,
+    menuCategoryId: initialInput.menuCategoryId,
     itemName: initialInput.itemName,
     price: initialInput.price,
     description: initialInput.description,
     category: initialInput.category,
     selectedTags: initialInput.selectedTags?.split(',').toList(),
     liveOnMenu: initialInput.liveOnMenu,
+    imageUrl: initialInput.imageUrl,
   );
 });

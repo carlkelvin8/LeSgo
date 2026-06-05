@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/api_service.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../auth/rider_auth_provider.dart';
 import 'merchant_profile_provider.dart';
@@ -8,6 +9,8 @@ class MerchantEditProfileState {
   final String contactNumber;
   final String email;
   final String referralCode;
+  final String? logoUrl;
+  final String? logoPath;
   final bool isSubmitting;
   final String? errorMessage;
 
@@ -16,6 +19,8 @@ class MerchantEditProfileState {
     required this.contactNumber,
     required this.email,
     required this.referralCode,
+    this.logoUrl,
+    this.logoPath,
     this.isSubmitting = false,
     this.errorMessage,
   });
@@ -30,6 +35,8 @@ class MerchantEditProfileState {
     String? contactNumber,
     String? email,
     String? referralCode,
+    String? logoUrl,
+    String? logoPath,
     bool? isSubmitting,
     String? errorMessage,
   }) {
@@ -38,6 +45,8 @@ class MerchantEditProfileState {
       contactNumber: contactNumber ?? this.contactNumber,
       email: email ?? this.email,
       referralCode: referralCode ?? this.referralCode,
+      logoUrl: logoUrl ?? this.logoUrl,
+      logoPath: logoPath ?? this.logoPath,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       errorMessage: errorMessage,
     );
@@ -53,11 +62,13 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
     required String contactNumber,
     required String email,
     required String referralCode,
+    String? logoUrl,
   }) : super(MerchantEditProfileState(
           restaurantName: restaurantName,
           contactNumber: contactNumber,
           email: email,
           referralCode: referralCode,
+          logoUrl: logoUrl,
         ));
 
   void updateRestaurantName(String value) {
@@ -72,6 +83,15 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
     state = state.copyWith(email: value);
   }
 
+  void setReferralCode(String value) {
+    if (value.isEmpty || value == state.referralCode) return;
+    state = state.copyWith(referralCode: value);
+  }
+
+  void updateLogoPath(String? path) {
+    state = state.copyWith(logoPath: path);
+  }
+
   Future<bool> attemptSave() async {
     if (!state.isValid) {
       state = state.copyWith(
@@ -83,9 +103,9 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
     state = state.copyWith(isSubmitting: true, errorMessage: null);
 
     try {
-      // Get partner_id from auth state
       final authState = _ref.read(riderAuthProvider);
-      final partnerId = authState.user?.partnerId;
+      final profile = _ref.read(merchantProfileProvider).value;
+      final partnerId = authState.user?.partnerId ?? profile?.id;
 
       if (partnerId == null) {
         state = state.copyWith(
@@ -95,29 +115,24 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
         return false;
       }
 
-      print('🔍 Updating profile for partner_id: $partnerId');
-
       final dataSource = _ref.read(merchantDataSourceProvider);
       final request = UpdatePartnerRequest(
         name: state.restaurantName,
         supportPhone: state.contactNumber,
         supportEmail: state.email,
+        logoUrl: state.logoUrl,
+        logoPath: state.logoPath,
       );
 
       await dataSource.updatePartnerProfile(partnerId, request);
-      print('✅ Profile updated successfully');
-
-      // Refresh profile provider
       _ref.invalidate(merchantProfileProvider);
 
-      // Success
       state = state.copyWith(isSubmitting: false);
       return true;
     } catch (e) {
-      print('❌ Error updating profile: $e');
       state = state.copyWith(
         isSubmitting: false,
-        errorMessage: 'Failed to update profile: ${e.toString()}',
+        errorMessage: ApiService.extractError(e),
       );
       return false;
     }
@@ -130,16 +145,24 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
 
 final merchantEditProfileProvider = StateNotifierProvider.autoDispose<
     MerchantEditProfileNotifier, MerchantEditProfileState>((ref) {
-  // Get current profile data
-  final profileAsync = ref.watch(merchantProfileProvider);
-  
-  final profile = profileAsync.value;
-  
-  return MerchantEditProfileNotifier(
+  final profile = ref.watch(merchantProfileProvider).value;
+  final referralFromApi = ref.watch(merchantReferralCodeProvider).value;
+  final referralCode = (referralFromApi != null && referralFromApi.isNotEmpty)
+      ? referralFromApi
+      : (profile?.referralCode ?? '');
+
+  final notifier = MerchantEditProfileNotifier(
     ref,
     restaurantName: profile?.name ?? '',
     contactNumber: profile?.supportPhone ?? '',
     email: profile?.supportEmail ?? '',
-    referralCode: profile?.referralCode ?? '',
+    referralCode: referralCode,
+    logoUrl: profile?.logoUrl,
   );
+
+  ref.listen<AsyncValue<String>>(merchantReferralCodeProvider, (previous, next) {
+    next.whenData(notifier.setReferralCode);
+  });
+
+  return notifier;
 });

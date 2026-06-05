@@ -7,6 +7,8 @@ import '../../widgets/tracking/driver_info_card.dart';
 import '../../widgets/orders/cancel_order_dialog.dart';
 import '../chat/chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/utils/api_error_mapper.dart';
+import '../../../core/utils/order_cancel_utils.dart';
 import '../../../data/data_source/order_remote_datasource.dart';
 import '../../../core/di/injection.dart';
 
@@ -107,7 +109,13 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
           setState(() => _isCancelling = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to cancel order: $e'),
+              content: Text(
+                ApiErrorMapper.message(
+                  e,
+                  fallbackEn: 'Could not cancel order.',
+                  fallbackTl: 'Hindi makansela ang order.',
+                ),
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -346,8 +354,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                               ),
 
                             // Cancel button (only if order can be cancelled)
-                            if (trackingState.orderStatus == 'pending' ||
-                                trackingState.orderStatus == 'accepted') ...[
+                            if (canCustomerCancelOrderStatus(
+                              trackingState.orderStatus,
+                            )) ...[
                               const SizedBox(height: 16),
                               SizedBox(
                                 width: double.infinity,

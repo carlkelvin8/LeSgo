@@ -1,57 +1,44 @@
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
+import '../constants/api_constants.dart';
+import '../network/auth_token_interceptor.dart';
+import '../utils/api_error_mapper.dart';
 import 'secure_storage_service.dart';
 
 class ApiService {
-  static String get _baseUrl => kReleaseMode
-      ? 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api'
-      : 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
-  
-  static final Dio _dio = Dio()..interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          // Set base URL dynamically
-          options.baseUrl = _baseUrl;
-          options.connectTimeout = const Duration(seconds: 30);
-          options.receiveTimeout = const Duration(seconds: 30);
-          options.headers['Accept'] = 'application/json';
-          options.headers['Content-Type'] = 'application/json';
-          
-          final token = await getToken();
-          print('🔒 Interceptor: Making request to ${options.path}');
-          print('🔒 Interceptor: Token available: ${token != null}');
-          
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-            print('🔒 Interceptor: Authorization header set');
-          } else {
-            print('🔒 Interceptor: No token, skipping Authorization header');
-          }
-          
-          // Add device ID for security
-          final deviceId = await SecureStorageService.getDeviceId();
-          options.headers['X-Device-ID'] = deviceId;
-          
-          handler.next(options);
-        },
-        onError: (error, handler) async {
-          print('🔒 Interceptor: Request error: ${error.message}');
-          if (error.response != null) {
-            print('🔒 Interceptor: Response status: ${error.response?.statusCode}');
-            print('🔒 Interceptor: Response data: ${error.response?.data}');
-          }
-          
-          // Handle 401 Unauthorized - token expired
-          if (error.response?.statusCode == 401) {
-            print('🔒 Interceptor: 401 Unauthorized - token may be expired');
-            await clearToken();
-          }
-          
-          handler.next(error);
+  static String get _baseUrl => ApiConstants.baseUrl;
+
+  static Dio? _dioInstance;
+
+  static Dio get _dio {
+    final existing = _dioInstance;
+    if (existing != null) return existing;
+
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: _baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
         },
       ),
     );
+    dio.interceptors.addAll([
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final deviceId = await SecureStorageService.getDeviceId();
+          options.headers['X-Device-ID'] = deviceId;
+          handler.next(options);
+        },
+      ),
+      AuthTokenInterceptor(dio),
+    ]);
+    _dioInstance = dio;
+    return dio;
+  }
 
   static Dio get dio => _dio;
 
@@ -61,20 +48,19 @@ class ApiService {
     return token;
   }
 
-  static Future<void> saveToken(String token, {int expiresIn = 3600}) async {
-    print('🔐 saveToken called with token: ${token.substring(0, 20)}...');
-    
+  static Future<void> saveToken(
+    String token, {
+    int expiresIn = 3600,
+    String? refreshToken,
+    int? userId,
+  }) async {
     final expiresAt = DateTime.now().add(Duration(seconds: expiresIn));
     await SecureStorageService.saveToken(
       token: token,
       expiresAt: expiresAt,
+      refreshToken: refreshToken,
+      userId: userId,
     );
-    
-    print('🔐 Token saved securely with expiry: $expiresAt');
-    
-    // Verify it was saved
-    final saved = await SecureStorageService.getToken();
-    print('🔐 Verification - Token retrieved: ${saved != null ? "YES" : "NO"}');
   }
 
   static Future<void> clearToken() async {
@@ -201,6 +187,7 @@ class ApiService {
     double lat,
     double lng, {
     String status = 'online',
+    int? orderId,
   }) async {
     try {
       await _dio.post(
@@ -210,6 +197,7 @@ class ApiService {
           'latitude': lat,
           'longitude': lng,
           'status': status,
+          if (orderId != null) 'order_id': orderId,
         },
       );
     } catch (e) {
@@ -343,6 +331,37 @@ class ApiService {
     await clearToken();
   }
 
+  /// POST /v1/auth/change-password
+  static Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String password,
+  }) async {
+    final res = await _dio.post(
+      ApiConstants.authChangePassword,
+      data: {
+        'current_password': currentPassword,
+        'password': password,
+        'password_confirmation': password,
+      },
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// POST /v1/auth/account/deactivate
+  static Future<Map<String, dynamic>> deactivateAccount({
+    required String password,
+    String? reason,
+  }) async {
+    final res = await _dio.post(
+      ApiConstants.authDeactivateAccount,
+      data: {
+        'password': password,
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
   /// GET /v1/driver/missions - Get driver missions
   static Future<Map<String, dynamic>> getDriverMissions() async {
     final res = await _dio.get('/v1/driver/missions');
@@ -373,28 +392,174 @@ class ApiService {
     return res.data as Map<String, dynamic>;
   }
 
-  /// Register device for push notifications (best-effort)
+  /// Register device for push notifications
   static Future<void> registerPushDevice({
     required String deviceToken,
     required String platform,
   }) async {
     try {
-      await _dio.post('/v1/notifications/device-token', data: {
-        'device_token': deviceToken,
+      await _dio.post(ApiConstants.deviceRegister, data: {
+        'fcm_token': deviceToken,
+        'token': deviceToken,
         'platform': platform,
+        'app': 'lesgo_rider',
       });
-    } catch (_) {
-      // Endpoint may not exist yet; local notifications still work.
+    } catch (_) {}
+  }
+
+  static Future<void> registerFcmToken(String token) async {
+    try {
+      await _dio.post(ApiConstants.authFcmToken, data: {'fcm_token': token});
+    } catch (_) {}
+  }
+
+  static Future<List<dynamic>> getFaqArticles() async {
+    final res = await _dio.get(ApiConstants.faqArticles);
+    final data = res.data['data'];
+    if (data is Map && data['data'] is List) return data['data'] as List;
+    if (data is List) return data;
+    return [];
+  }
+
+  static Future<List<dynamic>> getAvailableVouchers() async {
+    final res = await _dio.get(ApiConstants.vouchersAvailable);
+    final data = res.data['data'];
+    if (data is List) return data;
+    if (data is Map && data['data'] is List) return data['data'] as List;
+    return [];
+  }
+
+  static Future<List<dynamic>> getLoyaltyRewards() async {
+    final res = await _dio.get(ApiConstants.loyaltyRewards);
+    final data = res.data['data'];
+    if (data is List) return data;
+    if (data is Map && data['data'] is List) return data['data'] as List;
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> getReferralDashboard() async {
+    final res = await _dio.get(ApiConstants.referralDashboard);
+    final data = res.data['data'];
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return {};
+  }
+
+  static Future<Map<String, dynamic>> getSecurityDashboard() async {
+    final res = await _dio.get(ApiConstants.securityDashboard);
+    final data = res.data['data'];
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return {};
+  }
+
+  static Future<void> trackAnalyticsEvent(String eventType,
+      {Map<String, dynamic>? properties}) async {
+    try {
+      await _dio.post(ApiConstants.analyticsTrackEvent, data: {
+        'event_type': eventType,
+        if (properties != null) 'properties': properties,
+      });
+    } catch (_) {}
+  }
+
+  static Future<Map<String, dynamic>> claimVoucher(String voucherCode) async {
+    final res = await _dio.post(
+      ApiConstants.vouchersClaim,
+      data: {'voucher_code': voucherCode},
+    );
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+  }
+
+  static Future<Map<String, dynamic>> redeemLoyaltyReward(int rewardId) async {
+    final res = await _dio.post(ApiConstants.loyaltyRedeem(rewardId));
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+  }
+
+  static Future<Map<String, dynamic>> setup2fa() async {
+    final res = await _dio.post(ApiConstants.security2faSetup);
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+  }
+
+  static Future<Map<String, dynamic>> verify2fa(String code) async {
+    final res = await _dio.post(
+      ApiConstants.security2faVerify,
+      data: {'code': code},
+    );
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+  }
+
+  static Future<void> disable2fa() async {
+    await _dio.post(ApiConstants.security2faDisable);
+  }
+
+  static Future<List<dynamic>> getMyDocuments({int perPage = 30}) async {
+    final res = await _dio.get(
+      ApiConstants.documentsMy,
+      queryParameters: {'per_page': perPage},
+    );
+    return _parseListData(res.data['data']);
+  }
+
+  static Future<List<dynamic>> getDocumentTypes() async {
+    final res = await _dio.get(ApiConstants.documentsTypes);
+    final data = res.data['data'];
+    if (data is List) return data;
+    return [];
+  }
+
+  static Future<Map<String, dynamic>> getDocumentVerificationStatus() async {
+    final res = await _dio.get(ApiConstants.documentsVerificationStatus);
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+  }
+
+  static Future<Map<String, dynamic>> submitDocument({
+    required String documentType,
+    required String documentNumber,
+    required List<String> documentUrls,
+    String? description,
+  }) async {
+    final res = await _dio.post(
+      ApiConstants.documentsSubmit,
+      data: {
+        'document_type': documentType,
+        'document_number': documentNumber,
+        'document_urls': documentUrls,
+        if (description != null && description.isNotEmpty)
+          'description': description,
+      },
+    );
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+  }
+
+  static Future<String> uploadDocumentFile(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final formData = FormData.fromMap({
+      'context': 'document',
+      'file': MultipartFile.fromBytes(
+        bytes,
+        filename: file.name.isNotEmpty ? file.name : 'document.jpg',
+      ),
+    });
+    final res = await _dio.post(ApiConstants.documentsUpload, data: formData);
+    final data = res.data['data'] as Map<String, dynamic>;
+    return data['url']?.toString() ?? '';
+  }
+
+  static Future<List<String>> uploadDocumentFiles(List<XFile> files) async {
+    final urls = <String>[];
+    for (final file in files) {
+      final url = await uploadDocumentFile(file);
+      if (url.isNotEmpty) urls.add(url);
     }
+    return urls;
+  }
+
+  static List<dynamic> _parseListData(dynamic raw) {
+    if (raw is List) return raw;
+    if (raw is Map && raw['data'] is List) return raw['data'] as List;
+    return [];
   }
 
   static String extractError(dynamic e) {
-    if (e is DioException) {
-      final msg = e.response?.data?['message'];
-      if (msg is String) return msg;
-      return e.message ?? 'Network error';
-    }
-    final s = e.toString();
-    return s.startsWith('Exception: ') ? s.substring(11) : s;
+    return ApiErrorMapper.message(e);
   }
 }

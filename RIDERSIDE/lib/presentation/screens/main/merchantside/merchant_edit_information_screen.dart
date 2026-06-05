@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/merchantside/merchant_edit_profile_provider.dart';
@@ -16,6 +17,7 @@ class MerchantEditInformationScreen extends ConsumerStatefulWidget {
 
 class _MerchantEditInformationScreenState
     extends ConsumerState<MerchantEditInformationScreen> {
+  final ImagePicker _picker = ImagePicker();
   late final TextEditingController _restaurantController;
   late final TextEditingController _contactController;
   late final TextEditingController _emailController;
@@ -54,6 +56,23 @@ class _MerchantEditInformationScreenState
         context,
         errorMessage ?? 'Failed to update information',
       );
+    }
+  }
+
+  Future<void> _pickLogo() async {
+    try {
+      final image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        ref.read(merchantEditProfileProvider.notifier).updateLogoPath(image.path);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      SnackBarUtils.showError(context, 'Failed to pick image');
     }
   }
 
@@ -108,7 +127,9 @@ class _MerchantEditInformationScreenState
                     Center(
                       child: MerchantEditInformationHeaderSection(
                         restaurantName: state.restaurantName,
-                        onCameraTap: () {},
+                        logoUrl: state.logoUrl,
+                        logoPath: state.logoPath,
+                        onCameraTap: _pickLogo,
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 26)),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'dart:async';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
+import '../../../../../core/utils/order_cancel_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
@@ -37,44 +38,25 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
   bool _isBottomSheetExpanded = false;
   bool _mapReady = false;
   bool _isCancelling = false;
-  Timer? _statusPollTimer;
   Map<String, dynamic>? _fetchedOrderData; // Fetched from API
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Set context for notifications
       ref.read(liveTrackingProvider(int.parse(widget.orderId)).notifier).setContext(context);
       _fitBounds();
     });
     _fetchOrderData();
-    _startStatusPolling();
   }
 
   @override
   void dispose() {
-    _statusPollTimer?.cancel();
     try {
       _mapController?.dispose();
     } catch (_) {}
     _mapController = null;
     super.dispose();
-  }
-
-  void _startStatusPolling() {
-    // Poll every 5 seconds for status updates
-    _statusPollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted) {
-        final trackingState = ref.read(liveTrackingProvider(int.parse(widget.orderId)));
-        if (trackingState.isOrderActive) {
-          ref.read(liveTrackingProvider(int.parse(widget.orderId)).notifier).refreshTracking();
-          _fetchOrderData(); // Refresh fare data too
-        } else {
-          _statusPollTimer?.cancel();
-        }
-      }
-    });
   }
 
   Future<void> _fetchOrderData() async {
@@ -161,7 +143,13 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
           setState(() => _isCancelling = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to cancel order: $e'),
+              content: Text(
+                ApiErrorMapper.message(
+                  e,
+                  fallbackEn: 'Could not cancel order.',
+                  fallbackTl: 'Hindi makansela ang order.',
+                ),
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -233,10 +221,12 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
     // Use API-fetched data if available, fall back to passed orderData
     final orderData = _fetchedOrderData ?? widget.orderData ?? {};
 
-    // Listen for tracking state changes to update map
     ref.listen<LiveTrackingState>(
       liveTrackingProvider(int.parse(widget.orderId)),
       (previous, next) {
+        if (previous?.orderStatus != next.orderStatus && mounted) {
+          _fetchOrderData();
+        }
         if (next.markers.isNotEmpty && _mapReady && previous?.markers != next.markers) {
           _fitBounds();
         }
@@ -609,8 +599,9 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
                             ),
 
                             // Cancel Order Button (if applicable)
-                            if (trackingState.orderStatus == 'pending' ||
-                                trackingState.orderStatus == 'accepted') ...[
+                            if (canCustomerCancelOrderStatus(
+                              trackingState.orderStatus,
+                            )) ...[
                               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                               SizedBox(
                                 width: double.infinity,

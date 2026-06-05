@@ -54,16 +54,16 @@ class XenditRemoteDataSource {
 
       final data = response.data;
       if (data == null || data['id'] == null) {
-        throw Exception('Invalid response from Xendit.');
+        throw Exception('Invalid response from payment gateway.');
       }
       final invoice = XenditInvoiceDto.fromJson(data);
       if (invoice.invoiceUrl == null || invoice.invoiceUrl!.isEmpty) {
-        throw Exception('Xendit did not return a payment link.');
+        throw Exception('Could not create a payment link.');
       }
       return invoice;
     } on DioException catch (e) {
       final message = _dioMessage(e);
-      throw Exception(message ?? 'Could not connect to Xendit. Check your internet.');
+      throw Exception(message ?? 'Could not connect to payment gateway. Check your internet.');
     }
   }
 
@@ -75,7 +75,7 @@ class XenditRemoteDataSource {
       return XenditInvoiceDto.fromJson(response.data!);
     } on DioException catch (e) {
       final message = _dioMessage(e);
-      throw Exception(message ?? 'Could not verify payment with Xendit.');
+      throw Exception(message ?? 'Could not verify payment. Try again.');
     }
   }
 

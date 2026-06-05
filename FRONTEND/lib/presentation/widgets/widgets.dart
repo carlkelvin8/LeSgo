@@ -150,9 +150,6 @@ export 'lespay/wallet_transactions_section.dart';
 export 'lespay/withdraw_dialog.dart';
 
 // Inbox widgets
-export 'inbox/message_list_item.dart';
-export 'inbox/inbox_search_field.dart';
-
 // Transactions widgets
 export 'transactions/transaction_list_item.dart';
 

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../common/menu_image_widget.dart';
 
 class MerchantMenuItemCard extends StatelessWidget {
   final String name;
   final String description;
   final String price;
   final String? category;
+  final String? imageUrl;
   final VoidCallback onEditTap;
+  final VoidCallback? onDeleteTap;
 
   const MerchantMenuItemCard({
     super.key,
@@ -14,7 +17,9 @@ class MerchantMenuItemCard extends StatelessWidget {
     required this.description,
     required this.price,
     this.category,
+    this.imageUrl,
     required this.onEditTap,
+    this.onDeleteTap,
   });
 
   @override
@@ -45,11 +50,8 @@ class MerchantMenuItemCard extends StatelessWidget {
                 color: const Color(0xFFFFD69A),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Icons.restaurant,
-                size: ResponsiveUtils.spacing(context, 34),
-                color: const Color(0xFF9A5A00),
-              ),
+              clipBehavior: Clip.antiAlias,
+              child: _buildImage(context),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 12)),
             Expanded(
@@ -92,17 +94,47 @@ class MerchantMenuItemCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 3)),
-                  GestureDetector(
-                    onTap: onEditTap,
-                    child: Text(
-                      'Edit Menu',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 11),
-                        color: const Color(0xFFC320D6),
-                        fontWeight: FontWeight.w500,
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: onEditTap,
+                        child: Text(
+                          'Edit Menu',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 11),
+                            color: const Color(0xFFC320D6),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
+                      if (onDeleteTap != null) ...[
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResponsiveUtils.spacing(context, 8),
+                          ),
+                          child: Text(
+                            '|',
+                            style: TextStyle(
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: onDeleteTap,
+                          child: Text(
+                            'Delete',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
+                              color: Colors.red.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -110,6 +142,22 @@ class MerchantMenuItemCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildImage(BuildContext context) {
+    return MenuImageWidget(
+      source: imageUrl,
+      fit: BoxFit.cover,
+      placeholder: _buildPlaceholder(context),
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context) {
+    return Icon(
+      Icons.restaurant,
+      size: ResponsiveUtils.spacing(context, 34),
+      color: const Color(0xFF9A5A00),
     );
   }
 }

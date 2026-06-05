@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/websocket_service.dart';
+import '../services/order_polling_service.dart';
 import '../../data/data_source/chat_remote_datasource.dart';
 import '../../data/data_source/voucher_remote_datasource.dart';
 import '../../data/data_source/faq_remote_datasource.dart';
@@ -9,12 +10,22 @@ import '../../data/data_source/loyalty_remote_datasource.dart';
 import '../../data/data_source/referral_remote_datasource.dart';
 import '../../data/data_source/survey_remote_datasource.dart';
 import '../../data/data_source/device_remote_datasource.dart';
+import '../../data/data_source/notification_remote_datasource.dart';
+import '../../data/data_source/realtime_remote_datasource.dart';
+import '../../data/data_source/order_remote_datasource.dart';
 import '../../data/data_source/wallet_remote_datasource.dart';
 import '../services/app_preferences_service.dart';
 import '../../data/data_source/xendit_remote_datasource.dart';
 import '../network/dio_client.dart';
 import '../services/ssl_pinning_service.dart';
 import '../services/customer_satisfaction_service.dart';
+import '../services/chat_realtime_service.dart';
+import '../services/chat_websocket_service.dart';
+import '../di/local_storage_service.dart';
+import '../../data/data_source/support_remote_datasource.dart';
+import '../../data/data_source/document_remote_datasource.dart';
+import '../services/analytics_service.dart';
+import '../services/file_upload_service.dart';
 
 import 'injection.config.dart';
 
@@ -28,6 +39,12 @@ Future<void> configureDependencies() async {
 
   // Register WebSocketService manually
   getIt.registerLazySingleton<WebSocketService>(() => WebSocketService());
+
+  if (!getIt.isRegistered<OrderPollingService>()) {
+    getIt.registerLazySingleton<OrderPollingService>(
+      () => OrderPollingService(getIt<OrderRemoteDataSource>()),
+    );
+  }
 
   // Register ChatRemoteDataSource manually (not picked up by code generation)
   getIt.registerLazySingleton<ChatRemoteDataSource>(
@@ -88,9 +105,65 @@ Future<void> configureDependencies() async {
     );
   }
 
+  if (!getIt.isRegistered<RealtimeRemoteDataSource>()) {
+    getIt.registerLazySingleton<RealtimeRemoteDataSource>(
+      () => RealtimeRemoteDataSource(getIt<DioClient>()),
+    );
+  }
+
+  if (!getIt.isRegistered<NotificationRemoteDataSource>()) {
+    getIt.registerLazySingleton<NotificationRemoteDataSource>(
+      () => NotificationRemoteDataSource(getIt<DioClient>()),
+    );
+  }
+
   if (!getIt.isRegistered<AppPreferencesService>()) {
     getIt.registerLazySingleton<AppPreferencesService>(
       () => AppPreferencesService(getIt<SharedPreferences>()),
+    );
+  }
+
+  if (!getIt.isRegistered<SupportRemoteDataSource>()) {
+    getIt.registerLazySingleton<SupportRemoteDataSource>(
+      () => SupportRemoteDataSource(getIt<DioClient>()),
+    );
+  }
+
+  if (!getIt.isRegistered<DocumentRemoteDataSource>()) {
+    getIt.registerLazySingleton<DocumentRemoteDataSource>(
+      () => DocumentRemoteDataSource(getIt<DioClient>()),
+    );
+  }
+
+  if (!getIt.isRegistered<ChatRealtimeService>()) {
+    getIt.registerLazySingleton<ChatRealtimeService>(
+      () => ChatRealtimeService(
+        getIt<RealtimeRemoteDataSource>(),
+        getIt<ChatWebSocketService>(),
+        getIt<LocalStorageService>(),
+        getIt<DioClient>(),
+      ),
+    );
+  }
+
+  if (!getIt.isRegistered<ChatWebSocketService>()) {
+    getIt.registerLazySingleton<ChatWebSocketService>(
+      () => ChatWebSocketService(
+        getIt<RealtimeRemoteDataSource>(),
+        getIt<LocalStorageService>(),
+      ),
+    );
+  }
+
+  if (!getIt.isRegistered<AnalyticsService>()) {
+    getIt.registerLazySingleton<AnalyticsService>(
+      () => AnalyticsService(getIt<DioClient>()),
+    );
+  }
+
+  if (!getIt.isRegistered<FileUploadService>()) {
+    getIt.registerLazySingleton<FileUploadService>(
+      () => FileUploadService(getIt<DioClient>()),
     );
   }
 

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
+import '../../../widgets/common/menu_image_widget.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
+import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
 
@@ -57,6 +60,8 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(merchantMenuProvider);
+    final imageLookup = ref.watch(menuItemImageLookupProvider);
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
     final status = order.status.toLowerCase();
     
@@ -188,34 +193,65 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            width: ResponsiveUtils.spacing(context, 52),
+                            height: ResponsiveUtils.spacing(context, 52),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(4),
+                              color: const Color(0xFFFFD69A),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(
-                              '${item.quantity ?? 1}x',
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontWeight: FontWeight.w700,
-                                fontSize: ResponsiveUtils.fontSize(context, 14),
+                            clipBehavior: Clip.antiAlias,
+                            child: MenuImageWidget(
+                              source: imageLookup.resolve(item),
+                              fit: BoxFit.cover,
+                              placeholder: Icon(
+                                Icons.restaurant,
+                                size: ResponsiveUtils.fontSize(context, 24),
+                                color: const Color(0xFF9A5A00),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: ResponsiveUtils.spacing(context, 10)),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  item.itemName ?? 'Unknown Item',
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: ResponsiveUtils.fontSize(context, 15),
-                                  ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '${item.quantity}x',
+                                        style: TextStyle(
+                                          fontFamily: 'TT Fors',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize:
+                                              ResponsiveUtils.fontSize(context, 14),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        item.itemName,
+                                        style: TextStyle(
+                                          fontFamily: 'TT Fors',
+                                          fontWeight: FontWeight.w600,
+                                          fontSize:
+                                              ResponsiveUtils.fontSize(context, 15),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                if (item.options != null && item.options!.isNotEmpty) ...[
+                                if (item.options != null &&
+                                    item.options!.isNotEmpty) ...[
                                   const SizedBox(height: 4),
                                   Text(
                                     'Note: ${item.options}',
@@ -230,8 +266,9 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Text(
-                            'PHP ${((item.unitPrice ?? 0.0) * (item.quantity)).toStringAsFixed(2)}',
+                            'PHP ${((item.unitPrice ?? 0.0) * item.quantity).toStringAsFixed(2)}',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontWeight: FontWeight.w600,

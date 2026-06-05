@@ -4,6 +4,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../merchant_menu_edit_item_screen.dart';
+import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 
 class MerchantMenuView extends ConsumerWidget {
   const MerchantMenuView({super.key});
@@ -133,10 +134,11 @@ class MerchantMenuView extends ConsumerWidget {
                       return MerchantMenuItemCard(
                         name: item.name,
                         description: item.description ?? '',
-                        price: 'PHP ${item.price.toStringAsFixed(2)}',
+                        price: item.price.toStringAsFixed(2),
                         category: menu.categories
                             .firstWhere((cat) => cat.id == item.menuCategoryId)
                             .name,
+                        imageUrl: item.imageUrl,
                         onEditTap: () {
                           Navigator.push(
                             context,
@@ -144,6 +146,7 @@ class MerchantMenuView extends ConsumerWidget {
                               builder: (_) => MerchantMenuEditItemScreen(
                                 initialItem: {
                                   'id': item.id.toString(),
+                                  'menuCategoryId': item.menuCategoryId.toString(),
                                   'name': item.name,
                                   'description': item.description ?? '',
                                   'price': item.price.toStringAsFixed(2),
@@ -158,6 +161,12 @@ class MerchantMenuView extends ConsumerWidget {
                             ),
                           );
                         },
+                        onDeleteTap: () => confirmAndDeleteMerchantMenuItem(
+                          context,
+                          ref,
+                          itemId: item.id,
+                          itemName: item.name,
+                        ),
                       );
                     },
                   ),

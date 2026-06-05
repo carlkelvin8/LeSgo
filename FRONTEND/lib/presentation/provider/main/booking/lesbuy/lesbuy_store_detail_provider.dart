@@ -82,6 +82,7 @@ class LesbuyStoreDetailNotifier extends StateNotifier<LesbuyStoreDetailState> {
               price: itemDto.price,
               imagePath: itemDto.imageUrl ?? 'assets/images/book/lesbuy/Product.svg',
               categoryId: catDto.id.toString(),
+              isPopular: itemDto.isPopular ?? itemDto.isFeatured ?? false,
               inStock: itemDto.isAvailable ?? true,
             ));
           }

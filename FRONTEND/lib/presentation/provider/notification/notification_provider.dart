@@ -39,8 +39,10 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
   }
 
   Future<void> _initialize() async {
+    state = state.copyWith(isLoading: true);
     await _notificationService.initialize();
     _loadNotifications();
+    state = state.copyWith(isLoading: false);
   }
 
   void _loadNotifications() {
@@ -50,22 +52,25 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     );
   }
 
-  void markAsRead(int notificationId) {
-    _notificationService.markAsRead(notificationId);
+  Future<void> refresh() async {
+    state = state.copyWith(isLoading: true);
+    await _notificationService.refreshFromBackend();
+    _loadNotifications();
+    state = state.copyWith(isLoading: false);
+  }
+
+  Future<void> markAsRead(int notificationId) async {
+    await _notificationService.markAsRead(notificationId);
     _loadNotifications();
   }
 
-  void markAllAsRead() {
-    _notificationService.markAllAsRead();
+  Future<void> markAllAsRead() async {
+    await _notificationService.markAllAsRead();
     _loadNotifications();
   }
 
   void clearAll() {
     _notificationService.clearAll();
-    _loadNotifications();
-  }
-
-  void refresh() {
     _loadNotifications();
   }
 }

@@ -182,13 +182,17 @@ class OfferCard extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: offer.isClaimed ? null : onClaimPressed,
+                onPressed: (offer.isClaimed || !offer.isEligible)
+                    ? null
+                    : onClaimPressed,
                 style: TextButton.styleFrom(
                   foregroundColor: accent,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
                 child: Text(
-                  offer.isClaimed ? 'Claimed' : 'Claim',
+                  offer.isClaimed
+                      ? 'Claimed'
+                      : (!offer.isEligible ? 'Not eligible' : 'Claim'),
                   style: const TextStyle(
                     fontFamily: 'TT Fors',
                     fontWeight: FontWeight.w800,

@@ -1,6 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/network/token_refresh_service.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/services/secure_storage_service.dart';
 import '../../../core/services/push_notification_service.dart';
+import '../../../core/services/remember_me_service.dart';
+import '../../../core/utils/media_url_utils.dart';
 
 class RiderUser {
   final int id;
@@ -10,6 +14,7 @@ class RiderUser {
   final String role;
   final int? driverProfileId;
   final int? partnerId;
+  final String? profilePhotoUrl;
 
   RiderUser({
     required this.id,
@@ -19,10 +24,37 @@ class RiderUser {
     required this.role,
     this.driverProfileId,
     this.partnerId,
+    this.profilePhotoUrl,
   });
 
   bool get isDriver => role == 'driver';
-  bool get isMerchant => role == 'merchant' || role == 'partner' || role == 'partner_admin';
+  bool get isMerchant =>
+      role == 'merchant' || role == 'partner' || role == 'partner_admin';
+
+  RiderUser copyWith({int? partnerId, String? profilePhotoUrl}) {
+    return RiderUser(
+      id: id,
+      name: name,
+      email: email,
+      phone: phone,
+      role: role,
+      driverProfileId: driverProfileId,
+      partnerId: partnerId ?? this.partnerId,
+      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
+    );
+  }
+
+  static String? resolveProfilePhotoUrl(Map<String, dynamic> json) {
+    final photoUrl = json['profile_photo_url']?.toString();
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      return MediaUrlUtils.resolve(photoUrl) ?? photoUrl;
+    }
+    final picturePath = json['profile_picture']?.toString();
+    if (picturePath != null && picturePath.isNotEmpty) {
+      return MediaUrlUtils.resolve(picturePath);
+    }
+    return null;
+  }
 
   factory RiderUser.fromJson(Map<String, dynamic> json) {
     final dp = json['driver_profile'];
@@ -33,8 +65,23 @@ class RiderUser {
       phone: json['phone_number'] as String?,
       role: json['role'] as String? ?? 'driver',
       driverProfileId: dp is Map ? dp['id'] as int? : null,
-      partnerId: json['partner_id'] as int?,
+      partnerId: parsePartnerId(json),
+      profilePhotoUrl: resolveProfilePhotoUrl(json),
     );
+  }
+
+  static int? parsePartnerId(Map<String, dynamic> json) {
+    final direct = json['partner_id'];
+    if (direct is num) return direct.toInt();
+    if (direct is String) return int.tryParse(direct);
+
+    final partner = json['partner'];
+    if (partner is Map) {
+      final id = partner['id'];
+      if (id is num) return id.toInt();
+      if (id is String) return int.tryParse(id);
+    }
+    return null;
   }
 }
 
@@ -68,67 +115,150 @@ class RiderAuthState {
 }
 
 class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
-  RiderAuthNotifier() : super(RiderAuthState()) {
-    _tryAutoLogin();
-  }
+  RiderAuthNotifier() : super(RiderAuthState());
 
-  Future<void> _tryAutoLogin() async {
-    final token = await ApiService.getToken();
-    if (token == null) {
-      print('🔐 No token found, skipping auto-login');
-      return;
-    }
+  Future<RiderUser> _ensureMerchantPartnerId(RiderUser user) async {
+    if (!user.isMerchant || user.partnerId != null) return user;
 
-    print('🔐 Auto-login: Token found, calling /me endpoint');
-    state = state.copyWith(isLoading: true);
     try {
       final data = await ApiService.getMe();
-      print('🔐 Auto-login response: $data');
-      
       final userData = data['data'] ?? data['user'] ?? data;
-      print('🔐 Auto-login user data: $userData');
-      
-      final user = RiderUser.fromJson(userData as Map<String, dynamic>);
-      print('🔐 Auto-login parsed user - ID: ${user.id}, Role: ${user.role}, Partner ID: ${user.partnerId}');
-      
+      if (userData is! Map<String, dynamic>) return user;
+
+      final partnerId = RiderUser.parsePartnerId(userData);
+      if (partnerId != null) return user.copyWith(partnerId: partnerId);
+    } catch (e) {
+      print('⚠️ Could not resolve merchant partner_id: $e');
+    }
+    return user;
+  }
+
+  Future<String?> _resolveAccessToken() async {
+    var token = await ApiService.getToken();
+    if (token != null && token.isNotEmpty) return token;
+
+    if (!RememberMeService.isSessionValid()) return null;
+
+    return TokenRefreshService.instance.refreshAccessToken();
+  }
+
+  Future<bool> restoreSession() async {
+    if (!RememberMeService.isSessionValid()) {
+      return false;
+    }
+
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      if (await _restoreWithStoredTokens()) {
+        return true;
+      }
+
+      await ApiService.clearToken();
+
+      if (RememberMeService.hasSavedCredentials) {
+        final email = RememberMeService.savedEmail!;
+        final password = RememberMeService.savedPassword!;
+        final accountType = RememberMeService.savedAccountType ?? 'rider';
+
+        final success = await _loginInternal(
+          email,
+          password,
+          rememberMe: true,
+          accountType: accountType,
+        );
+        if (!success) {
+          state = state.copyWith(isLoading: false);
+          return false;
+        }
+
+        final user = state.user;
+        if (accountType == 'merchant' && user != null && !user.isMerchant) {
+          await ApiService.clearToken();
+          state = state.copyWith(isLoading: false, isLoggedIn: false, user: null);
+          return false;
+        }
+        if (accountType == 'rider' && user != null && !user.isDriver) {
+          await ApiService.clearToken();
+          state = state.copyWith(isLoading: false, isLoggedIn: false, user: null);
+          return false;
+        }
+
+        return true;
+      }
+
+      state = state.copyWith(isLoading: false);
+      return false;
+    } catch (e) {
+      print('❌ Restore session failed: $e');
+      state = state.copyWith(isLoading: false);
+      return false;
+    }
+  }
+
+  Future<bool> _restoreWithStoredTokens() async {
+    final token = await _resolveAccessToken();
+    if (token == null || token.isEmpty) return false;
+
+    try {
+      final data = await ApiService.getMe();
+      final userData = data['data'] ?? data['user'] ?? data;
+      if (userData is! Map<String, dynamic>) return false;
+
+      var user = RiderUser.fromJson(userData);
+      user = await _ensureMerchantPartnerId(user);
+
+      await SecureStorageService.saveUserId(user.id);
+
       state = state.copyWith(
         user: user,
         isLoggedIn: true,
         isLoading: false,
       );
-      
+
+      await RememberMeService.refreshExpiry();
       await PushNotificationService.registerWithBackend();
-      
-      print('✅ Auto-login successful - Partner ID in state: ${state.user?.partnerId}');
+      return true;
     } catch (e) {
-      print('❌ Auto-login failed: $e');
-      await ApiService.clearToken();
-      state = state.copyWith(isLoading: false);
+      print('⚠️ Token restore failed, will try saved credentials: $e');
+      return false;
     }
   }
 
-  Future<bool> login(String email, String password) async {
-    print('🔐🔐🔐 LOGIN METHOD CALLED 🔐🔐🔐');
-    print('🔐 Email: $email');
-    print('🔐 Password length: ${password.length}');
-    
+  Future<bool> login(
+    String email,
+    String password, {
+    required bool rememberMe,
+    required String accountType,
+  }) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    
+    return _loginInternal(
+      email,
+      password,
+      rememberMe: rememberMe,
+      accountType: accountType,
+    );
+  }
+
+  Future<bool> _loginInternal(
+    String email,
+    String password, {
+    required bool rememberMe,
+    required String accountType,
+  }) async {
     try {
-      print('🔐 Calling ApiService.login...');
       final data = await ApiService.login(email, password);
-      print('🔐 Login response received: $data');
-      
-      final token = data['token'] as String?;
-      final userData = data['user'] ?? data['data'];
-      final expiresIn = data['expires_in'] as int? ?? 3600; // Default 1 hour
-      
-      print('🔐 Token extracted: ${token != null ? "${token.substring(0, 20)}..." : "NULL"}');
-      print('🔐 User data extracted: $userData');
-      print('🔐 Token expires in: $expiresIn seconds');
+
+      final nested = data['data'];
+      final payload = nested is Map<String, dynamic> ? nested : data;
+      final token = payload['token'] as String? ?? data['token'] as String?;
+      final refreshToken =
+          payload['refresh_token'] as String? ?? data['refresh_token'] as String?;
+      final userData = payload['user'] ?? data['user'];
+      final expiresIn =
+          payload['expires_in'] as int? ?? data['expires_in'] as int? ?? 3600;
 
       if (token == null || userData == null) {
-        print('❌ Token or user data is null');
         state = state.copyWith(
           isLoading: false,
           error: 'Invalid response from server',
@@ -136,13 +266,10 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
         return false;
       }
 
-      final user = RiderUser.fromJson(userData as Map<String, dynamic>);
-      
-      print('🔐 Parsed user - ID: ${user.id}, Role: ${user.role}, Partner ID: ${user.partnerId}');
+      var user = RiderUser.fromJson(userData as Map<String, dynamic>);
+      user = await _ensureMerchantPartnerId(user);
 
-      // Allow both drivers and merchants/partners
       if (!user.isDriver && !user.isMerchant) {
-        print('❌ User role not authorized: ${user.role}');
         state = state.copyWith(
           isLoading: false,
           error: 'This account is not authorized for this app.',
@@ -150,14 +277,20 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
         return false;
       }
 
-      print('🔐 Calling ApiService.saveToken with expiry...');
-      await ApiService.saveToken(token, expiresIn: expiresIn);
-      print('🔐 Token saved, verifying...');
-      
-      // Verify token was saved
-      final savedToken = await ApiService.getToken();
-      print('🔐 Token verification: ${savedToken != null ? "SUCCESS" : "FAILED"}');
-      
+      await ApiService.saveToken(
+        token,
+        expiresIn: expiresIn,
+        refreshToken: refreshToken,
+        userId: user.id,
+      );
+
+      await RememberMeService.savePreference(
+        enabled: rememberMe,
+        email: email,
+        password: password,
+        accountType: accountType,
+      );
+
       state = state.copyWith(
         user: user,
         isLoggedIn: true,
@@ -165,14 +298,8 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       );
 
       await PushNotificationService.registerWithBackend();
-      
-      print('✅✅✅ LOGIN SUCCESSFUL ✅✅✅');
-      print('✅ Partner ID in state: ${state.user?.partnerId}');
       return true;
     } catch (e) {
-      print('❌❌❌ LOGIN ERROR ❌❌❌');
-      print('❌ Error: $e');
-      print('❌ Stack trace: ${StackTrace.current}');
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),
@@ -183,6 +310,7 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
 
   Future<void> logout() async {
     state = state.copyWith(isLoading: true);
+    await RememberMeService.clearSession();
     await ApiService.logout();
     state = RiderAuthState();
   }

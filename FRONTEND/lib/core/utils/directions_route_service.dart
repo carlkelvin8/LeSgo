@@ -21,7 +21,7 @@ class DirectionsRouteService {
     required double destLat,
     required double destLng,
   }) async {
-    if (ApiConstants.googleMapsApiKey.isEmpty) return null;
+    if (!ApiConstants.isGoogleMapsConfigured) return null;
 
     final origin = '$originLat,$originLng';
     final destination = '$destLat,$destLng';

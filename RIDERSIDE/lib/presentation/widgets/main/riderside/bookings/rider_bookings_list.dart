@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
@@ -68,29 +69,9 @@ class RiderBookingsList extends ConsumerWidget {
       );
     }
 
-    // Convert RiderOrder to RiderBooking for display
-    final bookings = ordersState.availableOrders.map((order) {
-      return RiderBooking(
-        id: order.id.toString(),
-        restaurantName: order.serviceName,
-        address: order.dropoffAddress,
-        pickupAddress: order.pickupAddress,
-        deliveryAddress: order.dropoffAddress,
-        distance: '${order.distanceKm.toStringAsFixed(1)} km',
-        estimatedTime: _calculateEstimatedTime(order.distanceKm),
-        earnings: 'Total: PHP ${order.displayTotalAmount.toStringAsFixed(2)} | Your Earnings: PHP ${order.driverEarnings.toStringAsFixed(2)}',
-        paymentMethod: order.paymentMethod.toUpperCase(),
-        items: order.parsedItems,
-        pickupLat: order.pickupLat,
-        pickupLng: order.pickupLng,
-        dropoffLat: order.dropoffLat,
-        dropoffLng: order.dropoffLng,
-        billingAmount: 'PHP ${order.displayTotalAmount.toStringAsFixed(2)}',
-        deliveryFee: 'PHP ${order.estimatedFare.toStringAsFixed(2)}',
-        billingMethod: order.paymentMethod.toUpperCase(),
-        currentStatus: _mapApiStatusToBookingStatus(order.status, order.serviceId),
-      );
-    }).toList();
+    final bookings = ordersState.availableOrders
+        .map(RiderBookingMapper.fromOrder)
+        .toList();
 
     // Show empty state (only if no active order and no available orders)
     if (bookings.isEmpty && ordersState.activeOrder == null) {
@@ -213,26 +194,7 @@ class RiderBookingsList extends ConsumerWidget {
   }
 
   Widget _buildActiveOrderCard(BuildContext context, WidgetRef ref, RiderOrder order) {
-    // Convert RiderOrder to RiderBooking for detail screen
-    final booking = RiderBooking(
-      id: order.id.toString(),
-      restaurantName: order.serviceName,
-      address: order.dropoffAddress,
-      pickupAddress: order.pickupAddress,
-      deliveryAddress: order.dropoffAddress,
-      distance: '${order.distanceKm.toStringAsFixed(1)} km',
-      estimatedTime: _calculateEstimatedTime(order.distanceKm),
-      earnings: 'Total: PHP ${order.displayTotalAmount.toStringAsFixed(2)} | Your Earnings: PHP ${order.driverEarnings.toStringAsFixed(2)}',
-      paymentMethod: order.paymentMethod.toUpperCase(),
-      items: order.parsedItems,
-      pickupLat: order.pickupLat,
-      pickupLng: order.pickupLng,
-      dropoffLat: order.dropoffLat,
-      dropoffLng: order.dropoffLng,
-      billingAmount: 'PHP ${order.displayTotalAmount.toStringAsFixed(2)}',
-      billingMethod: order.paymentMethod.toUpperCase(),
-      currentStatus: _mapApiStatusToBookingStatus(order.status, order.serviceId),
-    );
+    final booking = RiderBookingMapper.fromOrder(order);
     
     return GestureDetector(
       onTap: () {
@@ -377,69 +339,4 @@ class RiderBookingsList extends ConsumerWidget {
     );
   }
 
-  String _calculateEstimatedTime(double distanceKm) {
-    // Average speed in city: 30 km/h
-    final hours = distanceKm / 30;
-    final minutes = (hours * 60).round();
-    
-    if (minutes < 60) {
-      return '$minutes min';
-    } else {
-      final hrs = minutes ~/ 60;
-      final mins = minutes % 60;
-      return '${hrs}h ${mins}min';
-    }
-  }
-
-  // Map API status to BookingStatus enum
-  BookingStatus _mapApiStatusToBookingStatus(String apiStatus, int serviceId) {
-    // For LesRide (serviceId: 2)
-    if (serviceId == 2) {
-      switch (apiStatus.toLowerCase()) {
-        case 'accepted':
-          return BookingStatus.onTheWay;
-        case 'picked_up':
-          return BookingStatus.onTheWayGoing;
-        case 'completed':
-          return BookingStatus.complete;
-        default:
-          return BookingStatus.onTheWay;
-      }
-    }
-    
-    // For LesEat (serviceId: 3)
-    if (serviceId == 3) {
-      switch (apiStatus.toLowerCase()) {
-        case 'pending':
-          return BookingStatus.pending;
-        case 'accepted':
-          return BookingStatus.cooking;
-        case 'picked_up':
-          return BookingStatus.forPickUp;
-        case 'completed':
-          return BookingStatus.delivered;
-        default:
-          return BookingStatus.pending;
-      }
-    }
-    
-    // For LesBuy (serviceId: 4)
-    if (serviceId == 4) {
-      switch (apiStatus.toLowerCase()) {
-        case 'pending':
-          return BookingStatus.pending;
-        case 'accepted':
-          return BookingStatus.toBuy;
-        case 'picked_up':
-          return BookingStatus.forDelivery;
-        case 'completed':
-          return BookingStatus.delivered;
-        default:
-          return BookingStatus.pending;
-      }
-    }
-    
-    // Default
-    return BookingStatus.pending;
-  }
 }

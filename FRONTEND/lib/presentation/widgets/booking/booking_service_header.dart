@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/constants/routers/app_router.dart';
+import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/utils/responsive_utils.dart';
 
 class BookingServiceHeader extends StatelessWidget
@@ -46,9 +48,7 @@ class BookingServiceHeader extends StatelessWidget
             ),
             onPressed:
                 onProfileTap ??
-                () {
-                  // TODO: Navigate to profile
-                },
+                () => AppRouter.push(context, MainRoutes.profile),
           ),
         SizedBox(width: ResponsiveUtils.spacing(context, 8)),
       ],

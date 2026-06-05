@@ -3,6 +3,9 @@ import 'package:injectable/injectable.dart';
 import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/di/local_storage_service.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/services/promo_notification_service.dart';
+import '../../../core/services/notification_service.dart';
+import '../../../data/data_source/user_remote_datasource.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/entities/auth/login/login_request.dart';
 import '../../../data/data_source/user_remote_datasource.dart';
@@ -80,6 +83,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         clearError: true,
         successMessage: 'Login successful!',
       );
+
+      await getIt<PromoNotificationService>().registerDeviceToken();
+      await getIt<NotificationService>().refreshFromBackend();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -102,14 +108,55 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       message = await _logoutUseCase();
     } finally {
-      await _localStorageService.clearToken();
+      await _localStorageService.clearRememberMeSession();
       state = AuthState();
     }
     return message;
   }
 
+  Future<bool> restoreSession() async {
+    if (!_localStorageService.isRememberMeSessionValid()) {
+      return false;
+    }
+
+    final token = _localStorageService.token;
+    if (token == null || token.isEmpty) {
+      return false;
+    }
+
+    try {
+      final response = await getIt<UserRemoteDataSource>().getMe();
+      final profile = response.data;
+
+      if (response.success != true || profile == null) {
+        return false;
+      }
+
+      state = state.copyWith(
+        user: User(
+          id: profile.id.toString(),
+          email: profile.email,
+          name: profile.name,
+          token: token,
+        ),
+        rememberMe: true,
+        clearError: true,
+      );
+
+      await _localStorageService.refreshRememberMeExpiry();
+      await getIt<PromoNotificationService>().registerDeviceToken();
+      await getIt<NotificationService>().refreshFromBackend();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void toggleRememberMe(bool value) {
     state = state.copyWith(rememberMe: value);
+    if (!value) {
+      _localStorageService.clearRememberMePreference();
+    }
   }
 }
 

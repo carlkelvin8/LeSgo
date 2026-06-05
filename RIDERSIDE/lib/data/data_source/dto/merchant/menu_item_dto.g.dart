@@ -7,21 +7,21 @@ part of 'menu_item_dto.dart';
 // **************************************************************************
 
 MenuItemDto _$MenuItemDtoFromJson(Map<String, dynamic> json) => MenuItemDto(
-      id: (json['id'] as num).toInt(),
-      partnerId: (json['partner_id'] as num).toInt(),
-      menuCategoryId: (json['menu_category_id'] as num).toInt(),
+      id: _parseInt(json['id']),
+      partnerId: _parseInt(json['partner_id']),
+      menuCategoryId: _parseInt(json['menu_category_id']),
       name: json['name'] as String,
       description: json['description'] as String?,
-      imageUrl: json['image_url'] as String?,
-      price: (json['price'] as num).toDouble(),
-      originalPrice: (json['original_price'] as num?)?.toDouble(),
+      imageUrl: _parseImageUrl(_readImageUrlField(json, 'image_url')),
+      price: _parseDouble(json['price']),
+      originalPrice: _parseDoubleNullable(json['original_price']),
       unit: json['unit'] as String?,
-      isAvailable: json['is_available'] as bool,
-      isPopular: json['is_popular'] as bool?,
-      isFeatured: json['is_featured'] as bool?,
-      isBestSeller: json['is_best_seller'] as bool?,
-      requiresPrescription: json['requires_prescription'] as bool?,
-      sortOrder: (json['sort_order'] as num?)?.toInt(),
+      isAvailable: _parseBool(json['is_available']),
+      isPopular: _parseBoolNullable(json['is_popular']),
+      isFeatured: _parseBoolNullable(json['is_featured']),
+      isBestSeller: _parseBoolNullable(json['is_best_seller']),
+      requiresPrescription: _parseBoolNullable(json['requires_prescription']),
+      sortOrder: _parseIntNullable(json['sort_order']),
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
       options: json['options'] as Map<String, dynamic>?,
       category: json['category'] == null
@@ -53,14 +53,14 @@ Map<String, dynamic> _$MenuItemDtoToJson(MenuItemDto instance) =>
 
 MenuCategoryDto _$MenuCategoryDtoFromJson(Map<String, dynamic> json) =>
     MenuCategoryDto(
-      id: (json['id'] as num).toInt(),
-      partnerId: (json['partner_id'] as num).toInt(),
+      id: _parseInt(json['id']),
+      partnerId: _parseInt(json['partner_id']),
       name: json['name'] as String,
       description: json['description'] as String?,
-      imageUrl: json['image_url'] as String?,
+      imageUrl: _parseImageUrl(_readImageUrlField(json, 'image_url')),
       iconEmoji: json['icon_emoji'] as String?,
-      isActive: json['is_active'] as bool? ?? true,
-      sortOrder: (json['sort_order'] as num?)?.toInt(),
+      isActive: _parseBoolNullable(json['is_active']) ?? true,
+      sortOrder: _parseIntNullable(json['sort_order']),
       availableItems: (json['available_items'] as List<dynamic>?)
           ?.map((e) => MenuItemDto.fromJson(e as Map<String, dynamic>))
           .toList(),

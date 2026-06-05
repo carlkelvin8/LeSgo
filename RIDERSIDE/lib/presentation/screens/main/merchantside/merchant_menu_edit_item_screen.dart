@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../widgets/widgets.dart';
 import '../../../provider/main/merchantside/merchant_menu_item_form_provider.dart';
+import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../controllers/merchantside/merchant_menu_item_form_controller.dart';
 import '../../../widgets/main/merchantside/menu/shared/merchant_dietary_preferences_section.dart';
+import '../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MerchantMenuEditItemScreen extends ConsumerStatefulWidget {
@@ -31,17 +33,28 @@ class _MerchantMenuEditItemScreenState
     super.initState();
     _formInput = MerchantMenuItemFormInput.edit(widget.initialItem);
     _controller = MerchantMenuItemFormController(
-      initialItemName: widget.initialItem?['itemName'] ?? widget.initialItem?['name'] ?? 'Sun Sets Pizza',
-      initialPrice: widget.initialItem?['price'] ?? '300.00',
-      initialDescription: widget.initialItem?['description'] ??
-          'Pepperoni, Hawaiian, All Meat. Our signature sunset crust with a triple-meat blend and premium mozzarella.',
+      initialItemName: widget.initialItem?['itemName'] ??
+          widget.initialItem?['name'] ??
+          '',
+      initialPrice: widget.initialItem?['price'] ?? '0.00',
+      initialDescription: widget.initialItem?['description'] ?? '',
     );
     
-    // Defer the image path update until after the widget builds
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialItem?['imageUrl'] != null) {
-        final formProvider = merchantMenuItemFormProvider(_formInput);
-        ref.read(formProvider.notifier).updateImagePath(widget.initialItem!['imageUrl']);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final formProvider = merchantMenuItemFormProvider(_formInput);
+      final notifier = ref.read(formProvider.notifier);
+
+      final categoryName = widget.initialItem?['category'] ?? '';
+      if (categoryName.isEmpty && _formInput.menuCategoryId != null) {
+        final menu = await ref.read(merchantMenuProvider.future);
+        if (menu != null && mounted) {
+          for (final category in menu.categories) {
+            if (category.id == _formInput.menuCategoryId) {
+              notifier.updateCategory(category.name);
+              break;
+            }
+          }
+        }
       }
     });
   }
@@ -62,7 +75,7 @@ class _MerchantMenuEditItemScreenState
       );
       
       if (image != null) {
-        notifier.updateImagePath(image.path);
+        notifier.updateLocalImage(image.path);
       }
     } catch (e) {
       if (mounted) {
@@ -88,22 +101,58 @@ class _MerchantMenuEditItemScreenState
       }
     });
 
+    final itemId = int.tryParse(widget.initialItem?['id'] ?? '');
+    final itemName = widget.initialItem?['name'] ??
+        widget.initialItem?['itemName'] ??
+        'this item';
+
     return MerchantFormLayout(
       formKey: _controller.formKey,
-      stickyBottomAction: MerchantFormActionButtonsSection(
-        onDiscard: () => Navigator.pop(context),
-        onSubmit: () {
-          if (_controller.formKey.currentState!.validate()) {
-            notifier.attemptSubmit();
-          }
-        },
-        submitLabel: 'Save Item',
-        isSubmitting: formState.isSubmitting,
+      stickyBottomAction: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (itemId != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: TextButton(
+                onPressed: formState.isSubmitting
+                    ? null
+                    : () async {
+                        final deleted = await confirmAndDeleteMerchantMenuItem(
+                          context,
+                          ref,
+                          itemId: itemId,
+                          itemName: itemName,
+                        );
+                        if (deleted && mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
+                child: Text(
+                  'Delete Item',
+                  style: TextStyle(
+                    color: Colors.red.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          MerchantFormActionButtonsSection(
+            onDiscard: () => Navigator.pop(context),
+            onSubmit: () {
+              if (_controller.formKey.currentState!.validate()) {
+                notifier.attemptSubmit();
+              }
+            },
+            submitLabel: 'Save Item',
+            isSubmitting: formState.isSubmitting,
+          ),
+        ],
       ),
       children: [
         // Image Upload Section
         MerchantItemImageUploadSection(
-          uploadedImagePath: formState.imagePath,
+          uploadedImagePath: formState.displayImageSource,
           onTap: () => _pickImage(notifier),
         ),
         SectionSpacer(units: 20),

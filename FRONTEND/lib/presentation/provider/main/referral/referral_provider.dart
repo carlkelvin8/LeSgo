@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../data/data_source/referral_remote_datasource.dart';
-import '../../missions/missions_provider.dart';
 import '../profile/profile_provider.dart';
 
 class ReferralDashboardState {
@@ -15,7 +14,6 @@ class ReferralDashboardState {
   final List<ReferralRewardDto> recentRewards;
   final bool isLoading;
   final String? error;
-  final bool fromApi;
 
   const ReferralDashboardState({
     this.referralCode = '',
@@ -26,7 +24,6 @@ class ReferralDashboardState {
     this.recentRewards = const [],
     this.isLoading = false,
     this.error,
-    this.fromApi = false,
   });
 
   ReferralDashboardState copyWith({
@@ -38,7 +35,6 @@ class ReferralDashboardState {
     List<ReferralRewardDto>? recentRewards,
     bool? isLoading,
     String? error,
-    bool? fromApi,
     bool clearError = false,
   }) {
     return ReferralDashboardState(
@@ -50,7 +46,6 @@ class ReferralDashboardState {
       recentRewards: recentRewards ?? this.recentRewards,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
-      fromApi: fromApi ?? this.fromApi,
     );
   }
 }
@@ -68,15 +63,14 @@ class ReferralDashboardNotifier extends StateNotifier<ReferralDashboardState> {
   Future<void> loadDashboard() async {
     state = state.copyWith(isLoading: true, clearError: true);
 
-    final profile = _ref.read(profileProvider);
-    final referralCode = profile.referralCode;
-
     try {
       final dashboard = await _referralDs.getDashboard();
+      final profile = _ref.read(profileProvider);
+
       state = state.copyWith(
         referralCode: dashboard.referralCode.isNotEmpty
             ? dashboard.referralCode
-            : referralCode,
+            : profile.referralCode,
         invitesSent: dashboard.invitesSent,
         friendsJoined: dashboard.friendsJoined,
         pendingRewards: dashboard.pendingRewards,
@@ -85,31 +79,14 @@ class ReferralDashboardNotifier extends StateNotifier<ReferralDashboardState> {
             : profile.points,
         recentRewards: dashboard.recentRewards,
         isLoading: false,
-        fromApi: true,
       );
     } catch (e) {
-      final mission = _ref.read(missionsProvider).missions.where(
-            (m) => m.missionType.contains('referral'),
-          );
-      final referralMission = mission.isNotEmpty ? mission.first : null;
-
       state = state.copyWith(
-        referralCode: referralCode,
-        invitesSent: referralMission?.currentProgress ?? 0,
-        friendsJoined: referralMission?.isCompleted == true ? 1 : 0,
-        pendingRewards: referralMission != null &&
-                referralMission.isCompleted &&
-                !referralMission.rewardClaimed
-            ? 1
-            : 0,
-        pointsEarned: profile.points,
-        recentRewards: const [],
         isLoading: false,
-        fromApi: false,
         error: ApiErrorMapper.message(
           e,
-          fallbackEn: 'Live referral stats unavailable — showing your code and mission progress.',
-          fallbackTl: 'Hindi available ang live stats — ipinapakita ang code at mission progress.',
+          fallbackEn: 'Could not load referral stats. Pull to retry.',
+          fallbackTl: 'Hindi ma-load ang referral stats. Subukan muli.',
         ),
       );
     }

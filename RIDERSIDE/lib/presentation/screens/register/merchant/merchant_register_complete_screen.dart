@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
-import '../../../../core/constants/routers/register/register_routes.dart';
+import '../../../../core/constants/routers/auth/auth_routes.dart';
+import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/register/merchant/merchant_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
 
 class MerchantRegisterCompleteScreen extends ConsumerWidget {
   const MerchantRegisterCompleteScreen({super.key});
+
+  void _goToLogin(BuildContext context, WidgetRef ref) {
+    ref.read(authViewProvider.notifier).state = AuthView.welcome;
+    AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,9 +37,7 @@ class MerchantRegisterCompleteScreen extends ConsumerWidget {
                   contactNumber: state.presentationContactNumber,
                 ),
                 MerchantCompleteActionButtons(
-                  onProceed: () {
-                    AppRouter.push(context, RegisterRoutes.merchantPayment);
-                  },
+                  onProceed: () => _goToLogin(context, ref),
                 ),
               ],
             ),

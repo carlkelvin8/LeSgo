@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/api_error_mapper.dart';
+import '../../../../core/utils/order_cancel_utils.dart';
 
 class OrderHistoryState {
   final List<OrderDto> orders;
@@ -147,7 +149,13 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
       }
       return false;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not cancel order.',
+          fallbackTl: 'Hindi makansela ang order.',
+        ),
+      );
       return false;
     }
   }

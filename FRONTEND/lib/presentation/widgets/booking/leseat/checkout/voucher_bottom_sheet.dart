@@ -282,7 +282,7 @@ class _VoucherCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      voucher.description,
+                      voucher.description ?? '',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12,
@@ -314,7 +314,7 @@ class _VoucherCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          voucher.discountText,
+                          voucher.discountText ?? '',
                           style: const TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 12,

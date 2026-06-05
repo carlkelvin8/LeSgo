@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'dart:async';
 import '../../../../core/utils/order_contact_actions.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/order_status_utils.dart';
+import '../../../../core/services/order_polling_service.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../core/di/injection.dart';
@@ -33,13 +34,16 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
   GoogleMapController? _mapController;
   bool _mapReady = false;
   bool _showMap = false;
-  Timer? _statusPollTimer;
+  VoidCallback? _cancelOrderPoll;
 
   @override
   void initState() {
     super.initState();
     _loadOrderDetails();
-    _startStatusPolling();
+    _cancelOrderPoll = getIt<OrderPollingService>().watchOrder(
+      widget.orderId,
+      listener: _handleOrderPoll,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Set context for notifications
       ref.read(liveTrackingProvider(widget.orderId).notifier).setContext(context);
@@ -48,7 +52,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
 
   @override
   void dispose() {
-    _statusPollTimer?.cancel();
+    _cancelOrderPoll?.call();
     try {
       _mapController?.dispose();
     } catch (_) {}
@@ -56,16 +60,24 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     super.dispose();
   }
 
-  void _startStatusPolling() {
-    // Poll every 5 seconds for status updates
-    _statusPollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted && _isOrderActive(order?.status ?? '')) {
-        _loadOrderDetails();
-      } else if (!_isOrderActive(order?.status ?? '')) {
-        // Stop polling if order is completed/cancelled
-        _statusPollTimer?.cancel();
-      }
+  void _handleOrderPoll(OrderPollUpdate update) {
+    if (!mounted) return;
+    if (!_isOrderActive(update.status) && !OrderStatusUtils.isTerminal(update.status)) {
+      return;
+    }
+
+    final previousStatus = order?.status;
+    final newStatus = update.status;
+
+    setState(() {
+      order = update.order;
+      isLoading = false;
+      _showMap = _isOrderActive(newStatus);
     });
+
+    if (previousStatus != null && previousStatus != newStatus) {
+      _showStatusChangeNotification(previousStatus, newStatus);
+    }
   }
 
   Future<void> _loadOrderDetails() async {

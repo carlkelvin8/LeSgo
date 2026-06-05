@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../common/media_image.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../domain/entities/booking/leseat/menu_item.dart';
@@ -48,27 +48,17 @@ class MenuItemCard extends StatelessWidget {
                 width: imageSize,
                 height: imageSize,
                 color: Colors.grey[100],
-                child: item.imagePath.toLowerCase().endsWith('.svg')
-                    ? SvgPicture.asset(
-                        item.imagePath,
-                        fit: BoxFit.cover,
-                        placeholderBuilder: (BuildContext context) => Icon(
-                          Icons.image_not_supported,
-                          color: Colors.grey[400],
-                          size: 24,
-                        ),
-                      )
-                    : Image.asset(
-                        item.imagePath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.image_not_supported,
-                            color: Colors.grey[400],
-                            size: 24,
-                          );
-                        },
-                      ),
+                child: MediaImage(
+                  imagePath: item.imagePath,
+                  fit: BoxFit.cover,
+                  width: imageSize,
+                  height: imageSize,
+                  placeholder: Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey[400],
+                    size: 24,
+                  ),
+                ),
               ),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 12)),

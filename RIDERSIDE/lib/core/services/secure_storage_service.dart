@@ -71,17 +71,16 @@ class SecureStorageService {
         return null;
       }
 
-      // Check if token is expired
+      // Expired access tokens are omitted; refresh token stays for silent refresh.
       if (await isTokenExpired()) {
-        print('⏰ SecureStorage: Token expired');
-        await clearAll();
+        print('⏰ SecureStorage: Access token expired');
         return null;
       }
 
       // Verify integrity
       if (!await _verifyIntegrity(token)) {
         print('⚠️ SecureStorage: Token integrity check failed');
-        await clearAll();
+        await clearAuth();
         return null;
       }
 
@@ -135,6 +134,15 @@ class SecureStorageService {
     } catch (e) {
       print('❌ SecureStorage: Error getting user ID: $e');
       return null;
+    }
+  }
+
+  /// Persist user ID for wallet/history API paths.
+  static Future<void> saveUserId(int userId) async {
+    try {
+      await _storage.write(key: _userIdKey, value: userId.toString());
+    } catch (e) {
+      print('❌ SecureStorage: Error saving user ID: $e');
     }
   }
 

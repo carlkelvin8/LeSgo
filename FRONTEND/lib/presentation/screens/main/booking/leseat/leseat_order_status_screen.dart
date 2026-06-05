@@ -1,19 +1,22 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/services/order_polling_service.dart';
+import '../../../../../core/utils/driver_display_utils.dart';
 import '../../../../../core/utils/order_contact_actions.dart';
 import '../../../../../core/utils/order_status_mapper.dart';
 import '../../../../widgets/review/rating_dialog.dart';
+import '../../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
+import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../widgets/booking/leseat/checkout/delivery_address_section.dart';
 import '../../../../widgets/booking/leseat/checkout/order_item_card.dart';
 import '../../../../widgets/booking/leseat/checkout/order_summary_section.dart';
+import '../../../../widgets/tracking/driver_info_card.dart';
 import '../../../../../domain/entities/booking/leseat/order_item.dart';
 
 class LeseatOrderStatusScreen extends ConsumerStatefulWidget {
@@ -36,7 +39,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
   String _currentStatus = 'cooking';
   int _rating = 0;
   final TextEditingController _reviewController = TextEditingController();
-  Timer? _statusPollTimer;
+  VoidCallback? _cancelPoll;
   Map<String, dynamic>? _liveOrderData;
 
   int get _orderIdInt => int.tryParse(widget.orderId) ?? 0;
@@ -51,21 +54,22 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
       _liveOrderData?['status']?.toString(),
     );
     _fetchOrderStatus();
-    _startStatusPolling();
+    _cancelPoll = getIt<OrderPollingService>().watchOrder(
+      _orderIdInt,
+      listener: _handleOrderPoll,
+    );
   }
 
   @override
   void dispose() {
-    _statusPollTimer?.cancel();
+    _cancelPoll?.call();
     _reviewController.dispose();
     super.dispose();
   }
 
-  void _startStatusPolling() {
-    _statusPollTimer?.cancel();
-    _statusPollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      _fetchOrderStatus();
-    });
+  void _handleOrderPoll(OrderPollUpdate update) {
+    if (!mounted) return;
+    _applyOrderSnapshot(update.order);
   }
 
   Future<void> _fetchOrderStatus() async {
@@ -75,38 +79,41 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
           await getIt<OrderRemoteDataSource>().getOrder(_orderIdInt);
       if (!mounted || !response.success) return;
 
-      final order = response.data;
-      final meta = order.meta;
-      final uiStatus = OrderStatusMapper.toLesEatUiStatus(order.status);
-
-      setState(() {
-        _currentStatus = uiStatus;
-        _liveOrderData = {
-          if (_liveOrderData != null) ..._liveOrderData!,
-          'status': order.status,
-          'restaurantName': _liveOrderData?['restaurantName'] ??
-              meta?['restaurant_name'] ??
-              order.pickupContactName,
-          'deliveryAddress': order.dropoffAddress,
-          'subtotal': meta?['subtotal'] ?? _liveOrderData?['subtotal'],
-          'deliveryFee': order.effectiveDeliveryFee,
-          'total': order.effectiveTotalAmount,
-          'dropoff_lat': order.dropoffLat,
-          'dropoff_lng': order.dropoffLng,
-          'pickup_contact_phone': order.pickupContactPhone,
-          'driver_id': order.driverId,
-          'driver_name': order.driverProfile?.user?.name ??
-              (order.driverId != null ? 'Driver #${order.driverId}' : null),
-          'driver_phone': meta?['driver_phone']?.toString(),
-        };
-      });
-
-      if (OrderStatusMapper.isTerminal(order.status)) {
-        _statusPollTimer?.cancel();
-      }
+      _applyOrderSnapshot(response.data);
     } catch (e) {
       debugPrint('LesEat status poll failed: $e');
     }
+  }
+
+  void _applyOrderSnapshot(OrderDto order) {
+    final meta = order.meta;
+    final uiStatus = OrderStatusMapper.toLesEatUiStatus(order.status);
+    final driver = DriverInfo.fromOrder(order);
+
+    setState(() {
+      _currentStatus = uiStatus;
+      _liveOrderData = {
+        if (_liveOrderData != null) ..._liveOrderData!,
+        'status': order.status,
+        'restaurantName': _liveOrderData?['restaurantName'] ??
+            meta?['restaurant_name'] ??
+            order.pickupContactName,
+        'deliveryAddress': order.dropoffAddress,
+        'subtotal': meta?['subtotal'] ?? _liveOrderData?['subtotal'],
+        'deliveryFee': order.effectiveDeliveryFee,
+        'total': order.effectiveTotalAmount,
+        'dropoff_lat': order.dropoffLat,
+        'dropoff_lng': order.dropoffLng,
+        'pickup_contact_phone': order.pickupContactPhone,
+        'driver_id': order.driverId,
+        'driver_name': driver?.name ??
+            (order.driverId != null ? 'Driver #${order.driverId}' : null),
+        'driver_phone': driver?.phone ?? meta?['driver_phone']?.toString(),
+        'driver_photo_url': driver?.photoUrl,
+        'driver_plate_number': driver?.vehicleNumber,
+        'driver_rating': driver?.rating,
+      };
+    });
   }
 
   Map<String, dynamic> get _orderData =>
@@ -204,9 +211,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
       actions: [
         IconButton(
           icon: const Icon(Icons.account_circle, color: Colors.black87),
-          onPressed: () {
-            // TODO: Navigate to profile
-          },
+          onPressed: () => AppRouter.push(context, MainRoutes.profile),
         ),
       ],
     );
@@ -480,6 +485,29 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                 ),
 
                 SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+
+                if (_orderData['driver_id'] != null &&
+                    _orderData['driver_name'] != null) ...[
+                  _buildSectionHeader(context, 'Your Rider'),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                  DriverInfoCard(
+                    driverInfo: DriverInfo(
+                      name: _orderData['driver_name']?.toString() ?? 'Driver',
+                      phone: _orderData['driver_phone']?.toString(),
+                      vehicleNumber:
+                          _orderData['driver_plate_number']?.toString(),
+                      photoUrl: _orderData['driver_photo_url']?.toString(),
+                      rating: (_orderData['driver_rating'] as num?)?.toDouble(),
+                    ),
+                    onCall: _orderData['driver_phone'] != null
+                        ? () => OrderContactActions.callPhone(
+                              _orderData['driver_phone']?.toString(),
+                            )
+                        : null,
+                    onChat: _contactDriver,
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+                ],
 
                 // Address Section
                 _buildSectionHeader(context, 'Address'),

@@ -7,11 +7,33 @@ import '../../provider/main/loyalty/loyalty_provider.dart';
 import '../../provider/main/profile/profile_provider.dart';
 import '../../widgets/common/retry_widget.dart';
 
-class LoyaltyRedeemScreen extends ConsumerWidget {
+class LoyaltyRedeemScreen extends ConsumerStatefulWidget {
   const LoyaltyRedeemScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoyaltyRedeemScreen> createState() =>
+      _LoyaltyRedeemScreenState();
+}
+
+class _LoyaltyRedeemScreenState extends ConsumerState<LoyaltyRedeemScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(profileProvider.notifier).refreshProfile();
+      ref.read(loyaltyProvider.notifier).loadRewards();
+    });
+  }
+
+  Future<void> _refreshAll() async {
+    await Future.wait([
+      ref.read(profileProvider.notifier).refreshProfile(),
+      ref.read(loyaltyProvider.notifier).loadRewards(),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final loyaltyState = ref.watch(loyaltyProvider);
     final profileState = ref.watch(profileProvider);
     final points = profileState.points;
@@ -38,13 +60,11 @@ class LoyaltyRedeemScreen extends ConsumerWidget {
               ? RetryWidget(
                   message: loyaltyState.error!,
                   isLoading: loyaltyState.isRedeeming,
-                  onRetry: () =>
-                      ref.read(loyaltyProvider.notifier).loadRewards(),
+                  onRetry: () => _refreshAll(),
                 )
               : RefreshIndicator(
                   color: const Color(0xFF5F2D82),
-                  onRefresh: () =>
-                      ref.read(loyaltyProvider.notifier).loadRewards(),
+                  onRefresh: _refreshAll,
                   child: ListView(
                     padding: EdgeInsets.all(
                       ResponsiveUtils.spacing(context, 20),
@@ -87,17 +107,6 @@ class LoyaltyRedeemScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      if (loyaltyState.infoMessage != null) ...[
-                        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                        Text(
-                          loyaltyState.infoMessage!,
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 12),
-                            color: Colors.orange[800],
-                          ),
-                        ),
-                      ],
                       if (loyaltyState.error != null) ...[
                         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                         Text(
@@ -161,7 +170,7 @@ class LoyaltyRedeemScreen extends ConsumerWidget {
                               trailing: FilledButton(
                                 onPressed: loyaltyState.isRedeeming ||
                                         !canAfford ||
-                                        !loyaltyState.rewardsFromApi
+                                        !reward.available
                                     ? null
                                     : () async {
                                         final confirmed = await showDialog<bool>(
@@ -198,6 +207,9 @@ class LoyaltyRedeemScreen extends ConsumerWidget {
                                             context,
                                             'Reward redeemed successfully!',
                                           );
+                                          await ref
+                                              .read(profileProvider.notifier)
+                                              .refreshProfile();
                                         }
                                       },
                                 style: FilledButton.styleFrom(

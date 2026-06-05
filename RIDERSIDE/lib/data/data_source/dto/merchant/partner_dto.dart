@@ -2,6 +2,18 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'partner_dto.g.dart';
 
+bool? _parseBoolNullable(dynamic value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    final normalized = value.toLowerCase();
+    if (normalized == 'true' || normalized == '1') return true;
+    if (normalized == 'false' || normalized == '0') return false;
+  }
+  return null;
+}
+
 @JsonSerializable()
 class PartnerDto {
   final int id;
@@ -27,12 +39,12 @@ class PartnerDto {
   final int? minOrderAmount;
   @JsonKey(name: 'estimated_delivery_minutes')
   final int? estimatedDeliveryMinutes;
-  @JsonKey(name: 'is_open')
+  @JsonKey(name: 'is_open', fromJson: _parseBoolNullable)
   final bool? isOpen;
-  @JsonKey(name: 'is_featured')
+  @JsonKey(name: 'is_featured', fromJson: _parseBoolNullable)
   final bool? isFeatured;
   final String? status;
-  @JsonKey(name: 'accepts_online_payment')
+  @JsonKey(name: 'accepts_online_payment', fromJson: _parseBoolNullable)
   final bool? acceptsOnlinePayment;
   @JsonKey(name: 'opening_hours')
   final Map<String, dynamic>? openingHours;

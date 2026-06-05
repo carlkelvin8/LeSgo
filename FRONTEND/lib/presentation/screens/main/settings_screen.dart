@@ -56,6 +56,19 @@ class SettingsScreen extends StatelessWidget {
                 subtitle: '2FA, biometrics, and login activity',
                 onTap: () => AppRouter.push(context, MainRoutes.securitySettings),
               ),
+              _SettingsItem(
+                icon: Icons.lock_outline,
+                title: 'Change Password',
+                subtitle: 'Update your login password',
+                onTap: () => AppRouter.push(context, MainRoutes.changePassword),
+              ),
+              _SettingsItem(
+                icon: Icons.person_off_outlined,
+                title: 'Deactivate Account',
+                subtitle: 'Temporarily disable your account',
+                onTap: () =>
+                    AppRouter.push(context, MainRoutes.deactivateAccount),
+              ),
             ],
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -81,6 +94,19 @@ class SettingsScreen extends StatelessWidget {
           _SettingsSection(
             title: 'Support',
             items: [
+              _SettingsItem(
+                icon: Icons.confirmation_number_outlined,
+                title: 'Support Tickets',
+                subtitle: 'Get help from our support team',
+                onTap: () => AppRouter.push(context, MainRoutes.supportTickets),
+              ),
+              _SettingsItem(
+                icon: Icons.badge_outlined,
+                title: 'Document Verification',
+                subtitle: 'Submit and track your documents',
+                onTap: () =>
+                    AppRouter.push(context, MainRoutes.documentVerification),
+              ),
               _SettingsItem(
                 icon: Icons.help_outline,
                 title: 'FAQs',

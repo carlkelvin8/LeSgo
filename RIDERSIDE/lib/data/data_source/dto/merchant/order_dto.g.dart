@@ -93,6 +93,7 @@ OrderItemDto _$OrderItemDtoFromJson(Map<String, dynamic> json) => OrderItemDto(
       unitPrice: json['estimated_price'] != null ? double.tryParse(json['estimated_price'].toString()) : null,
       totalPrice: json['actual_price'] != null ? double.tryParse(json['actual_price'].toString()) : null,
       options: json['options'] as String?,
+      imageUrl: _parseOrderItemImageUrl(json['image_url']),
     );
 
 Map<String, dynamic> _$OrderItemDtoToJson(OrderItemDto instance) =>
@@ -106,6 +107,7 @@ Map<String, dynamic> _$OrderItemDtoToJson(OrderItemDto instance) =>
       'unit_price': instance.unitPrice,
       'total_price': instance.totalPrice,
       'options': instance.options,
+      'image_url': instance.imageUrl,
     };
 
 UserDto _$UserDtoFromJson(Map<String, dynamic> json) => UserDto(

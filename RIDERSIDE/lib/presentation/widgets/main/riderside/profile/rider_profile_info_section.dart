@@ -26,28 +26,29 @@ class RiderProfileInfoSection extends ConsumerWidget {
       );
     }
 
-    if (profileState.error != null) {
-      return Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: horizontalPadding,
-          vertical: ResponsiveUtils.spacing(context, 20),
-        ),
-        child: Text(
-          'Error loading profile: ${profileState.error}',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: Colors.red,
-          ),
-        ),
-      );
-    }
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (profileState.error != null) ...[
+            Text(
+              profileState.error!,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 13),
+                color: Colors.orange.shade800,
+              ),
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            TextButton.icon(
+              onPressed: () =>
+                  ref.read(riderProfileProvider.notifier).loadProfile(),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Retry'),
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          ],
           _buildInfoRow(
             context,
             'Name:',
@@ -79,7 +80,7 @@ class RiderProfileInfoSection extends ConsumerWidget {
             profileState.referralCode.isNotEmpty ? profileState.referralCode : 'Not set',
             valueColor: const Color(0xFFC320D6),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           // Edit Profile Button
           SizedBox(
             width: double.infinity,

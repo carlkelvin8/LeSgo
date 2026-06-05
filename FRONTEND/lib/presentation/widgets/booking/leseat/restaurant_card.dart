@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../../common/media_image.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../domain/entities/booking/leseat/restaurant.dart';
 
@@ -43,32 +43,17 @@ class RestaurantCard extends StatelessWidget {
                     width: double.infinity,
                     height: imageHeight,
                     color: Colors.grey[200],
-                    child: restaurant.imagePath.toLowerCase().endsWith('.svg')
-                        ? SvgPicture.asset(
-                            restaurant.imagePath,
-                            fit: BoxFit.cover,
-                            placeholderBuilder: (BuildContext context) =>
-                                Center(
-                                  child: Icon(
-                                    Icons.restaurant,
-                                    size: ResponsiveUtils.fontSize(context, 48),
-                                    color: Colors.grey[400],
-                                  ),
-                                ),
-                          )
-                        : Image.asset(
-                            restaurant.imagePath,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Center(
-                                child: Icon(
-                                  Icons.restaurant,
-                                  size: ResponsiveUtils.fontSize(context, 48),
-                                  color: Colors.grey[400],
-                                ),
-                              );
-                            },
-                          ),
+                    child: MediaImage(
+                      imagePath: restaurant.imagePath,
+                      fit: BoxFit.cover,
+                      placeholder: Center(
+                        child: Icon(
+                          Icons.restaurant,
+                          size: ResponsiveUtils.fontSize(context, 48),
+                          color: Colors.grey[400],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 if (restaurant.isNew)

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../common/menu_image_widget.dart';
 
 class MerchantFoodGridItem extends StatelessWidget {
   final String name;
@@ -51,12 +52,10 @@ class MerchantFoodGridItem extends StatelessWidget {
     if (imagePath != null && imagePath!.trim().isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          imagePath!,
+        child: MenuImageWidget(
+          source: imagePath,
           fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-          errorBuilder: (context, error, stackTrace) => _buildPlaceholder(context),
+          placeholder: _buildPlaceholder(context),
         ),
       );
     }

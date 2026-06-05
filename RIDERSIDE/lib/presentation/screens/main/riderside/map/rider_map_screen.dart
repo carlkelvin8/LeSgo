@@ -11,6 +11,7 @@ import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
+import '../../../../../core/config/secrets_config.dart';
 import '../../../../../core/services/api_service.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -78,8 +79,6 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   GoogleMapController? _mapController;
   bool _mapReady = false;
   Position? _currentPosition;
-  bool _isLocationUpdating = false;
-  Timer? _locationUpdateTimer;
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   final Completer<GoogleMapController> _controller = Completer();
@@ -95,14 +94,41 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   @override
   void dispose() {
     print('🗺️ RiderMapScreen dispose called');
-    _stopLocationUpdates();
+    ref.read(riderLocationProvider.notifier).setActiveOrderId(null);
     _mapController = null;
     super.dispose();
   }
 
+  Position _positionFromCoords(double lat, double lng) {
+    return Position(
+      latitude: lat,
+      longitude: lng,
+      timestamp: DateTime.now(),
+      accuracy: 0,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    );
+  }
+
   Future<void> _initializeMap() async {
     await _requestLocationPermission();
-    _startLocationUpdates();
+    if (!mounted) return;
+    final notifier = ref.read(riderLocationProvider.notifier);
+    notifier.setActiveOrderId(widget.orderId);
+    if (!ref.read(riderLocationProvider).isTracking) {
+      await notifier.startTracking(orderId: widget.orderId);
+    }
+    final loc = ref.read(riderLocationProvider);
+    if (loc.latitude != null && loc.longitude != null) {
+      setState(() {
+        _currentPosition = _positionFromCoords(loc.latitude!, loc.longitude!);
+      });
+      _updateMarkers();
+    }
   }
 
   Future<void> _requestLocationPermission() async {
@@ -129,54 +155,9 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
           _currentPosition = position;
         });
         _updateMarkers();
-        _sendLocationToBackend(position);
       }
     } catch (e) {
       print('Error getting location: $e');
-    }
-  }
-
-  void _startLocationUpdates() {
-    // Update location every 30 seconds
-    _locationUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (_currentPosition != null) {
-        _sendLocationToBackend(_currentPosition!);
-      }
-      // Also refresh current location
-      _getCurrentLocation();
-    });
-  }
-
-  void _stopLocationUpdates() {
-    _locationUpdateTimer?.cancel();
-    _locationUpdateTimer = null;
-  }
-
-  Future<void> _sendLocationToBackend(Position position) async {
-    if (_isLocationUpdating) return;
-    
-    try {
-      _isLocationUpdating = true;
-      final authState = ref.read(riderAuthProvider);
-      final driverProfileId = authState.user?.driverProfileId;
-      
-      if (driverProfileId != null) {
-        await ApiService.updateDriverLocation(
-          driverProfileId,
-          position.latitude,
-          position.longitude,
-        );
-        print('✅ Location update sent: $driverProfileId at ${position.latitude}, ${position.longitude}');
-        
-        // If we have an active order, fetch live tracking data
-        if (widget.orderId != null) {
-          _fetchLiveTrackingData();
-        }
-      }
-    } catch (e) {
-      print('❌ Error updating location: $e');
-    } finally {
-      _isLocationUpdating = false;
     }
   }
 
@@ -927,6 +908,22 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<RiderLocationState>(riderLocationProvider, (previous, next) {
+      if (next.latitude == null || next.longitude == null || !mounted) return;
+      if (previous?.latitude == next.latitude &&
+          previous?.longitude == next.longitude) {
+        return;
+      }
+      setState(() {
+        _currentPosition =
+            _positionFromCoords(next.latitude!, next.longitude!);
+      });
+      _updateMarkers();
+      if (widget.orderId != null) {
+        _fetchLiveTrackingData();
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -1000,7 +997,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                 });
                 
                 print('🗺️ REAL Google Maps created and ready with ${_markers.length} markers');
-                print('🔑 Using Google Maps API Key: AIzaSyA0s1a7phLN0iaD6-MjnwqfpJFhYhmyNjU');
+                print('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
                 print('📍 Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
                 
                 // Try to set a specific style to ensure map loads

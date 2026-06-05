@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../core/config/secrets_config.dart';
 
 class SimpleMapTest extends StatefulWidget {
   const SimpleMapTest({super.key});
@@ -123,7 +124,7 @@ class _SimpleMapTestState extends State<SimpleMapTest> {
                 Text('Debug Info:', style: TextStyle(fontWeight: FontWeight.bold)),
                 Text('Map Ready: $_mapReady'),
                 Text('Controller: ${_controller != null ? 'Available' : 'Null'}'),
-                Text('API Key: AIzaSyBekzwaPQ9H0Zu3y7XOyUkrM-ny4XdVZXA'),
+                Text('Maps config: ${SecretsConfig.googleMapsConfigStatus}'),
                 SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: () {

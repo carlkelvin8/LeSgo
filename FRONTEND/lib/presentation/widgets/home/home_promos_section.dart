@@ -5,13 +5,15 @@ import '../widgets.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../provider/main/offers/offers_provider.dart';
 import '../../screens/main/offers_screen.dart';
+import '../offers/offers_empty_state.dart';
 
 class HomePromosSection extends ConsumerWidget {
   const HomePromosSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final offers = ref.watch(offersProvider).featuredOffers;
+    final offersState = ref.watch(offersProvider);
+    final offers = offersState.featuredOffers;
 
     return Column(
       children: [
@@ -28,7 +30,11 @@ class HomePromosSection extends ConsumerWidget {
           ),
           child: SizedBox(
             height: ResponsiveUtils.imageHeight(context, 200),
-            child: ListView.builder(
+            child: offersState.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : offers.isEmpty
+                    ? const OffersEmptyState()
+                    : ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: offers.length,
               itemBuilder: (context, index) {

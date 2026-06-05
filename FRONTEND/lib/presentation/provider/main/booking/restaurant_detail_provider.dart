@@ -4,6 +4,10 @@ import '../../../../domain/entities/booking/leseat/food_category.dart';
 import '../../../../domain/entities/booking/leseat/order_item.dart';
 import '../../../../data/data_source/partner_remote_datasource.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/leseat_cart_cache.dart';
+import '../../../../core/utils/menu_image_utils.dart';
+
+const _defaultMenuImage = 'assets/images/book/leseat/Pizza.svg';
 
 class RestaurantDetailState {
   final List<FoodCategory> menuCategories;
@@ -13,6 +17,7 @@ class RestaurantDetailState {
   final List<OrderItem> cartItems;
   final String? activeRestaurantId;
   final String? activeRestaurantName;
+  final String? restaurantImagePath;
   final bool isLoading;
   final String? error;
 
@@ -24,6 +29,7 @@ class RestaurantDetailState {
     List<OrderItem>? cartItems,
     this.activeRestaurantId,
     this.activeRestaurantName,
+    this.restaurantImagePath,
     this.isLoading = false,
     this.error,
   }) : menuCategories = menuCategories ?? _defaultMenuCategories,
@@ -61,6 +67,7 @@ class RestaurantDetailState {
     List<OrderItem>? cartItems,
     String? activeRestaurantId,
     String? activeRestaurantName,
+    String? restaurantImagePath,
     bool? isLoading,
     String? error,
   }) {
@@ -72,6 +79,7 @@ class RestaurantDetailState {
       cartItems: cartItems ?? this.cartItems,
       activeRestaurantId: activeRestaurantId ?? this.activeRestaurantId,
       activeRestaurantName: activeRestaurantName ?? this.activeRestaurantName,
+      restaurantImagePath: restaurantImagePath ?? this.restaurantImagePath,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -82,13 +90,39 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
   final PartnerRemoteDataSource _partnerDataSource =
       getIt<PartnerRemoteDataSource>();
 
-  RestaurantDetailNotifier() : super(RestaurantDetailState());
+  RestaurantDetailNotifier() : super(RestaurantDetailState()) {
+    _restoreCachedCart();
+  }
+
+  Future<void> _restoreCachedCart() async {
+    final cached = await LeseatCartCache.load();
+    if (cached == null || cached.items.isEmpty) return;
+
+    state = state.copyWith(
+      activeRestaurantId: cached.restaurantId,
+      activeRestaurantName: cached.restaurantName,
+      cartItems: cached.items,
+    );
+  }
+
+  void _persistCart() {
+    LeseatCartCache.save(
+      restaurantId: state.activeRestaurantId,
+      restaurantName: state.activeRestaurantName,
+      items: state.cartItems,
+    );
+  }
 
   Future<void> loadRestaurantDetails(
     String restaurantId,
     List<String> restaurantCategories, {
     String? restaurantName,
   }) async {
+    final cached = await LeseatCartCache.load();
+    final restoredCart = cached != null && cached.restaurantId == restaurantId
+        ? cached.items
+        : const <OrderItem>[];
+
     state = state.copyWith(
       activeRestaurantId: restaurantId,
       activeRestaurantName: restaurantName,
@@ -99,8 +133,12 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     try {
       print('🔵 RestaurantDetail: Loading menu for restaurant $restaurantId');
 
-      final response = await _partnerDataSource.getPartnerMenu(
-        int.parse(restaurantId),
+      final partnerId = int.parse(restaurantId);
+      final partner = await _partnerDataSource.getPartner(partnerId);
+      final response = await _partnerDataSource.getPartnerMenu(partnerId);
+      final restaurantImagePath = MenuImageUtils.resolveOrAsset(
+        partner.coverImageUrl ?? partner.logoUrl,
+        _defaultMenuImage,
       );
 
       // Convert categories
@@ -126,8 +164,10 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
                 name: itemDto.name,
                 description: itemDto.description ?? '',
                 price: itemDto.price,
-                imagePath:
-                    itemDto.imageUrl ?? 'assets/images/book/leseat/Pizza.svg',
+                imagePath: MenuImageUtils.resolveOrAsset(
+                  itemDto.imageUrl,
+                  _defaultMenuImage,
+                ),
                 categoryId: catDto.id.toString(),
                 isPopular: itemDto.isPopular ?? false,
               ),
@@ -145,6 +185,8 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
             .where((item) => item.isPopular)
             .toList(),
         selectedCategoryId: 'popular',
+        cartItems: restoredCart,
+        restaurantImagePath: restaurantImagePath,
         isLoading: false,
         error: null,
       );
@@ -206,6 +248,7 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     }
 
     state = state.copyWith(cartItems: updatedCart);
+    _persistCart();
   }
 
   void removeFromCart(String itemId) {
@@ -213,6 +256,7 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
         .where((item) => item.id != itemId)
         .toList();
     state = state.copyWith(cartItems: updatedCart);
+    _persistCart();
   }
 
   void updateCartItemQuantity(String itemId, int quantity) {
@@ -229,14 +273,19 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     }).toList();
 
     state = state.copyWith(cartItems: updatedCart);
+    _persistCart();
   }
 
   void clearCart() {
     state = state.copyWith(cartItems: []);
+    LeseatCartCache.clear();
   }
 }
 
 final restaurantDetailProvider =
-    StateNotifierProvider.autoDispose<RestaurantDetailNotifier, RestaurantDetailState>(
-      (ref) => RestaurantDetailNotifier(),
+    StateNotifierProvider<RestaurantDetailNotifier, RestaurantDetailState>(
+      (ref) {
+        ref.keepAlive();
+        return RestaurantDetailNotifier();
+      },
     );

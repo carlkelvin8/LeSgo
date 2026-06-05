@@ -50,11 +50,12 @@ class LesbuyNotifier extends StateNotifier<LesbuyState> {
       print('🔵 LesbuyProvider: Loading stores from API');
       
       final response = await _partnerDataSource.getPartners(
-        category: 'grocery',  // or 'store', 'pharmacy', etc.
         perPage: 50,
       );
-      
-      final stores = response.data.map((partnerDto) {
+
+      final stores = response.data
+          .where((partnerDto) => partnerDto.category != 'restaurant')
+          .map((partnerDto) {
         return Store(
           id: partnerDto.id.toString(),
           name: partnerDto.name,

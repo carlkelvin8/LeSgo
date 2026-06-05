@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +6,7 @@ import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
+import '../../../../../core/services/order_polling_service.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../widgets/orders/cancel_order_dialog.dart';
 
@@ -30,53 +29,50 @@ class LeseatWaitingConfirmationScreen extends ConsumerStatefulWidget {
 
 class _LeseatWaitingConfirmationScreenState
     extends ConsumerState<LeseatWaitingConfirmationScreen> {
-  Timer? _pollTimer;
+  VoidCallback? _cancelPoll;
   bool _isCancelling = false;
 
   @override
   void initState() {
     super.initState();
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _checkOrderStatus());
+    _cancelPoll = getIt<OrderPollingService>().watchOrder(
+      widget.orderId,
+      tier: OrderPollTier.waiting,
+      listener: _handleOrderPoll,
+    );
   }
 
   @override
   void dispose() {
-    _pollTimer?.cancel();
+    _cancelPoll?.call();
     super.dispose();
   }
 
-  Future<void> _checkOrderStatus() async {
+  void _handleOrderPoll(OrderPollUpdate update) {
     if (!mounted || _isCancelling) return;
 
-    try {
-      final response =
-          await getIt<OrderRemoteDataSource>().getOrder(widget.orderId);
-      if (!mounted || !response.success) return;
+    final status = update.status.toLowerCase();
+    if (status == 'cancelled') {
+      SnackBarUtils.showError(context, 'This order was cancelled.');
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      return;
+    }
 
-      final status = response.data.status.toLowerCase();
-      if (status == 'cancelled') {
-        SnackBarUtils.showError(context, 'This order was cancelled.');
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        return;
-      }
-
-      if (status != 'pending' && status != 'created') {
-        if (!mounted) return;
-        AppRouter.pushReplacement(
-          context,
-          BookingRoutes.driverFinding,
-          arguments: {
-            'orderId': widget.orderId.toString(),
-            'orderType': 'LesEat',
-            'orderData': {
-              'deliveryAddress': widget.address,
-              'items': widget.orderItems,
-              'status': status,
-            },
+    if (status != 'pending' && status != 'created') {
+      AppRouter.pushReplacement(
+        context,
+        BookingRoutes.driverFinding,
+        arguments: {
+          'orderId': widget.orderId.toString(),
+          'orderType': 'LesEat',
+          'orderData': {
+            'deliveryAddress': widget.address,
+            'items': widget.orderItems,
+            'status': status,
           },
-        );
-      }
-    } catch (_) {}
+        },
+      );
+    }
   }
 
   Future<void> _showCancelDialog() async {

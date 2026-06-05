@@ -31,20 +31,6 @@ class OffersScreen extends ConsumerWidget {
               onCategorySelected: offersNotifier.selectCategory,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            if (offersState.infoMessage != null)
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: ResponsiveUtils.spacing(context, 20),
-                ),
-                child: Text(
-                  offersState.infoMessage!,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.orange[800],
-                  ),
-                ),
-              ),
             if (offersState.error != null)
               Padding(
                 padding: EdgeInsets.symmetric(
@@ -99,19 +85,35 @@ class OffersScreen extends ConsumerWidget {
                               offersNotifier.toggleSaved(offer.id);
                             },
                             onClaimPressed: () async {
-                              offersNotifier.claimOffer(offer.id);
-                              await Clipboard.setData(
-                                ClipboardData(text: offer.code),
-                              );
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      '${offer.code} copied to clipboard',
-                                    ),
-                                    backgroundColor: const Color(0xFF5F2D82),
-                                  ),
+                              try {
+                                await offersNotifier.claimOffer(offer.id);
+                                await Clipboard.setData(
+                                  ClipboardData(text: offer.code),
                                 );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${offer.code} claimed and copied',
+                                      ),
+                                      backgroundColor:
+                                          const Color(0xFF5F2D82),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  final message = e.toString().replaceFirst(
+                                        'Exception: ',
+                                        '',
+                                      );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(message),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               }
                             },
                           );

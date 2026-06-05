@@ -10,6 +10,11 @@ int _parseInt(dynamic value, [int fallback = 0]) {
   return fallback;
 }
 
+int? _parseIntNullable(dynamic value) {
+  if (value == null) return null;
+  return _parseInt(value);
+}
+
 double? _parseDoubleNullable(dynamic value) {
   if (value == null) return null;
   if (value is num) return value.toDouble();
@@ -57,8 +62,9 @@ class PartnerDto {
   final String? coverImageUrl;
   final String? description;
   final String? category;
+  @JsonKey(fromJson: _parseStringList)
   final List<String>? tags;
-  @JsonKey(name: 'cuisine_types')
+  @JsonKey(name: 'cuisine_types', fromJson: _parseStringList)
   final List<String>? cuisineTypes;
   final double? rating;
   @JsonKey(name: 'total_reviews')
@@ -124,9 +130,11 @@ class PaginationMetaDto {
   final int currentPage;
   @JsonKey(name: 'last_page')
   final int lastPage;
-  final int from;
-  final int to;
-  @JsonKey(name: 'has_more')
+  @JsonKey(fromJson: _parseIntNullable)
+  final int? from;
+  @JsonKey(fromJson: _parseIntNullable)
+  final int? to;
+  @JsonKey(name: 'has_more', fromJson: _parseBool)
   final bool hasMore;
 
   PaginationMetaDto({
@@ -134,8 +142,8 @@ class PaginationMetaDto {
     required this.perPage,
     required this.currentPage,
     required this.lastPage,
-    required this.from,
-    required this.to,
+    this.from,
+    this.to,
     required this.hasMore,
   });
 
@@ -190,6 +198,7 @@ class MenuItemDto {
   final bool? isPopular;
   @JsonKey(name: 'is_featured')
   final bool? isFeatured;
+  @JsonKey(fromJson: _parseStringList)
   final List<String>? tags;
 
   MenuItemDto({

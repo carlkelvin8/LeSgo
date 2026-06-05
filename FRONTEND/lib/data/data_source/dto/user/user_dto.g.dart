@@ -11,6 +11,7 @@ UserDto _$UserDtoFromJson(Map<String, dynamic> json) => UserDto(
       ? null
       : UserPayloadDto.fromJson(json['user'] as Map<String, dynamic>),
   token: json['token'] as String?,
+  refreshToken: json['refresh_token'] as String?,
   message: json['message'] as String?,
   success: json['success'] as bool?,
 );
@@ -18,6 +19,7 @@ UserDto _$UserDtoFromJson(Map<String, dynamic> json) => UserDto(
 Map<String, dynamic> _$UserDtoToJson(UserDto instance) => <String, dynamic>{
   'user': instance.user?.toJson(),
   'token': instance.token,
+  'refresh_token': instance.refreshToken,
   'message': instance.message,
   'success': instance.success,
 };

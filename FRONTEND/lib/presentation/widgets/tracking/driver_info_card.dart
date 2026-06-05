@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../provider/tracking/live_tracking_provider.dart';
+import '../../../core/utils/driver_display_utils.dart';
+import '../../../core/utils/media_url_utils.dart';
 
 class DriverInfoCard extends StatelessWidget {
   final DriverInfo driverInfo;
@@ -24,28 +25,7 @@ class DriverInfoCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Driver photo
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.blue[100],
-              image: driverInfo.photoUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(driverInfo.photoUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            child: driverInfo.photoUrl == null
-                ? const Icon(
-                    Icons.person,
-                    size: 32,
-                    color: Colors.blue,
-                  )
-                : null,
-          ),
+          _DriverAvatar(photoUrl: driverInfo.photoUrl),
           const SizedBox(width: 16),
 
           // Driver info
@@ -106,11 +86,11 @@ class DriverInfoCard extends StatelessWidget {
                   ),
                 if (driverInfo.vehicleNumber != null)
                   Text(
-                    driverInfo.vehicleNumber!,
+                    'Plate: ${driverInfo.vehicleNumber!}',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
               ],
@@ -157,6 +137,42 @@ class DriverInfoCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DriverAvatar extends StatelessWidget {
+  final String? photoUrl;
+
+  const _DriverAvatar({this.photoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedUrl = MediaUrlUtils.resolve(photoUrl);
+
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.blue[100],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: resolvedUrl != null
+          ? Image.network(
+              resolvedUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const Icon(
+                Icons.person,
+                size: 32,
+                color: Colors.blue,
+              ),
+            )
+          : const Icon(
+              Icons.person,
+              size: 32,
+              color: Colors.blue,
+            ),
     );
   }
 }

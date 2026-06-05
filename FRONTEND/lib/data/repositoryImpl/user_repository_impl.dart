@@ -38,6 +38,11 @@ class UserRepositoryImpl implements UserRepository {
 
     await localStorageService.saveToken(token);
 
+    final refreshToken = dto.refreshToken;
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await localStorageService.saveRefreshToken(refreshToken);
+    }
+
     return User(id: dto.id, email: dto.email, name: dto.name, token: token);
   }
 

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'dart:async';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
+import '../../../../../core/utils/order_cancel_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/utils/order_line_items_parser.dart';
@@ -39,18 +40,15 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
   bool _isBottomSheetExpanded = false;
   bool _mapReady = false;
   bool _isCancelling = false;
-  Timer? _statusPollTimer;
   Map<String, dynamic>? _currentOrderData;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Set context for notifications
       ref.read(liveTrackingProvider(int.parse(widget.orderId)).notifier).setContext(context);
       _fitBounds();
     });
-    _startStatusPolling();
     _fetchCurrentOrderData();
   }
 
@@ -112,29 +110,11 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
 
   @override
   void dispose() {
-    _statusPollTimer?.cancel();
     try {
       _mapController?.dispose();
     } catch (_) {}
     _mapController = null;
     super.dispose();
-  }
-
-  void _startStatusPolling() {
-    // Poll every 5 seconds for status updates
-    _statusPollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted) {
-        final trackingState = ref.read(liveTrackingProvider(int.parse(widget.orderId)));
-        if (trackingState.isOrderActive) {
-          ref.read(liveTrackingProvider(int.parse(widget.orderId)).notifier).refreshTracking();
-          // Also refresh order data to get updated prices
-          _fetchCurrentOrderData();
-        } else {
-          // Stop polling if order is completed/cancelled
-          _statusPollTimer?.cancel();
-        }
-      }
-    });
   }
 
   void _fitBounds() {
@@ -190,7 +170,13 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
           setState(() => _isCancelling = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to cancel order: $e'),
+              content: Text(
+                ApiErrorMapper.message(
+                  e,
+                  fallbackEn: 'Could not cancel order.',
+                  fallbackTl: 'Hindi makansela ang order.',
+                ),
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -236,6 +222,9 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
     ref.listen<LiveTrackingState>(
       liveTrackingProvider(int.parse(widget.orderId)),
       (previous, next) {
+        if (previous?.orderStatus != next.orderStatus && mounted) {
+          _fetchCurrentOrderData();
+        }
         if (next.markers.isNotEmpty && _mapReady && previous?.markers != next.markers) {
           _fitBounds();
         }
@@ -610,8 +599,9 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                             ),
 
                             // Cancel Order Button (if applicable)
-                            if (trackingState.orderStatus == 'pending' ||
-                                trackingState.orderStatus == 'accepted') ...[
+                            if (canCustomerCancelOrderStatus(
+                              trackingState.orderStatus,
+                            )) ...[
                               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                               SizedBox(
                                 width: double.infinity,

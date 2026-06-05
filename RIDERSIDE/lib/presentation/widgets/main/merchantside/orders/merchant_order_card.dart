@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../common/menu_image_widget.dart';
 
 class MerchantOrderCard extends StatelessWidget {
   final String orderId;
@@ -7,6 +8,7 @@ class MerchantOrderCard extends StatelessWidget {
   final String price;
   final String customerName;
   final String address;
+  final String? imageUrl;
 
   const MerchantOrderCard({
     super.key,
@@ -15,6 +17,7 @@ class MerchantOrderCard extends StatelessWidget {
     required this.price,
     required this.customerName,
     required this.address,
+    this.imageUrl,
   });
 
   @override
@@ -42,11 +45,15 @@ class MerchantOrderCard extends StatelessWidget {
               color: const Color(0xFFF1F1F1),
               borderRadius: BorderRadius.circular(8),
             ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.image_outlined,
-              color: const Color(0xFFCCCCCC),
-              size: ResponsiveUtils.fontSize(context, 28),
+            clipBehavior: Clip.antiAlias,
+            child: MenuImageWidget(
+              source: imageUrl,
+              fit: BoxFit.cover,
+              placeholder: Icon(
+                Icons.restaurant,
+                color: const Color(0xFFCCCCCC),
+                size: ResponsiveUtils.fontSize(context, 28),
+              ),
             ),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 10)),

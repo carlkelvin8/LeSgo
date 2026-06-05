@@ -15,7 +15,13 @@ class MainRoutes {
   static const String securitySettings = '/settings/security';
   static const String referralDashboard = '/referral-dashboard';
   static const String faqs = '/faqs';
+  static const String supportTickets = '/support-tickets';
+  static const String documentVerification = '/document-verification';
   static const String about = '/about';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String termsOfService = '/terms-of-service';
+  static const String changePassword = '/settings/change-password';
+  static const String deactivateAccount = '/settings/deactivate-account';
   static const String setLocation = '/set-location';
   static const String addressManagement = '/address-management';
   static const String addressDemo = '/address-demo';

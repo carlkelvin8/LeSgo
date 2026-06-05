@@ -20,7 +20,7 @@ class ReviewRemoteDataSource {
     final dio = _dioClient.dio;
     try {
       final response = await dio.get(
-        '/v1/partners/$partnerId/reviews',
+        ApiConstants.partnerReviews(partnerId),
         queryParameters: {'per_page': perPage},
       );
       return ReviewsResponseDto.fromJson(response.data as Map<String, dynamic>);

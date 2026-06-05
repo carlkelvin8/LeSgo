@@ -409,7 +409,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
 
     try {
       // Check if API key is configured
-      if (ApiConstants.googleMapsApiKey.isEmpty) {
+      if (!ApiConstants.isGoogleMapsConfigured) {
         state = state.copyWith(
           isLoadingRoute: false,
           error: 'Google Maps API key not configured',
@@ -668,8 +668,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
   Future<LocationAddress?> _getAddressFromGoogleAPI(LatLng location) async {
     try {
       // Check if we have a Google Maps API key
-      if (ApiConstants.googleMapsApiKey.isEmpty || 
-          ApiConstants.googleMapsApiKey == 'YOUR_GOOGLE_MAPS_API_KEY') {
+      if (!ApiConstants.isGoogleMapsConfigured) {
         print('🔴 LesgoLocation: No Google Maps API key configured');
         return null;
       }

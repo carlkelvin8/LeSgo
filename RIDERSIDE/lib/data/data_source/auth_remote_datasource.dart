@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
 import 'helpers/register_driver_form_builder.dart';
 import 'helpers/register_merchant_form_builder.dart';
@@ -239,6 +240,37 @@ class AuthRemoteDataSource {
         'otp': otp,
         'password': password,
         'password_confirmation': password,
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Change password for signed-in user.
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String password,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.authChangePassword,
+      data: {
+        'current_password': currentPassword,
+        'password': password,
+        'password_confirmation': password,
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Deactivate the signed-in account.
+  Future<Map<String, dynamic>> deactivateAccount({
+    required String password,
+    String? reason,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.authDeactivateAccount,
+      data: {
+        'password': password,
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
       },
     );
     return response.data as Map<String, dynamic>;

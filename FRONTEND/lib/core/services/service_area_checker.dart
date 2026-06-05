@@ -32,10 +32,17 @@ class ServiceAreaResult {
 class ServiceAreaChecker {
   ServiceAreaChecker._();
 
+  /// Set to `true` to restrict bookings to the CDO geofence / service radius.
+  static const bool enforceServiceArea = false;
+
   static Future<ServiceAreaResult> checkCoordinates({
     required double latitude,
     required double longitude,
   }) async {
+    if (!enforceServiceArea) {
+      return ServiceAreaResult.available;
+    }
+
     if (!BookingGeoUtils.hasValidCoords(latitude, longitude)) {
       return ServiceAreaResult.unavailable();
     }

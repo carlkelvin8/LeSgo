@@ -4,6 +4,7 @@ import '../../../../../domain/entities/booking/leseat/food_category.dart';
 import '../../../../../core/utils/opening_hours_formatter.dart';
 import '../../../../../data/data_source/partner_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/utils/menu_image_utils.dart';
 
 class LeseatState {
   final List<FoodCategory> categories;
@@ -106,7 +107,10 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
           id: partnerDto.id.toString(),
           name: partnerDto.name,
           address: partnerDto.description ?? 'No address available',
-          imagePath: partnerDto.logoUrl ?? 'assets/images/book/leseat/Pizza.svg',
+          imagePath: MenuImageUtils.resolveOrAsset(
+            partnerDto.coverImageUrl ?? partnerDto.logoUrl,
+            'assets/images/book/leseat/Pizza.svg',
+          ),
           rating: partnerDto.rating ?? 4.0,
           reviewCount: partnerDto.totalReviews ?? 0,
           categories: partnerDto.tags ?? [],

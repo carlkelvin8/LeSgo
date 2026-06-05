@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -124,6 +125,46 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
     }
   }
 
+  Future<bool> verifyTwoFactor(String code) async {
+    state = state.copyWith(isProcessing: true, clearError: true);
+    try {
+      await _securityDs.verify2FA(code);
+      await loadSecurity();
+      state = state.copyWith(isProcessing: false, clearSetup: true);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isProcessing: false,
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Invalid verification code.',
+          fallbackTl: 'Hindi valid ang verification code.',
+        ),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> disableTwoFactor() async {
+    state = state.copyWith(isProcessing: true, clearError: true);
+    try {
+      await _securityDs.disable2FA();
+      await loadSecurity();
+      state = state.copyWith(isProcessing: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isProcessing: false,
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not disable 2FA.',
+          fallbackTl: 'Hindi ma-disable ang 2FA.',
+        ),
+      );
+      return false;
+    }
+  }
+
   Future<bool> toggleBiometricUnlock(bool enabled) async {
     if (enabled) {
       try {
@@ -132,19 +173,37 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
           options: const AuthenticationOptions(biometricOnly: true),
         );
         if (!authenticated) return false;
+
+        final biometrics = await _localAuth.getAvailableBiometrics();
+        final type = biometrics.contains(BiometricType.face)
+            ? 'face_id'
+            : 'fingerprint';
+
+        await _securityDs.enrollBiometric(
+          biometricType: type,
+          deviceId: 'lesgo_${defaultTargetPlatform.name}',
+          deviceName: defaultTargetPlatform.name,
+        );
       } catch (e) {
         state = state.copyWith(
           error: ApiErrorMapper.message(
             e,
-            fallbackEn: 'Biometric authentication failed.',
-            fallbackTl: 'Hindi nag-authenticate ang biometric.',
+            fallbackEn: 'Biometric enrollment failed.',
+            fallbackTl: 'Hindi ma-enroll ang biometric.',
           ),
         );
         return false;
       }
+    } else {
+      for (final bio in state.registeredBiometrics) {
+        try {
+          await _securityDs.deactivateBiometric(biometricId: bio.id);
+        } catch (_) {}
+      }
     }
 
     await _prefs.setBiometricUnlockEnabled(enabled);
+    await loadSecurity();
     state = state.copyWith(localBiometricEnabled: enabled);
     return true;
   }

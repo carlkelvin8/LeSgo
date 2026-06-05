@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/push_notification_service.dart';
 import 'rider_duty_provider.dart';
+import 'rider_wallet_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Order model (minimal, from API)
@@ -62,8 +63,11 @@ class RiderOrder {
   // Get the price to display (always show full fare so customer and rider see same price)
   double get displayEarnings => estimatedFare;
   
-  // Get the total amount including items and subtracting discount
-  double get displayTotalAmount => (totalAmount != null && totalAmount! > 0 ? totalAmount! : estimatedFare) + itemsTotal - discount;
+  /// Full booking total (matches backend wallet charge: meta grand_total or fare + items - discount).
+  double get displayTotalAmount {
+    if (totalAmount != null && totalAmount! > 0) return totalAmount!;
+    return estimatedFare + itemsTotal - discount;
+  }
 
   // Get the actual driver earnings (what driver will receive after commission)
   double get driverEarnings => driverShare ?? (estimatedFare * 0.85); // 85% if not calculated yet
@@ -181,6 +185,35 @@ class RiderOrder {
       extractedDiscount = _d(j['meta']['discount']);
     }
 
+    double? extractedTotal;
+    if (j['meta'] is Map) {
+      final meta = j['meta'] as Map<String, dynamic>;
+      if (meta['grand_total'] != null) {
+        extractedTotal = _d(meta['grand_total']);
+      } else if (meta['total'] != null) {
+        extractedTotal = _d(meta['total']) - extractedDiscount;
+      }
+    }
+
+    final user = j['user'] is Map<String, dynamic>
+        ? j['user'] as Map<String, dynamic>
+        : (j['customer'] is Map<String, dynamic>
+            ? j['customer'] as Map<String, dynamic>
+            : null);
+
+    var dropoffName = j['dropoff_contact_name']?.toString().trim() ?? '';
+    var dropoffPhone = j['dropoff_contact_phone']?.toString().trim() ?? '';
+    if (user != null) {
+      if (dropoffName.isEmpty) {
+        dropoffName = user['name']?.toString().trim() ?? '';
+      }
+      if (dropoffPhone.isEmpty) {
+        dropoffPhone = user['phone_number']?.toString().trim() ??
+            user['phone']?.toString().trim() ??
+            '';
+      }
+    }
+
     return RiderOrder(
       id: j['id'] as int,
       serviceId: j['service_id'] as int? ?? 1,
@@ -193,15 +226,16 @@ class RiderOrder {
       dropoffAddress: _extractAddress(j['dropoff_address'], 'Dropoff location'),
       dropoffLat: _extractLat(j, 'dropoff'),
       dropoffLng: _extractLng(j, 'dropoff'),
-      dropoffContactName: j['dropoff_contact_name'] as String? ?? '',
-      dropoffContactPhone: j['dropoff_contact_phone'] as String? ?? '',
+      dropoffContactName: dropoffName,
+      dropoffContactPhone: dropoffPhone,
       estimatedFare: _d(j['estimated_fare']),
       driverShare: j['driver_share'] != null ? _d(j['driver_share']) : null,
       estimatedDistanceM: j['estimated_distance_m'] as int? ?? 0,
       paymentMethod: j['payment_method'] as String? ?? 'cash',
       notes: j['notes'] as String?,
       driverId: j['driver_id'] as int?,
-      totalAmount: j['total_amount'] != null ? _d(j['total_amount']) : null,
+      totalAmount: extractedTotal ??
+          (j['total_amount'] != null ? _d(j['total_amount']) : null),
       itemsTotal: calculatedItemsTotal,
       discount: extractedDiscount,
       parsedItems: extractedItems,
@@ -445,7 +479,8 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         // Reload orders to ensure we have the latest state
         print('🔄 Reloading orders to sync state...');
         await loadOrders(silent: true);
-        
+        await _ref.read(riderWalletProvider.notifier).loadWallet();
+
         return true;
       }
       

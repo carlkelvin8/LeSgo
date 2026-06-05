@@ -15,7 +15,7 @@ class LespayActionsSection extends ConsumerWidget {
         LespayMenuItem(
           iconPath: 'assets/images/lespay/Plus.svg',
           title: 'Top up',
-          subtitle: 'GCash, Maya, cards via Xendit',
+          subtitle: 'GCash, Maya, and cards',
           backgroundColor: const Color(0xFF5F2D82),
           onTap: () {
             showDialog(
@@ -28,7 +28,7 @@ class LespayActionsSection extends ConsumerWidget {
         LespayMenuItem(
           iconPath: 'assets/images/lespay/Gift.svg',
           title: 'Redeem Points',
-          subtitle: 'Coming soon',
+          subtitle: 'Exchange points for rewards',
           backgroundColor: const Color(0xFF5F2D82),
           onTap: () {
             AppRouter.push(context, MainRoutes.loyaltyRedeem);

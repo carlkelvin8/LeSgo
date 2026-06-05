@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../core/services/api_service.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../../../data/data_source/merchant_remote_datasource.dart';
@@ -11,12 +12,19 @@ class MerchantProfileInfoSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(merchantProfileProvider);
+    final referralAsync = ref.watch(merchantReferralCodeProvider);
 
     return profileAsync.when(
       loading: () => const SizedBox(height: 100),
       error: (_, __) => const SizedBox(height: 100),
       data: (profile) {
         if (profile == null) return const SizedBox(height: 100);
+
+        final referralLabel = referralAsync.when(
+          loading: () => 'Loading...',
+          error: (_, __) => 'Not set',
+          data: (code) => code.isNotEmpty ? code : 'Not set',
+        );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,7 +36,7 @@ class MerchantProfileInfoSection extends ConsumerWidget {
             _info(
               context,
               'Referral Code:',
-              profile.referralCode ?? 'LESGO${profile.name.toUpperCase().replaceAll(' ', '')}',
+              referralLabel,
               valueColor: const Color(0xFFC320D6),
             ),
           ],
@@ -107,30 +115,43 @@ class MerchantProfileInfoSection extends ConsumerWidget {
             onChanged: (value) async {
               try {
                 final authState = ref.read(riderAuthProvider);
-                final partnerId = authState.user?.partnerId;
-                if (partnerId != null) {
-                  final dataSource = ref.read(merchantDataSourceProvider);
-                  await dataSource.updatePartnerProfile(
-                    partnerId,
-                    UpdatePartnerRequest(isOpen: value),
-                  );
-                  ref.invalidate(merchantProfileProvider);
-                  
+                final profile = ref.read(merchantProfileProvider).value;
+                final partnerId = authState.user?.partnerId ?? profile?.id;
+
+                if (partnerId == null) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Store is now ${value ? "OPEN" : "CLOSED"}'),
-                        backgroundColor: value ? Colors.green : Colors.red,
-                        duration: const Duration(seconds: 2),
+                      const SnackBar(
+                        content: Text('Partner ID not found. Please login again.'),
+                        backgroundColor: Colors.red,
                       ),
                     );
                   }
+                  return;
                 }
-              } catch (e) {
+
+                final dataSource = ref.read(merchantDataSourceProvider);
+                await dataSource.updatePartnerProfile(
+                  partnerId,
+                  UpdatePartnerRequest(isOpen: value),
+                );
+                ref.invalidate(merchantProfileProvider);
+
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to update status: $e'),
+                      content: Text('Store is now ${value ? "OPEN" : "CLOSED"}'),
+                      backgroundColor: value ? Colors.green : Colors.red,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } catch (e) {
+                ref.invalidate(merchantProfileProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(ApiService.extractError(e)),
                       backgroundColor: Colors.red,
                     ),
                   );

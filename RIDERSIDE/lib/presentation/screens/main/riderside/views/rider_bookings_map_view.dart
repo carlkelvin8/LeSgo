@@ -8,8 +8,10 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
+import '../../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
+import '../../../../../core/config/secrets_config.dart';
 import '../../../../../core/services/api_service.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 import '../rider_booking_detail_screen.dart';
@@ -26,8 +28,6 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   GoogleMapController? _mapController;
   bool _mapReady = false;
   Position? _currentPosition;
-  bool _isLocationUpdating = false;
-  Timer? _locationUpdateTimer;
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   bool _showOrdersList = true;
@@ -36,12 +36,19 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   void initState() {
     super.initState();
     _requestLocationPermission();
-    _startLocationUpdates();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final activeOrderId = ref.read(riderOrdersProvider).activeOrder?.id;
+      final notifier = ref.read(riderLocationProvider.notifier);
+      notifier.setActiveOrderId(activeOrderId);
+      if (!ref.read(riderLocationProvider).isTracking) {
+        await notifier.startTracking(orderId: activeOrderId);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _stopLocationUpdates();
+    ref.read(riderLocationProvider.notifier).setActiveOrderId(null);
     try {
       _mapController?.dispose();
     } catch (_) {}
@@ -75,7 +82,6 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           _currentPosition = position;
         });
         _updateMarkers();
-        _sendLocationToBackend(position);
         _centerMapOnCurrentLocation();
       }
     } catch (e) {
@@ -94,39 +100,19 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     }
   }
 
-  void _startLocationUpdates() {
-    // Update location every 30 seconds
-    _locationUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-      _getCurrentLocation();
-    });
-  }
-
-  void _stopLocationUpdates() {
-    _locationUpdateTimer?.cancel();
-    _locationUpdateTimer = null;
-  }
-
-  Future<void> _sendLocationToBackend(Position position) async {
-    if (_isLocationUpdating) return;
-    
-    try {
-      _isLocationUpdating = true;
-      final authState = ref.read(riderAuthProvider);
-      final driverProfileId = authState.user?.driverProfileId;
-      
-      if (driverProfileId != null) {
-        await ApiService.updateDriverLocation(
-          driverProfileId,
-          position.latitude,
-          position.longitude,
-        );
-        print('📍 Location updated: ${position.latitude}, ${position.longitude}');
-      }
-    } catch (e) {
-      print('❌ Error updating location: $e');
-    } finally {
-      _isLocationUpdating = false;
-    }
+  Position _positionFromCoords(double lat, double lng) {
+    return Position(
+      latitude: lat,
+      longitude: lng,
+      timestamp: DateTime.now(),
+      accuracy: 0,
+      altitude: 0,
+      altitudeAccuracy: 0,
+      heading: 0,
+      headingAccuracy: 0,
+      speed: 0,
+      speedAccuracy: 0,
+    );
   }
 
   void _updateMarkers() {
@@ -254,7 +240,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
 
   Widget _buildMapView() {
     print('🗺️ Building map view with position: $_currentPosition');
-    print('🔑 Google Maps API Key: AIzaSyA0s1a7phLN0iaD6-MjnwqfpJFhYhmyNjU');
+    print('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
     
     return Container(
       decoration: BoxDecoration(
@@ -299,7 +285,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               }
             });
             print('🗺️ Bookings Map created and ready');
-            print('🔑 Google Maps API Key: AIzaSyA0s1a7phLN0iaD6-MjnwqfpJFhYhmyNjU');
+            print('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
             print('📍 Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
           }
         },
@@ -911,8 +897,23 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<RiderLocationState>(riderLocationProvider, (previous, next) {
+      if (next.latitude == null || next.longitude == null || !mounted) return;
+      if (previous?.latitude == next.latitude &&
+          previous?.longitude == next.longitude) {
+        return;
+      }
+      setState(() {
+        _currentPosition =
+            _positionFromCoords(next.latitude!, next.longitude!);
+      });
+      _updateMarkers();
+    });
+
     // Listen to orders changes and update markers
     ref.listen<RiderOrdersState>(riderOrdersProvider, (previous, next) {
+      final activeOrderId = next.activeOrder?.id;
+      ref.read(riderLocationProvider.notifier).setActiveOrderId(activeOrderId);
       _updateMarkers();
     });
 

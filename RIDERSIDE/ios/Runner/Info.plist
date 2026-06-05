@@ -50,6 +50,6 @@
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app needs access to your location for delivery tracking and navigation.</string>
 	<key>GMSApiKey</key>
-	<string>AIzaSyBekzwaPQ9H0Zu3y7XOyUkrM-ny4XdVZXA</string>
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
 </dict>
 </plist>

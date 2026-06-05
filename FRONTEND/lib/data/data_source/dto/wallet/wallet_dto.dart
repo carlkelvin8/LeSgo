@@ -2,11 +2,28 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'wallet_dto.g.dart';
 
+int _parseInt(dynamic value, [int fallback = 0]) {
+  if (value == null) return fallback;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+double _parseDouble(dynamic value, [double fallback = 0.0]) {
+  if (value == null) return fallback;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? fallback;
+  return fallback;
+}
+
 @JsonSerializable()
 class WalletDto {
+  @JsonKey(fromJson: _parseInt)
   final int id;
-  @JsonKey(name: 'user_id')
+  @JsonKey(name: 'user_id', fromJson: _parseInt)
   final int userId;
+  @JsonKey(fromJson: _parseDouble)
   final double balance;
   final String currency;
   @JsonKey(name: 'created_at')
@@ -57,13 +74,15 @@ class WalletResponseDto {
 
 @JsonSerializable()
 class WalletTransactionDto {
+  @JsonKey(fromJson: _parseInt)
   final int id;
-  @JsonKey(name: 'wallet_id')
+  @JsonKey(name: 'wallet_id', fromJson: _parseInt)
   final int walletId;
   final String type;
+  @JsonKey(fromJson: _parseDouble)
   final double amount;
-  final String description;
-  final String reference;
+  final String? description;
+  final String? reference;
   /// Optional API status: pending, paid, failed, refunded
   final String? status;
   @JsonKey(name: 'created_at')
@@ -74,8 +93,8 @@ class WalletTransactionDto {
     required this.walletId,
     required this.type,
     required this.amount,
-    required this.description,
-    required this.reference,
+    this.description,
+    this.reference,
     this.status,
     required this.createdAt,
   });

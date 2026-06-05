@@ -5,6 +5,7 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../widgets/widgets.dart';
+import '../../../widgets/tracking/driver_info_card.dart';
 import '../../../provider/main/booking/driver_finding_provider.dart';
 import 'simple_order_tracking_screen.dart';
 
@@ -168,7 +169,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
         ),
         
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        
+
         Text(
           'Driver Found!',
           style: TextStyle(
@@ -178,22 +179,9 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
             color: Colors.black87,
           ),
         ),
-        
-        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        
-        if (state.driverName != null)
-          Text(
-            state.driverName!,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 18),
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF5F2D82),
-            ),
-          ),
-        
+
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-        
+
         Text(
           'Your driver is on the way!',
           style: TextStyle(
@@ -202,7 +190,23 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
             color: Colors.grey[600],
           ),
         ),
-        
+
+        if (state.driverInfo != null) ...[
+          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+          DriverInfoCard(
+            driverInfo: state.driverInfo!,
+            onChat: () {
+              final orderId = int.tryParse(widget.orderId) ?? 0;
+              OrderContactActions.openOrderChat(
+                context,
+                orderId: orderId,
+                orderType: widget.orderType,
+                driverName: state.driverName,
+              );
+            },
+          ),
+        ],
+
         SizedBox(height: ResponsiveUtils.spacing(context, 32)),
         
         ElevatedButton(
@@ -332,28 +336,44 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     );
   }
 
-  void _handleCancelOrder() {
-    showDialog(
+  Future<void> _handleCancelOrder() async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Order'),
         content: const Text('Are you sure you want to cancel this order?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('No'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              ref.read(driverFindingProvider.notifier).cancelOrder(widget.orderId);
-              Navigator.pop(context); // Go back to previous screen
-            },
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Yes', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
+
+    if (confirmed != true || !mounted) return;
+
+    final success = await ref
+        .read(driverFindingProvider.notifier)
+        .cancelOrder(widget.orderId);
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pop(context);
+      return;
+    }
+
+    final error = ref.read(driverFindingProvider).error;
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+    }
   }
 
   void _retryFindingDriver() {

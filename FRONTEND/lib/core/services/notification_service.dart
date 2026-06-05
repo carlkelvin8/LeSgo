@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 import 'fcm_service.dart';
 import '../di/injection.dart';
+import '../services/chat_realtime_service.dart';
+import '../di/local_storage_service.dart';
 import '../services/app_preferences_service.dart';
-import '../../data/data_source/dto/notification/notification_dto.dart';
 import '../constants/routers/app_router.dart';
 import '../constants/routers/main/main_routes.dart';
+import '../../data/data_source/dto/notification/notification_dto.dart';
+import '../../data/data_source/notification_remote_datasource.dart';
+import '../constants/api_constants.dart';
+import '../network/dio_client.dart';
 
 /// Notification types
 enum NotificationType {
@@ -33,94 +38,128 @@ enum NotificationType {
   }
 }
 
-/// Notification Service for managing app notifications
 @lazySingleton
 class NotificationService {
   final FcmService _fcmService;
+  final NotificationRemoteDataSource _remoteDs =
+      getIt<NotificationRemoteDataSource>();
+  final DioClient _dioClient = getIt<DioClient>();
+  final LocalStorageService _localStorage = getIt<LocalStorageService>();
   final AppPreferencesService _appPrefs = getIt<AppPreferencesService>();
+
   final List<NotificationDto> _notifications = [];
   int _unreadCount = 0;
+  int? _userId;
 
   NotificationService(this._fcmService);
 
-  /// Initialize notification service
   Future<void> initialize() async {
     await _fcmService.initialize();
-    
-    // Register message handler
-    _fcmService.registerMessageHandler(_handleNotification);
-    
-    // Subscribe to user-specific topics
+    _fcmService.registerMessageHandler(_handlePushMessage);
+    await _syncFromBackend();
     await _subscribeToUserTopics();
-    
     debugPrint('✅ Notification service initialized');
   }
 
-  /// Subscribe to user-specific notification topics
-  Future<void> _subscribeToUserTopics() async {
-    // Subscribe to general topics
-    await _fcmService.subscribeToTopic('all_users');
-    await _fcmService.subscribeToTopic('promotions');
-    
-    // TODO: Subscribe to user-specific topics based on user ID
-    // await _fcmService.subscribeToTopic('user_${userId}');
+  Future<void> refreshFromBackend() => _syncFromBackend();
+
+  Future<void> _syncFromBackend() async {
+    if (_localStorage.token == null || _localStorage.token!.isEmpty) {
+      return;
+    }
+
+    try {
+      final response = await _remoteDs.fetchNotifications();
+      _notifications
+        ..clear()
+        ..addAll(response.data);
+      _unreadCount = await _remoteDs.fetchUnreadCount();
+    } catch (e) {
+      debugPrint('⚠️ Notification sync failed: $e');
+    }
   }
 
-  /// Handle incoming notification
-  void _handleNotification(Map<String, dynamic> message) {
+  Future<void> _subscribeToUserTopics() async {
+    await _fcmService.subscribeToTopic('all_users');
+    await _fcmService.subscribeToTopic('promotions');
+
     try {
-      final type = NotificationType.fromString(
-        message['type']?.toString() ?? 'system_alert',
-      );
-      if (type == NotificationType.promotional &&
-          !_appPrefs.pushPromotionsEnabled) {
-        return;
+      if (_localStorage.token == null) return;
+      final me = await _dioClient.dio.get(ApiConstants.authMe);
+      final data = me.data['data'] as Map<String, dynamic>? ?? {};
+      _userId = (data['id'] as num?)?.toInt();
+      if (_userId != null) {
+        await _fcmService.subscribeToTopic('user_$_userId');
       }
-      if ((type == NotificationType.orderAccepted ||
-              type == NotificationType.orderPickedUp ||
-              type == NotificationType.orderInTransit ||
-              type == NotificationType.orderDelivered ||
-              type == NotificationType.driverAssigned) &&
-          !_appPrefs.pushOrderUpdatesEnabled) {
-        return;
+    } catch (e) {
+      debugPrint('⚠️ User topic subscription skipped: $e');
+    }
+  }
+
+  void _handlePushMessage(Map<String, dynamic> message) {
+    try {
+      final typeStr = message['type']?.toString() ?? 'system_alert';
+      if (typeStr.toLowerCase().contains('chat') ||
+          typeStr.toLowerCase().contains('message') ||
+          message['data'] is Map &&
+              ((message['data'] as Map)['conversation_id'] != null ||
+                  (message['data'] as Map)['order_id'] != null)) {
+        getIt<ChatRealtimeService>().notifyChatUpdate();
       }
+
+      final type = NotificationType.fromString(typeStr);
+      if (!_shouldDeliver(type)) return;
 
       final notification = _parseNotification(message);
       _notifications.insert(0, notification);
-      
       if (!notification.isRead) {
         _unreadCount++;
       }
-      
-      debugPrint('📬 Notification received: ${notification.title}');
     } catch (e) {
       debugPrint('❌ Failed to handle notification: $e');
     }
   }
 
-  /// Parse notification from message
+  bool _shouldDeliver(NotificationType type) {
+    if (type == NotificationType.promotional &&
+        !_appPrefs.pushPromotionsEnabled) {
+      return false;
+    }
+    if ((type == NotificationType.orderAccepted ||
+            type == NotificationType.orderPickedUp ||
+            type == NotificationType.orderInTransit ||
+            type == NotificationType.orderDelivered ||
+            type == NotificationType.driverAssigned) &&
+        !_appPrefs.pushOrderUpdatesEnabled) {
+      return false;
+    }
+    return true;
+  }
+
   NotificationDto _parseNotification(Map<String, dynamic> message) {
     return NotificationDto(
-      id: DateTime.now().millisecondsSinceEpoch,
-      userId: 0, // TODO: Get from auth
-      type: message['type'] ?? 'system_alert',
-      title: message['title'] ?? 'Notification',
-      message: message['message'] ?? '',
-      data: message['data'],
+      id: message['id'] is num
+          ? (message['id'] as num).toInt()
+          : DateTime.now().millisecondsSinceEpoch,
+      userId: _userId ?? 0,
+      type: message['type']?.toString() ?? 'system_alert',
+      title: message['title']?.toString() ?? 'Notification',
+      message: message['message']?.toString() ?? message['body']?.toString() ?? '',
+      data: message['data'] is Map
+          ? Map<String, dynamic>.from(message['data'] as Map)
+          : null,
       isRead: false,
       readAt: null,
       createdAt: DateTime.now().toIso8601String(),
     );
   }
 
-  /// Show notification banner in app
   void showNotification(
     BuildContext context,
     NotificationDto notification, {
     VoidCallback? onTap,
   }) {
     final type = NotificationType.fromString(notification.type);
-    
     _fcmService.showInAppNotification(
       context,
       title: notification.title,
@@ -131,7 +170,6 @@ class NotificationService {
     );
   }
 
-  /// Show notification by type
   void showNotificationByType(
     BuildContext context, {
     required NotificationType type,
@@ -141,7 +179,7 @@ class NotificationService {
   }) {
     final notification = NotificationDto(
       id: DateTime.now().millisecondsSinceEpoch,
-      userId: 0,
+      userId: _userId ?? 0,
       type: type.value,
       title: type.title,
       message: message,
@@ -153,29 +191,22 @@ class NotificationService {
 
     _notifications.insert(0, notification);
     _unreadCount++;
-
     showNotification(context, notification, onTap: onTap);
   }
 
-  /// Handle notification tap
   void _handleNotificationTap(BuildContext context, NotificationDto notification) {
-    // Mark as read
     markAsRead(notification.id);
-    
-    // Navigate based on notification type
     final type = NotificationType.fromString(notification.type);
-    
+
     switch (type) {
       case NotificationType.orderAccepted:
       case NotificationType.orderPickedUp:
       case NotificationType.orderInTransit:
       case NotificationType.orderDelivered:
       case NotificationType.driverAssigned:
-        // Navigate to order tracking
         final orderId = notification.data?['order_id'];
         if (orderId != null) {
-          // TODO: Navigate to tracking screen
-          debugPrint('Navigate to order: $orderId');
+          debugPrint('Open order tracking: $orderId');
         }
         break;
       case NotificationType.promotional:
@@ -186,36 +217,65 @@ class NotificationService {
     }
   }
 
-  /// Mark notification as read
-  void markAsRead(int notificationId) {
+  Future<void> markAsRead(int notificationId) async {
     final index = _notifications.indexWhere((n) => n.id == notificationId);
-    if (index != -1 && !_notifications[index].isRead) {
+    if (index == -1) return;
+
+    if (!_notifications[index].isRead) {
       _unreadCount = (_unreadCount - 1).clamp(0, _notifications.length);
-      // TODO: Update notification in backend
-      debugPrint('✅ Notification $notificationId marked as read');
+      _notifications[index] = NotificationDto(
+        id: _notifications[index].id,
+        userId: _notifications[index].userId,
+        type: _notifications[index].type,
+        title: _notifications[index].title,
+        message: _notifications[index].message,
+        data: _notifications[index].data,
+        isRead: true,
+        readAt: DateTime.now().toIso8601String(),
+        createdAt: _notifications[index].createdAt,
+      );
+    }
+
+    try {
+      await _remoteDs.markRead(notificationId);
+    } catch (e) {
+      debugPrint('⚠️ markRead API failed: $e');
     }
   }
 
-  /// Mark all notifications as read
-  void markAllAsRead() {
+  Future<void> markAllAsRead() async {
     _unreadCount = 0;
-    // TODO: Update all notifications in backend
-    debugPrint('✅ All notifications marked as read');
+    for (var i = 0; i < _notifications.length; i++) {
+      if (!_notifications[i].isRead) {
+        _notifications[i] = NotificationDto(
+          id: _notifications[i].id,
+          userId: _notifications[i].userId,
+          type: _notifications[i].type,
+          title: _notifications[i].title,
+          message: _notifications[i].message,
+          data: _notifications[i].data,
+          isRead: true,
+          readAt: DateTime.now().toIso8601String(),
+          createdAt: _notifications[i].createdAt,
+        );
+      }
+    }
+
+    try {
+      await _remoteDs.markAllRead();
+    } catch (e) {
+      debugPrint('⚠️ markAllRead API failed: $e');
+    }
   }
 
-  /// Get all notifications
   List<NotificationDto> get notifications => List.unmodifiable(_notifications);
-
-  /// Get unread count
   int get unreadCount => _unreadCount;
 
-  /// Clear all notifications
   void clearAll() {
     _notifications.clear();
     _unreadCount = 0;
   }
 
-  /// Dispose service
   void dispose() {
     _fcmService.dispose();
   }

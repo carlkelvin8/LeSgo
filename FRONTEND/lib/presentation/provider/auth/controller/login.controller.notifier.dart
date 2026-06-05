@@ -6,7 +6,6 @@ import 'package:lesgo/core/services/google_auth_service.dart';
 import 'package:lesgo/core/di/injection.dart';
 import 'package:lesgo/core/network/dio_client.dart';
 import 'package:lesgo/core/di/local_storage_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../auth_provider.dart';
 import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/constants/routers/app_router.dart';
@@ -25,11 +24,12 @@ class LoginControllers {
 
   Future<void> loadCredentials(WidgetRef ref) async {
     final localStorage = getIt<LocalStorageService>();
+    if (!localStorage.isRememberMeEnabled()) return;
+
     final credentials = localStorage.getSavedCredentials();
     if (credentials != null) {
       emailController.text = credentials['email']!;
       passwordController.text = credentials['password']!;
-      // Need to defer this to avoid modifying provider during build
       Future.microtask(() {
         ref.read(authProvider.notifier).toggleRememberMe(true);
       });
@@ -57,14 +57,11 @@ class LoginControllers {
     if (!context.mounted) return false;
 
     if (authState.isAuthenticated) {
-      if (authState.rememberMe) {
-        await getIt<LocalStorageService>().saveCredentials(
-          loginRequest.email,
-          loginRequest.password,
-        );
-      } else {
-        await getIt<LocalStorageService>().clearCredentials();
-      }
+      await getIt<LocalStorageService>().saveRememberMePreference(
+        enabled: authState.rememberMe,
+        email: loginRequest.email,
+        password: loginRequest.password,
+      );
 
       SnackBarUtils.showSuccess(
         context,
@@ -91,9 +88,11 @@ class LoginControllers {
       if (!context.mounted) return;
 
       if (result.success && result.token != null) {
-        // Save the token to shared preferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', result.token!);
+        final localStorage = getIt<LocalStorageService>();
+        await localStorage.saveToken(result.token!);
+        if (result.refreshToken != null && result.refreshToken!.isNotEmpty) {
+          await localStorage.saveRefreshToken(result.refreshToken!);
+        }
 
         if (!context.mounted) return;
 

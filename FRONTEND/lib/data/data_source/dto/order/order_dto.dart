@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import '../user/user_dto.dart';
+import '../../../../core/utils/proof_image_utils.dart';
 import 'lesbuy_item_dto.dart';
 
 part 'order_dto.g.dart';
@@ -19,6 +19,45 @@ double? _parseDoubleNullable(dynamic value) {
   return null;
 }
 
+String _parseString(dynamic value, {String fallback = ''}) {
+  if (value == null) return fallback;
+  return value.toString();
+}
+
+int _parseInt(dynamic value, {int fallback = 0}) {
+  if (value == null) return fallback;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+@JsonSerializable()
+class DriverUserDto {
+  final int id;
+  final String name;
+  final String? email;
+  @JsonKey(name: 'phone_number')
+  final String? phoneNumber;
+  @JsonKey(name: 'profile_picture')
+  final String? profilePicture;
+  @JsonKey(name: 'profile_photo_url')
+  final String? profilePhotoUrl;
+
+  DriverUserDto({
+    required this.id,
+    required this.name,
+    this.email,
+    this.phoneNumber,
+    this.profilePicture,
+    this.profilePhotoUrl,
+  });
+
+  factory DriverUserDto.fromJson(Map<String, dynamic> json) =>
+      _$DriverUserDtoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DriverUserDtoToJson(this);
+}
+
 @JsonSerializable()
 class DriverProfileDto {
   final int id;
@@ -28,7 +67,13 @@ class DriverProfileDto {
   final double? rating;
   @JsonKey(name: 'total_trips')
   final int? totalTrips;
-  final UserDto? user;
+  @JsonKey(name: 'plate_number')
+  final String? plateNumber;
+  @JsonKey(name: 'vehicle_plate')
+  final String? vehiclePlate;
+  @JsonKey(name: 'vehicle_type')
+  final String? vehicleType;
+  final DriverUserDto? user;
 
   DriverProfileDto({
     required this.id,
@@ -36,6 +81,9 @@ class DriverProfileDto {
     required this.status,
     this.rating,
     this.totalTrips,
+    this.plateNumber,
+    this.vehiclePlate,
+    this.vehicleType,
     this.user,
   });
 
@@ -60,25 +108,25 @@ class OrderDto {
   final int? pickupAddressId;
   @JsonKey(name: 'dropoff_address_id')
   final int? dropoffAddressId;
-  @JsonKey(name: 'pickup_address')
+  @JsonKey(name: 'pickup_address', fromJson: _parseString)
   final String pickupAddress;
   @JsonKey(name: 'pickup_lat', fromJson: _parseDouble)
   final double pickupLat;
   @JsonKey(name: 'pickup_lng', fromJson: _parseDouble)
   final double pickupLng;
-  @JsonKey(name: 'pickup_contact_name')
+  @JsonKey(name: 'pickup_contact_name', fromJson: _parseString)
   final String pickupContactName;
-  @JsonKey(name: 'pickup_contact_phone')
+  @JsonKey(name: 'pickup_contact_phone', fromJson: _parseString)
   final String pickupContactPhone;
-  @JsonKey(name: 'dropoff_address')
+  @JsonKey(name: 'dropoff_address', fromJson: _parseString)
   final String dropoffAddress;
   @JsonKey(name: 'dropoff_lat', fromJson: _parseDouble)
   final double dropoffLat;
   @JsonKey(name: 'dropoff_lng', fromJson: _parseDouble)
   final double dropoffLng;
-  @JsonKey(name: 'dropoff_contact_name')
+  @JsonKey(name: 'dropoff_contact_name', fromJson: _parseString)
   final String dropoffContactName;
-  @JsonKey(name: 'dropoff_contact_phone')
+  @JsonKey(name: 'dropoff_contact_phone', fromJson: _parseString)
   final String dropoffContactPhone;
   final String? notes;
   @JsonKey(name: 'item_description')
@@ -93,10 +141,11 @@ class OrderDto {
   final String? voucherCode;
   @JsonKey(name: 'discount_amount', fromJson: _parseDouble)
   final double discountAmount;
+  @JsonKey(fromJson: _parseString)
   final String status;
   @JsonKey(name: 'scheduled_at')
   final String? scheduledAt;
-  @JsonKey(name: 'estimated_distance_m')
+  @JsonKey(name: 'estimated_distance_m', fromJson: _parseInt)
   final int estimatedDistanceM;
   @JsonKey(name: 'actual_distance_m')
   final int? actualDistanceM;
@@ -113,9 +162,9 @@ class OrderDto {
   @JsonKey(name: 'fare_breakdown')
   final Map<String, dynamic>? fareBreakdown;
   final Map<String, dynamic>? meta;
-  @JsonKey(name: 'payment_method')
+  @JsonKey(name: 'payment_method', fromJson: _parseString)
   final String paymentMethod;
-  @JsonKey(name: 'payment_status')
+  @JsonKey(name: 'payment_status', fromJson: _parseString)
   final String paymentStatus;
   @JsonKey(name: 'cancel_reason')
   final String? cancelReason;
@@ -135,6 +184,8 @@ class OrderDto {
   final DriverProfileDto? driverProfile;
   @JsonKey(name: 'lesbuy_items')
   final List<LesbuyItemDto>? lesbuyItems;
+  @JsonKey(name: 'proof_images', fromJson: ProofImageUtils.parseUrls)
+  final List<String> proofImages;
 
   OrderDto({
     required this.id,
@@ -183,6 +234,7 @@ class OrderDto {
     this.updatedAt,
     this.driverProfile,
     this.lesbuyItems,
+    this.proofImages = const [],
   });
 
   factory OrderDto.fromJson(Map<String, dynamic> json) =>

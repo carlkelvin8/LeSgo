@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/services/api_service.dart';
@@ -20,18 +21,35 @@ class _RiderEditProfileScreenState
   late final TextEditingController _addressController;
   late final TextEditingController _vehicleController;
   late final TextEditingController _plateController;
+  late final TextEditingController _referralController;
 
   bool _isSaving = false;
+  bool _hydrated = false;
 
   @override
   void initState() {
     super.initState();
-    final profile = ref.read(riderProfileProvider);
-    _nameController = TextEditingController(text: profile.name);
-    _phoneController = TextEditingController(text: profile.contact);
-    _addressController = TextEditingController(text: profile.address);
-    _vehicleController = TextEditingController(text: profile.vehicle);
-    _plateController = TextEditingController(text: profile.plateNumber);
+    _nameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _addressController = TextEditingController();
+    _vehicleController = TextEditingController();
+    _plateController = TextEditingController();
+    _referralController = TextEditingController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(riderProfileProvider.notifier).loadProfile();
+    });
+  }
+
+  void _hydrateFromProfile(RiderProfileState profile) {
+    if (_hydrated || profile.isLoading) return;
+    _hydrated = true;
+    _nameController.text = profile.name;
+    _phoneController.text = profile.contact;
+    _addressController.text = profile.address;
+    _vehicleController.text = profile.vehicle;
+    _plateController.text = profile.plateNumber;
+    _referralController.text = profile.referralCode;
   }
 
   @override
@@ -41,7 +59,19 @@ class _RiderEditProfileScreenState
     _addressController.dispose();
     _vehicleController.dispose();
     _plateController.dispose();
+    _referralController.dispose();
     super.dispose();
+  }
+
+  Future<void> _copyReferralCode() async {
+    final code = _referralController.text.trim();
+    if (code.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: code));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Referral code copied')),
+      );
+    }
   }
 
   Future<void> _save() async {
@@ -50,21 +80,20 @@ class _RiderEditProfileScreenState
     setState(() => _isSaving = true);
 
     try {
-      // Update user profile
       await ApiService.updateProfile({
         'name': _nameController.text.trim(),
         'phone_number': _phoneController.text.trim(),
         'address_line1': _addressController.text.trim(),
       });
 
-      // Update driver profile fields if vehicle/plate changed
       final vehicleText = _vehicleController.text.trim();
       final plateText = _plateController.text.trim();
       if (vehicleText.isNotEmpty || plateText.isNotEmpty) {
         try {
-          // Get driver profile ID from the /me response
           final meData = await ApiService.getMe();
-          final dp = (meData['user'] ?? meData)['driver_profile'] as Map<String, dynamic>?;
+          final user = meData['user'] ?? meData['data'] ?? meData;
+          final dp =
+              user is Map ? user['driver_profile'] as Map<String, dynamic>? : null;
           final driverProfileId = dp?['id'];
           if (driverProfileId != null) {
             await ApiService.dio.patch('/v1/drivers/$driverProfileId', data: {
@@ -74,11 +103,9 @@ class _RiderEditProfileScreenState
           }
         } catch (e) {
           print('Driver profile update error: $e');
-          // Best-effort, don't fail the whole save
         }
       }
 
-      // Reload profile to reflect changes
       await ref.read(riderProfileProvider.notifier).loadProfile();
 
       if (mounted) {
@@ -106,6 +133,8 @@ class _RiderEditProfileScreenState
 
   @override
   Widget build(BuildContext context) {
+    final profile = ref.watch(riderProfileProvider);
+    _hydrateFromProfile(profile);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
@@ -129,7 +158,7 @@ class _RiderEditProfileScreenState
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: _isSaving ? null : _save,
+            onPressed: _isSaving || profile.isLoading ? null : _save,
             child: _isSaving
                 ? const SizedBox(
                     width: 20,
@@ -152,88 +181,111 @@ class _RiderEditProfileScreenState
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(
-          horizontal: hp,
-          vertical: ResponsiveUtils.spacing(context, 24),
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildField(
-                context,
-                label: 'Full Name',
-                controller: _nameController,
-                hint: 'Enter your full name',
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Name is required' : null,
+      body: profile.isLoading && !_hydrated
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
               ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              _buildField(
-                context,
-                label: 'Contact Number',
-                controller: _phoneController,
-                hint: '+639XXXXXXXXX',
-                keyboardType: TextInputType.phone,
+            )
+          : SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: hp,
+                vertical: ResponsiveUtils.spacing(context, 24),
               ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              _buildField(
-                context,
-                label: 'Address',
-                controller: _addressController,
-                hint: 'Enter your address',
-                maxLines: 2,
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              _buildField(
-                context,
-                label: 'Vehicle Type',
-                controller: _vehicleController,
-                hint: 'e.g. Motorcycle, Bicycle',
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              _buildField(
-                context,
-                label: 'Plate Number',
-                controller: _plateController,
-                hint: 'e.g. ABC 1234',
-                textCapitalization: TextCapitalization.characters,
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 40)),
-              SizedBox(
-                width: double.infinity,
-                height: ResponsiveUtils.spacing(context, 52),
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
-                    disabledBackgroundColor: Colors.grey.shade300,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildField(
+                      context,
+                      label: 'Full Name',
+                      controller: _nameController,
+                      hint: 'Enter your full name',
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? 'Name is required'
+                          : null,
                     ),
-                  ),
-                  child: _isSaving
-                      ? const CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        )
-                      : Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 16),
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    _buildField(
+                      context,
+                      label: 'Contact Number',
+                      controller: _phoneController,
+                      hint: '+639XXXXXXXXX',
+                      keyboardType: TextInputType.phone,
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    _buildField(
+                      context,
+                      label: 'Address',
+                      controller: _addressController,
+                      hint: 'Enter your address',
+                      maxLines: 2,
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    _buildField(
+                      context,
+                      label: 'Vehicle Type',
+                      controller: _vehicleController,
+                      hint: 'e.g. Motorcycle, Bicycle',
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    _buildField(
+                      context,
+                      label: 'Plate Number',
+                      controller: _plateController,
+                      hint: 'e.g. ABC 1234',
+                      textCapitalization: TextCapitalization.characters,
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    _buildField(
+                      context,
+                      label: 'Referral Code',
+                      controller: _referralController,
+                      hint: 'Loading referral code…',
+                      readOnly: true,
+                      suffix: IconButton(
+                        onPressed: _referralController.text.trim().isEmpty
+                            ? null
+                            : _copyReferralCode,
+                        icon: const Icon(Icons.copy, color: Color(0xFF5F2D82)),
+                        tooltip: 'Copy referral code',
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 40)),
+                    SizedBox(
+                      width: double.infinity,
+                      height: ResponsiveUtils.spacing(context, 52),
+                      child: ElevatedButton(
+                        onPressed: _isSaving ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF5F2D82),
+                          disabledBackgroundColor: Colors.grey.shade300,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+                        child: _isSaving
+                            ? const CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
+                              )
+                            : Text(
+                                'Save Changes',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize:
+                                      ResponsiveUtils.fontSize(context, 16),
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
@@ -246,6 +298,8 @@ class _RiderEditProfileScreenState
     int maxLines = 1,
     TextCapitalization textCapitalization = TextCapitalization.words,
     String? Function(String?)? validator,
+    bool readOnly = false,
+    Widget? suffix,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,20 +320,22 @@ class _RiderEditProfileScreenState
           maxLines: maxLines,
           textCapitalization: textCapitalization,
           validator: validator,
+          readOnly: readOnly,
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 15),
-            color: Colors.black87,
+            color: readOnly ? Colors.grey.shade700 : Colors.black87,
           ),
           decoration: InputDecoration(
             hintText: hint,
+            suffixIcon: suffix,
             hintStyle: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               color: Colors.grey.shade400,
             ),
             filled: true,
-            fillColor: const Color(0xFFF5F5F5),
+            fillColor: readOnly ? Colors.grey.shade100 : const Color(0xFFF5F5F5),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,

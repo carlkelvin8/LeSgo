@@ -101,17 +101,39 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
 
             // Store List
             Expanded(
-              child: StoreListSection(
-                stores: lesbuyState.filteredStores,
-                onStoreTap: (store) {
-                  // Navigate to store detail screen
-                  AppRouter.push(
-                    context,
-                    BookingRoutes.lesbuyStoreDetail,
-                    arguments: store,
-                  );
-                },
-              ),
+              child: lesbuyState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : lesbuyState.error != null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                lesbuyState.error!,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                              TextButton(
+                                onPressed: () => lesbuyNotifier.refresh(),
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        )
+                      : StoreListSection(
+                          stores: lesbuyState.filteredStores,
+                          onStoreTap: (store) {
+                            AppRouter.push(
+                              context,
+                              BookingRoutes.lesbuyStoreDetail,
+                              arguments: store,
+                            );
+                          },
+                        ),
             ),
 
             // Manual Order Section

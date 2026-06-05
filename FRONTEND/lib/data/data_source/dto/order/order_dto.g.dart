@@ -6,6 +6,26 @@ part of 'order_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+DriverUserDto _$DriverUserDtoFromJson(Map<String, dynamic> json) =>
+    DriverUserDto(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String? ?? 'Driver',
+      email: json['email'] as String?,
+      phoneNumber: json['phone_number'] as String?,
+      profilePicture: json['profile_picture'] as String?,
+      profilePhotoUrl: json['profile_photo_url'] as String?,
+    );
+
+Map<String, dynamic> _$DriverUserDtoToJson(DriverUserDto instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'email': instance.email,
+      'phone_number': instance.phoneNumber,
+      'profile_picture': instance.profilePicture,
+      'profile_photo_url': instance.profilePhotoUrl,
+    };
+
 DriverProfileDto _$DriverProfileDtoFromJson(Map<String, dynamic> json) =>
     DriverProfileDto(
       id: (json['id'] as num).toInt(),
@@ -13,9 +33,12 @@ DriverProfileDto _$DriverProfileDtoFromJson(Map<String, dynamic> json) =>
       status: json['status'] as String,
       rating: (json['rating'] as num?)?.toDouble(),
       totalTrips: (json['total_trips'] as num?)?.toInt(),
+      plateNumber: json['plate_number'] as String?,
+      vehiclePlate: json['vehicle_plate'] as String?,
+      vehicleType: json['vehicle_type'] as String?,
       user: json['user'] == null
           ? null
-          : UserDto.fromJson(json['user'] as Map<String, dynamic>),
+          : DriverUserDto.fromJson(json['user'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$DriverProfileDtoToJson(DriverProfileDto instance) =>
@@ -25,7 +48,10 @@ Map<String, dynamic> _$DriverProfileDtoToJson(DriverProfileDto instance) =>
       'status': instance.status,
       'rating': instance.rating,
       'total_trips': instance.totalTrips,
-      'user': instance.user,
+      'plate_number': instance.plateNumber,
+      'vehicle_plate': instance.vehiclePlate,
+      'vehicle_type': instance.vehicleType,
+      'user': instance.user?.toJson(),
     };
 
 OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
@@ -36,16 +62,16 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
   serviceId: (json['service_id'] as num).toInt(),
   pickupAddressId: (json['pickup_address_id'] as num?)?.toInt(),
   dropoffAddressId: (json['dropoff_address_id'] as num?)?.toInt(),
-  pickupAddress: json['pickup_address'] as String,
+  pickupAddress: _parseString(json['pickup_address']),
   pickupLat: _parseDouble(json['pickup_lat']),
   pickupLng: _parseDouble(json['pickup_lng']),
-  pickupContactName: json['pickup_contact_name'] as String,
-  pickupContactPhone: json['pickup_contact_phone'] as String,
-  dropoffAddress: json['dropoff_address'] as String,
+  pickupContactName: _parseString(json['pickup_contact_name']),
+  pickupContactPhone: _parseString(json['pickup_contact_phone']),
+  dropoffAddress: _parseString(json['dropoff_address']),
   dropoffLat: _parseDouble(json['dropoff_lat']),
   dropoffLng: _parseDouble(json['dropoff_lng']),
-  dropoffContactName: json['dropoff_contact_name'] as String,
-  dropoffContactPhone: json['dropoff_contact_phone'] as String,
+  dropoffContactName: _parseString(json['dropoff_contact_name']),
+  dropoffContactPhone: _parseString(json['dropoff_contact_phone']),
   notes: json['notes'] as String?,
   itemDescription: json['item_description'] as String?,
   estimatedWeightKg: _parseDoubleNullable(json['estimated_weight_kg']),
@@ -53,9 +79,9 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
   passengerName: json['passenger_name'] as String?,
   voucherCode: json['voucher_code'] as String?,
   discountAmount: _parseDouble(json['discount_amount']),
-  status: json['status'] as String,
+  status: _parseString(json['status']),
   scheduledAt: json['scheduled_at'] as String?,
-  estimatedDistanceM: (json['estimated_distance_m'] as num).toInt(),
+  estimatedDistanceM: _parseInt(json['estimated_distance_m']),
   actualDistanceM: (json['actual_distance_m'] as num?)?.toInt(),
   estimatedFare: _parseDouble(json['estimated_fare']),
   actualFare: _parseDoubleNullable(json['actual_fare']),
@@ -64,8 +90,8 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
   serviceType: json['service_type'] as String?,
   fareBreakdown: json['fare_breakdown'] as Map<String, dynamic>?,
   meta: json['meta'] as Map<String, dynamic>?,
-  paymentMethod: json['payment_method'] as String,
-  paymentStatus: json['payment_status'] as String,
+  paymentMethod: _parseString(json['payment_method']),
+  paymentStatus: _parseString(json['payment_status']),
   cancelReason: json['cancel_reason'] as String?,
   acceptedAt: json['accepted_at'] as String?,
   pickedUpAt: json['picked_up_at'] as String?,
@@ -81,6 +107,7 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
   lesbuyItems: (json['lesbuy_items'] as List<dynamic>?)
       ?.map((e) => LesbuyItemDto.fromJson(e as Map<String, dynamic>))
       .toList(),
+  proofImages: ProofImageUtils.fromOrderMap(json),
 );
 
 Map<String, dynamic> _$OrderDtoToJson(OrderDto instance) => <String, dynamic>{
@@ -130,4 +157,5 @@ Map<String, dynamic> _$OrderDtoToJson(OrderDto instance) => <String, dynamic>{
   'updated_at': instance.updatedAt,
   'driver_profile': instance.driverProfile,
   'lesbuy_items': instance.lesbuyItems,
+  'proof_images': instance.proofImages,
 };

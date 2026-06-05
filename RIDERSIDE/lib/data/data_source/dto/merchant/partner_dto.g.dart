@@ -25,10 +25,10 @@ PartnerDto _$PartnerDtoFromJson(Map<String, dynamic> json) => PartnerDto(
       minOrderAmount: (json['min_order_amount'] as num?)?.toInt(),
       estimatedDeliveryMinutes:
           (json['estimated_delivery_minutes'] as num?)?.toInt(),
-      isOpen: json['is_open'] as bool?,
-      isFeatured: json['is_featured'] as bool?,
+      isOpen: _parseBoolNullable(json['is_open']),
+      isFeatured: _parseBoolNullable(json['is_featured']),
       status: json['status'] as String?,
-      acceptsOnlinePayment: json['accepts_online_payment'] as bool?,
+      acceptsOnlinePayment: _parseBoolNullable(json['accepts_online_payment']),
       openingHours: json['opening_hours'] as Map<String, dynamic>?,
       supportPhone: json['support_phone'] as String?,
       supportEmail: json['support_email'] as String?,

@@ -97,6 +97,7 @@ export 'main/riderside/bookings/rider_booking_card.dart';
 export 'main/riderside/bookings/rider_booking_detail_info.dart';
 export 'main/riderside/bookings/rider_booking_status_button.dart';
 export 'main/riderside/bookings/rider_booking_status_grid.dart';
+export 'main/riderside/bookings/rider_booking_next_actions.dart';
 export 'main/riderside/bookings/rider_bookings_header.dart';
 export 'main/riderside/bookings/rider_bookings_list.dart';
 export 'main/riderside/bookings/rider_duty_toggle.dart';

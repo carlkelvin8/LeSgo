@@ -70,7 +70,8 @@ class MerchantAddCategoryFormNotifier extends StateNotifier<MerchantAddCategoryF
     try {
       // Get partner_id from auth state
       final authState = _ref.read(riderAuthProvider);
-      final partnerId = authState.user?.partnerId;
+      final profile = _ref.read(merchantProfileProvider).value;
+      final partnerId = authState.user?.partnerId ?? profile?.id;
       
       if (partnerId == null) {
         state = state.copyWith(

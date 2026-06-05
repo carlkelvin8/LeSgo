@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/constants/polling_intervals.dart';
 import '../../../core/utils/order_service_labels.dart';
 import '../../../data/data_source/chat_remote_datasource.dart';
 import '../../../data/data_source/order_remote_datasource.dart';
 import '../../../data/data_source/dto/chat/message_dto.dart';
+import '../../../core/services/chat_realtime_service.dart';
 import '../../../core/di/injection.dart';
 
 // Chat state
@@ -53,13 +55,25 @@ class ChatState {
 class ChatNotifier extends StateNotifier<ChatState> {
   final ChatRemoteDataSource _chatDataSource;
   final OrderRemoteDataSource _orderDataSource = getIt<OrderRemoteDataSource>();
+  final ChatRealtimeService _chatRealtime = getIt<ChatRealtimeService>();
   Timer? _pollTimer;
+  late final ChatRefreshCallback _realtimeRefresh;
 
-  ChatNotifier(this._chatDataSource) : super(const ChatState());
+  ChatNotifier(this._chatDataSource) : super(const ChatState()) {
+    _realtimeRefresh = () {
+      if (state.currentConversation != null) {
+        loadMessages(state.currentConversation!.id, silent: true);
+      }
+      loadUnreadCount();
+      loadConversations();
+    };
+  }
 
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _chatRealtime.removeListener(_realtimeRefresh);
+    _chatRealtime.release();
     super.dispose();
   }
 
@@ -236,6 +250,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Clear current conversation
   void clearCurrentConversation() {
     _pollTimer?.cancel();
+    _chatRealtime.removeListener(_realtimeRefresh);
+    _chatRealtime.release();
     state = state.copyWith(
       currentConversation: null,
       messages: [],
@@ -247,10 +263,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = state.copyWith(error: null);
   }
 
-  // Start polling every 5 seconds
+  // Realtime session + slower fallback poll for open chat.
   void _startPolling() {
     _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _chatRealtime.addListener(_realtimeRefresh);
+    _chatRealtime.acquire(conversationId: state.currentConversation?.id);
+    _pollTimer = Timer.periodic(PollingIntervals.chatMessages, (_) {
       if (mounted && state.currentConversation != null) {
         loadMessages(state.currentConversation!.id, silent: true);
       }

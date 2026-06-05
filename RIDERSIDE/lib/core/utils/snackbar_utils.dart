@@ -15,10 +15,14 @@ class SnackBarUtils {
   static void showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
+        ),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(milliseconds: 1500),
+        duration: const Duration(seconds: 4),
       ),
     );
   }

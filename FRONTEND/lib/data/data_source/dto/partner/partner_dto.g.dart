@@ -13,10 +13,8 @@ PartnerDto _$PartnerDtoFromJson(Map<String, dynamic> json) => PartnerDto(
   coverImageUrl: json['cover_image_url'] as String?,
   description: json['description'] as String?,
   category: json['category'] as String?,
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-  cuisineTypes: (json['cuisine_types'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
+  tags: _parseStringList(json['tags']),
+  cuisineTypes: _parseStringList(json['cuisine_types']),
   rating: (json['rating'] as num?)?.toDouble(),
   totalReviews: (json['total_reviews'] as num?)?.toInt(),
   deliveryFee: (json['delivery_fee'] as num?)?.toDouble(),
@@ -75,9 +73,9 @@ PaginationMetaDto _$PaginationMetaDtoFromJson(Map<String, dynamic> json) =>
       perPage: (json['per_page'] as num).toInt(),
       currentPage: (json['current_page'] as num).toInt(),
       lastPage: (json['last_page'] as num).toInt(),
-      from: (json['from'] as num).toInt(),
-      to: (json['to'] as num).toInt(),
-      hasMore: json['has_more'] as bool,
+      from: _parseIntNullable(json['from']),
+      to: _parseIntNullable(json['to']),
+      hasMore: _parseBool(json['has_more']),
     );
 
 Map<String, dynamic> _$PaginationMetaDtoToJson(PaginationMetaDto instance) =>
@@ -126,7 +124,7 @@ MenuItemDto _$MenuItemDtoFromJson(Map<String, dynamic> json) => MenuItemDto(
   isAvailable: json['is_available'] as bool?,
   isPopular: json['is_popular'] as bool?,
   isFeatured: json['is_featured'] as bool?,
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  tags: _parseStringList(json['tags']),
 );
 
 Map<String, dynamic> _$MenuItemDtoToJson(MenuItemDto instance) =>

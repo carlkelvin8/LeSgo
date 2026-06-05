@@ -10,6 +10,19 @@ double? _parseDouble(dynamic value) {
   return null;
 }
 
+String? _parseOrderItemImageUrl(dynamic value) {
+  if (value == null) return null;
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  if (value is Map) {
+    final url = value['url'] ?? value['image_url'];
+    return url?.toString();
+  }
+  return null;
+}
+
 @JsonSerializable()
 class OrderDto {
   final int id;
@@ -126,6 +139,8 @@ class OrderItemDto {
   @JsonKey(name: 'actual_price', fromJson: _parseDouble)
   final double? totalPrice;
   final String? options;
+  @JsonKey(name: 'image_url', fromJson: _parseOrderItemImageUrl)
+  final String? imageUrl;
   
   OrderItemDto({
     required this.id,
@@ -137,6 +152,7 @@ class OrderItemDto {
     this.unitPrice,
     this.totalPrice,
     this.options,
+    this.imageUrl,
   });
   
   factory OrderItemDto.fromJson(Map<String, dynamic> json) => 

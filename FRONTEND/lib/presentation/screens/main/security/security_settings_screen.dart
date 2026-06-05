@@ -46,39 +46,90 @@ class SecuritySettingsScreen extends ConsumerWidget {
                         activeThumbColor: const Color(0xFF5F2D82),
                         onChanged: state.isProcessing
                             ? null
-                            : (_) async {
-                                final setup = await ref
-                                    .read(securitySettingsProvider.notifier)
-                                    .startTwoFactorSetup();
-                                if (!context.mounted || setup == null) return;
-                                await showDialog<void>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('2FA setup'),
-                                    content: SingleChildScrollView(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Add this secret to your authenticator app:',
-                                          ),
-                                          const SizedBox(height: 8),
-                                          SelectableText(setup.secret),
-                                          const SizedBox(height: 12),
-                                          const Text('Backup codes:'),
-                                          ...setup.backupCodes.map(Text.new),
-                                        ],
+                            : (enabled) async {
+                                if (enabled) {
+                                  if (state.twoFactorEnabled) return;
+                                  final setup = await ref
+                                      .read(securitySettingsProvider.notifier)
+                                      .startTwoFactorSetup();
+                                  if (!context.mounted || setup == null) return;
+                                  final codeController =
+                                      TextEditingController();
+                                  await showDialog<void>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('2FA setup'),
+                                      content: SingleChildScrollView(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Add this secret to your authenticator app:',
+                                            ),
+                                            const SizedBox(height: 8),
+                                            SelectableText(setup.secret),
+                                            const SizedBox(height: 12),
+                                            const Text('Backup codes:'),
+                                            ...setup.backupCodes.map(Text.new),
+                                            const SizedBox(height: 12),
+                                            TextField(
+                                              controller: codeController,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              decoration: const InputDecoration(
+                                                labelText: '6-digit code',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () async {
+                                            final ok = await ref
+                                                .read(
+                                                  securitySettingsProvider
+                                                      .notifier,
+                                                )
+                                                .verifyTwoFactor(
+                                                  codeController.text.trim(),
+                                                );
+                                            if (ctx.mounted) {
+                                              Navigator.pop(ctx);
+                                              if (ok && context.mounted) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      '2FA enabled successfully',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          },
+                                          child: const Text('Verify'),
+                                        ),
+                                      ],
                                     ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx),
-                                        child: const Text('Done'),
+                                  );
+                                } else if (state.twoFactorEnabled) {
+                                  final ok = await ref
+                                      .read(securitySettingsProvider.notifier)
+                                      .disableTwoFactor();
+                                  if (context.mounted && ok) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('2FA disabled'),
                                       ),
-                                    ],
-                                  ),
-                                );
+                                    );
+                                  }
+                                }
                               },
                       ),
                       if (state.deviceSupportsBiometrics)

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 
@@ -42,13 +43,13 @@ class MerchantProfileHeader extends ConsumerWidget {
                 ),
                 border: Border.all(color: Colors.black12),
               ),
-              child: profile.logoUrl != null && profile.logoUrl!.isNotEmpty
+              child: MediaUrlUtils.resolve(profile.logoUrl) != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(
                         ResponsiveUtils.spacing(context, 16),
                       ),
                       child: Image.network(
-                        profile.logoUrl!,
+                        MediaUrlUtils.resolve(profile.logoUrl)!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return _buildDefaultLogo(context, profile.name);

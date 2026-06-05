@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 
@@ -7,226 +8,265 @@ class RiderBookingDetailInfo extends StatelessWidget {
 
   const RiderBookingDetailInfo({super.key, required this.booking});
 
+  bool get _isFoodOrder =>
+      booking.category == BookingCategory.lesEat ||
+      booking.category == BookingCategory.lesBuy;
+
+  Future<void> _callCustomer(BuildContext context) async {
+    final phone = booking.customerPhone;
+    if (phone == null || phone.isEmpty) return;
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot open phone dialer')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hp = ResponsiveUtils.horizontalPadding(context);
+
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
-        vertical: ResponsiveUtils.spacing(context, 20),
+        horizontal: hp,
+        vertical: ResponsiveUtils.spacing(context, 16),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Restaurant Logo
-          Container(
-            width: ResponsiveUtils.spacing(context, 110),
-            height: ResponsiveUtils.spacing(context, 110),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade200),
-              borderRadius: BorderRadius.circular(
-                ResponsiveUtils.spacing(context, 12),
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.asset(
-              booking.logoPath,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.store,
-                color: Colors.grey,
-                size: 40,
-              ),
-            ),
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-          // Info rows
-          _InfoRow(
-            label: 'Name:',
-            value: booking.address.isNotEmpty ? booking.address : 'N/A',
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          _InfoRow(
-            label: 'Contact:',
-            value: (booking.customerPhone?.isNotEmpty == true) 
-                ? booking.customerPhone! 
-                : 'N/A',
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          _InfoRow(
-            label: 'Address:',
-            value: (booking.pickupAddress?.isNotEmpty == true) 
-                ? booking.pickupAddress! 
-                : 'N/A',
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          _InfoRow(
-            label: 'PU:',
-            value: (booking.pickupAddress?.isNotEmpty == true) 
-                ? booking.pickupAddress! 
-                : 'N/A',
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          _InfoRow(
-            label: 'DO:',
-            value: (booking.deliveryAddress?.isNotEmpty == true) 
-                ? booking.deliveryAddress! 
-                : 'N/A',
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          if (booking.deliveryFee != null) ...[
-            _InfoRow(
-              label: 'Delivery Fee:',
-              value: '${booking.deliveryFee}',
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          ],
-          _InfoRow(
-            label: 'Total Billing:',
-            value: '${booking.billingAmount}\n${booking.billingMethod}',
-          ),
-          
-          if (booking.items != null && booking.items!.isNotEmpty) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            _InfoRow(
-              label: 'Items:',
-              value: booking.items!.join('\n'),
-            ),
-          ],
-          
-          // Proof of Delivery Section
-          if (booking.proofOfDeliveryUrls != null && booking.proofOfDeliveryUrls!.isNotEmpty) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            Divider(color: Colors.grey.shade200, height: 1),
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Proof of Delivery:',
+          Row(
+            children: [
+              _ServiceBadge(category: booking.category),
+              const Spacer(),
+              Text(
+                'Order #${booking.id}',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 14),
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2D2D2D),
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
                 ),
               ),
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: booking.proofOfDeliveryUrls!.length,
-              itemBuilder: (context, index) {
-                // Safety check
-                if (index >= booking.proofOfDeliveryUrls!.length) {
-                  return const SizedBox.shrink();
-                }
-                
-                final imageUrl = booking.proofOfDeliveryUrls![index];
-                
-                // Skip empty URLs
-                if (imageUrl.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                
-                return GestureDetector(
-                  onTap: () {
-                    // Show full screen image
-                    showDialog(
-                      context: context,
-                      builder: (context) => Dialog(
-                        backgroundColor: Colors.black,
-                        child: Stack(
-                          children: [
-                            Center(
-                              child: InteractiveViewer(
-                                child: Image.network(
-                                  imageUrl,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) => 
-                                    const Center(
-                                      child: Icon(
-                                        Icons.error_outline,
-                                        color: Colors.white,
-                                        size: 48,
-                                      ),
-                                    ),
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        value: loadingProgress.expectedTotalBytes != null
-                                            ? loadingProgress.cumulativeBytesLoaded /
-                                                loadingProgress.expectedTotalBytes!
-                                            : null,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Color(0xFF5F2D82),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              top: 16,
-                              right: 16,
-                              child: IconButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                icon: Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                              ),
-                            ),
-                          ],
+            ],
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+          _SectionCard(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    _isFoodOrder ? Icons.storefront : Icons.local_taxi,
+                    color: const Color(0xFF5F2D82),
+                    size: 28,
+                  ),
+                ),
+                SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _isFoodOrder ? 'Pickup' : 'Trip',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 11),
+                          color: Colors.grey.shade600,
                         ),
                       ),
-                    );
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => 
-                          Container(
-                            color: Colors.grey.shade200,
-                            child: Icon(
-                              Icons.broken_image,
-                              color: Colors.grey.shade400,
+                      Text(
+                        booking.restaurantName,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 15),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Customer',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 11),
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                Text(
+                  booking.customerName,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 16),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (booking.customerPhone != null &&
+                    booking.customerPhone!.isNotEmpty) ...[
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                  InkWell(
+                    onTap: () => _callCustomer(context),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Icon(Icons.phone,
+                              size: 18, color: const Color(0xFF5F2D82)),
+                          SizedBox(
+                              width: ResponsiveUtils.spacing(context, 8)),
+                          Text(
+                            booking.customerPhone!,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 14),
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF5F2D82),
+                              decoration: TextDecoration.underline,
                             ),
                           ),
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: Colors.grey.shade200,
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF5F2D82),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                        ],
                       ),
                     ),
                   ),
-                );
-              },
+                ] else
+                  Text(
+                    'No contact number on file',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 13),
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+              ],
             ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          _SectionCard(
+            child: Column(
+              children: [
+                _RouteRow(
+                  icon: Icons.circle,
+                  iconColor: Colors.green,
+                  label: 'Pick up',
+                  value: booking.pickupAddress ?? 'N/A',
+                ),
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: ResponsiveUtils.spacing(context, 11),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(width: 2, height: 20, color: Colors.grey.shade300),
+                    ],
+                  ),
+                ),
+                _RouteRow(
+                  icon: Icons.place,
+                  iconColor: Colors.red,
+                  label: 'Drop off',
+                  value: booking.deliveryAddress ?? booking.address,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      booking.billingAmount,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF5F2D82),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                Text(
+                  booking.billingMethod,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                if (booking.deliveryFee != null) ...[
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                  Text(
+                    'Delivery fee: ${booking.deliveryFee}',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+                if (booking.items != null && booking.items!.isNotEmpty) ...[
+                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                  const Divider(height: 1),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                  Text(
+                    'Items',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                  ...booking.items!.map(
+                    (item) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: ResponsiveUtils.spacing(context, 6),
+                      ),
+                      child: Text(
+                        '• $item',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (booking.proofOfDeliveryUrls != null &&
+              booking.proofOfDeliveryUrls!.isNotEmpty) ...[
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            _ProofGrid(urls: booking.proofOfDeliveryUrls!),
           ],
         ],
       ),
@@ -234,39 +274,141 @@ class RiderBookingDetailInfo extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
+class _ServiceBadge extends StatelessWidget {
+  final BookingCategory category;
+
+  const _ServiceBadge({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        category.label,
+        style: TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: ResponsiveUtils.fontSize(context, 12),
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF5F2D82),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final Widget child;
+
+  const _SectionCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _RouteRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
   final String label;
   final String value;
 
-  const _InfoRow({required this.label, required this.value});
+  const _RouteRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: ResponsiveUtils.spacing(context, 110),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF2D2D2D),
-            ),
+        Icon(icon, size: 16, color: iconColor),
+        SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 11),
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-              fontWeight: FontWeight.w400,
-              color: Colors.black87,
-            ),
+      ],
+    );
+  }
+}
+
+class _ProofGrid extends StatelessWidget {
+  final List<String> urls;
+
+  const _ProofGrid({required this.urls});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Proof of delivery',
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontWeight: FontWeight.w700,
           ),
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+          ),
+          itemCount: urls.length,
+          itemBuilder: (context, index) {
+            final imageUrl = urls[index];
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Colors.grey.shade200,
+                  child: const Icon(Icons.broken_image),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

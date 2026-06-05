@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io' show File;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_profile_provider.dart';
 
 class RiderProfileHeader extends ConsumerStatefulWidget {
@@ -68,9 +67,14 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader> {
   Widget build(BuildContext context) {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
     final profileState = ref.watch(riderProfileProvider);
+    final authUser = ref.watch(riderAuthProvider).user;
+    final displayName = profileState.name.isNotEmpty
+        ? profileState.name
+        : (authUser?.name ?? '');
+    final displayPhoto =
+        profileState.profilePictureUrl ?? authUser?.profilePhotoUrl;
 
-    // Extract first name from full name
-    final firstName = profileState.name.split(' ').first;
+    final firstName = displayName.split(' ').first;
     final greeting = firstName.isNotEmpty ? 'LeSgo,\n$firstName!' : 'LeSgo,\nRider!';
 
     return Padding(
@@ -93,13 +97,13 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader> {
                       ResponsiveUtils.spacing(context, 12),
                     ),
                   ),
-                  child: profileState.profilePictureUrl != null
+                  child: displayPhoto != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(
                             ResponsiveUtils.spacing(context, 12),
                           ),
                           child: Image.network(
-                            profileState.profilePictureUrl!,
+                            displayPhoto,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Icon(
                               Icons.person,

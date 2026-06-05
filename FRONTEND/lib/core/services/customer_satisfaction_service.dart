@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../di/injection.dart';
+import '../constants/routers/app_router.dart';
 import '../../data/data_source/survey_remote_datasource.dart';
 import '../../presentation/widgets/survey/customer_satisfaction_dialog.dart';
 
@@ -33,6 +34,18 @@ class CustomerSatisfactionService {
         await CustomerSatisfactionDialog.show(context, this);
       }
     }
+  }
+
+  /// Called from tracking when order reaches completed (all services).
+  Future<void> onOrderCompletedFromTracking() async {
+    final context = AppRouter.navigatorKey.currentContext;
+    if (context != null && context.mounted) {
+      await onOrderCompleted(context);
+      return;
+    }
+
+    final next = completedOrdersCount + 1;
+    await _prefs.setInt(_completedOrdersKey, next);
   }
 
   Future<void> markSurveyCompleted({int? rating, String? feedback}) async {

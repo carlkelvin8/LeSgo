@@ -156,6 +156,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
           PaymentStatusUtils.fromOrderPaymentStatus(orderDto.paymentStatus),
       paymentMethod: orderDto.paymentMethod,
       items: transactionItems,
+      proofImages: orderDto.proofImages,
     );
   }
 
@@ -172,7 +173,9 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       rawStatus: dto.type,
       paymentStatus: PaymentStatusUtils.fromWalletTransaction(dto),
       walletDescription:
-          dto.description.isNotEmpty ? dto.description : (isCredit ? 'Top-up' : 'Payment'),
+          (dto.description?.isNotEmpty ?? false)
+              ? dto.description!
+              : (isCredit ? 'Top-up' : 'Payment'),
       walletReference: dto.reference,
       isWalletCredit: isCredit,
     );

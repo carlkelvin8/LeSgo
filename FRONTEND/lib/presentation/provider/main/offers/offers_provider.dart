@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../data/data_source/voucher_remote_datasource.dart';
+import '../../../../data/data_source/dto/voucher/voucher_dto.dart';
 
 class Offer {
   final String id;
@@ -15,6 +16,7 @@ class Offer {
   final String discountLabel;
   final int accentColor;
   final bool isFeatured;
+  final bool isEligible;
   final bool isSaved;
   final bool isClaimed;
 
@@ -29,6 +31,7 @@ class Offer {
     required this.discountLabel,
     required this.accentColor,
     this.isFeatured = false,
+    this.isEligible = true,
     this.isSaved = false,
     this.isClaimed = false,
   });
@@ -45,6 +48,7 @@ class Offer {
       discountLabel: discountLabel,
       accentColor: accentColor,
       isFeatured: isFeatured,
+      isEligible: isEligible,
       isSaved: isSaved ?? this.isSaved,
       isClaimed: isClaimed ?? this.isClaimed,
     );
@@ -56,14 +60,12 @@ class OffersState {
   final String selectedCategory;
   final bool isLoading;
   final String? error;
-  final String? infoMessage;
 
   const OffersState({
     this.offers = const [],
     this.selectedCategory = 'All',
     this.isLoading = false,
     this.error,
-    this.infoMessage,
   });
 
   List<String> get categories {
@@ -80,7 +82,9 @@ class OffersState {
   }
 
   List<Offer> get featuredOffers {
-    return offers.where((offer) => offer.isFeatured).take(3).toList();
+    final featured = offers.where((offer) => offer.isFeatured).toList();
+    if (featured.isNotEmpty) return featured.take(3).toList();
+    return offers.take(3).toList();
   }
 
   OffersState copyWith({
@@ -88,16 +92,13 @@ class OffersState {
     String? selectedCategory,
     bool? isLoading,
     String? error,
-    String? infoMessage,
     bool clearError = false,
-    bool clearInfo = false,
   }) {
     return OffersState(
       offers: offers ?? this.offers,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
-      infoMessage: clearInfo ? null : (infoMessage ?? this.infoMessage),
     );
   }
 }
@@ -111,7 +112,7 @@ class OffersNotifier extends StateNotifier<OffersState> {
       getIt<VoucherRemoteDataSource>();
 
   Future<void> loadOffers() async {
-    state = state.copyWith(isLoading: true, clearError: true, clearInfo: true);
+    state = state.copyWith(isLoading: true, clearError: true);
 
     try {
       final response = await _voucherDataSource.getAvailableVouchers();
@@ -120,26 +121,16 @@ class OffersNotifier extends StateNotifier<OffersState> {
         return _mapVoucherToOffer(voucher, entry.key);
       }).toList();
 
-      if (offers.isEmpty) {
-        state = state.copyWith(
-          offers: _seedOffers,
-          isLoading: false,
-          infoMessage: 'No active promos right now. Showing sample offers.',
-        );
-        return;
-      }
-
       state = state.copyWith(offers: offers, isLoading: false);
     } catch (e) {
       state = state.copyWith(
-        offers: _seedOffers,
+        offers: [],
         isLoading: false,
         error: ApiErrorMapper.message(
           e,
           fallbackEn: 'Could not load offers from server.',
           fallbackTl: 'Hindi ma-load ang mga offer mula sa server.',
         ),
-        infoMessage: 'Showing saved offers while offline.',
       );
     }
   }
@@ -159,15 +150,45 @@ class OffersNotifier extends StateNotifier<OffersState> {
     );
   }
 
-  void claimOffer(String offerId) {
+  Future<String?> claimOffer(String offerId) async {
+    final offer = findById(offerId);
+    if (offer == null) {
+      throw Exception('Offer not found');
+    }
+    if (!offer.isEligible) {
+      throw Exception(
+        offer.isClaimed
+            ? 'You already claimed this voucher.'
+            : 'You are not eligible for this voucher.',
+      );
+    }
+    if (offer.isClaimed) {
+      throw Exception('You already claimed this voucher.');
+    }
+
+    try {
+      await _voucherDataSource.claimVoucher(offer.code);
+    } catch (e) {
+      throw Exception(
+        ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Unable to claim this voucher.',
+          fallbackTl: 'Hindi ma-claim ang voucher na ito.',
+        ),
+      );
+    }
+
     state = state.copyWith(
       offers: state.offers
-          .map((offer) {
-            if (offer.id != offerId) return offer;
-            return offer.copyWith(isClaimed: true);
+          .map((item) {
+            if (item.id != offerId) return item;
+            return item.copyWith(isClaimed: true);
           })
           .toList(growable: false),
+      clearError: true,
     );
+
+    return offer.code;
   }
 
   Offer? findById(String offerId) {
@@ -178,8 +199,8 @@ class OffersNotifier extends StateNotifier<OffersState> {
   }
 }
 
-Offer _mapVoucherToOffer(dynamic voucher, int index) {
-  final code = voucher.code.toString();
+Offer _mapVoucherToOffer(VoucherDto voucher, int index) {
+  final code = voucher.code;
   final upper = code.toUpperCase();
   String category = 'Promo';
   String service = 'All Services';
@@ -189,7 +210,9 @@ Offer _mapVoucherToOffer(dynamic voucher, int index) {
     category = 'Rides';
     service = 'LesRide';
     accent = 0xFF5F2D82;
-  } else if (upper.contains('LUNCH') || upper.contains('EAT') || upper.contains('FOOD')) {
+  } else if (upper.contains('LUNCH') ||
+      upper.contains('EAT') ||
+      upper.contains('FOOD')) {
     category = 'Food';
     service = 'LesEat';
     accent = 0xFFB72AC8;
@@ -207,80 +230,24 @@ Offer _mapVoucherToOffer(dynamic voucher, int index) {
     accent = 0xFFC46A20;
   }
 
+  final eligible = voucher.eligible;
+  final claimed = voucher.claimed;
+
   return Offer(
     id: code,
-    title: voucher.title?.toString() ?? code,
-    description: voucher.description?.toString() ?? '',
+    title: voucher.title,
+    description: voucher.description ?? '',
     code: code,
     category: category,
     service: service,
-    expiresAt: voucher.expiresAt?.toString() ?? 'Limited time',
-    discountLabel: voucher.discountText?.toString() ?? 'SPECIAL OFFER',
+    expiresAt: voucher.expiresAt ?? 'Limited time',
+    discountLabel: voucher.discountText ?? 'SPECIAL OFFER',
     accentColor: accent,
     isFeatured: index < 3,
+    isEligible: eligible,
+    isClaimed: claimed,
   );
 }
-
-const _seedOffers = [
-  Offer(
-    id: 'ride-20',
-    title: 'Save on your next ride',
-    description: 'Get a discount on LesRide bookings around Cagayan de Oro.',
-    code: 'RIDE20',
-    category: 'Rides',
-    service: 'LesRide',
-    expiresAt: 'May 31, 2026',
-    discountLabel: '20% OFF',
-    accentColor: 0xFF5F2D82,
-    isFeatured: true,
-  ),
-  Offer(
-    id: 'food-free-delivery',
-    title: 'Free delivery for lunch',
-    description: 'Order from partner restaurants and skip the delivery fee.',
-    code: 'LUNCHFREE',
-    category: 'Food',
-    service: 'LesEat',
-    expiresAt: 'June 15, 2026',
-    discountLabel: 'FREE DELIVERY',
-    accentColor: 0xFFB72AC8,
-    isFeatured: true,
-  ),
-  Offer(
-    id: 'wallet-cashback',
-    title: 'LesPay cashback',
-    description: 'Pay with your LesPay wallet and receive wallet cashback.',
-    code: 'PAYBACK',
-    category: 'Wallet',
-    service: 'LesPay',
-    expiresAt: 'June 30, 2026',
-    discountLabel: 'P50 BACK',
-    accentColor: 0xFF2364AA,
-    isFeatured: true,
-  ),
-  Offer(
-    id: 'parcel-discount',
-    title: 'Send parcels for less',
-    description: 'Use LesGo for errands, parcels, and local item delivery.',
-    code: 'SEND15',
-    category: 'Delivery',
-    service: 'LesGo',
-    expiresAt: 'May 28, 2026',
-    discountLabel: '15% OFF',
-    accentColor: 0xFF16846B,
-  ),
-  Offer(
-    id: 'market-run',
-    title: 'Market run saver',
-    description: 'Get help buying daily essentials from nearby stores.',
-    code: 'BUYMORE',
-    category: 'Shopping',
-    service: 'LesBuy',
-    expiresAt: 'July 5, 2026',
-    discountLabel: 'P75 OFF',
-    accentColor: 0xFFC46A20,
-  ),
-];
 
 final offersProvider = StateNotifierProvider<OffersNotifier, OffersState>(
   (ref) => OffersNotifier(),

@@ -7,8 +7,17 @@ import '../../../../data/data_source/user_remote_datasource.dart';
 import '../../../../data/data_source/dto/user/user_profile_dto.dart';
 import '../../../../data/data_source/dto/user/update_user_request_dto.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/media_url_utils.dart';
 import '../../../../core/utils/referral_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
+
+String? _resolveProfileImageUrl(UserProfileDto user) {
+  final raw = (user.profilePhoto != null && user.profilePhoto!.isNotEmpty)
+      ? user.profilePhoto
+      : user.profilePicture;
+  if (raw == null || raw.isEmpty) return null;
+  return MediaUrlUtils.resolve(raw) ?? raw;
+}
 
 class ProfileState {
   final UserProfileDto? user;
@@ -101,7 +110,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           email: user.email,
           phone: user.phone ?? '',
           birthdate: user.dateOfBirth ?? '',
-          profileImageUrl: user.profilePhoto,
+          profileImageUrl: _resolveProfileImageUrl(user),
           referralCode: ReferralUtils.displayCode(
             user.referralCode,
             user.id,
@@ -168,8 +177,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         );
         
         // Handle profileImageUrl separately to allow setting it to null
-        if (userData.profilePhoto != null) {
-          state = newState.copyWith(profileImageUrl: userData.profilePhoto);
+        final resolvedPhoto = _resolveProfileImageUrl(userData);
+        if (resolvedPhoto != null) {
+          state = newState.copyWith(profileImageUrl: resolvedPhoto);
         } else {
           // Create a completely new state with null profileImageUrl
           state = ProfileState(
@@ -258,7 +268,8 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         // Use the URL returned by the API (stored on server)
         state = state.copyWith(
           user: response.data,
-          profileImageUrl: response.data!.profilePhoto ?? localPath,
+          profileImageUrl:
+              _resolveProfileImageUrl(response.data!) ?? localPath,
           isUpdating: false,
         );
         print('🔵 ProfileProvider: Profile image updated successfully');

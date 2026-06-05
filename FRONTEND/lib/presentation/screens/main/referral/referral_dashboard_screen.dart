@@ -26,7 +26,9 @@ class ReferralDashboardScreen extends ConsumerWidget {
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
             )
-          : state.error != null && state.referralCode.isEmpty
+          : state.error != null &&
+                  state.referralCode.isEmpty &&
+                  state.invitesSent == 0
               ? RetryWidget(
                   message: state.error!,
                   onRetry: () =>
@@ -79,9 +81,7 @@ class ReferralDashboardScreen extends ConsumerWidget {
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                       if (state.recentRewards.isEmpty)
                         Text(
-                          state.fromApi
-                              ? 'No referral rewards yet. Share your code to start earning.'
-                              : 'Reward history will appear here once friends join.',
+                          'No referral rewards yet. Share your code to start earning.',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             color: Colors.grey[600],

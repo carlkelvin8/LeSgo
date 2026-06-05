@@ -114,7 +114,9 @@ extension BookingCategoryStatuses on BookingCategory {
 
 class RiderBooking {
   final String id;
+  final int serviceId;
   final String restaurantName;
+  final String customerName;
   final String address;
   final String? pickupAddress;
   final String? deliveryAddress;
@@ -139,7 +141,9 @@ class RiderBooking {
 
   const RiderBooking({
     required this.id,
+    this.serviceId = 2,
     required this.restaurantName,
+    this.customerName = 'Customer',
     required this.address,
     this.pickupAddress,
     this.deliveryAddress,

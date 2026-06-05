@@ -15,7 +15,13 @@ import '../../../../presentation/screens/main/settings/language_settings_screen.
 import '../../../../presentation/screens/main/security/security_settings_screen.dart';
 import '../../../../presentation/screens/main/referral/referral_dashboard_screen.dart';
 import '../../../../presentation/screens/main/faqs_screen.dart';
+import '../../../../presentation/screens/main/support/support_tickets_screen.dart';
+import '../../../../presentation/screens/main/documents/document_verification_screen.dart';
 import '../../../../presentation/screens/main/about_screen.dart';
+import '../../../../presentation/screens/legal/privacy_policy_screen.dart';
+import '../../../../presentation/screens/legal/terms_of_service_screen.dart';
+import '../../../../presentation/screens/main/settings/change_password_screen.dart';
+import '../../../../presentation/screens/main/settings/deactivate_account_screen.dart';
 import '../../../../presentation/screens/main/set_location_screen.dart';
 import '../../../../presentation/screens/main/address_management_screen.dart';
 import '../../../../presentation/screens/demo/address_demo_screen.dart';
@@ -40,7 +46,13 @@ class MainRouter {
     MainRoutes.securitySettings: (_) => const SecuritySettingsScreen(),
     MainRoutes.referralDashboard: (_) => const ReferralDashboardScreen(),
     MainRoutes.faqs: (_) => const FaqsScreen(),
+    MainRoutes.supportTickets: (_) => const SupportTicketsScreen(),
+    MainRoutes.documentVerification: (_) => const DocumentVerificationScreen(),
     MainRoutes.about: (_) => const AboutScreen(),
+    MainRoutes.privacyPolicy: (_) => const PrivacyPolicyScreen(),
+    MainRoutes.termsOfService: (_) => const TermsOfServiceScreen(),
+    MainRoutes.changePassword: (_) => const ChangePasswordScreen(),
+    MainRoutes.deactivateAccount: (_) => const DeactivateAccountScreen(),
 
     MainRoutes.setLocation: (_) => const SetLocationScreen(),
     MainRoutes.addressManagement: (_) => const AddressManagementScreen(),

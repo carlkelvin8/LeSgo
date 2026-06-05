@@ -116,7 +116,10 @@ class _RestaurantDetailScreenState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Restaurant Header with Image
-                    RestaurantDetailHeader(restaurant: widget.restaurant),
+                    RestaurantDetailHeader(
+                      restaurant: widget.restaurant,
+                      imagePath: detailState.restaurantImagePath,
+                    ),
 
                     // Category Filters - Add padding to account for overlapping card
                     Padding(

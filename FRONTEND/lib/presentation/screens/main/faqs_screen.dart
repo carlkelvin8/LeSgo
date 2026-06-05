@@ -24,20 +24,6 @@ class FaqsScreen extends ConsumerWidget {
                 title: 'FAQs',
               ),
             ),
-            if (faqState.infoMessage != null)
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: ResponsiveUtils.horizontalPadding(context),
-                ),
-                child: Text(
-                  faqState.infoMessage!,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.orange[800],
-                  ),
-                ),
-              ),
             Expanded(
               child: faqState.isLoading
                   ? const Center(

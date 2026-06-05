@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../provider/main/merchantside/merchant_food_detail_provider.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../common/menu_image_widget.dart';
 
 class MerchantFoodDetailContent extends StatelessWidget {
   final String foodName;
@@ -44,10 +45,16 @@ class MerchantFoodDetailContent extends StatelessWidget {
                 ),
               ),
               alignment: Alignment.center,
-              child: foodImage != null
-                  ? Image.asset(
-                      foodImage!,
+              clipBehavior: Clip.antiAlias,
+              child: foodImage != null && foodImage!.trim().isNotEmpty
+                  ? MenuImageWidget(
+                      source: foodImage,
                       fit: BoxFit.cover,
+                      placeholder: Icon(
+                        Icons.image_not_supported,
+                        size: 60,
+                        color: Colors.grey.shade400,
+                      ),
                     )
                   : Icon(
                       Icons.image_not_supported,

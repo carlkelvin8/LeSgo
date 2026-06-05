@@ -6,6 +6,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
+import '../../../../widgets/orders/proof_of_delivery_section.dart';
 import '../../../../widgets/review/rating_dialog.dart';
 
 class LesbuyOrderCompleteScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,7 @@ class _LesbuyOrderCompleteScreenState extends ConsumerState<LesbuyOrderCompleteS
   final TextEditingController _feedbackController = TextEditingController();
   bool _hasSubmittedReview = false;
   int? _driverId;
+  List<String> _proofImages = const [];
 
   @override
   void initState() {
@@ -47,11 +49,24 @@ class _LesbuyOrderCompleteScreenState extends ConsumerState<LesbuyOrderCompleteS
     _driverId = widget.orderData?['driver_id'] as int? ??
         widget.orderData?['driverId'] as int?;
     try {
-      final response =
-          await getIt<OrderRemoteDataSource>().getOrder(orderId);
-      if (!mounted || !response.success) return;
+      final dataSource = getIt<OrderRemoteDataSource>();
+      var proofs = await dataSource.fetchProofImages(orderId);
+      int? driverId = _driverId;
+
+      try {
+        final response = await dataSource.getOrder(orderId);
+        if (response.success) {
+          driverId = response.data.driverId ?? driverId;
+          if (proofs.isEmpty) {
+            proofs = response.data.proofImages;
+          }
+        }
+      } catch (_) {}
+
+      if (!mounted) return;
       setState(() {
-        _driverId = response.data.driverId ?? _driverId;
+        _driverId = driverId;
+        _proofImages = proofs;
       });
     } catch (_) {}
   }
@@ -242,6 +257,11 @@ class _LesbuyOrderCompleteScreenState extends ConsumerState<LesbuyOrderCompleteS
                   ],
                 ),
               ),
+
+              if (_proofImages.isNotEmpty) ...[
+                SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+                ProofOfDeliverySection(imageUrls: _proofImages),
+              ],
 
               SizedBox(height: ResponsiveUtils.spacing(context, 32)),
 

@@ -47,8 +47,8 @@ void main() {
       tester,
     ) async {
       const friendly =
-          'LesPay is unavailable. You can still top up via Xendit.\n'
-          'Hindi available ang LesPay. Puwede pa ring mag-top up sa Xendit.';
+          'LesPay is unavailable. You can still top up using GCash, Maya, or cards.\n'
+          'Hindi available ang LesPay. Puwede pa ring mag-top up gamit ang GCash, Maya, o cards.';
 
       await tester.pumpWidget(
         ProviderScope(
@@ -115,8 +115,8 @@ class _StaticLespayNotifier extends LespayNotifier {
   @override
   LespayState get state => const LespayState(
         error:
-            'LesPay is unavailable. You can still top up via Xendit.\n'
-            'Hindi available ang LesPay. Puwede pa ring mag-top up sa Xendit.',
+            'LesPay is unavailable. You can still top up using GCash, Maya, or cards.\n'
+            'Hindi available ang LesPay. Puwede pa ring mag-top up gamit ang GCash, Maya, o cards.',
       );
 }
 

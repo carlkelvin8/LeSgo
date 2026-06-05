@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../common/media_image.dart';
 import '../../../../../domain/entities/booking/leseat/order_item.dart';
 
 class OrderItemCard extends StatelessWidget {
@@ -37,22 +37,15 @@ class OrderItemCard extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: item.imagePath.endsWith('.svg')
-                  ? SvgPicture.asset(
-                      item.imagePath,
-                      fit: BoxFit.cover,
-                    )
-                  : Image.asset(
-                      item.imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.restaurant,
-                          color: Colors.grey[400],
-                          size: ResponsiveUtils.fontSize(context, 32),
-                        );
-                      },
-                    ),
+              child: MediaImage(
+                imagePath: item.imagePath,
+                fit: BoxFit.cover,
+                placeholder: Icon(
+                  Icons.restaurant,
+                  color: Colors.grey[400],
+                  size: ResponsiveUtils.fontSize(context, 32),
+                ),
+              ),
             ),
           ),
 

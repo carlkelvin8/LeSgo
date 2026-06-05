@@ -22,6 +22,9 @@ class UserProfileDto {
   
   @JsonKey(name: 'profile_photo_url')
   final String? profilePhoto;
+
+  @JsonKey(name: 'profile_picture', includeToJson: false)
+  final String? profilePicture;
   
   @JsonKey(name: 'referral_code')
   final String? referralCode;
@@ -50,6 +53,7 @@ class UserProfileDto {
     this.addressLine1,
     this.addressLine2,
     this.profilePhoto,
+    this.profilePicture,
     this.referralCode,
     this.referredBy,
     this.points,

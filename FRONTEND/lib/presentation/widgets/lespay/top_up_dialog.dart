@@ -79,7 +79,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
 
     return AlertDialog(
       title: Text(
-        'Top Up via Xendit (3% fee)',
+        'Top Up (3% fee)',
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -93,7 +93,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'A 3% top-up fee applies. You pay the total below via Xendit (GCash, Maya, cards).',
+              'A 3% top-up fee applies. You pay the total below using GCash, Maya, or cards.',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),

@@ -5,18 +5,25 @@ import '../../../../../../core/utils/responsive_utils.dart';
 class RiderWalletActionItem extends StatelessWidget {
   final String iconAsset;
   final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
 
   const RiderWalletActionItem({
     super.key,
     required this.iconAsset,
     required this.title,
+    this.subtitle,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 24)),
-      child: Row(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Row(
         children: [
           SvgPicture.asset(
             iconAsset,
@@ -25,17 +32,34 @@ class RiderWalletActionItem extends StatelessWidget {
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 16)),
           Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 16),
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF5F2D82), // Purple text
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 16),
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF5F2D82),
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  SizedBox(height: ResponsiveUtils.spacing(context, 2)),
+                  Text(
+                    subtitle!,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
+        ),
       ),
     );
   }

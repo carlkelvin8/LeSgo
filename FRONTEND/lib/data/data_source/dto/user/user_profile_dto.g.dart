@@ -16,6 +16,7 @@ UserProfileDto _$UserProfileDtoFromJson(Map<String, dynamic> json) =>
       addressLine1: json['address_line1'] as String?,
       addressLine2: json['address_line2'] as String?,
       profilePhoto: json['profile_photo_url'] as String?,
+      profilePicture: json['profile_picture'] as String?,
       referralCode: json['referral_code'] as String?,
       referredBy: json['referred_by'] as String?,
       points: (json['points'] as num?)?.toInt(),

@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/utils/media_url_utils.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../global/custom_divider.dart';
 
@@ -112,71 +112,7 @@ class ProfileHeader extends StatelessWidget {
                   child: profileImageUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: kIsWeb
-                              ? Image.network(
-                                  profileImageUrl!,
-                                  fit: BoxFit.cover,
-                                  width: ResponsiveUtils.spacing(context, 90),
-                                  height: ResponsiveUtils.spacing(context, 90),
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) {
-                                      print('🔵 ProfileHeader: Image loaded successfully from: $profileImageUrl');
-                                      return child;
-                                    }
-                                    print('🔵 ProfileHeader: Loading image from: $profileImageUrl');
-                                    return Container(
-                                      color: Colors.grey[200],
-                                      child: const Center(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Color(0xFF5F2D82),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    print('🔴 ProfileHeader: Failed to load image from: $profileImageUrl');
-                                    print('🔴 ProfileHeader: Error: $error');
-                                    return Container(
-                                      color: Colors.red[100],
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          const Icon(
-                                            Icons.error,
-                                            color: Colors.red,
-                                            size: 40,
-                                          ),
-                                          Text(
-                                            'Error',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.red[900],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                )
-                              : Image.file(
-                                  File(profileImageUrl!),
-                                  fit: BoxFit.cover,
-                                  width: ResponsiveUtils.spacing(context, 90),
-                                  height: ResponsiveUtils.spacing(context, 90),
-                                  errorBuilder: (context, error, stackTrace) {
-                                    print('🔴 ProfileHeader: Failed to load image file: $profileImageUrl');
-                                    print('🔴 ProfileHeader: Error: $error');
-                                    return Container(
-                                      color: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.person,
-                                        color: Colors.grey,
-                                        size: 40,
-                                      ),
-                                    );
-                                  },
-                                ),
+                          child: _buildProfileImage(context, profileImageUrl!),
                         )
                       : SvgPicture.asset(
                           'assets/images/register/10.svg',
@@ -190,6 +126,59 @@ class ProfileHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProfileImage(BuildContext context, String imagePath) {
+    final size = ResponsiveUtils.spacing(context, 90);
+    final networkUrl = MediaUrlUtils.resolve(imagePath);
+
+    if (networkUrl != null) {
+      return Image.network(
+        networkUrl,
+        fit: BoxFit.cover,
+        width: size,
+        height: size,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey[200],
+            child: const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Color(0xFF5F2D82),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[300],
+            child: const Icon(
+              Icons.person,
+              color: Colors.grey,
+              size: 40,
+            ),
+          );
+        },
+      );
+    }
+
+    return Image.file(
+      File(imagePath),
+      fit: BoxFit.cover,
+      width: size,
+      height: size,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.grey[300],
+          child: const Icon(
+            Icons.person,
+            color: Colors.grey,
+            size: 40,
+          ),
+        );
+      },
     );
   }
 }

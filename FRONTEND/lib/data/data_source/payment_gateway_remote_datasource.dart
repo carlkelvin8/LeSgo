@@ -17,15 +17,11 @@ class PaymentGatewayRemoteDataSource {
   /// Create a payment invoice
   Future<InvoiceResponseDto> createInvoice(InvoiceRequestDto request) async {
     final dio = _dioClient.dio;
-    try {
-      final response = await dio.post(
-        '/v1/payment-gateway/invoices',
-        data: request.toJson(),
-      );
-      return InvoiceResponseDto.fromJson(response.data as Map<String, dynamic>);
-    } catch (e) {
-      throw Exception('Failed to create invoice: $e');
-    }
+    final response = await dio.post(
+      '/v1/payment-gateway/invoices',
+      data: request.toJson(),
+    );
+    return InvoiceResponseDto.fromJson(response.data as Map<String, dynamic>);
   }
 
   /// Validate whether the current wallet balance can be used.
@@ -73,7 +69,7 @@ class PaymentGatewayRemoteDataSource {
     final dio = _dioClient.dio;
     try {
       final response = await dio.post(
-        '/v1/payment-gateway/refunds',
+        ApiConstants.paymentGatewayRefunds,
         data: request.toJson(),
       );
       return RefundResponseDto.fromJson(response.data as Map<String, dynamic>);

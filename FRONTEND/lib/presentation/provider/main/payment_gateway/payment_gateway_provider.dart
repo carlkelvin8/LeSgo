@@ -5,6 +5,7 @@ import '../../../../data/data_source/dto/payment/invoice_request_dto.dart';
 import '../../../../data/data_source/dto/gateway/invoice_dto.dart';
 import '../../../../data/data_source/dto/wallet/wallet_validation_dto.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/auth/auth_provider.dart';
 
@@ -169,7 +170,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
       final request = InvoiceRequestDto(
         amount: amount,
         description: description,
-        paymentMethod: paymentMethod,
+        paymentMethod: _normalizeGatewayPaymentMethod(paymentMethod),
         successUrl: successUrl,
         cancelUrl: cancelUrl,
         metadata: metadata,
@@ -204,13 +205,15 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
         return null;
       }
     } catch (e) {
-      state = state.copyWith(isCreatingInvoice: false, error: e.toString());
+      final message = ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not start digital payment. Try again or use Cash.',
+        fallbackTl: 'Hindi masimulan ang digital payment. Subukan muli o Cash.',
+      );
+      state = state.copyWith(isCreatingInvoice: false, error: message);
 
       if (context != null && context.mounted) {
-        SnackBarUtils.showError(
-          context,
-          'Error creating invoice: ${e.toString()}',
-        );
+        SnackBarUtils.showError(context, message);
       }
       return null;
     }
@@ -283,6 +286,15 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
     );
   }
 
+  String _normalizeGatewayPaymentMethod(String method) {
+    switch (method.toLowerCase()) {
+      case 'paymaya':
+        return 'maya';
+      default:
+        return method.toLowerCase();
+    }
+  }
+
   /// Create invoice for order payment
   Future<InvoiceDto?> createOrderPaymentInvoice({
     required int orderId,
@@ -293,7 +305,9 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
     return await createInvoice(
       amount: amount,
       description: 'Order Payment - Order #$orderId',
-      paymentMethod: paymentMethod,
+      paymentMethod: _normalizeGatewayPaymentMethod(paymentMethod),
+      successUrl: 'lesgo://order/payment/success',
+      cancelUrl: 'lesgo://order/payment/failure',
       metadata: {
         'type': 'order_payment',
         'order_id': orderId,

@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+
+import '../constants/api_constants.dart';
 import '../services/secure_storage_service.dart';
+import 'auth_token_interceptor.dart';
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();
@@ -14,7 +16,7 @@ class DioClient {
   void initialize() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api',
+        baseUrl: ApiConstants.baseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -24,24 +26,15 @@ class DioClient {
       ),
     );
 
-    _dio.interceptors.add(
+    _dio.interceptors.addAll([
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final token = await _getToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
+          final deviceId = await SecureStorageService.getDeviceId();
+          options.headers['X-Device-ID'] = deviceId;
           handler.next(options);
         },
-        onError: (error, handler) {
-          handler.next(error);
-        },
       ),
-    );
-  }
-
-  Future<String?> _getToken() async {
-    // Read from SecureStorageService (same place ApiService saves it)
-    return await SecureStorageService.getToken();
+      AuthTokenInterceptor(_dio),
+    ]);
   }
 }

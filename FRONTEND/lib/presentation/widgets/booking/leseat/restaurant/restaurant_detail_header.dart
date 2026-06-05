@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../common/media_image.dart';
 import '../../../../../domain/entities/booking/leseat/restaurant.dart';
 
 class RestaurantDetailHeader extends StatelessWidget {
   final Restaurant restaurant;
+  final String? imagePath;
 
-  const RestaurantDetailHeader({super.key, required this.restaurant});
+  const RestaurantDetailHeader({
+    super.key,
+    required this.restaurant,
+    this.imagePath,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,37 +24,20 @@ class RestaurantDetailHeader extends StatelessWidget {
           width: double.infinity,
           height: headerHeight,
           decoration: BoxDecoration(color: Colors.grey[300]),
-          child: restaurant.imagePath.toLowerCase().endsWith('.svg')
-              ? SvgPicture.asset(
-                  restaurant.imagePath,
-                  fit: BoxFit.cover,
-                  placeholderBuilder: (BuildContext context) => Container(
-                    color: Colors.grey[300],
-                    child: Center(
-                      child: Icon(
-                        Icons.restaurant,
-                        size: ResponsiveUtils.fontSize(context, 64),
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  ),
-                )
-              : Image.asset(
-                  restaurant.imagePath,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: Center(
-                        child: Icon(
-                          Icons.restaurant,
-                          size: ResponsiveUtils.fontSize(context, 64),
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    );
-                  },
+          child: MediaImage(
+            imagePath: imagePath ?? restaurant.imagePath,
+            fit: BoxFit.cover,
+            placeholder: Container(
+              color: Colors.grey[300],
+              child: Center(
+                child: Icon(
+                  Icons.restaurant,
+                  size: ResponsiveUtils.fontSize(context, 64),
+                  color: Colors.grey[400],
                 ),
+              ),
+            ),
+          ),
         ),
 
         // Gradient Overlay

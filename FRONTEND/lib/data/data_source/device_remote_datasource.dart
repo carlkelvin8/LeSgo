@@ -18,6 +18,7 @@ class DeviceRemoteDataSource {
     await _dioClient.dio.post(
       ApiConstants.deviceRegister,
       data: {
+        'fcm_token': token,
         'token': token,
         'platform': platform,
         'app': 'lesgo_customer',

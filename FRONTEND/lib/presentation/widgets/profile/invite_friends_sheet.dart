@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/di/injection.dart';
 import '../../../core/utils/referral_utils.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
+import '../../../data/data_source/social_remote_datasource.dart';
 
 class InviteFriendsSheet extends StatelessWidget {
   const InviteFriendsSheet({
@@ -37,14 +39,30 @@ class InviteFriendsSheet extends StatelessWidget {
     SnackBarUtils.showSuccess(context, 'Referral code copied!');
   }
 
-  Future<void> _share() async {
-    await Share.share(
-      ReferralUtils.inviteMessage(
-        referralCode: referralCode,
-        userName: userName,
-      ),
-      subject: 'Join me on ${ReferralUtils.appName}',
-    );
+  Future<void> _share(BuildContext context) async {
+    try {
+      final generated =
+          await getIt<SocialRemoteDataSource>().generateReferralShare();
+      await Share.share(
+        generated.content.isNotEmpty
+            ? '${generated.content}\n${generated.shareUrl}'
+            : ReferralUtils.inviteMessage(
+                referralCode: referralCode,
+                userName: userName,
+              ),
+        subject: 'Join me on ${ReferralUtils.appName}',
+      );
+      if (generated.shareId > 0) {
+        await getIt<SocialRemoteDataSource>().trackShareEngagement(
+          generated.shareId,
+          action: 'share',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, 'Could not generate share link.');
+      }
+    }
   }
 
   @override
@@ -123,7 +141,7 @@ class InviteFriendsSheet extends StatelessWidget {
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           FilledButton.icon(
-            onPressed: _share,
+            onPressed: () => _share(context),
             icon: const Icon(Icons.share_outlined),
             label: const Text('Share invite link'),
             style: FilledButton.styleFrom(

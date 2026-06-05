@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/services/order_snapshot_cache.dart';
+import '../../core/utils/proof_image_utils.dart';
 import 'dto/order/create_order_request_dto.dart';
 import 'dto/order/orders_response_dto.dart';
 import 'dto/order/estimate_request_dto.dart';
@@ -113,7 +114,7 @@ class OrderRemoteDataSource {
         throw Exception('API response missing data field');
       }
 
-      // Workaround: Inject cached meta/items
+      // Workaround: Inject cached meta/items + resolve proof image URLs
       if (responseMap['data'] is List) {
         final List dataList = responseMap['data'];
         for (var i = 0; i < dataList.length; i++) {
@@ -123,6 +124,7 @@ class OrderRemoteDataSource {
             if (id != null && id is int) {
               OrderSnapshotCache.enrichOrderJson(item, id);
             }
+            dataList[i] = ProofImageUtils.normalizeOrderJson(item);
           }
         }
       }
@@ -208,6 +210,27 @@ class OrderRemoteDataSource {
     }
   }
 
+  /// Fetch proof-of-delivery image URLs without requiring full [OrderDto] parse.
+  Future<List<String>> fetchProofImages(int id) async {
+    final dio = _dioClient.dio;
+    try {
+      final response = await dio.get(ApiConstants.orderById(id));
+      final body = response.data;
+      if (body is! Map) return [];
+
+      final data = body['data'];
+      if (data is! Map) return [];
+
+      final orderJson = ProofImageUtils.normalizeOrderJson(
+        Map<String, dynamic>.from(data),
+      );
+      return ProofImageUtils.fromOrderMap(orderJson);
+    } catch (e) {
+      print('Failed to fetch proof images for order $id: $e');
+      return [];
+    }
+  }
+
   // NEW: Get order by ID
   Future<OrderResponseDto> getOrder(int id) async {
     final dio = _dioClient.dio;
@@ -215,9 +238,10 @@ class OrderRemoteDataSource {
       final response = await dio.get(ApiConstants.orderById(id));
       final responseData = Map<String, dynamic>.from(response.data);
 
-      if (responseData['data'] != null) {
-        final data = responseData['data'] as Map<String, dynamic>;
+      if (responseData['data'] is Map<String, dynamic>) {
+        final data = Map<String, dynamic>.from(responseData['data'] as Map);
         OrderSnapshotCache.enrichOrderJson(data, id);
+        responseData['data'] = ProofImageUtils.normalizeOrderJson(data);
       }
 
       return OrderResponseDto.fromJson(responseData);
@@ -246,7 +270,29 @@ class OrderRemoteDataSource {
         ApiConstants.orderStatus(id),
         data: data,
       );
-      return OrderResponseDto.fromJson(response.data);
+      final responseData = Map<String, dynamic>.from(response.data as Map);
+
+      if (responseData['data'] is Map<String, dynamic>) {
+        OrderSnapshotCache.enrichOrderJson(
+          responseData['data'] as Map<String, dynamic>,
+          id,
+        );
+      }
+
+      return OrderResponseDto.fromJson(responseData);
+    } on DioException catch (e) {
+      final responseData = e.response?.data;
+      String errorMsg;
+      if (responseData is Map) {
+        errorMsg = (responseData['message'] as String?)?.isNotEmpty == true
+            ? responseData['message'] as String
+            : (responseData['error'] as String?)?.isNotEmpty == true
+                ? responseData['error'] as String
+                : e.message ?? 'Failed to update order status';
+      } else {
+        errorMsg = e.message ?? 'Failed to update order status';
+      }
+      throw Exception(errorMsg);
     } catch (e) {
       throw Exception('Failed to update order status: $e');
     }
@@ -266,7 +312,7 @@ class OrderRemoteDataSource {
     final dio = _dioClient.dio;
     try {
       final response = await dio.post(
-        '${ApiConstants.orderById(orderId)}/reorder',
+        ApiConstants.orderReorder(orderId),
       );
       return OrderResponseDto.fromJson(response.data);
     } catch (e) {

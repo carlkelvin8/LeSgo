@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/remember_me_service.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/main/main_routes.dart';
@@ -22,6 +23,27 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
   bool isRememberMe = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadRememberMeCredentials();
+  }
+
+  Future<void> _loadRememberMeCredentials() async {
+    if (!RememberMeService.isEnabled()) return;
+    if (!RememberMeService.matchesAccountType('rider')) return;
+
+    final email = RememberMeService.savedEmail;
+    final password = RememberMeService.savedPassword;
+    if (!mounted) return;
+
+    setState(() {
+      isRememberMe = true;
+      if (email != null) _emailController.text = email;
+      if (password != null) _passwordController.text = password;
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -42,7 +64,12 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
     print('🔐 Attempting login with email: $email');
 
     // Perform actual authentication
-    final success = await ref.read(riderAuthProvider.notifier).login(email, password);
+    final success = await ref.read(riderAuthProvider.notifier).login(
+          email,
+          password,
+          rememberMe: isRememberMe,
+          accountType: 'rider',
+        );
     
     print('🔐 Login result: ${success ? "SUCCESS" : "FAILED"}');
 

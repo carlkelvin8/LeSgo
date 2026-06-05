@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/services/api_service.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../../data/data_source/dto/merchant/partner_dto.dart';
 import '../../auth/rider_auth_provider.dart';
@@ -28,4 +29,30 @@ final merchantProfileProvider = FutureProvider.autoDispose<PartnerDto?>((ref) as
     print('❌ Error loading merchant profile: $e');
     rethrow;
   }
+});
+
+/// Referral code is stored on the user account, not the partner record.
+final merchantReferralCodeProvider = FutureProvider.autoDispose<String>((ref) async {
+  ref.watch(riderAuthProvider);
+
+  try {
+    final dashboard = await ApiService.getReferralDashboard();
+    final code = dashboard['referral_code']?.toString().trim();
+    if (code != null && code.isNotEmpty) return code;
+  } catch (e) {
+    print('⚠️ Referral dashboard fetch failed: $e');
+  }
+
+  try {
+    final data = await ApiService.getMe();
+    final user = data['user'] ?? data['data'] ?? data;
+    if (user is Map<String, dynamic>) {
+      final code = user['referral_code']?.toString().trim();
+      if (code != null && code.isNotEmpty) return code;
+    }
+  } catch (e) {
+    print('⚠️ getMe referral fetch failed: $e');
+  }
+
+  return '';
 });

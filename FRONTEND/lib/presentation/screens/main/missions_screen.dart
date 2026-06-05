@@ -103,12 +103,43 @@ class MissionsScreen extends ConsumerWidget {
 
                 Expanded(
                   child: missionsState.isLoading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
-                        )
-                      : missionsState.missions.isEmpty
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                  ),
+                )
+              : missionsState.error != null && missionsState.missions.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: ResponsiveUtils.spacing(context, 24),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              missionsState.error!,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: ResponsiveUtils.fontSize(context, 14),
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 16),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => ref
+                                  .read(missionsProvider.notifier)
+                                  .refreshMissions(),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : missionsState.missions.isEmpty
                           ? Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -143,7 +174,14 @@ class MissionsScreen extends ConsumerWidget {
                                   return MissionCard(
                                     mission: mission,
                                     onTap: () {
-                                      // Handle mission tap if needed
+                                      if (mission.isCompleted) return;
+                                      if (mission.missionType == 'app_review' ||
+                                          mission.missionType ==
+                                              'social_follow') {
+                                        ref
+                                            .read(missionsProvider.notifier)
+                                            .performMissionAction(mission);
+                                      }
                                     },
                                   );
                                 },

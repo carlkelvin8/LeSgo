@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../domain/entities/missions/mission.dart';
 import '../../../data/data_source/missions_remote_datasource.dart';
+import '../../../data/data_source/social_remote_datasource.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/utils/api_error_mapper.dart';
 
 class MissionsState {
   final List<Mission> missions;
@@ -29,30 +33,25 @@ class MissionsState {
 }
 
 class MissionsNotifier extends StateNotifier<MissionsState> {
-  final MissionsRemoteDataSource _missionsDataSource = getIt<MissionsRemoteDataSource>();
+  final MissionsRemoteDataSource _missionsDataSource =
+      getIt<MissionsRemoteDataSource>();
+  final SocialRemoteDataSource _socialDataSource =
+      getIt<SocialRemoteDataSource>();
 
   MissionsNotifier()
       : super(MissionsState(
           missions: [],
           isLoading: true,
         )) {
-    print('🔵 MissionsNotifier: Constructor called');
     _loadMissions();
   }
 
   Future<void> _loadMissions() async {
-    print('🔵 MissionsNotifier: _loadMissions called');
-    
     try {
       state = state.copyWith(isLoading: true, clearError: true);
-      print('🔵 Missions: State updated to loading');
-      
-      print('🔵 Missions: Starting API call...');
-      
+
       final response = await _missionsDataSource.getMissions();
-      print('🟢 Missions: API call successful!');
-      print('🟢 Missions: Got ${response.data.length} missions');
-      
+
       final missions = response.data.map((missionDto) {
         return Mission(
           id: missionDto.id,
@@ -71,126 +70,32 @@ class MissionsNotifier extends StateNotifier<MissionsState> {
           missionDate: missionDto.missionDate,
         );
       }).toList();
-      
-      print('🟢 Missions: Mapped ${missions.length} missions');
-      
+
       state = state.copyWith(
         missions: missions,
         isLoading: false,
       );
-      
-      print('🟢 Missions: State updated with ${missions.length} missions');
-      
     } catch (e) {
-      print('🔴 Missions: Error fetching missions - $e');
-      print('🔴 Missions: Error type: ${e.runtimeType}');
-      
-      // Temporary fallback: Show static missions if API fails
-      print('🔵 Missions: Using fallback static missions due to API error');
-      final fallbackMissions = [
-        Mission(
-          id: 1,
-          userId: 0,
-          missionType: 'leseat_order',
-          title: 'Book 1 LesEat today',
-          description: 'Order food from any restaurant',
-          currentProgress: 0,
-          goalTarget: 1,
-          isCompleted: false,
-          completedAt: null,
-          rewardType: 'voucher',
-          rewardValue: 50.0,
-          rewardClaimed: false,
-          claimedAt: null,
-          missionDate: DateTime.now().toIso8601String().split('T')[0],
-        ),
-        Mission(
-          id: 2,
-          userId: 0,
-          missionType: 'friend_referral',
-          title: 'Refer 1 friend',
-          description: 'Invite a friend to join LesGo',
-          currentProgress: 0,
-          goalTarget: 1,
-          isCompleted: false,
-          completedAt: null,
-          rewardType: 'voucher',
-          rewardValue: 100.0,
-          rewardClaimed: false,
-          claimedAt: null,
-          missionDate: DateTime.now().toIso8601String().split('T')[0],
-        ),
-        Mission(
-          id: 3,
-          userId: 0,
-          missionType: 'app_review',
-          title: 'Leave us a review',
-          description: 'Rate our app on the store',
-          currentProgress: 0,
-          goalTarget: 1,
-          isCompleted: false,
-          completedAt: null,
-          rewardType: 'voucher',
-          rewardValue: 25.0,
-          rewardClaimed: false,
-          claimedAt: null,
-          missionDate: DateTime.now().toIso8601String().split('T')[0],
-        ),
-        Mission(
-          id: 4,
-          userId: 0,
-          missionType: 'social_follow',
-          title: 'Like our FB page',
-          description: 'Follow us on social media',
-          currentProgress: 0,
-          goalTarget: 1,
-          isCompleted: false,
-          completedAt: null,
-          rewardType: 'voucher',
-          rewardValue: 25.0,
-          rewardClaimed: false,
-          claimedAt: null,
-          missionDate: DateTime.now().toIso8601String().split('T')[0],
-        ),
-        Mission(
-          id: 5,
-          userId: 0,
-          missionType: 'lesride_orders',
-          title: 'Book 5 LesRide',
-          description: 'Complete 5 ride bookings',
-          currentProgress: 0,
-          goalTarget: 5,
-          isCompleted: false,
-          completedAt: null,
-          rewardType: 'voucher',
-          rewardValue: 200.0,
-          rewardClaimed: false,
-          claimedAt: null,
-          missionDate: DateTime.now().toIso8601String().split('T')[0],
-        ),
-      ];
-      
       state = state.copyWith(
-        missions: fallbackMissions,
+        missions: [],
         isLoading: false,
-        error: 'Using offline missions. API connection failed: ${e.toString()}',
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not load missions. Pull to retry.',
+          fallbackTl: 'Hindi ma-load ang missions. Subukan muli.',
+        ),
       );
     }
   }
 
   Future<void> refreshMissions() async {
-    print('🔵 Missions: Manual refresh triggered');
     await _loadMissions();
   }
 
   Future<void> claimMission(int missionId) async {
     try {
-      print('🔵 Missions: Claiming mission $missionId');
-      
       final response = await _missionsDataSource.claimMission(missionId);
-      print('🟢 Missions: Mission claimed successfully');
-      
-      // Update the mission in the state
+
       final updatedMissions = state.missions.map((mission) {
         if (mission.id == missionId) {
           return Mission(
@@ -213,18 +118,49 @@ class MissionsNotifier extends StateNotifier<MissionsState> {
         return mission;
       }).toList();
 
-      state = state.copyWith(missions: updatedMissions);
-      
+      state = state.copyWith(missions: updatedMissions, clearError: true);
     } catch (e) {
-      print('🔴 Missions: Error claiming mission - $e');
-      state = state.copyWith(error: 'Failed to claim reward: $e');
+      state = state.copyWith(
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Failed to claim reward.',
+          fallbackTl: 'Hindi ma-claim ang reward.',
+        ),
+      );
       rethrow;
     }
   }
 
-  void updateProgress(String missionId, double newProgress) {
-    // This method is kept for backward compatibility but not used with real API
-    print('⚠️ Missions: updateProgress called but using real API now');
+  Future<void> performMissionAction(Mission mission) async {
+    switch (mission.missionType) {
+      case 'app_review':
+        await launchUrl(
+          Uri.parse(
+            'https://play.google.com/store/apps/details?id=com.lezgo.app',
+          ),
+          mode: LaunchMode.externalApplication,
+        );
+        await _missionsDataSource.recordProgress(mission.id);
+        break;
+      case 'social_follow':
+        await launchUrl(
+          Uri.parse('https://www.facebook.com/lesgo'),
+          mode: LaunchMode.externalApplication,
+        );
+        await _socialDataSource.confirmSocialFollow(platform: 'facebook');
+        final share = await _socialDataSource.generateReferralShare(
+          platform: 'facebook',
+        );
+        await Share.share(
+          '${share.content}\n${share.shareUrl}',
+          subject: 'Follow LeSGo',
+        );
+        await _missionsDataSource.recordProgress(mission.id);
+        break;
+      default:
+        return;
+    }
+    await refreshMissions();
   }
 }
 

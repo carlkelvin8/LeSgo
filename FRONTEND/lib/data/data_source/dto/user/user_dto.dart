@@ -6,12 +6,15 @@ part 'user_dto.g.dart';
 class UserDto {
   final UserPayloadDto? user;
   final String? token;
+  @JsonKey(name: 'refresh_token')
+  final String? refreshToken;
   final String? message;
   final bool? success;
 
   UserDto({
     this.user,
     this.token,
+    this.refreshToken,
     this.message,
     this.success,
   });
@@ -30,6 +33,7 @@ class UserDto {
     return UserDto(
       user: null,
       token: null,
+      refreshToken: null,
       message: errorMessage,
       success: false,
     );

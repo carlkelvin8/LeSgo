@@ -43,7 +43,7 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
       );
       
       if (image != null) {
-        notifier.updateImagePath(image.path);
+        notifier.updateLocalImage(image.path);
       }
     } catch (e) {
       if (mounted) {
@@ -87,7 +87,7 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
       children: [
         // Image Upload Section
         MerchantItemImageUploadSection(
-          uploadedImagePath: formState.imagePath,
+          uploadedImagePath: formState.displayImageSource,
           onTap: () => _pickImage(notifier),
         ),
         SectionSpacer(units: 20),

@@ -5,6 +5,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/orders/order_history_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/orders/cancel_order_dialog.dart';
+import '../../../widgets/orders/proof_of_delivery_section.dart';
+import '../../../../data/data_source/order_remote_datasource.dart';
+import '../../../../core/utils/order_cancel_utils.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../tracking/live_tracking_screen.dart';
@@ -25,8 +28,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   bool _isReordering = false;
   List<LatLng> _routePolyline = [];
   bool _isLoadingRoute = false;
+  OrderDto? _fetchedOrder;
+  List<String> _proofImages = const [];
 
   OrderDto? get _order {
+    if (_fetchedOrder != null) return _fetchedOrder;
     final orders = ref.watch(orderHistoryProvider).orders;
     try {
       return orders.firstWhere((o) => o.id == widget.orderId);
@@ -38,13 +44,47 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Load route when screen opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final order = _order;
-      if (order != null && _shouldShowMap(order.status)) {
-        _loadRoute(order);
+    _loadOrderDetails();
+  }
+
+  Future<void> _loadOrderDetails() async {
+    try {
+      final dataSource = getIt<OrderRemoteDataSource>();
+      var proofs = await dataSource.fetchProofImages(widget.orderId);
+
+      try {
+        final response = await dataSource.getOrder(widget.orderId);
+        if (!mounted) return;
+        if (response.success) {
+          if (proofs.isEmpty) {
+            proofs = response.data.proofImages;
+          }
+          setState(() {
+            _fetchedOrder = response.data;
+            _proofImages = proofs;
+          });
+          if (_shouldShowMap(response.data.status)) {
+            _loadRoute(response.data);
+          }
+          return;
+        }
+      } catch (e) {
+        print('Error loading order details: $e');
       }
-    });
+
+      if (!mounted) return;
+      if (proofs.isNotEmpty) {
+        setState(() => _proofImages = proofs);
+      }
+    } catch (e) {
+      print('Error loading order details: $e');
+      if (mounted) {
+        final cached = _order;
+        if (cached != null && _shouldShowMap(cached.status)) {
+          _loadRoute(cached);
+        }
+      }
+    }
   }
 
   Future<void> _loadRoute(OrderDto order) async {
@@ -91,7 +131,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   bool get _canCancel {
     final order = _order;
     if (order == null) return false;
-    return order.status == 'pending' || order.status == 'accepted';
+    return canCustomerCancelOrderStatus(order.status);
   }
 
   bool get _canReorder {
@@ -136,9 +176,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           );
         } else {
+          final error = ref.read(orderHistoryProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to cancel order'),
+            SnackBar(
+              content: Text(error ?? 'Failed to cancel order'),
               backgroundColor: Colors.red,
             ),
           );
@@ -255,6 +296,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                     _buildAddressInfo(order),
                     const SizedBox(height: 16),
                     _buildPriceBreakdown(order),
+                    if (_proofImages.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      ProofOfDeliverySection(imageUrls: _proofImages),
+                    ],
                     if (order.cancelReason != null) ...[
                       const SizedBox(height: 16),
                       _buildCancellationInfo(order),
