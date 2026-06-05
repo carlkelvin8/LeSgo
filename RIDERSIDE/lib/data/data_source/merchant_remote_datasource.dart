@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/services/api_service.dart';
 import '../../core/utils/media_url_utils.dart';
+import '../../core/utils/menu_image_utils.dart';
 import '../../core/utils/multipart_file_utils.dart';
 import 'dto/merchant/menu_item_dto.dart';
 import 'dto/merchant/partner_dto.dart';
@@ -25,7 +26,9 @@ class MerchantRemoteDataSource {
   Future<MenuResponse> getMenu(int partnerId) async {
     try {
       final response = await _dio.get('/v1/partners/$partnerId/menu');
-      final data = response.data['data'] ?? response.data;
+      final raw = response.data as Map<String, dynamic>;
+      final normalized = MenuImageUtils.normalizeMenuJson(raw);
+      final data = normalized['data'] ?? normalized;
       
       final categories = (data['categories'] as List<dynamic>?)
           ?.map((json) => MenuCategoryDto.fromJson(json as Map<String, dynamic>))
@@ -92,6 +95,17 @@ class MerchantRemoteDataSource {
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch partner orders: ${ApiService.extractError(e)}');
+    }
+  }
+
+  /// Fetch a single order with full relationships (driver profile, items, etc.)
+  Future<OrderDto> getOrderById(int orderId) async {
+    try {
+      final response = await _dio.get('/v1/orders/$orderId');
+      final data = response.data['data'] ?? response.data;
+      return OrderDto.fromJson(data as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Failed to fetch order details: ${ApiService.extractError(e)}');
     }
   }
   
@@ -293,17 +307,29 @@ class MerchantRemoteDataSource {
       final payload = request.toJson();
       payload.remove('logo_url');
 
-      final uploadedLogoUrl = await _resolvePartnerLogoUrl(
-        logoUrl: request.logoUrl,
-        logoPath: request.logoPath,
-      );
-      if (uploadedLogoUrl != null && uploadedLogoUrl.isNotEmpty) {
-        payload['logo_url'] = uploadedLogoUrl;
+      dynamic data;
+      if (request.logoPath != null &&
+          MediaUrlUtils.isLocalFilePath(request.logoPath)) {
+        final formData = FormData.fromMap(payload);
+        formData.files.add(MapEntry(
+          'logo',
+          await MultipartFile.fromFile(request.logoPath!),
+        ));
+        data = formData;
+      } else {
+        final uploadedLogoUrl = await _resolvePartnerLogoUrl(
+          logoUrl: request.logoUrl,
+          logoPath: request.logoPath,
+        );
+        if (uploadedLogoUrl != null && uploadedLogoUrl.isNotEmpty) {
+          payload['logo_url'] = uploadedLogoUrl;
+        }
+        data = payload;
       }
 
       final response = await _dio.patch(
         '/v1/partners/$partnerId',
-        data: payload,
+        data: data,
       );
       final data = response.data['data'] ?? response.data;
       return PartnerDto.fromJson(data as Map<String, dynamic>);
