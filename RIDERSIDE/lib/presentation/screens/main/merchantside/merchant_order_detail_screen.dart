@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/utils/screen_auto_refresh.dart';
+import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../widgets/common/menu_image_widget.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -9,13 +11,29 @@ import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
 
-class MerchantOrderDetailScreen extends ConsumerWidget {
+class MerchantOrderDetailScreen extends ConsumerStatefulWidget {
   final OrderDto order;
 
   const MerchantOrderDetailScreen({
     super.key,
     required this.order,
   });
+
+  @override
+  ConsumerState<MerchantOrderDetailScreen> createState() =>
+      _MerchantOrderDetailScreenState();
+}
+
+class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailScreen>
+    with WidgetsBindingObserver, AutoRefreshMixin {
+  @override
+  Duration get autoRefreshInterval => kScreenAutoRefreshInterval;
+
+  @override
+  void onAutoRefresh() {
+    ref.invalidate(merchantOrderDetailProvider(widget.order.id));
+    ref.invalidate(merchantMenuProvider);
+  }
 
   String _getStatusLabel(String status) {
     switch (status.toLowerCase()) {
@@ -59,25 +77,30 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     ref.watch(merchantMenuProvider);
     final imageLookup = ref.watch(menuItemImageLookupProvider);
+    final detailAsync = ref.watch(merchantOrderDetailProvider(widget.order.id));
+    final resolvedOrder = detailAsync.maybeWhen(
+      data: (freshOrder) => freshOrder,
+      orElse: () => widget.order,
+    );
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
-    final status = order.status.toLowerCase();
+    final status = resolvedOrder.status.toLowerCase();
     
     // Calculate subtotals
     double itemSubtotal = 0;
-    if (order.orderItems != null) {
-      for (var item in order.orderItems!) {
+    if (resolvedOrder.orderItems != null) {
+      for (var item in resolvedOrder.orderItems!) {
         itemSubtotal += (item.unitPrice ?? 0.0) * (item.quantity);
       }
     }
     
     // Format dates
     String orderDate = 'Unknown date';
-    if (order.createdAt != null) {
+    if (resolvedOrder.createdAt.isNotEmpty) {
       try {
-        final date = DateTime.parse(order.createdAt!).toLocal();
+        final date = DateTime.parse(resolvedOrder.createdAt).toLocal();
         orderDate = DateFormat('MMM dd, yyyy • hh:mm a').format(date);
       } catch (_) {}
     }
@@ -116,7 +139,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '#${order.referenceNumber ?? order.id.toString()}',
+                        '#${resolvedOrder.referenceNumber ?? resolvedOrder.id.toString()}',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 20),
@@ -127,19 +150,19 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(order.status).withValues(alpha: 0.1),
+                          color: _getStatusColor(resolvedOrder.status).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _getStatusColor(order.status).withValues(alpha: 0.5),
+                            color: _getStatusColor(resolvedOrder.status).withValues(alpha: 0.5),
                           ),
                         ),
                         child: Text(
-                          _getStatusLabel(order.status),
+                          _getStatusLabel(resolvedOrder.status),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 12),
                             fontWeight: FontWeight.w700,
-                            color: _getStatusColor(order.status),
+                            color: _getStatusColor(resolvedOrder.status),
                           ),
                         ),
                       ),
@@ -184,10 +207,10 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                   
-                  if (order.orderItems == null || order.orderItems!.isEmpty)
+                  if (resolvedOrder.orderItems == null || resolvedOrder.orderItems!.isEmpty)
                     const Text('No items found')
                   else
-                    ...order.orderItems!.map((item) => Padding(
+                    ...resolvedOrder.orderItems!.map((item) => Padding(
                       padding: const EdgeInsets.only(bottom: 12.0),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,14 +273,15 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                                     ),
                                   ],
                                 ),
-                                if (item.options != null &&
-                                    item.options!.isNotEmpty) ...[
+                                if (item.optionsDisplay != null &&
+                                    item.optionsDisplay!.isNotEmpty) ...[
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Note: ${item.options}',
+                                    item.optionsDisplay!,
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
-                                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                                      fontSize:
+                                          ResponsiveUtils.fontSize(context, 12),
                                       color: Colors.orange.shade700,
                                       fontStyle: FontStyle.italic,
                                     ),
@@ -304,7 +328,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                         style: TextStyle(fontFamily: 'TT Fors', color: Colors.black54),
                       ),
                       Text(
-                        'PHP ${(order.estimatedFare ?? order.totalFare ?? order.distanceFare ?? 0.0).toStringAsFixed(2)}',
+                        'PHP ${(resolvedOrder.estimatedFare ?? resolvedOrder.totalFare ?? resolvedOrder.distanceFare ?? 0.0).toStringAsFixed(2)}',
                         style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -322,7 +346,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        'PHP ${(itemSubtotal + (order.estimatedFare ?? order.totalFare ?? order.distanceFare ?? 0.0)).toStringAsFixed(2)}',
+                        'PHP ${(itemSubtotal + (resolvedOrder.estimatedFare ?? resolvedOrder.totalFare ?? resolvedOrder.distanceFare ?? 0.0)).toStringAsFixed(2)}',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -357,9 +381,20 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                   Row(
                     children: [
-                      CircleAvatar(
-                        backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
-                        child: const Icon(Icons.person, color: Color(0xFF5F2D82)),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: _buildProfileAvatar(
+                            context,
+                            resolvedOrder.user?.resolvedProfilePhotoUrl,
+                            fallbackIcon: Icons.person,
+                            fallbackColor: const Color(0xFF5F2D82),
+                            backgroundColor:
+                                const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -367,7 +402,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              order.user?.name ?? 'Guest Customer',
+                              resolvedOrder.user?.name ?? 'Guest Customer',
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 15),
@@ -376,7 +411,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              order.user?.phoneNumber ?? 'No phone number',
+                              resolvedOrder.user?.phoneNumber ?? 'No phone number',
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -408,7 +443,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              order.dropoffAddress ?? 'Unknown Address',
+                              resolvedOrder.dropoffAddress,
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -423,8 +458,8 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
               ),
             ),
             
-            // Rider Info (If assigned)
-            if (order.driver != null) ...[
+            // Rider Info
+            if (resolvedOrder.driverId != null || resolvedOrder.driver != null) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Container(
                 color: Colors.white,
@@ -442,57 +477,24 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Colors.orange.withValues(alpha: 0.1),
-                          child: const Icon(Icons.two_wheeler, color: Colors.orange),
+                    if (detailAsync.isLoading && resolvedOrder.driver == null)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                order.driver?.name ?? 'Unknown Rider',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 15),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                order.driver?.phoneNumber ?? 'No phone number',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 13),
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                              if (order.driver?.vehicleType != null || order.driver?.plateNumber != null) ...[
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(Icons.motorcycle, size: 12, color: Colors.grey.shade600),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${order.driver?.vehicleType ?? 'Vehicle'} • ${order.driver?.plateNumber ?? 'No Plate'}'.toUpperCase(),
-                                      style: TextStyle(
-                                        fontFamily: 'TT Fors',
-                                        fontSize: ResponsiveUtils.fontSize(context, 12),
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
+                      )
+                    else if (resolvedOrder.driver != null)
+                      _buildRiderDetails(context, resolvedOrder.driver!)
+                    else
+                      Text(
+                        'Rider assigned. Loading rider details...',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                          color: Colors.grey.shade600,
                         ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
               ),
@@ -506,6 +508,139 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
       // Bottom Action Button (Accept)
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: _buildBottomActions(context, ref, status, horizontalPadding),
+    );
+  }
+
+  Widget _buildRiderDetails(BuildContext context, DriverDto driver) {
+    final avatarSize = ResponsiveUtils.spacing(context, 56);
+    final photoUrl = driver.profilePictureUrl;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(avatarSize / 2),
+          child: SizedBox(
+            width: avatarSize,
+            height: avatarSize,
+            child: photoUrl != null
+                ? MenuImageWidget(
+                    source: photoUrl,
+                    fit: BoxFit.cover,
+                    placeholder: _riderAvatarFallback(context, avatarSize),
+                  )
+                : _riderAvatarFallback(context, avatarSize),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                driver.name,
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 15),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (driver.phoneNumber != null &&
+                  driver.phoneNumber!.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  driver.phoneNumber!,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+              if (driver.plateNumber != null &&
+                  driver.plateNumber!.trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7F2FB),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE8D9F5)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.confirmation_number_outlined,
+                        size: 14,
+                        color: Colors.grey.shade700,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Plate: ${driver.plateNumber!.toUpperCase()}',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 12),
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF5F2D82),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (driver.vehicleType != null &&
+                  driver.vehicleType!.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  driver.vehicleType!,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _riderAvatarFallback(BuildContext context, double size) {
+    return Container(
+      width: size,
+      height: size,
+      color: Colors.orange.withValues(alpha: 0.12),
+      child: Icon(
+        Icons.two_wheeler,
+        color: Colors.orange.shade700,
+        size: ResponsiveUtils.fontSize(context, 28),
+      ),
+    );
+  }
+
+  Widget _buildProfileAvatar(
+    BuildContext context,
+    String? photoUrl, {
+    required IconData fallbackIcon,
+    required Color fallbackColor,
+    required Color backgroundColor,
+  }) {
+    final fallback = Container(
+      color: backgroundColor,
+      child: Icon(fallbackIcon, color: fallbackColor),
+    );
+
+    if (photoUrl == null || photoUrl.trim().isEmpty) {
+      return fallback;
+    }
+
+    return MenuImageWidget(
+      source: photoUrl,
+      fit: BoxFit.cover,
+      placeholder: fallback,
     );
   }
 
@@ -592,7 +727,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                 );
                 if (reason != null && context.mounted) {
                   await run(
-                    () => ref.read(merchantOrderActionProvider).rejectOrder(order.id, reason),
+                    () => ref.read(merchantOrderActionProvider).rejectOrder(widget.order.id, reason),
                     'Order rejected.',
                   );
                 }
@@ -611,7 +746,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                 );
                 if (confirm && context.mounted) {
                   await run(
-                    () => ref.read(merchantOrderActionProvider).acceptOrder(order.id),
+                    () => ref.read(merchantOrderActionProvider).acceptOrder(widget.order.id),
                     'Order accepted successfully!',
                   );
                 }
@@ -648,7 +783,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                 );
                 if (reason != null && context.mounted) {
                   await run(
-                    () => ref.read(merchantOrderActionProvider).cancelOrder(order.id, reason),
+                    () => ref.read(merchantOrderActionProvider).cancelOrder(widget.order.id, reason),
                     'Order cancelled.',
                   );
                 }
@@ -667,7 +802,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
                 );
                 if (confirm && context.mounted) {
                   await run(
-                    () => ref.read(merchantOrderActionProvider).markReadyForPickup(order.id),
+                    () => ref.read(merchantOrderActionProvider).markReadyForPickup(widget.order.id),
                     'Order marked ready for pickup!',
                   );
                 }
@@ -702,7 +837,7 @@ class MerchantOrderDetailScreen extends ConsumerWidget {
             );
             if (reason != null && context.mounted) {
               await run(
-                () => ref.read(merchantOrderActionProvider).cancelOrder(order.id, reason),
+                () => ref.read(merchantOrderActionProvider).cancelOrder(widget.order.id, reason),
                 'Order cancelled.',
               );
             }

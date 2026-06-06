@@ -134,6 +134,7 @@ class RiderBooking {
   final String billingAmount;
   final String billingMethod;
   final String? deliveryFee;
+  final String? itemsSubtotal;
   final BookingStatus currentStatus;
   final List<String>? proofOfDeliveryUrls;
   final String? customerPhone;
@@ -161,6 +162,7 @@ class RiderBooking {
     this.billingAmount = 'PHP 0.00',
     this.billingMethod = 'Cash on Delivery',
     this.deliveryFee,
+    this.itemsSubtotal,
     this.currentStatus = BookingStatus.pending,
     this.proofOfDeliveryUrls,
     this.customerPhone,

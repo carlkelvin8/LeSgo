@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/menu_item_options.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import 'merchant_profile_provider.dart';
@@ -15,6 +18,7 @@ class MerchantMenuItemFormInput {
   final String? selectedTags;
   final bool? liveOnMenu;
   final String? imageUrl;
+  final String? optionsJson;
 
   // Backward-compatibility shim for hot-reload sessions that still look up this removed getter.
   @Deprecated('variationLabels has been removed')
@@ -30,6 +34,7 @@ class MerchantMenuItemFormInput {
     this.selectedTags,
     this.liveOnMenu,
     this.imageUrl,
+    this.optionsJson,
   });
 
   const MerchantMenuItemFormInput.add()
@@ -41,7 +46,8 @@ class MerchantMenuItemFormInput {
         category = '',
         selectedTags = null,
         liveOnMenu = null,
-        imageUrl = null;
+        imageUrl = null,
+        optionsJson = null;
 
   factory MerchantMenuItemFormInput.edit(Map<String, String>? initialItem) {
     return MerchantMenuItemFormInput(
@@ -55,6 +61,7 @@ class MerchantMenuItemFormInput {
       category: initialItem?['category'],
       selectedTags: initialItem?['selectedTags'],
       imageUrl: initialItem?['imageUrl'],
+      optionsJson: initialItem?['optionsJson'],
     );
   }
 
@@ -98,6 +105,7 @@ class MerchantMenuItemFormState {
   final String? errorMessage;
   final String? existingImageUrl;
   final String? localImagePath;
+  final MenuItemOptionGroups menuOptions;
 
   String? get displayImageSource => localImagePath ?? existingImageUrl;
 
@@ -112,6 +120,7 @@ class MerchantMenuItemFormState {
     this.errorMessage,
     this.existingImageUrl,
     this.localImagePath,
+    this.menuOptions = MenuItemOptionGroups.empty,
   });
 
   bool get isValid =>
@@ -131,6 +140,7 @@ class MerchantMenuItemFormState {
     String? errorMessage,
     String? existingImageUrl,
     String? localImagePath,
+    MenuItemOptionGroups? menuOptions,
     bool clearLocalImage = false,
   }) {
     return MerchantMenuItemFormState(
@@ -145,6 +155,7 @@ class MerchantMenuItemFormState {
       existingImageUrl: existingImageUrl ?? this.existingImageUrl,
       localImagePath:
           clearLocalImage ? null : (localImagePath ?? this.localImagePath),
+      menuOptions: menuOptions ?? this.menuOptions,
     );
   }
 }
@@ -165,6 +176,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
     List<String>? selectedTags,
     bool? liveOnMenu,
     String? imageUrl,
+    String? optionsJson,
   }) : _itemId = itemId,
        _initialMenuCategoryId = menuCategoryId,
        super(
@@ -176,8 +188,20 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
       selectedTags: selectedTags ?? [],
       liveOnMenu: liveOnMenu ?? true,
       existingImageUrl: imageUrl,
+      menuOptions: _parseOptionsJson(optionsJson),
     ),
   );
+
+  static MenuItemOptionGroups _parseOptionsJson(String? raw) {
+    if (raw == null || raw.isEmpty) return MenuItemOptionGroups.empty;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return MenuItemOptionGroups.fromApiMap(decoded);
+      }
+    } catch (_) {}
+    return MenuItemOptionGroups.empty;
+  }
 
   void updateItemName(String value) {
     state = state.copyWith(itemName: value);
@@ -215,6 +239,10 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
       return;
     }
     state = state.copyWith(localImagePath: path);
+  }
+
+  void updateMenuOptions(MenuItemOptionGroups options) {
+    state = state.copyWith(menuOptions: options);
   }
 
   Future<int?> _resolveMenuCategoryId() async {
@@ -267,6 +295,8 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
       
       final dataSource = _ref.read(merchantDataSourceProvider);
       
+      final optionsMap = state.menuOptions.toApiMap();
+
       if (_itemId != null) {
         final request = UpdateMenuItemRequest(
           menuCategoryId: menuCategoryId,
@@ -277,6 +307,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           imageUrl: state.existingImageUrl,
           imagePath: state.localImagePath,
           tags: state.selectedTags.isEmpty ? null : state.selectedTags,
+          options: optionsMap.isEmpty ? null : optionsMap,
         );
         
         await dataSource.updateMenuItem(_itemId!, request);
@@ -307,6 +338,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           imageUrl: state.existingImageUrl,
           imagePath: state.localImagePath,
           tags: state.selectedTags.isEmpty ? null : state.selectedTags,
+          options: optionsMap.isEmpty ? null : optionsMap,
         );
         
         await dataSource.createMenuItem(partnerId, request);
@@ -351,5 +383,6 @@ final merchantMenuItemFormProvider =
     selectedTags: initialInput.selectedTags?.split(',').toList(),
     liveOnMenu: initialInput.liveOnMenu,
     imageUrl: initialInput.imageUrl,
+    optionsJson: initialInput.optionsJson,
   );
 });

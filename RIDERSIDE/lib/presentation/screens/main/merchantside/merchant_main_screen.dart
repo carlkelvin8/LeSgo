@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/auth_navigation.dart';
+import '../../../../core/utils/screen_auto_refresh.dart';
+import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
@@ -22,7 +25,17 @@ class MerchantMainScreen extends ConsumerStatefulWidget {
   ConsumerState<MerchantMainScreen> createState() => _MerchantMainScreenState();
 }
 
-class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen> {
+class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
+    with WidgetsBindingObserver, AutoRefreshMixin {
+  @override
+  Duration get autoRefreshInterval => kScreenAutoRefreshInterval;
+
+  @override
+  void onAutoRefresh() {
+    final currentTab = ref.read(merchantNavProvider);
+    refreshMerchantScreen(ref, currentTab);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -64,21 +77,33 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen> {
       message: 'Are you sure you want to logout?',
       confirmLabel: 'Logout',
       onConfirm: () async {
-        // Logout and clear token
-        await ref.read(riderAuthProvider.notifier).logout();
-        if (mounted) {
-          ref.read(authViewProvider.notifier).state = AuthView.welcome;
-          AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
-        }
+        await ref.read(riderAuthProvider.notifier).logout(ref);
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<RiderAuthState>(riderAuthProvider, (previous, next) {
+      if (!mounted) return;
+      if ((previous?.isLoggedIn ?? false) && !next.isLoggedIn) {
+        navigateToLoginAfterLogout(
+          context,
+          ref,
+          target: AuthViewTarget.merchant,
+        );
+      }
+    });
+
     final currentNav = ref.watch(merchantNavProvider);
     final isMission = currentNav == MerchantNavType.mission;
     final showMenuFab = currentNav == MerchantNavType.menu;
+
+    ref.listen<MerchantNavType>(merchantNavProvider, (previous, next) {
+      if (!mounted) return;
+      if (previous == next) return;
+      refreshMerchantScreen(ref, next, silent: false);
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -72,8 +72,10 @@ class MerchantMissionNotifier extends StateNotifier<MerchantMissionState> {
     loadMissions();
   }
 
-  Future<void> loadMissions() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+  Future<void> loadMissions({bool silent = false}) async {
+    if (!silent) {
+      state = state.copyWith(isLoading: true, clearError: true);
+    }
     try {
       print('🎯 Fetching merchant missions from API...');
       

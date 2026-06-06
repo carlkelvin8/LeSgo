@@ -106,7 +106,7 @@ class RiderHistoryView extends ConsumerWidget {
                               ),
                               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                               Text(
-                                'Completed orders will appear here',
+                                'Active and completed orders will appear here',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(context, 14),

@@ -5,8 +5,18 @@ import 'booking_workflow.dart';
 class RiderBookingMapper {
   RiderBookingMapper._();
 
-  static RiderBooking fromOrder(RiderOrder order) {
+  static RiderBooking fromOrder(
+    RiderOrder order, {
+    String? packageTier,
+    double? riderCommissionRate,
+    List<String>? proofOfDeliveryUrls,
+    int? orderRating,
+  }) {
     final category = BookingWorkflow.categoryFromServiceId(order.serviceId);
+    final riderEarnings = order.earningsFor(
+      packageTier: packageTier,
+      riderCommissionRate: riderCommissionRate,
+    );
     final customerName = order.dropoffContactName.trim().isNotEmpty
         ? order.dropoffContactName.trim()
         : 'Customer';
@@ -15,6 +25,9 @@ class RiderBookingMapper {
         : (order.pickupContactPhone.trim().isNotEmpty
             ? order.pickupContactPhone.trim()
             : null);
+
+    final isFoodOrder =
+        category == BookingCategory.lesEat || category == BookingCategory.lesBuy;
 
     return RiderBooking(
       id: order.id.toString(),
@@ -27,20 +40,28 @@ class RiderBookingMapper {
       distance: '${order.distanceKm.toStringAsFixed(1)} km',
       estimatedTime: _estimateTime(order.distanceKm),
       earnings:
-          'PHP ${order.driverEarnings.toStringAsFixed(2)} rider earnings',
+          'Your earnings PHP ${riderEarnings.toStringAsFixed(2)}',
       paymentMethod: order.paymentMethod.toUpperCase(),
-      items: order.parsedItems,
+      items: order.parsedItems.isEmpty ? null : order.parsedItems,
       pickupLat: order.pickupLat,
       pickupLng: order.pickupLng,
       dropoffLat: order.dropoffLat,
       dropoffLng: order.dropoffLng,
       category: category,
-      billingAmount: 'PHP ${order.displayTotalAmount.toStringAsFixed(2)}',
-      deliveryFee: 'PHP ${order.estimatedFare.toStringAsFixed(2)}',
+      itemsSubtotal: isFoodOrder && order.itemsTotal > 0
+          ? 'Items subtotal PHP ${order.itemsTotal.toStringAsFixed(2)}'
+          : null,
+      billingAmount:
+          'Order total PHP ${order.displayTotalAmount.toStringAsFixed(2)}',
+      deliveryFee: isFoodOrder
+          ? 'Delivery fee PHP ${order.displayShippingFee.toStringAsFixed(2)}'
+          : 'Wallet hold (shipping only) PHP ${order.walletDeductionAmount.toStringAsFixed(2)}',
       billingMethod: order.paymentMethod.toUpperCase(),
       currentStatus:
           BookingWorkflow.mapApiStatus(order.status, order.serviceId),
+      proofOfDeliveryUrls: proofOfDeliveryUrls,
       customerPhone: customerPhone,
+      orderRating: orderRating,
     );
   }
 

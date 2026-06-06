@@ -31,6 +31,10 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       paymentMethod: json['payment_method'] as String? ?? 'cash',
       paymentStatus: json['payment_status'] as String? ?? 'pending',
       specialInstructions: json['notes'] as String?,
+      completedAt: json['completed_at'] as String?,
+      partnerShare: json['partner_share'] != null ? double.tryParse(json['partner_share'].toString()) : null,
+      fareBreakdownSubtotal: _parseFareBreakdownSubtotal(json['fare_breakdown']),
+      metaOrderValue: _parseMetaOrderValue(json['meta']),
       createdAt: json['created_at'] as String? ?? '',
       updatedAt: json['updated_at'] as String? ?? '',
       user: json['customer'] == null
@@ -92,7 +96,8 @@ OrderItemDto _$OrderItemDtoFromJson(Map<String, dynamic> json) => OrderItemDto(
       quantity: (json['quantity'] as num).toInt(),
       unitPrice: json['estimated_price'] != null ? double.tryParse(json['estimated_price'].toString()) : null,
       totalPrice: json['actual_price'] != null ? double.tryParse(json['actual_price'].toString()) : null,
-      options: json['options'] as String?,
+      notes: json['notes'] as String?,
+      selectedOptionsRaw: json['selected_options'] as Map<String, dynamic>?,
       imageUrl: _parseOrderItemImageUrl(json['image_url']),
     );
 
@@ -106,7 +111,8 @@ Map<String, dynamic> _$OrderItemDtoToJson(OrderItemDto instance) =>
       'quantity': instance.quantity,
       'unit_price': instance.unitPrice,
       'total_price': instance.totalPrice,
-      'options': instance.options,
+      'notes': instance.notes,
+      'selected_options': instance.selectedOptionsRaw,
       'image_url': instance.imageUrl,
     };
 
@@ -115,6 +121,8 @@ UserDto _$UserDtoFromJson(Map<String, dynamic> json) => UserDto(
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       phoneNumber: json['phone_number'] as String?,
+      profilePhotoUrl: json['profile_photo_url'] as String?,
+      profilePicture: json['profile_picture'] as String?,
     );
 
 Map<String, dynamic> _$UserDtoToJson(UserDto instance) => <String, dynamic>{
@@ -122,6 +130,8 @@ Map<String, dynamic> _$UserDtoToJson(UserDto instance) => <String, dynamic>{
       'name': instance.name,
       'email': instance.email,
       'phone_number': instance.phoneNumber,
+      'profile_photo_url': instance.profilePhotoUrl,
+      'profile_picture': instance.profilePicture,
     };
 
 DriverDto _$DriverDtoFromJson(Map<String, dynamic> json) => DriverDto(

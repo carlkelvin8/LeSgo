@@ -5,6 +5,9 @@ import '../../../core/services/secure_storage_service.dart';
 import '../../../core/services/push_notification_service.dart';
 import '../../../core/services/remember_me_service.dart';
 import '../../../core/utils/media_url_utils.dart';
+import '../main/riderside/rider_orders_provider.dart';
+
+enum AuthViewTarget { rider, merchant }
 
 class RiderUser {
   final int id;
@@ -15,6 +18,8 @@ class RiderUser {
   final int? driverProfileId;
   final int? partnerId;
   final String? profilePhotoUrl;
+  final String? packageTier;
+  final double? commissionRate;
 
   RiderUser({
     required this.id,
@@ -25,13 +30,15 @@ class RiderUser {
     this.driverProfileId,
     this.partnerId,
     this.profilePhotoUrl,
+    this.packageTier,
+    this.commissionRate,
   });
 
   bool get isDriver => role == 'driver';
   bool get isMerchant =>
       role == 'merchant' || role == 'partner' || role == 'partner_admin';
 
-  RiderUser copyWith({int? partnerId, String? profilePhotoUrl}) {
+  RiderUser copyWith({int? partnerId, String? profilePhotoUrl, String? packageTier, double? commissionRate}) {
     return RiderUser(
       id: id,
       name: name,
@@ -41,6 +48,8 @@ class RiderUser {
       driverProfileId: driverProfileId,
       partnerId: partnerId ?? this.partnerId,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
+      packageTier: packageTier ?? this.packageTier,
+      commissionRate: commissionRate ?? this.commissionRate,
     );
   }
 
@@ -58,6 +67,18 @@ class RiderUser {
 
   factory RiderUser.fromJson(Map<String, dynamic> json) {
     final dp = json['driver_profile'];
+    String? packageTier;
+    double? commissionRate;
+    if (dp is Map) {
+      packageTier = dp['package_tier']?.toString();
+      final rawRate = dp['commission_rate'];
+      if (rawRate is num) {
+        commissionRate = rawRate.toDouble();
+      } else if (rawRate is String) {
+        commissionRate = double.tryParse(rawRate);
+      }
+    }
+
     return RiderUser(
       id: json['id'] as int,
       name: json['name'] as String,
@@ -67,6 +88,8 @@ class RiderUser {
       driverProfileId: dp is Map ? dp['id'] as int? : null,
       partnerId: parsePartnerId(json),
       profilePhotoUrl: resolveProfilePhotoUrl(json),
+      packageTier: packageTier,
+      commissionRate: commissionRate,
     );
   }
 
@@ -308,11 +331,29 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
     }
   }
 
-  Future<void> logout() async {
+  /// Clears local session immediately and returns the login view to show next.
+  Future<AuthViewTarget> logout(WidgetRef ref) async {
+    final target = state.user?.isMerchant == true
+        ? AuthViewTarget.merchant
+        : AuthViewTarget.rider;
+
     state = state.copyWith(isLoading: true);
-    await RememberMeService.clearSession();
-    await ApiService.logout();
-    state = RiderAuthState();
+
+    try {
+      ref.read(riderOrdersProvider.notifier).reset();
+    } catch (_) {}
+
+    try {
+      await RememberMeService.clearSession();
+      await ApiService.logout();
+    } catch (e) {
+      print('⚠️ Logout cleanup failed: $e');
+      await ApiService.clearToken();
+    } finally {
+      state = RiderAuthState();
+    }
+
+    return target;
   }
 
   void clearError() => state = state.copyWith(clearError: true);

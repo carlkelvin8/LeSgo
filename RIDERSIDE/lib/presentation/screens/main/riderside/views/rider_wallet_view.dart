@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../widgets/main/riderside/wallet/rider_wallet_low_balance_banner.dart';
 import '../../../../widgets/widgets.dart';
 
 class RiderWalletView extends ConsumerWidget {
@@ -21,6 +22,10 @@ class RiderWalletView extends ConsumerWidget {
           children: [
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
             const RiderWalletCard(),
+            if (wallet.showLowBalanceWarning) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              RiderWalletLowBalanceBanner(balance: wallet.balance),
+            ],
             if (wallet.error != null) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               Padding(

@@ -13,6 +13,7 @@ import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
 import '../../../../../core/config/secrets_config.dart';
 import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 import '../rider_booking_detail_screen.dart';
 
@@ -31,24 +32,58 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   bool _showOrdersList = true;
+  ProviderSubscription<RiderLocationState>? _locationSub;
+  ProviderSubscription<RiderOrdersState>? _ordersSub;
 
   @override
   void initState() {
     super.initState();
     _requestLocationPermission();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _locationSub = ref.listenManual<RiderLocationState>(
+        riderLocationProvider,
+        (previous, next) {
+          if (!mounted) return;
+          if (next.latitude == null || next.longitude == null) return;
+          if (previous?.latitude == next.latitude &&
+              previous?.longitude == next.longitude) {
+            return;
+          }
+          setState(() {
+            _currentPosition =
+                _positionFromCoords(next.latitude!, next.longitude!);
+          });
+          _updateMarkers();
+        },
+      );
+
+      _ordersSub = ref.listenManual<RiderOrdersState>(
+        riderOrdersProvider,
+        (previous, next) {
+          if (!mounted) return;
+          final activeOrderId = next.activeOrder?.id;
+          ref
+              .read(riderLocationProvider.notifier)
+              .setActiveOrderId(activeOrderId);
+          _updateMarkers();
+        },
+      );
+
       final activeOrderId = ref.read(riderOrdersProvider).activeOrder?.id;
       final notifier = ref.read(riderLocationProvider.notifier);
       notifier.setActiveOrderId(activeOrderId);
       if (!ref.read(riderLocationProvider).isTracking) {
-        await notifier.startTracking(orderId: activeOrderId);
+        notifier.startTracking(orderId: activeOrderId);
       }
     });
   }
 
   @override
   void dispose() {
-    ref.read(riderLocationProvider.notifier).setActiveOrderId(null);
+    _locationSub?.close();
+    _ordersSub?.close();
     try {
       _mapController?.dispose();
     } catch (_) {}
@@ -442,26 +477,16 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   }
 
   Widget _buildActiveOrderCard(RiderOrder order) {
+    final rider = ref.read(riderAuthProvider).user;
+    final riderEarnings = order.earningsFor(
+      packageTier: rider?.packageTier,
+      riderCommissionRate: rider?.commissionRate,
+    );
     // Convert RiderOrder to RiderBooking for detail screen
-    final booking = RiderBooking(
-      id: order.id.toString(),
-      restaurantName: order.serviceName,
-      address: order.dropoffAddress,
-      pickupAddress: order.pickupAddress,
-      deliveryAddress: order.dropoffAddress,
-      distance: '${order.distanceKm.toStringAsFixed(1)} km',
-      estimatedTime: _calculateEstimatedTime(order.distanceKm),
-      earnings: 'Total: PHP ${order.displayTotalAmount.toStringAsFixed(2)} | Your Earnings: PHP ${order.driverEarnings.toStringAsFixed(2)}',
-      paymentMethod: order.paymentMethod.toUpperCase(),
-      items: order.parsedItems,
-      pickupLat: order.pickupLat,
-      pickupLng: order.pickupLng,
-      dropoffLat: order.dropoffLat,
-      dropoffLng: order.dropoffLng,
-      billingAmount: 'PHP ${order.displayTotalAmount.toStringAsFixed(2)}',
-      deliveryFee: 'PHP ${order.estimatedFare.toStringAsFixed(2)}',
-      billingMethod: order.paymentMethod.toUpperCase(),
-      currentStatus: _mapApiStatusToBookingStatus(order.status, order.serviceId),
+    final booking = RiderBookingMapper.fromOrder(
+      order,
+      packageTier: rider?.packageTier,
+      riderCommissionRate: rider?.commissionRate,
     );
     
     return GestureDetector(
@@ -848,8 +873,10 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       final success = await ref
                           .read(riderOrdersProvider.notifier)
                           .acceptOrder(order.id);
-                      
-                      if (success && mounted) {
+
+                      if (!mounted) return;
+
+                      if (success) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Order #${order.id} accepted!'),
@@ -858,6 +885,16 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         );
                         _updateMarkers();
                         _fitBounds();
+                      } else {
+                        final error = ref.read(riderOrdersProvider).error;
+                        if (error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(error),
+                              backgroundColor: Colors.orange.shade800,
+                            ),
+                          );
+                        }
                       }
                     },
               style: ElevatedButton.styleFrom(
@@ -897,26 +934,6 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<RiderLocationState>(riderLocationProvider, (previous, next) {
-      if (next.latitude == null || next.longitude == null || !mounted) return;
-      if (previous?.latitude == next.latitude &&
-          previous?.longitude == next.longitude) {
-        return;
-      }
-      setState(() {
-        _currentPosition =
-            _positionFromCoords(next.latitude!, next.longitude!);
-      });
-      _updateMarkers();
-    });
-
-    // Listen to orders changes and update markers
-    ref.listen<RiderOrdersState>(riderOrdersProvider, (previous, next) {
-      final activeOrderId = next.activeOrder?.id;
-      ref.read(riderLocationProvider.notifier).setActiveOrderId(activeOrderId);
-      _updateMarkers();
-    });
-
     final ordersState = ref.watch(riderOrdersProvider);
 
     return Scaffold(

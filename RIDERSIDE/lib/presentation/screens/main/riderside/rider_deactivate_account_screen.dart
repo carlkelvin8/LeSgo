@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
@@ -72,14 +72,11 @@ class _RiderDeactivateAccountScreenState
         reason: _reasonController.text,
       );
 
-      await ref.read(riderAuthProvider.notifier).logout();
+      final target = await ref.read(riderAuthProvider.notifier).logout(ref);
 
       if (!mounted) return;
       SnackBarUtils.showSuccess(context, 'Your account has been deactivated.');
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AuthRoutes.auth,
-        (route) => false,
-      );
+      navigateToLoginAfterLogout(context, ref, target: target);
     } catch (e) {
       if (!mounted) return;
       SnackBarUtils.showError(

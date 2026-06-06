@@ -48,18 +48,19 @@ class RiderHistoryBookingsList extends StatelessWidget {
         Color statusColor;
         Color statusBackgroundColor;
         
-        if (booking.currentStatus == BookingStatus.complete) {
+        if (booking.currentStatus == BookingStatus.complete ||
+            booking.currentStatus == BookingStatus.delivered) {
           statusLabel = 'Completed';
           statusColor = const Color(0xFF4CAF50);
           statusBackgroundColor = const Color(0xFFE8F5E9);
-        } else if (booking.currentStatus == BookingStatus.onTheWayGoing) {
-          statusLabel = 'Processing';
-          statusColor = const Color(0xFFFF9800);
-          statusBackgroundColor = const Color(0xFFFFF3E0);
-        } else {
+        } else if (booking.currentStatus == BookingStatus.cancelled) {
           statusLabel = 'Cancelled';
           statusColor = const Color(0xFFF44336);
           statusBackgroundColor = const Color(0xFFFFEBEE);
+        } else {
+          statusLabel = 'Active';
+          statusColor = const Color(0xFFFF9800);
+          statusBackgroundColor = const Color(0xFFFFF3E0);
         }
         
         return GestureDetector(
@@ -77,8 +78,8 @@ class RiderHistoryBookingsList extends StatelessWidget {
           child: RiderHistoryBookingCard(
             bookingId: booking.id,
             restaurantName: booking.restaurantName,
-            address: booking.address,
-            price: booking.earnings ?? 'PHP 0.00',
+            address: booking.deliveryAddress ?? booking.address,
+            price: booking.billingAmount.replaceFirst('Order total ', ''),
             status: statusLabel,
             statusColor: statusColor,
             statusBackgroundColor: statusBackgroundColor,
@@ -93,17 +94,24 @@ class RiderHistoryBookingsList extends StatelessWidget {
   String _mapBookingStatusToApiStatus(BookingStatus status) {
     switch (status) {
       case BookingStatus.complete:
+      case BookingStatus.delivered:
         return 'completed';
       case BookingStatus.onTheWayGoing:
+      case BookingStatus.forDelivery:
+      case BookingStatus.forPickUp:
         return 'picked_up';
       case BookingStatus.onTheWay:
+      case BookingStatus.cooking:
+      case BookingStatus.toBuy:
         return 'accepted';
       case BookingStatus.driverHasArrived:
         return 'driver_arrived_at_pickup';
       case BookingStatus.inProgress:
         return 'in_progress';
+      case BookingStatus.cancelled:
+        return 'cancelled';
       default:
-        return 'completed';
+        return 'accepted';
     }
   }
 }

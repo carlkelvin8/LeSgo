@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import '../../../../core/utils/menu_item_options.dart';
 
 part 'order_dto.g.dart';
 
@@ -21,6 +22,20 @@ String? _parseOrderItemImageUrl(dynamic value) {
     return url?.toString();
   }
   return null;
+}
+
+double? _parseFareBreakdownSubtotal(dynamic value) {
+  if (value is! Map) return null;
+  return _parseDouble(value['subtotal']) ??
+      _parseDouble(value['order_value']) ??
+      _parseDouble(value['items_total']);
+}
+
+double? _parseMetaOrderValue(dynamic value) {
+  if (value is! Map) return null;
+  return _parseDouble(value['order_value']) ??
+      _parseDouble(value['subtotal']) ??
+      _parseDouble(value['grand_total']);
 }
 
 @JsonSerializable()
@@ -69,6 +84,14 @@ class OrderDto {
   final String paymentStatus;
   @JsonKey(name: 'notes')
   final String? specialInstructions;
+  @JsonKey(name: 'completed_at')
+  final String? completedAt;
+  @JsonKey(name: 'partner_share', fromJson: _parseDouble)
+  final double? partnerShare;
+  @JsonKey(name: 'fare_breakdown', fromJson: _parseFareBreakdownSubtotal)
+  final double? fareBreakdownSubtotal;
+  @JsonKey(name: 'meta', fromJson: _parseMetaOrderValue)
+  final double? metaOrderValue;
   @JsonKey(name: 'created_at')
   final String createdAt;
   @JsonKey(name: 'updated_at')
@@ -108,6 +131,10 @@ class OrderDto {
     required this.paymentMethod,
     required this.paymentStatus,
     this.specialInstructions,
+    this.completedAt,
+    this.partnerShare,
+    this.fareBreakdownSubtotal,
+    this.metaOrderValue,
     required this.createdAt,
     required this.updatedAt,
     this.user,
@@ -138,9 +165,21 @@ class OrderItemDto {
   final double? unitPrice;
   @JsonKey(name: 'actual_price', fromJson: _parseDouble)
   final double? totalPrice;
-  final String? options;
+  @JsonKey(name: 'notes')
+  final String? notes;
+  @JsonKey(name: 'selected_options')
+  final Map<String, dynamic>? selectedOptionsRaw;
   @JsonKey(name: 'image_url', fromJson: _parseOrderItemImageUrl)
   final String? imageUrl;
+
+  SelectedMenuOptions get selectedOptions =>
+      SelectedMenuOptions.fromApiMap(selectedOptionsRaw);
+
+  String? get optionsDisplay {
+    if (notes != null && notes!.trim().isNotEmpty) return notes;
+    if (!selectedOptions.isEmpty) return selectedOptions.formatDisplay();
+    return null;
+  }
   
   OrderItemDto({
     required this.id,
@@ -151,7 +190,8 @@ class OrderItemDto {
     required this.quantity,
     this.unitPrice,
     this.totalPrice,
-    this.options,
+    this.notes,
+    this.selectedOptionsRaw,
     this.imageUrl,
   });
   
@@ -167,13 +207,25 @@ class UserDto {
   final String email;
   @JsonKey(name: 'phone_number')
   final String? phoneNumber;
+  @JsonKey(name: 'profile_photo_url')
+  final String? profilePhotoUrl;
+  @JsonKey(name: 'profile_picture')
+  final String? profilePicture;
   
   UserDto({
     required this.id,
     required this.name,
     required this.email,
     this.phoneNumber,
+    this.profilePhotoUrl,
+    this.profilePicture,
   });
+
+  String? get resolvedProfilePhotoUrl {
+    final photo = profilePhotoUrl ?? profilePicture;
+    if (photo == null || photo.trim().isEmpty) return null;
+    return photo;
+  }
   
   factory UserDto.fromJson(Map<String, dynamic> json) => 
       _$UserDtoFromJson(json);
@@ -186,31 +238,53 @@ class DriverDto {
   final String? phoneNumber;
   final String? vehicleType;
   final String? plateNumber;
-  
+  final String? profilePictureUrl;
+
   DriverDto({
     required this.id,
     required this.name,
     this.phoneNumber,
     this.vehicleType,
     this.plateNumber,
+    this.profilePictureUrl,
   });
-  
+
   factory DriverDto.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] is Map
+        ? Map<String, dynamic>.from(json['user'] as Map)
+        : null;
+
+    final plate = json['plate_number']?.toString().trim();
+    final legacyPlate = json['vehicle_plate']?.toString().trim();
+    final resolvedPlate = (plate != null && plate.isNotEmpty)
+        ? plate
+        : (legacyPlate != null && legacyPlate.isNotEmpty ? legacyPlate : null);
+
+    final photo = user?['profile_photo_url'] ??
+        user?['profile_picture'] ??
+        json['profile_photo_url'] ??
+        json['profile_picture'];
+
     return DriverDto(
-      id: json['id'] as int,
-      name: (json['user'] as Map<String, dynamic>?)?['name'] as String? ?? json['name'] as String? ?? 'Driver',
-      phoneNumber: (json['user'] as Map<String, dynamic>?)?['phone_number'] as String? ?? json['phone_number'] as String?,
-      vehicleType: json['vehicle_type'] as String? ?? 'Honda Click 125i', // Fallback for testing
-      plateNumber: json['plate_number'] as String? ?? 'ABC 1234', // Fallback for testing
+      id: (json['id'] as num).toInt(),
+      name: user?['name']?.toString() ??
+          json['name']?.toString() ??
+          'Driver',
+      phoneNumber: user?['phone_number']?.toString() ??
+          json['phone_number']?.toString(),
+      vehicleType: json['vehicle_type']?.toString(),
+      plateNumber: resolvedPlate,
+      profilePictureUrl: photo?.toString(),
     );
   }
-  
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
     'phone_number': phoneNumber,
     'vehicle_type': vehicleType,
     'plate_number': plateNumber,
+    'profile_picture_url': profilePictureUrl,
   };
 }
 

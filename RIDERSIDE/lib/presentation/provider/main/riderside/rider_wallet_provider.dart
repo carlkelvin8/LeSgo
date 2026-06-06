@@ -5,6 +5,7 @@ import '../../../../core/services/api_service.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/lespay_topup_fee.dart';
+import '../../../../core/utils/rider_wallet_policy.dart';
 import '../../../../core/utils/wallet_response_parser.dart';
 
 class RiderTopUpCheckout {
@@ -42,6 +43,17 @@ class RiderWalletState {
 
   String get balanceFormatted => 'PHP ${balance.toStringAsFixed(2)}';
   String get depositFormatted => 'PHP ${deposit.toStringAsFixed(2)}';
+
+  bool get canAcceptBooking => RiderWalletPolicy.canAcceptBooking(balance);
+
+  bool get showLowBalanceWarning =>
+      RiderWalletPolicy.shouldShowTopUpWarning(balance);
+
+  String get acceptBlockedMessage =>
+      RiderWalletPolicy.acceptBlockedMessage(balance);
+
+  String get lowBalanceWarningMessage =>
+      RiderWalletPolicy.lowBalanceWarningMessage(balance);
 
   bool isProviderLinked(String provider) {
     return _findLinkedAccount(provider) != null;
@@ -101,8 +113,10 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
     loadWallet();
   }
 
-  Future<void> loadWallet() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+  Future<void> loadWallet({bool silent = false}) async {
+    if (!silent) {
+      state = state.copyWith(isLoading: true, clearError: true);
+    }
     try {
       final data = await ApiService.dio.get('/v1/wallets/my/wallet');
       final wallet = (data.data['data'] ?? data.data) as Map<String, dynamic>;

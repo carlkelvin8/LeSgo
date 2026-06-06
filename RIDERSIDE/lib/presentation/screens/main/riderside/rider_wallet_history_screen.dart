@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/screen_auto_refresh.dart';
+import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../widgets/widgets.dart';
 
@@ -14,7 +16,15 @@ class RiderWalletHistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _RiderWalletHistoryScreenState
-    extends ConsumerState<RiderWalletHistoryScreen> {
+    extends ConsumerState<RiderWalletHistoryScreen> with WidgetsBindingObserver, AutoRefreshMixin {
+  @override
+  Duration get autoRefreshInterval => kScreenAutoRefreshInterval;
+
+  @override
+  void onAutoRefresh() {
+    _load(silent: true);
+  }
+
   List<Map<String, dynamic>> _transactions = [];
   bool _loading = true;
 
@@ -26,11 +36,13 @@ class _RiderWalletHistoryScreenState
 
   String? _loadError;
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _loadError = null;
-    });
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _loading = true;
+        _loadError = null;
+      });
+    }
     final result =
         await ref.read(riderWalletProvider.notifier).fetchTransactionHistory();
     final list = List<Map<String, dynamic>>.from(result.items);

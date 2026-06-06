@@ -194,18 +194,68 @@ class RiderBookingDetailInfo extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (booking.itemsSubtotal != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Items subtotal',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      Text(
+                        booking.itemsSubtotal!.replaceFirst('Items subtotal ', ''),
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w600,
+                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                ],
+                if (booking.deliveryFee != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Delivery fee',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      Text(
+                        booking.deliveryFee!
+                            .replaceAll('Delivery fee ', '')
+                            .replaceAll('Wallet hold (shipping only) ', ''),
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w600,
+                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                ],
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Total',
+                      'Order total',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
-                      booking.billingAmount,
+                      booking.billingAmount.replaceFirst('Order total ', ''),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontWeight: FontWeight.w800,
@@ -223,10 +273,10 @@ class RiderBookingDetailInfo extends StatelessWidget {
                     color: Colors.grey.shade600,
                   ),
                 ),
-                if (booking.deliveryFee != null) ...[
+                if (booking.earnings != null) ...[
                   SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                   Text(
-                    'Delivery fee: ${booking.deliveryFee}',
+                    booking.earnings!,
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -246,20 +296,37 @@ class RiderBookingDetailInfo extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  ...booking.items!.map(
-                    (item) => Padding(
-                      padding: EdgeInsets.only(
-                        bottom: ResponsiveUtils.spacing(context, 6),
-                      ),
-                      child: Text(
-                        '• $item',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                  ...booking.items!.expand((item) {
+                    final lines = item.split('\n');
+                    return lines.map(
+                      (line) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom: ResponsiveUtils.spacing(context, 6),
+                        ),
+                        child: Text(
+                          line.trimLeft().startsWith('Size:') ||
+                                  line.trimLeft().startsWith('Flavor:') ||
+                                  line.trimLeft().startsWith('Add-ons:')
+                              ? '   $line'
+                              : '• $line',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 13),
+                            color: line.trimLeft().startsWith('Size:') ||
+                                    line.trimLeft().startsWith('Flavor:') ||
+                                    line.trimLeft().startsWith('Add-ons:')
+                                ? Colors.orange.shade700
+                                : Colors.black87,
+                            fontStyle: line.contains('Size:') ||
+                                    line.contains('Flavor:') ||
+                                    line.contains('Add-ons:')
+                                ? FontStyle.italic
+                                : FontStyle.normal,
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 ],
               ],
             ),

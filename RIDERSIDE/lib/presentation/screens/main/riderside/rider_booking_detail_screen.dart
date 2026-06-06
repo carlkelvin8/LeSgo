@@ -17,6 +17,7 @@ import '../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/booking_workflow.dart';
 import '../../../../core/utils/media_url_utils.dart';
+import '../../../../core/utils/rider_booking_mapper.dart';
 import 'map/rider_map_screen.dart';
 import '../../../widgets/chat/rider_chat_button.dart';
 import '../../../widgets/test/simple_map_test.dart';
@@ -115,59 +116,29 @@ class _RiderBookingDetailScreenState
       
       if (orderData != null && mounted) {
         final apiStatus = orderData['status'] as String?;
-        final serviceId = orderData['service_id'] as int? ?? 2;
-        
-        print('✅ Latest status from API: $apiStatus');
-        
-        if (apiStatus != null) {
-          // Extract proof of delivery URLs (prefer API-resolved proof_image_urls)
-          final proofUrls = MediaUrlUtils.parseProofImageUrls(orderData);
-          if (proofUrls.isNotEmpty) {
-            print('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
-          } else {
-            print('⚠️ No proof images in API response');
-          }
+        final order = RiderOrder.fromJson(orderData);
+        final proofUrls = MediaUrlUtils.parseProofImageUrls(orderData);
 
-          if (proofUrls.isNotEmpty) {
-            final updatedBooking = RiderBooking(
-              id: widget.booking.id,
-              serviceId: serviceId,
-              restaurantName: widget.booking.restaurantName,
-              customerName: widget.booking.customerName,
-              address: widget.booking.address,
-              pickupAddress: widget.booking.pickupAddress,
-              deliveryAddress: widget.booking.deliveryAddress,
-              distance: widget.booking.distance,
-              estimatedTime: widget.booking.estimatedTime,
-              earnings: widget.booking.earnings,
-              paymentMethod: widget.booking.paymentMethod,
-              items: widget.booking.items,
-              pickupLat: widget.booking.pickupLat,
-              pickupLng: widget.booking.pickupLng,
-              dropoffLat: widget.booking.dropoffLat,
-              dropoffLng: widget.booking.dropoffLng,
-              logoPath: widget.booking.logoPath,
-              category: BookingWorkflow.categoryFromServiceId(serviceId),
-              billingAmount: widget.booking.billingAmount,
-              billingMethod: widget.booking.billingMethod,
-              deliveryFee: widget.booking.deliveryFee,
-              currentStatus: _mapApiStatusToBookingStatus(apiStatus, serviceId),
-              proofOfDeliveryUrls: proofUrls,
-              customerPhone: widget.booking.customerPhone,
+        print('✅ Latest status from API: $apiStatus');
+        if (proofUrls.isNotEmpty) {
+          print('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
+        }
+
+        if (apiStatus != null) {
+          final refreshedBooking = RiderBookingMapper.fromOrder(
+            order,
+            proofOfDeliveryUrls:
+                proofUrls.isEmpty ? widget.booking.proofOfDeliveryUrls : proofUrls,
+          );
+
+          setState(() {
+            _currentApiStatus = apiStatus;
+            _currentStatus = _mapApiStatusToBookingStatus(
+              apiStatus,
+              order.serviceId,
             );
-            
-            // Replace the current booking with updated one
-            setState(() {
-              _currentApiStatus = apiStatus;
-              _currentStatus = _mapApiStatusToBookingStatus(apiStatus, serviceId);
-              _updatedBooking = updatedBooking;
-            });
-          } else {
-            setState(() {
-              _currentApiStatus = apiStatus;
-              _currentStatus = _mapApiStatusToBookingStatus(apiStatus, serviceId);
-            });
-          }
+            _updatedBooking = refreshedBooking;
+          });
           print('📊 Updated UI status to: ${_currentStatus.label}');
         }
       }
@@ -306,9 +277,10 @@ class _RiderBookingDetailScreenState
       // LesEat/LesBuy statuses
       case BookingStatus.forPickUp:
       case BookingStatus.forDelivery:
-        // Can transition from accepted, driver_arrived_at_pickup, or in_progress → picked_up
-        if (_currentApiStatus == 'accepted' || 
-            _currentApiStatus == 'driver_arrived_at_pickup' || 
+        // Can transition from accepted, ready_for_pickup, driver_arrived_at_pickup, or in_progress → picked_up
+        if (_currentApiStatus == 'accepted' ||
+            _currentApiStatus == 'ready_for_pickup' ||
+            _currentApiStatus == 'driver_arrived_at_pickup' ||
             _currentApiStatus == 'in_progress') {
           apiStatus = 'picked_up';
           statusLabel = 'Picked Up';
@@ -381,7 +353,8 @@ class _RiderBookingDetailScreenState
       // New statuses for driver workflow
       case BookingStatus.driverHasArrived:
         // accepted → driver_arrived_at_pickup
-        if (_currentApiStatus == 'accepted') {
+        if (_currentApiStatus == 'accepted' ||
+            _currentApiStatus == 'ready_for_pickup') {
           apiStatus = 'driver_arrived_at_pickup';
           statusLabel = 'Driver Has Arrived';
         } else if (_currentApiStatus == 'picked_up') {
@@ -421,7 +394,9 @@ class _RiderBookingDetailScreenState
             ),
           );
           return;
-        } else if (_currentApiStatus == 'driver_arrived_at_pickup' || _currentApiStatus == 'accepted') {
+        } else if (_currentApiStatus == 'driver_arrived_at_pickup' ||
+            _currentApiStatus == 'accepted' ||
+            _currentApiStatus == 'ready_for_pickup') {
           apiStatus = 'in_progress';
           statusLabel = 'In Progress';
         } else {
@@ -1193,28 +1168,33 @@ class _RiderBookingDetailScreenState
     
     // Listen for order updates to refresh status
     ref.listen<RiderOrdersState>(riderOrdersProvider, (previous, next) {
-      if (previous != next) {
-        // Check if our current order has been updated
-        final currentOrderId = int.tryParse(widget.booking.id);
-        if (currentOrderId != null) {
-          final updatedOrder = next.activeOrder;
-          if (updatedOrder != null && updatedOrder.id == currentOrderId) {
-            print('🔄 Order #${currentOrderId} status updated: ${updatedOrder.status}');
-            // Update local status to match API
-            if (mounted && updatedOrder.status != _currentApiStatus) {
-              setState(() {
-                _currentApiStatus = updatedOrder.status;
-                _currentStatus = _mapApiStatusToBookingStatus(
-                  updatedOrder.status,
-                  updatedOrder.serviceId,
-                );
-                if (updatedOrder.status != 'picked_up') {
-                  _showProofUpload = false;
-                }
-              });
-            }
-          }
+      if (!mounted) return;
+
+      final currentOrderId = int.tryParse(widget.booking.id);
+      if (currentOrderId == null) return;
+
+      RiderOrder? updatedOrder;
+      for (final order in next.activeOrders) {
+        if (order.id == currentOrderId) {
+          updatedOrder = order;
+          break;
         }
+      }
+      updatedOrder ??=
+          next.activeOrder?.id == currentOrderId ? next.activeOrder : null;
+
+      if (updatedOrder != null &&
+          updatedOrder.status != _currentApiStatus) {
+        setState(() {
+          _currentApiStatus = updatedOrder!.status;
+          _currentStatus = _mapApiStatusToBookingStatus(
+            updatedOrder.status,
+            updatedOrder.serviceId,
+          );
+          if (updatedOrder.status != 'picked_up') {
+            _showProofUpload = false;
+          }
+        });
       }
     });
     
@@ -1430,6 +1410,7 @@ class _RiderBookingDetailScreenState
         LatLng destLoc;
         
         final enRouteToPickup = _currentApiStatus == 'accepted' ||
+            _currentApiStatus == 'ready_for_pickup' ||
             _currentApiStatus == 'driver_arrived_at_pickup' ||
             _currentApiStatus == 'in_progress';
         destLoc = enRouteToPickup

@@ -90,8 +90,8 @@ class ApiErrorMapper {
       return _pick(
         fallbackEn,
         fallbackTl,
-        'Payment service is busy. Please try again in a few minutes.',
-        'Abala ang payment service. Subukan muli maya-maya.',
+        'Server error. Please try again in a few minutes.',
+        'May error sa server. Subukan muli maya-maya.',
       );
     }
 

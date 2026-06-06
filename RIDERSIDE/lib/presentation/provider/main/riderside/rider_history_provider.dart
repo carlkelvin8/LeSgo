@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/booking_workflow.dart';
 import '../../../../../core/utils/media_url_utils.dart';
+import '../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../domain/entities/rider_booking.dart';
+import 'rider_orders_provider.dart';
 
 // History State
 class RiderHistoryState {
@@ -35,13 +38,13 @@ class RiderHistoryState {
     if (selectedFilter == 'All') return allBookings;
     
     if (selectedFilter == 'Completed') {
-      return allBookings.where((b) => b.currentStatus == BookingStatus.complete).toList();
+      return allBookings.where((b) =>
+          b.currentStatus == BookingStatus.complete ||
+          b.currentStatus == BookingStatus.delivered).toList();
     } else if (selectedFilter == 'Processing') {
-      return allBookings.where((b) => 
-        b.currentStatus == BookingStatus.onTheWayGoing ||
-        b.currentStatus == BookingStatus.inProgress ||
-        b.currentStatus == BookingStatus.forDelivery
-      ).toList();
+      return allBookings
+          .where((b) => BookingWorkflow.isProcessingBookingStatus(b.currentStatus))
+          .toList();
     } else if (selectedFilter == 'Cancelled') {
       return allBookings.where((b) => b.currentStatus == BookingStatus.cancelled).toList();
     }
@@ -57,14 +60,13 @@ class RiderHistoryState {
       'Cancelled': 0,
     };
     for (final booking in allBookings) {
-      if (booking.currentStatus == BookingStatus.complete) {
+      if (booking.currentStatus == BookingStatus.complete ||
+          booking.currentStatus == BookingStatus.delivered) {
         counts['Completed'] = counts['Completed']! + 1;
-      } else if (booking.currentStatus == BookingStatus.onTheWayGoing ||
-                 booking.currentStatus == BookingStatus.inProgress ||
-                 booking.currentStatus == BookingStatus.forDelivery) {
-        counts['Processing'] = counts['Processing']! + 1;
       } else if (booking.currentStatus == BookingStatus.cancelled) {
         counts['Cancelled'] = counts['Cancelled']! + 1;
+      } else if (BookingWorkflow.isProcessingBookingStatus(booking.currentStatus)) {
+        counts['Processing'] = counts['Processing']! + 1;
       }
     }
     return counts;
@@ -145,165 +147,64 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
     try {
       print('📊 Fetching rider history from API...');
       
-      // Fetch completed and cancelled orders for history list
+      // Fetch completed, cancelled, and active assigned orders for history
       final ordersRaw = await ApiService.getOrders(perPage: 100);
       print('📦 Received ${ordersRaw.length} orders from API');
 
       final bookings = <RiderBooking>[];
       int completedCount = 0;
+      int processingCount = 0;
       int cancelledCount = 0;
 
       for (var orderData in ordersRaw) {
-        final order = orderData as Map<String, dynamic>;
-        final apiStatus = order['status'] as String?;
-        final orderId = order['id'];
+        final orderMap = orderData as Map<String, dynamic>;
+        final apiStatus = orderMap['status'] as String?;
 
-        // Only include completed, picked_up, and cancelled orders in history
-        if (apiStatus == 'completed' || apiStatus == 'cancelled' || apiStatus == 'picked_up') {
-          // Map API status to BookingStatus
-          BookingStatus bookingStatus;
-          if (apiStatus == 'completed') {
-            bookingStatus = BookingStatus.complete;
-            completedCount++;
-          } else if (apiStatus == 'picked_up') {
-            bookingStatus = BookingStatus.onTheWayGoing;
-          } else {
-            // cancelled
-            bookingStatus = BookingStatus.cancelled;
-            cancelledCount++;
-          }
-
-          // Extract service info
-          int serviceId = 2; // Default to LesRide
-          if (order['service'] != null && order['service'] is Map) {
-            serviceId = order['service']['id'] ?? 2;
-          }
-
-          // Determine category based on service_id
-          BookingCategory category;
-          String serviceName;
-          if (serviceId == 3) {
-            category = BookingCategory.lesEat;
-            serviceName = 'LesEat';
-          } else if (serviceId == 4) {
-            category = BookingCategory.lesBuy;
-            serviceName = 'LesBuy';
-          } else {
-            category = BookingCategory.lesRide;
-            serviceName = 'LesRide';
-          }
-
-          // Extract addresses
-          String pickupAddress = 'Pickup location';
-          String dropoffAddress = 'Dropoff location';
-          double? pickupLat;
-          double? pickupLng;
-          double? dropoffLat;
-          double? dropoffLng;
-          
-          if (order['pickup_address'] is String) {
-            pickupAddress = order['pickup_address'];
-          }
-          if (order['dropoff_address'] is String) {
-            dropoffAddress = order['dropoff_address'];
-          }
-          
-          // Extract coordinates
-          if (order['pickup_lat'] != null) {
-            pickupLat = double.tryParse(order['pickup_lat'].toString());
-          }
-          if (order['pickup_lng'] != null) {
-            pickupLng = double.tryParse(order['pickup_lng'].toString());
-          }
-          if (order['dropoff_lat'] != null) {
-            dropoffLat = double.tryParse(order['dropoff_lat'].toString());
-          }
-          if (order['dropoff_lng'] != null) {
-            dropoffLng = double.tryParse(order['dropoff_lng'].toString());
-          }
-
-          // Extract customer name and phone
-          String customerName = 'Customer';
-          String customerPhone = '';
-          if (order['customer'] != null && order['customer'] is Map) {
-            customerName = order['customer']['name'] ?? 'Customer';
-            customerPhone = order['customer']['phone_number'] ?? '';
-          }
-
-          // Extract fare
-          final fare = order['estimated_fare'] ?? order['actual_fare'];
-          String fareStr = 'PHP 0.00';
-          if (fare != null) {
-            try {
-              final fareValue = fare is num ? fare.toDouble() : double.tryParse(fare.toString()) ?? 0.0;
-              fareStr = 'PHP ${fareValue.toStringAsFixed(2)}';
-            } catch (e) {
-              print('⚠️ Error parsing fare for order $orderId: $e');
-              fareStr = 'PHP 0.00';
-            }
-          }
-
-          // Extract distance
-          String distanceStr = '0.0 km';
-          final distanceM = order['estimated_distance_m'];
-          if (distanceM != null) {
-            try {
-              final distanceValue = distanceM is num ? distanceM.toDouble() : double.tryParse(distanceM.toString()) ?? 0.0;
-              final distanceKm = distanceValue / 1000;
-              distanceStr = '${distanceKm.toStringAsFixed(1)} km';
-            } catch (e) {
-              print('⚠️ Error parsing distance for order $orderId: $e');
-              distanceStr = '0.0 km';
-            }
-          }
-
-          // Extract proof of delivery URLs (prefer API-resolved proof_image_urls)
-          final proofUrls = MediaUrlUtils.parseProofImageUrls(order);
-          if (proofUrls.isNotEmpty) {
-            print('📸 Order $orderId has ${proofUrls.length} proof image(s): ${proofUrls.join(", ")}');
-          } else {
-            print('⚠️ Order $orderId has no proof images');
-          }
-
-          // Extract order rating if available
-          int? orderRating;
-          final ratingRaw = order['rating'] ?? order['customer_rating'] ?? order['review_rating'];
-          if (ratingRaw != null) {
-            final ratingValue = ratingRaw is num
-                ? ratingRaw.toDouble()
-                : double.tryParse(ratingRaw.toString()) ?? 0.0;
-            orderRating = ratingValue.round().clamp(0, 5);
-          }
-
-          final booking = RiderBooking(
-            id: orderId.toString(),
-            restaurantName: serviceName,
-            address: customerName,
-            pickupAddress: pickupAddress,
-            deliveryAddress: dropoffAddress,
-            pickupLat: pickupLat,
-            pickupLng: pickupLng,
-            dropoffLat: dropoffLat,
-            dropoffLng: dropoffLng,
-            distance: distanceStr,
-            earnings: fareStr,
-            paymentMethod: (order['payment_method'] ?? 'cash').toString().toUpperCase(),
-            logoPath: 'assets/images/lesgo_logo.png', // Default logo
-            category: category,
-            billingAmount: fareStr,
-            billingMethod: (order['payment_method'] ?? 'cash').toString().toUpperCase(),
-            currentStatus: bookingStatus,
-            proofOfDeliveryUrls: proofUrls.isEmpty ? null : proofUrls,
-            customerPhone: customerPhone,
-            orderRating: orderRating,
-          );
-
-          bookings.add(booking);
+        if (!BookingWorkflow.isHistoryEligible(orderMap)) {
+          continue;
         }
+
+        final order = RiderOrder.fromJson(orderMap);
+        final proofUrls = MediaUrlUtils.parseProofImageUrls(orderMap);
+
+        int? orderRating;
+        final ratingRaw = orderMap['rating'] ??
+            orderMap['customer_rating'] ??
+            orderMap['review_rating'];
+        if (ratingRaw != null) {
+          final ratingValue = ratingRaw is num
+              ? ratingRaw.toDouble()
+              : double.tryParse(ratingRaw.toString()) ?? 0.0;
+          orderRating = ratingValue.round().clamp(0, 5);
+        }
+
+        final booking = RiderBookingMapper.fromOrder(
+          order,
+          proofOfDeliveryUrls: proofUrls.isEmpty ? null : proofUrls,
+          orderRating: orderRating,
+        );
+
+        if (apiStatus == 'completed') {
+          completedCount++;
+        } else if (apiStatus == 'cancelled') {
+          cancelledCount++;
+        } else if (BookingWorkflow.isActiveApiStatus(apiStatus)) {
+          processingCount++;
+        } else if (apiStatus == 'picked_up') {
+          processingCount++;
+        }
+
+        bookings.add(booking);
       }
 
+      bookings.sort((a, b) {
+        final aId = int.tryParse(a.id) ?? 0;
+        final bId = int.tryParse(b.id) ?? 0;
+        return bId.compareTo(aId);
+      });
+
       print('✅ Processed ${bookings.length} history bookings');
-      print('   Completed: $completedCount, Cancelled: $cancelledCount');
+      print('   Completed: $completedCount, Processing: $processingCount, Cancelled: $cancelledCount');
 
       // Get driver rating from profile API
       int stars = 0;

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -17,22 +16,6 @@ class MerchantOrdersView extends ConsumerStatefulWidget {
 }
 
 class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
-  Timer? _pollTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (mounted) ref.invalidate(merchantOrdersProvider);
-    });
-  }
-
-  @override
-  void dispose() {
-    _pollTimer?.cancel();
-    super.dispose();
-  }
-
   String _getStatusLabel(String status) {
     switch (status.toLowerCase()) {
       case 'pending':

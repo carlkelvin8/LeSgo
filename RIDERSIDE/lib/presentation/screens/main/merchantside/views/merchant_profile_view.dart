@@ -53,6 +53,8 @@ class MerchantProfileView extends ConsumerWidget {
               const MerchantProfileHeader(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantProfileInfoSection(),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              const MerchantEarningsPreviewCard(),
               SizedBox(
                 height: ResponsiveUtils.spacing(context, 24),
                 child: ElevatedButton(

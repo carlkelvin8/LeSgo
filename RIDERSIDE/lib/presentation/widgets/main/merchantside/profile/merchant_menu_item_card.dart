@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../../core/utils/menu_image_utils.dart';
+import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../common/menu_image_widget.dart';
 
@@ -146,10 +148,39 @@ class MerchantMenuItemCard extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context) {
-    return MenuImageWidget(
-      source: imageUrl,
+    final resolved = MenuImageUtils.resolve(imageUrl);
+    if (resolved == null || resolved.isEmpty) {
+      return _buildPlaceholder(context);
+    }
+
+    return Image.network(
+      resolved,
       fit: BoxFit.cover,
-      placeholder: _buildPlaceholder(context),
+      width: double.infinity,
+      height: double.infinity,
+      errorBuilder: (_, __, ___) {
+        return MenuImageWidget(
+          source: imageUrl,
+          fit: BoxFit.cover,
+          placeholder: _buildPlaceholder(context),
+        );
+      },
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+        return Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              value: progress.expectedTotalBytes != null
+                  ? progress.cumulativeBytesLoaded /
+                      progress.expectedTotalBytes!
+                  : null,
+            ),
+          ),
+        );
+      },
     );
   }
 

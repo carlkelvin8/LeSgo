@@ -1,8 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/push_notification_service.dart';
 import '../../../../../core/network/dio_client.dart';
+import '../../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
 import '../../../../screens/chat/rider_chat_screen.dart';
 import '../../../../../data/data_source/chat_remote_datasource.dart';
 import '../../../../../data/data_source/dto/chat/chat_dto.dart';
@@ -18,23 +18,26 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
   List<ConversationDto> _conversations = [];
   bool _isLoading = true;
   String? _error;
-  Timer? _pollTimer;
   final Map<int, String> _lastMessageByConversation = {};
 
   @override
   void initState() {
     super.initState();
     _loadConversations();
-    // Poll every 10 seconds for new conversations/messages
-    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      _loadConversations(silent: true);
-    });
   }
 
   @override
-  void dispose() {
-    _pollTimer?.cancel();
-    super.dispose();
+  Widget build(BuildContext context) {
+    ref.listen<int>(riderInboxRefreshSignalProvider, (previous, next) {
+      if (previous == next) return;
+      _loadConversations(silent: true);
+    });
+
+    return RefreshIndicator(
+      onRefresh: () => _loadConversations(),
+      color: const Color(0xFF5F2D82),
+      child: _buildBody(),
+    );
   }
 
   Future<void> _loadConversations({bool silent = false}) async {
@@ -87,15 +90,6 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
           customerName: customerName,
         ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: () => _loadConversations(),
-      color: const Color(0xFF5F2D82),
-      child: _buildBody(),
     );
   }
 

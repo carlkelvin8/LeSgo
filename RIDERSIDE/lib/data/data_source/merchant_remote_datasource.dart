@@ -374,6 +374,7 @@ class CreateMenuItemRequest {
   final String? imagePath;
   final bool isAvailable;
   final List<String>? tags;
+  final Map<String, dynamic>? options;
 
   CreateMenuItemRequest({
     required this.menuCategoryId,
@@ -384,6 +385,7 @@ class CreateMenuItemRequest {
     this.imagePath,
     this.isAvailable = true,
     this.tags,
+    this.options,
   });
 
   Map<String, dynamic> toJson() {
@@ -398,6 +400,9 @@ class CreateMenuItemRequest {
     if (tags != null && tags!.isNotEmpty) {
       map['tags'] = tags;
     }
+    if (options != null && options!.isNotEmpty) {
+      map['options'] = options;
+    }
     return map;
   }
 }
@@ -411,6 +416,7 @@ class UpdateMenuItemRequest {
   final String? imagePath;
   final bool? isAvailable;
   final List<String>? tags;
+  final Map<String, dynamic>? options;
 
   UpdateMenuItemRequest({
     this.menuCategoryId,
@@ -421,6 +427,7 @@ class UpdateMenuItemRequest {
     this.imagePath,
     this.isAvailable,
     this.tags,
+    this.options,
   });
 
   Map<String, dynamic> toJson() {
@@ -433,6 +440,9 @@ class UpdateMenuItemRequest {
     if (isAvailable != null) map['is_available'] = isAvailable;
     if (tags != null && tags!.isNotEmpty) {
       map['tags'] = tags;
+    }
+    if (options != null) {
+      map['options'] = options;
     }
     return map;
   }

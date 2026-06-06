@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/auth_navigation.dart';
+import '../../../../core/utils/screen_auto_refresh.dart';
+import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/riderside/rider_main_nav_provider.dart';
 import '../../../provider/main/riderside/rider_mission_provider.dart';
 import '../../../provider/main/riderside/rider_history_provider.dart';
@@ -7,6 +10,7 @@ import '../../../provider/main/riderside/rider_profile_provider.dart';
 import '../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
 import '../../../widgets/widgets.dart';
 import 'views/rider_profile_view.dart';
 import 'views/rider_wallet_view.dart';
@@ -28,7 +32,17 @@ class RiderMainScreen extends ConsumerStatefulWidget {
   ConsumerState<RiderMainScreen> createState() => _RiderMainScreenState();
 }
 
-class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
+class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
+    with WidgetsBindingObserver, AutoRefreshMixin {
+  @override
+  Duration get autoRefreshInterval => kScreenAutoRefreshInterval;
+
+  @override
+  void onAutoRefresh() {
+    final currentTab = ref.read(riderNavProvider).last;
+    refreshRiderScreen(ref, currentTab);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +50,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAuthentication();
       ref.read(riderDutyProvider.notifier);
+      ref.read(riderWalletProvider.notifier).loadWallet();
     });
   }
 
@@ -66,12 +81,23 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<RiderAuthState>(riderAuthProvider, (previous, next) {
+      if (!mounted) return;
+      if ((previous?.isLoggedIn ?? false) && !next.isLoggedIn) {
+        final target = previous?.user?.isMerchant == true
+            ? AuthViewTarget.merchant
+            : AuthViewTarget.rider;
+        navigateToLoginAfterLogout(context, ref, target: target);
+      }
+    });
+
     final navStack = ref.watch(riderNavProvider);
     final currentNav = navStack.last;
     final isMission = currentNav == RiderNavType.mission;
 
     // Refresh data when switching to a tab
     ref.listen<List<RiderNavType>>(riderNavProvider, (previous, next) {
+      if (!mounted) return;
       final prevTab = previous?.last;
       final newTab = next.last;
       if (prevTab == newTab) return;
@@ -79,6 +105,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
       switch (newTab) {
         case RiderNavType.bookings:
           ref.read(riderOrdersProvider.notifier).loadOrders();
+          ref.read(riderWalletProvider.notifier).loadWallet();
           break;
         case RiderNavType.mission:
           ref.read(riderMissionProvider.notifier).loadMissions();
@@ -92,7 +119,8 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
         case RiderNavType.wallet:
           ref.read(riderWalletProvider.notifier).loadWallet();
           break;
-        default:
+        case RiderNavType.inbox:
+          ref.read(riderInboxRefreshSignalProvider.notifier).state++;
           break;
       }
     });
@@ -172,14 +200,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen> {
       message: 'Are you sure you want to logout?',
       confirmLabel: 'Logout',
       onConfirm: () async {
-        // Stop order polling before logout
-        ref.read(riderOrdersProvider.notifier).reset();
-        // Logout and clear token
-        await ref.read(riderAuthProvider.notifier).logout();
-        if (context.mounted) {
-          ref.read(authViewProvider.notifier).state = AuthView.welcome;
-          AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
-        }
+        await ref.read(riderAuthProvider.notifier).logout(ref);
       },
     );
   }

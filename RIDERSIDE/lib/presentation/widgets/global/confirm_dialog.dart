@@ -20,7 +20,7 @@ Future<void> showConfirmDialog({
   String confirmLabel = 'Confirm',
   String cancelLabel = 'Cancel',
   Color confirmColor = const Color(0xFFE53935),
-  required VoidCallback onConfirm,
+  required Future<void> Function() onConfirm,
 }) {
   return showDialog(
     context: context,
@@ -46,9 +46,9 @@ Future<void> showConfirmDialog({
           ),
         ),
         TextButton(
-          onPressed: () {
+          onPressed: () async {
             Navigator.of(ctx).pop();
-            onConfirm();
+            await onConfirm();
           },
           child: Text(
             confirmLabel,

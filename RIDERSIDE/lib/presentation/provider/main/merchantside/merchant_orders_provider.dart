@@ -59,6 +59,12 @@ final merchantOrdersProvider =
   return dataSource.getPartnerOrders(partnerId);
 });
 
+final merchantOrderDetailProvider =
+    FutureProvider.autoDispose.family<OrderDto, int>((ref, orderId) async {
+  final dataSource = ref.read(merchantDataSourceProvider);
+  return dataSource.getOrderById(orderId);
+});
+
 final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
   final ordersAsync = ref.watch(merchantOrdersProvider);
   final filter = ref.watch(selectedMerchantOrderFilterProvider);

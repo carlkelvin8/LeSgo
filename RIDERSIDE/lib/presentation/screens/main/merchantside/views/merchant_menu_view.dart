@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
+import 'dart:convert';
+
 import '../merchant_menu_edit_item_screen.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 
@@ -156,6 +158,8 @@ class MerchantMenuView extends ConsumerWidget {
                                   if (item.imageUrl != null) 'imageUrl': item.imageUrl!,
                                   if (item.tags != null && item.tags!.isNotEmpty)
                                     'selectedTags': item.tags!.join(','),
+                                  if (item.options != null && item.options!.isNotEmpty)
+                                    'optionsJson': jsonEncode(item.options),
                                 },
                               ),
                             ),

@@ -1,13 +1,79 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/booking_workflow.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/push_notification_service.dart';
+import '../../../../core/utils/rider_commission_utils.dart';
+import '../../../../core/utils/menu_item_options.dart';
 import 'rider_duty_provider.dart';
+import 'rider_history_provider.dart';
 import 'rider_wallet_provider.dart';
+import '../../auth/rider_auth_provider.dart';
+
+int? _extractDriverId(Map<String, dynamic> json) {
+  final direct = json['driver_id'];
+  if (direct is num) return direct.toInt();
+  if (direct is String) return int.tryParse(direct);
+
+  final driverProfile = json['driver_profile'];
+  if (driverProfile is Map) {
+    final id = driverProfile['id'];
+    if (id is num) return id.toInt();
+    if (id is String) return int.tryParse(id);
+  }
+  return null;
+}
+
+bool _isActiveForDriver(RiderOrder order, int? driverProfileId) {
+  if (!BookingWorkflow.isActiveApiStatus(order.status)) return false;
+  if (order.driverId == null) return false;
+  if (driverProfileId == null) return true;
+  return order.driverId == driverProfileId;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Order model (minimal, from API)
 // ─────────────────────────────────────────────────────────────────────────────
+
+String? _formatItemOptions(dynamic item) {
+  if (item is! Map) return null;
+
+  final display = item['options_display']?.toString();
+  if (display != null && display.trim().isNotEmpty) return display.trim();
+
+  final notes = item['notes']?.toString();
+  if (notes != null && notes.trim().isNotEmpty) return notes.trim();
+
+  final selectedRaw = item['selected_options'];
+  if (selectedRaw is Map) {
+    final selected = SelectedMenuOptions.fromApiMap(
+      Map<String, dynamic>.from(selectedRaw),
+    );
+    if (!selected.isEmpty) return selected.formatDisplay();
+  }
+
+  final legacyOptions = item['options']?.toString();
+  if (legacyOptions != null && legacyOptions.trim().isNotEmpty) {
+    return legacyOptions.trim();
+  }
+  return null;
+}
+
+double _itemLineTotal(dynamic item, int qty) {
+  if (item is! Map) return 0;
+  final explicitTotal = item['total'];
+  if (explicitTotal != null) {
+    final totalVal = RiderOrder._d(explicitTotal);
+    if (totalVal > 0) return totalVal;
+  }
+  final actual = item['actual_price'];
+  if (actual != null) {
+    final actualVal = RiderOrder._d(actual);
+    if (actualVal > 0) return actualVal;
+  }
+  final unit = RiderOrder._d(item['estimated_price'] ?? item['price']);
+  return unit * qty;
+}
 
 class RiderOrder {
   final int id;
@@ -32,6 +98,8 @@ class RiderOrder {
   final double? totalAmount;
   final double itemsTotal;
   final double discount;
+  final double shippingFee;
+  final double? commissionRate;
   final List<String> parsedItems;
 
   RiderOrder({
@@ -57,20 +125,33 @@ class RiderOrder {
     this.totalAmount,
     this.itemsTotal = 0.0,
     this.discount = 0.0,
+    this.shippingFee = 0.0,
+    this.commissionRate,
     this.parsedItems = const [],
   });
 
-  // Get the price to display (always show full fare so customer and rider see same price)
-  double get displayEarnings => estimatedFare;
-  
-  /// Full booking total (matches backend wallet charge: meta grand_total or fare + items - discount).
+  // Delivery / shipping fee shown to rider (wallet deduction basis).
+  double get displayShippingFee =>
+      shippingFee > 0 ? shippingFee : estimatedFare;
+
+  /// Wallet hold on accept — shipping fee only, not item subtotal.
+  double get walletDeductionAmount => displayShippingFee;
+
+  /// Full customer order total (items + shipping - discount).
   double get displayTotalAmount {
     if (totalAmount != null && totalAmount! > 0) return totalAmount!;
-    return estimatedFare + itemsTotal - discount;
+    if (itemsTotal > 0) {
+      return itemsTotal + displayShippingFee - discount;
+    }
+    return displayShippingFee > 0 ? displayShippingFee : estimatedFare;
   }
 
-  // Get the actual driver earnings (what driver will receive after commission)
-  double get driverEarnings => driverShare ?? (estimatedFare * 0.85); // 85% if not calculated yet
+  static double _d(dynamic v) {
+    if (v == null) return 0.0;
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
+  }
 
   String get serviceName {
     switch (serviceId) {
@@ -85,56 +166,50 @@ class RiderOrder {
 
   double get distanceKm => estimatedDistanceM / 1000.0;
 
-  static double _d(dynamic v) {
-    if (v == null) return 0.0;
-    if (v is num) return v.toDouble();
-    if (v is String) return double.tryParse(v) ?? 0.0;
-    return 0.0;
+  double estimatedEarningsFor(String? packageTier) {
+    return RiderCommissionUtils.earningsFromShipping(
+      shippingFee: displayShippingFee,
+      driverShare: driverShare,
+      packageTier: packageTier,
+    );
   }
 
   factory RiderOrder.fromJson(Map<String, dynamic> j) {
     // Helper to extract address string from nested object or string
-    String _extractAddress(dynamic addressData, String fallback) {
+    String extractAddress(dynamic addressData, String fallback) {
       if (addressData == null) return fallback;
       if (addressData is String) {
-        // Check if it's the problematic "Instance of" string
         if (addressData.startsWith('Instance of ')) {
           return fallback;
         }
         return addressData;
       }
       if (addressData is Map<String, dynamic>) {
-        return addressData['address_line1'] as String? ?? 
-               addressData['address'] as String? ?? 
-               addressData['name'] as String? ??
-               fallback;
+        return addressData['address_line1'] as String? ??
+            addressData['address'] as String? ??
+            addressData['name'] as String? ??
+            fallback;
       }
-      // Handle any other object types
       final stringValue = addressData.toString();
       return stringValue.startsWith('Instance of ') ? fallback : stringValue;
     }
 
-    // Helper to extract lat/lng from nested address object
-    double _extractLat(Map<String, dynamic> j, String prefix) {
-      // First try direct field
-      final directLat = j['${prefix}_lat'];
+    double extractLat(Map<String, dynamic> json, String prefix) {
+      final directLat = json['${prefix}_lat'];
       if (directLat != null) return _d(directLat);
-      
-      // Then try nested address object
-      final addressObj = j['${prefix}_address'];
+
+      final addressObj = json['${prefix}_address'];
       if (addressObj is Map<String, dynamic>) {
         return _d(addressObj['latitude']);
       }
       return 0.0;
     }
 
-    double _extractLng(Map<String, dynamic> j, String prefix) {
-      // First try direct field
-      final directLng = j['${prefix}_lng'];
+    double extractLng(Map<String, dynamic> json, String prefix) {
+      final directLng = json['${prefix}_lng'];
       if (directLng != null) return _d(directLng);
-      
-      // Then try nested address object
-      final addressObj = j['${prefix}_address'];
+
+      final addressObj = json['${prefix}_address'];
       if (addressObj is Map<String, dynamic>) {
         return _d(addressObj['longitude']);
       }
@@ -143,36 +218,37 @@ class RiderOrder {
 
     List<String> extractedItems = [];
     double calculatedItemsTotal = 0.0;
-    
+
+    void addItemLine(dynamic item) {
+      if (item is! Map) return;
+      final name = item['name'] ?? 'Item';
+      final qtyStr = item['quantity']?.toString() ?? '1';
+      final qty = int.tryParse(qtyStr) ?? 1;
+      final lineTotal = _itemLineTotal(item, qty);
+      calculatedItemsTotal += lineTotal;
+      final optionsText = _formatItemOptions(item);
+      var line = '${qty}x $name';
+      if (lineTotal > 0) {
+        line += ' (PHP ${lineTotal.toStringAsFixed(2)})';
+      }
+      if (optionsText != null && optionsText.isNotEmpty) {
+        line += '\n   $optionsText';
+      }
+      extractedItems.add(line);
+    }
+
     if (j['lesbuy_items'] is List && (j['lesbuy_items'] as List).isNotEmpty) {
-      for (var item in j['lesbuy_items']) {
-        final name = item['name'] ?? 'Item';
-        final qtyStr = item['quantity']?.toString() ?? '1';
-        final qty = int.tryParse(qtyStr) ?? 1;
-        final price = item['actual_price'] ?? item['estimated_price'] ?? item['price'];
-        final double priceVal = _d(price);
-        calculatedItemsTotal += (priceVal * qty);
-        if (priceVal > 0) {
-          extractedItems.add('${qty}x $name (PHP ${(priceVal * qty).toStringAsFixed(2)})');
-        } else {
-          extractedItems.add('${qty}x $name');
-        }
+      for (final item in j['lesbuy_items']) {
+        addItemLine(item);
       }
-    } else if (j['meta'] is Map && j['meta']['items'] is List && (j['meta']['items'] as List).isNotEmpty) {
-      for (var item in j['meta']['items']) {
-        final name = item['name'] ?? 'Item';
-        final qtyStr = item['quantity']?.toString() ?? '1';
-        final qty = int.tryParse(qtyStr) ?? 1;
-        final price = item['actual_price'] ?? item['estimated_price'] ?? item['price'];
-        final double priceVal = _d(price);
-        calculatedItemsTotal += (priceVal * qty);
-        if (priceVal > 0) {
-          extractedItems.add('${qty}x $name (PHP ${(priceVal * qty).toStringAsFixed(2)})');
-        } else {
-          extractedItems.add('${qty}x $name');
-        }
+    } else if (j['meta'] is Map &&
+        j['meta']['items'] is List &&
+        (j['meta']['items'] as List).isNotEmpty) {
+      for (final item in j['meta']['items']) {
+        addItemLine(item);
       }
-    } else if (j['item_description'] != null && j['item_description'].toString().isNotEmpty) {
+    } else if (j['item_description'] != null &&
+        j['item_description'].toString().isNotEmpty) {
       extractedItems.add(j['item_description'].toString());
     } else if (j['notes'] != null && j['notes'].toString().isNotEmpty) {
       extractedItems.add(j['notes'].toString());
@@ -186,12 +262,25 @@ class RiderOrder {
     }
 
     double? extractedTotal;
+    double extractedShipping = _d(j['estimated_fare']);
+    double? extractedCommissionRate;
     if (j['meta'] is Map) {
       final meta = j['meta'] as Map<String, dynamic>;
+      if (calculatedItemsTotal <= 0 && meta['subtotal'] != null) {
+        calculatedItemsTotal = _d(meta['subtotal']);
+      }
       if (meta['grand_total'] != null) {
         extractedTotal = _d(meta['grand_total']);
       } else if (meta['total'] != null) {
-        extractedTotal = _d(meta['total']) - extractedDiscount;
+        extractedTotal = _d(meta['total']);
+      }
+      if (meta['shipping_fee'] != null) {
+        extractedShipping = _d(meta['shipping_fee']);
+      } else if (meta['delivery_fee'] != null) {
+        extractedShipping = _d(meta['delivery_fee']);
+      }
+      if (meta['driver_commission_rate'] != null) {
+        extractedCommissionRate = _d(meta['driver_commission_rate']);
       }
     }
 
@@ -218,14 +307,14 @@ class RiderOrder {
       id: j['id'] as int,
       serviceId: j['service_id'] as int? ?? 1,
       status: j['status'] as String? ?? 'pending',
-      pickupAddress: _extractAddress(j['pickup_address'], 'Pickup location'),
-      pickupLat: _extractLat(j, 'pickup'),
-      pickupLng: _extractLng(j, 'pickup'),
+      pickupAddress: extractAddress(j['pickup_address'], 'Pickup location'),
+      pickupLat: extractLat(j, 'pickup'),
+      pickupLng: extractLng(j, 'pickup'),
       pickupContactName: j['pickup_contact_name'] as String? ?? '',
       pickupContactPhone: j['pickup_contact_phone'] as String? ?? '',
-      dropoffAddress: _extractAddress(j['dropoff_address'], 'Dropoff location'),
-      dropoffLat: _extractLat(j, 'dropoff'),
-      dropoffLng: _extractLng(j, 'dropoff'),
+      dropoffAddress: extractAddress(j['dropoff_address'], 'Dropoff location'),
+      dropoffLat: extractLat(j, 'dropoff'),
+      dropoffLng: extractLng(j, 'dropoff'),
       dropoffContactName: dropoffName,
       dropoffContactPhone: dropoffPhone,
       estimatedFare: _d(j['estimated_fare']),
@@ -233,14 +322,32 @@ class RiderOrder {
       estimatedDistanceM: j['estimated_distance_m'] as int? ?? 0,
       paymentMethod: j['payment_method'] as String? ?? 'cash',
       notes: j['notes'] as String?,
-      driverId: j['driver_id'] as int?,
+      driverId: _extractDriverId(j),
       totalAmount: extractedTotal ??
           (j['total_amount'] != null ? _d(j['total_amount']) : null),
       itemsTotal: calculatedItemsTotal,
       discount: extractedDiscount,
+      shippingFee: extractedShipping,
+      commissionRate: extractedCommissionRate,
       parsedItems: extractedItems,
     );
   }
+
+  double earningsFor({String? packageTier, double? riderCommissionRate}) {
+    if (driverShare != null && driverShare! > 0) return driverShare!;
+    final rate = commissionRate ??
+        riderCommissionRate ??
+        RiderCommissionUtils.rateForPackage(packageTier);
+    return displayShippingFee * rate;
+  }
+
+  double get displayEarnings => displayShippingFee;
+
+  double driverEarningsFor(String? packageTier, {double? riderCommissionRate}) =>
+      earningsFor(
+        packageTier: packageTier,
+        riderCommissionRate: riderCommissionRate,
+      );
 
   RiderOrder copyWith({String? status, int? driverId}) {
     return RiderOrder(
@@ -279,6 +386,7 @@ enum RiderOrderAction { none, accepting, updatingStatus }
 
 class RiderOrdersState {
   final List<RiderOrder> availableOrders;
+  final List<RiderOrder> activeOrders;
   final RiderOrder? activeOrder;
   final bool isLoading;
   final bool isRefreshing;
@@ -289,6 +397,7 @@ class RiderOrdersState {
 
   RiderOrdersState({
     this.availableOrders = const [],
+    this.activeOrders = const [],
     this.activeOrder,
     this.isLoading = false,
     this.isRefreshing = false,
@@ -302,6 +411,7 @@ class RiderOrdersState {
 
   RiderOrdersState copyWith({
     List<RiderOrder>? availableOrders,
+    List<RiderOrder>? activeOrders,
     RiderOrder? activeOrder,
     bool? isLoading,
     bool? isRefreshing,
@@ -315,6 +425,9 @@ class RiderOrdersState {
   }) {
     return RiderOrdersState(
       availableOrders: availableOrders ?? this.availableOrders,
+      activeOrders: clearActiveOrder
+          ? const []
+          : (activeOrders ?? this.activeOrders),
       activeOrder: clearActiveOrder ? null : (activeOrder ?? this.activeOrder),
       isLoading: isLoading ?? this.isLoading,
       isRefreshing: isRefreshing ?? this.isRefreshing,
@@ -385,7 +498,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
       print('🔄 Fetching orders from API...');
       
       // Fetch all orders visible to this driver
-      final allRaw = await ApiService.getOrders(perPage: 50);
+      final allRaw = await ApiService.getOrders(perPage: 100);
       print('📦 Received ${allRaw.length} orders from API');
       
       final all = allRaw
@@ -397,32 +510,42 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         print('Order #${order.id}: status=${order.status}, driverId=${order.driverId}');
       }
 
-      // Available = pending/searching_driver with no driver assigned
-      // Backend returns these for all drivers to see
+      // Available = unassigned orders drivers can still accept
       final available = all
-          .where((o) => 
-            (o.status == 'pending' || o.status == 'searching_driver') && 
-            o.driverId == null
-          )
+          .where((o) =>
+              (o.status == 'pending' ||
+                  o.status == 'searching_driver' ||
+                  o.status == 'ready_for_pickup') &&
+              o.driverId == null)
           .toList();
 
       print('✅ Available orders: ${available.length}');
 
-      // Active = accepted or picked_up (assigned to this driver)
-      // Backend only returns orders where driver_id matches the logged-in driver
-      final active = all
-          .where((o) => 
-            (o.status == 'accepted' || o.status == 'picked_up') && 
-            o.driverId != null
-          )
-          .toList();
+      // Active = in-progress orders assigned to this driver
+      final driverProfileId =
+          _ref.read(riderAuthProvider).user?.driverProfileId;
+      final active = all.where((o) => _isActiveForDriver(o, driverProfileId)).toList();
+
+      // Keep current active order if API temporarily omits it after accept.
+      final currentActive = state.activeOrder;
+      if (currentActive != null &&
+          _isActiveForDriver(currentActive, driverProfileId) &&
+          !active.any((o) => o.id == currentActive.id)) {
+        active.insert(0, currentActive);
+      }
+
+      active.sort((a, b) => b.id.compareTo(a.id));
 
       print('🚗 Active orders: ${active.length}');
+      if (active.isNotEmpty) {
+        print('   Primary active: #${active.first.id} (${active.first.status})');
+      }
 
       _notifyOrderChanges(available, active.isNotEmpty ? active.first : null);
 
       state = state.copyWith(
         availableOrders: available,
+        activeOrders: active,
         activeOrder: active.isNotEmpty ? active.first : null,
         isLoading: false,
         isRefreshing: false,
@@ -446,6 +569,19 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
   Future<bool> acceptOrder(int orderId) async {
     print('🎯 Attempting to accept order #$orderId');
+
+    await _ref.read(riderWalletProvider.notifier).loadWallet();
+    final wallet = _ref.read(riderWalletProvider);
+    if (!wallet.canAcceptBooking) {
+      final message = wallet.acceptBlockedMessage;
+      print('🚫 Accept blocked — wallet balance: ${wallet.balance}');
+      state = state.copyWith(
+        action: RiderOrderAction.none,
+        actionOrderId: null,
+        error: message,
+      );
+      return false;
+    }
     
     state = state.copyWith(
       action: RiderOrderAction.accepting,
@@ -480,6 +616,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         print('🔄 Reloading orders to sync state...');
         await loadOrders(silent: true);
         await _ref.read(riderWalletProvider.notifier).loadWallet();
+        await _ref.read(riderHistoryProvider.notifier).loadHistory(silent: true);
 
         return true;
       }
@@ -518,7 +655,6 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
     final ok = await _updateStatus(orderId, 'completed', 'Order delivered!');
     if (ok) {
       state = state.copyWith(clearActiveOrder: true);
-      await loadOrders(silent: true);
     }
     return ok;
   }
@@ -540,6 +676,8 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
           actionOrderId: null,
           successMessage: msg,
         );
+        await loadOrders(silent: true);
+        await _ref.read(riderHistoryProvider.notifier).loadHistory(silent: true);
         return true;
       }
       state = state.copyWith(
@@ -591,11 +729,22 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
     }
   }
 
+  RiderOrder? _enrichAcceptedOrder(RiderOrder? order) {
+    if (order == null) return null;
+    if (order.driverId != null) return order;
+    if (!BookingWorkflow.isActiveApiStatus(order.status)) return order;
+
+    final profileId = _ref.read(riderAuthProvider).user?.driverProfileId;
+    if (profileId == null) return order;
+    return order.copyWith(driverId: profileId);
+  }
+
   RiderOrder? _parseOrder(Map<String, dynamic> data) {
     try {
       final orderData = data['data'] ?? data['order'];
       if (orderData is Map<String, dynamic>) {
-        return RiderOrder.fromJson(orderData);
+        final parsed = RiderOrder.fromJson(orderData);
+        return _enrichAcceptedOrder(parsed);
       }
     } catch (_) {}
     return null;

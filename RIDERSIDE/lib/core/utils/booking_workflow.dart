@@ -19,6 +19,9 @@ class BookingWorkflow {
 
   static BookingStatus mapApiStatus(String apiStatus, int serviceId) {
     final status = apiStatus.toLowerCase();
+    if (status == 'cancelled') return BookingStatus.cancelled;
+    if (status == 'searching_driver') return BookingStatus.pending;
+
     final category = categoryFromServiceId(serviceId);
 
     if (category == BookingCategory.lesRide) {
@@ -46,6 +49,8 @@ class BookingWorkflow {
         case 'driver_arrived_at_pickup':
         case 'in_progress':
           return BookingStatus.cooking;
+        case 'ready_for_pickup':
+          return BookingStatus.forPickUp;
         case 'picked_up':
           return BookingStatus.forDelivery;
         case 'completed':
@@ -63,6 +68,8 @@ class BookingWorkflow {
         case 'driver_arrived_at_pickup':
         case 'in_progress':
           return BookingStatus.toBuy;
+        case 'ready_for_pickup':
+          return BookingStatus.forPickUp;
         case 'picked_up':
           return BookingStatus.forDelivery;
         case 'completed':
@@ -79,6 +86,8 @@ class BookingWorkflow {
     switch (apiStatus.toLowerCase()) {
       case 'accepted':
         return 0;
+      case 'ready_for_pickup':
+        return 1;
       case 'driver_arrived_at_pickup':
       case 'in_progress':
         return 1;
@@ -103,6 +112,51 @@ class BookingWorkflow {
     return s == 'completed' || s == 'cancelled';
   }
 
+  static const Set<String> activeApiStatuses = {
+    'accepted',
+    'ready_for_pickup',
+    'driver_arrived_at_pickup',
+    'in_progress',
+    'picked_up',
+  };
+
+  static bool isActiveApiStatus(String? apiStatus) {
+    return activeApiStatuses.contains(apiStatus?.toLowerCase());
+  }
+
+  static int? extractDriverId(Map<String, dynamic> order) {
+    final direct = order['driver_id'];
+    if (direct is num) return direct.toInt();
+    if (direct is String) return int.tryParse(direct);
+
+    final driverProfile = order['driver_profile'];
+    if (driverProfile is Map) {
+      final id = driverProfile['id'];
+      if (id is num) return id.toInt();
+      if (id is String) return int.tryParse(id);
+    }
+    return null;
+  }
+
+  /// Orders shown in rider history: completed/cancelled + in-progress assigned jobs.
+  static bool isHistoryEligible(Map<String, dynamic> order) {
+    final status = (order['status'] as String?)?.toLowerCase();
+    if (status == null) return false;
+    if (isTerminal(status)) return true;
+
+    final driverId = extractDriverId(order);
+    if (status == 'picked_up' || isActiveApiStatus(status)) {
+      return driverId != null;
+    }
+    return false;
+  }
+
+  static bool isProcessingBookingStatus(BookingStatus status) {
+    return status != BookingStatus.complete &&
+        status != BookingStatus.delivered &&
+        status != BookingStatus.cancelled;
+  }
+
   static List<BookingNextAction> nextActions({
     required String? apiStatus,
     required BookingCategory category,
@@ -120,6 +174,25 @@ class BookingWorkflow {
                 : 'Arrived at restaurant',
             subtitle: 'Tap when you reach the pickup location',
             iconName: 'location_on',
+          ),
+        ];
+      case 'ready_for_pickup':
+        return [
+          BookingNextAction(
+            targetStatus: BookingStatus.driverHasArrived,
+            title: category == BookingCategory.lesRide
+                ? 'Arrived at pickup'
+                : 'Arrived at restaurant',
+            subtitle: 'Order is ready — go pick it up',
+            iconName: 'location_on',
+          ),
+          BookingNextAction(
+            targetStatus: _pickedUpStatus(category),
+            title: category == BookingCategory.lesRide
+                ? 'Passenger picked up'
+                : 'Order picked up',
+            subtitle: 'Confirm you collected the order',
+            iconName: 'check_circle',
           ),
         ];
       case 'driver_arrived_at_pickup':

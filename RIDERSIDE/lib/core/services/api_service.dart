@@ -213,12 +213,41 @@ class ApiService {
   ) async {
     try {
       await _dio.patch('/v1/drivers/$driverProfileId', data: {
-        'is_available': isAvailable ? 1 : 0,
+        'is_available': isAvailable,
       });
     } catch (e) {
       print('❌ Error updating driver availability: $e');
       rethrow;
     }
+  }
+
+  /// POST /v1/drivers/{id}/duty-attendance - Upload on-duty attendance photo
+  static Future<Map<String, dynamic>> submitDutyAttendance(
+    int driverProfileId,
+    XFile photo, {
+    double? latitude,
+    double? longitude,
+  }) async {
+    final bytes = await photo.readAsBytes();
+    final formData = FormData.fromMap({
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      'photo': MultipartFile.fromBytes(
+        bytes,
+        filename: photo.name.isNotEmpty ? photo.name : 'duty_attendance.jpg',
+      ),
+    });
+
+    final res = await _dio.post(
+      '/v1/drivers/$driverProfileId/duty-attendance',
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+
+    final data = res.data['data'];
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return Map<String, dynamic>.from(res.data as Map? ?? {});
   }
 
   /// GET /v1/tracking/order/{id}/live - Get live order tracking data
@@ -278,34 +307,84 @@ class ApiService {
 
   /// POST /v1/auth/me/profile-picture - Upload profile picture (from XFile for web compatibility)
   static Future<Map<String, dynamic>> uploadProfilePictureFromXFile(XFile imageFile) async {
+    try {
+      return await _uploadProfilePictureViaMedia(imageFile);
+    } catch (mediaError) {
+      if (kDebugMode) {
+        print('Profile upload via media failed, trying direct endpoint: $mediaError');
+      }
+      return _uploadProfilePictureDirect(imageFile);
+    }
+  }
+
+  static Future<Map<String, dynamic>> _uploadProfilePictureViaMedia(XFile imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final filename = imageFile.name.isNotEmpty ? imageFile.name : 'profile.jpg';
+    final formData = FormData.fromMap({'context': 'profile'});
+    formData.files.add(MapEntry(
+      'file',
+      MultipartFile.fromBytes(bytes, filename: filename),
+    ));
+
+    final uploadRes = await _dio.post(
+      ApiConstants.mediaUpload,
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    final uploadData = uploadRes.data['data'] ?? uploadRes.data;
+    if (uploadData is! Map) {
+      throw Exception('Media upload returned unexpected response');
+    }
+    final publicUrl = uploadData['url']?.toString();
+    final storedPath = uploadData['path']?.toString();
+    if (publicUrl == null || publicUrl.isEmpty) {
+      throw Exception('Media upload did not return a URL');
+    }
+
+    final payload = <String, dynamic>{'profile_photo_url': publicUrl};
+    if (storedPath != null && storedPath.isNotEmpty) {
+      payload['profile_picture'] = storedPath;
+    }
+
+    return updateProfile(payload);
+  }
+
+  static Future<Map<String, dynamic>> _uploadProfilePictureDirect(XFile imageFile) async {
     final formData = FormData();
-    
+
     try {
       final bytes = await imageFile.readAsBytes();
       final file = MultipartFile.fromBytes(
         bytes,
-        filename: imageFile.name,
+        filename: imageFile.name.isNotEmpty ? imageFile.name : 'profile.jpg',
       );
       formData.files.add(MapEntry('profile_picture', file));
     } catch (e) {
       print('Error creating multipart file: $e');
       rethrow;
     }
-    
+
     final res = await _dio.post(
       '/v1/auth/me/profile-picture',
       data: formData,
+      options: Options(contentType: 'multipart/form-data'),
     );
     return res.data as Map<String, dynamic>;
   }
 
   /// POST /v1/auth/me/profile-picture - Upload profile picture (legacy, for mobile)
   static Future<Map<String, dynamic>> uploadProfilePicture(String imagePath) async {
-    final formData = FormData();
-    
     try {
-      // For web, we need to use XFile and read bytes
-      // The imagePath is actually from XFile.path which works differently on web
+      return await _uploadProfilePictureViaMedia(XFile(imagePath));
+    } catch (mediaError) {
+      if (kDebugMode) {
+        print('Profile upload via media failed, trying direct endpoint: $mediaError');
+      }
+    }
+
+    final formData = FormData();
+
+    try {
       final file = MultipartFile.fromBytes(
         await XFile(imagePath).readAsBytes(),
         filename: 'profile_picture.jpg',
@@ -315,20 +394,36 @@ class ApiService {
       print('Error creating multipart file: $e');
       rethrow;
     }
-    
+
     final res = await _dio.post(
       '/v1/auth/me/profile-picture',
       data: formData,
+      options: Options(contentType: 'multipart/form-data'),
     );
     return res.data as Map<String, dynamic>;
   }
 
-  /// POST /v1/auth/logout
+  /// POST /v1/auth/logout — always clears local auth even if the API fails.
   static Future<void> logout() async {
+    String? token;
     try {
-      await _dio.post('/v1/auth/logout');
+      token = await getToken();
     } catch (_) {}
+
     await clearToken();
+
+    if (token == null || token.isEmpty) return;
+
+    try {
+      await _dio
+          .post(
+            '/v1/auth/logout',
+            options: Options(
+              headers: {'Authorization': 'Bearer $token'},
+            ),
+          )
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {}
   }
 
   /// POST /v1/auth/change-password

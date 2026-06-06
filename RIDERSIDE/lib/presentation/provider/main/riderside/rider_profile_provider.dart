@@ -130,8 +130,10 @@ class RiderProfileNotifier extends StateNotifier<RiderProfileState> {
     return '';
   }
 
-  Future<void> loadProfile() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+  Future<void> loadProfile({bool silent = false}) async {
+    if (!silent) {
+      state = state.copyWith(isLoading: true, clearError: true);
+    }
     try {
       final data = await _fetchMe();
       final u = (data['user'] ?? data['data'] ?? data) as Map<String, dynamic>;

@@ -8,6 +8,7 @@ import '../../../../presentation/screens/main/riderside/rider_booking_detail_scr
 import '../../../../presentation/screens/main/riderside/rider_history_detail_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_main_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_order_detail_screen.dart';
+import '../../../../presentation/screens/main/merchantside/merchant_earnings_screen.dart';
 import '../../../../domain/entities/rider_booking.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import 'main_routes.dart';
@@ -30,6 +31,7 @@ class MainRouter {
     MainRoutes.merchantSecurity: (_) => const RiderSecurityScreen(),
     MainRoutes.merchantDocuments: (_) => const RiderDocumentVerificationScreen(),
     MainRoutes.merchantMain: (_) => const MerchantMainScreen(),
+    MainRoutes.merchantEarnings: (_) => const MerchantEarningsScreen(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

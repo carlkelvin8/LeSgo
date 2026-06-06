@@ -18,6 +18,7 @@ class MainRoutes {
   static const String merchantReferral = '/merchant/referral';
   static const String merchantSecurity = '/merchant/security';
   static const String merchantDocuments = '/merchant/documents';
+  static const String merchantEarnings = '/merchant/earnings';
 
   MainRoutes._();
 }

@@ -4,7 +4,10 @@ import '../../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
+import '../../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../screens/main/riderside/rider_booking_detail_screen.dart';
+import '../wallet/rider_wallet_low_balance_banner.dart';
 import 'rider_booking_card.dart';
 
 class RiderBookingsList extends ConsumerWidget {
@@ -15,6 +18,10 @@ class RiderBookingsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ordersState = ref.watch(riderOrdersProvider);
+    final wallet = ref.watch(riderWalletProvider);
+    final rider = ref.watch(riderAuthProvider).user;
+    final packageTier = rider?.packageTier;
+    final riderCommissionRate = rider?.commissionRate;
 
     // Show loading indicator
     if (ordersState.isLoading) {
@@ -70,7 +77,13 @@ class RiderBookingsList extends ConsumerWidget {
     }
 
     final bookings = ordersState.availableOrders
-        .map(RiderBookingMapper.fromOrder)
+        .map(
+          (order) => RiderBookingMapper.fromOrder(
+            order,
+            packageTier: packageTier,
+            riderCommissionRate: riderCommissionRate,
+          ),
+        )
         .toList();
 
     // Show empty state (only if no active order and no available orders)
@@ -119,7 +132,10 @@ class RiderBookingsList extends ConsumerWidget {
 
     // Show bookings list with active order at top
     return RefreshIndicator(
-      onRefresh: () => ref.read(riderOrdersProvider.notifier).loadOrders(),
+      onRefresh: () async {
+        await ref.read(riderWalletProvider.notifier).loadWallet();
+        await ref.read(riderOrdersProvider.notifier).loadOrders();
+      },
       color: const Color(0xFF5F2D82),
       child: ListView(
         padding: EdgeInsets.symmetric(
@@ -127,6 +143,10 @@ class RiderBookingsList extends ConsumerWidget {
           vertical: ResponsiveUtils.spacing(context, 8),
         ),
         children: [
+          if (wallet.showLowBalanceWarning) ...[
+            RiderWalletLowBalanceBanner(balance: wallet.balance),
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          ],
           // Active Order Section (if exists)
           if (ordersState.activeOrder != null) ...[
             _buildActiveOrderCard(context, ref, ordersState.activeOrder!),
@@ -165,20 +185,25 @@ class RiderBookingsList extends ConsumerWidget {
               child: RiderBookingCard(
                 booking: booking,
                 onAccept: () async {
-                  // Accept order via API
-                  final success = await ref.read(riderOrdersProvider.notifier).acceptOrder(order.id);
-                  
-                  if (success && context.mounted) {
+                  final success = await ref
+                      .read(riderOrdersProvider.notifier)
+                      .acceptOrder(order.id);
+
+                  if (!context.mounted) return;
+
+                  if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Order #${order.id} accepted!'),
                         backgroundColor: Colors.green,
                       ),
                     );
-                  } else if (!success && context.mounted) {
+                  } else {
+                    final error = ref.read(riderOrdersProvider).error ??
+                        'Failed to accept order';
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(ordersState.error ?? 'Failed to accept order'),
+                        content: Text(error),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -194,7 +219,16 @@ class RiderBookingsList extends ConsumerWidget {
   }
 
   Widget _buildActiveOrderCard(BuildContext context, WidgetRef ref, RiderOrder order) {
-    final booking = RiderBookingMapper.fromOrder(order);
+    final rider = ref.read(riderAuthProvider).user;
+    final booking = RiderBookingMapper.fromOrder(
+      order,
+      packageTier: rider?.packageTier,
+      riderCommissionRate: rider?.commissionRate,
+    );
+    final riderEarnings = order.earningsFor(
+      packageTier: rider?.packageTier,
+      riderCommissionRate: rider?.commissionRate,
+    );
     
     return GestureDetector(
       onTap: () {
@@ -252,7 +286,7 @@ class RiderBookingsList extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Text(
-                  'PHP ${order.displayEarnings.toStringAsFixed(2)}',
+                  'PHP ${riderEarnings.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),

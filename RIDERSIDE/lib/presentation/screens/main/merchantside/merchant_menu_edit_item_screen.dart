@@ -6,6 +6,7 @@ import '../../../provider/main/merchantside/merchant_menu_item_form_provider.dar
 import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../controllers/merchantside/merchant_menu_item_form_controller.dart';
 import '../../../widgets/main/merchantside/menu/shared/merchant_dietary_preferences_section.dart';
+import '../../../widgets/main/merchantside/menu/shared/merchant_item_options_section.dart';
 import '../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -187,6 +188,11 @@ class _MerchantMenuEditItemScreenState
         MerchantDietaryPreferencesSection(
           selectedTags: formState.selectedTags.toSet(),
           onTagToggle: notifier.toggleTag,
+        ),
+        SectionSpacer(),
+        MerchantItemOptionsSection(
+          optionGroups: formState.menuOptions,
+          onChanged: notifier.updateMenuOptions,
         ),
         SectionSpacer(),
       ],
