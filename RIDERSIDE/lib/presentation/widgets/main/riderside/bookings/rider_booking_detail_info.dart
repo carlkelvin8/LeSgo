@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
+import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 
 class RiderBookingDetailInfo extends StatelessWidget {
@@ -396,7 +397,8 @@ class _ProofGrid extends StatelessWidget {
           ),
           itemCount: urls.length,
           itemBuilder: (context, index) {
-            final imageUrl = urls[index];
+            final imageUrl =
+                MediaUrlUtils.resolveProofImageUrl(urls[index]) ?? urls[index];
             return ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(

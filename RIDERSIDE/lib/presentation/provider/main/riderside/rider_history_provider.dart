@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/media_url_utils.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 
 // History State
@@ -136,8 +137,10 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
     loadHistory();
   }
 
-  Future<void> loadHistory() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+  Future<void> loadHistory({bool silent = false}) async {
+    if (!silent) {
+      state = state.copyWith(isLoading: true, clearError: true);
+    }
 
     try {
       print('📊 Fetching rider history from API...');
@@ -254,23 +257,9 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
             }
           }
 
-          // Extract proof of delivery URLs
-          List<String>? proofUrls;
-          if (order['proof_images'] != null) {
-            final proofData = order['proof_images'];
-            if (proofData is String && proofData.isNotEmpty) {
-              // Single URL as string
-              proofUrls = [_buildImageUrl(proofData)];
-            } else if (proofData is List) {
-              // Multiple URLs as array
-              proofUrls = proofData
-                  .map((url) => url.toString())
-                  .where((url) => url.isNotEmpty)
-                  .map((url) => _buildImageUrl(url))
-                  .toList();
-            }
-          }
-          if (proofUrls != null && proofUrls.isNotEmpty) {
+          // Extract proof of delivery URLs (prefer API-resolved proof_image_urls)
+          final proofUrls = MediaUrlUtils.parseProofImageUrls(order);
+          if (proofUrls.isNotEmpty) {
             print('📸 Order $orderId has ${proofUrls.length} proof image(s): ${proofUrls.join(", ")}');
           } else {
             print('⚠️ Order $orderId has no proof images');
@@ -304,7 +293,7 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
             billingAmount: fareStr,
             billingMethod: (order['payment_method'] ?? 'cash').toString().toUpperCase(),
             currentStatus: bookingStatus,
-            proofOfDeliveryUrls: proofUrls,
+            proofOfDeliveryUrls: proofUrls.isEmpty ? null : proofUrls,
             customerPhone: customerPhone,
             orderRating: orderRating,
           );
@@ -362,17 +351,6 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
 
   Future<void> refresh() async {
     await loadHistory();
-  }
-
-  // Helper to build full image URL
-  String _buildImageUrl(String path) {
-    // If already a full URL, return as is
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
-    }
-    // Use production API for image serving
-    const baseUrl = 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud';
-    return '$baseUrl/storage/$path';
   }
 }
 

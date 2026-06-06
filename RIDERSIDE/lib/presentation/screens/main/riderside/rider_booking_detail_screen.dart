@@ -6,6 +6,8 @@ import 'dart:io' show File;
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/utils/screen_auto_refresh.dart';
+import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../widgets/widgets.dart';
 import '../../../../domain/entities/rider_booking.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -36,7 +38,16 @@ class RiderBookingDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _RiderBookingDetailScreenState
-    extends ConsumerState<RiderBookingDetailScreen> {
+    extends ConsumerState<RiderBookingDetailScreen> with WidgetsBindingObserver, AutoRefreshMixin {
+  @override
+  Duration get autoRefreshInterval => kScreenAutoRefreshInterval;
+
+  @override
+  void onAutoRefresh() {
+    _fetchLatestStatus();
+    ref.read(riderOrdersProvider.notifier).loadOrders(silent: true);
+  }
+
   late BookingStatus _currentStatus;
   late String? _currentApiStatus;
   bool _isUpdating = false;
@@ -109,29 +120,15 @@ class _RiderBookingDetailScreenState
         print('✅ Latest status from API: $apiStatus');
         
         if (apiStatus != null) {
-          // Extract proof of delivery URLs
-          List<String>? proofUrls;
-          if (orderData['proof_images'] != null) {
-            print('📸 Raw proof_images from API: ${orderData['proof_images']}');
-            final proofData = orderData['proof_images'];
-            if (proofData is String && proofData.isNotEmpty) {
-              proofUrls = [_buildImageUrl(proofData)];
-              print('📸 Parsed as single string: $proofUrls');
-            } else if (proofData is List) {
-              proofUrls = proofData
-                  .map((url) => url.toString())
-                  .where((url) => url.isNotEmpty)
-                  .map((url) => _buildImageUrl(url))
-                  .toList();
-              print('📸 Parsed as list: $proofUrls');
-            }
-          } else {
-            print('⚠️ No proof_images field in API response');
-          }
-          
-          if (proofUrls != null && proofUrls.isNotEmpty) {
+          // Extract proof of delivery URLs (prefer API-resolved proof_image_urls)
+          final proofUrls = MediaUrlUtils.parseProofImageUrls(orderData);
+          if (proofUrls.isNotEmpty) {
             print('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
-            // Update the booking with proof URLs
+          } else {
+            print('⚠️ No proof images in API response');
+          }
+
+          if (proofUrls.isNotEmpty) {
             final updatedBooking = RiderBooking(
               id: widget.booking.id,
               serviceId: serviceId,
@@ -647,10 +644,6 @@ class _RiderBookingDetailScreenState
     );
     
     return result ?? false;
-  }
-
-  String _buildImageUrl(String path) {
-    return MediaUrlUtils.resolve(path) ?? path;
   }
 
   // Pick images from gallery or camera

@@ -68,6 +68,78 @@ class MediaUrlUtils {
     return url;
   }
 
+  /// Build URL for Laravel `/api/v1/proof-images/{orderId}/{filename}`.
+  static String? proofImageApiUrl(String? path) {
+    if (path == null || path.trim().isEmpty) return null;
+
+    var relative = path.trim().replaceAll('\\', '/');
+    while (relative.startsWith('/')) {
+      relative = relative.substring(1);
+    }
+
+    const marker = '/api/v1/proof-images/';
+    if (isHttpUrl(relative)) {
+      final idx = relative.indexOf(marker);
+      if (idx >= 0) return relative;
+      return null;
+    }
+
+    final match = RegExp(r'^proof_images/(\d+)/([^/]+)$').firstMatch(relative);
+    if (match == null) return null;
+
+    return '$_apiBase/v1/proof-images/${match.group(1)}/${match.group(2)}';
+  }
+
+  /// Prefer API-resolved `proof_image_urls`, then normalize `proof_images`.
+  static List<String> parseProofImageUrls(Map<String, dynamic> order) {
+    final resolved = order['proof_image_urls'];
+    if (resolved is List && resolved.isNotEmpty) {
+      return resolved
+          .map((item) => item.toString())
+          .where((url) => url.isNotEmpty)
+          .map((url) => resolveProofImageUrl(url))
+          .whereType<String>()
+          .toList();
+    }
+
+    final raw = order['proof_images'];
+    if (raw == null) return [];
+
+    if (raw is String && raw.isNotEmpty) {
+      final url = resolveProofImageUrl(raw);
+      return url == null ? [] : [url];
+    }
+
+    if (raw is List) {
+      return raw
+          .map((item) => item.toString())
+          .where((url) => url.isNotEmpty)
+          .map((url) => resolveProofImageUrl(url))
+          .whereType<String>()
+          .toList();
+    }
+
+    return [];
+  }
+
+  static String? resolveProofImageUrl(String? path) {
+    if (path == null || path.trim().isEmpty) return null;
+
+    final trimmed = path.trim();
+    if (isHttpUrl(trimmed)) {
+      if (trimmed.contains('/api/v1/proof-images/')) return trimmed;
+      return resolve(trimmed) ?? trimmed;
+    }
+
+    if (trimmed.startsWith('proof_images/')) {
+      return objectStorageUrl(trimmed) ??
+          proofImageApiUrl(trimmed) ??
+          apiStorageUrl(trimmed);
+    }
+
+    return resolve(trimmed) ?? proofImageApiUrl(trimmed);
+  }
+
   /// Returns an absolute URL suitable for [Image.network].
   static String? resolve(String? path) {
     if (path == null || path.trim().isEmpty) return null;

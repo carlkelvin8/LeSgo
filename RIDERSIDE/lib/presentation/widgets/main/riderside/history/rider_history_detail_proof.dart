@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 
 class RiderHistoryDetailProof extends StatelessWidget {
@@ -13,7 +14,12 @@ class RiderHistoryDetailProof extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final urls = proofUrls?.where((url) => url.isNotEmpty).toList() ?? [];
+    final urls = proofUrls
+            ?.map((url) => MediaUrlUtils.resolveProofImageUrl(url))
+            .whereType<String>()
+            .where((url) => url.isNotEmpty)
+            .toList() ??
+        [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
