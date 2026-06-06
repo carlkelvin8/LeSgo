@@ -714,131 +714,20 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
             ),
           ],
         ),
-        child: Row(
-          children: [
-            actionButton(
-              label: 'Reject',
-              color: Colors.red.shade400,
-              onPressed: () async {
-                final reason = await showMerchantCancelReasonDialog(
-                  context,
-                  title: 'Reject Order',
-                  hint: 'Why are you rejecting this order?',
-                );
-                if (reason != null && context.mounted) {
-                  await run(
-                    () => ref.read(merchantOrderActionProvider).rejectOrder(widget.order.id, reason),
-                    'Order rejected.',
-                  );
-                }
-              },
-            ),
-            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-            actionButton(
-              label: 'Accept',
-              color: const Color(0xFF5F2D82),
-              onPressed: () async {
-                final confirm = await showMerchantConfirmDialog(
-                  context,
-                  title: 'Accept Order?',
-                  message: 'Start searching for a driver?',
-                  confirmLabel: 'Accept',
-                );
-                if (confirm && context.mounted) {
-                  await run(
-                    () => ref.read(merchantOrderActionProvider).acceptOrder(widget.order.id),
-                    'Order accepted successfully!',
-                  );
-                }
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (status == 'searching_driver' || status == 'accepted') {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(horizontalPadding),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            actionButton(
-              label: 'Cancel',
-              color: Colors.red.shade400,
-              onPressed: () async {
-                final reason = await showMerchantCancelReasonDialog(
-                  context,
-                  title: 'Cancel Order',
-                );
-                if (reason != null && context.mounted) {
-                  await run(
-                    () => ref.read(merchantOrderActionProvider).cancelOrder(widget.order.id, reason),
-                    'Order cancelled.',
-                  );
-                }
-              },
-            ),
-            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-            actionButton(
-              label: 'Ready for Pickup',
-              color: const Color(0xFF5F2D82),
-              onPressed: () async {
-                final confirm = await showMerchantConfirmDialog(
-                  context,
-                  title: 'Ready for Pickup?',
-                  message: 'Mark this order as ready for driver pickup?',
-                  confirmLabel: 'Mark Ready',
-                );
-                if (confirm && context.mounted) {
-                  await run(
-                    () => ref.read(merchantOrderActionProvider).markReadyForPickup(widget.order.id),
-                    'Order marked ready for pickup!',
-                  );
-                }
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (status == 'ready_for_pickup') {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(horizontalPadding),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
         child: actionButton(
-          label: 'Cancel Order',
-          color: Colors.red.shade400,
+          label: 'Accept',
+          color: const Color(0xFF5F2D82),
           onPressed: () async {
-            final reason = await showMerchantCancelReasonDialog(
+            final confirm = await showMerchantConfirmDialog(
               context,
-              title: 'Cancel Order',
+              title: 'Accept Order?',
+              message: 'Start searching for a driver?',
+              confirmLabel: 'Accept',
             );
-            if (reason != null && context.mounted) {
+            if (confirm && context.mounted) {
               await run(
-                () => ref.read(merchantOrderActionProvider).cancelOrder(widget.order.id, reason),
-                'Order cancelled.',
+                () => ref.read(merchantOrderActionProvider).acceptOrder(widget.order.id),
+                'Order accepted successfully!',
               );
             }
           },

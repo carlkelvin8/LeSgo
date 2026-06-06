@@ -63,6 +63,8 @@ OrderItemDto _$OrderItemDtoFromJson(Map<String, dynamic> json) => OrderItemDto(
   quantity: (json['quantity'] as num).toInt(),
   estimatedPrice: (json['estimated_price'] as num?)?.toDouble(),
   notes: json['notes'] as String?,
+  menuItemId: (json['menu_item_id'] as num?)?.toInt(),
+  selectedOptions: json['selected_options'] as Map<String, dynamic>?,
 );
 
 Map<String, dynamic> _$OrderItemDtoToJson(OrderItemDto instance) =>
@@ -71,4 +73,6 @@ Map<String, dynamic> _$OrderItemDtoToJson(OrderItemDto instance) =>
       'quantity': instance.quantity,
       'estimated_price': instance.estimatedPrice,
       'notes': instance.notes,
+      'menu_item_id': instance.menuItemId,
+      'selected_options': instance.selectedOptions,
     };

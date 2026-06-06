@@ -1,3 +1,5 @@
+import '../../../../core/utils/menu_item_options.dart';
+
 class OrderItem {
   final String id;
   final String name;
@@ -6,6 +8,8 @@ class OrderItem {
   final int quantity;
   final String? restaurantId;
   final String? restaurantName;
+  final String? menuItemId;
+  final SelectedMenuOptions selectedOptions;
 
   OrderItem({
     required this.id,
@@ -15,9 +19,14 @@ class OrderItem {
     required this.quantity,
     this.restaurantId,
     this.restaurantName,
+    this.menuItemId,
+    this.selectedOptions = const SelectedMenuOptions(),
   });
 
   double get total => price * quantity;
+
+  String? get optionsDisplay =>
+      selectedOptions.isEmpty ? null : selectedOptions.formatDisplay();
 
   OrderItem copyWith({
     String? id,
@@ -27,6 +36,8 @@ class OrderItem {
     int? quantity,
     String? restaurantId,
     String? restaurantName,
+    String? menuItemId,
+    SelectedMenuOptions? selectedOptions,
   }) {
     return OrderItem(
       id: id ?? this.id,
@@ -36,6 +47,8 @@ class OrderItem {
       quantity: quantity ?? this.quantity,
       restaurantId: restaurantId ?? this.restaurantId,
       restaurantName: restaurantName ?? this.restaurantName,
+      menuItemId: menuItemId ?? this.menuItemId,
+      selectedOptions: selectedOptions ?? this.selectedOptions,
     );
   }
 }

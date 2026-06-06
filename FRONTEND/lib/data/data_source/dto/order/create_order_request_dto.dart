@@ -75,12 +75,18 @@ class OrderItemDto {
   @JsonKey(name: 'estimated_price')
   final double? estimatedPrice;
   final String? notes;
+  @JsonKey(name: 'menu_item_id')
+  final int? menuItemId;
+  @JsonKey(name: 'selected_options')
+  final Map<String, dynamic>? selectedOptions;
 
   OrderItemDto({
     required this.name,
     required this.quantity,
     this.estimatedPrice,
     this.notes,
+    this.menuItemId,
+    this.selectedOptions,
   });
 
   factory OrderItemDto.fromJson(Map<String, dynamic> json) =>

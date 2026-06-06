@@ -125,6 +125,7 @@ MenuItemDto _$MenuItemDtoFromJson(Map<String, dynamic> json) => MenuItemDto(
   isPopular: json['is_popular'] as bool?,
   isFeatured: json['is_featured'] as bool?,
   tags: _parseStringList(json['tags']),
+  options: json['options'] as Map<String, dynamic>?,
 );
 
 Map<String, dynamic> _$MenuItemDtoToJson(MenuItemDto instance) =>
@@ -142,6 +143,7 @@ Map<String, dynamic> _$MenuItemDtoToJson(MenuItemDto instance) =>
       'is_popular': instance.isPopular,
       'is_featured': instance.isFeatured,
       'tags': instance.tags,
+      'options': instance.options,
     };
 
 MenuCategoryDto _$MenuCategoryDtoFromJson(Map<String, dynamic> json) =>

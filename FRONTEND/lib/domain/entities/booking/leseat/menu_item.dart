@@ -1,3 +1,5 @@
+import '../../../../core/utils/menu_item_options.dart';
+
 class MenuItem {
   final String id;
   final String name;
@@ -6,7 +8,7 @@ class MenuItem {
   final String imagePath;
   final String categoryId;
   final bool isPopular;
-  final List<String>? sizeOptions;
+  final MenuItemOptionGroups optionGroups;
 
   MenuItem({
     required this.id,
@@ -16,10 +18,10 @@ class MenuItem {
     required this.imagePath,
     required this.categoryId,
     this.isPopular = false,
-    this.sizeOptions,
+    this.optionGroups = MenuItemOptionGroups.empty,
   });
 
-  bool get hasSizeOptions => sizeOptions != null && sizeOptions!.isNotEmpty;
+  bool get hasOptions => optionGroups.hasAny;
 
   MenuItem copyWith({
     String? id,
@@ -29,7 +31,7 @@ class MenuItem {
     String? imagePath,
     String? categoryId,
     bool? isPopular,
-    List<String>? sizeOptions,
+    MenuItemOptionGroups? optionGroups,
   }) {
     return MenuItem(
       id: id ?? this.id,
@@ -39,8 +41,7 @@ class MenuItem {
       imagePath: imagePath ?? this.imagePath,
       categoryId: categoryId ?? this.categoryId,
       isPopular: isPopular ?? this.isPopular,
-      sizeOptions: sizeOptions ?? this.sizeOptions,
+      optionGroups: optionGroups ?? this.optionGroups,
     );
   }
 }
-

@@ -200,6 +200,7 @@ class MenuItemDto {
   final bool? isFeatured;
   @JsonKey(fromJson: _parseStringList)
   final List<String>? tags;
+  final Map<String, dynamic>? options;
 
   MenuItemDto({
     required this.id,
@@ -215,6 +216,7 @@ class MenuItemDto {
     this.isPopular,
     this.isFeatured,
     this.tags,
+    this.options,
   });
 
   factory MenuItemDto.fromJson(Map<String, dynamic> json) =>

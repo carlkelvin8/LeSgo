@@ -714,23 +714,18 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         paymentMethod: state.selectedPaymentMethod ?? 'cash',
 
         items: order.items
-
             .map(
-
               (item) => OrderItemDto(
-
                 name: item.name,
-
                 quantity: item.quantity,
-
                 estimatedPrice: item.price,
-
-                notes: null,
-
+                notes: item.optionsDisplay,
+                menuItemId: int.tryParse(item.menuItemId ?? ''),
+                selectedOptions: item.selectedOptions.isEmpty
+                    ? null
+                    : item.selectedOptions.toApiMap(),
               ),
-
             )
-
             .toList(),
 
         voucherCode: order.voucherCode,
@@ -758,29 +753,22 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
           'order_type': 'leseat',
 
           'items': order.items
-
               .map(
-
                 (item) => {
-
                   'name': item.name,
-
                   'price': item.price,
-
                   'quantity': item.quantity,
-
                   'total': item.total,
-
                   'restaurant_id': item.restaurantId,
-
                   'restaurant_name':
-
                       item.restaurantName ?? order.restaurantName,
-
+                  if (item.menuItemId != null) 'menu_item_id': item.menuItemId,
+                  if (!item.selectedOptions.isEmpty)
+                    'selected_options': item.selectedOptions.toApiMap(),
+                  if (item.optionsDisplay != null)
+                    'options_display': item.optionsDisplay,
                 },
-
               )
-
               .toList(),
 
         },

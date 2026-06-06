@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../di/injection.dart';
 import '../../domain/entities/booking/leseat/order_item.dart';
+import '../utils/menu_item_options.dart';
 
 class LeseatCartSnapshot {
   final String restaurantId;
@@ -21,12 +22,12 @@ class LeseatCartSnapshot {
 class LeseatCartCache {
   LeseatCartCache._();
 
-  static const _prefsKey = 'leseat_cart_v1';
+  static const _prefsKey = 'leseat_cart_v2';
 
   static Future<LeseatCartSnapshot?> load() async {
     try {
       final prefs = getIt<SharedPreferences>();
-      final raw = prefs.getString(_prefsKey);
+      final raw = prefs.getString(_prefsKey) ?? prefs.getString('leseat_cart_v1');
       if (raw == null || raw.isEmpty) return null;
 
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
@@ -85,7 +86,9 @@ class LeseatCartCache {
 
   static Future<void> clear() async {
     try {
-      await getIt<SharedPreferences>().remove(_prefsKey);
+      final prefs = getIt<SharedPreferences>();
+      await prefs.remove(_prefsKey);
+      await prefs.remove('leseat_cart_v1');
     } catch (_) {}
   }
 
@@ -97,6 +100,8 @@ class LeseatCartCache {
         'quantity': item.quantity,
         'restaurantId': item.restaurantId,
         'restaurantName': item.restaurantName,
+        'menuItemId': item.menuItemId,
+        'selectedOptions': item.selectedOptions.toApiMap(),
       };
 
   static OrderItem? _itemFromJson(Map<String, dynamic> json) {
@@ -104,6 +109,13 @@ class LeseatCartCache {
     if (id == null || id.isEmpty) return null;
     final quantity = json['quantity'];
     if (quantity is! num || quantity <= 0) return null;
+
+    final selectedRaw = json['selectedOptions'];
+    final selectedOptions = selectedRaw is Map
+        ? SelectedMenuOptions.fromApiMap(
+            Map<String, dynamic>.from(selectedRaw),
+          )
+        : const SelectedMenuOptions();
 
     return OrderItem(
       id: id,
@@ -114,6 +126,8 @@ class LeseatCartCache {
       quantity: quantity.toInt(),
       restaurantId: json['restaurantId']?.toString(),
       restaurantName: json['restaurantName']?.toString(),
+      menuItemId: json['menuItemId']?.toString(),
+      selectedOptions: selectedOptions,
     );
   }
 }

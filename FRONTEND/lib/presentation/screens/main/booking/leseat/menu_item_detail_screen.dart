@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../widgets/widgets.dart';
+import '../../../../widgets/booking/leseat/restaurant/menu_item_detail/menu_item_options_selector.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../domain/entities/booking/leseat/menu_item.dart';
@@ -29,20 +30,23 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
 
   void _handleAddToOrder() {
     final detailState = ref.read(menuItemDetailProvider(widget.menuItem));
-    final restaurantNotifier = ref.read(restaurantDetailProvider.notifier);
-
-    // Add item to cart with selected quantity
-    for (int i = 0; i < detailState.quantity; i++) {
-      restaurantNotifier.addToCart(widget.menuItem);
+    if (!detailState.isValid) {
+      SnackBarUtils.showError(context, 'Please complete all required options');
+      return;
     }
 
-    // Show success message
+    final restaurantNotifier = ref.read(restaurantDetailProvider.notifier);
+    restaurantNotifier.addToCart(
+      widget.menuItem,
+      selectedOptions: detailState.selectedOptions,
+      quantity: detailState.quantity,
+    );
+
     SnackBarUtils.showInfo(
       context,
       '${detailState.quantity} ${widget.menuItem.name} added to cart',
     );
 
-    // Navigate back
     Navigator.pop(context);
   }
 
@@ -192,14 +196,17 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
 
                           SizedBox(height: ResponsiveUtils.spacing(context, 20)),
 
-                          // Size Selection - only show if item has size options
-                          if (widget.menuItem.hasSizeOptions) ...[
-                            MenuItemSizeSelector(
-                              sizeOptions: widget.menuItem.sizeOptions!,
+                          // Options (sizes, flavors, add-ons)
+                          if (widget.menuItem.hasOptions) ...[
+                            MenuItemOptionsSelector(
+                              optionGroups: widget.menuItem.optionGroups,
                               selectedSize: detailState.selectedSize,
-                              onSizeSelected: (String size) {
-                                detailNotifier.selectSize(size);
-                              },
+                              selectedFlavor: detailState.selectedFlavor,
+                              addonQuantities: detailState.addonQuantities,
+                              onSizeSelected: detailNotifier.selectSize,
+                              onFlavorSelected: detailNotifier.selectFlavor,
+                              onAddonQuantityChanged:
+                                  detailNotifier.setAddonQuantity,
                             ),
                             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                           ],

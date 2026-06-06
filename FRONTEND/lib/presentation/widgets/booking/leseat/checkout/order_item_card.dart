@@ -65,6 +65,17 @@ class OrderItemCard extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
+                if (item.optionsDisplay != null) ...[
+                  SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                  Text(
+                    item.optionsDisplay!,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 11),
+                      color: Colors.orange.shade700,
+                    ),
+                  ),
+                ],
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                 Text(
                   'PHP ${item.price.toStringAsFixed(2)}',

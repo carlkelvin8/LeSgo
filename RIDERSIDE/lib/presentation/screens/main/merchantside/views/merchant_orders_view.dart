@@ -57,54 +57,17 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
   }
 
   Future<void> _handlePendingTap(BuildContext context, int orderId) async {
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.check_circle, color: Colors.green),
-              title: const Text('Accept Order'),
-              onTap: () => Navigator.pop(context, 'accept'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.cancel, color: Colors.red),
-              title: const Text('Reject Order'),
-              onTap: () => Navigator.pop(context, 'reject'),
-            ),
-          ],
-        ),
-      ),
+    final confirm = await showMerchantConfirmDialog(
+      context,
+      title: 'Accept Order?',
+      message: 'This will accept the order and start searching for a driver.',
+      confirmLabel: 'Accept',
     );
-
-    if (!mounted || action == null) return;
-
-    if (action == 'accept') {
-      final confirm = await showMerchantConfirmDialog(
-        context,
-        title: 'Accept Order?',
-        message: 'This will accept the order and start searching for a driver.',
-        confirmLabel: 'Accept',
+    if (confirm && mounted) {
+      await _runAction(
+        () => ref.read(merchantOrderActionProvider).acceptOrder(orderId),
+        successMessage: 'Order accepted successfully!',
       );
-      if (confirm && mounted) {
-        await _runAction(
-          () => ref.read(merchantOrderActionProvider).acceptOrder(orderId),
-          successMessage: 'Order accepted successfully!',
-        );
-      }
-    } else if (action == 'reject') {
-      final reason = await showMerchantCancelReasonDialog(
-        context,
-        title: 'Reject Order',
-        hint: 'Why are you rejecting this order?',
-      );
-      if (reason != null && mounted) {
-        await _runAction(
-          () => ref.read(merchantOrderActionProvider).rejectOrder(orderId, reason),
-          successMessage: 'Order rejected.',
-        );
-      }
     }
   }
 

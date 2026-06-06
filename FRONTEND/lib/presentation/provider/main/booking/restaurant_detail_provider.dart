@@ -6,6 +6,7 @@ import '../../../../data/data_source/partner_remote_datasource.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/leseat_cart_cache.dart';
 import '../../../../core/utils/menu_image_utils.dart';
+import '../../../../core/utils/menu_item_options.dart';
 
 const _defaultMenuImage = 'assets/images/book/leseat/Pizza.svg';
 
@@ -170,6 +171,7 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
                 ),
                 categoryId: catDto.id.toString(),
                 isPopular: itemDto.isPopular ?? false,
+                optionGroups: MenuItemOptionGroups.fromApiMap(itemDto.options),
               ),
             );
           }
@@ -214,11 +216,17 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     state = state.copyWith(filteredMenuItems: filtered);
   }
 
-  void addToCart(MenuItem item) {
+  void addToCart(
+    MenuItem item, {
+    SelectedMenuOptions selectedOptions = const SelectedMenuOptions(),
+    int quantity = 1,
+  }) {
     final restaurantId = state.activeRestaurantId;
+    final suffix = selectedOptions.cartKeySuffix();
     final cartItemId = restaurantId != null
-        ? '$restaurantId:${item.id}'
-        : item.id;
+        ? '$restaurantId:${item.id}${suffix.isEmpty ? '' : ':$suffix'}'
+        : '${item.id}${suffix.isEmpty ? '' : ':$suffix'}';
+    final unitPrice = selectedOptions.unitPriceForBase(item.price);
 
     final existingItemIndex = state.cartItems.indexWhere(
       (cartItem) => cartItem.id == cartItemId,
@@ -226,23 +234,23 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
 
     List<OrderItem> updatedCart;
     if (existingItemIndex >= 0) {
-      // Update quantity
       updatedCart = List.from(state.cartItems);
       updatedCart[existingItemIndex] = updatedCart[existingItemIndex].copyWith(
-        quantity: updatedCart[existingItemIndex].quantity + 1,
+        quantity: updatedCart[existingItemIndex].quantity + quantity,
       );
     } else {
-      // Add new item
       updatedCart = [
         ...state.cartItems,
         OrderItem(
           id: cartItemId,
           name: item.name,
           imagePath: item.imagePath,
-          price: item.price,
-          quantity: 1,
+          price: unitPrice,
+          quantity: quantity,
           restaurantId: restaurantId,
           restaurantName: state.activeRestaurantName,
+          menuItemId: item.id,
+          selectedOptions: selectedOptions,
         ),
       ];
     }
