@@ -307,7 +307,7 @@ class MerchantRemoteDataSource {
       final payload = request.toJson();
       payload.remove('logo_url');
 
-      dynamic data;
+      dynamic requestData;
       if (request.logoPath != null &&
           MediaUrlUtils.isLocalFilePath(request.logoPath)) {
         final formData = FormData.fromMap(payload);
@@ -315,7 +315,7 @@ class MerchantRemoteDataSource {
           'logo',
           await MultipartFile.fromFile(request.logoPath!),
         ));
-        data = formData;
+        requestData = formData;
       } else {
         final uploadedLogoUrl = await _resolvePartnerLogoUrl(
           logoUrl: request.logoUrl,
@@ -324,15 +324,15 @@ class MerchantRemoteDataSource {
         if (uploadedLogoUrl != null && uploadedLogoUrl.isNotEmpty) {
           payload['logo_url'] = uploadedLogoUrl;
         }
-        data = payload;
+        requestData = payload;
       }
 
       final response = await _dio.patch(
         '/v1/partners/$partnerId',
-        data: data,
+        data: requestData,
       );
-      final data = response.data['data'] ?? response.data;
-      return PartnerDto.fromJson(data as Map<String, dynamic>);
+      final responseData = response.data['data'] ?? response.data;
+      return PartnerDto.fromJson(responseData as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to update partner profile: ${ApiService.extractError(e)}');
     }
