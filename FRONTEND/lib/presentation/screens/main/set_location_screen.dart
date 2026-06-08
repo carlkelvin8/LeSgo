@@ -158,7 +158,7 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Stack(
           children: [
@@ -187,7 +187,7 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: EdgeInsets.only(
-                      bottom: ResponsiveUtils.spacing(context, 110),
+                      bottom: ResponsiveUtils.spacing(context, 110) + MediaQuery.of(context).viewInsets.bottom,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

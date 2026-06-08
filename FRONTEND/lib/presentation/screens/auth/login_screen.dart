@@ -46,178 +46,184 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth),
-            child: SizedBox(
-              height: screenHeight,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: Form(
-                  key: _controllers.formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(height: ResponsiveUtils.spacing(context, 80)),
-           
-                      Center(
-                        child: SvgPicture.asset(
-                          'assets/images/Logo.svg',
-                          height: ResponsiveUtils.imageHeight(context, 82),
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                      Text(
-                        'Welcome Back!',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 22),
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                      Text(
-                        'Please enter your details',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey[500],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 48)),
-         
-                      // Email/Phone field with real-time validation
-                      ValidatedTextField(
-                        label: 'Email/Phone',
-                        hint: 'Enter your email or phone number',
-                        controller: _controllers.emailController,
-                        validator: Validators.emailOrPhone,
-                        keyboardType: TextInputType.emailAddress,
-                        prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
-                        required: true,
-                        enabled: !authState.isLoading,
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SizedBox(
+                height: screenHeight,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  child: Form(
+                    key: _controllers.formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(height: ResponsiveUtils.spacing(context, 80)),
 
-                      // Password field with show/hide toggle
-                      PasswordField(
-                        label: 'Password',
-                        hint: 'Enter your password',
-                        controller: _controllers.passwordController,
-                        required: true,
-                        enabled: !authState.isLoading,
-                        validator: (value) {
-                          // For login, just check if password is not empty
-                          if (value == null || value.isEmpty) {
-                            return 'Password is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          RememberMeCheckbox(
-                            value: authState.rememberMe,
-                            onChanged: (value) {
-                              ref.read(authProvider.notifier).toggleRememberMe(value ?? false);
-                            },
+                        Center(
+                          child: SvgPicture.asset(
+                            'assets/images/Logo.svg',
+                            height: ResponsiveUtils.imageHeight(context, 82),
+                            fit: BoxFit.contain,
                           ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ForgotPasswordScreen(),
-                                ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+                        Text(
+                          'Welcome Back!',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 22),
+                            color: Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                        Text(
+                          'Please enter your details',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 13),
+                            color: Colors.grey[500],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 48)),
+
+                        // Email/Phone field with real-time validation
+                        ValidatedTextField(
+                          label: 'Email/Phone',
+                          hint: 'Enter your email or phone number',
+                          controller: _controllers.emailController,
+                          validator: Validators.emailOrPhone,
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                          required: true,
+                          enabled: !authState.isLoading,
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+
+                        // Password field with show/hide toggle
+                        PasswordField(
+                          label: 'Password',
+                          hint: 'Enter your password',
+                          controller: _controllers.passwordController,
+                          required: true,
+                          enabled: !authState.isLoading,
+                          validator: (value) {
+                            // For login, just check if password is not empty
+                            if (value == null || value.isEmpty) {
+                              return 'Password is required';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            RememberMeCheckbox(
+                              value: authState.rememberMe,
+                              onChanged: (value) {
+                                ref.read(authProvider.notifier).toggleRememberMe(value ?? false);
+                              },
                             ),
-                            child: Text(
-                              'Forgot Password?',
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 12),
-                                color: const Color(0xFF6B4EFF),
-                                fontWeight: FontWeight.w500,
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ForgotPasswordScreen(),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                                  color: const Color(0xFF6B4EFF),
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-                      PrimaryButton(
-                        text: 'Log In',
-                        isLoading: authState.isLoading,
-                        onPressed: () async {
-                          final success = await _controllers.handleLogin(context, ref);
-                          if (success) {
-                            if (!context.mounted) return;
-                            AppRouter.pushReplacement(context, MainRoutes.home);
-                          }
-                        },
-                        backgroundColor: const Color(0xFF5F2D82),
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-                      SocialLoginButton(
-                        text: 'Log in with Google',
-                        iconUrl: 'https://www.google.com/favicon.ico',
-                        iconData: Icons.g_mobiledata,
-                        onPressed: () => _controllers.handleGoogleSignIn(context, ref),
-                      ),
-  const Spacer(),
+                          ],
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 32)),
+                        PrimaryButton(
+                          text: 'Log In',
+                          isLoading: authState.isLoading,
+                          onPressed: () async {
+                            final success = await _controllers.handleLogin(context, ref);
+                            if (success) {
+                              if (!context.mounted) return;
+                              AppRouter.pushReplacement(context, MainRoutes.home);
+                            }
+                          },
+                          backgroundColor: const Color(0xFF5F2D82),
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+                        SocialLoginButton(
+                          text: 'Log in with Google',
+                          iconUrl: 'https://www.google.com/favicon.ico',
+                          iconData: Icons.g_mobiledata,
+                          onPressed: () => _controllers.handleGoogleSignIn(context, ref),
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 24)),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Don't have an account? ",
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              AppRouter.push(context, RegisterRoutes.register);
-                            },
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Sign Up',
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account? ",
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: const Color(0xFF5F2D82),
-                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 84)),
-                    ],
-                  ),
+                            TextButton(
+                              onPressed: () {
+                                AppRouter.push(context, RegisterRoutes.register);
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Sign Up',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                                  color: const Color(0xFF5F2D82),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 84)),
+                      ],
+                    ),
                 ),
               ),
             ),
           ),
         ),
       ),
+      )
     );
+    
   }
 }

@@ -9,7 +9,7 @@ part of 'order_dto.dart';
 DriverUserDto _$DriverUserDtoFromJson(Map<String, dynamic> json) =>
     DriverUserDto(
       id: (json['id'] as num).toInt(),
-      name: json['name'] as String? ?? 'Driver',
+      name: json['name'] as String,
       email: json['email'] as String?,
       phoneNumber: json['phone_number'] as String?,
       profilePicture: json['profile_picture'] as String?,
@@ -51,7 +51,7 @@ Map<String, dynamic> _$DriverProfileDtoToJson(DriverProfileDto instance) =>
       'plate_number': instance.plateNumber,
       'vehicle_plate': instance.vehiclePlate,
       'vehicle_type': instance.vehicleType,
-      'user': instance.user?.toJson(),
+      'user': instance.user,
     };
 
 OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
@@ -107,7 +107,9 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
   lesbuyItems: (json['lesbuy_items'] as List<dynamic>?)
       ?.map((e) => LesbuyItemDto.fromJson(e as Map<String, dynamic>))
       .toList(),
-  proofImages: ProofImageUtils.fromOrderMap(json),
+  proofImages: json['proof_images'] == null
+      ? const []
+      : ProofImageUtils.parseUrls(json['proof_images']),
 );
 
 Map<String, dynamic> _$OrderDtoToJson(OrderDto instance) => <String, dynamic>{

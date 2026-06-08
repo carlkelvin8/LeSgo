@@ -42,7 +42,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Builder(
           builder: (context) {
@@ -60,6 +60,9 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
 
                     Expanded(
                       child: SingleChildScrollView(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
                         child: Column(
                           children: [
                             Center(

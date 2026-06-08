@@ -23,7 +23,12 @@ class AddressFormPanel extends StatelessWidget {
       child: Form(
         key: controllers.formKey,
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(padding, padding, padding, 90.0),
+          padding: EdgeInsets.fromLTRB(
+            padding,
+            padding,
+            padding,
+            90.0 + MediaQuery.of(context).viewInsets.bottom,
+          ),
           child: AddressFormFields(
             houseNumberController: controllers.houseNumberController,
             subdivisionController: controllers.subdivisionController,

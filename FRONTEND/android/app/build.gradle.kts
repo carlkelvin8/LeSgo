@@ -48,6 +48,16 @@ fun requireKeystoreProperty(props: Properties, name: String): String {
 val googleMapsApiKey = loadGoogleMapsApiKey(rootProject.projectDir.parentFile)
 val keystoreProperties = loadKeystoreProperties()
 val keystorePropertiesFile = rootProject.file("key.properties")
+val requestedTaskNames = gradle.startParameter.taskNames.map { it.lowercase() }
+val releaseBuildRequested = requestedTaskNames.any { it.contains("release") }
+val releaseKeystorePresent = keystorePropertiesFile.exists()
+
+if (releaseBuildRequested && !releaseKeystorePresent) {
+    throw GradleException(
+        "android/key.properties not found. " +
+            "Run: powershell -ExecutionPolicy Bypass -File android/tool/generate_release_keystore.ps1"
+    )
+}
 
 android {
     namespace = "com.lesgo.app"
@@ -67,19 +77,15 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            if (!keystorePropertiesFile.exists()) {
-                throw GradleException(
-                    "android/key.properties not found. " +
-                        "Run: powershell -ExecutionPolicy Bypass -File android/tool/generate_release_keystore.ps1"
-                )
-            }
-            keyAlias = requireKeystoreProperty(keystoreProperties, "keyAlias")
-            keyPassword = requireKeystoreProperty(keystoreProperties, "keyPassword")
-            storePassword = requireKeystoreProperty(keystoreProperties, "storePassword")
-            storeFile = rootProject.file(requireKeystoreProperty(keystoreProperties, "storeFile"))
-            if (!storeFile!!.exists()) {
-                throw GradleException("Keystore not found at ${storeFile!!.absolutePath}")
+        if (releaseKeystorePresent) {
+            create("release") {
+                keyAlias = requireKeystoreProperty(keystoreProperties, "keyAlias")
+                keyPassword = requireKeystoreProperty(keystoreProperties, "keyPassword")
+                storePassword = requireKeystoreProperty(keystoreProperties, "storePassword")
+                storeFile = rootProject.file(requireKeystoreProperty(keystoreProperties, "storeFile"))
+                if (!storeFile!!.exists()) {
+                    throw GradleException("Keystore not found at ${storeFile!!.absolutePath}")
+                }
             }
         }
     }
@@ -95,7 +101,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            if (releaseKeystorePresent) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             isShrinkResources = false
         }
