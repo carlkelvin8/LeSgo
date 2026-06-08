@@ -36,13 +36,9 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
     final lesbuyNotifier = ref.read(lesbuyProvider.notifier);
     final profileState = ref.watch(profileProvider);
 
-    // Get user name and address
-    final userName = profileState.name.isNotEmpty 
-        ? profileState.name 
+    final userName = profileState.name.isNotEmpty
+        ? profileState.name
         : 'Guest';
-    final userAddress = profileState.address1.isNotEmpty
-        ? profileState.address1
-        : 'No address set';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -66,10 +62,7 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
             // Location Header
-            LocationHeaderSection(
-              userName: userName,
-              address: userAddress,
-            ),
+            BookingLocationHeader(userName: userName),
 
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 

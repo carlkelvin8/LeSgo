@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../provider/register/controller/address.controller.notifier.dart';
 import '../../../provider/register/register_provider.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/constants/routers/register/register_routes.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../widgets/widgets.dart';
@@ -76,11 +77,17 @@ class _AddressScreenState extends ConsumerState<AddressScreen> {
                   ref,
                 );
                 if (success && context.mounted) {
-                  await ref
+                  final registered = await ref
                       .read(registerProvider.notifier)
                       .submitRegistration();
-                  if (context.mounted) {
+                  if (!context.mounted) return;
+                  if (registered) {
                     AppRouter.push(context, RegisterRoutes.success);
+                  } else {
+                    final error = ref.read(registerProvider).error;
+                    if (error != null) {
+                      SnackBarUtils.showError(context, error);
+                    }
                   }
                 }
               },

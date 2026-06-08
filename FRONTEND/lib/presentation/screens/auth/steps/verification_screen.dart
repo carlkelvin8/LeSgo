@@ -40,7 +40,7 @@ class VerificationScreen extends ConsumerWidget {
           isLoading: registerState.isLoading,
           onStart: () => _handleStartVerification(context, ref),
           onNext: () {
-            AppRouter.push(context, RegisterRoutes.otpVerification);
+            AppRouter.push(context, RegisterRoutes.address);
           },
         ),
       ),

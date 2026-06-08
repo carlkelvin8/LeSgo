@@ -38,11 +38,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
     final leseatNotifier = ref.read(leseatProvider.notifier);
     final profileState = ref.watch(profileProvider);
 
-    // Get user name and address
     final userName = profileState.name.isNotEmpty ? profileState.name : 'Guest';
-    final userAddress = profileState.address1.isNotEmpty
-        ? profileState.address1
-        : 'No address set';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -54,11 +50,11 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
             color: Color(0xFFA930D0),
             size: 28,
           ),
-          onPressed: () {
-            // Initialize checkout with cart data
-            ref
+          onPressed: () async {
+            await ref
                 .read(checkoutProvider.notifier)
                 .initializeFromCart('Restaurant');
+            if (!context.mounted) return;
             AppRouter.push(context, BookingRoutes.leseatCheckout);
           },
         ),
@@ -70,7 +66,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
             SizedBox(height: ResponsiveUtils.spacing(context, 4)),
 
             // Location Header
-            LocationHeaderSection(userName: userName, address: userAddress),
+            BookingLocationHeader(userName: userName),
 
             SizedBox(height: ResponsiveUtils.spacing(context, 10)),
 

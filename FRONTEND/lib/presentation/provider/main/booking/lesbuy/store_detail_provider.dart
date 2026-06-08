@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../domain/entities/booking/lesbuy/product.dart';
 import '../../../../../domain/entities/booking/lesbuy/cart_item.dart';
@@ -69,12 +71,16 @@ class StoreDetailState {
 class StoreDetailNotifier extends StateNotifier<StoreDetailState> {
   final PartnerRemoteDataSource _partnerDataSource = getIt<PartnerRemoteDataSource>();
 
+  int _cartEpoch = 0;
+
   StoreDetailNotifier() : super(StoreDetailState()) {
     _restoreCachedCart();
   }
 
   Future<void> _restoreCachedCart() async {
+    final epoch = _cartEpoch;
     final cached = await LesbuyCartCache.load();
+    if (epoch != _cartEpoch) return;
     if (cached == null || cached.items.isEmpty) return;
 
     state = state.copyWith(
@@ -85,17 +91,39 @@ class StoreDetailNotifier extends StateNotifier<StoreDetailState> {
   }
 
   void _persistCart() {
-    LesbuyCartCache.save(
-      storeId: state.partnerStoreId,
-      storeName: state.storeName,
-      items: state.cartItems,
+    unawaited(_persistCartAsync());
+  }
+
+  Future<void> _persistCartAsync() async {
+    final epoch = _cartEpoch;
+    final items = List<LesbuyCartItem>.from(state.cartItems);
+    final storeId = state.partnerStoreId;
+    final storeName = state.storeName;
+
+    if (items.isEmpty || storeId == null || storeId.isEmpty) {
+      await LesbuyCartCache.clear();
+      return;
+    }
+
+    await LesbuyCartCache.save(
+      storeId: storeId,
+      storeName: storeName,
+      items: items,
     );
+
+    if (epoch != _cartEpoch) {
+      await LesbuyCartCache.clear();
+    }
   }
 
   Future<void> loadStoreDetails(String storeId, List<String> categories) async {
+    final epoch = _cartEpoch;
     final cached = await LesbuyCartCache.load();
-    final restoredCart =
-        cached != null && cached.storeId == storeId ? cached.items : const <LesbuyCartItem>[];
+    final restoredCart = epoch == _cartEpoch &&
+            cached != null &&
+            cached.storeId == storeId
+        ? cached.items
+        : const <LesbuyCartItem>[];
 
     state = state.copyWith(isLoading: true, error: null);
 
@@ -209,26 +237,18 @@ class StoreDetailNotifier extends StateNotifier<StoreDetailState> {
     _persistCart();
   }
 
-  void clearCart() {
+  Future<void> clearCart() async {
+    _cartEpoch++;
     state = state.copyWith(cartItems: []);
-    LesbuyCartCache.clear();
+    await LesbuyCartCache.clear();
   }
 
   void removeFromCart(Product product) {
-    final currentItems = [...state.cartItems];
-    final index = currentItems.indexWhere((item) => item.product.id == product.id);
-
-    if (index >= 0) {
-      if (currentItems[index].quantity > 1) {
-        currentItems[index] = currentItems[index].copyWith(
-          quantity: currentItems[index].quantity - 1,
-        );
-      } else {
-        currentItems.removeAt(index);
-      }
-      state = state.copyWith(cartItems: currentItems);
-      _persistCart();
-    }
+    final currentItems = state.cartItems
+        .where((item) => item.product.id != product.id)
+        .toList();
+    state = state.copyWith(cartItems: currentItems);
+    _persistCart();
   }
 }
 

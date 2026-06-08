@@ -11,6 +11,7 @@ import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/order_cancel_utils.dart';
 import '../../../data/data_source/order_remote_datasource.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/utils/cart_cleanup.dart';
 
 class LiveTrackingScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -93,6 +94,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       try {
         final dataSource = getIt<OrderRemoteDataSource>();
         await dataSource.cancelOrder(widget.orderId, result);
+        await CartCleanup.clearAllCarts(ref);
 
         if (mounted) {
           setState(() => _isCancelling = false);
@@ -143,6 +145,13 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
             ),
           );
         }
+      }
+
+      final wasCancelled =
+          previous?.orderStatus.toLowerCase() == 'cancelled';
+      final isCancelled = next.orderStatus.toLowerCase() == 'cancelled';
+      if (isCancelled && !wasCancelled) {
+        CartCleanup.clearAllCarts(ref);
       }
     });
 

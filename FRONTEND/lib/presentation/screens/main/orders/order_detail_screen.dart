@@ -13,6 +13,7 @@ import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../tracking/live_tracking_screen.dart';
 import '../../../../data/data_source/tracking_remote_datasource.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/cart_cleanup.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -169,6 +170,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         setState(() => _isCancelling = false);
 
         if (success) {
+          await CartCleanup.clearAllCarts(ref);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Order cancelled successfully'),

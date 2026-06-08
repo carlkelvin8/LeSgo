@@ -25,7 +25,7 @@ class AddressMapSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final registerState = ref.watch(registerProvider);
-    final isLoading = registerState.isLoading || registerState.selectedLocation == null;
+    final isLoading = registerState.isLoading;
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
     
     return Padding(
@@ -46,6 +46,48 @@ class AddressMapSection extends ConsumerWidget {
                 onMapTap: onMapTap,
                 isFullscreen: false,
               ),
+              if (isLoading)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                      child: Container(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: ResponsiveUtils.fontSize(context, 80),
+                                height: ResponsiveUtils.fontSize(context, 80),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: MapLoadingIndicator(
+                                    size: ResponsiveUtils.fontSize(context, 48),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: ResponsiveUtils.spacing(context, 16),
+                              ),
+                              const LoadingTextWithDots(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 top: ResponsiveUtils.spacing(context, 16),
                 right: ResponsiveUtils.spacing(context, 16),
@@ -57,46 +99,10 @@ class AddressMapSection extends ConsumerWidget {
               Positioned(
                 bottom: ResponsiveUtils.spacing(context, 16),
                 right: ResponsiveUtils.spacing(context, 16),
-                child: LocationButton(onUseCurrentLocation: onUseCurrentLocation),
-              ),
-              if (isLoading)
-                Positioned.fill(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                    child: Container(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: ResponsiveUtils.fontSize(context, 80),
-                              height: ResponsiveUtils.fontSize(context, 80),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: MapLoadingIndicator(
-                                  size: ResponsiveUtils.fontSize(context, 48),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                            const LoadingTextWithDots(),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                child: LocationButton(
+                  onUseCurrentLocation: onUseCurrentLocation,
                 ),
+              ),
             ],
           ),
         ),

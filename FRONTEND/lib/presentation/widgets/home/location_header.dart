@@ -23,76 +23,91 @@ class LocationHeader extends StatelessWidget {
     final fontSize14 = ResponsiveUtils.fontSize(context, 14);
     final iconSize = ResponsiveUtils.fontSize(context, 24);
     
+    final editIconSize = ResponsiveUtils.fontSize(context, 14);
+
     return Padding(
       padding: EdgeInsets.all(spacing),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: onMenuTap,
-                child: SvgPicture.asset(
-                  'assets/images/homepage/Nav.svg',
-                  width: iconSize,
-                  height: iconSize,
-                ),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              GestureDetector(
-                onTap: onLocationTap,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+          GestureDetector(
+            onTap: onMenuTap,
+            behavior: HitTestBehavior.opaque,
+            child: SvgPicture.asset(
+              'assets/images/homepage/Nav.svg',
+              width: iconSize,
+              height: iconSize,
+            ),
+          ),
+          SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+          Expanded(
+            child: GestureDetector(
+              onTap: onLocationTap,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            SvgPicture.asset(
-                              'assets/images/homepage/Location.svg',
-                              width: ResponsiveUtils.fontSize(context, 14),
-                              height: ResponsiveUtils.fontSize(context, 14),
-                            ),
-                            SizedBox(width: ResponsiveUtils.spacing(context, 4)),
-                            Text(
-                              'Current Location',
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: fontSize12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                        SvgPicture.asset(
+                          'assets/images/homepage/Location.svg',
+                          width: ResponsiveUtils.fontSize(context, 14),
+                          height: ResponsiveUtils.fontSize(context, 14),
                         ),
-                        Row(
-                          children: [
-                            Text(
-                              location,
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: fontSize14,
-                                color: Colors.black87
+                        SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+                        Text(
+                          'Current Location',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: fontSize12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 2)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            location,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: fontSize14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: onLocationTap,
+                          behavior: HitTestBehavior.opaque,
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Center(
+                              child: SvgPicture.asset(
+                                'assets/images/homepage/Edit.svg',
+                                width: editIconSize,
+                                height: editIconSize,
                               ),
                             ),
-                            SizedBox(width: ResponsiveUtils.spacing(context, 4)),
-                            SvgPicture.asset(
-                              'assets/images/homepage/Edit.svg',
-                              width: ResponsiveUtils.fontSize(context, 12),
-                              height: ResponsiveUtils.fontSize(context, 12),
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
+          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
           GestureDetector(
             onTap: onProfileTap,
+            behavior: HitTestBehavior.opaque,
             child: SvgPicture.asset(
               'assets/images/homepage/Profile.svg',
               width: ResponsiveUtils.spacing(context, 32),

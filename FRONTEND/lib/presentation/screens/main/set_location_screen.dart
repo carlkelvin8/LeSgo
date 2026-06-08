@@ -6,6 +6,7 @@ import '../../provider/main/location/location_provider.dart';
 import '../../provider/main/location/controller/location_controller.notifier.dart';
 import '../../provider/main/address/address_provider.dart';
 import '../../provider/auth/auth_provider.dart';
+import '../../provider/main/profile/profile_provider.dart';
 import '../../widgets/widgets.dart';
 
 class SetLocationScreen extends ConsumerStatefulWidget {
@@ -23,8 +24,15 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
   void initState() {
     super.initState();
     _controllers = LocationControllers();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controllers.initialize(ref);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final authState = ref.read(authProvider);
+      final userId = int.tryParse(authState.user?.id ?? '0') ?? 0;
+      ref.read(locationProvider.notifier).reset();
+      if (userId > 0) {
+        await ref.read(addressProvider.notifier).loadAddresses(userId);
+        await ref.read(profileProvider.notifier).loadProfile();
+      }
+      await _controllers.initialize(ref);
     });
   }
 
@@ -111,34 +119,69 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
       print('🔵 SetLocationScreen: - addressLine1: $addressLine1');
       print('🔵 SetLocationScreen: - addressLine2: $addressLine2');
 
-      // Save address to backend
+      var city = '';
+      var region = '';
+      if (cityProvince.isNotEmpty) {
+        final parts = cityProvince.split(',');
+        if (parts.length > 1) {
+          city = parts.first.trim();
+          region = parts.sublist(1).join(',').trim();
+        } else {
+          city = cityProvince.trim();
+        }
+      }
+
+      final profileState = ref.read(profileProvider);
+      final contactPhone = profileState.phone.trim().isNotEmpty
+          ? profileState.phone.trim()
+          : (profileState.user?.phone ?? '').trim();
+
+      final country = AddressNotifier.inferCountry(
+        latitude: location.latitude,
+        longitude: location.longitude,
+        cityProvince: cityProvince,
+      );
+
+      // Update existing default location or create one if needed
       final success = await ref
           .read(addressProvider.notifier)
-          .createAddress(
+          .upsertDefaultLocation(
             userId: userId,
             label: address['landmark']?.toString().isNotEmpty == true
-                ? address['landmark']
+                ? address['landmark'].toString()
                 : 'My Location',
             contactName: authState.user?.name ?? 'User',
-            contactPhone: '', // Phone number not available in User entity
+            contactPhone: contactPhone,
             addressLine1: addressLine1.isNotEmpty
                 ? addressLine1
                 : 'Selected Location',
             addressLine2: addressLine2.isNotEmpty ? addressLine2 : null,
+            city: city.isNotEmpty ? city : null,
+            region: region.isNotEmpty ? region : null,
+            postalCode: zipCode.isNotEmpty ? zipCode : null,
+            country: country,
             latitude: location.latitude,
             longitude: location.longitude,
-            isDefault: address['isDefault'] ?? false,
+            context: context,
           );
 
       if (!mounted) return;
 
       if (success) {
         print('🔵 SetLocationScreen: Address saved successfully');
+        await ref.read(profileProvider.notifier).updateProfile(
+              address1: addressLine1,
+              address2: addressLine2.isNotEmpty ? addressLine2 : null,
+            );
         SnackBarUtils.showSuccess(context, 'Address saved successfully');
         Navigator.of(context).pop(true);
       } else {
-        print('🔴 SetLocationScreen: Failed to save address');
-        SnackBarUtils.showError(context, 'Failed to save address');
+        final error = ref.read(addressProvider).error;
+        print('🔴 SetLocationScreen: Failed to save address - $error');
+        SnackBarUtils.showError(
+          context,
+          error ?? 'Failed to save address',
+        );
       }
     } catch (e) {
       print('🔴 SetLocationScreen: Error saving address - $e');

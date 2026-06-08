@@ -108,12 +108,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       final merged = [...orderTransactions, ...walletTransactions]
         ..sort((a, b) => _parseDate(b.date).compareTo(_parseDate(a.date)));
 
-      state = state.copyWith(
-        transactions: merged,
-        filteredTransactions: merged,
-        isLoading: false,
+      state = _withFiltered(
+        state.copyWith(
+          transactions: merged,
+          isLoading: false,
+        ),
       );
-      _applyFilters();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -182,96 +182,113 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   }
 
   void filterByKind(TransactionKindFilter kind) {
-    state = state.copyWith(
-      selectedKind: kind,
-      clearKind: kind == null,
+    final normalized = kind?.trim().toLowerCase();
+    state = _withFiltered(
+      state.copyWith(
+        selectedKind: normalized,
+        clearKind: normalized == null || normalized.isEmpty,
+      ),
     );
-    _applyFilters();
   }
 
   void filterByService(String? service) {
-    state = state.copyWith(
-      selectedService: service,
-      clearService: service == null,
+    final normalized = service?.trim();
+    state = _withFiltered(
+      state.copyWith(
+        selectedService: normalized,
+        clearService: normalized == null || normalized.isEmpty,
+      ),
     );
-    _applyFilters();
   }
 
   void filterByStatus(String? status) {
-    state = state.copyWith(
-      selectedStatus: status,
-      clearStatus: status == null,
+    final normalized = status?.trim().toLowerCase();
+    state = _withFiltered(
+      state.copyWith(
+        selectedStatus: normalized,
+        clearStatus: normalized == null || normalized.isEmpty,
+      ),
     );
-    _applyFilters();
   }
 
   void filterByPaymentStatus(PaymentStatusFilter status) {
-    state = state.copyWith(
-      selectedPaymentStatus: status,
-      clearPaymentStatus: status == null,
+    final normalized = status?.trim().toLowerCase();
+    state = _withFiltered(
+      state.copyWith(
+        selectedPaymentStatus: normalized,
+        clearPaymentStatus: normalized == null || normalized.isEmpty,
+      ),
     );
-    _applyFilters();
   }
 
   void searchOrders(String query) {
-    state = state.copyWith(searchQuery: query);
-    _applyFilters();
+    state = _withFiltered(state.copyWith(searchQuery: query));
   }
 
   void clearFilters() {
-    state = state.copyWith(
-      clearService: true,
-      clearStatus: true,
-      clearKind: true,
-      clearPaymentStatus: true,
-      searchQuery: '',
+    state = _withFiltered(
+      state.copyWith(
+        clearService: true,
+        clearStatus: true,
+        clearKind: true,
+        clearPaymentStatus: true,
+        searchQuery: '',
+      ),
     );
-    _applyFilters();
   }
 
   void _applyFilters() {
-    var filtered = List<Transaction>.from(state.transactions);
+    state = _withFiltered(state);
+  }
 
-    if (state.selectedKind == 'order') {
-      // Orders only (exclude wallet events)
-      filtered = filtered
-          .where((t) => t.isOrder)
-          .toList();
-    } else if (state.selectedKind == 'wallet') {
-      // Wallet events + orders paid with LesPay wallet
-      filtered = filtered
-          .where((t) =>
-              t.isWallet ||
-              (t.isOrder &&
-                  (t.paymentMethod?.toLowerCase() == 'wallet' ||
-                      t.paymentMethod?.toLowerCase() == 'lespay')))
-          .toList();
+  /// Re-run filters on the current in-memory list (e.g. after screen re-opens).
+  void reapplyFilters() {
+    _applyFilters();
+  }
+
+  TransactionsState _withFiltered(TransactionsState current) {
+    return current.copyWith(
+      filteredTransactions: _computeFiltered(current),
+    );
+  }
+
+  List<Transaction> _computeFiltered(TransactionsState current) {
+    var filtered = List<Transaction>.from(current.transactions);
+    final kind = current.selectedKind?.trim().toLowerCase();
+
+    if (kind == 'order') {
+      filtered = filtered.where((t) => t.isOrder).toList();
+    } else if (kind == 'wallet') {
+      // LesPay tab: wallet ledger only (top-ups, payments, refunds).
+      filtered = filtered.where((t) => t.isWallet).toList();
     }
 
-    if (state.selectedService != null) {
+    final service = current.selectedService?.trim();
+    if (service != null && service.isNotEmpty) {
       filtered =
-          filtered.where((t) => t.serviceName == state.selectedService).toList();
+          filtered.where((t) => t.serviceName == service).toList();
     }
 
-    if (state.selectedStatus != null) {
-      if (state.selectedStatus == 'completed') {
-        filtered = filtered
-            .where((t) => t.status == TransactionStatus.completed)
-            .toList();
-      } else if (state.selectedStatus == 'cancelled') {
-        filtered = filtered
-            .where((t) => t.status == TransactionStatus.cancelled)
-            .toList();
-      } else if (state.selectedStatus == 'pending') {
-        filtered = filtered
-            .where((t) => t.status == TransactionStatus.pending)
-            .toList();
-      }
+    final status = current.selectedStatus?.trim().toLowerCase();
+    if (status == 'completed') {
+      filtered = filtered
+          .where((t) => t.status == TransactionStatus.completed)
+          .toList();
+    } else if (status == 'cancelled') {
+      filtered = filtered
+          .where((t) => t.status == TransactionStatus.cancelled)
+          .toList();
+    } else if (status == 'pending') {
+      filtered = filtered
+          .where((t) => t.status == TransactionStatus.pending)
+          .toList();
     }
 
-    if (state.selectedPaymentStatus != null) {
+    final paymentStatus =
+        current.selectedPaymentStatus?.trim().toLowerCase();
+    if (paymentStatus != null && paymentStatus.isNotEmpty) {
       filtered = filtered.where((t) {
-        switch (state.selectedPaymentStatus) {
+        switch (paymentStatus) {
           case 'paid':
             return t.paymentStatus == PaymentStatus.paid;
           case 'failed':
@@ -286,8 +303,8 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       }).toList();
     }
 
-    if (state.searchQuery.isNotEmpty) {
-      final query = state.searchQuery.toLowerCase();
+    final query = current.searchQuery.trim().toLowerCase();
+    if (query.isNotEmpty) {
       filtered = filtered.where((t) {
         return t.id.toLowerCase().contains(query) ||
             t.date.toLowerCase().contains(query) ||
@@ -300,7 +317,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       }).toList();
     }
 
-    state = state.copyWith(filteredTransactions: filtered);
+    return filtered;
   }
 
   Future<void> reorderTransaction(String orderId) async {

@@ -10,6 +10,10 @@ class RegisterRequestDto {
   final String password;
   @JsonKey(name: 'password_confirmation')
   final String passwordConfirmation;
+  @JsonKey(name: 'date_of_birth')
+  final String? dateOfBirth;
+  @JsonKey(name: 'referral_code')
+  final String? referralCode;
   @JsonKey(name: 'address_line_1')
   final String? addressLine1;
   @JsonKey(name: 'address_line_2')
@@ -24,6 +28,7 @@ class RegisterRequestDto {
   final bool termsAccepted;
   @JsonKey(name: 'privacy_accepted')
   final bool privacyAccepted;
+  final String? role;
 
   const RegisterRequestDto({
     required this.name,
@@ -31,6 +36,8 @@ class RegisterRequestDto {
     required this.phone,
     required this.password,
     required this.passwordConfirmation,
+    this.dateOfBirth,
+    this.referralCode,
     this.addressLine1,
     this.addressLine2,
     this.city,
@@ -40,6 +47,7 @@ class RegisterRequestDto {
     this.longitude,
     required this.termsAccepted,
     required this.privacyAccepted,
+    this.role,
   });
 
   factory RegisterRequestDto.fromJson(Map<String, dynamic> json) =>

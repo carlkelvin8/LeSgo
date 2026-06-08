@@ -13,6 +13,8 @@ RegisterRequestDto _$RegisterRequestDtoFromJson(Map<String, dynamic> json) =>
       phone: json['phone'] as String,
       password: json['password'] as String,
       passwordConfirmation: json['password_confirmation'] as String,
+      dateOfBirth: json['date_of_birth'] as String?,
+      referralCode: json['referral_code'] as String?,
       addressLine1: json['address_line_1'] as String?,
       addressLine2: json['address_line_2'] as String?,
       city: json['city'] as String?,
@@ -22,6 +24,7 @@ RegisterRequestDto _$RegisterRequestDtoFromJson(Map<String, dynamic> json) =>
       longitude: (json['longitude'] as num?)?.toDouble(),
       termsAccepted: json['terms_accepted'] as bool,
       privacyAccepted: json['privacy_accepted'] as bool,
+      role: json['role'] as String?,
     );
 
 Map<String, dynamic> _$RegisterRequestDtoToJson(RegisterRequestDto instance) =>
@@ -31,6 +34,8 @@ Map<String, dynamic> _$RegisterRequestDtoToJson(RegisterRequestDto instance) =>
       'phone': instance.phone,
       'password': instance.password,
       'password_confirmation': instance.passwordConfirmation,
+      'date_of_birth': instance.dateOfBirth,
+      'referral_code': instance.referralCode,
       'address_line_1': instance.addressLine1,
       'address_line_2': instance.addressLine2,
       'city': instance.city,
@@ -40,4 +45,5 @@ Map<String, dynamic> _$RegisterRequestDtoToJson(RegisterRequestDto instance) =>
       'longitude': instance.longitude,
       'terms_accepted': instance.termsAccepted,
       'privacy_accepted': instance.privacyAccepted,
+      'role': instance.role,
     };

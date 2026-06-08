@@ -16,6 +16,7 @@ import '../../../../provider/chat/chat_provider.dart';
 import '../../../../widgets/tracking/order_status_timeline.dart';
 import '../../../../widgets/tracking/driver_info_card.dart';
 import '../../../../widgets/orders/cancel_order_dialog.dart';
+import '../../../../../core/utils/cart_cleanup.dart';
 import '../../../../widgets/chat/order_chat_widget.dart';
 import '../../../../widgets/chat/chat_button_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -176,6 +177,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
       try {
         final dataSource = getIt<OrderRemoteDataSource>();
         await dataSource.cancelOrder(int.parse(widget.orderId), result);
+        await CartCleanup.clearAllCarts(ref);
 
         if (mounted) {
           setState(() => _isCancelling = false);
@@ -253,6 +255,12 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
       (previous, next) {
         if (previous?.orderStatus != next.orderStatus && mounted) {
           _fetchCurrentOrderData();
+        }
+        final wasCancelled =
+            previous?.orderStatus.toLowerCase() == 'cancelled';
+        final isCancelled = next.orderStatus.toLowerCase() == 'cancelled';
+        if (isCancelled && !wasCancelled) {
+          CartCleanup.clearAllCarts(ref);
         }
         if (next.markers.isNotEmpty && _mapReady && previous?.markers != next.markers) {
           _fitBounds();

@@ -51,8 +51,18 @@ class _HomeHeaderSectionState extends ConsumerState<HomeHeaderSection> {
       onMenuTap: () {
         Scaffold.of(context).openDrawer();
       },
-      onLocationTap: () {
-        AppRouter.push(context, MainRoutes.setLocation);
+      onLocationTap: () async {
+        final updated = await AppRouter.push(
+          context,
+          MainRoutes.setLocation,
+        );
+        if (updated == true && mounted) {
+          final authState = ref.read(authProvider);
+          final userId = int.tryParse(authState.user?.id ?? '0') ?? 0;
+          if (userId > 0) {
+            await ref.read(addressProvider.notifier).loadAddresses(userId);
+          }
+        }
       },
       onProfileTap: () {
         AppRouter.push(context, MainRoutes.profile);

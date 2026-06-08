@@ -36,14 +36,23 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final storeState = ref.read(storeDetailProvider);
-      ref.read(lesbuyCheckoutProvider.notifier).initialize(
-            storePartnerId: storeState.partnerStoreId,
-          );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userId = ref.read(profileProvider).user?.id;
       if (userId != null) {
-        ref.read(addressProvider.notifier).loadAddresses(userId);
+        await ref.read(addressProvider.notifier).loadAddresses(userId);
+      }
+      if (!mounted) return;
+
+      final storeState = ref.read(storeDetailProvider);
+      final deliveryAddr = ref.read(addressProvider).deliveryAddress;
+      await ref.read(lesbuyCheckoutProvider.notifier).initialize(
+            storePartnerId: storeState.partnerStoreId,
+          );
+      if (deliveryAddr != null) {
+        await ref.read(lesbuyCheckoutProvider.notifier).refreshDeliveryFee(
+              dropoffLat: deliveryAddr.latitude,
+              dropoffLng: deliveryAddr.longitude,
+            );
       }
     });
   }
@@ -146,8 +155,8 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
       contactPhone = _selectedAddress!.contactPhone?.isNotEmpty == true
           ? _selectedAddress!.contactPhone!
           : (profileState.user?.phone ?? '+639123456789');
-    } else if (addressState.defaultAddress != null) {
-      final addr = addressState.defaultAddress!;
+    } else if (addressState.deliveryAddress != null) {
+      final addr = addressState.deliveryAddress!;
       userAddress = addr.addressLine1;
       dropoffLat = addr.latitude;
       dropoffLng = addr.longitude;
@@ -271,9 +280,8 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                           );
                         },
                         onRemove: (index) {
-                          storeNotifier.updateCartItemQuantity(
+                          storeNotifier.removeFromCart(
                             storeState.cartItems[index].product,
-                            0,
                           );
                         },
                         onAddMoreItems: () => Navigator.pop(context),
@@ -474,7 +482,8 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       );
                       if (!paid) return;
 
-                      storeNotifier.clearCart();
+                      await storeNotifier.clearCart();
+                      ref.read(manualOrderProvider.notifier).clearAll();
 
                       if (context.mounted) {
                         final orderId = response.data.id.toString();

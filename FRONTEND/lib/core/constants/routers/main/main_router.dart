@@ -69,6 +69,13 @@ class MainRouter {
         settings: settings,
       );
     }
+    if (settings.name == MainRoutes.setLocation) {
+      return MaterialPageRoute<bool>(
+        builder: (_) => const SetLocationScreen(),
+        settings: settings,
+      );
+    }
+
     final builder = _routes[settings.name];
     if (builder != null) {
       return MaterialPageRoute(builder: builder, settings: settings);

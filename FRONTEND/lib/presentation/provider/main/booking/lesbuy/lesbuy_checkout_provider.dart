@@ -99,10 +99,10 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
 
     if (dropoffLat == null || dropoffLng == null) {
       final addressState = _ref.read(addressProvider);
-      final defaultAddr = addressState.defaultAddress;
-      if (defaultAddr != null) {
-        lat = defaultAddr.latitude;
-        lng = defaultAddr.longitude;
+      final deliveryAddr = addressState.deliveryAddress;
+      if (deliveryAddr != null) {
+        lat = deliveryAddr.latitude;
+        lng = deliveryAddr.longitude;
       }
     }
 

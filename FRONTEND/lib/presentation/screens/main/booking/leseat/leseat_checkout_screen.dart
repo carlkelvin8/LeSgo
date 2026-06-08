@@ -6,6 +6,7 @@ import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../data/data_source/dto/address/address_dto.dart';
 import '../../../../../domain/entities/booking/leseat/order.dart';
 import '../../../../../domain/entities/booking/leseat/order_item.dart';
+import '../../../../provider/auth/auth_provider.dart';
 import '../../../../provider/main/booking/checkout_provider.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
@@ -23,6 +24,32 @@ class LeseatCheckoutScreen extends ConsumerStatefulWidget {
 
 class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
   AddressDto? _selectedAddress;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncDeliveryAddress());
+  }
+
+  Future<void> _syncDeliveryAddress() async {
+    final authState = ref.read(authProvider);
+    final userId = int.tryParse(authState.user?.id ?? '0') ?? 0;
+    if (userId > 0) {
+      await ref.read(addressProvider.notifier).loadAddresses(userId);
+    }
+
+    final deliveryAddr = ref.read(addressProvider).deliveryAddress;
+    if (deliveryAddr == null || !mounted) return;
+
+    setState(() => _selectedAddress = deliveryAddr);
+    ref.read(checkoutProvider.notifier).updateDeliveryAddress(
+          deliveryAddr.addressLine1,
+          deliveryAddr.latitude,
+          deliveryAddr.longitude,
+          deliveryAddr.contactName ?? '',
+          deliveryAddr.contactPhone ?? '',
+        );
+  }
 
   void _showAddressSelector(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(

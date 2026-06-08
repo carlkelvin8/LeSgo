@@ -161,6 +161,18 @@ class _ManualOrderItemRow extends StatelessWidget {
             ),
           ),
 
+          IconButton(
+            tooltip: 'Remove item',
+            icon: Icon(
+              Icons.delete_outline,
+              size: ResponsiveUtils.fontSize(context, 18),
+              color: Colors.red.shade400,
+            ),
+            onPressed: onRemove,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+
           // Quantity controls
           Container(
             decoration: BoxDecoration(

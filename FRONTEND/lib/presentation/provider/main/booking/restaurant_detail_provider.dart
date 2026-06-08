@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../domain/entities/booking/leseat/menu_item.dart';
 import '../../../../domain/entities/booking/leseat/food_category.dart';
@@ -91,12 +93,16 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
   final PartnerRemoteDataSource _partnerDataSource =
       getIt<PartnerRemoteDataSource>();
 
+  int _cartEpoch = 0;
+
   RestaurantDetailNotifier() : super(RestaurantDetailState()) {
     _restoreCachedCart();
   }
 
   Future<void> _restoreCachedCart() async {
+    final epoch = _cartEpoch;
     final cached = await LeseatCartCache.load();
+    if (epoch != _cartEpoch) return;
     if (cached == null || cached.items.isEmpty) return;
 
     state = state.copyWith(
@@ -107,11 +113,31 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
   }
 
   void _persistCart() {
-    LeseatCartCache.save(
-      restaurantId: state.activeRestaurantId,
-      restaurantName: state.activeRestaurantName,
-      items: state.cartItems,
+    unawaited(_persistCartAsync());
+  }
+
+  Future<void> _persistCartAsync() async {
+    final epoch = _cartEpoch;
+    final items = List<OrderItem>.from(state.cartItems);
+    final restaurantId = state.activeRestaurantId;
+    final restaurantName = state.activeRestaurantName;
+
+    if (items.isEmpty ||
+        restaurantId == null ||
+        restaurantId.isEmpty) {
+      await LeseatCartCache.clear();
+      return;
+    }
+
+    await LeseatCartCache.save(
+      restaurantId: restaurantId,
+      restaurantName: restaurantName,
+      items: items,
     );
+
+    if (epoch != _cartEpoch) {
+      await LeseatCartCache.clear();
+    }
   }
 
   Future<void> loadRestaurantDetails(
@@ -119,8 +145,11 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     List<String> restaurantCategories, {
     String? restaurantName,
   }) async {
+    final epoch = _cartEpoch;
     final cached = await LeseatCartCache.load();
-    final restoredCart = cached != null && cached.restaurantId == restaurantId
+    final restoredCart = epoch == _cartEpoch &&
+            cached != null &&
+            cached.restaurantId == restaurantId
         ? cached.items
         : const <OrderItem>[];
 
@@ -284,9 +313,10 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     _persistCart();
   }
 
-  void clearCart() {
+  Future<void> clearCart() async {
+    _cartEpoch++;
     state = state.copyWith(cartItems: []);
-    LeseatCartCache.clear();
+    await LeseatCartCache.clear();
   }
 }
 

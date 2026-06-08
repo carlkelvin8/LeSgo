@@ -32,8 +32,6 @@ import '../address/address_provider.dart';
 
 import '../lespay/lespay_provider.dart';
 
-
-
 class CheckoutState {
 
   final Order? order;
@@ -184,9 +182,14 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
 
-  /// Initialize order from cart data
+  /// Initialize order from cart data using the latest saved delivery address.
 
-  void initializeFromCart(String restaurantName) {
+  Future<void> initializeFromCart(String restaurantName) async {
+    final profileState = ref.read(profileProvider);
+    final userId = profileState.user?.id ?? 0;
+    if (userId > 0) {
+      await ref.read(addressProvider.notifier).loadAddresses(userId);
+    }
 
     final restaurantState = ref.read(restaurantDetailProvider);
 
@@ -199,8 +202,6 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
           : item;
 
     }).toList();
-
-    final profileState = ref.read(profileProvider);
 
     final addressState = ref.read(addressProvider);
 
@@ -220,15 +221,15 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
 
-    final defaultAddr = addressState.defaultAddress;
+    final deliveryAddr = addressState.deliveryAddress;
 
-    if (defaultAddr != null) {
+    if (deliveryAddr != null) {
 
-      dropoffLat = defaultAddr.latitude;
+      dropoffLat = deliveryAddr.latitude;
 
-      dropoffLng = defaultAddr.longitude;
+      dropoffLng = deliveryAddr.longitude;
 
-      deliveryAddress = defaultAddr.addressLine1;
+      deliveryAddress = deliveryAddr.addressLine1;
 
     }
 
@@ -373,87 +374,61 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
   void updateItemQuantity(String itemId, int quantity) {
-
     if (state.order == null) return;
 
+    if (quantity <= 0) {
+      removeItem(itemId);
+      return;
+    }
 
+    ref.read(restaurantDetailProvider.notifier).updateCartItemQuantity(
+          itemId,
+          quantity,
+        );
 
     final updatedItems = state.order!.items.map((item) {
-
       if (item.id == itemId) {
-
         return item.copyWith(quantity: quantity);
-
       }
-
       return item;
-
     }).toList();
 
-
-
     final subtotal = updatedItems.fold<double>(
-
       0,
-
       (sum, item) => sum + item.total,
-
     );
-
-
 
     final updatedOrder = state.order!.copyWith(
-
       items: updatedItems,
-
       subtotal: subtotal,
-
     );
 
-
-
     state = state.copyWith(order: updatedOrder);
-
   }
 
-
-
   void removeItem(String itemId) {
-
     if (state.order == null) return;
 
+    ref.read(restaurantDetailProvider.notifier).removeFromCart(itemId);
 
-
-    final updatedItems = state.order!.items
-
-        .where((item) => item.id != itemId)
-
-        .toList();
-
-
+    final updatedItems =
+        state.order!.items.where((item) => item.id != itemId).toList();
 
     final subtotal = updatedItems.fold<double>(
-
       0,
-
       (sum, item) => sum + item.total,
-
     );
-
-
 
     final updatedOrder = state.order!.copyWith(
-
       items: updatedItems,
-
       subtotal: subtotal,
-
     );
 
-
-
     state = state.copyWith(order: updatedOrder);
+  }
 
+  void resetCheckout() {
+    state = CheckoutState();
   }
 
 
@@ -844,15 +819,12 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         return false;
       }
 
+      await ref.read(restaurantDetailProvider.notifier).clearCart();
+
       state = state.copyWith(
-
         isLoading: false,
-
         createdOrderId: response.data.id,
-
       );
-
-
 
       return true;
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -14,6 +16,7 @@ import '../../../widgets/chat/chat_button_widget.dart';
 import '../../../provider/tracking/live_tracking_provider.dart';
 import '../../../widgets/tracking/driver_info_card.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/utils/cart_cleanup.dart';
 
 class SimpleOrderTrackingScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -76,6 +79,9 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     });
 
     if (previousStatus != null && previousStatus != newStatus) {
+      if (newStatus.toLowerCase() == 'cancelled') {
+        unawaited(CartCleanup.clearAllCarts(ref));
+      }
       _showStatusChangeNotification(previousStatus, newStatus);
     }
   }

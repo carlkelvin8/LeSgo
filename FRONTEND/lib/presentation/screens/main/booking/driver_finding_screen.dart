@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/order_contact_actions.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/cart_cleanup.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../widgets/widgets.dart';
@@ -55,6 +56,14 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
             _navigateToTracking();
           }
         });
+      }
+
+      final wasCancelled =
+          previous?.error?.toLowerCase().contains('cancelled') == true;
+      final isCancelled =
+          next.error?.toLowerCase().contains('cancelled') == true;
+      if (isCancelled && !wasCancelled) {
+        CartCleanup.clearAllCarts(ref);
       }
     });
 
@@ -364,6 +373,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     if (!mounted) return;
 
     if (success) {
+      await CartCleanup.clearAllCarts(ref);
       Navigator.pop(context);
       return;
     }

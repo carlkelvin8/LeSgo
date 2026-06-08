@@ -150,7 +150,7 @@ class AddressControllers {
     if (!context.mounted) return false;
 
     if (success) {
-      SnackBarUtils.showSuccess(context, 'Address saved successfully!');
+      SnackBarUtils.showSuccess(context, 'Address confirmed');
     } else {
       final error = ref.read(registerProvider).error;
       if (error != null) {

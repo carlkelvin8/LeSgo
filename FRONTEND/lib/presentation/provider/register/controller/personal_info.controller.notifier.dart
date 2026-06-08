@@ -8,6 +8,7 @@ class PersonalInfoControllers {
   final TextEditingController lastNameController;
   final TextEditingController birthdayController;
   final TextEditingController emailController;
+  final TextEditingController phoneController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
   final TextEditingController referralCodeController;
@@ -18,6 +19,7 @@ class PersonalInfoControllers {
         lastNameController = TextEditingController(),
         birthdayController = TextEditingController(),
         emailController = TextEditingController(),
+        phoneController = TextEditingController(text: '+63 '),
         passwordController = TextEditingController(),
         confirmPasswordController = TextEditingController(),
         referralCodeController = TextEditingController();
@@ -30,6 +32,7 @@ class PersonalInfoControllers {
         lastName: lastNameController.text.trim(),
         birthday: birthdayController.text.trim(),
         email: emailController.text.trim(),
+        phoneNumber: phoneController.text.trim(),
         password: passwordController.text.trim(),
         confirmPassword: confirmPasswordController.text.trim(),
         referralCode: referralCodeController.text.trim(),
@@ -44,6 +47,7 @@ class PersonalInfoControllers {
     lastNameController.dispose();
     birthdayController.dispose();
     emailController.dispose();
+    phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     referralCodeController.dispose();

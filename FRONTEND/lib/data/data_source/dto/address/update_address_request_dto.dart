@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'update_address_request_dto.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class UpdateAddressRequestDto {
   final String? label;
   @JsonKey(name: 'contact_name')
@@ -13,6 +13,10 @@ class UpdateAddressRequestDto {
   final String? addressLine1;
   @JsonKey(name: 'address_line2')
   final String? addressLine2;
+  final String? city;
+  final String? region;
+  @JsonKey(name: 'postal_code')
+  final String? postalCode;
   final String? country;
   final double? latitude;
   final double? longitude;
@@ -25,6 +29,9 @@ class UpdateAddressRequestDto {
     this.contactPhone,
     this.addressLine1,
     this.addressLine2,
+    this.city,
+    this.region,
+    this.postalCode,
     this.country,
     this.latitude,
     this.longitude,

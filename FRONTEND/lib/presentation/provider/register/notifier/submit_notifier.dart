@@ -7,12 +7,14 @@ import '../../../../domain/entities/user.dart';
 import 'register_state.dart';
 
 mixin SubmitNotifier on StateNotifier<RegisterState> {
- 
-  Future<void> submitRegistration() async {
-    state = state.copyWith(isLoading: true, error: null);
+  Future<bool> submitRegistration() async {
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      registeredUser: null,
+    );
 
     try {
-      // Validate required fields
       if (state.data.firstName.isEmpty ||
           state.data.lastName.isEmpty ||
           state.data.birthday.isEmpty ||
@@ -23,15 +25,19 @@ mixin SubmitNotifier on StateNotifier<RegisterState> {
         throw Exception('Please complete all required fields');
       }
 
-      // Create registration request
+      final referralCode = state.data.referralCode.trim();
+
       final registerRequest = RegisterRequestDto(
         name: '${state.data.firstName} ${state.data.lastName}',
         email: state.data.email,
         phone: state.data.phoneNumber,
         password: state.data.password,
         passwordConfirmation: state.data.confirmPassword,
-        addressLine1: state.data.address != null 
-            ? '${state.data.address!.houseNumber} ${state.data.address!.streetName}'.trim()
+        dateOfBirth: state.data.birthday,
+        referralCode: referralCode.isEmpty ? null : referralCode,
+        addressLine1: state.data.address != null
+            ? '${state.data.address!.houseNumber} ${state.data.address!.streetName}'
+                .trim()
             : null,
         addressLine2: state.data.address?.subdivision,
         city: state.data.address?.city,
@@ -40,12 +46,20 @@ mixin SubmitNotifier on StateNotifier<RegisterState> {
         latitude: state.data.address?.latitude,
         longitude: state.data.address?.longitude,
         termsAccepted: state.data.termsAccepted,
-        privacyAccepted: state.data.termsAccepted, // Using same value for now
+        privacyAccepted: state.data.termsAccepted,
+        role: 'customer',
       );
 
-      // Call registration API
       final authDataSource = getIt<AuthRemoteDataSource>();
       final response = await authDataSource.register(registerRequest);
+
+      if (!response.success) {
+        throw Exception(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Registration failed. Please try again.',
+        );
+      }
 
       final localStorage = getIt<LocalStorageService>();
       if (response.token != null && response.token!.isNotEmpty) {
@@ -55,23 +69,27 @@ mixin SubmitNotifier on StateNotifier<RegisterState> {
         await localStorage.saveRefreshToken(response.refreshToken!);
       }
 
-      // Create user from response
       final user = User(
         id: response.user?.id ?? '',
         email: response.user?.email ?? state.data.email,
-        name: response.user?.name ?? '${state.data.firstName} ${state.data.lastName}',
+        name: response.user?.name ??
+            '${state.data.firstName} ${state.data.lastName}',
         token: response.token ?? '',
       );
 
       state = state.copyWith(
         registeredUser: user,
         isLoading: false,
+        error: null,
       );
+      return true;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
+        registeredUser: null,
       );
+      return false;
     }
   }
 

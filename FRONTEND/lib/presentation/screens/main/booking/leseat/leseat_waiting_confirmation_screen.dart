@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,6 +11,7 @@ import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../core/services/order_polling_service.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../widgets/orders/cancel_order_dialog.dart';
+import '../../../../../core/utils/cart_cleanup.dart';
 
 class LeseatWaitingConfirmationScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -48,13 +51,19 @@ class _LeseatWaitingConfirmationScreenState
     super.dispose();
   }
 
+  Future<void> _clearCartAndExit(String message) async {
+    await CartCleanup.clearAllCarts(ref);
+    if (!mounted) return;
+    SnackBarUtils.showError(context, message);
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
   void _handleOrderPoll(OrderPollUpdate update) {
     if (!mounted || _isCancelling) return;
 
     final status = update.status.toLowerCase();
     if (status == 'cancelled') {
-      SnackBarUtils.showError(context, 'This order was cancelled.');
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      unawaited(_clearCartAndExit('This order was cancelled.'));
       return;
     }
 
@@ -86,6 +95,7 @@ class _LeseatWaitingConfirmationScreenState
               widget.orderId,
               reason,
             );
+            await CartCleanup.clearAllCarts(ref);
             if (!mounted) return;
             Navigator.of(dialogContext).pop();
             SnackBarUtils.showSuccess(context, 'Order cancelled.');

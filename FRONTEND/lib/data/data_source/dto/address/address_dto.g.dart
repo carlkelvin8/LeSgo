@@ -14,10 +14,10 @@ AddressDto _$AddressDtoFromJson(Map<String, dynamic> json) => AddressDto(
   contactPhone: json['contact_phone'] as String?,
   addressLine1: json['address_line1'] as String,
   addressLine2: json['address_line2'] as String?,
-  country: json['country'] as String,
+  country: json['country'] as String? ?? 'Philippines',
   latitude: (json['latitude'] as num).toDouble(),
   longitude: (json['longitude'] as num).toDouble(),
-  isDefault: json['is_default'] as bool,
+  isDefault: json['is_default'] == true || json['is_default'] == 1,
   createdAt: json['created_at'] as String,
   updatedAt: json['updated_at'] as String,
 );

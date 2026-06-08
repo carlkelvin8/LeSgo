@@ -6,6 +6,7 @@ import '../../../widgets/common/common_widgets.dart';
 import '../../../provider/register/controller/personal_info.controller.notifier.dart';
 import '../../../../core/utils/validators/register_validator.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/validators/otp_validator.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/constants/routers/register/register_routes.dart';
 import '../../../../core/constants/routers/app_router.dart';
@@ -34,7 +35,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
 
   void _handleNext() {
     if (_controllers.validateAndSave(ref)) {
-      AppRouter.push(context, RegisterRoutes.verification);
+      AppRouter.push(context, RegisterRoutes.address);
     }
   }
 
@@ -139,6 +140,22 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               keyboardType: TextInputType.emailAddress,
                               prefixIcon: Icon(
                                 Icons.email_outlined,
+                                color: Colors.grey[600],
+                              ),
+                              required: true,
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 16),
+                            ),
+
+                            ValidatedTextField(
+                              label: 'Phone Number',
+                              hint: '+63 XXX XXX XXXX',
+                              controller: _controllers.phoneController,
+                              validator: OtpValidator.phoneNumber,
+                              keyboardType: TextInputType.phone,
+                              prefixIcon: Icon(
+                                Icons.phone_outlined,
                                 color: Colors.grey[600],
                               ),
                               required: true,

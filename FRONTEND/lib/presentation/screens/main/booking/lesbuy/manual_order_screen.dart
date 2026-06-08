@@ -31,11 +31,22 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(lesbuyCheckoutProvider.notifier).initialize(storePartnerId: null);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userId = ref.read(profileProvider).user?.id;
       if (userId != null) {
-        ref.read(addressProvider.notifier).loadAddresses(userId);
+        await ref.read(addressProvider.notifier).loadAddresses(userId);
+      }
+      if (!mounted) return;
+
+      final deliveryAddr = ref.read(addressProvider).deliveryAddress;
+      await ref.read(lesbuyCheckoutProvider.notifier).initialize(
+            storePartnerId: null,
+          );
+      if (deliveryAddr != null) {
+        await ref.read(lesbuyCheckoutProvider.notifier).refreshDeliveryFee(
+              dropoffLat: deliveryAddr.latitude,
+              dropoffLng: deliveryAddr.longitude,
+            );
       }
     });
   }
@@ -57,11 +68,11 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
               ? profileState.address1
               : 'Brgy 6, Claveria, Cagayan');
 
-      final defaultAddr = addressState.defaultAddress;
-      if (defaultAddr != null) {
-        dropoffLat = defaultAddr.latitude;
-        dropoffLng = defaultAddr.longitude;
-        dropoffAddress = defaultAddr.addressLine1;
+      final deliveryAddr = addressState.deliveryAddress;
+      if (deliveryAddr != null) {
+        dropoffLat = deliveryAddr.latitude;
+        dropoffLng = deliveryAddr.longitude;
+        dropoffAddress = deliveryAddr.addressLine1;
       }
 
       await ref.read(lesbuyCheckoutProvider.notifier).refreshDeliveryFee(

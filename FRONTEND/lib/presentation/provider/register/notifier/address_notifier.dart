@@ -345,8 +345,6 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      await Future.delayed(const Duration(seconds: 1));
-
       final address = state.data.address;
       if (address == null || !address.isComplete) {
         throw Exception('Please complete all required address fields');

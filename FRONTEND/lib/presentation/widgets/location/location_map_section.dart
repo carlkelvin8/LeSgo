@@ -49,6 +49,48 @@ class LocationMapSection extends ConsumerWidget {
                 isFullscreen: false,
                 showPickupDestination: showPickupDestination,
               ),
+              if (isLoading)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                      child: Container(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: ResponsiveUtils.fontSize(context, 80),
+                                height: ResponsiveUtils.fontSize(context, 80),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: MapLoadingIndicator(
+                                    size: ResponsiveUtils.fontSize(context, 48),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: ResponsiveUtils.spacing(context, 16),
+                              ),
+                              const LoadingTextWithDots(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 top: ResponsiveUtils.spacing(context, 16),
                 right: ResponsiveUtils.spacing(context, 16),
@@ -60,46 +102,10 @@ class LocationMapSection extends ConsumerWidget {
               Positioned(
                 bottom: ResponsiveUtils.spacing(context, 16),
                 right: ResponsiveUtils.spacing(context, 16),
-                child: LocationButton(onUseCurrentLocation: onUseCurrentLocation),
-              ),
-              if (isLoading)
-                Positioned.fill(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                    child: Container(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: ResponsiveUtils.fontSize(context, 80),
-                              height: ResponsiveUtils.fontSize(context, 80),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: MapLoadingIndicator(
-                                  size: ResponsiveUtils.fontSize(context, 48),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                            const LoadingTextWithDots(),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                child: LocationButton(
+                  onUseCurrentLocation: onUseCurrentLocation,
                 ),
+              ),
             ],
           ),
         ),

@@ -2,6 +2,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../domain/entities/auth/register/register_request.dart';
 import '../../../../domain/entities/user.dart';
 
+const _unset = Object();
+
 class RegisterState {
   final RegisterRequest data;
   final bool isLoading;
@@ -28,8 +30,8 @@ class RegisterState {
   RegisterState copyWith({
     RegisterRequest? data,
     bool? isLoading,
-    String? error,
-    User? registeredUser,
+    Object? error = _unset,
+    Object? registeredUser = _unset,
     LatLng? currentLocation,
     LatLng? selectedLocation,
     String? locationName,
@@ -39,8 +41,10 @@ class RegisterState {
     return RegisterState(
       data: data ?? this.data,
       isLoading: isLoading ?? this.isLoading,
-      error: error,
-      registeredUser: registeredUser ?? this.registeredUser,
+      error: identical(error, _unset) ? this.error : error as String?,
+      registeredUser: identical(registeredUser, _unset)
+          ? this.registeredUser
+          : registeredUser as User?,
       currentLocation: currentLocation ?? this.currentLocation,
       selectedLocation: selectedLocation ?? this.selectedLocation,
       locationName: locationName ?? this.locationName,

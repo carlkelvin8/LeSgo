@@ -93,48 +93,65 @@ class StoreCartItemCard extends StatelessWidget {
             ),
           ),
 
-          // Quantity Controls
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove, size: 16),
-                  onPressed: () {
-                    if (item.quantity > 1) {
-                      onQuantityChanged(item.quantity - 1);
-                    } else {
-                      onRemove();
-                    }
-                  },
-                  padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
-                  constraints: const BoxConstraints(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              IconButton(
+                tooltip: 'Remove item',
+                icon: Icon(
+                  Icons.delete_outline,
+                  size: ResponsiveUtils.fontSize(context, 18),
+                  color: Colors.red.shade400,
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveUtils.spacing(context, 8),
-                  ),
-                  child: Text(
-                    '${item.quantity}',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 14),
-                      fontWeight: FontWeight.w600,
+                onPressed: onRemove,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove, size: 16),
+                      onPressed: () {
+                        if (item.quantity > 1) {
+                          onQuantityChanged(item.quantity - 1);
+                        } else {
+                          onRemove();
+                        }
+                      },
+                      padding:
+                          EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
+                      constraints: const BoxConstraints(),
                     ),
-                  ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.spacing(context, 8),
+                      ),
+                      child: Text(
+                        '${item.quantity}',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 14),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add, size: 16),
+                      onPressed: () => onQuantityChanged(item.quantity + 1),
+                      padding:
+                          EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add, size: 16),
-                  onPressed: () => onQuantityChanged(item.quantity + 1),
-                  padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

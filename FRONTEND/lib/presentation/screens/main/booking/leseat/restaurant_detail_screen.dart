@@ -267,11 +267,11 @@ class _RestaurantDetailScreenState
           ? RestaurantCartBar(
               itemCount: detailState.cartItemCount,
               total: detailState.cartTotal,
-              onViewCart: () {
-                // Initialize checkout with cart data
-                ref
+              onViewCart: () async {
+                await ref
                     .read(checkoutProvider.notifier)
                     .initializeFromCart(widget.restaurant.name);
+                if (!context.mounted) return;
                 AppRouter.push(context, BookingRoutes.leseatCheckout);
               },
             )

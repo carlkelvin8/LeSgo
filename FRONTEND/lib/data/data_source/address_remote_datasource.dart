@@ -103,16 +103,28 @@ class AddressRemoteDataSource {
   ) async {
     final dio = _dioClient.dio;
     try {
+      print('🔵 AddressRemoteDataSource: Updating address $id...');
+      print('🔵 AddressRemoteDataSource: Request data: ${request.toJson()}');
+
       final response = await dio.patch(
         '/v1/addresses/$id',
         data: request.toJson(),
       );
+
+      print('🔵 AddressRemoteDataSource: Update status: ${response.statusCode}');
+      print('🔵 AddressRemoteDataSource: Update data: ${response.data}');
+
       return AddressResponseDto.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
+      print('🔴 AddressRemoteDataSource: Update DioException - ${e.message}');
+      print('🔴 AddressRemoteDataSource: Update response: ${e.response?.data}');
+      print('🔴 AddressRemoteDataSource: Update status: ${e.response?.statusCode}');
+
       if (e.response != null && e.response?.data != null) {
         if (e.response?.data is Map<String, dynamic>) {
-          return AddressResponseDto.fromJson(
+          return _addressResponseFromApiMap(
             e.response?.data as Map<String, dynamic>,
+            fallbackMessage: e.message,
           );
         }
       }
@@ -120,7 +132,23 @@ class AddressRemoteDataSource {
         e.message ?? 'An unexpected network error occurred',
       );
     } catch (e) {
+      print('🔴 AddressRemoteDataSource: Update exception - $e');
       return AddressResponseDto.withError(e.toString());
+    }
+  }
+
+  AddressResponseDto _addressResponseFromApiMap(
+    Map<String, dynamic> json, {
+    String? fallbackMessage,
+  }) {
+    try {
+      return AddressResponseDto.fromJson(json);
+    } catch (_) {
+      final message = json['message']?.toString() ??
+          json['error']?.toString() ??
+          fallbackMessage ??
+          'Failed to save address';
+      return AddressResponseDto.withError(message);
     }
   }
 

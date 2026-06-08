@@ -88,7 +88,15 @@ class LocationNotifier extends StateNotifier<LocationState> {
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 15),
         ),
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw Exception(
+            'Location request timed out. Tap the button again or pick a spot on the map.',
+          );
+        },
       );
 
       final location = LatLng(position.latitude, position.longitude);

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../presentation/screens/auth/register_screen.dart';
 import '../../../../presentation/screens/auth/steps/terms_of_service_screen.dart';
 import '../../../../presentation/screens/auth/steps/personal_info_screen.dart';
-import '../../../../presentation/screens/auth/steps/verification_screen.dart';
-import '../../../../presentation/screens/auth/steps/otp_verification_screen.dart';
 import '../../../../presentation/screens/auth/steps/address_screen.dart';
 import '../../../../presentation/screens/auth/steps/success_screen.dart';
 import 'register_routes.dart';
@@ -14,8 +12,8 @@ class RegisterRouter {
     RegisterRoutes.register: (_) => const RegisterScreen(),
     RegisterRoutes.termsOfService: (_) => const TermsOfServiceScreen(),
     RegisterRoutes.personalInfo: (_) => const PersonalInfoScreen(),
-    RegisterRoutes.verification: (_) => const VerificationScreen(),
-    RegisterRoutes.otpVerification: (_) => const OtpVerificationScreen(),
+    RegisterRoutes.verification: (_) => const AddressScreen(),
+    RegisterRoutes.otpVerification: (_) => const AddressScreen(),
     RegisterRoutes.address: (_) => const AddressScreen(),
     RegisterRoutes.success: (_) => const CongratulationsScreen(),
   };

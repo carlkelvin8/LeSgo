@@ -1,7 +1,13 @@
 import '../../../domain/entities/booking/leseat/menu_item.dart';
 import '../../../domain/entities/booking/leseat/food_category.dart';
+import '../../../core/utils/menu_item_options.dart';
 
 class LeseatMockData {
+  static MenuItemOptionGroups _sizeOptions(List<String> labels) {
+    return MenuItemOptionGroups(
+      sizes: labels.map((label) => MenuOptionChoice(label: label)).toList(),
+    );
+  }
   /// Get menu categories based on restaurant categories
   static List<FoodCategory> getMenuCategoriesForRestaurant(
     List<String> restaurantCategories,
@@ -241,7 +247,7 @@ class LeseatMockData {
         imagePath: 'assets/images/book/leseat/Fries.svg',
         categoryId: 'fries',
         isPopular: true,
-        sizeOptions: ['Small', 'Medium', 'Large', 'Family'],
+        optionGroups: _sizeOptions(['Small', 'Medium', 'Large', 'Family']),
       ),
       MenuItem(
         id: '${restaurantId}_fries_2',
@@ -250,7 +256,7 @@ class LeseatMockData {
         price: 7.50,
         imagePath: 'assets/images/book/leseat/Fries.svg',
         categoryId: 'fries',
-        sizeOptions: ['Small', 'Medium', 'Large'],
+        optionGroups: _sizeOptions(['Small', 'Medium', 'Large']),
       ),
       MenuItem(
         id: '${restaurantId}_fries_3',
@@ -259,7 +265,7 @@ class LeseatMockData {
         price: 6.00,
         imagePath: 'assets/images/book/leseat/Fries.svg',
         categoryId: 'fries',
-        sizeOptions: ['Small', 'Medium', 'Large'],
+        optionGroups: _sizeOptions(['Small', 'Medium', 'Large']),
       ),
     ];
   }
@@ -274,7 +280,7 @@ class LeseatMockData {
         price: 4.50,
         imagePath: 'assets/images/book/leseat/Drink.svg',
         categoryId: 'drinks',
-        sizeOptions: ['Small', 'Medium', 'Large'],
+        optionGroups: _sizeOptions(['Small', 'Medium', 'Large']),
       ),
       MenuItem(
         id: '${restaurantId}_drink_2',
@@ -283,7 +289,7 @@ class LeseatMockData {
         price: 3.50,
         imagePath: 'assets/images/book/leseat/Drink.svg',
         categoryId: 'drinks',
-        sizeOptions: ['Regular', 'Large'],
+        optionGroups: _sizeOptions(['Regular', 'Large']),
       ),
       MenuItem(
         id: '${restaurantId}_drink_3',
@@ -292,7 +298,7 @@ class LeseatMockData {
         price: 3.00,
         imagePath: 'assets/images/book/leseat/Drink.svg',
         categoryId: 'drinks',
-        sizeOptions: ['Small', 'Medium', 'Large'],
+        optionGroups: _sizeOptions(['Small', 'Medium', 'Large']),
       ),
     ];
   }

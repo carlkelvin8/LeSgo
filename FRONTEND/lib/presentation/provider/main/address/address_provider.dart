@@ -46,12 +46,35 @@ class AddressState {
     );
   }
 
-  AddressDto? get defaultAddress {
-    try {
-      return addresses.firstWhere((addr) => addr.isDefault);
-    } catch (e) {
-      return addresses.isNotEmpty ? addresses.first : null;
+  AddressDto? get defaultAddress => AddressState.resolveDefaultAddress(addresses);
+
+  /// Preferred delivery address: explicit selection, then default.
+  AddressDto? get deliveryAddress => selectedAddress ?? defaultAddress;
+
+  /// Human-readable label for the active delivery / current location.
+  String get deliveryAddressLabel {
+    final addr = deliveryAddress;
+    if (addr == null || addr.addressLine1.isEmpty) {
+      return 'Set your location';
     }
+    return addr.addressLine1;
+  }
+
+  static AddressDto? resolveDefaultAddress(List<AddressDto> addresses) {
+    if (addresses.isEmpty) return null;
+
+    final sorted = List<AddressDto>.from(addresses)
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+    for (final addr in sorted) {
+      if (addr.isDefault) return addr;
+    }
+
+    for (final addr in sorted) {
+      if (addr.label.toLowerCase() == 'my location') return addr;
+    }
+
+    return sorted.first;
   }
 }
 
@@ -71,15 +94,13 @@ class AddressNotifier extends StateNotifier<AddressState> {
         for (var addr in response.data) {
           print('  - ${addr.label}: ${addr.addressLine1} (${addr.latitude}, ${addr.longitude})');
         }
+        final defaultAddr =
+            AddressState.resolveDefaultAddress(response.data);
         state = state.copyWith(
           addresses: response.data,
           isLoading: false,
+          selectedAddress: defaultAddr,
         );
-
-        // Auto-select default address if none selected
-        if (state.selectedAddress == null && state.defaultAddress != null) {
-          state = state.copyWith(selectedAddress: state.defaultAddress);
-        }
       } else {
         state = state.copyWith(
           isLoading: false,
@@ -94,6 +115,122 @@ class AddressNotifier extends StateNotifier<AddressState> {
     }
   }
 
+  AddressDto? _resolveLocationAddress(double latitude, double longitude) {
+    const epsilon = 0.0005;
+    final matches = state.addresses.where((addr) {
+      return (addr.latitude - latitude).abs() < epsilon &&
+          (addr.longitude - longitude).abs() < epsilon;
+    }).toList();
+
+    if (matches.isNotEmpty) {
+      matches.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return matches.first;
+    }
+
+    final defaultAddr = state.defaultAddress;
+    if (defaultAddr != null) return defaultAddr;
+
+    for (final addr in state.addresses) {
+      if (addr.label.toLowerCase() == 'my location') {
+        return addr;
+      }
+    }
+
+    return null;
+  }
+
+  static String inferCountry({
+    required double latitude,
+    required double longitude,
+    required String cityProvince,
+  }) {
+    final inPhilippines =
+        latitude >= 4 && latitude <= 21 && longitude >= 116 && longitude <= 127;
+    if (inPhilippines) return 'Philippines';
+
+    final lower = cityProvince.toLowerCase();
+    if (lower.contains('philippines')) return 'Philippines';
+    if (lower.contains('united states') ||
+        lower.contains('usa') ||
+        RegExp(
+          r'\b(california|texas|new york|florida|washington)\b',
+        ).hasMatch(lower)) {
+      return 'United States';
+    }
+
+    return 'Philippines';
+  }
+
+  /// Update the user's saved default location, or create one if none exists.
+  Future<bool> upsertDefaultLocation({
+    required int userId,
+    required String label,
+    required String contactName,
+    required String contactPhone,
+    required String addressLine1,
+    String? addressLine2,
+    String? city,
+    String? region,
+    String? postalCode,
+    String? country,
+    required double latitude,
+    required double longitude,
+    BuildContext? context,
+  }) async {
+    await loadAddresses(userId);
+
+    final resolvedPhone = contactPhone.trim().isNotEmpty
+        ? contactPhone.trim()
+        : '09000000000';
+    final resolvedCountry = country ??
+        inferCountry(
+          latitude: latitude,
+          longitude: longitude,
+          cityProvince: '$city $region',
+        );
+
+    final existing = _resolveLocationAddress(latitude, longitude);
+
+    if (existing != null) {
+      print('🔵 AddressProvider: Updating existing address id=${existing.id}');
+      return updateAddress(
+        userId: userId,
+        addressId: existing.id,
+        label: label,
+        contactName: contactName,
+        contactPhone: resolvedPhone,
+        addressLine1: addressLine1,
+        addressLine2: addressLine2,
+        city: city,
+        region: region,
+        postalCode: postalCode,
+        country: resolvedCountry,
+        latitude: latitude,
+        longitude: longitude,
+        isDefault: true,
+        context: context,
+      );
+    }
+
+    print('🔵 AddressProvider: Creating new default location address');
+    return createAddress(
+      userId: userId,
+      label: label,
+      contactName: contactName,
+      contactPhone: resolvedPhone,
+      addressLine1: addressLine1,
+      addressLine2: addressLine2,
+      city: city,
+      region: region,
+      postalCode: postalCode,
+      country: resolvedCountry,
+      latitude: latitude,
+      longitude: longitude,
+      isDefault: true,
+      context: context,
+    );
+  }
+
   /// Create a new address
   Future<bool> createAddress({
     required int userId,
@@ -102,6 +239,9 @@ class AddressNotifier extends StateNotifier<AddressState> {
     required String contactPhone,
     required String addressLine1,
     String? addressLine2,
+    String? city,
+    String? region,
+    String? postalCode,
     String? country,
     required double latitude,
     required double longitude,
@@ -126,6 +266,9 @@ class AddressNotifier extends StateNotifier<AddressState> {
         contactPhone: contactPhone,
         addressLine1: addressLine1,
         addressLine2: addressLine2,
+        city: city,
+        region: region,
+        postalCode: postalCode,
         country: country ?? 'Philippines',
         latitude: latitude,
         longitude: longitude,
@@ -188,6 +331,9 @@ class AddressNotifier extends StateNotifier<AddressState> {
     String? contactPhone,
     String? addressLine1,
     String? addressLine2,
+    String? city,
+    String? region,
+    String? postalCode,
     String? country,
     double? latitude,
     double? longitude,
@@ -204,6 +350,9 @@ class AddressNotifier extends StateNotifier<AddressState> {
         contactPhone: contactPhone,
         addressLine1: addressLine1,
         addressLine2: addressLine2,
+        city: city,
+        region: region,
+        postalCode: postalCode,
         country: country,
         latitude: latitude,
         longitude: longitude,
@@ -211,6 +360,9 @@ class AddressNotifier extends StateNotifier<AddressState> {
       );
 
       final response = await addressDataSource.updateAddress(addressId, request);
+      print(
+        '🔵 AddressProvider: Update response - success: ${response.success}, error: ${response.error}',
+      );
 
       if (response.success && response.data != null) {
         // Reload addresses to get updated list
@@ -223,20 +375,20 @@ class AddressNotifier extends StateNotifier<AddressState> {
         }
         return true;
       } else {
+        final message = response.error ?? 'Failed to update address';
+        print('🔴 AddressProvider: Update failed - $message');
         state = state.copyWith(
           isUpdating: false,
-          error: response.error ?? 'Failed to update address',
+          error: message,
         );
 
         if (context != null && context.mounted) {
-          SnackBarUtils.showError(
-            context,
-            response.error ?? 'Failed to update address',
-          );
+          SnackBarUtils.showError(context, message);
         }
         return false;
       }
     } catch (e) {
+      print('🔴 AddressProvider: Update exception - $e');
       state = state.copyWith(
         isUpdating: false,
         error: e.toString(),

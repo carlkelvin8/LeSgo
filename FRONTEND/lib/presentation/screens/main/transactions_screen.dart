@@ -31,13 +31,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialKindFilter != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(transactionsProvider.notifier)
-            .filterByKind(widget.initialKindFilter);
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notifier = ref.read(transactionsProvider.notifier);
+      final kind = widget.initialKindFilter?.trim().toLowerCase();
+      if (kind != null && kind.isNotEmpty) {
+        notifier.filterByKind(kind);
+      } else {
+        notifier.reapplyFilters();
+      }
+    });
   }
 
   @override
