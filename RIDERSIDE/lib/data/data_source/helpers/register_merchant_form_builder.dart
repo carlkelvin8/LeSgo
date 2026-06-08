@@ -55,17 +55,7 @@ Future<FormData> buildRegisterMerchantFormData(
     formData.fields.add(MapEntry(entry.key, _formFieldValue(entry.value)));
   }
 
-  final uploadFolder = DateTime.now().millisecondsSinceEpoch.toString();
-
   for (final entry in documents.entries) {
-    final pathField = _pathFieldKeys[entry.key];
-    if (pathField == null) continue;
-
-    final extension = _fileExtension(entry.value);
-    final storedFilename = '${entry.key}.$extension';
-    formData.fields.add(
-      MapEntry(pathField, 'uploads/merchants/$uploadFolder/$storedFilename'),
-    );
     await appendDocumentFile(formData, entry.key, entry.value);
   }
 

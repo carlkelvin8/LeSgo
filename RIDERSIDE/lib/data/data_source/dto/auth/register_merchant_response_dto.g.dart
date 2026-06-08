@@ -12,6 +12,8 @@ RegisterMerchantResponseDto _$RegisterMerchantResponseDtoFromJson(
       success: json['success'] as bool,
       message: json['message'] as String,
       token: json['token'] as String?,
+      refreshToken: json['refresh_token'] as String?,
+      expiresIn: (json['expires_in'] as num?)?.toInt(),
       user: json['user'] == null
           ? null
           : MerchantUserDto.fromJson(json['user'] as Map<String, dynamic>),
@@ -23,6 +25,8 @@ Map<String, dynamic> _$RegisterMerchantResponseDtoToJson(
       'success': instance.success,
       'message': instance.message,
       'token': instance.token,
+      'refresh_token': instance.refreshToken,
+      'expires_in': instance.expiresIn,
       'user': instance.user,
     };
 

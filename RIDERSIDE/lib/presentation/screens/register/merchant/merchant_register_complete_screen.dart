@@ -3,14 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../provider/auth/auth_provider.dart';
+import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../provider/register/merchant/merchant_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
 
 class MerchantRegisterCompleteScreen extends ConsumerWidget {
   const MerchantRegisterCompleteScreen({super.key});
 
-  void _goToLogin(BuildContext context, WidgetRef ref) {
+  void _goToApp(BuildContext context, WidgetRef ref) {
+    if (ref.read(riderAuthProvider).isLoggedIn) {
+      AppRouter.pushAndRemoveUntil(context, MainRoutes.merchantMain);
+      return;
+    }
     ref.read(authViewProvider.notifier).state = AuthView.welcome;
     AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
   }
@@ -37,7 +43,7 @@ class MerchantRegisterCompleteScreen extends ConsumerWidget {
                   contactNumber: state.presentationContactNumber,
                 ),
                 MerchantCompleteActionButtons(
-                  onProceed: () => _goToLogin(context, ref),
+                  onProceed: () => _goToApp(context, ref),
                 ),
               ],
             ),

@@ -4,7 +4,9 @@ import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/utils/phone_utils.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../provider/auth/auth_provider.dart';
+import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../provider/register/riderside/rider_register_info_provider.dart';
 import '../../../provider/register/riderside/rider_phone_verification_provider.dart';
 import '../../../widgets/widgets.dart';
@@ -12,9 +14,15 @@ import '../../../widgets/widgets.dart';
 class RegisterCompleteScreen extends ConsumerWidget {
   const RegisterCompleteScreen({super.key});
 
-  void _goToLogin(BuildContext context, WidgetRef ref) {
+  void _goToApp(BuildContext context, WidgetRef ref) {
     ref.read(registerInfoProvider.notifier).reset();
     ref.read(phoneVerificationProvider.notifier).reset();
+
+    if (ref.read(riderAuthProvider).isLoggedIn) {
+      AppRouter.pushAndRemoveUntil(context, MainRoutes.riderMain);
+      return;
+    }
+
     ref.read(authViewProvider.notifier).state = AuthView.welcome;
     AppRouter.pushAndRemoveUntil(context, AuthRoutes.auth);
   }
@@ -44,7 +52,7 @@ class RegisterCompleteScreen extends ConsumerWidget {
                       : 'Not provided',
                 ),
                 ActionButtonsSection(
-                  onProceed: () => _goToLogin(context, ref),
+                  onProceed: () => _goToApp(context, ref),
                 ),
               ],
             ),

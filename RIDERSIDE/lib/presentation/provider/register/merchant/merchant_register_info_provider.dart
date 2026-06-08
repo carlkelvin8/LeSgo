@@ -8,8 +8,8 @@ import '../../../../../data/data_source/auth_remote_datasource.dart';
 import '../../../../../data/data_source/dto/auth/register_merchant_request_dto.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/services/api_service.dart';
-import '../../../../../core/services/secure_storage_service.dart';
 import '../../../../../data/data_source/helpers/register_merchant_form_builder.dart';
+import '../../../auth/rider_auth_provider.dart';
 
 // Merchant Register Info State
 class MerchantRegisterInfoState {
@@ -341,13 +341,19 @@ class MerchantRegisterInfoNotifier
         documents: documents,
       );
 
-      // Store token if registration successful
-      if (response.success && response.token != null) {
-        await SecureStorageService.saveToken(
+      // Store session if registration successful
+      if (response.success && response.token != null && response.user != null) {
+        final sessionReady = await ref.read(riderAuthProvider.notifier).establishSession(
           token: response.token!,
-          expiresAt: DateTime.now().add(const Duration(days: 30)),
+          refreshToken: response.refreshToken,
+          expiresIn: response.expiresIn ?? 3600,
+          userData: response.user!.toJson(),
         );
-        
+
+        if (!sessionReady) {
+          throw Exception('Registration succeeded but sign-in failed. Please log in.');
+        }
+
         state = state.copyWith(
           isSubmitted: true,
           isSubmitting: false,

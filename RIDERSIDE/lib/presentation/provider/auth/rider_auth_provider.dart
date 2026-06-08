@@ -357,6 +357,49 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
   }
 
   void clearError() => state = state.copyWith(clearError: true);
+
+  Future<bool> establishSession({
+    required String token,
+    required Map<String, dynamic> userData,
+    int expiresIn = 3600,
+    String? refreshToken,
+  }) async {
+    try {
+      var user = RiderUser.fromJson(userData);
+      user = await _ensureMerchantPartnerId(user);
+
+      if (!user.isDriver && !user.isMerchant) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'This account is not authorized for this app.',
+        );
+        return false;
+      }
+
+      await ApiService.saveToken(
+        token,
+        expiresIn: expiresIn,
+        refreshToken: refreshToken,
+        userId: user.id,
+      );
+
+      state = state.copyWith(
+        user: user,
+        isLoggedIn: true,
+        isLoading: false,
+        clearError: true,
+      );
+
+      await PushNotificationService.registerWithBackend();
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: ApiService.extractError(e),
+      );
+      return false;
+    }
+  }
 }
 
 final riderAuthProvider =

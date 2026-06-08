@@ -11,6 +11,9 @@ RegisterDriverResponseDto _$RegisterDriverResponseDtoFromJson(
     RegisterDriverResponseDto(
       success: json['success'] as bool,
       message: json['message'] as String,
+      token: json['token'] as String?,
+      refreshToken: json['refresh_token'] as String?,
+      expiresIn: (json['expires_in'] as num?)?.toInt(),
       data: json['data'] == null
           ? null
           : RegisterDriverDataDto.fromJson(json['data'] as Map<String, dynamic>),
@@ -21,6 +24,9 @@ Map<String, dynamic> _$RegisterDriverResponseDtoToJson(
     <String, dynamic>{
       'success': instance.success,
       'message': instance.message,
+      'token': instance.token,
+      'refresh_token': instance.refreshToken,
+      'expires_in': instance.expiresIn,
       'data': instance.data,
     };
 

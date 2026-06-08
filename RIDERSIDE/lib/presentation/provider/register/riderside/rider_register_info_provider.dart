@@ -7,9 +7,9 @@ import '../../../../../data/data_source/auth_remote_datasource.dart';
 import '../../../../../data/data_source/dto/auth/register_driver_request_dto.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/services/api_service.dart';
-import '../../../../../core/services/secure_storage_service.dart';
 import '../../../../../core/utils/phone_utils.dart';
 import '../../../../../data/data_source/helpers/register_driver_form_builder.dart';
+import '../../../auth/rider_auth_provider.dart';
 import 'rider_phone_verification_provider.dart';
 
 // Register Info State
@@ -465,10 +465,45 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
         documents: documents,
       );
 
-      // Store token if registration successful
+      // Store session if registration successful
       if (response.success && response.data?.user != null) {
-        // Note: Token is not returned in driver registration response
-        // User needs to login after registration
+        if (response.token != null) {
+          final userData = {
+            ...response.data!.user!.toJson(),
+            if (response.data!.driverProfile != null)
+              'driver_profile': response.data!.driverProfile!.toJson(),
+          };
+
+          final sessionReady = await _ref.read(riderAuthProvider.notifier).establishSession(
+            token: response.token!,
+            refreshToken: response.refreshToken,
+            expiresIn: response.expiresIn ?? 3600,
+            userData: userData,
+          );
+
+          if (!sessionReady) {
+            final loggedIn = await _ref.read(riderAuthProvider.notifier).login(
+              info.email,
+              info.password,
+              rememberMe: false,
+              accountType: 'rider',
+            );
+            if (!loggedIn) {
+              throw Exception('Registration succeeded but sign-in failed. Please log in.');
+            }
+          }
+        } else {
+          final loggedIn = await _ref.read(riderAuthProvider.notifier).login(
+            info.email,
+            info.password,
+            rememberMe: false,
+            accountType: 'rider',
+          );
+          if (!loggedIn) {
+            throw Exception(response.message);
+          }
+        }
+
         state = state.copyWith(
           isSubmitting: false,
           isSubmitted: true,

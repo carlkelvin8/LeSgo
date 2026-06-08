@@ -140,7 +140,11 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
       final response = await authDataSource.sendOtp(formattedPhone);
       
       if (response.success) {
-        state = state.copyWith(isLoading: false, clearError: true);
+        state = state.copyWith(
+          isLoading: false,
+          clearError: true,
+          devOtp: response.otp,
+        );
       } else {
         throw Exception(response.message);
       }

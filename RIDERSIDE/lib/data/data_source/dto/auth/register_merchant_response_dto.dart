@@ -7,12 +7,18 @@ class RegisterMerchantResponseDto {
   final bool success;
   final String message;
   final String? token;
+  @JsonKey(name: 'refresh_token')
+  final String? refreshToken;
+  @JsonKey(name: 'expires_in')
+  final int? expiresIn;
   final MerchantUserDto? user;
 
   RegisterMerchantResponseDto({
     required this.success,
     required this.message,
     this.token,
+    this.refreshToken,
+    this.expiresIn,
     this.user,
   });
 
