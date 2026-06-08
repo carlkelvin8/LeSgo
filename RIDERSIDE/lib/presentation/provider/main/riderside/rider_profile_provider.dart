@@ -136,21 +136,27 @@ class RiderProfileNotifier extends StateNotifier<RiderProfileState> {
     }
     try {
       final data = await _fetchMe();
-      final u = (data['user'] ?? data['data'] ?? data) as Map<String, dynamic>;
+      final rawUser = data['user'] ?? data['data'] ?? data;
+      if (rawUser is! Map) {
+        throw StateError('Invalid profile response from server');
+      }
+      final u = Map<String, dynamic>.from(rawUser);
 
-      final dp = u['driver_profile'] as Map<String, dynamic>?;
+      final dpRaw = u['driver_profile'];
+      final dp = dpRaw is Map ? Map<String, dynamic>.from(dpRaw) : null;
       final profilePicUrl = _resolveProfilePictureUrl(u);
       final referralCode = await _resolveReferralCode(u);
 
       state = state.copyWith(
-        name: u['name'] as String? ?? '',
-        contact: u['phone_number'] as String? ?? '',
-        address: u['address_line1'] as String? ?? '',
-        vehicle: dp != null ? (dp['vehicle_type'] as String? ?? '') : '',
+        name: u['name']?.toString() ?? '',
+        contact: u['phone_number']?.toString() ?? '',
+        address: u['address_line1']?.toString() ?? '',
+        vehicle: dp?['vehicle_type']?.toString() ?? '',
         plateNumber: _readPlateNumber(dp),
         referralCode: referralCode,
         profilePictureUrl: profilePicUrl,
         isLoading: false,
+        clearError: true,
       );
     } catch (e) {
       final authUser = _ref.read(riderAuthProvider).user;
