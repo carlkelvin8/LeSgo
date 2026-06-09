@@ -12,6 +12,8 @@ import '../profile/profile_provider.dart';
 import '../../../../core/services/service_area_checker.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/booking_checkout_payment.dart';
+import '../../../../core/utils/network_guard.dart';
+import '../../../../core/utils/active_order_limit_guard.dart';
 import '../../../widgets/widgets.dart';
 
 class LesrideState {
@@ -357,6 +359,8 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
 
   // Handle booking action with validation and dialog
   Future<void> handleBook(BuildContext context) async {
+    if (!await NetworkGuard.ensureOnline(context)) return;
+
     final locationState = _ref.read(lesrideLocationProvider);
 
     // Check if destination is set
@@ -379,6 +383,8 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
 
     if (confirmed == true) {
       if (context.mounted) {
+        if (!await NetworkGuard.ensureOnline(context)) return;
+        if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
         try {
           final orderDataSource = getIt<OrderRemoteDataSource>();
           final locationState = _ref.read(lesrideLocationProvider);

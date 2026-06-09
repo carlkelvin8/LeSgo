@@ -36,15 +36,16 @@ class _BookingPaymentMethodSectionState
 
   @override
   Widget build(BuildContext context) {
-    final balance = ref.watch(lespayProvider).balance;
+    final lespayState = ref.watch(lespayProvider);
 
     return PaymentMethodSelector(
       selectedMethod: widget.selectedMethod,
       onMethodChanged: widget.onMethodChanged,
       enabled: widget.enabled,
       showWallet: true,
-      showDigitalPayments: true,
-      walletBalance: balance,
+      showDigitalPayments: false,
+      walletBalance: lespayState.balance,
+      walletBalanceVisible: lespayState.balanceVisible,
       minimumWalletAmount: widget.minimumAmount,
     );
   }

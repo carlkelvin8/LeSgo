@@ -1,8 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/di/local_storage_service.dart';
+import 'package:cross_file/cross_file.dart';
+
 import '../../../../data/data_source/auth_remote_datasource.dart';
 import '../../../../data/data_source/dto/auth/register_request_dto.dart';
+import '../../../../data/data_source/dto/user/update_user_request_dto.dart';
+import '../../../../data/data_source/user_remote_datasource.dart';
+import '../../../../core/services/file_upload_service.dart';
 import '../../../../domain/entities/user.dart';
 import 'register_state.dart';
 
@@ -82,6 +87,12 @@ mixin SubmitNotifier on StateNotifier<RegisterState> {
         isLoading: false,
         error: null,
       );
+
+      final selfiePath = state.data.selfiePath;
+      if (selfiePath.isNotEmpty && response.token != null) {
+        await _uploadRegistrationSelfie(selfiePath);
+      }
+
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -95,5 +106,22 @@ mixin SubmitNotifier on StateNotifier<RegisterState> {
 
   void reset() {
     state = RegisterState();
+  }
+
+  Future<void> _uploadRegistrationSelfie(String imagePath) async {
+    try {
+      final xFile = XFile(imagePath);
+      final uploaded = await getIt<FileUploadService>().uploadFile(
+        xFile,
+        context: 'profile',
+      );
+      await getIt<UserRemoteDataSource>().updateMe(
+        UpdateUserRequestDto(profilePhoto: uploaded.url),
+      );
+    } catch (_) {
+      try {
+        await getIt<UserRemoteDataSource>().uploadProfilePicture(XFile(imagePath));
+      } catch (_) {}
+    }
   }
 }

@@ -14,6 +14,9 @@ export 'global/googlemaps/map_zoom_controls.dart';
 export 'global/googlemaps/map_toggle_button.dart';
 export 'global/googlemaps/fullscreen_map_overlay.dart';
 export 'global/googlemaps/map_search_bar.dart';
+export 'global/googlemaps/map_place_preview_card.dart';
+export 'global/googlemaps/map_expand_hint.dart';
+export 'global/googlemaps/map_route_info_banner.dart';
 export 'global/map_loading_indicator.dart';
 
 // Auth - Login widgets
@@ -129,6 +132,7 @@ export 'home/quick_access_card.dart';
 export 'home/promo_card.dart';
 export 'home/app_drawer.dart';
 export 'home/home_header_section.dart';
+export 'home/home_active_orders_section.dart';
 export 'home/home_hero_section.dart';
 export 'home/home_quick_access_section.dart';
 export 'home/home_promos_section.dart';

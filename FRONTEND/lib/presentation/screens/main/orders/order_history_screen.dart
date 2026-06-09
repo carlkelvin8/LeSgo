@@ -7,11 +7,39 @@ import '../../../../core/utils/responsive_utils.dart';
 import 'order_detail_screen.dart';
 import '../../../widgets/common/retry_widget.dart';
 
-class OrderHistoryScreen extends ConsumerWidget {
+class OrderHistoryScreen extends ConsumerStatefulWidget {
   const OrderHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
+}
+
+class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 200) {
+      ref.read(orderHistoryProvider.notifier).loadMoreOrders();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final orderState = ref.watch(orderHistoryProvider);
     final filteredOrders = orderState.filteredOrders;
 
@@ -20,7 +48,6 @@ class OrderHistoryScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               color: Colors.white,
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
@@ -36,10 +63,7 @@ class OrderHistoryScreen extends ConsumerWidget {
                 ],
               ),
             ),
-
             Container(height: 1, color: Colors.grey[300]),
-
-            // Filter tabs
             Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -82,10 +106,7 @@ class OrderHistoryScreen extends ConsumerWidget {
                 ),
               ),
             ),
-
             Container(height: 1, color: Colors.grey[200]),
-
-            // Orders list
             Expanded(
               child: orderState.isLoading && orderState.orders.isEmpty
                   ? const Center(
@@ -102,62 +123,88 @@ class OrderHistoryScreen extends ConsumerWidget {
                               .refreshOrders(),
                         )
                       : filteredOrders.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.receipt_long_outlined,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No ${orderState.selectedFilter} orders',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Pull down to refresh',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 13,
-                                  color: Colors.grey[400],
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : RefreshIndicator(
-                          color: const Color(0xFF5F2D82),
-                          onRefresh: () => ref
-                              .read(orderHistoryProvider.notifier)
-                              .refreshOrders(),
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: filteredOrders.length,
-                            itemBuilder: (context, index) {
-                              final order = filteredOrders[index];
-                              return OrderCard(
-                                order: order,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => OrderDetailScreen(
-                                        orderId: order.id,
-                                      ),
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.receipt_long_outlined,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No ${orderState.selectedFilter} orders',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
                                     ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Pull down to refresh',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize: 13,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              color: const Color(0xFF5F2D82),
+                              onRefresh: () => ref
+                                  .read(orderHistoryProvider.notifier)
+                                  .refreshOrders(),
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.all(16),
+                                itemCount: filteredOrders.length +
+                                    (orderState.hasMore ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (index >= filteredOrders.length) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      child: Center(
+                                        child: orderState.isLoadingMore
+                                            ? const CircularProgressIndicator(
+                                                color: Color(0xFF5F2D82),
+                                              )
+                                            : TextButton(
+                                                onPressed: () => ref
+                                                    .read(
+                                                      orderHistoryProvider
+                                                          .notifier,
+                                                    )
+                                                    .loadMoreOrders(),
+                                                child: const Text('Load more'),
+                                              ),
+                                      ),
+                                    );
+                                  }
+
+                                  final order = filteredOrders[index];
+                                  return OrderCard(
+                                    order: order,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => OrderDetailScreen(
+                                            orderId: order.id,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   );
                                 },
-                              );
-                            },
-                          ),
-                        ),
+                              ),
+                            ),
             ),
           ],
         ),

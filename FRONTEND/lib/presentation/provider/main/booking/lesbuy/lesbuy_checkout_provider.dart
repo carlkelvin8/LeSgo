@@ -19,6 +19,7 @@ class LesbuyCheckoutState {
   final double pickupLng;
   final int? partnerId;
   final int estimatedDistanceM;
+  final bool deliveryFeeUncertain;
 
   const LesbuyCheckoutState({
     this.deliveryFee = 50,
@@ -31,6 +32,7 @@ class LesbuyCheckoutState {
     this.pickupLng = BookingGeoUtils.defaultLng,
     this.partnerId,
     this.estimatedDistanceM = 5000,
+    this.deliveryFeeUncertain = false,
   });
 
   LesbuyCheckoutState copyWith({
@@ -44,6 +46,7 @@ class LesbuyCheckoutState {
     double? pickupLng,
     int? partnerId,
     int? estimatedDistanceM,
+    bool? deliveryFeeUncertain,
     bool clearVoucher = false,
     bool clearVoucherError = false,
   }) {
@@ -59,6 +62,8 @@ class LesbuyCheckoutState {
       pickupLng: pickupLng ?? this.pickupLng,
       partnerId: partnerId ?? this.partnerId,
       estimatedDistanceM: estimatedDistanceM ?? this.estimatedDistanceM,
+      deliveryFeeUncertain:
+          deliveryFeeUncertain ?? this.deliveryFeeUncertain,
     );
   }
 }
@@ -90,10 +95,29 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
     } catch (_) {}
   }
 
+  void setManualDeliveryFeeUncertain(bool uncertain) {
+    if (uncertain) {
+      state = state.copyWith(
+        deliveryFeeUncertain: true,
+        deliveryFee: 0,
+        estimatedDistanceM: 0,
+        isLoadingFare: false,
+      );
+      return;
+    }
+    state = state.copyWith(deliveryFeeUncertain: false);
+  }
+
   Future<void> refreshDeliveryFee({
     double? dropoffLat,
     double? dropoffLng,
+    bool hasManualItems = false,
+    bool hasStoreItems = true,
   }) async {
+    if (hasManualItems && !hasStoreItems) {
+      setManualDeliveryFeeUncertain(true);
+      return;
+    }
     double lat = dropoffLat ?? BookingGeoUtils.defaultLat;
     double lng = dropoffLng ?? BookingGeoUtils.defaultLng;
 
@@ -127,9 +151,14 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
       state = state.copyWith(
         deliveryFee: fee ?? 50,
         isLoadingFare: false,
+        deliveryFeeUncertain: false,
       );
     } catch (_) {
-      state = state.copyWith(deliveryFee: 50, isLoadingFare: false);
+      state = state.copyWith(
+        deliveryFee: 50,
+        isLoadingFare: false,
+        deliveryFeeUncertain: false,
+      );
     }
   }
 

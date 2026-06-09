@@ -7,6 +7,7 @@ import '../../widgets/chat/order_chat_widget.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/order_service_labels.dart';
 import '../../../data/data_source/dto/chat/message_dto.dart';
+import '../../widgets/common/retry_widget.dart';
 
 class InboxScreen extends ConsumerStatefulWidget {
   const InboxScreen({super.key});
@@ -131,7 +132,15 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                             AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
                       ),
                     )
-                  : conversations.isEmpty
+                  : chatState.error != null && conversations.isEmpty
+                      ? RetryWidget(
+                          message: chatState.error!,
+                          isLoading: chatState.isLoading,
+                          onRetry: () => ref
+                              .read(chatProviderGlobal.notifier)
+                              .loadConversations(),
+                        )
+                      : conversations.isEmpty
                       ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,

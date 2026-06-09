@@ -14,6 +14,8 @@ import '../address/address_provider.dart';
 import '../../../../core/services/service_area_checker.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/booking_checkout_payment.dart';
+import '../../../../core/utils/network_guard.dart';
+import '../../../../core/utils/active_order_limit_guard.dart';
 
 class LesgoState {
   final bool isFullscreen;
@@ -443,6 +445,9 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
 
   // Handle booking action with validation and API integration
   Future<void> handleBook(BuildContext context) async {
+    if (!await NetworkGuard.ensureOnline(context)) return;
+    if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
+
     print('🚀 LesGo: handleBook called!');
     final locationState = _ref.read(lesgoLocationProvider);
 

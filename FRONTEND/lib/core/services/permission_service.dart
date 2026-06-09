@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -99,9 +101,9 @@ class PermissionService {
   }
 
   /// Open app settings (for permanently denied permissions)
-  Future<bool> openAppSettings() async {
+  Future<bool> openSettings() async {
     debugPrint('⚙️ Opening app settings...');
-    return await openAppSettings();
+    return openAppSettings();
   }
 
   /// Request location permission with rationale
@@ -120,6 +122,35 @@ class PermissionService {
     // Request permission
     final result = await requestLocationPermission();
     return result.isGranted;
+  }
+
+  /// Request gallery/photos permission (Android 13+ uses photos).
+  Future<bool> requestGalleryWithRationale() async {
+    if (kIsWeb) return true;
+
+    if (Platform.isIOS) {
+      final status = await Permission.photos.request();
+      return status.isGranted || status.isLimited;
+    }
+
+    if (Platform.isAndroid) {
+      var status = await Permission.photos.status;
+      if (status.isGranted || status.isLimited) return true;
+      if (!status.isPermanentlyDenied) {
+        status = await Permission.photos.request();
+        if (status.isGranted || status.isLimited) return true;
+      }
+
+      final storageStatus = await Permission.storage.status;
+      if (storageStatus.isGranted) return true;
+      if (!storageStatus.isPermanentlyDenied) {
+        final requested = await Permission.storage.request();
+        return requested.isGranted;
+      }
+      return false;
+    }
+
+    return true;
   }
 
   /// Request camera permission with rationale

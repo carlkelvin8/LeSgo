@@ -69,11 +69,13 @@ class OrderRemoteDataSource {
     String? paymentStatus,
     int? serviceId,
     int perPage = 20,
+    int page = 1,
   }) async {
     final dio = _dioClient.dio;
     try {
       final queryParams = <String, dynamic>{
         'per_page': perPage,
+        'page': page,
       };
       if (status != null) queryParams['status'] = status;
       if (paymentStatus != null) queryParams['payment_status'] = paymentStatus;

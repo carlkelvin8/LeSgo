@@ -2,28 +2,57 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'mission_dto.g.dart';
 
+int _parseInt(dynamic value, [int fallback = 0]) {
+  if (value == null) return fallback;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+double _parseDouble(dynamic value, [double fallback = 0]) {
+  if (value == null) return fallback;
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+bool _parseBool(dynamic value, [bool fallback = false]) {
+  if (value == null) return fallback;
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    final normalized = value.toLowerCase();
+    if (normalized == 'true' || normalized == '1') return true;
+    if (normalized == 'false' || normalized == '0') return false;
+  }
+  return fallback;
+}
+
 @JsonSerializable()
 class MissionDto {
+  @JsonKey(fromJson: _parseInt)
   final int id;
-  @JsonKey(name: 'user_id')
+  @JsonKey(name: 'user_id', fromJson: _parseInt)
   final int userId;
   @JsonKey(name: 'mission_type')
   final String missionType;
   final String title;
   final String? description;
-  @JsonKey(name: 'current_progress')
+  @JsonKey(name: 'current_progress', fromJson: _parseInt)
   final int currentProgress;
-  @JsonKey(name: 'goal_target')
+  @JsonKey(name: 'goal_target', fromJson: _parseInt)
   final int goalTarget;
-  @JsonKey(name: 'is_completed')
+  @JsonKey(name: 'is_completed', fromJson: _parseBool)
   final bool isCompleted;
   @JsonKey(name: 'completed_at')
   final String? completedAt;
   @JsonKey(name: 'reward_type')
   final String rewardType;
-  @JsonKey(name: 'reward_value')
+  @JsonKey(name: 'reward_value', fromJson: _parseDouble)
   final double rewardValue;
-  @JsonKey(name: 'reward_claimed')
+  @JsonKey(name: 'reward_claimed', fromJson: _parseBool)
   final bool rewardClaimed;
   @JsonKey(name: 'claimed_at')
   final String? claimedAt;

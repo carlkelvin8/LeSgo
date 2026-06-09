@@ -95,6 +95,13 @@ class SettingsScreen extends StatelessWidget {
             title: 'Support',
             items: [
               _SettingsItem(
+                icon: Icons.smart_toy_outlined,
+                title: 'LeSGo Assistant',
+                subtitle: 'Chat with our AI customer service bot',
+                onTap: () =>
+                    AppRouter.push(context, MainRoutes.customerServiceChat),
+              ),
+              _SettingsItem(
                 icon: Icons.confirmation_number_outlined,
                 title: 'Support Tickets',
                 subtitle: 'Get help from our support team',

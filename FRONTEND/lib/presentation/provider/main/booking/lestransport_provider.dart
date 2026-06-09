@@ -8,6 +8,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/utils/booking_checkout_payment.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/utils/network_guard.dart';
+import '../../../../core/utils/active_order_limit_guard.dart';
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../domain/entities/booking/lestransport/lestransport_booking.dart';
@@ -126,6 +128,9 @@ class LestransportNotifier extends StateNotifier<LestransportState> {
   }
 
   Future<bool> bookTransport(BuildContext context) async {
+    if (!await NetworkGuard.ensureOnline(context)) return false;
+    if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return false;
+
     if (!state.isValid) {
       state = state.copyWith(error: 'Please fill in all required fields');
       return false;

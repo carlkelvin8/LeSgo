@@ -16,6 +16,7 @@ import '../../../../presentation/screens/main/security/security_settings_screen.
 import '../../../../presentation/screens/main/referral/referral_dashboard_screen.dart';
 import '../../../../presentation/screens/main/faqs_screen.dart';
 import '../../../../presentation/screens/main/support/support_tickets_screen.dart';
+import '../../../../presentation/screens/main/support/customer_service_chat_screen.dart';
 import '../../../../presentation/screens/main/documents/document_verification_screen.dart';
 import '../../../../presentation/screens/main/about_screen.dart';
 import '../../../../presentation/screens/legal/privacy_policy_screen.dart';
@@ -47,6 +48,7 @@ class MainRouter {
     MainRoutes.referralDashboard: (_) => const ReferralDashboardScreen(),
     MainRoutes.faqs: (_) => const FaqsScreen(),
     MainRoutes.supportTickets: (_) => const SupportTicketsScreen(),
+    MainRoutes.customerServiceChat: (_) => const CustomerServiceChatScreen(),
     MainRoutes.documentVerification: (_) => const DocumentVerificationScreen(),
     MainRoutes.about: (_) => const AboutScreen(),
     MainRoutes.privacyPolicy: (_) => const PrivacyPolicyScreen(),

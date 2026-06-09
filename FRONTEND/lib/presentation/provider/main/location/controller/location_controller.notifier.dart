@@ -139,11 +139,31 @@ class LocationControllers {
     WidgetRef ref,
     BuildContext context,
   ) async {
+    await _updateSelectedLocation(location, ref, context);
+  }
+
+  Future<void> handleMarkerDragEnd(
+    LatLng location,
+    WidgetRef ref,
+    BuildContext context,
+  ) async {
+    await _updateSelectedLocation(location, ref, context, fromDrag: true);
+  }
+
+  Future<void> _updateSelectedLocation(
+    LatLng location,
+    WidgetRef ref,
+    BuildContext context, {
+    bool fromDrag = false,
+  }) async {
     await ref.read(locationProvider.notifier).updateSelectedLocation(location);
     updateFormFromProvider(ref);
 
     if (context.mounted) {
-      SnackBarUtils.showSuccess(context, 'Location updated');
+      SnackBarUtils.showSuccess(
+        context,
+        fromDrag ? 'Pin location updated' : 'Location updated',
+      );
     }
   }
 

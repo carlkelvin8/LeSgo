@@ -7,6 +7,7 @@ class AppPreferencesService {
   static const pushMissionRemindersKey = 'pref_push_mission_reminders';
   static const appLanguageKey = 'pref_app_language';
   static const biometricUnlockKey = 'pref_biometric_unlock';
+  static const lespayBalanceVisibleKey = 'pref_lespay_balance_visible';
 
   final SharedPreferences _prefs;
 
@@ -24,6 +25,9 @@ class AppPreferencesService {
   bool get biometricUnlockEnabled =>
       _prefs.getBool(biometricUnlockKey) ?? false;
 
+  bool get lespayBalanceVisible =>
+      _prefs.getBool(lespayBalanceVisibleKey) ?? true;
+
   String get appLanguage => _prefs.getString(appLanguageKey) ?? 'en';
 
   Future<void> setPushPromotionsEnabled(bool value) =>
@@ -37,6 +41,9 @@ class AppPreferencesService {
 
   Future<void> setBiometricUnlockEnabled(bool value) =>
       _prefs.setBool(biometricUnlockKey, value);
+
+  Future<void> setLespayBalanceVisible(bool value) =>
+      _prefs.setBool(lespayBalanceVisibleKey, value);
 
   Future<void> setAppLanguage(String languageCode) =>
       _prefs.setString(appLanguageKey, languageCode);

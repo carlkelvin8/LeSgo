@@ -6,6 +6,8 @@ import '../../../core/services/promo_notification_service.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../provider/main/offers/offers_provider.dart';
 import '../../widgets/home/home_favorites_section.dart';
+import '../../widgets/home/home_active_orders_section.dart';
+import '../../provider/main/orders/active_orders_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +25,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _onHomeReady() async {
     if (!mounted) return;
+    ref.read(activeOrdersProvider.notifier).loadActiveOrders();
     final offers = ref.read(offersProvider).featuredOffers;
     if (offers.isNotEmpty) {
       await getIt<PromoNotificationService>().maybeShowDailyPromoPush(
@@ -46,6 +49,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const HomeHeaderSection(),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                  const HomeActiveOrdersSection(),
                   const HomeHeroSection(),
                   const HomeQuickAccessSection(),
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),

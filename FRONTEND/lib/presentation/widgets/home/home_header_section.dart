@@ -64,8 +64,8 @@ class _HomeHeaderSectionState extends ConsumerState<HomeHeaderSection> {
           }
         }
       },
-      onProfileTap: () {
-        AppRouter.push(context, MainRoutes.profile);
+      onSupportTap: () {
+        AppRouter.push(context, MainRoutes.customerServiceChat);
       },
     );
   }

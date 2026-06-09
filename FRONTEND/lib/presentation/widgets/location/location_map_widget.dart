@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../../../core/utils/marker_utils.dart';
 import '../../provider/main/location/location_provider.dart';
 
-class LocationMapWidget extends ConsumerWidget {
+class LocationMapWidget extends ConsumerStatefulWidget {
   final Function(GoogleMapController) onMapCreated;
   final VoidCallback onUseCurrentLocation;
   final VoidCallback onToggleFullscreen;
   final Function(LatLng) onMapTap;
+  final Function(LatLng)? onMarkerDragEnd;
   final bool isFullscreen;
   final bool showPickupDestination;
 
@@ -17,16 +20,40 @@ class LocationMapWidget extends ConsumerWidget {
     required this.onUseCurrentLocation,
     required this.onToggleFullscreen,
     required this.onMapTap,
+    this.onMarkerDragEnd,
     required this.isFullscreen,
     this.showPickupDestination = true,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LocationMapWidget> createState() => _LocationMapWidgetState();
+}
+
+class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
+  BitmapDescriptor? _roseMarker;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMarker();
+  }
+
+  Future<void> _loadMarker() async {
+    _roseMarker = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(48, 48)),
+      'assets/images/marker_rose.png',
+    ).catchError((_) async {
+      return MarkerUtils.createColoredMarker(const Color(0xFFFF69B4));
+    });
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final locationState = ref.watch(locationProvider);
 
     final markers = <Marker>{};
-    if (showPickupDestination && locationState.pickupLocation != null) {
+    if (widget.showPickupDestination && locationState.pickupLocation != null) {
       markers.add(
         Marker(
           markerId: const MarkerId('pickup'),
@@ -38,7 +65,7 @@ class LocationMapWidget extends ConsumerWidget {
         ),
       );
     }
-    if (showPickupDestination && locationState.destinationLocation != null) {
+    if (widget.showPickupDestination && locationState.destinationLocation != null) {
       markers.add(
         Marker(
           markerId: const MarkerId('destination'),
@@ -51,36 +78,43 @@ class LocationMapWidget extends ConsumerWidget {
       );
     }
     if (locationState.selectedLocation != null) {
+      final draggable = widget.isFullscreen && widget.onMarkerDragEnd != null;
       markers.add(
         Marker(
           markerId: const MarkerId('selected'),
           position: locationState.selectedLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose),
-          infoWindow: const InfoWindow(title: 'Selected Location'),
+          icon: _roseMarker ??
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose),
+          infoWindow: InfoWindow(
+            title: 'Selected Location',
+            snippet: draggable ? 'Drag to adjust pin' : null,
+          ),
+          draggable: draggable,
+          onDragEnd: draggable
+              ? (position) => widget.onMarkerDragEnd!(position)
+              : null,
         ),
       );
     }
 
     return GoogleMap(
-      onMapCreated: onMapCreated,
+      onMapCreated: widget.onMapCreated,
       initialCameraPosition: CameraPosition(
         target:
             locationState.selectedLocation ??
-            const LatLng(8.4542, 124.6319), // Cagayan de Oro default
+            const LatLng(8.4542, 124.6319),
         zoom: 16.0,
       ),
-      onTap: onMapTap,
+      onTap: widget.onMapTap,
       markers: markers,
       myLocationEnabled: true,
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
-      scrollGesturesEnabled: isFullscreen,
-      zoomGesturesEnabled: isFullscreen,
-      rotateGesturesEnabled: isFullscreen,
-      tiltGesturesEnabled: isFullscreen,
-      // Temporarily disable advanced markers to fix booking issue
-      // markerType: GoogleMapMarkerType.advancedMarker,
+      scrollGesturesEnabled: widget.isFullscreen,
+      zoomGesturesEnabled: widget.isFullscreen,
+      rotateGesturesEnabled: widget.isFullscreen,
+      tiltGesturesEnabled: widget.isFullscreen,
     );
   }
 }

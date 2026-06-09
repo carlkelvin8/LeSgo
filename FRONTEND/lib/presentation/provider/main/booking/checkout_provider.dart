@@ -21,6 +21,8 @@ import '../../../../core/services/service_area_checker.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/booking_checkout_payment.dart';
+import '../../../../core/utils/network_guard.dart';
+import '../../../../core/utils/active_order_limit_guard.dart';
 
 import '../../../../data/data_source/voucher_remote_datasource.dart';
 
@@ -600,6 +602,8 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
   Future<bool> placeOrder(BuildContext context) async {
+    if (!await NetworkGuard.ensureOnline(context)) return false;
+    if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return false;
 
     if (state.order == null) return false;
 

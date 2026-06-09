@@ -6,6 +6,9 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../core/utils/booking_geo_utils.dart';
 import '../../../../../core/utils/booking_checkout_payment.dart';
+import '../../../../../core/utils/network_guard.dart';
+import '../../../../../core/utils/active_order_limit_guard.dart';
+import '../../../../../core/utils/lesbuy_manual_delivery_utils.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../data/data_source/dto/order/create_order_request_dto.dart';
@@ -42,12 +45,9 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
       await ref.read(lesbuyCheckoutProvider.notifier).initialize(
             storePartnerId: null,
           );
-      if (deliveryAddr != null) {
-        await ref.read(lesbuyCheckoutProvider.notifier).refreshDeliveryFee(
-              dropoffLat: deliveryAddr.latitude,
-              dropoffLng: deliveryAddr.longitude,
-            );
-      }
+      ref
+          .read(lesbuyCheckoutProvider.notifier)
+          .setManualDeliveryFeeUncertain(true);
     });
   }
 
@@ -55,6 +55,9 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
     BuildContext context,
     ManualOrderState manualOrderState,
   ) async {
+    if (!await NetworkGuard.ensureOnline(context)) return;
+    if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
+
     try {
       final orderDataSource = getIt<OrderRemoteDataSource>();
       final profileState = ref.read(profileProvider);
@@ -75,13 +78,9 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
         dropoffAddress = deliveryAddr.addressLine1;
       }
 
-      await ref.read(lesbuyCheckoutProvider.notifier).refreshDeliveryFee(
-            dropoffLat: dropoffLat,
-            dropoffLng: dropoffLng,
-          );
-      final quote = ref.read(lesbuyCheckoutProvider);
-      final deliveryFee = quote.deliveryFee;
-      final total = deliveryFee;
+      const deliveryFee = 0.0;
+      const total = 0.0;
+      const orderValueUncertain = true;
 
       final orderItems = manualOrderState.items
           .map(
@@ -96,12 +95,12 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
 
       final createOrderRequest = CreateOrderRequestDto(
         serviceId: 4,
-        estimatedDistanceM: quote.estimatedDistanceM,
+        estimatedDistanceM: 0,
         pickup: OrderAddressDto(
-          address: 'Manual Order Pickup',
-          lat: quote.pickupLat,
-          lng: quote.pickupLng,
-          contactName: 'LesBuy Store',
+          address: 'Store location — set when rider uploads item photo',
+          lat: 0,
+          lng: 0,
+          contactName: 'LesBuy Rider',
           contactPhone: '+639123456789',
         ),
         dropoff: OrderAddressDto(
@@ -118,17 +117,23 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
         meta: {
           'subtotal': 0.0,
           'delivery_fee': deliveryFee,
+          'delivery_fee_uncertain': true,
           'total': total,
           'grand_total': total,
           'order_type': 'lesbuy_manual',
+          'manual_pickup_source': 'rider_first_item_photo',
+          'order_value_uncertain': true,
+          'minimum_order_exempt': true,
         },
       );
 
       final response = await orderDataSource.createOrder(createOrderRequest);
 
-      final payAmount = response.data.effectiveTotalAmount > 0
-          ? response.data.effectiveTotalAmount
-          : total;
+      final payAmount = LesbuyManualDeliveryUtils.resolveCheckoutPayAmount(
+        orderValueUncertain: orderValueUncertain,
+        checkoutTotal: total,
+        apiEffectiveTotal: response.data.effectiveTotalAmount,
+      );
 
       if (!context.mounted) return;
 
@@ -164,6 +169,8 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                   .toList(),
               'total': total,
               'deliveryFee': deliveryFee,
+              'deliveryFeeUncertain': true,
+              'orderValueUncertain': true,
               'paymentMethod': _paymentMethod,
             },
           },
@@ -187,7 +194,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
     final manualOrderNotifier = ref.read(manualOrderProvider.notifier);
     final lesbuyCheckout = ref.watch(lesbuyCheckoutProvider);
     final bool isEmpty = manualOrderState.items.isEmpty;
-    final deliveryFee = lesbuyCheckout.deliveryFee;
+    final deliveryFeeUncertain = lesbuyCheckout.deliveryFeeUncertain;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -430,20 +437,42 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                           setState(() => _paymentMethod = method);
                         },
                         enabled: !isEmpty,
-                        minimumAmount: isEmpty ? null : deliveryFee,
+                        minimumAmount: isEmpty ? null : 0,
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: ResponsiveUtils.horizontalPadding(context),
                           vertical: ResponsiveUtils.spacing(context, 8),
                         ),
-                        child: Text(
-                          'Estimated delivery fee: ₱${deliveryFee.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: Colors.grey[700],
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              deliveryFeeUncertain
+                                  ? 'Delivery fee: TBD'
+                                  : 'Estimated delivery fee: ₱${lesbuyCheckout.deliveryFee.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: ResponsiveUtils.fontSize(context, 13),
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            if (deliveryFeeUncertain) ...[
+                              SizedBox(
+                                height: ResponsiveUtils.spacing(context, 4),
+                              ),
+                              Text(
+                                LesbuyManualDeliveryUtils.pendingHint,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 11),
+                                  color: Colors.grey[600],
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 80)),
@@ -472,7 +501,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '📋 Prices are estimated. Final amount determined by rider.',
+                '📋 No minimum order. Item prices, delivery fee & total are TBD until rider finds your items.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'TT Fors',

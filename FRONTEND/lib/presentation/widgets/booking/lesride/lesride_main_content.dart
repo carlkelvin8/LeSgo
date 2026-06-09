@@ -91,6 +91,7 @@ class LesrideMainContent extends ConsumerWidget {
                   onUseCurrentLocation: () => notifier.useCurrentLocation(),
                   onToggleFullscreen: () => notifier.toggleFullscreen(),
                   onMapTap: (latLng) => notifier.onMapTap(latLng),
+                  onMarkerDragEnd: (latLng) => notifier.onMapTap(latLng),
                   isFullscreen: true,
                 ),
                 shouldShow: () => locationState.selectedLocation != null,
