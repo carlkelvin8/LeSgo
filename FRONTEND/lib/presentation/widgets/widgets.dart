@@ -148,7 +148,6 @@ export 'drawer/drawer_logout_button.dart';
 export 'lespay/wallet_card.dart';
 export 'lespay/lespay_menu_item.dart';
 export 'lespay/lespay_actions_section.dart';
-export 'lespay/link_accounts_section.dart';
 export 'lespay/top_up_dialog.dart';
 export 'lespay/wallet_transactions_section.dart';
 export 'lespay/withdraw_dialog.dart';
