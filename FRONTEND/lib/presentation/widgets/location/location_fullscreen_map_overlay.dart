@@ -10,6 +10,7 @@ class LocationFullscreenMapOverlay extends ConsumerWidget {
   final VoidCallback onUseCurrentLocation;
   final VoidCallback onToggleFullscreen;
   final Function(LatLng) onMapTap;
+  final Function(LatLng)? onMarkerDragEnd;
   final bool showPickupDestination;
   final Future<void> Function(LatLng)? onAnimateToLocation;
   final VoidCallback? onPlaceSelected;
@@ -20,6 +21,7 @@ class LocationFullscreenMapOverlay extends ConsumerWidget {
     required this.onUseCurrentLocation,
     required this.onToggleFullscreen,
     required this.onMapTap,
+    this.onMarkerDragEnd,
     this.showPickupDestination = true,
     this.onAnimateToLocation,
     this.onPlaceSelected,
@@ -43,6 +45,7 @@ class LocationFullscreenMapOverlay extends ConsumerWidget {
               onUseCurrentLocation: onUseCurrentLocation,
               onToggleFullscreen: onToggleFullscreen,
               onMapTap: onMapTap,
+              onMarkerDragEnd: onMarkerDragEnd,
               isFullscreen: true,
               showPickupDestination: showPickupDestination,
             ),

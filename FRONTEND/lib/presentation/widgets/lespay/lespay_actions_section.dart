@@ -15,7 +15,7 @@ class LespayActionsSection extends ConsumerWidget {
         LespayMenuItem(
           iconPath: 'assets/images/lespay/Plus.svg',
           title: 'Top up',
-          subtitle: 'GCash, Maya, and cards',
+          subtitle: 'Add funds with card',
           backgroundColor: const Color(0xFF5F2D82),
           onTap: () {
             showDialog(

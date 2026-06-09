@@ -106,7 +106,6 @@ class ProfileHeader extends StatelessWidget {
                   width: ResponsiveUtils.spacing(context, 90),
                   height: ResponsiveUtils.spacing(context, 90),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blue, width: 2), // Debug border
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: profileImageUrl != null

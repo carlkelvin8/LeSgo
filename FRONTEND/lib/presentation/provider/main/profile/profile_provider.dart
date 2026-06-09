@@ -1,12 +1,12 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:cross_file/cross_file.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:io';
-import 'dart:convert';
 import '../../../../data/data_source/user_remote_datasource.dart';
 import '../../../../data/data_source/dto/user/user_profile_dto.dart';
 import '../../../../data/data_source/dto/user/update_user_request_dto.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/file_upload_service.dart';
 import '../../../../core/utils/media_url_utils.dart';
 import '../../../../core/utils/referral_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
@@ -224,65 +224,57 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
   }
 
-  Future<void> updateProfileImage(dynamic imageFile) async {
-    print('🔵 ProfileProvider: Starting updateProfileImage...');
-    state = state.copyWith(isUpdating: true);
+  Future<bool> updateProfileImage(dynamic imageFile) async {
+    state = state.copyWith(isUpdating: true, error: null);
     try {
-      String base64Image;
-      String localPath;
+      final XFile xFile = imageFile is XFile
+          ? imageFile
+          : XFile(imageFile as String);
 
-      // Handle both XFile (from image_picker) and String path
-      if (imageFile is String) {
-        print('🔵 ProfileProvider: Image is String path');
-        localPath = imageFile;
-        if (kIsWeb) {
-          // If it's a string on web, it's a blob URL - can't upload
-          print('🔵 ProfileProvider: Web blob URL, using local path');
-          state = state.copyWith(profileImageUrl: localPath, isUpdating: false);
-          return;
-        }
-        final bytes = await File(imageFile).readAsBytes();
-        final ext = imageFile.toLowerCase().split('.').last;
-        final mime = ext == 'png' ? 'image/png' : 'image/jpeg';
-        base64Image = 'data:$mime;base64,${base64Encode(bytes)}';
-      } else {
-        print('🔵 ProfileProvider: Image is XFile');
-        // XFile - works on both web and mobile
-        localPath = imageFile.path;
-        final bytes = await imageFile.readAsBytes();
-        // Detect image type from name
-        final name = imageFile.name.toLowerCase();
-        final mime = name.endsWith('.png') ? 'image/png' : 'image/jpeg';
-        base64Image = 'data:$mime;base64,${base64Encode(bytes)}';
-        print('🔵 ProfileProvider: Base64 length: ${base64Image.length}');
-      }
-
-      print('🔵 ProfileProvider: Calling API to update profile photo...');
       final userDataSource = getIt<UserRemoteDataSource>();
-      final request = UpdateUserRequestDto(profilePhoto: base64Image);
-      final response = await userDataSource.updateMe(request);
+      UserProfileDto? updatedUser;
 
-      print('🔵 ProfileProvider: API response - success: ${response.success}');
-      if (response.success && response.data != null) {
-        print('🔵 ProfileProvider: Profile photo URL from API: ${response.data!.profilePhoto}');
-        // Use the URL returned by the API (stored on server)
-        state = state.copyWith(
-          user: response.data,
-          profileImageUrl:
-              _resolveProfileImageUrl(response.data!) ?? localPath,
-          isUpdating: false,
+      try {
+        final uploaded = await getIt<FileUploadService>().uploadFile(
+          xFile,
+          context: 'profile',
         );
-        print('🔵 ProfileProvider: Profile image updated successfully');
-      } else {
-        print('🔴 ProfileProvider: API failed, using local path');
-        // Optimistically show local image even if upload failed
-        state = state.copyWith(profileImageUrl: localPath, isUpdating: false);
+        final response = await userDataSource.updateMe(
+          UpdateUserRequestDto(profilePhoto: uploaded.url),
+        );
+        if (response.success && response.data != null) {
+          updatedUser = response.data;
+        }
+      } catch (mediaError) {
+        debugPrint('Profile upload via media failed: $mediaError');
+        final response = await userDataSource.uploadProfilePicture(xFile);
+        if (response.success && response.data != null) {
+          updatedUser = response.data;
+        }
       }
+
+      if (updatedUser != null) {
+        state = state.copyWith(
+          user: updatedUser,
+          profileImageUrl: _resolveProfileImageUrl(updatedUser),
+          isUpdating: false,
+          error: null,
+        );
+        return true;
+      }
+
+      state = state.copyWith(
+        isUpdating: false,
+        error: 'Failed to upload profile picture',
+      );
+      return false;
     } catch (e, stackTrace) {
-      print('🔴 ProfileProvider: Error updating profile image - $e');
-      print('🔴 ProfileProvider: Stack trace - $stackTrace');
-      // On error, keep the current image
-      state = state.copyWith(isUpdating: false);
+      debugPrint('Profile image upload error: $e\n$stackTrace');
+      state = state.copyWith(
+        isUpdating: false,
+        error: e.toString(),
+      );
+      return false;
     }
   }
 

@@ -34,6 +34,8 @@ class LiveTrackingState {
   final DriverInfo? driverInfo;
   final bool isTracking;
   final double? driverHeading;
+  final bool followDriver;
+  final LatLng? displayedDriverLocation;
 
   LiveTrackingState({
     this.tracking,
@@ -51,6 +53,8 @@ class LiveTrackingState {
     this.driverInfo,
     this.isTracking = false,
     this.driverHeading = 0.0,
+    this.followDriver = true,
+    this.displayedDriverLocation,
   });
 
   LiveTrackingState copyWith({
@@ -69,6 +73,8 @@ class LiveTrackingState {
     DriverInfo? driverInfo,
     bool? isTracking,
     double? driverHeading,
+    bool? followDriver,
+    LatLng? displayedDriverLocation,
   }) {
     return LiveTrackingState(
       tracking: tracking ?? this.tracking,
@@ -86,6 +92,9 @@ class LiveTrackingState {
       driverInfo: driverInfo ?? this.driverInfo,
       isTracking: isTracking ?? this.isTracking,
       driverHeading: driverHeading ?? this.driverHeading,
+      followDriver: followDriver ?? this.followDriver,
+      displayedDriverLocation:
+          displayedDriverLocation ?? this.displayedDriverLocation,
     );
   }
 
@@ -108,6 +117,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
   BuildContext? _context;
   List<LatLng> _activeRoutePoints = [];
   static const _routeDeviationMeters = 120.0;
+  Timer? _driverAnimTimer;
+  static const _driverAnimSteps = 12;
 
   LiveTrackingNotifier(this.orderId) : super(LiveTrackingState()) {
     _initializeIcons();
@@ -231,11 +242,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         final lng = (location['longitude'] as num).toDouble();
 
         final newLocation = LatLng(lat, lng);
-
-        // Update state with new location
         state = state.copyWith(driverLocation: newLocation);
-
-        _updateMarkers();
+        _animateDriverTo(newLocation);
         _refreshDynamicEta();
 
         if (_shouldRecalculateRoute(newLocation)) {
@@ -454,7 +462,12 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         driverHeading: heading,
       );
 
-      _updateMarkers();
+      if (state.displayedDriverLocation == null) {
+        state = state.copyWith(displayedDriverLocation: location);
+        _updateMarkers();
+      } else {
+        _animateDriverTo(location);
+      }
       _refreshDynamicEta();
     } catch (e) {
       debugPrint('Failed to load driver location: $e');
@@ -656,15 +669,63 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
     return null;
   }
 
+  void toggleFollowDriver() {
+    state = state.copyWith(followDriver: !state.followDriver);
+  }
+
+  String buildShareLocationText() {
+    final driver = state.displayedDriverLocation ?? state.driverLocation;
+    final pickup = state.pickupLocation;
+    final dropoff = state.dropoffLocation;
+    final driverName = state.driverInfo?.name ?? 'Driver';
+    final lines = <String>[
+      'LeSGo live tracking — Order #$orderId',
+      if (driver != null)
+        'Driver ($driverName): https://maps.google.com/?q=${driver.latitude},${driver.longitude}',
+      if (pickup != null)
+        'Pickup: https://maps.google.com/?q=${pickup.latitude},${pickup.longitude}',
+      if (dropoff != null)
+        'Dropoff: https://maps.google.com/?q=${dropoff.latitude},${dropoff.longitude}',
+      if (state.eta != null) 'ETA: ${state.eta}',
+    ];
+    return lines.join('\n');
+  }
+
+  void _animateDriverTo(LatLng target) {
+    final from = state.displayedDriverLocation ?? state.driverLocation ?? target;
+    if (from.latitude == target.latitude && from.longitude == target.longitude) {
+      state = state.copyWith(displayedDriverLocation: target);
+      _updateMarkers();
+      return;
+    }
+
+    _driverAnimTimer?.cancel();
+    var step = 0;
+    _driverAnimTimer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
+      step++;
+      final t = (step / _driverAnimSteps).clamp(0.0, 1.0);
+      final lat = from.latitude + (target.latitude - from.latitude) * t;
+      final lng = from.longitude + (target.longitude - from.longitude) * t;
+      state = state.copyWith(displayedDriverLocation: LatLng(lat, lng));
+      _updateMarkers();
+
+      if (step >= _driverAnimSteps) {
+        timer.cancel();
+        state = state.copyWith(displayedDriverLocation: target);
+        _updateMarkers();
+      }
+    });
+  }
+
   void _updateMarkers() {
     final markers = <Marker>{};
+    final driverPos = state.displayedDriverLocation ?? state.driverLocation;
 
-    // Add driver marker
-    if (state.driverLocation != null) {
+    if (driverPos != null) {
       markers.add(
         Marker(
           markerId: const MarkerId('driver'),
-          position: state.driverLocation!,
+          position: driverPos,
           icon:
               _driverIcon ??
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
@@ -744,6 +805,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
   @override
   void dispose() {
+    _driverAnimTimer?.cancel();
     stopTracking();
     super.dispose();
   }

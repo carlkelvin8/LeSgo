@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/lespay_topup_fee.dart';
 import '../../../../data/data_source/payment_gateway_remote_datasource.dart';
@@ -43,6 +44,7 @@ class LespayState {
   final bool isLoadingTransactions;
   final String? transactionsError;
   final bool walletLoaded;
+  final bool balanceVisible;
 
   const LespayState({
     this.balance = 0,
@@ -54,6 +56,7 @@ class LespayState {
     this.isLoadingTransactions = false,
     this.transactionsError,
     this.walletLoaded = false,
+    this.balanceVisible = true,
   });
 
   LespayState copyWith({
@@ -66,6 +69,7 @@ class LespayState {
     bool? isLoadingTransactions,
     String? transactionsError,
     bool? walletLoaded,
+    bool? balanceVisible,
     bool clearPendingCheckout = false,
     bool clearError = false,
     bool clearTransactionsError = false,
@@ -85,12 +89,29 @@ class LespayState {
           ? null
           : (transactionsError ?? this.transactionsError),
       walletLoaded: walletLoaded ?? this.walletLoaded,
+      balanceVisible: balanceVisible ?? this.balanceVisible,
     );
   }
 }
 
 class LespayNotifier extends StateNotifier<LespayState> {
-  LespayNotifier() : super(const LespayState());
+  LespayNotifier() : super(const LespayState()) {
+    _loadBalanceVisibility();
+  }
+
+  void _loadBalanceVisibility() {
+    if (!getIt.isRegistered<AppPreferencesService>()) return;
+    final visible = getIt<AppPreferencesService>().lespayBalanceVisible;
+    state = state.copyWith(balanceVisible: visible);
+  }
+
+  Future<void> toggleBalanceVisibility() async {
+    final next = !state.balanceVisible;
+    if (getIt.isRegistered<AppPreferencesService>()) {
+      await getIt<AppPreferencesService>().setLespayBalanceVisible(next);
+    }
+    state = state.copyWith(balanceVisible: next);
+  }
 
   Future<void> loadWallet() async {
     state = state.copyWith(isLoading: true, clearError: true);

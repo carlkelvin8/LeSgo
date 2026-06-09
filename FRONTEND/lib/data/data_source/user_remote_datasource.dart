@@ -1,3 +1,4 @@
+import 'package:cross_file/cross_file.dart';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/constants/api_constants.dart';
@@ -88,6 +89,33 @@ class UserRemoteDataSource {
       return UserResponseDto.fromJson(raw);
     } catch (e) {
       throw Exception('Failed to get user profile: $e');
+    }
+  }
+
+  /// POST /v1/auth/me/profile-picture — multipart profile photo upload.
+  Future<UserResponseDto> uploadProfilePicture(XFile imageFile) async {
+    final dio = _dioClient.dio;
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final filename =
+          imageFile.name.isNotEmpty ? imageFile.name : 'profile.jpg';
+      final formData = FormData.fromMap({
+        'profile_picture': MultipartFile.fromBytes(bytes, filename: filename),
+      });
+
+      final response = await dio.post(
+        '${ApiConstants.authMe}/profile-picture',
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+
+      final raw = Map<String, dynamic>.from(response.data as Map);
+      if (raw['data'] is Map && raw['user'] == null) {
+        raw['user'] = raw['data'];
+      }
+      return UserResponseDto.fromJson(raw);
+    } catch (e) {
+      throw Exception('Failed to upload profile picture: $e');
     }
   }
 

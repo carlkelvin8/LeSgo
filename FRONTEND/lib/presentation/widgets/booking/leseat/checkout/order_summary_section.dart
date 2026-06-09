@@ -7,6 +7,10 @@ class OrderSummarySection extends StatelessWidget {
   final double discount;
   final double total;
   final int itemCount;
+  final bool deliveryFeeUncertain;
+  final String? deliveryFeeNote;
+  final bool orderValueUncertain;
+  final String? orderValueNote;
 
   const OrderSummarySection({
     super.key,
@@ -15,6 +19,10 @@ class OrderSummarySection extends StatelessWidget {
     this.discount = 0,
     required this.total,
     required this.itemCount,
+    this.deliveryFeeUncertain = false,
+    this.deliveryFeeNote,
+    this.orderValueUncertain = false,
+    this.orderValueNote,
   });
 
   @override
@@ -45,15 +53,43 @@ class OrderSummarySection extends StatelessWidget {
           _buildSummaryRow(
             context,
             'Subtotal',
-            'PHP ${subtotal.toStringAsFixed(2)}',
+            orderValueUncertain && subtotal <= 0
+                ? 'TBD'
+                : 'PHP ${subtotal.toStringAsFixed(2)}',
           ),
+          if (orderValueNote != null) ...[
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            Text(
+              orderValueNote!,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 11),
+                color: Colors.grey[600],
+                height: 1.35,
+              ),
+            ),
+          ],
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
           
           _buildSummaryRow(
             context,
             'Delivery',
-            'PHP ${delivery.toStringAsFixed(2)}',
+            deliveryFeeUncertain && delivery <= 0
+                ? 'TBD'
+                : 'PHP ${delivery.toStringAsFixed(2)}',
           ),
+          if (deliveryFeeNote != null) ...[
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            Text(
+              deliveryFeeNote!,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 11),
+                color: Colors.grey[600],
+                height: 1.35,
+              ),
+            ),
+          ],
           if (discount > 0) ...[
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             _buildSummaryRow(
@@ -73,8 +109,10 @@ class OrderSummarySection extends StatelessWidget {
           
           _buildSummaryRow(
             context,
-            'Total ($itemCount items)',
-            'PHP ${total.toStringAsFixed(2)}',
+            orderValueUncertain ? 'Total ($itemCount items, est.)' : 'Total ($itemCount items)',
+            orderValueUncertain && total <= 0
+                ? 'TBD'
+                : 'PHP ${total.toStringAsFixed(2)}',
             isTotal: true,
           ),
         ],

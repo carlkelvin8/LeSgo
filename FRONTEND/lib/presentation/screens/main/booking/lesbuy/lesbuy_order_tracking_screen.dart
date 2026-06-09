@@ -7,6 +7,7 @@ import '../../../../../core/utils/order_cancel_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/utils/order_line_items_parser.dart';
+import '../../../../../core/utils/lesbuy_manual_delivery_utils.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../provider/tracking/live_tracking_provider.dart';
@@ -81,10 +82,11 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
           print('🟢 LesBuy: Calculated subtotal from fallback: $subtotal');
         }
 
-        // Use effective delivery fee
         final deliveryFee = order.effectiveDeliveryFee;
-
-        // Use effective total amount
+        final deliveryUncertain = LesbuyManualDeliveryUtils.isDeliveryFeePending(
+          meta: meta,
+          deliveryFee: deliveryFee,
+        );
         final grandTotal = order.effectiveTotalAmount;
 
         setState(() {
@@ -92,6 +94,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
             ...order.toJson(),
             'subtotal': subtotal,
             'deliveryFee': deliveryFee,
+            'deliveryFeeUncertain': deliveryUncertain,
             'total': grandTotal,
           };
         });
@@ -818,6 +821,16 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
   Widget _buildOrderSummary(BuildContext context, Map<String, dynamic> orderData) {
     final subtotal = _safeToDouble(orderData['subtotal']);
     final deliveryFee = _safeToDouble(orderData['deliveryFee']);
+    final meta = orderData['meta'] is Map
+        ? Map<String, dynamic>.from(orderData['meta'] as Map)
+        : null;
+    final deliveryUncertain = orderData['deliveryFeeUncertain'] == true ||
+        LesbuyManualDeliveryUtils.isDeliveryFeePending(
+          meta: meta,
+          deliveryFee: deliveryFee,
+        );
+    final orderValueUncertain = orderData['orderValueUncertain'] == true ||
+        LesbuyManualDeliveryUtils.isOrderValueUncertainFromMeta(meta);
     final total = _safeToDouble(orderData['total']);
 
     return Column(
@@ -833,13 +846,59 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        _buildSummaryRow(context, 'Subtotal', 'Php ${subtotal.toStringAsFixed(2)}'),
-        _buildSummaryRow(context, 'Delivery', 'Php ${deliveryFee.toStringAsFixed(2)}'),
+        _buildSummaryRow(
+          context,
+          'Subtotal',
+          orderValueUncertain && subtotal <= 0
+              ? 'TBD'
+              : 'Php ${subtotal.toStringAsFixed(2)}',
+        ),
+        if (orderValueUncertain && subtotal <= 0)
+          Padding(
+            padding: EdgeInsets.only(
+              top: ResponsiveUtils.spacing(context, 6),
+            ),
+            child: Text(
+              LesbuyManualDeliveryUtils.orderValuePendingHint,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 11),
+                color: Colors.grey[600],
+                height: 1.35,
+              ),
+            ),
+          ),
+        _buildSummaryRow(
+          context,
+          'Delivery',
+          deliveryUncertain && deliveryFee <= 0
+              ? 'TBD'
+              : 'Php ${deliveryFee.toStringAsFixed(2)}',
+        ),
+        if (deliveryUncertain && deliveryFee <= 0)
+          Padding(
+            padding: EdgeInsets.only(
+              top: ResponsiveUtils.spacing(context, 6),
+            ),
+            child: Text(
+              LesbuyManualDeliveryUtils.pendingHint,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 11),
+                color: Colors.grey[600],
+                height: 1.35,
+              ),
+            ),
+          ),
         const Divider(),
         _buildSummaryRow(
           context,
-          'Total (Estimated)',
-          'PHP ${total.toStringAsFixed(2)}',
+          orderValueUncertain || deliveryUncertain
+              ? 'Total (Estimated)'
+              : 'Total',
+          (orderValueUncertain || deliveryUncertain) && total <= 0
+              ? 'TBD'
+              : 'PHP ${total.toStringAsFixed(2)}',
           isTotal: true,
         ),
       ],

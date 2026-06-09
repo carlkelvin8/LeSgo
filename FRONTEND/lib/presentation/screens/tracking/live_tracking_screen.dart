@@ -7,6 +7,8 @@ import '../../widgets/tracking/driver_info_card.dart';
 import '../../widgets/orders/cancel_order_dialog.dart';
 import '../chat/chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../core/constants/map_styles.dart';
 import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/order_cancel_utils.dart';
 import '../../../data/data_source/order_remote_datasource.dart';
@@ -130,21 +132,23 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   Widget build(BuildContext context) {
     final trackingState = ref.watch(liveTrackingProvider(widget.orderId));
 
-    // Listen for driver location changes to auto-follow
     ref.listen<LiveTrackingState>(liveTrackingProvider(widget.orderId), (previous, next) {
-      if (previous?.driverLocation != next.driverLocation && next.driverLocation != null) {
-        if (_mapController != null && _mapReady) {
-          _mapController!.animateCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: next.driverLocation!,
-                zoom: 16.5,
-                bearing: next.driverHeading ?? 0.0,
-                tilt: 45.0, // Add some tilt for a cool 3D navigation effect
-              ),
+      if (!next.followDriver) return;
+      final target = next.displayedDriverLocation ?? next.driverLocation;
+      if (previous?.displayedDriverLocation != next.displayedDriverLocation &&
+          target != null &&
+          _mapController != null &&
+          _mapReady) {
+        _mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: target,
+              zoom: 16.5,
+              bearing: next.driverHeading ?? 0.0,
+              tilt: 45.0,
             ),
-          );
-        }
+          ),
+        );
       }
 
       final wasCancelled =
@@ -161,10 +165,10 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
           // Map
           GoogleMap(
             initialCameraPosition: const CameraPosition(
-              // Philippines geographic center — camera moves to real location once tracking loads
               target: LatLng(12.8797, 121.7740),
               zoom: 6,
             ),
+            style: MapStyles.dark,
             markers: trackingState.markers,
             polylines: trackingState.polylines,
             myLocationEnabled: true,
@@ -273,25 +277,60 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
             ),
           ),
 
-          // My location button
+          if (trackingState.error != null)
+            Positioned(
+              top: 100,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Colors.red.shade700,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    trackingState.error!,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ),
+            ),
+
           Positioned(
             right: 16,
             bottom: _isBottomSheetExpanded ? 400 : 250,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.my_location),
-                onPressed: _fitBounds,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _mapFab(
+                  icon: trackingState.followDriver
+                      ? Icons.gps_fixed
+                      : Icons.gps_not_fixed,
+                  tooltip: trackingState.followDriver
+                      ? 'Following driver'
+                      : 'Follow driver off',
+                  onPressed: () => ref
+                      .read(liveTrackingProvider(widget.orderId).notifier)
+                      .toggleFollowDriver(),
+                  isActive: trackingState.followDriver,
+                ),
+                const SizedBox(height: 8),
+                _mapFab(
+                  icon: Icons.share_location,
+                  tooltip: 'Share location',
+                  onPressed: () {
+                    final text = ref
+                        .read(liveTrackingProvider(widget.orderId).notifier)
+                        .buildShareLocationText();
+                    Share.share(text);
+                  },
+                ),
+                const SizedBox(height: 8),
+                _mapFab(
+                  icon: Icons.my_location,
+                  tooltip: 'Fit route',
+                  onPressed: _fitBounds,
+                ),
+              ],
             ),
           ),
 
@@ -597,5 +636,30 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       default:
         return Icons.info;
     }
+  }
+
+  Widget _mapFab({
+    required IconData icon,
+    required VoidCallback onPressed,
+    String? tooltip,
+    bool isActive = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFF5F2D82) : Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: IconButton(
+        tooltip: tooltip,
+        icon: Icon(icon, color: isActive ? Colors.white : Colors.black87),
+        onPressed: onPressed,
+      ),
+    );
   }
 }

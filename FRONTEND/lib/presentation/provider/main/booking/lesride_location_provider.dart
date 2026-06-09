@@ -8,6 +8,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/utils/directions_route_service.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 
 class LesrideLocationState {
@@ -502,88 +503,53 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         return;
       }
 
-      // Use backend proxy to get directions
-      final originStr = '${origin.latitude},${origin.longitude}';
-      final destinationStr = '${destination.latitude},${destination.longitude}';
-      
-      final url = Uri.parse(
-        '${ApiConstants.baseUrl}/v1/google-places/directions'
-        '?origin=$originStr&destination=$destinationStr',
+      final directions = await DirectionsRouteService.fetchRoute(
+        originLat: origin.latitude,
+        originLng: origin.longitude,
+        destLat: destination.latitude,
+        destLng: destination.longitude,
       );
 
-      print('🚗 Fetching route from: $url');
-      final response = await http.get(url);
-      print('🚗 Response status: ${response.statusCode}');
-      print('🚗 Response body: ${response.body}');
+      if (directions != null && directions.points.isNotEmpty) {
+        final polyline = Polyline(
+          polylineId: const PolylineId('route'),
+          points: directions.points,
+          color: const Color(0xFF1976D2),
+          width: 6,
+          geodesic: true,
+        );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print('🚗 Decoded data status: ${data['status']}');
-        
-        if (data['status'] == 'OK' && data['routes'] != null && (data['routes'] as List).isNotEmpty) {
-          final route = data['routes'][0];
-          final polylineEncoded = route['overview_polyline']['points'];
-          print('🚗 Polyline encoded: ${polylineEncoded.substring(0, 50)}...');
-          final List<LatLng> polylinePoints = _decodePolyline(polylineEncoded);
-          print('🚗 Decoded ${polylinePoints.length} points');
-
-          // Get distance and duration from the route
-          final leg = route['legs'][0];
-          final distanceInMeters = leg['distance']['value'];
-          final durationInSeconds = leg['duration']['value'];
-          print('🚗 Distance: ${distanceInMeters}m, Duration: ${durationInSeconds}s');
-
-          // Use ALL decoded polyline points for accurate route following roads
-          print('🚗 Using all ${polylinePoints.length} points for accurate road-following route');
-
-          // Create polyline that follows actual roads
-          final polyline = Polyline(
-            polylineId: const PolylineId('route'),
-            points: polylinePoints, // Use ALL decoded points from Google Directions
-            color: const Color(0xFF1976D2), // Blue color for visibility
-            width: 6, // Medium thickness
-            geodesic: true, // Enable geodesic for proper road curvature
-            patterns: [], // Solid line
-          );
-
-          state = state.copyWith(
-            routePolylines: {polyline},
-            distanceInKm: distanceInMeters / 1000.0,
-            durationInSeconds: durationInSeconds,
-            isLoadingRoute: false,
-            error: null,
-          );
-          print('🚗 Route updated successfully with ${polylinePoints.length} road-following points!');
-        } else {
-          print('🚗 No valid route found, using fallback');
-          // Fallback to straight line if no route found
-          final double distanceInKm = Geolocator.distanceBetween(
-            origin.latitude,
-            origin.longitude,
-            destination.latitude,
-            destination.longitude,
-          ) / 1000.0;
-
-          // Fallback: Use straight line only if no route data available
-          final polyline = Polyline(
-            polylineId: const PolylineId('route'),
-            points: [origin, destination],
-            color: const Color(0xFF1976D2), // Blue color
-            width: 6, // Medium thickness
-            geodesic: true, // Enable geodesic
-            patterns: [PatternItem.dash(20), PatternItem.gap(10)], // Dashed for fallback
-          );
-
-          state = state.copyWith(
-            routePolylines: {polyline},
-            distanceInKm: distanceInKm,
-            durationInSeconds: (distanceInKm * 180).round(),
-            isLoadingRoute: false,
-            error: null,
-          );
-        }
+        state = state.copyWith(
+          routePolylines: {polyline},
+          distanceInKm: (directions.distanceMeters ?? 0) / 1000.0,
+          durationInSeconds: directions.durationSeconds,
+          isLoadingRoute: false,
+          error: directions.error,
+        );
       } else {
-        throw Exception('Failed to fetch route: ${response.statusCode}');
+        final distanceInKm = Geolocator.distanceBetween(
+          origin.latitude,
+          origin.longitude,
+          destination.latitude,
+          destination.longitude,
+        ) / 1000.0;
+
+        final polyline = Polyline(
+          polylineId: const PolylineId('route'),
+          points: [origin, destination],
+          color: const Color(0xFF1976D2),
+          width: 6,
+          geodesic: true,
+          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+        );
+
+        state = state.copyWith(
+          routePolylines: {polyline},
+          distanceInKm: distanceInKm,
+          durationInSeconds: (distanceInKm * 180).round(),
+          isLoadingRoute: false,
+          error: directions?.error ?? 'Using estimated straight-line route',
+        );
       }
     } catch (e) {
       print('Error fetching route: $e');

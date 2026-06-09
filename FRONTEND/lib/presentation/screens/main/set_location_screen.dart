@@ -297,6 +297,11 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
                 },
                 onMapTap: (location) =>
                     _controllers.handleMapTap(location, ref, context),
+                onMarkerDragEnd: (location) => _controllers.handleMarkerDragEnd(
+                  location,
+                  ref,
+                  context,
+                ),
                 showPickupDestination: false,
                 onAnimateToLocation: (location) =>
                     _controllers.animateOverlayToLocation(location),

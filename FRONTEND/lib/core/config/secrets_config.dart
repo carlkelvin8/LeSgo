@@ -50,6 +50,16 @@ class SecretsConfig {
     defaultValue: 'com.lesgo.app',
   );
 
+  static const String geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
+
+  static bool get isGeminiConfigured =>
+      geminiApiKey.isNotEmpty &&
+      !geminiApiKey.startsWith('your-') &&
+      geminiApiKey != 'your-gemini-api-key-here';
+
   static bool get isGoogleMapsConfigured =>
       googleMapsApiKey.isNotEmpty &&
       googleMapsApiKey != 'your-google-maps-api-key-here';

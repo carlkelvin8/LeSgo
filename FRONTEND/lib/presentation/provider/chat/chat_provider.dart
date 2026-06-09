@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/polling_intervals.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/order_service_labels.dart';
 import '../../../data/data_source/chat_remote_datasource.dart';
 import '../../../data/data_source/order_remote_datasource.dart';
@@ -93,7 +94,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
       );
     } catch (e) {
       state = state.copyWith(
-        error: e.toString(),
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not load conversations.',
+          fallbackTl: 'Hindi ma-load ang mga mensahe.',
+        ),
         isLoading: false,
       );
     }

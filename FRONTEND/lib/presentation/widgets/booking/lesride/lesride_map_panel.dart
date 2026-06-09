@@ -39,6 +39,7 @@ class LesrideMapPanel extends ConsumerWidget {
             onMapTap: onMapTap,
             isFullscreen: false,
           ),
+          MapExpandHint(onTap: onToggleFullscreen),
           if (isLoading)
             Positioned.fill(
               child: BackdropFilter(

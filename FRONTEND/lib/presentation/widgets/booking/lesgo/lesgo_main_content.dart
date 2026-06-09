@@ -115,6 +115,7 @@ class LesgoMainContent extends ConsumerWidget {
                   onUseCurrentLocation: () => notifier.useCurrentLocation(),
                   onToggleFullscreen: () => notifier.toggleFullscreen(),
                   onMapTap: (latLng) => notifier.onMapTap(latLng),
+                  onMarkerDragEnd: (latLng) => notifier.onMapTap(latLng),
                   isFullscreen: true,
                 ),
                 shouldShow: () => true,
@@ -184,6 +185,7 @@ class LesgoMainContent extends ConsumerWidget {
             left: 0,
             right: 0,
             child: MapSearchBar(
+              requirePreviewConfirmation: true,
               isSelectingDestination: selectingDestination,
               onPlaceSelected:
                   (latLng, formattedAddress, addressComponents) async {

@@ -1,9 +1,10 @@
-import 'dart:convert';
-
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
 
 import '../constants/api_constants.dart';
+import '../di/injection.dart';
+import '../network/dio_client.dart';
 
 /// Fetches road-following routes via the backend Google Directions proxy.
 class DirectionsRouteService {
@@ -15,37 +16,84 @@ class DirectionsRouteService {
     String? durationText,
     int? distanceMeters,
     int? durationSeconds,
+    String? error,
   })?> fetchRoute({
     required double originLat,
     required double originLng,
     required double destLat,
     required double destLng,
   }) async {
-    if (!ApiConstants.isGoogleMapsConfigured) return null;
-
-    final origin = '$originLat,$originLng';
-    final destination = '$destLat,$destLng';
-    final url = Uri.parse(
-      '${ApiConstants.baseUrl}/v1/google-places/directions'
-      '?origin=$origin&destination=$destination',
-    );
+    if (!ApiConstants.isGoogleMapsConfigured) {
+      return (
+        points: <LatLng>[],
+        distanceText: null,
+        durationText: null,
+        distanceMeters: null,
+        durationSeconds: null,
+        error: 'Maps not configured',
+      );
+    }
 
     try {
-      final response = await http.get(url);
-      if (response.statusCode != 200) return null;
+      final dio = getIt<DioClient>().dio;
+      final response = await dio.get<Map<String, dynamic>>(
+        '/v1/google-places/directions',
+        queryParameters: {
+          'origin': '$originLat,$originLng',
+          'destination': '$destLat,$destLng',
+        },
+      );
 
-      final data = json.decode(response.body) as Map<String, dynamic>;
-      if (data['status'] != 'OK') return null;
+      final data = _unwrapPayload(response.data);
+      final status = data['status']?.toString() ?? '';
+
+      if (status != 'OK') {
+        return (
+          points: <LatLng>[],
+          distanceText: null,
+          durationText: null,
+          distanceMeters: null,
+          durationSeconds: null,
+          error: status.isEmpty ? 'Route unavailable' : status,
+        );
+      }
 
       final routes = data['routes'] as List?;
-      if (routes == null || routes.isEmpty) return null;
+      if (routes == null || routes.isEmpty) {
+        return (
+          points: <LatLng>[],
+          distanceText: null,
+          durationText: null,
+          distanceMeters: null,
+          durationSeconds: null,
+          error: 'No route found',
+        );
+      }
 
       final route = routes.first as Map<String, dynamic>;
       final encoded = route['overview_polyline']?['points']?.toString();
-      if (encoded == null || encoded.isEmpty) return null;
+      if (encoded == null || encoded.isEmpty) {
+        return (
+          points: <LatLng>[],
+          distanceText: null,
+          durationText: null,
+          distanceMeters: null,
+          durationSeconds: null,
+          error: 'Invalid route data',
+        );
+      }
 
       final points = decodePolyline(encoded);
-      if (points.isEmpty) return null;
+      if (points.isEmpty) {
+        return (
+          points: <LatLng>[],
+          distanceText: null,
+          durationText: null,
+          distanceMeters: null,
+          durationSeconds: null,
+          error: 'Empty route',
+        );
+      }
 
       String? distanceText;
       String? durationText;
@@ -69,10 +117,37 @@ class DirectionsRouteService {
         durationText: durationText,
         distanceMeters: distanceMeters,
         durationSeconds: durationSeconds,
+        error: null,
       );
-    } catch (_) {
-      return null;
+    } on DioException catch (e) {
+      debugPrint('DirectionsRouteService error: ${e.message}');
+      return (
+        points: <LatLng>[],
+        distanceText: null,
+        durationText: null,
+        distanceMeters: null,
+        durationSeconds: null,
+        error: 'Could not load route. Check your connection.',
+      );
+    } catch (e) {
+      debugPrint('DirectionsRouteService error: $e');
+      return (
+        points: <LatLng>[],
+        distanceText: null,
+        durationText: null,
+        distanceMeters: null,
+        durationSeconds: null,
+        error: 'Could not load route.',
+      );
     }
+  }
+
+  static Map<String, dynamic> _unwrapPayload(Map<String, dynamic>? raw) {
+    if (raw == null) return {};
+    final data = raw['data'];
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return raw;
   }
 
   static List<LatLng> decodePolyline(String encoded) {

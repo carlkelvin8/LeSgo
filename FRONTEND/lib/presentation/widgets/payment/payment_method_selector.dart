@@ -3,12 +3,13 @@ import '../../../core/utils/responsive_utils.dart';
 
 /// Reusable payment method selector widget
 /// Currently supports COD (Cash on Delivery) as primary method
-/// Infrastructure ready for digital payments (GCash, PayMaya, Card)
+/// Optional card payments via payment gateway (GCash/PayMaya/bank hidden in UI).
 class PaymentMethodSelector extends StatelessWidget {
   final String selectedMethod;
   final Function(String) onMethodChanged;
   final bool enabled;
   final double? walletBalance;
+  final bool walletBalanceVisible;
   /// When set, LesPay is selectable only if balance >= this amount.
   final double? minimumWalletAmount;
   final bool showWallet;
@@ -20,6 +21,7 @@ class PaymentMethodSelector extends StatelessWidget {
     required this.onMethodChanged,
     this.enabled = true,
     this.walletBalance,
+    this.walletBalanceVisible = true,
     this.minimumWalletAmount,
     this.showWallet = false,
     this.showDigitalPayments = false,
@@ -29,6 +31,15 @@ class PaymentMethodSelector extends StatelessWidget {
     final balance = walletBalance ?? 0;
     final required = minimumWalletAmount ?? 0.01;
     return balance >= required;
+  }
+
+  String get _walletBalanceLabel {
+    if (!walletBalanceVisible) return 'Balance: ••••••';
+    final balance = walletBalance ?? 0;
+    if (_walletHasSufficientBalance) {
+      return 'Balance: ₱${balance.toStringAsFixed(2)}';
+    }
+    return 'Insufficient balance (₱${balance.toStringAsFixed(2)})';
   }
 
   @override
@@ -93,9 +104,7 @@ class PaymentMethodSelector extends StatelessWidget {
               value: 'wallet',
               title: 'LesPay Wallet',
               subtitle: walletBalance != null
-                  ? _walletHasSufficientBalance
-                      ? 'Balance: ₱${walletBalance!.toStringAsFixed(2)}'
-                      : 'Insufficient balance (₱${walletBalance!.toStringAsFixed(2)})'
+                  ? _walletBalanceLabel
                   : 'Digital wallet payment',
               icon: Icons.account_balance_wallet,
               iconColor: const Color(0xFF5F2D82),
@@ -103,28 +112,7 @@ class PaymentMethodSelector extends StatelessWidget {
             ),
           ],
 
-          // Digital Payments (Optional - for future use)
           if (showDigitalPayments) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            _buildPaymentOption(
-              context: context,
-              value: 'gcash',
-              title: 'GCash',
-              subtitle: 'Pay with GCash e-wallet',
-              icon: Icons.phone_android,
-              iconColor: Colors.blue,
-              enabled: enabled,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            _buildPaymentOption(
-              context: context,
-              value: 'paymaya',
-              title: 'PayMaya',
-              subtitle: 'Pay with PayMaya e-wallet',
-              icon: Icons.phone_android,
-              iconColor: Colors.green,
-              enabled: enabled,
-            ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             _buildPaymentOption(
               context: context,

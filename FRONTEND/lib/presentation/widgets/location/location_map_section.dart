@@ -91,12 +91,15 @@ class LocationMapSection extends ConsumerWidget {
                     ),
                   ),
                 ),
+              MapExpandHint(onTap: onToggleFullscreen),
               Positioned(
                 top: ResponsiveUtils.spacing(context, 16),
                 right: ResponsiveUtils.spacing(context, 16),
                 child: MapZoomControls(
                   onToggleFullscreen: onToggleFullscreen,
                   isFullscreen: false,
+                  mapController: mapController,
+                  showZoomButtons: mapController != null,
                 ),
               ),
               Positioned(

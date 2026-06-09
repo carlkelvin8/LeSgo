@@ -18,6 +18,7 @@ import '../services/app_preferences_service.dart';
 import '../../data/data_source/xendit_remote_datasource.dart';
 import '../network/dio_client.dart';
 import '../services/ssl_pinning_service.dart';
+import '../services/map_recent_search_service.dart';
 import '../services/customer_satisfaction_service.dart';
 import '../services/chat_realtime_service.dart';
 import '../services/chat_websocket_service.dart';
@@ -26,6 +27,7 @@ import '../../data/data_source/support_remote_datasource.dart';
 import '../../data/data_source/document_remote_datasource.dart';
 import '../services/analytics_service.dart';
 import '../services/file_upload_service.dart';
+import '../services/gemini_customer_service.dart';
 
 import 'injection.config.dart';
 
@@ -164,6 +166,18 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<FileUploadService>()) {
     getIt.registerLazySingleton<FileUploadService>(
       () => FileUploadService(getIt<DioClient>()),
+    );
+  }
+
+  if (!getIt.isRegistered<GeminiCustomerService>()) {
+    getIt.registerLazySingleton<GeminiCustomerService>(
+      () => GeminiCustomerService(),
+    );
+  }
+
+  if (!getIt.isRegistered<MapRecentSearchService>()) {
+    getIt.registerLazySingleton<MapRecentSearchService>(
+      () => MapRecentSearchService(getIt<SharedPreferences>()),
     );
   }
 

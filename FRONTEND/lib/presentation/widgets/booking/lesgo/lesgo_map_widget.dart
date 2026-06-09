@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesgo_location_provider.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/marker_utils.dart';
+import '../../global/googlemaps/map_route_info_banner.dart';
 
 /// Map for LesGo — stable [GoogleMap] instance; marker/polyline updates only.
 class LesgoMapWidget extends ConsumerStatefulWidget {
@@ -11,6 +12,7 @@ class LesgoMapWidget extends ConsumerStatefulWidget {
   final VoidCallback onUseCurrentLocation;
   final VoidCallback onToggleFullscreen;
   final Function(LatLng) onMapTap;
+  final Function(LatLng)? onMarkerDragEnd;
   final bool isFullscreen;
   final bool showPickupDestination;
 
@@ -20,6 +22,7 @@ class LesgoMapWidget extends ConsumerStatefulWidget {
     required this.onUseCurrentLocation,
     required this.onToggleFullscreen,
     required this.onMapTap,
+    this.onMarkerDragEnd,
     required this.isFullscreen,
     this.showPickupDestination = true,
   });
@@ -97,12 +100,20 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
         _roseMarker != null &&
         selected != pickup &&
         selected != destination) {
+      final draggable = widget.onMarkerDragEnd != null;
       markers.add(
         Marker(
           markerId: const MarkerId('selected'),
           position: selected,
           icon: _roseMarker!,
-          infoWindow: const InfoWindow(title: 'Selected Location'),
+          infoWindow: InfoWindow(
+            title: 'Selected Location',
+            snippet: draggable ? 'Drag to adjust pin' : null,
+          ),
+          draggable: draggable,
+          onDragEnd: draggable
+              ? (position) => widget.onMarkerDragEnd!(position)
+              : null,
         ),
       );
     }
@@ -167,7 +178,7 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
               top: 16,
               left: 16,
               right: 16,
-              child: _RouteInfoBanner(
+              child: MapRouteInfoBanner(
                 isLoadingRoute: isLoadingRoute,
                 distanceKm: distanceKm,
                 durationSec: durationSec,
@@ -213,79 +224,6 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
       ),
     );
     _mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
-  }
-}
-
-class _RouteInfoBanner extends StatelessWidget {
-  const _RouteInfoBanner({
-    required this.isLoadingRoute,
-    required this.distanceKm,
-    required this.durationSec,
-  });
-
-  final bool isLoadingRoute;
-  final double? distanceKm;
-  final int? durationSec;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: isLoadingRoute
-          ? const Row(
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Calculating route...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            )
-          : distanceKm != null
-              ? Row(
-                  children: [
-                    const Icon(Icons.route, color: Color(0xFF4285F4), size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Route: ${distanceKm!.toStringAsFixed(1)} km',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (durationSec != null) ...[
-                      const SizedBox(width: 16),
-                      Text(
-                        '${(durationSec! / 60).ceil()} min',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ],
-                )
-              : const Text(
-                  'Tap "Confirm location" to calculate route',
-                  style: TextStyle(fontSize: 14),
-                ),
-    );
   }
 }
 

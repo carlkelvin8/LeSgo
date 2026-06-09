@@ -32,6 +32,19 @@ class OrderStatusMapper {
     }
   }
 
+  static String toDisplayLabel(String? apiStatus) {
+    final raw = (apiStatus ?? '').trim();
+    if (raw.isEmpty) return 'In progress';
+    return raw
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
+  }
+
   static bool isTerminal(String? apiStatus) {
     final s = (apiStatus ?? '').toLowerCase();
     return s == 'completed' ||

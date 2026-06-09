@@ -16,6 +16,7 @@ class MainRoutes {
   static const String referralDashboard = '/referral-dashboard';
   static const String faqs = '/faqs';
   static const String supportTickets = '/support-tickets';
+  static const String customerServiceChat = '/customer-service-chat';
   static const String documentVerification = '/document-verification';
   static const String about = '/about';
   static const String privacyPolicy = '/privacy-policy';

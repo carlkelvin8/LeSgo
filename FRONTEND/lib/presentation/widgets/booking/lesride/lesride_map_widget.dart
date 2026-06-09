@@ -4,12 +4,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesride_location_provider.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/marker_utils.dart';
+import '../../global/googlemaps/map_route_info_banner.dart';
 
 class LesrideMapWidget extends ConsumerStatefulWidget {
   final Function(GoogleMapController) onMapCreated;
   final VoidCallback onUseCurrentLocation;
   final VoidCallback onToggleFullscreen;
   final Function(LatLng) onMapTap;
+  final Function(LatLng)? onMarkerDragEnd;
   final bool isFullscreen;
   final bool showPickupDestination;
 
@@ -19,6 +21,7 @@ class LesrideMapWidget extends ConsumerStatefulWidget {
     required this.onUseCurrentLocation,
     required this.onToggleFullscreen,
     required this.onMapTap,
+    this.onMarkerDragEnd,
     required this.isFullscreen,
     this.showPickupDestination = true,
   });
@@ -120,12 +123,20 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
         _roseMarker != null &&
         selected != pickup &&
         selected != destination) {
+      final draggable = widget.onMarkerDragEnd != null;
       markers.add(
         Marker(
           markerId: const MarkerId('selected'),
           position: selected,
           icon: _roseMarker!,
-          infoWindow: const InfoWindow(title: 'Selected Location'),
+          infoWindow: InfoWindow(
+            title: 'Selected Location',
+            snippet: draggable ? 'Drag to adjust pin' : null,
+          ),
+          draggable: draggable,
+          onDragEnd: draggable
+              ? (position) => widget.onMarkerDragEnd!(position)
+              : null,
         ),
       );
     }
@@ -160,152 +171,16 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
           liteModeEnabled: false,
         ),
         
-        // Route info overlay when both locations are set
         if (pickup != null && destination != null)
           Positioned(
             top: 16,
             left: 16,
             right: 16,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: isLoadingRoute
-                  ? Row(
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFF7B1FA2),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Calculating route...',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    )
-                  : distanceKm != null
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF7B1FA2).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.route,
-                                    color: Color(0xFF7B1FA2),
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${distanceKm!.toStringAsFixed(1)} km',
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                      if (durationSec != null)
-                                        Text(
-                                          '${(durationSec! / 60).ceil()} min estimated',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Route Ready',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        )
-                      : Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.info_outline,
-                                color: Colors.orange,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: const Text(
-                                'Tap "Confirm location" to calculate route',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+            child: MapRouteInfoBanner(
+              isLoadingRoute: isLoadingRoute,
+              distanceKm: distanceKm,
+              durationSec: durationSec,
+              accentColor: const Color(0xFF7B1FA2),
             ),
           ),
         

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
+import '../../../../core/utils/directions_route_service.dart';
 
 class LesgoLocationState {
   final LatLng? currentLocation;
@@ -417,81 +418,53 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         return;
       }
 
-      // Use backend proxy to get directions
-      final originStr = '${origin.latitude},${origin.longitude}';
-      final destinationStr = '${destination.latitude},${destination.longitude}';
-      
-      final url = Uri.parse(
-        '${ApiConstants.baseUrl}/v1/google-places/directions'
-        '?origin=$originStr&destination=$destinationStr',
+      final directions = await DirectionsRouteService.fetchRoute(
+        originLat: origin.latitude,
+        originLng: origin.longitude,
+        destLat: destination.latitude,
+        destLng: destination.longitude,
       );
 
-      print('🚗 Lesgo: Fetching route from: $url');
-      final response = await http.get(url);
-      print('🚗 Lesgo: Response status: ${response.statusCode}');
+      if (directions != null && directions.points.isNotEmpty) {
+        final polyline = Polyline(
+          polylineId: const PolylineId('route'),
+          points: directions.points,
+          color: const Color(0xFF1976D2),
+          width: 6,
+          geodesic: true,
+        );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print('🚗 Lesgo: Decoded data status: ${data['status']}');
-        
-        if (data['status'] == 'OK' && data['routes'] != null && (data['routes'] as List).isNotEmpty) {
-          final route = data['routes'][0];
-          final polylineEncoded = route['overview_polyline']['points'];
-          print('🚗 Lesgo: Polyline encoded length: ${polylineEncoded.length}');
-          final List<LatLng> polylinePoints = _decodePolyline(polylineEncoded);
-          print('🚗 Lesgo: Decoded ${polylinePoints.length} points');
-
-          // Get distance and duration from the route
-          final leg = route['legs'][0];
-          final distanceInMeters = leg['distance']['value'];
-          final durationInSeconds = leg['duration']['value'];
-          print('🚗 Lesgo: Distance: ${distanceInMeters}m, Duration: ${durationInSeconds}s');
-
-          final polyline = Polyline(
-            polylineId: const PolylineId('route'),
-            points: polylinePoints,
-            color: const Color(0xFF1976D2), // Blue color for consistency
-            width: 6, // Medium thickness
-            geodesic: true,
-          );
-
-          state = state.copyWith(
-            routePolylines: {polyline},
-            distanceInKm: distanceInMeters / 1000.0,
-            durationInSeconds: durationInSeconds,
-            isLoadingRoute: false,
-            error: null,
-          );
-          print('🚗 Lesgo: Route updated successfully with ${polylinePoints.length} points!');
-        } else {
-          print('🚗 Lesgo: No valid route found, using fallback');
-          // Fallback to straight line if no route found
-          final double distanceInKm = Geolocator.distanceBetween(
-            origin.latitude,
-            origin.longitude,
-            destination.latitude,
-            destination.longitude,
-          ) / 1000.0;
-
-          final polyline = Polyline(
-            polylineId: const PolylineId('route'),
-            points: [origin, destination],
-            color: const Color(0xFF1976D2), // Darker blue
-            width: 8, // Thicker line
-            patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-            geodesic: true,
-          );
-
-          state = state.copyWith(
-            routePolylines: {polyline},
-            distanceInKm: distanceInKm,
-            durationInSeconds: (distanceInKm * 180).round(),
-            isLoadingRoute: false,
-            error: null,
-          );
-        }
+        state = state.copyWith(
+          routePolylines: {polyline},
+          distanceInKm: (directions.distanceMeters ?? 0) / 1000.0,
+          durationInSeconds: directions.durationSeconds,
+          isLoadingRoute: false,
+          error: directions.error,
+        );
       } else {
-        throw Exception('Failed to fetch route: ${response.statusCode}');
+        final distanceInKm = Geolocator.distanceBetween(
+          origin.latitude,
+          origin.longitude,
+          destination.latitude,
+          destination.longitude,
+        ) / 1000.0;
+
+        final polyline = Polyline(
+          polylineId: const PolylineId('route'),
+          points: [origin, destination],
+          color: const Color(0xFF1976D2),
+          width: 8,
+          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
+          geodesic: true,
+        );
+
+        state = state.copyWith(
+          routePolylines: {polyline},
+          distanceInKm: distanceInKm,
+          durationInSeconds: (distanceInKm * 180).round(),
+          isLoadingRoute: false,
+          error: directions?.error ?? 'Using estimated straight-line route',
+        );
       }
     } catch (e) {
       print('🔴 Lesgo: Error fetching route: $e');

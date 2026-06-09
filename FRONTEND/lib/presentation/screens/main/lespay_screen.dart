@@ -44,8 +44,12 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
             else
               WalletCard(
                 balance: lespayState.balance,
+                balanceVisible: lespayState.balanceVisible,
                 onTap: () {
                   ref.read(lespayProvider.notifier).refreshBalance();
+                },
+                onToggleVisibility: () {
+                  ref.read(lespayProvider.notifier).toggleBalanceVisibility();
                 },
               ),
 
@@ -87,9 +91,6 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
                   children: [
                     const CustomDivider(),
                     const LespayActionsSection(),
-                    const CustomDivider(),
-                    const SectionHeader(title: 'Link Account'),
-                    const LinkAccountsSection(),
                     const CustomDivider(),
                     const SectionHeader(title: 'Transaction History'),
                     const WalletTransactionsSection(),

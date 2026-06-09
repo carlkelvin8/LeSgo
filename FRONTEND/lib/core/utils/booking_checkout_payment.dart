@@ -10,8 +10,8 @@ import '../../presentation/provider/main/payment_gateway/payment_gateway_provide
 import '../../presentation/screens/main/booking/order_digital_payment_screen.dart';
 import 'lespay_order_payment.dart';
 
-/// GCash, PayMaya, card — paid via payment gateway / Xendit before continuing.
-const digitalPaymentMethods = {'gcash', 'paymaya', 'card', 'xendit'};
+/// Card / gateway checkout — paid via payment gateway before continuing.
+const digitalPaymentMethods = {'card', 'xendit'};
 
 bool isDigitalPaymentMethod(String method) =>
     digitalPaymentMethods.contains(method.toLowerCase());
@@ -35,7 +35,7 @@ Future<bool> validateWalletBalanceForOrder(
   if (context != null && context.mounted) {
     SnackBarUtils.showError(
       context,
-      'Insufficient LesPay balance. Top up or choose Cash / GCash.',
+      'Insufficient LesPay balance. Top up or choose Cash on Delivery.',
     );
   }
   return false;

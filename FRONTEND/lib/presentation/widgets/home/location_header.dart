@@ -5,14 +5,14 @@ import '../../../core/utils/responsive_utils.dart';
 class LocationHeader extends StatelessWidget {
   final String location;
   final VoidCallback? onMenuTap;
-  final VoidCallback? onProfileTap;
+  final VoidCallback? onSupportTap;
   final VoidCallback? onLocationTap;
 
   const LocationHeader({
     super.key,
     required this.location,
     this.onMenuTap,
-    this.onProfileTap,
+    this.onSupportTap,
     this.onLocationTap,
   });
 
