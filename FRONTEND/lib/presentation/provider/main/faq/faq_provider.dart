@@ -47,8 +47,14 @@ class FaqNotifier extends StateNotifier<FaqState> {
           .toList()
         ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
 
+      // Exclude the FAQ asking where we deliver (remove from list)
+      final filtered = articles.where((article) {
+        final title = article.title?.toLowerCase() ?? '';
+        return !(title.contains('where') && title.contains('deliver'));
+      }).toList();
+
       state = state.copyWith(
-        faqs: articles
+        faqs: filtered
             .map(
               (article) => Faq(
                 id: article.id.toString(),

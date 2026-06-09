@@ -6,16 +6,18 @@ import '../../../../../domain/entities/booking/leseat/restaurant.dart';
 class RestaurantDetailHeader extends StatelessWidget {
   final Restaurant restaurant;
   final String? imagePath;
+  final double? height;
 
   const RestaurantDetailHeader({
     super.key,
     required this.restaurant,
     this.imagePath,
+    this.height,
   });
 
   @override
   Widget build(BuildContext context) {
-    final headerHeight = ResponsiveUtils.imageHeight(context, 280);
+    final headerHeight = height ?? ResponsiveUtils.imageHeight(context, 240);
 
     return Stack(
       children: [

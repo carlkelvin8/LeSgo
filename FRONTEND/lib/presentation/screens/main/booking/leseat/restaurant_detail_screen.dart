@@ -58,7 +58,7 @@ class _RestaurantDetailScreenState
   Widget build(BuildContext context) {
     final detailState = ref.watch(restaurantDetailProvider);
     final detailNotifier = ref.read(restaurantDetailProvider.notifier);
-    final headerHeight = ResponsiveUtils.imageHeight(context, 340);
+    final headerHeight = ResponsiveUtils.imageHeight(context, 240);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -119,6 +119,7 @@ class _RestaurantDetailScreenState
                     RestaurantDetailHeader(
                       restaurant: widget.restaurant,
                       imagePath: detailState.restaurantImagePath,
+                      height: headerHeight,
                     ),
 
                     // Category Filters - Add padding to account for overlapping card
@@ -126,7 +127,7 @@ class _RestaurantDetailScreenState
                       padding: EdgeInsets.only(
                         top: ResponsiveUtils.spacing(
                           context,
-                          80,
+                          36,
                         ), // Space for overlapping card
                       ),
                       child: MenuCategoryFilters(

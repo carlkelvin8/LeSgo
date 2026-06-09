@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_info.dart';
 
 /// Privacy Policy Screen
 /// Displays the app's privacy policy
@@ -94,7 +95,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               '• Request deletion of your data\n'
               '• Opt-out of marketing communications\n'
               '• Export your data\n\n'
-              'Contact us at privacy@lesgo.ph to exercise these rights.',
+              'Contact us at ${AppInfo.privacyEmail} to exercise these rights.',
             ),
             const SizedBox(height: 24),
             _buildSection(
@@ -119,11 +120,10 @@ class PrivacyPolicyScreen extends StatelessWidget {
             _buildSection(
               '10. Contact Us',
               'If you have questions about this privacy policy, please contact us:\n\n'
-              'Email: privacy@lesgo.ph\n'
-              'Phone: [Your Phone Number]\n'
-              'Address: [Your Company Address]\n\n'
-              'LeSgo Philippines\n'
-              '[City, Province, ZIP Code]',
+              'Email: ${AppInfo.privacyEmail}\n'
+              'Phone: ${AppInfo.supportPhone}\n'
+              'Address: ${AppInfo.companyAddress}\n\n'
+              '${AppInfo.companyName}',
             ),
             const SizedBox(height: 40),
           ],

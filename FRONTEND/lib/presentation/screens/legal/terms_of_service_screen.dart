@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_info.dart';
 
 /// Terms of Service Screen
 /// Displays the app's terms of service
@@ -149,11 +150,10 @@ class TermsOfServiceScreen extends StatelessWidget {
             _buildSection(
               '15. Contact Information',
               'For questions about these terms, contact us:\n\n'
-              'Email: support@lesgo.ph\n'
-              'Phone: [Your Phone Number]\n'
-              'Address: [Your Company Address]\n\n'
-              'LeSgo Philippines\n'
-              '[City, Province, ZIP Code]',
+              'Email: ${AppInfo.supportEmail}\n'
+              'Phone: ${AppInfo.supportPhone}\n'
+              'Address: ${AppInfo.companyAddress}\n\n'
+              '${AppInfo.companyName}',
             ),
             const SizedBox(height: 40),
           ],

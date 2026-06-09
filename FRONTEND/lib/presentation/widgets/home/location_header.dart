@@ -28,14 +28,18 @@ class LocationHeader extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.all(spacing),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
             onTap: onMenuTap,
             behavior: HitTestBehavior.opaque,
-            child: SvgPicture.asset(
-              'assets/images/homepage/Nav.svg',
-              width: iconSize,
-              height: iconSize,
+            child: Padding(
+              padding: EdgeInsets.only(top: ResponsiveUtils.spacing(context, 12)),
+              child: SvgPicture.asset(
+                'assets/images/homepage/Nav.svg',
+                width: iconSize,
+                height: iconSize,
+              ),
             ),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -44,7 +48,7 @@ class LocationHeader extends StatelessWidget {
               onTap: onLocationTap,
               behavior: HitTestBehavior.opaque,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                padding: EdgeInsets.only(top: ResponsiveUtils.spacing(context, 6)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -69,8 +73,10 @@ class LocationHeader extends StatelessWidget {
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 2)),
                     Row(
+                      mainAxisSize: MainAxisSize.max,
                       children: [
-                        Expanded(
+                        Flexible(
+                          fit: FlexFit.loose,
                           child: Text(
                             location,
                             maxLines: 1,
@@ -82,36 +88,17 @@ class LocationHeader extends StatelessWidget {
                             ),
                           ),
                         ),
-                        GestureDetector(
-                          onTap: onLocationTap,
-                          behavior: HitTestBehavior.opaque,
-                          child: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: Center(
-                              child: SvgPicture.asset(
-                                'assets/images/homepage/Edit.svg',
-                                width: editIconSize,
-                                height: editIconSize,
-                              ),
-                            ),
-                          ),
+                        SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+                        SvgPicture.asset(
+                          'assets/images/homepage/Edit.svg',
+                          width: editIconSize,
+                          height: editIconSize,
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-          GestureDetector(
-            onTap: onProfileTap,
-            behavior: HitTestBehavior.opaque,
-            child: SvgPicture.asset(
-              'assets/images/homepage/Profile.svg',
-              width: ResponsiveUtils.spacing(context, 32),
-              height: ResponsiveUtils.spacing(context, 32),
             ),
           ),
         ],

@@ -10,12 +10,16 @@ class AppInfo {
   static const String version = '1.0.0';
   static const String buildNumber = '1';
 
-  static const String supportEmail = 'support@lesgo.ph';
-  static const String privacyEmail = 'privacy@lesgo.ph';
+  
+
+  // Updated contact details
+  static const String supportEmail = 'lesgoclaveria@gmail.com';
+  static const String privacyEmail = 'lesgoclaveria@gmail.com';
   static const String website = 'https://lesgo.ph';
 
-  static const String companyAddress =
-      'Cagayan de Oro City, Misamis Oriental, Philippines';
+  static const String supportPhone = '+639624040948';
+
+  static const String companyAddress = 'Kilkiling Claveria Cagayan';
 
   static String get versionLabel => 'Version $version ($buildNumber)';
 }

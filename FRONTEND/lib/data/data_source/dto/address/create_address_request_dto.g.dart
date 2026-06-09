@@ -20,7 +20,7 @@ CreateAddressRequestDto _$CreateAddressRequestDtoFromJson(
   country: json['country'] as String?,
   latitude: (json['latitude'] as num).toDouble(),
   longitude: (json['longitude'] as num).toDouble(),
-  isDefault: json['is_default'] == true || json['is_default'] == 1,
+  isDefault: json['is_default'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$CreateAddressRequestDtoToJson(
@@ -30,11 +30,11 @@ Map<String, dynamic> _$CreateAddressRequestDtoToJson(
   'contact_name': instance.contactName,
   'contact_phone': instance.contactPhone,
   'address_line1': instance.addressLine1,
-  if (instance.addressLine2 case final value?) 'address_line2': value,
-  if (instance.city case final value?) 'city': value,
-  if (instance.region case final value?) 'region': value,
-  if (instance.postalCode case final value?) 'postal_code': value,
-  if (instance.country case final value?) 'country': value,
+  'address_line2': ?instance.addressLine2,
+  'city': ?instance.city,
+  'region': ?instance.region,
+  'postal_code': ?instance.postalCode,
+  'country': ?instance.country,
   'latitude': instance.latitude,
   'longitude': instance.longitude,
   'is_default': instance.isDefault,
