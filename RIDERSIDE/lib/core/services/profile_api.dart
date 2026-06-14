@@ -175,6 +175,29 @@ class ProfileApi {
     return urls;
   }
 
+  static Future<Map<String, dynamic>> getDocumentById(int documentId) async {
+    final res = await _dio.get(ApiConstants.documentById(documentId));
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+  }
+
+  static Future<Map<String, dynamic>> resubmitDocument(
+    int documentId, {
+    required String documentNumber,
+    required List<String> documentUrls,
+    String? description,
+  }) async {
+    final res = await _dio.post(
+      ApiConstants.documentResubmit(documentId),
+      data: {
+        'document_number': documentNumber,
+        'document_urls': documentUrls,
+        if (description != null && description.isNotEmpty)
+          'description': description,
+      },
+    );
+    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
+  }
+
   static List<dynamic> _parseListData(dynamic raw) {
     if (raw is List) return raw;
     if (raw is Map && raw['data'] is List) return raw['data'] as List;

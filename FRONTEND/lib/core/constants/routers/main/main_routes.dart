@@ -23,6 +23,7 @@ class MainRoutes {
   static const String termsOfService = '/terms-of-service';
   static const String changePassword = '/settings/change-password';
   static const String deactivateAccount = '/settings/deactivate-account';
+  static const String deleteAccount = '/settings/delete-account';
   static const String setLocation = '/set-location';
   static const String addressManagement = '/address-management';
   static const String addressDemo = '/address-demo';

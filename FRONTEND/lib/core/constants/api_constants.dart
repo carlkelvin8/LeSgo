@@ -26,6 +26,7 @@ class ApiConstants {
   static const String authRefresh = '/v1/auth/refresh';
   static const String authChangePassword = '/v1/auth/change-password';
   static const String authDeactivateAccount = '/v1/auth/account/deactivate';
+  static const String authDeleteAccount = '/v1/auth/account/delete';
   
   // Auth endpoints
   static const String authMe = '/v1/auth/me';

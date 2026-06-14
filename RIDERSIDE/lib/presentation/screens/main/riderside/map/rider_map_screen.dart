@@ -5,11 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_location_provider.dart';
-import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
 import '../../../../../core/config/secrets_config.dart';
 import '../../../../../core/services/api_service.dart';
@@ -17,6 +15,7 @@ import '../../../../../core/utils/location_permission_utils.dart';
 import '../../../../../core/utils/app_logger.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
+import '../../../../../core/utils/rider_navigation_launcher.dart';
 
 // Custom painter for map pattern
 class MapPatternPainter extends CustomPainter {
@@ -358,20 +357,15 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   }
 
   void _openNavigation(double lat, double lng, String label) async {
-    final url = RiderRouteUtils.buildGoogleMapsNavigationUrl(
+    if (!mounted) return;
+    await RiderNavigationLauncher.showChooser(
+      context: context,
       destLat: lat,
       destLng: lng,
+      destinationLabel: label,
       originLat: _currentPosition?.latitude,
       originLng: _currentPosition?.longitude,
     );
-    
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open navigation to $label')),
-      );
-    }
   }
 
   String _getRouteTitle(RiderOrder order) {

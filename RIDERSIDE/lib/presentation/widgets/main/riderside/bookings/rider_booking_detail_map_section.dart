@@ -3,9 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/rider_navigation_launcher.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 import '../../../../provider/main/riderside/rider_location_provider.dart';
@@ -140,16 +140,14 @@ class _RiderBookingDetailMapSectionState
       dropoffLng: booking.dropoffLng!,
     );
 
-    final url = RiderRouteUtils.buildGoogleMapsNavigationUrl(
+    await RiderNavigationLauncher.showChooser(
+      context: context,
       destLat: target.destination.latitude,
       destLng: target.destination.longitude,
+      destinationLabel: target.navLabel,
       originLat: widget.locationState.latitude,
       originLng: widget.locationState.longitude,
     );
-
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    }
   }
 
   Set<Marker> _buildMarkers() {

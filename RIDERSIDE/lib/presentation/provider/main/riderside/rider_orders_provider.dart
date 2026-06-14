@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/api_service.dart';
+import '../../../../core/services/fcm_service.dart';
+import '../../../../core/services/rider_active_order_cache.dart';
 import '../../../../core/services/push_notification_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/booking_workflow.dart';
@@ -37,9 +39,14 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
   void _scheduleNextRefresh() {
     final hasActiveOrder = state.activeOrder != null;
-    final interval = hasActiveOrder
-        ? const Duration(seconds: 10)
-        : const Duration(seconds: 30);
+    final pushEnabled = FcmService.instance.isReady;
+    final interval = pushEnabled
+        ? (hasActiveOrder
+            ? const Duration(seconds: 20)
+            : const Duration(seconds: 60))
+        : (hasActiveOrder
+            ? const Duration(seconds: 10)
+            : const Duration(seconds: 30));
 
     _autoRefreshTimer = Timer(interval, () {
       if (_ref.read(riderDutyProvider)) {
@@ -114,16 +121,36 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         clearActiveOrder: active.isEmpty,
       );
 
+      if (active.isNotEmpty) {
+        Map<String, dynamic>? activeRaw;
+        for (final raw in allRaw) {
+          if (raw is Map<String, dynamic> &&
+              (raw['id'] as num?)?.toInt() == active.first.id) {
+            activeRaw = raw;
+            break;
+          }
+        }
+        if (activeRaw != null) {
+          await RiderActiveOrderCache.saveRaw(activeRaw);
+        }
+      } else {
+        await RiderActiveOrderCache.clear();
+      }
+
       if (_ref.read(riderDutyProvider) &&
           (_autoRefreshTimer == null || !_autoRefreshTimer!.isActive)) {
         _startAutoRefresh();
       }
     } catch (e) {
       AppLogger.error('Error loading orders', e);
+      final cached = await RiderActiveOrderCache.loadOrder();
       state = state.copyWith(
         isLoading: false,
         isRefreshing: false,
-        error: ApiService.extractError(e),
+        activeOrder: state.activeOrder ?? cached,
+        error: cached != null
+            ? '${ApiService.extractError(e)} (showing cached active order)'
+            : ApiService.extractError(e),
       );
     }
   }
@@ -203,6 +230,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   Future<bool> markCompleted(int orderId) async {
     final ok = await _updateStatus(orderId, 'completed', 'Order delivered!');
     if (ok) {
+      await RiderActiveOrderCache.clear();
       state = state.copyWith(clearActiveOrder: true);
     }
     return ok;

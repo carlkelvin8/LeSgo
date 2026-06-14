@@ -165,6 +165,179 @@ class _RiderDocumentVerificationScreenState
     }
   }
 
+  Future<void> _openDocumentDetail(int docId, Map<String, dynamic> summary) async {
+    try {
+      final detail = await ApiService.getDocumentById(docId);
+      if (!mounted) return;
+      final status = detail['status']?.toString() ?? summary['status']?.toString() ?? '';
+      final urls = detail['document_urls'] as List? ?? summary['document_urls'] as List? ?? [];
+
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (ctx) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.6,
+          maxChildSize: 0.9,
+          builder: (_, controller) => ListView(
+            controller: controller,
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text(
+                detail['document_type']?.toString().replaceAll('_', ' ') ?? 'Document',
+                style: const TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text('Status: $status', style: const TextStyle(fontFamily: 'TT Fors')),
+              Text(
+                'Number: ${detail['document_number'] ?? summary['document_number']}',
+                style: const TextStyle(fontFamily: 'TT Fors'),
+              ),
+              if (detail['rejection_reason'] != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Reason: ${detail['rejection_reason']}',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    color: Colors.red.shade700,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              ...urls.map(
+                (url) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Image.network(
+                    url.toString(),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const ListTile(
+                      leading: Icon(Icons.description),
+                      title: Text('Document file'),
+                    ),
+                  ),
+                ),
+              ),
+              if (status.toLowerCase() == 'rejected') ...[
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _resubmitDocument(docId, detail);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF5F2D82),
+                  ),
+                  child: const Text('Resubmit document'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ApiService.extractError(e))),
+        );
+      }
+    }
+  }
+
+  Future<void> _resubmitDocument(int docId, Map<String, dynamic> detail) async {
+    final picker = ImagePicker();
+    final numberController = TextEditingController(
+      text: detail['document_number']?.toString() ?? '',
+    );
+    final notesController = TextEditingController();
+    final files = <XFile>[];
+
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: numberController,
+                decoration: const InputDecoration(labelText: 'Document number'),
+              ),
+              TextField(
+                controller: notesController,
+                decoration: const InputDecoration(labelText: 'Notes (optional)'),
+              ),
+              TextButton.icon(
+                onPressed: () async {
+                  final picked = await picker.pickMultiImage(imageQuality: 85);
+                  if (picked.isNotEmpty) {
+                    setSheetState(() {
+                      files
+                        ..clear()
+                        ..addAll(picked.take(5));
+                    });
+                  }
+                },
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(
+                  files.isEmpty
+                      ? 'Attach new photos (required)'
+                      : '${files.length} file(s) selected',
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (numberController.text.trim().isEmpty || files.isEmpty) return;
+                  Navigator.pop(context, true);
+                },
+                child: const Text('Resubmit'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _submitting = true);
+    try {
+      final urls = await ApiService.uploadDocumentFiles(files);
+      await ApiService.resubmitDocument(
+        docId,
+        documentNumber: numberController.text.trim(),
+        documentUrls: urls,
+        description: notesController.text.trim().isEmpty
+            ? null
+            : notesController.text.trim(),
+      );
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Document resubmitted for review')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ApiService.extractError(e))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -199,6 +372,8 @@ class _RiderDocumentVerificationScreenState
                       const SizedBox(height: 12),
                       ..._documents.map((doc) {
                         final map = doc as Map<String, dynamic>;
+                        final docId = (map['id'] as num?)?.toInt();
+                        final status = map['status']?.toString() ?? '';
                         return ListTile(
                           tileColor: Colors.grey.shade50,
                           title: Text(
@@ -210,9 +385,13 @@ class _RiderDocumentVerificationScreenState
                             ),
                           ),
                           subtitle: Text(
-                            '${map['status']} · ${map['document_number']}',
+                            '$status · ${map['document_number']}',
                             style: const TextStyle(fontFamily: 'TT Fors'),
                           ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: docId == null
+                              ? null
+                              : () => _openDocumentDetail(docId, map),
                         );
                       }),
                       const SizedBox(height: 16),

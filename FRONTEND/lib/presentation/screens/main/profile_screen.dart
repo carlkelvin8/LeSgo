@@ -92,6 +92,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       points: profileState.points,
                       userName: profileState.name,
                     ),
+
+                    SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+
+                    const ProfileAccountSection(),
                     
                     SizedBox(height: ResponsiveUtils.spacing(context, 40)),
                   ],

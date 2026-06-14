@@ -3,6 +3,7 @@ import '../network/dio_client.dart';
 import '../network/offline_request_queue.dart';
 import '../services/connectivity_service.dart';
 import '../services/secure_storage_service.dart';
+import '../services/gemini_customer_service.dart';
 import '../../data/data_source/auth_remote_datasource.dart';
 
 final getIt = GetIt.instance;
@@ -21,4 +22,10 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSource(getIt<DioClient>()),
   );
+
+  if (!getIt.isRegistered<GeminiCustomerService>()) {
+    getIt.registerLazySingleton<GeminiCustomerService>(
+      () => GeminiCustomerService(),
+    );
+  }
 }

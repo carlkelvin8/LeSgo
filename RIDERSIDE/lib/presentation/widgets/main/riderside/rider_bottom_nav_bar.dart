@@ -72,21 +72,12 @@ class RiderBottomNavBar extends ConsumerWidget {
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
           ),
-          _buildNavItem(
+          _buildNavItemIcon(
             context, ref,
-            type: RiderNavType.wallet,
-            svgAsset: 'assets/images/navbar/riderside/wallet.svg',
-            label: 'LesPay',
-            isSelected: currentNav == RiderNavType.wallet,
-            selectedColor: selectedColor,
-            unselectedColor: unselectedColor,
-          ),
-          _buildNavItem(
-            context, ref,
-            type: RiderNavType.mission,
-            svgAsset: 'assets/images/navbar/riderside/star.svg',
-            label: 'Mission',
-            isSelected: currentNav == RiderNavType.mission,
+            type: RiderNavType.more,
+            icon: Icons.grid_view_rounded,
+            label: 'More',
+            isSelected: currentNav == RiderNavType.more,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
           ),
@@ -151,7 +142,6 @@ class RiderBottomNavBar extends ConsumerWidget {
     );
   }
 
-  // Icon-based nav item (for tabs without SVG assets)
   Widget _buildNavItemIcon(
     BuildContext context,
     WidgetRef ref, {

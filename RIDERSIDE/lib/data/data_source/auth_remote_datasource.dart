@@ -275,4 +275,21 @@ class AuthRemoteDataSource {
     );
     return response.data as Map<String, dynamic>;
   }
+
+  /// Permanently delete the signed-in driver/customer account.
+  Future<Map<String, dynamic>> deleteAccountPermanently({
+    required String password,
+    required String confirmation,
+    String? reason,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.authDeleteAccount,
+      data: {
+        'password': password,
+        'confirmation': confirmation.trim().toUpperCase(),
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
 }

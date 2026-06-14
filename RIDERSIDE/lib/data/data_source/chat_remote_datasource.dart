@@ -84,4 +84,18 @@ class ChatRemoteDataSource {
       // Silently ignore — not critical if mark-as-read fails
     }
   }
+
+  Future<void> sendTypingIndicator(int conversationId) async {
+    try {
+      await _dioClient.dio.post(
+        ApiConstants.chatTyping.replaceAll('{id}', conversationId.toString()),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> endConversation(int conversationId) async {
+    await _dioClient.dio.post(
+      ApiConstants.chatEndConversation.replaceAll('{id}', conversationId.toString()),
+    );
+  }
 }

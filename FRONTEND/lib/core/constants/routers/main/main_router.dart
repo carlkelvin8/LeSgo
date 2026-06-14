@@ -23,6 +23,7 @@ import '../../../../presentation/screens/legal/privacy_policy_screen.dart';
 import '../../../../presentation/screens/legal/terms_of_service_screen.dart';
 import '../../../../presentation/screens/main/settings/change_password_screen.dart';
 import '../../../../presentation/screens/main/settings/deactivate_account_screen.dart';
+import '../../../../presentation/screens/main/settings/delete_account_screen.dart';
 import '../../../../presentation/screens/main/set_location_screen.dart';
 import '../../../../presentation/screens/main/address_management_screen.dart';
 import '../../../../presentation/screens/demo/address_demo_screen.dart';
@@ -56,6 +57,7 @@ class MainRouter {
     MainRoutes.termsOfService: (_) => const TermsOfServiceScreen(),
     MainRoutes.changePassword: (_) => const ChangePasswordScreen(),
     MainRoutes.deactivateAccount: (_) => const DeactivateAccountScreen(),
+    MainRoutes.deleteAccount: (_) => const DeleteAccountScreen(),
 
     MainRoutes.setLocation: (_) => const SetLocationScreen(),
     MainRoutes.addressManagement: (_) => const AddressManagementScreen(),

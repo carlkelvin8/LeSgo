@@ -124,6 +124,51 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
           ],
         ),
         actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Color(0xFF5F2D82)),
+            onSelected: (value) async {
+              if (value != 'end') return;
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('End chat?'),
+                  content: const Text(
+                    'This will close the conversation with the customer. You can still view past messages in Inbox.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('End chat'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed != true || !context.mounted) return;
+              final ok = await ref
+                  .read(chatProviderFamily(widget.orderId).notifier)
+                  .endConversation();
+              if (!context.mounted) return;
+              if (ok) {
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Could not end conversation.'),
+                  ),
+                );
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'end',
+                child: Text('End conversation'),
+              ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFF5F2D82)),
             onPressed: () => ref
@@ -206,6 +251,22 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
   }
 
   Widget _buildInputBar(bool isSending) {
+    final conversation = ref.watch(chatProviderFamily(widget.orderId)).currentConversation;
+    final isActive = conversation?.status == 'active' || conversation == null;
+
+    if (!isActive) {
+      return Container(
+        width: double.infinity,
+        color: Colors.grey.shade200,
+        padding: const EdgeInsets.all(16),
+        child: const Text(
+          'This conversation has ended.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
     return Container(
       color: Colors.white,
       padding: EdgeInsets.only(
@@ -238,6 +299,9 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                   ),
                 ),
                 onSubmitted: (_) => _sendMessage(),
+                onChanged: (_) => ref
+                    .read(chatProviderFamily(widget.orderId).notifier)
+                    .notifyTyping(),
               ),
             ),
             const SizedBox(width: 8),

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_location_provider.dart';
@@ -17,6 +16,7 @@ import '../../../../../core/utils/location_permission_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
+import '../../../../../core/utils/rider_navigation_launcher.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 import '../rider_booking_detail_screen.dart';
 
@@ -305,22 +305,15 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   }
 
   void _openNavigation(double lat, double lng, String label) async {
-    final url = RiderRouteUtils.buildGoogleMapsNavigationUrl(
+    if (!mounted) return;
+    await RiderNavigationLauncher.showChooser(
+      context: context,
       destLat: lat,
       destLng: lng,
+      destinationLabel: label,
       originLat: _currentPosition?.latitude,
       originLng: _currentPosition?.longitude,
     );
-    
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open navigation to $label')),
-        );
-      }
-    }
   }
 
   Widget _buildMapView() {

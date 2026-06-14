@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../../../presentation/screens/main/riderside/rider_earnings_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_safety_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_document_verification_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_benefits_screens.dart';
 import '../../../../presentation/screens/main/riderside/rider_change_password_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_deactivate_account_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_delete_account_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_notification_center_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_notification_settings_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_customer_service_chat_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_security_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_faqs_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_main_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_booking_detail_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_history_detail_screen.dart';
@@ -12,6 +20,8 @@ import '../../../../presentation/screens/main/merchantside/merchant_earnings_scr
 import '../../../../presentation/screens/main/merchantside/merchant_wallet_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_reviews_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_analytics_screen.dart';
+import '../../../../presentation/screens/main/merchantside/merchant_support_tickets_screen.dart';
+import '../../../../presentation/screens/main/merchantside/merchant_missions_screen.dart';
 import '../../../../domain/entities/rider_booking.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import 'main_routes.dart';
@@ -21,17 +31,32 @@ class MainRouter {
     MainRoutes.riderMain: (_) => const RiderMainScreen(),
     MainRoutes.riderChangePassword: (_) => const RiderChangePasswordScreen(),
     MainRoutes.riderDeactivateAccount: (_) => const RiderDeactivateAccountScreen(),
+    MainRoutes.riderDeleteAccount: (_) => const RiderDeleteAccountScreen(),
+    MainRoutes.riderSupportTickets: (_) => const RiderSupportTicketsScreen(),
+    MainRoutes.riderNotifications: (_) => const RiderNotificationCenterScreen(),
+    MainRoutes.riderNotificationSettings: (_) =>
+        const RiderNotificationSettingsScreen(),
+    MainRoutes.riderCustomerServiceChat: (_) =>
+        const RiderCustomerServiceChatScreen(),
     MainRoutes.riderFaqs: (_) => const RiderFaqsScreen(),
     MainRoutes.riderOffers: (_) => const RiderOffersScreen(),
     MainRoutes.riderLoyalty: (_) => const RiderLoyaltyScreen(),
     MainRoutes.riderReferral: (_) => const RiderReferralScreen(),
     MainRoutes.riderSecurity: (_) => const RiderSecurityScreen(),
     MainRoutes.riderDocuments: (_) => const RiderDocumentVerificationScreen(),
+    MainRoutes.riderEarnings: (_) => const RiderEarningsScreen(),
+    MainRoutes.riderSafety: (_) => const RiderSafetyScreen(),
     MainRoutes.merchantFaqs: (_) => const RiderFaqsScreen(),
     MainRoutes.merchantOffers: (_) => const RiderOffersScreen(),
     MainRoutes.merchantLoyalty: (_) => const RiderLoyaltyScreen(),
     MainRoutes.merchantReferral: (_) => const RiderReferralScreen(),
     MainRoutes.merchantSecurity: (_) => const RiderSecurityScreen(),
+    MainRoutes.merchantSupportTickets: (_) =>
+        const MerchantSupportTicketsScreen(),
+    MainRoutes.merchantMissions: (_) => const MerchantMissionsScreen(),
+    MainRoutes.merchantDeactivateAccount: (_) =>
+        const RiderDeactivateAccountScreen(),
+    MainRoutes.merchantDeleteAccount: (_) => const RiderDeleteAccountScreen(),
     MainRoutes.merchantDocuments: (_) => const RiderDocumentVerificationScreen(),
     MainRoutes.merchantMain: (_) => const MerchantMainScreen(),
     MainRoutes.merchantEarnings: (_) => const MerchantEarningsScreen(),

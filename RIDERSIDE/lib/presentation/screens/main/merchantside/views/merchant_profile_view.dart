@@ -8,6 +8,7 @@ import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../widgets/widgets.dart';
+import '../../../../widgets/main/merchantside/profile/merchant_settings_section.dart';
 import '../merchant_edit_information_screen.dart';
 import '../merchant_menu_edit_item_screen.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
@@ -99,6 +100,10 @@ class MerchantProfileView extends ConsumerWidget {
                   ),
                 ),
               ),
+              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+              Divider(color: Colors.grey.shade300, thickness: 1),
+              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+              const MerchantSettingsSection(),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
               Divider(color: Colors.grey.shade300, thickness: 1),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),

@@ -15,6 +15,7 @@ import '../../../provider/main/riderside/rider_inbox_provider.dart';
 import '../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
 import '../../../widgets/widgets.dart';
 import 'views/rider_profile_view.dart';
+import 'views/rider_more_view.dart';
 import 'views/rider_wallet_view.dart';
 import 'views/rider_history_view.dart';
 import 'views/rider_mission_view.dart';
@@ -132,7 +133,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
 
     final navStack = ref.watch(riderNavProvider);
     final currentNav = navStack.last;
-    final isMission = currentNav == RiderNavType.mission;
+    final isFullBleed = currentNav == RiderNavType.mission;
 
     // Refresh data when switching to a tab
     ref.listen<List<RiderNavType>>(riderNavProvider, (previous, next) {
@@ -146,6 +147,10 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
           ref.read(riderOrdersProvider.notifier).loadOrders();
           ref.read(riderWalletProvider.notifier).loadWallet();
           break;
+        case RiderNavType.more:
+          ref.read(riderMissionProvider.notifier).loadMissions();
+          ref.read(riderWalletProvider.notifier).loadWallet();
+          break;
         case RiderNavType.mission:
           ref.read(riderMissionProvider.notifier).loadMissions();
           break;
@@ -154,6 +159,8 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
           break;
         case RiderNavType.profile:
           ref.read(riderProfileProvider.notifier).loadProfile();
+          ref.read(riderMissionProvider.notifier).loadMissions();
+          ref.read(riderWalletProvider.notifier).loadWallet();
           break;
         case RiderNavType.wallet:
           ref.read(riderWalletProvider.notifier).loadWallet();
@@ -175,7 +182,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
       },
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: isMission
+        body: isFullBleed
             ? _buildBody(currentNav)
             : SafeArea(
                 child: Column(
@@ -214,6 +221,9 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
     }
     if (type == RiderNavType.profile) {
       return const RiderProfileView();
+    }
+    if (type == RiderNavType.more) {
+      return const RiderMoreView();
     }
     if (type == RiderNavType.wallet) {
       return const RiderWalletView();
@@ -259,6 +269,8 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
         return 'History';
       case RiderNavType.profile:
         return 'Profile';
+      case RiderNavType.more:
+        return 'More';
       case RiderNavType.wallet:
         return 'LesPay';
       case RiderNavType.mission:

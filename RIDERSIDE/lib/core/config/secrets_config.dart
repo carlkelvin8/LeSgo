@@ -54,6 +54,16 @@ class SecretsConfig {
     defaultValue: '',
   );
 
+  static const String geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
+
+  static bool get isGeminiConfigured =>
+      geminiApiKey.isNotEmpty &&
+      !geminiApiKey.startsWith('your-') &&
+      !geminiApiKey.startsWith('YOUR_');
+
   static bool get isGoogleMapsConfigured =>
       googleMapsApiKey.isNotEmpty &&
       googleMapsApiKey != 'your-google-maps-api-key-here';

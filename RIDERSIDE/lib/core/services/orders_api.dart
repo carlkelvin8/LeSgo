@@ -128,4 +128,19 @@ class OrdersApi {
     final res = await _dio.post('/v1/orders', data: data);
     return res.data as Map<String, dynamic>;
   }
+
+  static Future<void> submitOrderFeedback({
+    required int orderId,
+    required int rating,
+    String? comment,
+  }) async {
+    await _dio.post(
+      '/v1/orders/$orderId/feedback',
+      data: {
+        'rating': rating,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+        'target': 'customer',
+      },
+    );
+  }
 }

@@ -64,6 +64,10 @@ void refreshRiderScreen(
     case RiderNavType.mission:
       ref.read(riderMissionProvider.notifier).loadMissions(silent: silent);
       break;
+    case RiderNavType.more:
+      ref.read(riderMissionProvider.notifier).loadMissions(silent: silent);
+      ref.read(riderWalletProvider.notifier).loadWallet(silent: silent);
+      break;
   }
 }
 

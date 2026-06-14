@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../constants/api_constants.dart';
 import '../utils/app_logger.dart';
+import 'mobile_config_service.dart';
 
 class AppVersionCheck {
   const AppVersionCheck({
@@ -36,9 +37,15 @@ class AppVersionService {
         ),
       );
 
-      final response = await dio.get('/v1/app/rider-version');
+      final response = await dio.get(ApiConstants.appRiderVersion);
       final data = response.data;
-      final payload = data is Map ? (data['data'] ?? data) : null;
+      var payload = data is Map ? (data['data'] ?? data) : null;
+
+      if (payload is! Map || payload['min_build'] == null) {
+        final config = await MobileConfigService.instance.load();
+        payload = config['rider_app'] as Map? ?? payload;
+      }
+
       if (payload is! Map) return null;
 
       final minimumBuild = _parseInt(payload['min_build'] ?? payload['min_build_number']);

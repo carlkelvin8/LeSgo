@@ -145,6 +145,10 @@ class _ConversationTile extends StatelessWidget {
     final lastMsg = conversation.latestMessage?.content ?? 'No messages yet';
     final orderId = conversation.orderId;
     final isActive = conversation.status == 'active';
+    final latest = conversation.latestMessage;
+    final hasUnreadFromCustomer = latest != null &&
+        latest.readAt == null &&
+        latest.senderType.toLowerCase() == 'customer';
 
     return Semantics(
       button: true,
@@ -165,11 +169,23 @@ class _ConversationTile extends StatelessWidget {
         ),
         title: Row(
           children: [
+            if (hasUnreadFromCustomer)
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF5F2D82),
+                  shape: BoxShape.circle,
+                ),
+              ),
             Expanded(
               child: Text(
                 customerName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
+                style: TextStyle(
+                  fontWeight: hasUnreadFromCustomer
+                      ? FontWeight.w800
+                      : FontWeight.w600,
                   fontSize: 15,
                 ),
                 overflow: TextOverflow.ellipsis,

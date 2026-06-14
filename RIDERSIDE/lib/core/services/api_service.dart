@@ -7,9 +7,12 @@ import '../network/dio_client.dart';
 import '../utils/api_error_mapper.dart';
 import '../utils/app_logger.dart';
 import 'benefits_api.dart';
+import 'notification_api.dart';
 import 'orders_api.dart';
 import 'profile_api.dart';
 import 'secure_storage_service.dart';
+import 'security_api.dart';
+import 'support_api.dart';
 import 'tracking_api.dart';
 
 /// HTTP facade — delegates to feature APIs backed by the shared [DioClient].
@@ -112,6 +115,32 @@ class ApiService {
     return res.data as Map<String, dynamic>;
   }
 
+  static Future<Map<String, dynamic>> deleteAccountPermanently({
+    required String password,
+    required String confirmation,
+    String? reason,
+  }) async {
+    final res = await _dio.post(
+      ApiConstants.authDeleteAccount,
+      data: {
+        'password': password,
+        'confirmation': confirmation.trim().toUpperCase(),
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> getDriverEarnings({
+    String period = 'today',
+  }) async {
+    final res = await _dio.get(
+      ApiConstants.driverMyEarnings,
+      queryParameters: {'period': period},
+    );
+    return Map<String, dynamic>.from(res.data['data'] as Map);
+  }
+
   static String extractError(dynamic e) => ApiErrorMapper.message(e);
 
   // ── Orders ─────────────────────────────────────────────────────────────────
@@ -168,6 +197,17 @@ class ApiService {
 
   static Future<Map<String, dynamic>> createOrder(Map<String, dynamic> data) =>
       OrdersApi.createOrder(data);
+
+  static Future<void> submitOrderFeedback({
+    required int orderId,
+    required int rating,
+    String? comment,
+  }) =>
+      OrdersApi.submitOrderFeedback(
+        orderId: orderId,
+        rating: rating,
+        comment: comment,
+      );
 
   // ── Tracking & driver ────────────────────────────────────────────────────
 
@@ -267,6 +307,50 @@ class ApiService {
   static Future<List<String>> uploadDocumentFiles(List<XFile> files) =>
       ProfileApi.uploadDocumentFiles(files);
 
+  static Future<Map<String, dynamic>> getDocumentById(int documentId) =>
+      ProfileApi.getDocumentById(documentId);
+
+  static Future<Map<String, dynamic>> resubmitDocument(
+    int documentId, {
+    required String documentNumber,
+    required List<String> documentUrls,
+    String? description,
+  }) =>
+      ProfileApi.resubmitDocument(
+        documentId,
+        documentNumber: documentNumber,
+        documentUrls: documentUrls,
+        description: description,
+      );
+
+  // ── Notifications ──────────────────────────────────────────────────────────
+
+  static Future<List<AppNotification>> fetchNotifications({
+    bool unreadOnly = false,
+    int page = 1,
+  }) =>
+      NotificationApi.fetchNotifications(unreadOnly: unreadOnly, page: page);
+
+  static Future<int> fetchNotificationUnreadCount() =>
+      NotificationApi.fetchUnreadCount();
+
+  static Future<void> markNotificationRead(int notificationId) =>
+      NotificationApi.markRead(notificationId);
+
+  static Future<void> markAllNotificationsRead() =>
+      NotificationApi.markAllRead();
+
+  // ── Support ────────────────────────────────────────────────────────────────
+
+  static Future<List<RiderSupportTicket>> getSupportTickets({
+    String? status,
+    int perPage = 30,
+  }) =>
+      SupportApi.getTickets(status: status, perPage: perPage);
+
+  static Future<Map<String, dynamic>> getSupportStatistics() =>
+      SupportApi.getStatistics();
+
   // ── Benefits, missions, devices ────────────────────────────────────────────
 
   static Future<Map<String, dynamic>> getDriverMissions() =>
@@ -291,6 +375,18 @@ class ApiService {
       );
 
   static Future<List<dynamic>> getFaqArticles() => BenefitsApi.getFaqArticles();
+
+  static Future<List<dynamic>> getFaqCategories() =>
+      BenefitsApi.getFaqCategories();
+
+  static Future<List<dynamic>> getFaqArticlesByCategory(int categoryId) =>
+      BenefitsApi.getFaqArticlesByCategory(categoryId);
+
+  static Future<List<dynamic>> searchFaqArticles(String query) =>
+      BenefitsApi.searchFaqArticles(query);
+
+  static Future<void> markFaqHelpful(int articleId, {bool helpful = true}) =>
+      BenefitsApi.markFaqHelpful(articleId, helpful: helpful);
 
   static Future<List<dynamic>> getAvailableVouchers() =>
       BenefitsApi.getAvailableVouchers();
@@ -318,8 +414,18 @@ class ApiService {
 
   static Future<Map<String, dynamic>> setup2fa() => BenefitsApi.setup2fa();
 
-  static Future<Map<String, dynamic>> verify2fa(String code) =>
-      BenefitsApi.verify2fa(code);
+  static Future<void> verify2fa(String code) => BenefitsApi.verify2fa(code);
 
   static Future<void> disable2fa() => BenefitsApi.disable2fa();
+
+  static Future<List<String>> regenerateBackupCodes() =>
+      BenefitsApi.regenerateBackupCodes();
+
+  static Future<List<SecurityBiometric>> listSecurityBiometrics() =>
+      BenefitsApi.listBiometrics();
+
+  static Future<List<SecurityAuditLog>> getSecurityAuditLogs({
+    int perPage = 20,
+  }) =>
+      BenefitsApi.getAuditLogs(perPage: perPage);
 }

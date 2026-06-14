@@ -24,6 +24,7 @@ dependencies:
 
   # Image Picker
   image_picker: ^1.0.7
+  cross_file: ^0.3.4+2
 
   # File Picker
   file_picker: ^8.0.0+1
@@ -55,7 +56,12 @@ dependencies:
   firebase_core: ^3.8.1
   firebase_crashlytics: ^4.3.10
   firebase_messaging: ^15.1.6
+  pusher_reverb_flutter: ^0.0.7
   injectable: ^2.5.0
+  local_auth: ^2.3.0
+  google_generative_ai: ^0.4.6
+  uuid: ^4.5.1
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

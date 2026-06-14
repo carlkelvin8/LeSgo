@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../constants/api_constants.dart';
 import '../di/injection.dart';
 import '../network/dio_client.dart';
+import 'security_api.dart';
 
 /// Missions, vouchers, loyalty, referrals, security, and device registration.
 class BenefitsApi {
@@ -46,9 +47,37 @@ class BenefitsApi {
 
   static Future<List<dynamic>> getFaqArticles() async {
     final res = await _dio.get(ApiConstants.faqArticles);
-    final data = res.data['data'];
-    if (data is Map && data['data'] is List) return data['data'] as List;
-    if (data is List) return data;
+    return _parseFaqList(res.data['data']);
+  }
+
+  static Future<List<dynamic>> getFaqCategories() async {
+    final res = await _dio.get(ApiConstants.faqCategories);
+    return _parseFaqList(res.data['data']);
+  }
+
+  static Future<List<dynamic>> getFaqArticlesByCategory(int categoryId) async {
+    final res = await _dio.get(ApiConstants.faqCategoryArticles(categoryId));
+    return _parseFaqList(res.data['data']);
+  }
+
+  static Future<List<dynamic>> searchFaqArticles(String query) async {
+    final res = await _dio.get(
+      ApiConstants.faqSearch,
+      queryParameters: {'q': query.trim()},
+    );
+    return _parseFaqList(res.data['data']);
+  }
+
+  static Future<void> markFaqHelpful(int articleId, {bool helpful = true}) async {
+    final path = helpful
+        ? ApiConstants.faqMarkHelpful(articleId)
+        : ApiConstants.faqMarkNotHelpful(articleId);
+    await _dio.post(path);
+  }
+
+  static List<dynamic> _parseFaqList(dynamic raw) {
+    if (raw is List) return raw;
+    if (raw is Map && raw['data'] is List) return raw['data'] as List;
     return [];
   }
 
@@ -107,20 +136,18 @@ class BenefitsApi {
     return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
   }
 
-  static Future<Map<String, dynamic>> setup2fa() async {
-    final res = await _dio.post(ApiConstants.security2faSetup);
-    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
-  }
+  static Future<Map<String, dynamic>> setup2fa() => SecurityApi.setup2fa();
 
-  static Future<Map<String, dynamic>> verify2fa(String code) async {
-    final res = await _dio.post(
-      ApiConstants.security2faVerify,
-      data: {'code': code},
-    );
-    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
-  }
+  static Future<void> verify2fa(String code) => SecurityApi.verify2fa(code);
 
-  static Future<void> disable2fa() async {
-    await _dio.post(ApiConstants.security2faDisable);
-  }
+  static Future<void> disable2fa() => SecurityApi.disable2fa();
+
+  static Future<List<String>> regenerateBackupCodes() =>
+      SecurityApi.regenerateBackupCodes();
+
+  static Future<List<SecurityBiometric>> listBiometrics() =>
+      SecurityApi.listBiometrics();
+
+  static Future<List<SecurityAuditLog>> getAuditLogs({int perPage = 20}) =>
+      SecurityApi.getAuditLogs(perPage: perPage);
 }

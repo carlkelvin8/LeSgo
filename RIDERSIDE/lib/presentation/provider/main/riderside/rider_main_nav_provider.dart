@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Enum defining the navigation tabs for the Rider app
-enum RiderNavType { bookings, history, inbox, profile, wallet, mission }
+enum RiderNavType { bookings, history, inbox, profile, more, wallet, mission }
 
 /// StateNotifier that maintains a navigation stack.
 /// - [state.last] is always the currently visible tab.

@@ -2,15 +2,16 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/services/chat_realtime_service.dart';
+import '../../../core/services/chat_websocket_service.dart';
+import '../../../core/services/fcm_service.dart';
 import '../../../data/data_source/chat_remote_datasource.dart';
 import '../../../data/data_source/dto/chat/chat_dto.dart';
 
-// Chat data source provider (singleton)
 final chatDataSourceProvider = Provider<ChatRemoteDataSource>((ref) {
   return ChatRemoteDataSource(getIt<DioClient>());
 });
 
-// Chat state
 class ChatState {
   final bool isLoading;
   final bool isSending;
@@ -48,26 +49,32 @@ class ChatState {
   }
 }
 
-// Chat notifier - per order instance
 class ChatNotifier extends StateNotifier<ChatState> {
   final ChatRemoteDataSource _chatDataSource;
   Timer? _pollTimer;
+  Timer? _typingDebounce;
+  void Function()? _realtimeListener;
 
   ChatNotifier(this._chatDataSource) : super(ChatState());
 
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _typingDebounce?.cancel();
+    if (_realtimeListener != null) {
+      ChatRealtimeService.instance.removeListener(_realtimeListener!);
+    }
+    unawaited(ChatRealtimeService.instance.release());
     super.dispose();
   }
 
-  // Get or create conversation for order
   Future<void> getOrCreateConversation(int orderId) async {
     if (!mounted) return;
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final conversation = await _chatDataSource.getOrCreateConversation(orderId);
+      final conversation =
+          await _chatDataSource.getOrCreateConversation(orderId);
       if (!mounted) return;
 
       state = state.copyWith(
@@ -75,11 +82,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
         currentConversation: conversation,
       );
 
-      // Load messages for this conversation
       await loadMessages();
-
-      // Start polling for new messages
-      if (mounted) _startPolling();
+      if (mounted) await _startRealtime(conversation.id);
     } catch (e) {
       if (!mounted) return;
       state = state.copyWith(
@@ -89,7 +93,28 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  // Load messages for current conversation
+  Future<void> _startRealtime(int conversationId) async {
+    _pollTimer?.cancel();
+    if (_realtimeListener != null) {
+      ChatRealtimeService.instance.removeListener(_realtimeListener!);
+    }
+
+    _realtimeListener = () {
+      if (mounted) loadMessages(silent: true);
+    };
+    ChatRealtimeService.instance.addListener(_realtimeListener!);
+    await ChatRealtimeService.instance.acquire(conversationId: conversationId);
+
+    final interval = FcmService.instance.isReady
+        ? const Duration(seconds: 30)
+        : const Duration(seconds: 8);
+    _pollTimer = Timer.periodic(interval, (_) {
+      if (mounted && !ChatWebSocketService.instance.isConnected) {
+        loadMessages(silent: true);
+      }
+    });
+  }
+
   Future<void> loadMessages({bool silent = false}) async {
     if (!mounted || state.currentConversation == null) return;
 
@@ -103,7 +128,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
       );
       if (!mounted) return;
 
-      // Show newest first (descending) for reverse ListView
       state = state.copyWith(
         isLoading: false,
         messages: messages,
@@ -119,9 +143,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  // Send message
   Future<bool> sendMessage(String message) async {
-    if (!mounted || state.currentConversation == null || message.trim().isEmpty) {
+    if (!mounted ||
+        state.currentConversation == null ||
+        message.trim().isEmpty) {
       return false;
     }
 
@@ -136,7 +161,6 @@ class ChatNotifier extends StateNotifier<ChatState> {
       await _chatDataSource.sendMessage(request);
       if (!mounted) return false;
 
-      // Reload messages to get the new message
       await loadMessages(silent: true);
       if (!mounted) return false;
       state = state.copyWith(isSending: false);
@@ -148,19 +172,15 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  // Load unread count
   Future<void> loadUnreadCount() async {
     if (!mounted) return;
     try {
       final count = await _chatDataSource.getUnreadCount();
       if (!mounted) return;
       state = state.copyWith(unreadCount: count);
-    } catch (_) {
-      // Silently fail
-    }
+    } catch (_) {}
   }
 
-  // Mark messages as read
   Future<void> markAsRead() async {
     if (!mounted || state.currentConversation == null) return;
     try {
@@ -169,32 +189,67 @@ class ChatNotifier extends StateNotifier<ChatState> {
     } catch (_) {}
   }
 
-  // Start polling for new messages every 5 seconds
-  void _startPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (mounted) loadMessages(silent: true);
+  void notifyTyping() {
+    if (!mounted || state.currentConversation == null) return;
+    _typingDebounce?.cancel();
+    _typingDebounce = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted || state.currentConversation == null) return;
+      try {
+        await _chatDataSource.sendTypingIndicator(
+          state.currentConversation!.id,
+        );
+      } catch (_) {}
     });
   }
 
-  // Stop polling
-  void stopPolling() {
-    _pollTimer?.cancel();
+  Future<bool> endConversation() async {
+    if (!mounted || state.currentConversation == null) return false;
+    try {
+      await _chatDataSource.endConversation(state.currentConversation!.id);
+      clearConversation();
+      return true;
+    } catch (e) {
+      if (mounted) {
+        state = state.copyWith(error: e.toString());
+      }
+      return false;
+    }
   }
 
-  // Clear current conversation
   void clearConversation() {
     _pollTimer?.cancel();
+    _typingDebounce?.cancel();
+    if (_realtimeListener != null) {
+      ChatRealtimeService.instance.removeListener(_realtimeListener!);
+      _realtimeListener = null;
+    }
+    unawaited(ChatRealtimeService.instance.release());
     state = ChatState();
   }
 }
 
-// Per-order chat provider family - each order gets its own chat state
 final chatProviderFamily =
     StateNotifierProvider.family<ChatNotifier, ChatState, int>((ref, orderId) {
   final dataSource = ref.watch(chatDataSourceProvider);
   return ChatNotifier(dataSource);
 });
 
-// Global unread count provider
-final unreadCountProvider = Provider<int>((ref) => 0);
+class ChatUnreadCountNotifier extends StateNotifier<int> {
+  ChatUnreadCountNotifier(this._chatDataSource) : super(0) {
+    refresh();
+  }
+
+  final ChatRemoteDataSource _chatDataSource;
+
+  Future<void> refresh() async {
+    try {
+      final count = await _chatDataSource.getUnreadCount();
+      if (mounted) state = count;
+    } catch (_) {}
+  }
+}
+
+final unreadCountProvider =
+    StateNotifierProvider<ChatUnreadCountNotifier, int>((ref) {
+  return ChatUnreadCountNotifier(ref.watch(chatDataSourceProvider));
+});

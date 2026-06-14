@@ -166,6 +166,7 @@ export 'profile/profile_points_card.dart';
 export 'profile/profile_address_section.dart';
 export 'profile/profile_edit_section.dart';
 export 'profile/profile_rewards_section.dart';
+export 'profile/profile_account_section.dart';
 
 // FAQ widgets
 export 'faq/faq_item.dart';

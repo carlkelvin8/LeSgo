@@ -25,6 +25,9 @@ import '../../../widgets/main/riderside/bookings/rider_booking_confirm_dialog.da
 import '../../../widgets/main/riderside/bookings/rider_cancel_order_dialog.dart';
 import '../../../widgets/main/riderside/bookings/rider_booking_detail_map_section.dart';
 import '../../../widgets/main/riderside/bookings/rider_booking_proof_upload_section.dart';
+import '../../../widgets/main/riderside/bookings/rider_cod_confirm_dialog.dart';
+import '../../../widgets/main/riderside/bookings/rider_customer_rating_dialog.dart';
+import '../../../../core/utils/rider_payment_utils.dart';
 
 class RiderBookingDetailScreen extends ConsumerStatefulWidget {
   final RiderBooking booking;
@@ -430,16 +433,19 @@ class _RiderBookingDetailScreenState
         return;
     }
 
-    AppLogger.debug('📡 Will update to API status: $apiStatus');
+    final targetStatus = apiStatus!;
+    final targetLabel = statusLabel!;
+
+    AppLogger.debug('📡 Will update to API status: $targetStatus');
     
     // Check if we're trying to update to the same status
-    if (_currentApiStatus != null && _currentApiStatus == apiStatus) {
-      AppLogger.warn('Status is already $apiStatus, showing warning');
+    if (_currentApiStatus != null && _currentApiStatus == targetStatus) {
+      AppLogger.warn('Status is already $targetStatus, showing warning');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Order is already $statusLabel. ${apiStatus == "picked_up" ? "Tap Complete to finish the order." : ""}',
+              'Order is already $targetLabel. ${targetStatus == "picked_up" ? "Tap Complete to finish the order." : ""}',
             ),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 3),
@@ -450,10 +456,21 @@ class _RiderBookingDetailScreenState
     }
     
     // Show confirmation dialog
+    if (targetStatus == 'completed') {
+      final booking = _updatedBooking ?? widget.booking;
+      if (RiderPaymentUtils.isCashPayment(booking.paymentMethod)) {
+        final codOk = await showRiderCodConfirmDialog(
+          context,
+          amountLabel: booking.billingAmount,
+        );
+        if (!codOk) return;
+      }
+    }
+
     final confirmed = await showRiderBookingConfirmDialog(
       context: context,
       title: 'Update Status',
-      message: 'Are you sure you want to update the order status to $statusLabel?',
+      message: 'Are you sure you want to update the order status to $targetLabel?',
       confirmText: 'Update',
       cancelText: 'Cancel',
     );
@@ -463,54 +480,53 @@ class _RiderBookingDetailScreenState
       return;
     }
 
-    AppLogger.debug('✅ Status is different ($_currentApiStatus → $apiStatus), proceeding with update');
+    AppLogger.debug('✅ Status is different ($_currentApiStatus → $targetStatus), proceeding with update');
     setState(() => _isUpdating = true);
 
     try {
       bool success = false;
-      if (apiStatus == 'driver_arrived_at_pickup') {
+      if (targetStatus == 'driver_arrived_at_pickup') {
         success = await ref.read(riderOrdersProvider.notifier).markDriverArrived(orderId);
-      } else if (apiStatus == 'in_progress') {
+      } else if (targetStatus == 'in_progress') {
         success = await ref.read(riderOrdersProvider.notifier).markInProgress(orderId);
-      } else if (apiStatus == 'picked_up') {
+      } else if (targetStatus == 'picked_up') {
         success = await ref.read(riderOrdersProvider.notifier).markPickedUp(orderId);
-      } else if (apiStatus == 'completed') {
+      } else if (targetStatus == 'completed') {
         success = await ref.read(riderOrdersProvider.notifier).markCompleted(orderId);
       }
 
-      if (success && mounted && apiStatus != null) {
+      if (success && mounted) {
         setState(() {
-          _currentApiStatus = apiStatus;
+          _currentApiStatus = targetStatus;
           _currentStatus = _mapApiStatusToBookingStatus(
-            apiStatus!,
+            targetStatus,
             widget.booking.serviceId,
           );
-          if (apiStatus != 'picked_up') {
+          if (targetStatus != 'picked_up') {
             _showProofUpload = false;
           }
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Status updated to $statusLabel'),
+            content: Text('✅ Status updated to $targetLabel'),
             backgroundColor: Colors.green,
           ),
         );
         
         // If completed, go back to main screen and refresh history
-        if (apiStatus == 'completed') {
+        if (targetStatus == 'completed') {
           AppLogger.debug('🎯 Order completed! Starting refresh sequence...');
           
-          // Multiple refresh attempts with delays to ensure backend has saved
           await Future.delayed(const Duration(milliseconds: 300));
-          AppLogger.debug('🔄 First history refresh...');
           await ref.read(riderHistoryProvider.notifier).refresh();
           
-          await Future.delayed(const Duration(milliseconds: 300));
-          AppLogger.debug('🔄 Second history refresh...');
-          await ref.read(riderHistoryProvider.notifier).refresh();
-          
-          await Future.delayed(const Duration(milliseconds: 400));
-          AppLogger.debug('✅ Refresh sequence complete, closing screen...');
+          if (mounted) {
+            await showRiderCustomerRatingDialog(
+              context,
+              orderId: orderId,
+              customerName: widget.booking.customerName,
+            );
+          }
           
           if (mounted) {
             Navigator.of(context).pop();
@@ -820,9 +836,6 @@ class _RiderBookingDetailScreenState
   Widget build(BuildContext context) {
     // Watch location provider to ensure tracking continues
     final locationState = ref.watch(riderLocationProvider);
-    
-    // Watch orders provider for real-time updates
-    final ordersState = ref.watch(riderOrdersProvider);
     
     // Listen for order updates to refresh status
     ref.listen<RiderOrdersState>(riderOrdersProvider, (previous, next) {

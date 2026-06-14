@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/merchantside/merchant_wallet_provider.dart';
 
@@ -30,6 +31,111 @@ class _MerchantWalletScreenState extends ConsumerState<MerchantWalletScreen>
     final parsed = DateTime.tryParse(raw);
     if (parsed == null) return raw;
     return DateFormat('MMM d, yyyy • h:mm a').format(parsed.toLocal());
+  }
+
+  Future<void> _showTopUpDialog(BuildContext context, WidgetRef ref) async {
+    final amountController = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Top up LesPay', style: TextStyle(fontFamily: 'TT Fors')),
+        content: TextField(
+          controller: amountController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Amount (PHP)',
+            prefixText: 'PHP ',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF5F2D82)),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final amount = double.tryParse(amountController.text.trim());
+    amountController.dispose();
+    if (amount == null || amount < 10) {
+      SnackBarUtils.showError(context, 'Enter at least PHP 10.00');
+      return;
+    }
+
+    final checkout =
+        await ref.read(merchantWalletProvider.notifier).startTopUp(amount);
+    if (!mounted || checkout == null) return;
+
+    SnackBarUtils.showSuccess(
+      context,
+      'Payment link created. Complete payment to credit your wallet.',
+    );
+    await ref.read(merchantWalletProvider.notifier).completeTopUp(checkout);
+  }
+
+  Future<void> _showWithdrawDialog(BuildContext context, WidgetRef ref) async {
+    final wallet = ref.read(merchantWalletProvider);
+    final amountController = TextEditingController();
+    var method = wallet.isProviderLinked('gcash') ? 'gcash' : 'maya';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Withdraw', style: TextStyle(fontFamily: 'TT Fors')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Available: ${wallet.balanceFormatted}',
+                style: const TextStyle(fontFamily: 'TT Fors'),
+              ),
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Amount (PHP)'),
+              ),
+              DropdownButtonFormField<String>(
+                value: method,
+                items: const [
+                  DropdownMenuItem(value: 'gcash', child: Text('GCash')),
+                  DropdownMenuItem(value: 'maya', child: Text('Maya')),
+                ],
+                onChanged: (v) {
+                  if (v != null) setDialogState(() => method = v);
+                },
+                decoration: const InputDecoration(labelText: 'Method'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFF5F2D82)),
+              child: const Text('Withdraw'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    final amount = double.tryParse(amountController.text.trim());
+    amountController.dispose();
+    if (amount == null || amount <= 0) return;
+
+    final ok = await ref.read(merchantWalletProvider.notifier).withdraw(amount, method);
+    if (!mounted) return;
+    if (ok) {
+      SnackBarUtils.showSuccess(context, 'Withdrawal submitted');
+    } else {
+      SnackBarUtils.showError(context, ref.read(merchantWalletProvider).error ?? 'Withdraw failed');
+    }
   }
 
   @override
@@ -120,6 +226,50 @@ class _MerchantWalletScreenState extends ConsumerState<MerchantWalletScreen>
                 ),
               ),
             ],
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF5F2D82),
+                        padding: EdgeInsets.symmetric(
+                          vertical: ResponsiveUtils.spacing(context, 14),
+                        ),
+                      ),
+                      onPressed: wallet.isProcessingTopUp
+                          ? null
+                          : () => _showTopUpDialog(context, ref),
+                      icon: const Icon(Icons.add),
+                      label: const Text(
+                        'Top up',
+                        style: TextStyle(fontFamily: 'TT Fors'),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF5F2D82),
+                        side: const BorderSide(color: Color(0xFF5F2D82)),
+                        padding: EdgeInsets.symmetric(
+                          vertical: ResponsiveUtils.spacing(context, 14),
+                        ),
+                      ),
+                      onPressed: () => _showWithdrawDialog(context, ref),
+                      icon: const Icon(Icons.remove),
+                      label: const Text(
+                        'Withdraw',
+                        style: TextStyle(fontFamily: 'TT Fors'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
