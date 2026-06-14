@@ -52,9 +52,9 @@ extension BookingStatusX on BookingStatus {
       case BookingStatus.onTheWay:
         return 'On The Way';
       case BookingStatus.onTheWayGoing:
-        return 'On The Way\n(Going)';
+        return 'On The Way (Going)';
       case BookingStatus.driverHasArrived:
-        return 'Driver Has\nArrived';
+        return 'Driver Arrived';
       case BookingStatus.inProgress:
         return 'In Progress';
       case BookingStatus.complete:

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/media_url_utils.dart';
@@ -26,6 +28,13 @@ class MenuImageWidget extends StatelessWidget {
     }
 
     if (MediaUrlUtils.isLocalFilePath(path)) {
+      if (path.startsWith('content://') || path.startsWith('file://')) {
+        return _LocalUriImage(
+          path: path,
+          fit: fit,
+          placeholder: placeholder,
+        );
+      }
       return Image.file(
         File(path),
         fit: fit,
@@ -117,6 +126,46 @@ class _NetworkMenuImageState extends State<_NetworkMenuImage> {
             ),
           ),
         );
+      },
+    );
+  }
+}
+
+class _LocalUriImage extends StatelessWidget {
+  final String path;
+  final BoxFit fit;
+  final Widget? placeholder;
+
+  const _LocalUriImage({
+    required this.path,
+    required this.fit,
+    this.placeholder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Uint8List>(
+      future: XFile(path).readAsBytes(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Image.memory(
+            snapshot.data!,
+            fit: fit,
+            errorBuilder: (_, __, ___) =>
+                placeholder ?? const SizedBox.shrink(),
+          );
+        }
+        if (snapshot.hasError) {
+          return placeholder ?? const SizedBox.shrink();
+        }
+        return placeholder ??
+            const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            );
       },
     );
   }

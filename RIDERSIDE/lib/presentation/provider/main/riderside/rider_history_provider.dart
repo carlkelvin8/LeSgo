@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/app_logger.dart';
 import '../../../../../core/utils/booking_workflow.dart';
 import '../../../../../core/utils/media_url_utils.dart';
 import '../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../domain/entities/rider_booking.dart';
+import '../../auth/rider_auth_provider.dart';
 import 'rider_orders_provider.dart';
 
 // History State
@@ -135,9 +137,11 @@ class RiderHistoryState {
 }
 
 class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
-  RiderHistoryNotifier() : super(const RiderHistoryState()) {
+  RiderHistoryNotifier(this._ref) : super(const RiderHistoryState()) {
     loadHistory();
   }
+
+  final Ref _ref;
 
   Future<void> loadHistory({bool silent = false}) async {
     if (!silent) {
@@ -145,11 +149,15 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
     }
 
     try {
-      print('📊 Fetching rider history from API...');
+      AppLogger.debug('Fetching rider history from API');
       
       // Fetch completed, cancelled, and active assigned orders for history
       final ordersRaw = await ApiService.getOrders(perPage: 100);
-      print('📦 Received ${ordersRaw.length} orders from API');
+      AppLogger.debug('Received ${ordersRaw.length} orders from API');
+
+      final rider = _ref.read(riderAuthProvider).user;
+      final packageTier = rider?.packageTier;
+      final riderCommissionRate = rider?.commissionRate;
 
       final bookings = <RiderBooking>[];
       int completedCount = 0;
@@ -180,6 +188,8 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
 
         final booking = RiderBookingMapper.fromOrder(
           order,
+          packageTier: packageTier,
+          riderCommissionRate: riderCommissionRate,
           proofOfDeliveryUrls: proofUrls.isEmpty ? null : proofUrls,
           orderRating: orderRating,
         );
@@ -203,8 +213,10 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
         return bId.compareTo(aId);
       });
 
-      print('✅ Processed ${bookings.length} history bookings');
-      print('   Completed: $completedCount, Processing: $processingCount, Cancelled: $cancelledCount');
+      AppLogger.debug(
+        'Processed ${bookings.length} history bookings '
+        '(completed: $completedCount, processing: $processingCount, cancelled: $cancelledCount)',
+      );
 
       // Get driver rating from profile API
       int stars = 0;
@@ -216,10 +228,10 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
           final ratingValue = rating is num ? rating.toDouble() : double.tryParse(rating.toString()) ?? 0.0;
           // Convert 0-5 rating to stars (round to nearest integer)
           stars = ratingValue.round().clamp(0, 5);
-          print('⭐ Driver rating: $ratingValue → $stars stars');
+          AppLogger.debug('Driver rating: $ratingValue → $stars stars');
         }
       } catch (e) {
-        print('⚠️ Could not fetch driver rating: $e');
+        AppLogger.warn('Could not fetch driver rating: $e');
         // Fallback: calculate from completion rate
         if (bookings.isNotEmpty) {
           final completionRate = completedCount / bookings.length;
@@ -238,7 +250,7 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
         isLoading: false,
       );
     } catch (e) {
-      print('❌ Error loading history: $e');
+      AppLogger.error('Error loading history', e);
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),
@@ -257,5 +269,5 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
 
 final riderHistoryProvider =
     StateNotifierProvider<RiderHistoryNotifier, RiderHistoryState>(
-      (ref) => RiderHistoryNotifier(),
+      (ref) => RiderHistoryNotifier(ref),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
+import '../../../../provider/main/riderside/rider_orders_provider.dart';
 
 class RiderDutyToggle extends ConsumerStatefulWidget {
   const RiderDutyToggle({super.key});
@@ -22,6 +23,34 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
     if (wantOnDuty == isOnDuty) return;
 
     if (!wantOnDuty) {
+      final activeOrder = ref.read(riderOrdersProvider).activeOrder;
+      if (activeOrder != null) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Go Off Duty?'),
+            content: Text(
+              'May active order ka pa (Order #${activeOrder.id}). '
+              'Sigurado ka bang gusto mong mag-OFF DUTY?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.red.shade700,
+                ),
+                child: const Text('Go Off Duty'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true || !mounted) return;
+      }
+
       await ref.read(riderDutyProvider.notifier).setOnDuty(false);
       return;
     }
@@ -95,12 +124,18 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
             child: const CircularProgressIndicator(strokeWidth: 2),
           )
         else
-          Switch(
-            value: isOnDuty,
-            onChanged: _handleToggle,
-            activeTrackColor: const Color(0xFF5F2D82),
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: Colors.grey.shade400,
+          Semantics(
+            label: isOnDuty
+                ? 'On duty. Double tap to go off duty'
+                : 'Off duty. Double tap to go on duty with attendance photo',
+            toggled: isOnDuty,
+            child: Switch(
+              value: isOnDuty,
+              onChanged: _handleToggle,
+              activeTrackColor: const Color(0xFF5F2D82),
+              inactiveThumbColor: Colors.white,
+              inactiveTrackColor: Colors.grey.shade400,
+            ),
           ),
         SizedBox(width: ResponsiveUtils.spacing(context, 8)),
         Text(

@@ -43,7 +43,7 @@ class _BookingPaymentMethodSectionState
       onMethodChanged: widget.onMethodChanged,
       enabled: widget.enabled,
       showWallet: true,
-      showDigitalPayments: false,
+      showDigitalPayments: true,
       walletBalance: lespayState.balance,
       walletBalanceVisible: lespayState.balanceVisible,
       minimumWalletAmount: widget.minimumAmount,

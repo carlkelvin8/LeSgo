@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/rider_commission_utils.dart';
+import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 
 class RiderWalletCard extends ConsumerWidget {
@@ -10,6 +12,8 @@ class RiderWalletCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = ref.watch(riderWalletProvider);
+    final packageTier = ref.watch(riderAuthProvider).user?.packageTier;
+    final packageLabel = RiderCommissionUtils.labelForPackage(packageTier);
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Padding(
@@ -62,8 +66,8 @@ class RiderWalletCard extends ConsumerWidget {
                           const Spacer(),
                           _buildCardText(
                             context,
-                            'Total top-ups',
-                            wallet.depositFormatted,
+                            'Rider Package Type:',
+                            packageLabel,
                           ),
                         ],
                       ),

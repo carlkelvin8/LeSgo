@@ -60,7 +60,7 @@ class RegisterScreen extends ConsumerWidget {
                     ? () {
                         ref.read(hasAcceptedTermsProvider.notifier).state =
                             true;
-                        AppRouter.push(context, RegisterRoutes.riderPhoneVerification);
+                        AppRouter.push(context, RegisterRoutes.riderInfo);
                       }
                     : null,
               ),

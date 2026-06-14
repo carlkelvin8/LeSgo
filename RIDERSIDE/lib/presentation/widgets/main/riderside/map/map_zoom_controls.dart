@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../../core/utils/app_logger.dart';
+
 class MapZoomControls extends StatelessWidget {
   final GoogleMapController? mapController;
   final VoidCallback? onZoomIn;
@@ -20,48 +22,39 @@ class MapZoomControls extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Zoom In Button
         _buildZoomButton(
+          semanticsLabel: 'Zoom in on map',
           icon: Icons.add,
           onTap: () async {
-            if (mapController != null) {
-              try {
-                await mapController!.animateCamera(CameraUpdate.zoomIn());
-                if (onZoomIn != null) onZoomIn!();
-                print('🔍 Zoomed In');
-              } catch (e) {
-                print('❌ Error zooming in: $e');
-              }
+            if (mapController == null) return;
+            try {
+              await mapController!.animateCamera(CameraUpdate.zoomIn());
+              onZoomIn?.call();
+            } catch (e) {
+              AppLogger.error('Error zooming in', e);
             }
           },
         ),
         const SizedBox(height: 8),
-        
-        // Zoom Out Button
         _buildZoomButton(
+          semanticsLabel: 'Zoom out on map',
           icon: Icons.remove,
           onTap: () async {
-            if (mapController != null) {
-              try {
-                await mapController!.animateCamera(CameraUpdate.zoomOut());
-                if (onZoomOut != null) onZoomOut!();
-                print('🔍 Zoomed Out');
-              } catch (e) {
-                print('❌ Error zooming out: $e');
-              }
+            if (mapController == null) return;
+            try {
+              await mapController!.animateCamera(CameraUpdate.zoomOut());
+              onZoomOut?.call();
+            } catch (e) {
+              AppLogger.error('Error zooming out', e);
             }
           },
         ),
         const SizedBox(height: 8),
-        
-        // Center Map Button
         _buildZoomButton(
+          semanticsLabel: 'Center map on current location',
           icon: Icons.my_location,
           onTap: () {
-            if (onCenterMap != null) {
-              onCenterMap!();
-              print('🎯 Map Centered');
-            }
+            onCenterMap?.call();
           },
         ),
       ],
@@ -69,33 +62,38 @@ class MapZoomControls extends StatelessWidget {
   }
 
   Widget _buildZoomButton({
+    required String semanticsLabel,
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: Icon(
-            icon,
-            color: const Color(0xFF5F2D82),
-            size: 24,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: onTap,
+            child: Icon(
+              icon,
+              color: const Color(0xFF5F2D82),
+              size: 24,
+            ),
           ),
         ),
       ),

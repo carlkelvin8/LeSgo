@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../constants/api_constants.dart';
 import '../services/secure_storage_service.dart';
 import 'auth_token_interceptor.dart';
+import 'offline_interceptor.dart';
 
 class DioClient {
   static final DioClient _instance = DioClient._internal();
@@ -34,6 +35,7 @@ class DioClient {
           handler.next(options);
         },
       ),
+      OfflineInterceptor(),
       AuthTokenInterceptor(_dio),
     ]);
   }

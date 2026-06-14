@@ -6,6 +6,7 @@ import '../../../provider/main/merchantside/merchant_menu_item_form_provider.dar
 import '../../../controllers/merchantside/merchant_menu_item_form_controller.dart';
 import '../../../widgets/main/merchantside/menu/shared/merchant_dietary_preferences_section.dart';
 import '../../../widgets/main/merchantside/menu/shared/merchant_item_options_section.dart';
+import '../../../widgets/main/merchantside/menu/shared/merchant_item_inventory_section.dart';
 
 import 'package:image_picker/image_picker.dart';
 
@@ -128,6 +129,17 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
         MerchantItemOptionsSection(
           optionGroups: formState.menuOptions,
           onChanged: notifier.updateMenuOptions,
+        ),
+        SectionSpacer(),
+        MerchantItemInventorySection(
+          trackStock: formState.trackStock,
+          stock: formState.stock,
+          autoHideWhenEmpty: formState.autoHideWhenEmpty,
+          liveOnMenu: formState.liveOnMenu,
+          onTrackStockChanged: notifier.toggleTrackStock,
+          onStockChanged: notifier.updateStock,
+          onAutoHideChanged: notifier.toggleAutoHideWhenEmpty,
+          onLiveOnMenuChanged: notifier.toggleLiveOnMenu,
         ),
         SectionSpacer(),
       ],

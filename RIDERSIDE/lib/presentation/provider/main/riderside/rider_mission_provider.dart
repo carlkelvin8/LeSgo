@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/app_logger.dart';
 
 class RiderMission {
   final int id;
@@ -77,7 +78,7 @@ class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
       state = state.copyWith(isLoading: true, clearError: true);
     }
     try {
-      print('🎯 Fetching missions from API...');
+      AppLogger.debug('Fetching missions from API');
       
       final data = await ApiService.getDriverMissions();
       final missionsData = data['missions'] as List<dynamic>? ?? [];
@@ -86,14 +87,14 @@ class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
           .map((m) => RiderMission.fromJson(m as Map<String, dynamic>))
           .toList();
 
-      print('✅ Loaded ${missions.length} missions');
+      AppLogger.debug('Loaded ${missions.length} missions');
       
       state = state.copyWith(
         missions: missions,
         isLoading: false,
       );
     } catch (e) {
-      print('❌ Error loading missions: $e');
+      AppLogger.error('Error loading missions', e);
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),
@@ -103,18 +104,18 @@ class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
 
   Future<bool> claimReward(int missionId) async {
     try {
-      print('💰 Claiming reward for mission $missionId...');
+      AppLogger.debug('Claiming reward for mission $missionId');
       
-      final response = await ApiService.claimMissionReward(missionId);
+      await ApiService.claimMissionReward(missionId);
       
-      print('✅ Reward claimed successfully');
+      AppLogger.debug('Reward claimed successfully');
       
       // Reload missions to update state
       await loadMissions();
       
       return true;
     } catch (e) {
-      print('❌ Error claiming reward: $e');
+      AppLogger.error('Error claiming reward', e);
       state = state.copyWith(
         error: ApiService.extractError(e),
       );

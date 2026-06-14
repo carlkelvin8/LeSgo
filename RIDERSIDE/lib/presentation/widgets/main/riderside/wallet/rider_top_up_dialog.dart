@@ -69,7 +69,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
       if (widget.parentContext.mounted) {
         SnackBarUtils.showSuccess(
           widget.parentContext,
-          'PHP ${amount.toStringAsFixed(2)} added to your wallet!',
+          'PHP ${amount.toStringAsFixed(2)} added to your LesPay!',
         );
       }
     }
@@ -110,7 +110,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
-                labelText: 'Amount to add to wallet',
+                labelText: 'Amount to add to LesPay',
                 prefixText: 'PHP ',
                 border: OutlineInputBorder(),
               ),

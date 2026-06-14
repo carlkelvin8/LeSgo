@@ -26,6 +26,7 @@ import '../../../../presentation/screens/main/settings/deactivate_account_screen
 import '../../../../presentation/screens/main/set_location_screen.dart';
 import '../../../../presentation/screens/main/address_management_screen.dart';
 import '../../../../presentation/screens/demo/address_demo_screen.dart';
+import '../../../../presentation/screens/main/payment_methods_screen.dart';
 import 'main_routes.dart';
 
 class MainRouter {
@@ -59,6 +60,7 @@ class MainRouter {
     MainRoutes.setLocation: (_) => const SetLocationScreen(),
     MainRoutes.addressManagement: (_) => const AddressManagementScreen(),
     MainRoutes.addressDemo: (_) => const AddressDemoScreen(),
+    MainRoutes.paymentMethods: (_) => const PaymentMethodsScreen(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

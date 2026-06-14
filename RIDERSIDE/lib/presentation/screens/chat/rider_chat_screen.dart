@@ -42,9 +42,9 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
   Future<void> _initializeChat() async {
     if (_isInitialized) return;
     _isInitialized = true;
-    await ref
-        .read(chatProviderFamily(widget.orderId).notifier)
-        .getOrCreateConversation(widget.orderId);
+    final notifier = ref.read(chatProviderFamily(widget.orderId).notifier);
+    await notifier.getOrCreateConversation(widget.orderId);
+    await notifier.markAsRead();
     _scrollToBottom();
   }
 

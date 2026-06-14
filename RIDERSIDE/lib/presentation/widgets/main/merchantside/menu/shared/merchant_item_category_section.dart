@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/screen_auto_refresh.dart';
+import '../../../../../mixins/auto_refresh_mixin.dart';
 import '../../../../../provider/main/merchantside/merchant_menu_provider.dart';
 
-class MerchantItemCategorySection extends ConsumerWidget {
+class MerchantItemCategorySection extends ConsumerStatefulWidget {
   final String selectedCategory;
   final ValueChanged<String?> onChanged;
 
@@ -14,7 +16,33 @@ class MerchantItemCategorySection extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MerchantItemCategorySection> createState() =>
+      _MerchantItemCategorySectionState();
+}
+
+class _MerchantItemCategorySectionState
+    extends ConsumerState<MerchantItemCategorySection>
+    with WidgetsBindingObserver, AutoRefreshMixin {
+  @override
+  Duration get autoRefreshInterval => kScreenAutoRefreshInterval;
+
+  @override
+  void onAutoRefresh() {
+    ref.invalidate(merchantMenuProvider);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.invalidate(merchantMenuProvider);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final menuAsync = ref.watch(merchantMenuProvider);
 
     return Column(
@@ -89,13 +117,14 @@ class MerchantItemCategorySection extends ConsumerWidget {
                 );
               }
 
-              final categoryNames = menu.categories.map((cat) => cat.name).toSet().toList();
-              final hasSelected = categoryNames.contains(selectedCategory);
+              final categoryNames =
+                  menu.categories.map((cat) => cat.name).toSet().toList();
+              final hasSelected = categoryNames.contains(widget.selectedCategory);
 
               return DropdownButton<String>(
                 isExpanded: true,
-                value: hasSelected ? selectedCategory : null,
-                onChanged: onChanged,
+                value: hasSelected ? widget.selectedCategory : null,
+                onChanged: widget.onChanged,
                 underline: const SizedBox(),
                 hint: Text(
                   'Select a category',

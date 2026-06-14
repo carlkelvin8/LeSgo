@@ -12,6 +12,8 @@ class MerchantMenuItemCard extends StatelessWidget {
   final String? imageUrl;
   final VoidCallback onEditTap;
   final VoidCallback? onDeleteTap;
+  final Widget? inventoryBadge;
+  final Widget? stockControls;
 
   const MerchantMenuItemCard({
     super.key,
@@ -22,6 +24,8 @@ class MerchantMenuItemCard extends StatelessWidget {
     this.imageUrl,
     required this.onEditTap,
     this.onDeleteTap,
+    this.inventoryBadge,
+    this.stockControls,
   });
 
   @override
@@ -95,9 +99,17 @@ class MerchantMenuItemCard extends StatelessWidget {
                       color: Colors.grey.shade500,
                     ),
                   ),
+                  if (inventoryBadge != null) ...[
+                    SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                    inventoryBadge!,
+                  ],
                   SizedBox(height: ResponsiveUtils.spacing(context, 3)),
                   Row(
                     children: [
+                      if (stockControls != null) ...[
+                        stockControls!,
+                        SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+                      ],
                       GestureDetector(
                         onTap: onEditTap,
                         child: Text(

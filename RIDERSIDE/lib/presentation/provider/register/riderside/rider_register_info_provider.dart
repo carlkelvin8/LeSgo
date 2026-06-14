@@ -9,8 +9,7 @@ import '../../../../../core/di/injection.dart';
 import '../../../../../core/services/api_service.dart';
 import '../../../../../core/utils/phone_utils.dart';
 import '../../../../../data/data_source/helpers/register_driver_form_builder.dart';
-import '../../../auth/rider_auth_provider.dart';
-import 'rider_phone_verification_provider.dart';
+import '../../auth/rider_auth_provider.dart';
 
 // Register Info State
 class RegisterInfoState {
@@ -109,6 +108,12 @@ class RegisterInfoState {
       ? registrationInfo.email
       : '—';
 
+  String get presentationContactNumber {
+    final phone = registrationInfo.phoneNumber.trim();
+    if (phone.isEmpty) return '—';
+    return PhoneUtils.toInternational(phone);
+  }
+
   String? get selfieImagePath => documents.selfieImagePath;
   String? get selfieWithMotorcycleImagePath =>
       documents.selfieWithMotorcycleImagePath;
@@ -122,7 +127,6 @@ class RegisterInfoState {
 
 class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
   final Ref _ref;
-  String? _verifiedPhone;
 
   RegisterInfoNotifier(this._ref) : super(RegisterInfoState());
 
@@ -147,6 +151,12 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
   void updateEmail(String value) {
     state = state.copyWith(
       registrationInfo: state.registrationInfo.copyWith(email: value),
+    );
+  }
+
+  void updatePhoneNumber(String value) {
+    state = state.copyWith(
+      registrationInfo: state.registrationInfo.copyWith(phoneNumber: value),
     );
   }
 
@@ -424,15 +434,9 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     try {
       state = state.copyWith(isSubmitting: true, clearError: true);
 
-      final phoneState = _ref.read(phoneVerificationProvider);
-      if (!phoneState.isVerified) {
-        throw Exception('Please verify your phone number first.');
-      }
-
-      final phoneNumber = PhoneUtils.toInternational(phoneState.phoneNumber);
-      _verifiedPhone = phoneNumber;
-
       final info = state.registrationInfo;
+      final phoneNumber = PhoneUtils.toInternational(info.phoneNumber);
+
       final registerRequest = RegisterDriverRequestDto(
         name: '${info.firstName} ${info.lastName}',
         email: info.email,
@@ -524,11 +528,8 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
   }
 
   void reset() {
-    _verifiedPhone = null;
     state = RegisterInfoState();
   }
-
-  String? get verifiedPhone => _verifiedPhone;
 
   String? _formatDateForApi(String? mmddyyyy) {
     if (mmddyyyy == null || mmddyyyy.isEmpty) return null;

@@ -18,12 +18,22 @@ class MediaUrlUtils {
   static bool isApiMediaPath(String? path) {
     if (path == null || path.isEmpty) return false;
     if (isHttpUrl(path)) return true;
+    if (path.startsWith('content://') || path.startsWith('file://')) {
+      return false;
+    }
     if (path.startsWith('/storage/emulated/')) return false;
+    if (path.startsWith('/data/') || path.startsWith('/sdcard/')) {
+      return false;
+    }
+    if (path.contains(':\\')) return false;
     if (path.startsWith('/storage/') || path.startsWith('storage/')) {
       return true;
     }
     if (path.contains('/v1/storage/')) return true;
-    if (!path.startsWith('/') && !path.contains(':\\')) {
+    if (path.startsWith('uploads/') ||
+        path.startsWith('menu_items/') ||
+        path.startsWith('profile_pictures/') ||
+        path.startsWith('public/')) {
       return true;
     }
     return false;
@@ -32,9 +42,17 @@ class MediaUrlUtils {
   /// Local file from image picker or camera.
   static bool isLocalFilePath(String? path) {
     if (path == null || path.isEmpty) return false;
+    if (path.startsWith('content://') ||
+        path.startsWith('file://') ||
+        path.startsWith('/data/') ||
+        path.startsWith('/sdcard/') ||
+        path.contains(':\\')) {
+      return true;
+    }
     if (isApiMediaPath(path)) return false;
     if (path.startsWith('assets/')) return false;
-    return true;
+    if (path.startsWith('/')) return true;
+    return false;
   }
 
   /// Build URL for Laravel `/api/v1/storage/{path}` (CORS-enabled file serving).

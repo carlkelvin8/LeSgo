@@ -46,6 +46,7 @@ bool? _parseBoolNullable(dynamic value) {
 Object? _readImageUrlField(Map json, String key) {
   for (final field in [
     'image_url',
+    'icon_url',
     'image',
     'thumbnail_url',
     'photo_url',
@@ -104,6 +105,8 @@ class MenuItemDto {
   final bool? requiresPrescription;
   @JsonKey(name: 'sort_order', fromJson: _parseIntNullable)
   final int? sortOrder;
+  @JsonKey(name: 'stock_count', fromJson: _parseIntNullable)
+  final int? stockCount;
   final List<String>? tags;
   final Map<String, dynamic>? options;
   
@@ -126,6 +129,7 @@ class MenuItemDto {
     this.isBestSeller,
     this.requiresPrescription,
     this.sortOrder,
+    this.stockCount,
     this.tags,
     this.options,
     this.category,

@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
@@ -54,7 +57,13 @@ class MerchantProfileView extends ConsumerWidget {
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantProfileInfoSection(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              const MerchantWalletPreviewCard(),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantEarningsPreviewCard(),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              const MerchantAnalyticsPreviewCard(),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              const MerchantReviewsPreviewCard(),
               SizedBox(
                 height: ResponsiveUtils.spacing(context, 24),
                 child: ElevatedButton(
@@ -195,19 +204,11 @@ class MerchantProfileView extends ConsumerWidget {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => MerchantMenuEditItemScreen(
-                                  initialItem: {
-                                    'id': item.id.toString(),
-                                    'menuCategoryId': item.menuCategoryId.toString(),
-                                    'name': item.name,
-                                    'description': item.description ?? '',
-                                    'price': item.price.toStringAsFixed(2),
-                                    'category': item.category?.name ?? '',
-                                    if (item.imageUrl != null)
-                                      'imageUrl': item.imageUrl!,
-                                    if (item.tags != null &&
-                                        item.tags!.isNotEmpty)
-                                      'selectedTags': item.tags!.join(','),
-                                  },
+                                  initialItem: menuItemToEditFormMap(
+                                    item,
+                                    categoryName: item.category?.name ?? '',
+                                    encodeOptions: jsonEncode,
+                                  ),
                                 ),
                               ),
                             );

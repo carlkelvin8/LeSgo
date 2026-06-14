@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../auth/rider_auth_provider.dart';
 import 'rider_location_provider.dart';
 import 'rider_orders_provider.dart';
@@ -12,14 +13,14 @@ class RiderDutyNotifier extends StateNotifier<bool> {
   final Ref _ref;
   bool _initialized = false;
 
-  RiderDutyNotifier(this._ref) : super(true) {
+  RiderDutyNotifier(this._ref) : super(false) {
     _initialize();
   }
 
   Future<void> _initialize() async {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getBool(_dutyPrefKey);
-    final onDuty = stored ?? true;
+    final onDuty = stored ?? false;
     state = onDuty;
     _initialized = true;
     _applySideEffects(onDuty, syncApi: true);
@@ -96,7 +97,7 @@ class RiderDutyNotifier extends StateNotifier<bool> {
 
       await ApiService.updateDriverAvailability(driverProfileId, onDuty);
     } catch (e) {
-      print('⚠️ Failed to sync driver availability: $e');
+      AppLogger.warn('Failed to sync driver availability: $e');
     }
   }
 }

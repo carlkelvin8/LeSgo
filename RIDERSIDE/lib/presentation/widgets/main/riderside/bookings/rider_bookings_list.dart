@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../core/utils/offline_feedback_utils.dart';
 import '../../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
@@ -143,6 +144,37 @@ class RiderBookingsList extends ConsumerWidget {
           vertical: ResponsiveUtils.spacing(context, 8),
         ),
         children: [
+          if (ordersState.isRefreshing && !ordersState.isLoading) ...[
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: ResponsiveUtils.spacing(context, 8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFF5F2D82),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                  Text(
+                    'Updating bookings...',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (wallet.showLowBalanceWarning) ...[
             RiderWalletLowBalanceBanner(balance: wallet.balance),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -201,11 +233,10 @@ class RiderBookingsList extends ConsumerWidget {
                   } else {
                     final error = ref.read(riderOrdersProvider).error ??
                         'Failed to accept order';
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(error),
-                        backgroundColor: Colors.red,
-                      ),
+                    showApiErrorSnackBar(
+                      context,
+                      error,
+                      fallback: 'Failed to accept order',
                     );
                   }
                 },

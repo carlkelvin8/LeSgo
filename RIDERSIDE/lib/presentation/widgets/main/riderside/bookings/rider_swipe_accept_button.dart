@@ -67,11 +67,8 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
     final double maxDrag = maxWidth - thumbWidth;
     final double threshold = maxDrag * 0.75;
     if (_dragOffset >= threshold) {
-      setState(() {
-        _dragOffset = maxDrag;
-        _isAccepted = true;
-      });
-      widget.onAccepted();
+      setState(() => _dragOffset = maxDrag);
+      _accept();
     } else {
       // Animate back to original position
       _slideBackAnimation = Tween<double>(begin: _dragOffset, end: 0.0).animate(
@@ -81,15 +78,27 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
     }
   }
 
+  void _accept() {
+    if (_isAccepted) return;
+    setState(() => _isAccepted = true);
+    widget.onAccepted();
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = ResponsiveUtils.spacing(context, 48);
 
-    return LayoutBuilder(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
 
-        return Container(
+        return Semantics(
+          label: widget.text,
+          hint: 'Swipe right to accept this booking',
+          child: Container(
           width: double.infinity,
           height: height,
           decoration: BoxDecoration(
@@ -189,8 +198,30 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
               ),
             ],
           ),
+        ),
         );
       },
+    ),
+        if (!_isAccepted) ...[
+          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+          Semantics(
+            button: true,
+            label: 'Accept booking',
+            child: TextButton(
+              onPressed: _accept,
+              child: Text(
+                'Accept booking',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF5F2D82),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

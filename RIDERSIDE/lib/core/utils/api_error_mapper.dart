@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../network/offline_exceptions.dart';
+
 /// Maps API/network errors to short, user-friendly messages.
 class ApiErrorMapper {
   ApiErrorMapper._();
@@ -11,6 +13,15 @@ class ApiErrorMapper {
   }) {
     if (error == null) {
       return _pick(fallbackEn, fallbackTl, _defaultEn, _defaultTl);
+    }
+
+    if (error is OfflineQueuedException) {
+      return _pick(
+        fallbackEn,
+        fallbackTl,
+        'You\'re offline. This action will retry when connection returns.',
+        'Walang internet. Isusubok muli ang aksyon kapag bumalik ang koneksyon.',
+      );
     }
 
     if (error is DioException) {
@@ -42,6 +53,15 @@ class ApiErrorMapper {
     String? fallbackEn,
     String? fallbackTl,
   }) {
+    if (error.error is OfflineQueuedException) {
+      return _pick(
+        fallbackEn,
+        fallbackTl,
+        'You\'re offline. This action will retry when connection returns.',
+        'Walang internet. Isusubok muli ang aksyon kapag bumalik ang koneksyon.',
+      );
+    }
+
     final apiMsg = _extractApiMessage(error.response?.data);
     if (apiMsg != null) return apiMsg;
 
@@ -110,21 +130,40 @@ class ApiErrorMapper {
       }
       return null;
     }
+
+    final errors = data['errors'];
+    if (errors is Map && errors.isNotEmpty) {
+      for (final entry in errors.entries) {
+        final value = entry.value;
+        if (value is List && value.isNotEmpty) {
+          final msg = value.first.toString();
+          if (msg.isNotEmpty && !_isTechnical(msg)) {
+            return msg;
+          }
+        } else if (value is String && value.isNotEmpty && !_isTechnical(value)) {
+          return value;
+        }
+      }
+    }
+
     for (final key in ['message', 'error', 'detail']) {
       final v = data[key];
-      if (v is String && v.isNotEmpty && !_isTechnical(v) && v.length < 160) {
+      if (v is String &&
+          v.isNotEmpty &&
+          !_isTechnical(v) &&
+          v.length < 160 &&
+          !_isGenericValidationMessage(v)) {
         return v;
       }
     }
-    final errors = data['errors'];
-    if (errors is Map && errors.isNotEmpty) {
-      final first = errors.values.first;
-      if (first is List && first.isNotEmpty) {
-        final msg = first.first.toString();
-        if (!_isTechnical(msg)) return msg;
-      }
-    }
+
     return null;
+  }
+
+  static bool _isGenericValidationMessage(String message) {
+    final lower = message.toLowerCase();
+    return lower == 'the given data was invalid.' ||
+        lower.contains('validation failed');
   }
 
   static String _sanitize(String raw) {

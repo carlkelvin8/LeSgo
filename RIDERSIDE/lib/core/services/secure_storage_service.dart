@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import '../utils/app_logger.dart';
 
 /// Secure storage service using Flutter Secure Storage
 /// Provides encrypted storage for sensitive data like tokens
@@ -55,9 +56,9 @@ class SecureStorageService {
       final hash = _generateIntegrityHash(token, expiresAt);
       await _storage.write(key: _integrityKey, value: hash);
       
-      print('🔐 SecureStorage: Token saved securely with expiry');
+      AppLogger.auth('Token saved securely with expiry');
     } catch (e) {
-      print('❌ SecureStorage: Error saving token: $e');
+      AppLogger.error('SecureStorage: Error saving token', e);
       rethrow;
     }
   }
@@ -67,26 +68,26 @@ class SecureStorageService {
     try {
       final token = await _storage.read(key: _tokenKey);
       if (token == null) {
-        print('🔐 SecureStorage: No token found');
+        AppLogger.auth('No token found');
         return null;
       }
 
       // Expired access tokens are omitted; refresh token stays for silent refresh.
       if (await isTokenExpired()) {
-        print('⏰ SecureStorage: Access token expired');
+        AppLogger.auth('Access token expired');
         return null;
       }
 
       // Verify integrity
       if (!await _verifyIntegrity(token)) {
-        print('⚠️ SecureStorage: Token integrity check failed');
+        AppLogger.warn('SecureStorage: Token integrity check failed');
         await clearAuth();
         return null;
       }
 
       return token;
     } catch (e) {
-      print('❌ SecureStorage: Error getting token: $e');
+      AppLogger.error('SecureStorage: Error getting token', e);
       return null;
     }
   }
@@ -106,12 +107,12 @@ class SecureStorageService {
       final isExpired = DateTime.now().isAfter(bufferExpiry);
 
       if (isExpired) {
-        print('⏰ SecureStorage: Token expired at $expiry');
+        AppLogger.auth('Token expired');
       }
 
       return isExpired;
     } catch (e) {
-      print('❌ SecureStorage: Error checking expiry: $e');
+      AppLogger.error('SecureStorage: Error checking expiry', e);
       return true;
     }
   }
@@ -121,7 +122,7 @@ class SecureStorageService {
     try {
       return await _storage.read(key: _refreshTokenKey);
     } catch (e) {
-      print('❌ SecureStorage: Error getting refresh token: $e');
+      AppLogger.error('SecureStorage: Error getting refresh token', e);
       return null;
     }
   }
@@ -132,7 +133,7 @@ class SecureStorageService {
       final userIdStr = await _storage.read(key: _userIdKey);
       return userIdStr != null ? int.tryParse(userIdStr) : null;
     } catch (e) {
-      print('❌ SecureStorage: Error getting user ID: $e');
+      AppLogger.error('SecureStorage: Error getting user ID', e);
       return null;
     }
   }
@@ -142,7 +143,7 @@ class SecureStorageService {
     try {
       await _storage.write(key: _userIdKey, value: userId.toString());
     } catch (e) {
-      print('❌ SecureStorage: Error saving user ID: $e');
+      AppLogger.error('SecureStorage: Error saving user ID', e);
     }
   }
 
@@ -155,12 +156,12 @@ class SecureStorageService {
         // Generate new device ID
         deviceId = _generateDeviceId();
         await _storage.write(key: _deviceIdKey, value: deviceId);
-        print('🔐 SecureStorage: Generated new device ID');
+        AppLogger.auth('Generated new device ID');
       }
       
       return deviceId;
     } catch (e) {
-      print('❌ SecureStorage: Error with device ID: $e');
+      AppLogger.error('SecureStorage: Error with device ID', e);
       return _generateDeviceId();
     }
   }
@@ -169,9 +170,9 @@ class SecureStorageService {
   static Future<void> clearAll() async {
     try {
       await _storage.deleteAll();
-      print('🔐 SecureStorage: All data cleared');
+      AppLogger.auth('All secure storage data cleared');
     } catch (e) {
-      print('❌ SecureStorage: Error clearing data: $e');
+      AppLogger.error('SecureStorage: Error clearing data', e);
     }
   }
 
@@ -183,9 +184,9 @@ class SecureStorageService {
       await _storage.delete(key: _refreshTokenKey);
       await _storage.delete(key: _userIdKey);
       await _storage.delete(key: _integrityKey);
-      print('🔐 SecureStorage: Auth data cleared');
+      AppLogger.auth('Auth data cleared');
     } catch (e) {
-      print('❌ SecureStorage: Error clearing auth: $e');
+      AppLogger.error('SecureStorage: Error clearing auth', e);
     }
   }
 
@@ -213,7 +214,7 @@ class SecureStorageService {
       final expectedHash = _generateIntegrityHash(token, expiry);
       return storedHash == expectedHash;
     } catch (e) {
-      print('❌ SecureStorage: Error verifying integrity: $e');
+      AppLogger.error('SecureStorage: Error verifying integrity', e);
       return false;
     }
   }
@@ -235,7 +236,7 @@ class SecureStorageService {
       await _storage.delete(key: 'test');
       return true;
     } catch (e) {
-      print('❌ SecureStorage: Not available: $e');
+      AppLogger.error('SecureStorage: Not available', e);
       return false;
     }
   }

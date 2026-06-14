@@ -87,7 +87,7 @@ class _RiderWalletHistoryScreenState
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Wallet History',
+                  'LesPay History',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 20),

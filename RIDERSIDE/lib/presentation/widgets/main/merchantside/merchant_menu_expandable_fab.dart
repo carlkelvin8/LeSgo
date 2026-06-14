@@ -27,33 +27,42 @@ class _MerchantMenuExpandableFabState extends State<MerchantMenuExpandableFab> {
     });
   }
 
+  static const double _quickActionWidth = 168;
+
   Widget _buildQuickAction({
     required String label,
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    return ElevatedButton.icon(
-      onPressed: () {
-        onPressed();
-        setState(() {
-          _isExpanded = false;
-        });
-      },
-      style: ElevatedButton.styleFrom(
-        elevation: 4,
-        backgroundColor: _brandLavender,
-        foregroundColor: _brandPurple,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+    return SizedBox(
+      width: _quickActionWidth,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          onPressed();
+          setState(() {
+            _isExpanded = false;
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          elevation: 4,
+          backgroundColor: _brandLavender,
+          foregroundColor: _brandPurple,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
-      ),
-      icon: Icon(icon, size: 18),
-      label: Text(
-        label,
-        style: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontWeight: FontWeight.w600,
+        icon: Icon(icon, size: 18),
+        label: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: const TextStyle(
+              fontFamily: 'TT Fors',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ),
     );

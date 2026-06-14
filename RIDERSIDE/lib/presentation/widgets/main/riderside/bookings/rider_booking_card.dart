@@ -17,7 +17,11 @@ class RiderBookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Semantics(
+      label:
+          'Booking from ${booking.restaurantName}. ${booking.address}. Earnings ${booking.earnings ?? 'unknown'} pesos.',
+      button: onTap != null,
+      child: GestureDetector(
       onTap: onTap,
       child: Container(
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 16)),
@@ -94,6 +98,7 @@ class RiderBookingCard extends StatelessWidget {
           RiderSwipeAcceptButton(onAccepted: onAccept),
         ],
       ),
+    ),
     ),
     );
   }

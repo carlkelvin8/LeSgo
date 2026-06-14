@@ -9,7 +9,7 @@ import '../../../../../data/data_source/dto/auth/register_merchant_request_dto.d
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/services/api_service.dart';
 import '../../../../../data/data_source/helpers/register_merchant_form_builder.dart';
-import '../../../auth/rider_auth_provider.dart';
+import '../../auth/rider_auth_provider.dart';
 
 // Merchant Register Info State
 class MerchantRegisterInfoState {

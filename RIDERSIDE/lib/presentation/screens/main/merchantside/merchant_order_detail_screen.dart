@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/utils/merchant_order_amount_utils.dart';
+import '../../../../core/utils/merchant_order_ops_utils.dart';
+import '../../../../core/utils/merchant_payment_utils.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
@@ -9,7 +12,11 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
 import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
+import '../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
+import '../../../widgets/main/merchantside/orders/merchant_order_action_handlers.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
+import '../../../widgets/main/merchantside/orders/merchant_prep_timer_badge.dart';
+import '../../../widgets/main/merchantside/orders/merchant_special_instructions_banner.dart';
 
 class MerchantOrderDetailScreen extends ConsumerStatefulWidget {
   final OrderDto order;
@@ -87,6 +94,11 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     );
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
     final status = resolvedOrder.status.toLowerCase();
+    final prepTimer = ref.watch(merchantPrepTimerProvider)[resolvedOrder.id];
+    final orderInstructions =
+        MerchantOrderOpsUtils.orderSpecialInstructions(resolvedOrder);
+    final itemInstructions =
+        MerchantOrderOpsUtils.itemSpecialInstructions(resolvedOrder);
     
     // Calculate subtotals
     double itemSubtotal = 0;
@@ -183,9 +195,62 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                       ),
                     ],
                   ),
+                  if (MerchantOrderOpsUtils.showsPrepTimer(status) &&
+                      prepTimer != null) ...[
+                    SizedBox(height: ResponsiveUtils.spacing(context, 10)),
+                    MerchantPrepTimerBadge(timer: prepTimer),
+                  ],
                 ],
               ),
             ),
+
+            if (MerchantOrderOpsUtils.isRiderFlowStatus(status)) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE3F2FD),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF90CAF9)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.two_wheeler,
+                        color: Colors.blue.shade800,
+                        size: ResponsiveUtils.fontSize(context, 20),
+                      ),
+                      SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+                      Expanded(
+                        child: Text(
+                          'This order is with the rider. Merchant cancel is no longer available.',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 13),
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            if (MerchantOrderOpsUtils.hasSpecialInstructions(resolvedOrder)) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: MerchantSpecialInstructionsBanner(
+                  orderInstructions: orderInstructions,
+                  itemInstructions: itemInstructions,
+                ),
+              ),
+            ],
             
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             
@@ -276,14 +341,40 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                                 if (item.optionsDisplay != null &&
                                     item.optionsDisplay!.isNotEmpty) ...[
                                   const SizedBox(height: 4),
-                                  Text(
-                                    item.optionsDisplay!,
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize:
-                                          ResponsiveUtils.fontSize(context, 12),
-                                      color: Colors.orange.shade700,
-                                      fontStyle: FontStyle.italic,
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: item.notes != null &&
+                                              item.notes!.trim().isNotEmpty
+                                          ? const Color(0xFFFFF8E1)
+                                          : Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: item.notes != null &&
+                                                item.notes!.trim().isNotEmpty
+                                            ? const Color(0xFFFFB300)
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      item.optionsDisplay!,
+                                      style: TextStyle(
+                                        fontFamily: 'TT Fors',
+                                        fontSize:
+                                            ResponsiveUtils.fontSize(context, 12),
+                                        color: item.notes != null &&
+                                                item.notes!.trim().isNotEmpty
+                                            ? Colors.orange.shade900
+                                            : Colors.black54,
+                                        fontWeight: item.notes != null &&
+                                                item.notes!.trim().isNotEmpty
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -333,6 +424,82 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Payment Method',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          color: Colors.black54,
+                        ),
+                      ),
+                      Text(
+                        MerchantPaymentUtils.methodLabel(
+                          resolvedOrder.paymentMethod,
+                        ),
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Payment Status',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          color: Colors.black54,
+                        ),
+                      ),
+                      Text(
+                        MerchantPaymentUtils.statusLabel(
+                          resolvedOrder.paymentStatus,
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w600,
+                          color: MerchantPaymentUtils.creditsMerchantWallet(
+                            resolvedOrder.paymentMethod,
+                            resolvedOrder.paymentStatus,
+                          )
+                              ? Colors.green.shade700
+                              : Colors.orange.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (MerchantPaymentUtils.creditsMerchantWallet(
+                    resolvedOrder.paymentMethod,
+                    resolvedOrder.paymentStatus,
+                  )) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Credited to E-Wallet',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            color: Colors.black54,
+                          ),
+                        ),
+                        Text(
+                          'PHP ${MerchantOrderAmountUtils.foodEarnings(resolvedOrder).toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontWeight: FontWeight.w700,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -700,7 +867,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
       );
     }
 
-    if (status == 'pending') {
+    Widget actionBar(List<Widget> children) {
       return Container(
         width: double.infinity,
         padding: EdgeInsets.all(horizontalPadding),
@@ -714,25 +881,92 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
             ),
           ],
         ),
-        child: actionButton(
-          label: 'Accept',
-          color: const Color(0xFF5F2D82),
-          onPressed: () async {
-            final confirm = await showMerchantConfirmDialog(
-              context,
-              title: 'Accept Order?',
-              message: 'Start searching for a driver?',
-              confirmLabel: 'Accept',
-            );
-            if (confirm && context.mounted) {
-              await run(
-                () => ref.read(merchantOrderActionProvider).acceptOrder(widget.order.id),
-                'Order accepted successfully!',
-              );
-            }
-          },
+        child: Row(
+          children: [
+            for (var i = 0; i < children.length; i++) ...[
+              if (i > 0) SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+              children[i],
+            ],
+          ],
         ),
       );
+    }
+
+    void popOnSuccess() {
+      if (context.mounted) Navigator.pop(context);
+    }
+
+    if (MerchantOrderOpsUtils.canAccept(status)) {
+      return actionBar([
+        actionButton(
+          label: 'Reject',
+          color: const Color(0xFFE53935),
+          onPressed: () => MerchantOrderActionHandlers.reject(
+            context,
+            ref,
+            orderId: widget.order.id,
+            onSuccess: popOnSuccess,
+          ),
+        ),
+        actionButton(
+          label: 'Accept',
+          color: const Color(0xFF5F2D82),
+          onPressed: () => MerchantOrderActionHandlers.accept(
+            context,
+            ref,
+            orderId: widget.order.id,
+            onSuccess: popOnSuccess,
+          ),
+        ),
+      ]);
+    }
+
+    if (MerchantOrderOpsUtils.canMarkReadyForPickup(status) ||
+        MerchantOrderOpsUtils.canCancelAfterAccept(status)) {
+      final actions = <Widget>[];
+
+      if (MerchantOrderOpsUtils.canCancelAfterAccept(status)) {
+        actions.add(
+          actionButton(
+            label: 'Cancel',
+            color: const Color(0xFFE53935),
+            onPressed: () => MerchantOrderActionHandlers.cancelAfterAccept(
+              context,
+              ref,
+              orderId: widget.order.id,
+              onSuccess: popOnSuccess,
+            ),
+          ),
+        );
+      }
+
+      if (MerchantOrderOpsUtils.canMarkReadyForPickup(status)) {
+        actions.add(
+          actionButton(
+            label: 'Mark Ready',
+            color: const Color(0xFF5F2D82),
+            onPressed: () async {
+              final confirm = await showMerchantConfirmDialog(
+                context,
+                title: 'Mark Ready for Pickup?',
+                message: 'Let the rider know this order is ready.',
+                confirmLabel: 'Mark Ready',
+              );
+              if (confirm && context.mounted) {
+                await run(
+                  () => ref
+                      .read(merchantOrderActionProvider)
+                      .markReadyForPickup(widget.order.id),
+                  'Order marked ready for pickup!',
+                );
+              }
+            },
+          ),
+        );
+      }
+
+      if (actions.isEmpty) return null;
+      return actionBar(actions);
     }
 
     return null;

@@ -116,7 +116,7 @@ class _RiderWalletPaymentScreenState
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            _summaryRow('Wallet credit', widget.checkout.walletAmount),
+            _summaryRow('LesPay credit', widget.checkout.walletAmount),
             _summaryRow('Top-up fee (3%)', widget.checkout.feeAmount),
             const Divider(),
             _summaryRow(

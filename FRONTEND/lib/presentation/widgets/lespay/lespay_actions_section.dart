@@ -34,6 +34,15 @@ class LespayActionsSection extends ConsumerWidget {
             AppRouter.push(context, MainRoutes.loyaltyRedeem);
           },
         ),
+        LespayMenuItem(
+          iconPath: 'assets/images/lespay/Card.svg',
+          title: 'Payment Methods',
+          subtitle: 'Manage cards and wallets',
+          backgroundColor: const Color(0xFF5F2D82),
+          onTap: () {
+            AppRouter.push(context, MainRoutes.paymentMethods);
+          },
+        ),
       ],
     );
   }

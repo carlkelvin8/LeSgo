@@ -17,6 +17,7 @@ class RiderWalletView extends ConsumerWidget {
       onRefresh: () => ref.read(riderWalletProvider.notifier).loadWallet(),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
+        padding: ResponsiveUtils.scrollPaddingWithBottomNav(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

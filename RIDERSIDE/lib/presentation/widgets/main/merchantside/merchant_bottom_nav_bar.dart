@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
+import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 
 class MerchantBottomNavBar extends ConsumerWidget {
   const MerchantBottomNavBar({super.key});
@@ -10,6 +11,7 @@ class MerchantBottomNavBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentNav = ref.watch(merchantNavProvider);
+    final pendingCount = ref.watch(merchantPendingOrderCountProvider);
     final selectedColor = const Color(0xFF5F2D82);
     final unselectedColor = Colors.grey.shade400;
 
@@ -50,6 +52,7 @@ class MerchantBottomNavBar extends ConsumerWidget {
             isSelected: currentNav == MerchantNavType.orders,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
+            badgeCount: pendingCount,
           ),
           _buildNavItem(
             context, ref,
@@ -92,6 +95,7 @@ class MerchantBottomNavBar extends ConsumerWidget {
     required bool isSelected,
     required Color selectedColor,
     required Color unselectedColor,
+    int badgeCount = 0,
   }) {
     final color = isSelected ? selectedColor : unselectedColor;
     final iconSize = ResponsiveUtils.fontSize(context, 24);
@@ -107,12 +111,40 @@ class MerchantBottomNavBar extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
-              svgAsset,
-              width: iconSize,
-              height: iconSize,
-              allowDrawingOutsideViewBox: true,
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                SvgPicture.asset(
+                  svgAsset,
+                  width: iconSize,
+                  height: iconSize,
+                  allowDrawingOutsideViewBox: true,
+                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                ),
+                if (badgeCount > 0)
+                  Positioned(
+                    right: -6,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE53935),
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        badgeCount > 9 ? '9+' : '$badgeCount',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 8),
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 4)),
             Text(

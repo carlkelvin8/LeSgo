@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../global/home_header.dart';
+import 'merchant_sticky_action_bar.dart';
 
 /// Reusable form layout wrapper that handles scaffold, safe area, header, and form structure
 /// Reduces boilerplate by ~25 lines per screen
@@ -46,22 +47,7 @@ class MerchantFormLayout extends StatelessWidget {
               ),
             ),
             if (stickyBottomAction != null)
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  ResponsiveUtils.spacing(context, 10),
-                  horizontalPadding,
-                  ResponsiveUtils.spacing(context, 12),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    top: BorderSide(color: Colors.grey.shade200),
-                  ),
-                ),
-                child: stickyBottomAction,
-              ),
+              MerchantStickyActionBar(child: stickyBottomAction!),
           ],
         ),
       ),

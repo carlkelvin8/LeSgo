@@ -191,7 +191,7 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
         items: <Map<String, dynamic>>[],
         error: ApiErrorMapper.message(
           e,
-          fallbackEn: 'Could not load wallet history. Pull to retry.',
+          fallbackEn: 'Could not load LesPay history. Pull to retry.',
           fallbackTl: 'Hindi ma-load ang history. Subukan muli.',
         ),
       );

@@ -100,7 +100,12 @@ class _RiderDeactivateAccountScreenState
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
+        padding: EdgeInsets.fromLTRB(
+          ResponsiveUtils.spacing(context, 20),
+          ResponsiveUtils.spacing(context, 20),
+          ResponsiveUtils.spacing(context, 20),
+          ResponsiveUtils.scrollBottomPaddingForKeyboard(context),
+        ),
         child: Form(
           key: _formKey,
           child: Column(

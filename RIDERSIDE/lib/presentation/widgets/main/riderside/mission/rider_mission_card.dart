@@ -153,61 +153,62 @@ class _RiderMissionCardState extends State<RiderMissionCard> {
                                 ),
                               ),
                               
-                              // Progress Text
-                              Positioned(
-                                left: ResponsiveUtils.spacing(context, 12),
-                                top: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Text(
-                                    '${widget.mission.currentProgress} / ${widget.mission.goalTarget}',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      color: Colors.white,
-                                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                                      fontWeight: FontWeight.bold,
-                                      shadows: const [
-                                        Shadow(
-                                          color: Colors.black45,
-                                          blurRadius: 2,
-                                          offset: Offset(0, 1),
+                              // Progress Text + reward (no overlap)
+                              Positioned.fill(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(
+                                          left: ResponsiveUtils.spacing(context, 12),
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Purple Reward Badge (aligned to right)
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: ResponsiveUtils.spacing(context, 16),
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent, // Transparent inner badge
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    widget.mission.reward,
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      color: Colors.white,
-                                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                                      fontWeight: FontWeight.bold,
-                                      shadows: const [
-                                        Shadow(
-                                          color: Colors.black45,
-                                          blurRadius: 2,
-                                          offset: Offset(0, 1),
+                                        child: Text(
+                                          '${widget.mission.currentProgress} / ${widget.mission.goalTarget}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontFamily: 'TT Fors',
+                                            color: Colors.white,
+                                            fontSize: ResponsiveUtils.fontSize(context, 12),
+                                            fontWeight: FontWeight.bold,
+                                            shadows: const [
+                                              Shadow(
+                                                color: Colors.black45,
+                                                blurRadius: 2,
+                                                offset: Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
+                                    Flexible(
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: ResponsiveUtils.spacing(context, 8),
+                                        ),
+                                        child: Text(
+                                          widget.mission.reward,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                            fontFamily: 'TT Fors',
+                                            color: Colors.white,
+                                            fontSize: ResponsiveUtils.fontSize(context, 12),
+                                            fontWeight: FontWeight.bold,
+                                            shadows: const [
+                                              Shadow(
+                                                color: Colors.black45,
+                                                blurRadius: 2,
+                                                offset: Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

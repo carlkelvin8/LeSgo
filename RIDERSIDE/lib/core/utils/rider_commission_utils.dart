@@ -24,6 +24,7 @@ class RiderCommissionUtils {
     if (tier == 'pro' || tier == 'pro_rider' || tier == 'professional') {
       return 'pro';
     }
+    if (tier == 'employee') return 'employee';
     return 'basic';
   }
 
@@ -32,7 +33,9 @@ class RiderCommissionUtils {
       case 'advance':
         return 'Advance';
       case 'pro':
-        return 'Pro Rider';
+        return 'Pro';
+      case 'employee':
+        return 'Employee';
       case 'basic':
       default:
         return 'Basic';

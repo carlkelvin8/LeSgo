@@ -1,48 +1,33 @@
-{
-  "project_info": {
-    "project_number": "937689509907",
-    "project_id": "lesgo-a957c",
-    "storage_bucket": "lesgo-a957c.firebasestorage.app"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:937689509907:android:e0993ab947117d82a18fe6",
-        "android_client_info": {
-          "package_name": "com.lesgo.app"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyA4Scc0djM72Ail_e1B1luu_L9VkC5xQK4"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:937689509907:android:c90d5433276d7ce6a18fe6",
-        "android_client_info": {
-          "package_name": "com.lesgo.rider"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyA4Scc0djM72Ail_e1B1luu_L9VkC5xQK4"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    }
-  ],
-  "configuration_version": "1"
+﻿{
+    "client":  [
+                   {
+                       "client_info":  {
+                                           "android_client_info":  {
+                                                                       "package_name":  "com.lesgo.rider"
+                                                                   },
+                                           "mobilesdk_app_id":  "1:937689509907:android:c90d5433276d7ce6a18fe6"
+                                       },
+                       "api_key":  [
+                                       {
+                                           "current_key":  "AIzaSyA4Scc0djM72Ail_e1B1luu_L9VkC5xQK4"
+                                       }
+                                   ],
+                       "services":  {
+                                        "appinvite_service":  {
+                                                                  "other_platform_oauth_client":  [
+
+                                                                                                  ]
+                                                              }
+                                    },
+                       "oauth_client":  [
+
+                                        ]
+                   }
+               ],
+    "configuration_version":  "1",
+    "project_info":  {
+                         "project_number":  "937689509907",
+                         "storage_bucket":  "lesgo-a957c.firebasestorage.app",
+                         "project_id":  "lesgo-a957c"
+                     }
 }

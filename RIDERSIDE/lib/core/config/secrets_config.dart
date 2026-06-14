@@ -42,6 +42,18 @@ class SecretsConfig {
     defaultValue: 'com.lesgo.rider',
   );
 
+  /// Optional override, e.g. `https://api.lesgo.com/api`
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  );
+
+  /// `dev` | `staging` | `prod` — used when [apiBaseUrl] is empty.
+  static const String apiEnv = String.fromEnvironment(
+    'API_ENV',
+    defaultValue: '',
+  );
+
   static bool get isGoogleMapsConfigured =>
       googleMapsApiKey.isNotEmpty &&
       googleMapsApiKey != 'your-google-maps-api-key-here';

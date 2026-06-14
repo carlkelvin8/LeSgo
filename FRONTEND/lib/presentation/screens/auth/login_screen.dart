@@ -124,36 +124,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           },
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             RememberMeCheckbox(
                               value: authState.rememberMe,
                               onChanged: (value) {
-                                ref.read(authProvider.notifier).toggleRememberMe(value ?? false);
+                                ref
+                                    .read(authProvider.notifier)
+                                    .toggleRememberMe(value ?? false);
                               },
                             ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const ForgotPasswordScreen(),
+                            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ForgotPasswordScreen(),
+                                    ),
+                                  );
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  'Forgot Password?',
+                                  style: TextStyle(
+                                    fontFamily: 'TT Fors',
+                                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                                    color: const Color(0xFF6B4EFF),
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                );
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                'Forgot Password?',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                                  color: const Color(0xFF6B4EFF),
-                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),

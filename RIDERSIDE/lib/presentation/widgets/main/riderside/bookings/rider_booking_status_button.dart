@@ -98,67 +98,82 @@ class RiderBookingStatusButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final upload = status.uploadLabel;
+    final labelFontSize = ResponsiveUtils.fontSize(context, 12);
+    final subFontSize = ResponsiveUtils.fontSize(context, 10);
 
-    return GestureDetector(
-      onTap: () {
-        print('🔘 Status button tapped: ${status.label}');
-        if (onTap != null) {
-          print('✅ Calling onTap handler');
-          onTap!();
-        } else {
-          print('❌ onTap is null!');
-        }
-      },
-      child: Container(
-        margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 5)),
-        constraints: BoxConstraints(
-          minHeight: ResponsiveUtils.spacing(context, 72),
-        ),
-        decoration: BoxDecoration(
-          gradient: _gradient(status),
-          borderRadius: BorderRadius.circular(
-            ResponsiveUtils.spacing(context, 14),
+    return Semantics(
+      button: true,
+      enabled: isActive && onTap != null,
+      label: isActive && onTap != null
+          ? 'Update booking to ${status.label}'
+          : status.label,
+      child: GestureDetector(
+        onTap: isActive ? onTap : null,
+        child: Container(
+          width: double.infinity,
+          constraints: BoxConstraints(
+            minHeight: ResponsiveUtils.spacing(context, 88),
+            minWidth: ResponsiveUtils.spacing(context, 108),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+          margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
+          decoration: BoxDecoration(
+            gradient: _gradient(status),
+            borderRadius: BorderRadius.circular(
+              ResponsiveUtils.spacing(context, 14),
             ),
-          ],
-        ),
-        padding: EdgeInsets.symmetric(
-          vertical: ResponsiveUtils.spacing(context, 14),
-          horizontal: ResponsiveUtils.spacing(context, 10),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              status.label,
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 13),
-                fontWeight: FontWeight.w700,
-                color: _textColor(status),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (upload != null) ...[
-              SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-              Text(
-                upload,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 11),
-                  fontWeight: FontWeight.w400,
-                  color: _textColor(status).withValues(alpha: 0.8),
-                ),
-                textAlign: TextAlign.center,
+            border: isActive
+                ? Border.all(color: const Color(0xFF5F2D82), width: 2)
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
-          ],
+          ),
+          clipBehavior: Clip.hardEdge,
+          padding: EdgeInsets.symmetric(
+            vertical: ResponsiveUtils.spacing(context, 12),
+            horizontal: ResponsiveUtils.spacing(context, 8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                status.label.replaceAll('\n', ' '),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: labelFontSize,
+                  fontWeight: FontWeight.w700,
+                  color: _textColor(status),
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                softWrap: true,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (upload != null) ...[
+                SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                Text(
+                  upload,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: subFontSize,
+                    fontWeight: FontWeight.w500,
+                    color: _textColor(status).withValues(alpha: 0.85),
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );

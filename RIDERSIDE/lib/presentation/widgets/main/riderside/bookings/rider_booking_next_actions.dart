@@ -201,16 +201,18 @@ class _StepProgress extends StatelessWidget {
                     Text(
                       BookingWorkflow.stepLabels[index],
                       textAlign: TextAlign.center,
-                      maxLines: 1,
+                      maxLines: 2,
+                      softWrap: true,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 10),
+                        fontSize: ResponsiveUtils.fontSize(context, 8),
                         fontWeight:
                             isActive ? FontWeight.w700 : FontWeight.w500,
                         color: isDone
                             ? const Color(0xFF5F2D82)
                             : Colors.grey.shade500,
+                        height: 1.15,
                       ),
                     ),
                   ],

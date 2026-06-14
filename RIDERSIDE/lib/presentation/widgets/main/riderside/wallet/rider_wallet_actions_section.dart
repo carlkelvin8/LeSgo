@@ -87,7 +87,7 @@ class RiderWalletActionsSection extends ConsumerWidget {
           RiderWalletActionItem(
             iconAsset: 'assets/images/wallet/Bank.svg',
             title: 'History',
-            subtitle: 'View wallet credits and debits',
+            subtitle: 'View LesPay credits and debits',
             onTap: () => _openHistory(context),
           ),
         ],

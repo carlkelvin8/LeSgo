@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import 'rider_booking_status_button.dart';
 
@@ -14,48 +15,39 @@ class RiderBookingStatusGrid extends StatelessWidget {
     this.onStatusTap,
   });
 
+  List<BookingStatus> get _statuses {
+    final steps = List<BookingStatus>.from(booking.category.statuses);
+    if (currentStatus == BookingStatus.cancelled &&
+        !steps.contains(BookingStatus.cancelled)) {
+      steps.add(BookingStatus.cancelled);
+    }
+    return steps;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final statuses = booking.category.statuses;
-    final rows = <Widget>[];
+    final statuses = _statuses;
+    final chipWidth = ResponsiveUtils.spacing(context, 118);
 
-    for (int i = 0; i < statuses.length; i += 2) {
-      final isLastOdd = i + 1 >= statuses.length;
-
-      rows.add(
-        isLastOdd
-            ? Row(
-                children: [
-                  Expanded(
-                    child: RiderBookingStatusButton(
-                      status: statuses[i],
-                      isActive: statuses[i] == currentStatus,
-                      onTap: onStatusTap != null ? () => onStatusTap!(statuses[i]) : null,
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                children: [
-                  Expanded(
-                    child: RiderBookingStatusButton(
-                      status: statuses[i],
-                      isActive: statuses[i] == currentStatus,
-                      onTap: onStatusTap != null ? () => onStatusTap!(statuses[i]) : null,
-                    ),
-                  ),
-                  Expanded(
-                    child: RiderBookingStatusButton(
-                      status: statuses[i + 1],
-                      isActive: statuses[i + 1] == currentStatus,
-                      onTap: onStatusTap != null ? () => onStatusTap!(statuses[i + 1]) : null,
-                    ),
-                  ),
-                ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final status in statuses) ...[
+            SizedBox(
+              width: chipWidth,
+              child: RiderBookingStatusButton(
+                status: status,
+                isActive: status == currentStatus,
+                onTap: onStatusTap != null ? () => onStatusTap!(status) : null,
               ),
-      );
-    }
-
-    return Column(children: rows);
+            ),
+            if (status != statuses.last)
+              SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+          ],
+        ],
+      ),
+    );
   }
 }

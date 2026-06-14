@@ -13,7 +13,10 @@ import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
 import '../../../../../core/config/secrets_config.dart';
 import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/location_permission_utils.dart';
+import '../../../../../core/utils/app_logger.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/rider_route_utils.dart';
 
 // Custom painter for map pattern
 class MapPatternPainter extends CustomPainter {
@@ -87,13 +90,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   @override
   void initState() {
     super.initState();
-    print('🗺️ RiderMapScreen initState called - FIXED ZOOM CONTROLS v2');
+    AppLogger.debug('🗺️ RiderMapScreen initState called - FIXED ZOOM CONTROLS v2');
     _initializeMap();
   }
 
   @override
   void dispose() {
-    print('🗺️ RiderMapScreen dispose called');
+    AppLogger.debug('🗺️ RiderMapScreen dispose called');
     ref.read(riderLocationProvider.notifier).setActiveOrderId(null);
     _mapController = null;
     super.dispose();
@@ -135,12 +138,10 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     final status = await Permission.locationWhenInUse.request();
     if (status.isGranted) {
       _getCurrentLocation();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location permission is required for map functionality'),
-          backgroundColor: Colors.red,
-        ),
+    } else if (mounted) {
+      await showLocationPermissionSnackBar(
+        context,
+        openSettings: permissionNeedsSettings(status),
       );
     }
   }
@@ -157,7 +158,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
         _updateMarkers();
       }
     } catch (e) {
-      print('Error getting location: $e');
+      AppLogger.error('Error getting location', e);
     }
   }
 
@@ -168,7 +169,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     try {
       final trackingData = await ApiService.getLiveOrderTracking(widget.orderId!);
       if (trackingData != null && mounted) {
-        print('📍 Live tracking data received: $trackingData');
+        AppLogger.debug('📍 Live tracking data received: $trackingData');
         
         // Update markers with live driver location if available
         if (trackingData['driver_location'] != null) {
@@ -193,17 +194,17 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
               );
             });
             _updateMarkers();
-            print('🚗 Updated driver position from live tracking: $driverLat, $driverLng');
+            AppLogger.debug('🚗 Updated driver position from live tracking: $driverLat, $driverLng');
           }
         }
         
         // Update ETA if available
         if (trackingData['eta'] != null) {
-          print('⏱️ ETA: ${trackingData['eta']} minutes');
+          AppLogger.debug('⏱️ ETA: ${trackingData['eta']} minutes');
         }
       }
     } catch (e) {
-      print('❌ Error fetching live tracking data: $e');
+      AppLogger.error('Error fetching live tracking data', e);
     }
   }
 
@@ -225,10 +226,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     // Add order markers if viewing a specific order
     if (widget.orderId != null) {
       final ordersState = ref.read(riderOrdersProvider);
-      final order = ordersState.availableOrders.cast<RiderOrder?>().firstWhere(
-        (order) => order?.id == widget.orderId,
-        orElse: () => null,
-      );
+      final order = RiderRouteUtils.findOrder(ordersState, widget.orderId!);
       
       if (order != null) {
         // Add pickup marker (Green)
@@ -273,86 +271,20 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     });
 
     try {
-      print('🗺️ Fetching route for order ${order.id}');
-      
-      // Determine the destination based on order status
-      LatLng destination;
-      String routeType;
-      
-      // Check order status to determine where to navigate
-      if (order.status == 'accepted' || order.status == 'driver_arrived_at_pickup') {
-        // Navigate to pickup location
-        destination = LatLng(order.pickupLat, order.pickupLng);
-        routeType = 'to_pickup';
-        print('🎯 Route to pickup location');
-      } else if (order.status == 'picked_up' || order.status == 'in_progress') {
-        // Navigate to dropoff location
-        destination = LatLng(order.dropoffLat, order.dropoffLng);
-        routeType = 'to_dropoff';
-        print('🎯 Route to dropoff location');
-      } else {
-        print('⚠️ Order status ${order.status} - no route needed');
+      AppLogger.debug('🗺️ Fetching route for order ${order.id}');
+
+      final polylines = await RiderRouteUtils.buildNavigationPolylines(
+        order: order,
+        riderLat: _currentPosition!.latitude,
+        riderLng: _currentPosition!.longitude,
+      );
+
+      if (polylines.isEmpty) {
+        AppLogger.warn('Order status ${order.status} - no route needed');
         setState(() {
           _isLoadingRoute = false;
         });
         return;
-      }
-
-      final origin = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
-      
-      // Try to get actual route from backend
-      final routeData = await ApiService.getRoute(
-        originLat: origin.latitude,
-        originLng: origin.longitude,
-        destLat: destination.latitude,
-        destLng: destination.longitude,
-      );
-      
-      final polylines = <Polyline>{};
-      
-      if (routeData != null && routeData['polyline'] != null) {
-        // Use actual route from backend
-        final polylinePoints = routeData['polyline'] as List<dynamic>;
-        final points = polylinePoints.map((point) => 
-          LatLng(point['lat'] as double, point['lng'] as double)
-        ).toList();
-        
-        polylines.add(
-          Polyline(
-            polylineId: PolylineId('route_$routeType'),
-            points: points,
-            color: routeType == 'to_pickup' ? Colors.blue : Colors.orange,
-            width: 4,
-            patterns: routeType == 'to_pickup' ? [] : [PatternItem.dash(10), PatternItem.gap(5)],
-          ),
-        );
-        print('✅ Using actual route with ${points.length} points');
-      } else {
-        // Fallback to simple straight line route
-        polylines.add(
-          Polyline(
-            polylineId: PolylineId('route_$routeType'),
-            points: [origin, destination],
-            color: routeType == 'to_pickup' ? Colors.blue : Colors.orange,
-            width: 4,
-            patterns: routeType == 'to_pickup' ? [] : [PatternItem.dash(10), PatternItem.gap(5)],
-          ),
-        );
-        print('⚠️ Using fallback straight line route');
-      }
-
-      // If going to dropoff, also show pickup to dropoff route
-      if (routeType == 'to_dropoff') {
-        final pickupLocation = LatLng(order.pickupLat, order.pickupLng);
-        polylines.add(
-          Polyline(
-            polylineId: const PolylineId('pickup_to_dropoff'),
-            points: [pickupLocation, destination],
-            color: Colors.grey,
-            width: 2,
-            patterns: [PatternItem.dot, PatternItem.gap(5)],
-          ),
-        );
       }
 
       if (mounted) {
@@ -360,15 +292,12 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
           _polylines = polylines;
           _isLoadingRoute = false;
         });
-        
-        // Fit camera to show the route
         _fitBoundsToRoute();
       }
 
-      print('✅ Route created: $routeType');
-      
+      AppLogger.debug('✅ Route created for order ${order.id}');
     } catch (e) {
-      print('❌ Error fetching route: $e');
+      AppLogger.error('Error fetching route', e);
       setState(() {
         _isLoadingRoute = false;
       });
@@ -385,7 +314,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
         CameraUpdate.newLatLngBounds(bounds, 100),
       );
     } catch (e) {
-      print('❌ Error fitting bounds: $e');
+      AppLogger.error('Error fitting bounds', e);
     }
   }
 
@@ -429,7 +358,12 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   }
 
   void _openNavigation(double lat, double lng, String label) async {
-    final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving';
+    final url = RiderRouteUtils.buildGoogleMapsNavigationUrl(
+      destLat: lat,
+      destLng: lng,
+      originLat: _currentPosition?.latitude,
+      originLng: _currentPosition?.longitude,
+    );
     
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
@@ -441,28 +375,18 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   }
 
   String _getRouteTitle(RiderOrder order) {
-    if (order.status == 'accepted' || order.status == 'driver_arrived_at_pickup') {
+    if (RiderRouteUtils.isEnRouteToPickup(order.status)) {
       return 'Route to Pickup Location';
-    } else if (order.status == 'picked_up' || order.status == 'in_progress') {
-      return 'Route to Dropoff Location';
     }
-    return 'Route Information';
+    return 'Route to Dropoff Location';
   }
 
   LatLng _getNavigationDestination(RiderOrder order) {
-    if (order.status == 'accepted' || order.status == 'driver_arrived_at_pickup') {
-      return LatLng(order.pickupLat, order.pickupLng);
-    } else {
-      return LatLng(order.dropoffLat, order.dropoffLng);
-    }
+    return RiderRouteUtils.navigationTarget(order).destination;
   }
 
   String _getNavigationLabel(RiderOrder order) {
-    if (order.status == 'accepted' || order.status == 'driver_arrived_at_pickup') {
-      return 'Pickup';
-    } else {
-      return 'Dropoff';
-    }
+    return RiderRouteUtils.navigationTarget(order).navLabel;
   }
 
   Future<void> _refreshRoute(RiderOrder order) async {
@@ -477,11 +401,8 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   Widget _buildBottomSheet() {
     final ordersState = ref.read(riderOrdersProvider);
     final currentOrder = widget.orderId != null
-        ? ordersState.availableOrders.cast<RiderOrder?>().firstWhere(
-            (order) => order?.id == widget.orderId,
-            orElse: () => null,
-          )
-        : null;
+        ? RiderRouteUtils.findOrder(ordersState, widget.orderId!)
+        : ordersState.activeOrder;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.2, // Even smaller initial size
@@ -940,7 +861,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
           onPressed: () {
-            print('🔙 Back button pressed');
+            AppLogger.debug('🔙 Back button pressed');
             Navigator.pop(context);
           },
         ),
@@ -996,37 +917,37 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                   });
                 });
                 
-                print('🗺️ REAL Google Maps created and ready with ${_markers.length} markers');
-                print('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
-                print('📍 Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+                AppLogger.debug('🗺️ REAL Google Maps created and ready with ${_markers.length} markers');
+                AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+                AppLogger.debug('📍 Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
                 
                 // Try to set a specific style to ensure map loads
                 try {
                   await controller.setMapStyle(null); // Reset to default style
-                  print('✅ Map style set successfully');
+                  AppLogger.debug('✅ Map style set successfully');
                 } catch (e) {
-                  print('⚠️ Could not set map style: $e');
+                  AppLogger.warn('Could not set map style: $e');
                 }
               }
             },
             
             onTap: (LatLng position) {
-              print('🗺️ Google Maps tapped at: ${position.latitude}, ${position.longitude}');
+              AppLogger.debug('🗺️ Google Maps tapped at: ${position.latitude}, ${position.longitude}');
             },
             
             onCameraMove: (CameraPosition position) {
-              print('📷 Google Maps camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
+              AppLogger.debug('📷 Google Maps camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
             },
             
             onCameraIdle: () {
-              print('📷 Google Maps camera idle');
+              AppLogger.debug('📷 Google Maps camera idle');
             },
           ),
           
           // Custom Zoom Controls - positioned to NOT overlap map interaction area
           Positioned(
-            top: 100,
-            right: 20,
+            top: ResponsiveUtils.spacing(context, 16),
+            right: ResponsiveUtils.spacing(context, 16),
             child: MapZoomControls(
               mapController: _mapController,
               onCenterMap: () {
@@ -1037,7 +958,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                       15,
                     ),
                   );
-                  print('🎯 Map centered on current location');
+                  AppLogger.debug('🎯 Map centered on current location');
                 }
               },
             ),

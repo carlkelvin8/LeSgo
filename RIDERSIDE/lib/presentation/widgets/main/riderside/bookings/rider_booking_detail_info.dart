@@ -233,7 +233,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                       Text(
                         booking.deliveryFee!
                             .replaceAll('Delivery fee ', '')
-                            .replaceAll('Wallet hold (shipping only) ', ''),
+                            .replaceAll('LesPay hold (shipping only) ', ''),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontWeight: FontWeight.w600,

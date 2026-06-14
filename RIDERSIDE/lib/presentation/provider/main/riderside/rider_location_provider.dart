@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/location_permission_utils.dart';
 import '../../auth/rider_auth_provider.dart';
 import 'rider_duty_provider.dart';
 
@@ -16,6 +17,7 @@ class RiderLocationState {
   final bool isUpdating;
   final bool isTracking;
   final String? error;
+  final bool needsLocationSettings;
   final DateTime? lastUpdated;
   final int? activeOrderId;
 
@@ -26,6 +28,7 @@ class RiderLocationState {
     this.isUpdating = false,
     this.isTracking = false,
     this.error,
+    this.needsLocationSettings = false,
     this.lastUpdated,
     this.activeOrderId,
   });
@@ -37,6 +40,7 @@ class RiderLocationState {
     bool? isUpdating,
     bool? isTracking,
     String? error,
+    bool? needsLocationSettings,
     DateTime? lastUpdated,
     int? activeOrderId,
     bool clearError = false,
@@ -49,6 +53,8 @@ class RiderLocationState {
       isUpdating: isUpdating ?? this.isUpdating,
       isTracking: isTracking ?? this.isTracking,
       error: clearError ? null : (error ?? this.error),
+      needsLocationSettings:
+          clearError ? false : (needsLocationSettings ?? this.needsLocationSettings),
       lastUpdated: lastUpdated ?? this.lastUpdated,
       activeOrderId:
           clearActiveOrderId ? null : (activeOrderId ?? this.activeOrderId),
@@ -99,11 +105,22 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
   }
 
   Future<bool> _requestPermissions() async {
-    var whenInUse = await Permission.locationWhenInUse.request();
+    var whenInUse = await Permission.locationWhenInUse.status;
     if (!whenInUse.isGranted) {
-      state = state.copyWith(error: 'Location permission denied');
+      whenInUse = await Permission.locationWhenInUse.request();
+    }
+    if (!whenInUse.isGranted) {
+      final needsSettings = permissionNeedsSettings(whenInUse);
+      state = state.copyWith(
+        error: needsSettings
+            ? 'Location access is blocked. Open Settings to enable it for deliveries.'
+            : 'Location permission is required for deliveries.',
+        needsLocationSettings: needsSettings,
+      );
       return false;
     }
+
+    state = state.copyWith(clearError: true);
 
     if (!kIsWeb && Platform.isAndroid) {
       final always = await Permission.locationAlways.request();
@@ -116,11 +133,17 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
   }
 
   LocationSettings _buildLocationSettings() {
+    final hasActiveOrder = state.activeOrderId != null;
+    final distanceFilter = hasActiveOrder ? 5 : 20;
+    final intervalDuration = hasActiveOrder
+        ? const Duration(seconds: 5)
+        : const Duration(seconds: 30);
+
     if (!kIsWeb && Platform.isAndroid) {
       return AndroidSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5,
-        intervalDuration: const Duration(seconds: 5),
+        distanceFilter: distanceFilter,
+        intervalDuration: intervalDuration,
         foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationText:
               'LezGo is sharing your location for active deliveries.',
@@ -133,16 +156,16 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
     if (!kIsWeb && Platform.isIOS) {
       return AppleSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5,
+        distanceFilter: distanceFilter,
         activityType: ActivityType.automotiveNavigation,
         pauseLocationUpdatesAutomatically: false,
         showBackgroundLocationIndicator: true,
       );
     }
 
-    return const LocationSettings(
+    return LocationSettings(
       accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 5,
+      distanceFilter: distanceFilter,
     );
   }
 

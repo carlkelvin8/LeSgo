@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../common/menu_image_widget.dart';
 
 class MerchantCategoryLivePreviewSection extends StatelessWidget {
   final String categoryName;
@@ -44,9 +45,11 @@ class MerchantCategoryLivePreviewSection extends StatelessWidget {
                   color: const Color(0xFFEAD3F7),
                   child: Center(
                     child: categoryImagePath != null
-                        ? Image.asset(
-                            categoryImagePath!,
-                            fit: BoxFit.cover,
+                        ? SizedBox.expand(
+                            child: MenuImageWidget(
+                              source: categoryImagePath,
+                              fit: BoxFit.cover,
+                            ),
                           )
                         : Icon(
                             Icons.image,

@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/di/injection.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../data/data_source/chat_remote_datasource.dart';
 import '../../../data/data_source/dto/chat/chat_dto.dart';
 
 // Chat data source provider (singleton)
 final chatDataSourceProvider = Provider<ChatRemoteDataSource>((ref) {
-  return ChatRemoteDataSource(DioClient());
+  return ChatRemoteDataSource(getIt<DioClient>());
 });
 
 // Chat state

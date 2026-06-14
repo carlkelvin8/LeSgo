@@ -33,6 +33,21 @@ Test-Secret "FIREBASE_MESSAGING_SENDER_ID" $content.FIREBASE_MESSAGING_SENDER_ID
 Test-Secret "FIREBASE_API_KEY_ANDROID" $content.FIREBASE_API_KEY_ANDROID { param($v) $v.StartsWith("AIza") }
 Test-Secret "FIREBASE_APP_ID_ANDROID" $content.FIREBASE_APP_ID_ANDROID { param($v) $v -match "^1:\d+:android:" }
 
+$apiEnv = if ($null -ne $content.API_ENV) { [string]$content.API_ENV } else { "" }
+if (-not [string]::IsNullOrWhiteSpace($apiEnv)) {
+  $allowedEnvs = @("dev", "development", "staging", "prod", "production")
+  if ($allowedEnvs -notcontains $apiEnv.Trim().ToLower()) {
+    $errors += "API_ENV must be one of: dev, staging, prod (got '$apiEnv')"
+  }
+}
+
+$apiBaseUrl = if ($null -ne $content.API_BASE_URL) { [string]$content.API_BASE_URL } else { "" }
+if (-not [string]::IsNullOrWhiteSpace($apiBaseUrl)) {
+  if ($apiBaseUrl -notmatch '^https?://') {
+    $errors += "API_BASE_URL must start with http:// or https://"
+  }
+}
+
 if ($errors.Count -gt 0) {
   $errors | ForEach-Object { Write-Error $_ }
 }

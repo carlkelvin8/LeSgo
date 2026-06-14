@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/merchant_order_ops_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
+import '../../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
+import '../../../../widgets/main/merchantside/orders/merchant_prep_timer_badge.dart';
 import '../../../../widgets/widgets.dart';
-import '../../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
+import '../../../../widgets/main/merchantside/orders/merchant_order_action_handlers.dart';
 import '../merchant_order_detail_screen.dart';
 
 class MerchantOrdersView extends ConsumerStatefulWidget {
@@ -56,42 +60,13 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
     }
   }
 
-  Future<void> _handlePendingTap(BuildContext context, int orderId) async {
-    final confirm = await showMerchantConfirmDialog(
-      context,
-      title: 'Accept Order?',
-      message: 'This will accept the order and start searching for a driver.',
-      confirmLabel: 'Accept',
-    );
-    if (confirm && mounted) {
-      await _runAction(
-        () => ref.read(merchantOrderActionProvider).acceptOrder(orderId),
-        successMessage: 'Order accepted successfully!',
-      );
-    }
-  }
+  String? _instructionsPreview(OrderDto order) {
+    final orderNote = MerchantOrderOpsUtils.orderSpecialInstructions(order);
+    if (orderNote != null) return orderNote;
 
-  Future<void> _runAction(
-    Future<void> Function() action, {
-    required String successMessage,
-  }) async {
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating order...')),
-      );
-      await action();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(successMessage)),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Action failed: $e')),
-        );
-      }
-    }
+    final itemNotes = MerchantOrderOpsUtils.itemSpecialInstructions(order);
+    if (itemNotes.isNotEmpty) return itemNotes.first;
+    return null;
   }
 
   @override
@@ -102,6 +77,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
     final ordersAsync = ref.watch(merchantOrdersProvider);
     ref.watch(merchantMenuProvider);
     final imageLookup = ref.watch(menuItemImageLookupProvider);
+    final prepTimers = ref.watch(merchantPrepTimerProvider);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -295,20 +271,148 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   customerName: order.user?.name ?? 'Customer',
                                   address: order.dropoffAddress,
                                   imageUrl: firstItemImage,
+                                  specialInstructionsPreview:
+                                      _instructionsPreview(order),
                                 ),
                               ),
                             ),
                             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                             SizedBox(
-                              width: ResponsiveUtils.spacing(context, 82),
-                              child: GestureDetector(
-                                onTap: status == 'pending'
-                                    ? () => _handlePendingTap(context, order.id)
-                                    : null,
-                                child: MerchantOrderStatusPanel(
-                                  statusType: _getStatusType(order.status),
-                                  statusLabel: _getStatusLabel(order.status),
-                                ),
+                              width: ResponsiveUtils.spacing(context, 96),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GestureDetector(
+                                    onTap: MerchantOrderOpsUtils.canAccept(status)
+                                        ? () => MerchantOrderActionHandlers.accept(
+                                              context,
+                                              ref,
+                                              orderId: order.id,
+                                            )
+                                        : null,
+                                    onLongPress: MerchantOrderOpsUtils.canReject(status) ||
+                                            MerchantOrderOpsUtils.canCancelAfterAccept(status)
+                                        ? () => MerchantOrderActionHandlers.handleStatusLongPress(
+                                              context,
+                                              ref,
+                                              status: status,
+                                              orderId: order.id,
+                                            )
+                                        : null,
+                                    child: MerchantOrderStatusPanel(
+                                      statusType: _getStatusType(order.status),
+                                      statusLabel: _getStatusLabel(order.status),
+                                    ),
+                                  ),
+                                  if (MerchantOrderOpsUtils.canReject(status) ||
+                                      MerchantOrderOpsUtils.canCancelAfterAccept(status)) ...[
+                                    SizedBox(
+                                      height: ResponsiveUtils.spacing(context, 6),
+                                    ),
+                                    if (MerchantOrderOpsUtils.canReject(status))
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: OutlinedButton(
+                                          onPressed: () =>
+                                              MerchantOrderActionHandlers.reject(
+                                            context,
+                                            ref,
+                                            orderId: order.id,
+                                          ),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor:
+                                                const Color(0xFFE53935),
+                                            side: const BorderSide(
+                                              color: Color(0xFFE53935),
+                                            ),
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: ResponsiveUtils.spacing(
+                                                context,
+                                                4,
+                                              ),
+                                            ),
+                                            minimumSize: Size.zero,
+                                            tapTargetSize:
+                                                MaterialTapTargetSize.shrinkWrap,
+                                          ),
+                                          child: Text(
+                                            'Reject',
+                                            style: TextStyle(
+                                              fontFamily: 'TT Fors',
+                                              fontSize: ResponsiveUtils.fontSize(
+                                                context,
+                                                9,
+                                              ),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    if (MerchantOrderOpsUtils
+                                        .canCancelAfterAccept(status))
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                          top: MerchantOrderOpsUtils.canReject(
+                                                  status)
+                                              ? ResponsiveUtils.spacing(
+                                                  context,
+                                                  4,
+                                                )
+                                              : 0,
+                                        ),
+                                        child: SizedBox(
+                                          width: double.infinity,
+                                          child: OutlinedButton(
+                                            onPressed: () =>
+                                                MerchantOrderActionHandlers
+                                                    .cancelAfterAccept(
+                                              context,
+                                              ref,
+                                              orderId: order.id,
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor:
+                                                  const Color(0xFFE53935),
+                                              side: const BorderSide(
+                                                color: Color(0xFFE53935),
+                                              ),
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: ResponsiveUtils.spacing(
+                                                  context,
+                                                  4,
+                                                ),
+                                              ),
+                                              minimumSize: Size.zero,
+                                              tapTargetSize: MaterialTapTargetSize
+                                                  .shrinkWrap,
+                                            ),
+                                            child: Text(
+                                              'Cancel',
+                                              style: TextStyle(
+                                                fontFamily: 'TT Fors',
+                                                fontSize:
+                                                    ResponsiveUtils.fontSize(
+                                                  context,
+                                                  9,
+                                                ),
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                  if (MerchantOrderOpsUtils.showsPrepTimer(status) &&
+                                      prepTimers[order.id] != null) ...[
+                                    SizedBox(
+                                      height: ResponsiveUtils.spacing(context, 6),
+                                    ),
+                                    MerchantPrepTimerBadge(
+                                      timer: prepTimers[order.id],
+                                      compact: true,
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
                           ],

@@ -33,7 +33,7 @@ final merchantMenuProvider = FutureProvider.autoDispose<MenuResponse?>((ref) asy
   
   try {
     final dataSource = ref.read(merchantDataSourceProvider);
-    final menu = await dataSource.getMenu(partnerId);
+    final menu = await dataSource.getMerchantMenu(partnerId);
     print('✅ Loaded menu with ${menu.categories.length} categories');
     return menu;
   } catch (e) {

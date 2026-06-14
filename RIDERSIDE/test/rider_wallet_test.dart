@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:frontend2/core/utils/lespay_topup_fee.dart';
-import 'package:frontend2/core/utils/wallet_response_parser.dart';
-import 'package:frontend2/presentation/provider/main/riderside/rider_wallet_provider.dart';
+import 'package:lezgo_rider/core/utils/lespay_topup_fee.dart';
+import 'package:lezgo_rider/core/utils/wallet_response_parser.dart';
+import 'package:lezgo_rider/presentation/provider/main/riderside/rider_wallet_provider.dart';
 
 void main() {
   group('WalletResponseParser', () {

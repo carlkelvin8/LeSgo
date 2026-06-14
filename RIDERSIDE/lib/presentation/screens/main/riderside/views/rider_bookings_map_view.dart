@@ -12,8 +12,11 @@ import '../../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
 import '../../../../../core/config/secrets_config.dart';
-import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/app_logger.dart';
+import '../../../../../core/utils/location_permission_utils.dart';
+import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_booking_mapper.dart';
+import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 import '../rider_booking_detail_screen.dart';
 
@@ -31,6 +34,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   Position? _currentPosition;
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
+  bool _isLoadingRoute = false;
   bool _showOrdersList = true;
   ProviderSubscription<RiderLocationState>? _locationSub;
   ProviderSubscription<RiderOrdersState>? _ordersSub;
@@ -56,6 +60,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 _positionFromCoords(next.latitude!, next.longitude!);
           });
           _updateMarkers();
+          _updateActiveOrderRoute();
         },
       );
 
@@ -68,6 +73,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               .read(riderLocationProvider.notifier)
               .setActiveOrderId(activeOrderId);
           _updateMarkers();
+          _updateActiveOrderRoute();
         },
       );
 
@@ -95,15 +101,11 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     final status = await Permission.locationWhenInUse.request();
     if (status.isGranted) {
       _getCurrentLocation();
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location permission is required for map functionality'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    } else if (mounted) {
+      await showLocationPermissionSnackBar(
+        context,
+        openSettings: permissionNeedsSettings(status),
+      );
     }
   }
 
@@ -117,10 +119,11 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           _currentPosition = position;
         });
         _updateMarkers();
+        _updateActiveOrderRoute();
         _centerMapOnCurrentLocation();
       }
     } catch (e) {
-      print('Error getting location: $e');
+      AppLogger.error('Error getting location', e);
     }
   }
 
@@ -217,6 +220,48 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
       setState(() {
         _markers = markers;
       });
+      _updateActiveOrderRoute();
+    }
+  }
+
+  Future<void> _updateActiveOrderRoute() async {
+    final activeOrder = ref.read(riderOrdersProvider).activeOrder;
+    if (activeOrder == null || _currentPosition == null || _isLoadingRoute) {
+      if (mounted && activeOrder == null) {
+        setState(() => _polylines = {});
+      }
+      return;
+    }
+
+    if (!RiderRouteUtils.hasValidCoordinates(
+          activeOrder.pickupLat,
+          activeOrder.pickupLng,
+        )) {
+      return;
+    }
+
+    setState(() => _isLoadingRoute = true);
+
+    try {
+      final polylines = await RiderRouteUtils.buildNavigationPolylines(
+        order: activeOrder,
+        riderLat: _currentPosition!.latitude,
+        riderLng: _currentPosition!.longitude,
+      );
+      if (mounted) {
+        setState(() {
+          _polylines = polylines;
+          _isLoadingRoute = false;
+        });
+        if (polylines.isNotEmpty) {
+          _fitBounds();
+        }
+      }
+    } catch (e) {
+      AppLogger.error('Error loading active order route', e);
+      if (mounted) {
+        setState(() => _isLoadingRoute = false);
+      }
     }
   }
 
@@ -260,7 +305,12 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   }
 
   void _openNavigation(double lat, double lng, String label) async {
-    final url = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving';
+    final url = RiderRouteUtils.buildGoogleMapsNavigationUrl(
+      destLat: lat,
+      destLng: lng,
+      originLat: _currentPosition?.latitude,
+      originLng: _currentPosition?.longitude,
+    );
     
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -274,13 +324,10 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   }
 
   Widget _buildMapView() {
-    print('🗺️ Building map view with position: $_currentPosition');
-    print('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+    AppLogger.debug('🗺️ Building map view with position: $_currentPosition');
+    AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
     
     return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.red, width: 2), // Debug border
-      ),
       child: GoogleMap(
         mapType: MapType.normal,
         initialCameraPosition: CameraPosition(
@@ -319,18 +366,18 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 _fitBounds();
               }
             });
-            print('🗺️ Bookings Map created and ready');
-            print('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
-            print('📍 Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+            AppLogger.debug('🗺️ Bookings Map created and ready');
+            AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+            AppLogger.debug('📍 Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
           }
         },
         
         onTap: (LatLng position) {
-          print('🗺️ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
+          AppLogger.debug('🗺️ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
         },
         
         onCameraMove: (CameraPosition position) {
-          print('📷 Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
+          AppLogger.debug('📷 Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
         },
       ),
     );
@@ -460,7 +507,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               padding: EdgeInsets.symmetric(
                 horizontal: 16.0,
               ),
-              itemCount: min(ordersState.availableOrders.length, 3),
+              itemCount: ordersState.availableOrders.length,
               separatorBuilder: (context, index) => SizedBox(
                 height: 12.0,
               ),
@@ -936,90 +983,89 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   Widget build(BuildContext context) {
     final ordersState = ref.watch(riderOrdersProvider);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Map View
-          _buildMapView(),
-          
-          // Top Controls
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: Column(
-              children: [
-                // Zoom Controls
-                MapZoomControls(
-                  mapController: _mapController,
-                  onCenterMap: _centerMapOnCurrentLocation,
-                ),
-                SizedBox(height: 12),
-                
-                // Refresh button
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final sheetInitial = constraints.maxHeight < 500
+            ? 0.24
+            : (constraints.maxHeight < 650 ? 0.30 : 0.35);
+        final sheetMax = constraints.maxHeight < 500 ? 0.50 : 0.70;
+
+        return Stack(
+          children: [
+            _buildMapView(),
+            Positioned(
+              top: ResponsiveUtils.mapOverlayTop(context),
+              right: ResponsiveUtils.spacing(context, 12),
+              child: Column(
+                children: [
+                  MapZoomControls(
+                    mapController: _mapController,
+                    onCenterMap: _centerMapOnCurrentLocation,
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(24),
-                    child: InkWell(
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(24),
-                      onTap: () {
-                        ref.read(riderOrdersProvider.notifier).loadOrders();
-                      },
-                      child: ordersState.isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  const Color(0xFF5F2D82),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(24),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(24),
+                        onTap: () {
+                          ref.read(riderOrdersProvider.notifier).loadOrders();
+                        },
+                        child: ordersState.isLoading
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    const Color(0xFF5F2D82),
+                                  ),
                                 ),
+                              )
+                            : const Icon(
+                                Icons.refresh,
+                                color: Color(0xFF5F2D82),
+                                size: 24,
                               ),
-                            )
-                          : const Icon(
-                              Icons.refresh,
-                              color: Color(0xFF5F2D82),
-                              size: 24,
-                            ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          
-          // Bottom Orders List
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: DraggableScrollableSheet(
-              initialChildSize: 0.35,
-              minChildSize: 0.2,
-              maxChildSize: 0.7,
-              builder: (context, scrollController) {
-                return SingleChildScrollView(
-                  controller: scrollController,
-                  child: _buildOrdersList(),
-                );
-              },
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: DraggableScrollableSheet(
+                initialChildSize: sheetInitial,
+                minChildSize: 0.18,
+                maxChildSize: sheetMax,
+                builder: (context, scrollController) {
+                  return SingleChildScrollView(
+                    controller: scrollController,
+                    child: _buildOrdersList(),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }

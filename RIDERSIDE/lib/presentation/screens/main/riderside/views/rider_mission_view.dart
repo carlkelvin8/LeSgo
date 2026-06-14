@@ -79,10 +79,12 @@ class RiderMissionView extends ConsumerWidget {
                               await ref.read(riderMissionProvider.notifier).loadMissions();
                             },
                             child: SingleChildScrollView(
-                              physics: AlwaysScrollableScrollPhysics(),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: ResponsiveUtils.horizontalPadding(context),
-                                vertical: ResponsiveUtils.spacing(context, 32),
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: EdgeInsets.fromLTRB(
+                                ResponsiveUtils.horizontalPadding(context),
+                                ResponsiveUtils.spacing(context, 32),
+                                ResponsiveUtils.horizontalPadding(context),
+                                ResponsiveUtils.scrollBottomPaddingForBottomNav(context),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +138,7 @@ class RiderMissionView extends ConsumerWidget {
                                               SnackBar(
                                                 content: Text(
                                                   success
-                                                      ? '✅ Reward claimed! ${mission.reward} added to wallet'
+                                                      ? '✅ Reward claimed! ${mission.reward} added to LesPay'
                                                       : '❌ Failed to claim reward',
                                                 ),
                                                 backgroundColor: success ? Colors.green : Colors.red,

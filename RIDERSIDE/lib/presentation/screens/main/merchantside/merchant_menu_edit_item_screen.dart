@@ -7,6 +7,7 @@ import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../controllers/merchantside/merchant_menu_item_form_controller.dart';
 import '../../../widgets/main/merchantside/menu/shared/merchant_dietary_preferences_section.dart';
 import '../../../widgets/main/merchantside/menu/shared/merchant_item_options_section.dart';
+import '../../../widgets/main/merchantside/menu/shared/merchant_item_inventory_section.dart';
 import '../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -193,6 +194,17 @@ class _MerchantMenuEditItemScreenState
         MerchantItemOptionsSection(
           optionGroups: formState.menuOptions,
           onChanged: notifier.updateMenuOptions,
+        ),
+        SectionSpacer(),
+        MerchantItemInventorySection(
+          trackStock: formState.trackStock,
+          stock: formState.stock,
+          autoHideWhenEmpty: formState.autoHideWhenEmpty,
+          liveOnMenu: formState.liveOnMenu,
+          onTrackStockChanged: notifier.toggleTrackStock,
+          onStockChanged: notifier.updateStock,
+          onAutoHideChanged: notifier.toggleAutoHideWhenEmpty,
+          onLiveOnMenuChanged: notifier.toggleLiveOnMenu,
         ),
         SectionSpacer(),
       ],

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
@@ -104,6 +106,23 @@ class _MerchantLogoBadge extends StatelessWidget {
 
   Widget _buildLogoContent(BuildContext context) {
     if (logoPath != null && MediaUrlUtils.isLocalFilePath(logoPath)) {
+      if (logoPath!.startsWith('content://') ||
+          logoPath!.startsWith('file://')) {
+        return FutureBuilder<Uint8List>(
+          future: XFile(logoPath!).readAsBytes(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return Image.memory(
+                snapshot.data!,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              );
+            }
+            return _initials(context);
+          },
+        );
+      }
       return Image.file(
         File(logoPath!),
         fit: BoxFit.cover,

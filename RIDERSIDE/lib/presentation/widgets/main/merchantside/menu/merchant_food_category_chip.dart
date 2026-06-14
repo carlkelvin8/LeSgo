@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../common/menu_image_widget.dart';
 
 class MerchantFoodCategoryChip extends StatelessWidget {
   final String label;
   final String icon;
+  final String? imageUrl;
   final bool isSelected;
 
   const MerchantFoodCategoryChip({
     super.key,
     required this.label,
     required this.icon,
+    this.imageUrl,
     this.isSelected = false,
   });
 
@@ -18,6 +21,7 @@ class MerchantFoodCategoryChip extends StatelessWidget {
     final backgroundColor = isSelected
         ? const Color(0xFFE6E6E6)
         : const Color(0xFFF0F0F0);
+    final avatarSize = ResponsiveUtils.spacing(context, 42);
 
     return Container(
       width: ResponsiveUtils.spacing(context, 74),
@@ -33,23 +37,27 @@ class MerchantFoodCategoryChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: ResponsiveUtils.spacing(context, 42),
-            height: ResponsiveUtils.spacing(context, 42),
+            width: avatarSize,
+            height: avatarSize,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: Colors.white,
             ),
-            alignment: Alignment.center,
-            child: Text(
-              icon,
-              style: TextStyle(fontSize: ResponsiveUtils.fontSize(context, 22)),
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: imageUrl != null && imageUrl!.trim().isNotEmpty
+                ? MenuImageWidget(
+                    source: imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: _emojiIcon(context),
+                  )
+                : _emojiIcon(context),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           Text(
             label,
             textAlign: TextAlign.center,
             maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 10),
@@ -59,6 +67,15 @@ class MerchantFoodCategoryChip extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _emojiIcon(BuildContext context) {
+    return Center(
+      child: Text(
+        icon,
+        style: TextStyle(fontSize: ResponsiveUtils.fontSize(context, 22)),
       ),
     );
   }

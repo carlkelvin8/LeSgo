@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/menu_item_options.dart';
+import '../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import 'merchant_profile_provider.dart';
@@ -17,6 +18,9 @@ class MerchantMenuItemFormInput {
   final String? category;
   final String? selectedTags;
   final bool? liveOnMenu;
+  final bool? trackStock;
+  final int? stock;
+  final bool? autoHideWhenEmpty;
   final String? imageUrl;
   final String? optionsJson;
 
@@ -33,6 +37,9 @@ class MerchantMenuItemFormInput {
     this.category,
     this.selectedTags,
     this.liveOnMenu,
+    this.trackStock,
+    this.stock,
+    this.autoHideWhenEmpty,
     this.imageUrl,
     this.optionsJson,
   });
@@ -46,6 +53,9 @@ class MerchantMenuItemFormInput {
         category = '',
         selectedTags = null,
         liveOnMenu = null,
+        trackStock = null,
+        stock = null,
+        autoHideWhenEmpty = null,
         imageUrl = null,
         optionsJson = null;
 
@@ -60,6 +70,18 @@ class MerchantMenuItemFormInput {
       description: initialItem?['description'],
       category: initialItem?['category'],
       selectedTags: initialItem?['selectedTags'],
+      liveOnMenu: initialItem?['isAvailable'] == null
+          ? null
+          : initialItem!['isAvailable'] == 'true',
+      trackStock: initialItem?['trackStock'] == null
+          ? null
+          : initialItem!['trackStock'] == 'true',
+      stock: initialItem?['stock'] == null
+          ? null
+          : int.tryParse(initialItem!['stock']!),
+      autoHideWhenEmpty: initialItem?['autoHideWhenEmpty'] == null
+          ? null
+          : initialItem!['autoHideWhenEmpty'] == 'true',
       imageUrl: initialItem?['imageUrl'],
       optionsJson: initialItem?['optionsJson'],
     );
@@ -101,6 +123,9 @@ class MerchantMenuItemFormState {
   final String category;
   final List<String> selectedTags;
   final bool liveOnMenu;
+  final bool trackStock;
+  final int stock;
+  final bool autoHideWhenEmpty;
   final bool isSubmitting;
   final String? errorMessage;
   final String? existingImageUrl;
@@ -116,6 +141,9 @@ class MerchantMenuItemFormState {
     required this.category,
     required this.selectedTags,
     required this.liveOnMenu,
+    this.trackStock = false,
+    this.stock = 0,
+    this.autoHideWhenEmpty = true,
     this.isSubmitting = false,
     this.errorMessage,
     this.existingImageUrl,
@@ -136,6 +164,9 @@ class MerchantMenuItemFormState {
     String? category,
     List<String>? selectedTags,
     bool? liveOnMenu,
+    bool? trackStock,
+    int? stock,
+    bool? autoHideWhenEmpty,
     bool? isSubmitting,
     String? errorMessage,
     String? existingImageUrl,
@@ -150,6 +181,9 @@ class MerchantMenuItemFormState {
       category: category ?? this.category,
       selectedTags: selectedTags ?? this.selectedTags,
       liveOnMenu: liveOnMenu ?? this.liveOnMenu,
+      trackStock: trackStock ?? this.trackStock,
+      stock: stock ?? this.stock,
+      autoHideWhenEmpty: autoHideWhenEmpty ?? this.autoHideWhenEmpty,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       errorMessage: errorMessage,
       existingImageUrl: existingImageUrl ?? this.existingImageUrl,
@@ -175,6 +209,9 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
     String? category,
     List<String>? selectedTags,
     bool? liveOnMenu,
+    bool? trackStock,
+    int? stock,
+    bool? autoHideWhenEmpty,
     String? imageUrl,
     String? optionsJson,
   }) : _itemId = itemId,
@@ -187,10 +224,36 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
       category: category ?? '',
       selectedTags: selectedTags ?? [],
       liveOnMenu: liveOnMenu ?? true,
+      trackStock: _resolveTrackStock(trackStock, optionsJson),
+      stock: _resolveStock(stock, optionsJson),
+      autoHideWhenEmpty: autoHideWhenEmpty ?? true,
       existingImageUrl: imageUrl,
       menuOptions: _parseOptionsJson(optionsJson),
     ),
   );
+
+  static bool _resolveTrackStock(bool? trackStock, String? optionsJson) {
+    if (trackStock != null) return trackStock;
+    return _inventoryFromOptionsJson(optionsJson).trackStock;
+  }
+
+  static int _resolveStock(int? stock, String? optionsJson) {
+    if (stock != null) return stock;
+    return _inventoryFromOptionsJson(optionsJson).stock ?? 0;
+  }
+
+  static MenuItemInventory _inventoryFromOptionsJson(String? optionsJson) {
+    if (optionsJson == null || optionsJson.isEmpty) {
+      return MenuItemInventory.unlimited;
+    }
+    try {
+      final decoded = jsonDecode(optionsJson);
+      if (decoded is Map<String, dynamic>) {
+        return MenuItemInventory.fromOptionsMap(decoded);
+      }
+    } catch (_) {}
+    return MenuItemInventory.unlimited;
+  }
 
   static MenuItemOptionGroups _parseOptionsJson(String? raw) {
     if (raw == null || raw.isEmpty) return MenuItemOptionGroups.empty;
@@ -231,6 +294,18 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
 
   void toggleLiveOnMenu(bool value) {
     state = state.copyWith(liveOnMenu: value);
+  }
+
+  void toggleTrackStock(bool value) {
+    state = state.copyWith(trackStock: value, stock: value ? state.stock : 0);
+  }
+
+  void updateStock(int value) {
+    state = state.copyWith(stock: value < 0 ? 0 : value);
+  }
+
+  void toggleAutoHideWhenEmpty(bool value) {
+    state = state.copyWith(autoHideWhenEmpty: value);
   }
 
   void updateLocalImage(String? path) {
@@ -295,7 +370,18 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
       
       final dataSource = _ref.read(merchantDataSourceProvider);
       
-      final optionsMap = state.menuOptions.toApiMap();
+      final inventory = MenuItemInventory(
+        stock: state.trackStock ? state.stock : null,
+        trackStock: state.trackStock,
+        autoHideWhenEmpty: state.autoHideWhenEmpty,
+      );
+      final resolvedAvailability = inventory.resolveAvailability(
+        liveOnMenu: state.liveOnMenu,
+      );
+      final optionsMap = mergeInventoryIntoOptions(
+        state.menuOptions.toApiMap(),
+        inventory,
+      );
 
       if (_itemId != null) {
         final request = UpdateMenuItemRequest(
@@ -303,7 +389,8 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           name: state.itemName,
           description: state.description.isEmpty ? null : state.description,
           price: priceValue,
-          isAvailable: state.liveOnMenu,
+          isAvailable: resolvedAvailability,
+          stockCount: state.trackStock ? state.stock : null,
           imageUrl: state.existingImageUrl,
           imagePath: state.localImagePath,
           tags: state.selectedTags.isEmpty ? null : state.selectedTags,
@@ -334,7 +421,8 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           name: state.itemName,
           description: state.description.isEmpty ? null : state.description,
           price: priceValue,
-          isAvailable: state.liveOnMenu,
+          isAvailable: resolvedAvailability,
+          stockCount: state.trackStock ? state.stock : null,
           imageUrl: state.existingImageUrl,
           imagePath: state.localImagePath,
           tags: state.selectedTags.isEmpty ? null : state.selectedTags,
@@ -382,6 +470,9 @@ final merchantMenuItemFormProvider =
     category: initialInput.category,
     selectedTags: initialInput.selectedTags?.split(',').toList(),
     liveOnMenu: initialInput.liveOnMenu,
+    trackStock: initialInput.trackStock,
+    stock: initialInput.stock,
+    autoHideWhenEmpty: initialInput.autoHideWhenEmpty,
     imageUrl: initialInput.imageUrl,
     optionsJson: initialInput.optionsJson,
   );

@@ -37,6 +37,7 @@ class MerchantEditProfileState {
     String? referralCode,
     String? logoUrl,
     String? logoPath,
+    bool clearLogoPath = false,
     bool? isSubmitting,
     String? errorMessage,
   }) {
@@ -46,7 +47,7 @@ class MerchantEditProfileState {
       email: email ?? this.email,
       referralCode: referralCode ?? this.referralCode,
       logoUrl: logoUrl ?? this.logoUrl,
-      logoPath: logoPath ?? this.logoPath,
+      logoPath: clearLogoPath ? null : (logoPath ?? this.logoPath),
       isSubmitting: isSubmitting ?? this.isSubmitting,
       errorMessage: errorMessage,
     );
@@ -124,10 +125,14 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
         logoPath: state.logoPath,
       );
 
-      await dataSource.updatePartnerProfile(partnerId, request);
+      final updated = await dataSource.updatePartnerProfile(partnerId, request);
       _ref.invalidate(merchantProfileProvider);
 
-      state = state.copyWith(isSubmitting: false);
+      state = state.copyWith(
+        isSubmitting: false,
+        logoUrl: updated.logoUrl ?? state.logoUrl,
+        clearLogoPath: true,
+      );
       return true;
     } catch (e) {
       state = state.copyWith(

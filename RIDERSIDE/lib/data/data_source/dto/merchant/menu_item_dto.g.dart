@@ -22,6 +22,7 @@ MenuItemDto _$MenuItemDtoFromJson(Map<String, dynamic> json) => MenuItemDto(
       isBestSeller: _parseBoolNullable(json['is_best_seller']),
       requiresPrescription: _parseBoolNullable(json['requires_prescription']),
       sortOrder: _parseIntNullable(json['sort_order']),
+      stockCount: _parseIntNullable(json['stock_count']),
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
       options: json['options'] as Map<String, dynamic>?,
       category: json['category'] == null
@@ -46,6 +47,7 @@ Map<String, dynamic> _$MenuItemDtoToJson(MenuItemDto instance) =>
       'is_best_seller': instance.isBestSeller,
       'requires_prescription': instance.requiresPrescription,
       'sort_order': instance.sortOrder,
+      'stock_count': instance.stockCount,
       'tags': instance.tags,
       'options': instance.options,
       'category': instance.category,

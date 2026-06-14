@@ -8,6 +8,7 @@ class InfoFormFields extends ConsumerWidget {
   final TextEditingController lastNameController;
   final TextEditingController birthdayController;
   final TextEditingController emailController;
+  final TextEditingController phoneNumberController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
   final TextEditingController licenseNumberController;
@@ -19,6 +20,7 @@ class InfoFormFields extends ConsumerWidget {
     required this.lastNameController,
     required this.birthdayController,
     required this.emailController,
+    required this.phoneNumberController,
     required this.passwordController,
     required this.confirmPasswordController,
     required this.licenseNumberController,
@@ -91,6 +93,15 @@ class InfoFormFields extends ConsumerWidget {
           hintText: '',
           validator: RegisterValidator.email,
           keyboardType: TextInputType.emailAddress,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        _label(context, 'Contact Number'),
+        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+        CustomTextField(
+          controller: phoneNumberController,
+          hintText: '9XX XXX XXXX',
+          keyboardType: TextInputType.phone,
+          validator: RegisterValidator.phoneNumber,
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
         _label(context, 'Password'),

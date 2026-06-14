@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../common/menu_image_widget.dart';
 
 class MerchantCategoryImageUploadSection extends StatelessWidget {
   final VoidCallback onTap;
@@ -43,51 +43,49 @@ class MerchantCategoryImageUploadSection extends StatelessWidget {
             child: uploadedImagePath != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: _buildPreview(uploadedImagePath!),
-                  )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.image_outlined,
-                          size: ResponsiveUtils.spacing(context, 48),
-                          color: Colors.grey.shade400,
-                        ),
-                        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                        Text(
-                          'Tap to upload category photo',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                        Text(
-                          'Recommended: 400x300px',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 11),
-                            color: Colors.grey.shade500,
-                          ),
-                        ),
-                      ],
+                    child: MenuImageWidget(
+                      source: uploadedImagePath,
+                      fit: BoxFit.cover,
+                      placeholder: _emptyState(context),
                     ),
-                  ),
+                  )
+                : _emptyState(context),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPreview(String path) {
-    if (path.startsWith('http')) {
-      return Image.network(path, fit: BoxFit.cover, width: double.infinity);
-    }
-    if (path.startsWith('assets/')) {
-      return Image.asset(path, fit: BoxFit.cover, width: double.infinity);
-    }
-    return Image.file(File(path), fit: BoxFit.cover, width: double.infinity);
+  Widget _emptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_outlined,
+            size: ResponsiveUtils.spacing(context, 48),
+            color: Colors.grey.shade400,
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          Text(
+            'Tap to upload category photo',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 13),
+              color: Colors.grey.shade600,
+            ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+          Text(
+            'Recommended: 400x300px',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 11),
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

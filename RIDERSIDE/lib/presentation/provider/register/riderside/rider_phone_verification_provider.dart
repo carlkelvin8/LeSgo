@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../data/data_source/auth_remote_datasource.dart';
 
 // Phone Verification State
@@ -90,7 +91,7 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
           devOtp: response.otp, // null in production, actual OTP in dev fallback
         );
         if (response.otp != null) {
-          print('🔑 DEV MODE - OTP Code: ${response.otp}');
+          AppLogger.debug('DEV MODE - OTP Code: ${response.otp}');
         }
       } else {
         throw Exception(response.message);
@@ -104,16 +105,17 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
         errorMessage = e.message!;
       }
       
-      // Debug logging
-      print('❌ OTP Send DioError: ${e.type} - ${e.message}');
-      print('❌ Response: ${e.response?.statusCode} - ${e.response?.data}');
+      AppLogger.error(
+        'OTP Send DioError: ${e.type} - ${e.message}',
+        e.response?.data,
+      );
       
       state = state.copyWith(
         isLoading: false,
         errorMessage: errorMessage,
       );
     } catch (e) {
-      print('❌ OTP Send Error: $e');
+      AppLogger.error('OTP Send Error', e);
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Failed to send OTP: ${e.toString()}',

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/services/push_notification_service.dart';
-import '../../../../../core/network/dio_client.dart';
+
+import '../../../../provider/main/riderside/rider_inbox_provider.dart';
 import '../../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
 import '../../../../screens/chat/rider_chat_screen.dart';
-import '../../../../../data/data_source/chat_remote_datasource.dart';
 import '../../../../../data/data_source/dto/chat/chat_dto.dart';
 
 class RiderInboxView extends ConsumerStatefulWidget {
@@ -15,68 +14,28 @@ class RiderInboxView extends ConsumerStatefulWidget {
 }
 
 class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
-  List<ConversationDto> _conversations = [];
-  bool _isLoading = true;
-  String? _error;
-  final Map<int, String> _lastMessageByConversation = {};
-
   @override
   void initState() {
     super.initState();
-    _loadConversations();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(riderInboxProvider.notifier).loadConversations();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final inboxState = ref.watch(riderInboxProvider);
+
     ref.listen<int>(riderInboxRefreshSignalProvider, (previous, next) {
       if (previous == next) return;
-      _loadConversations(silent: true);
+      ref.read(riderInboxProvider.notifier).loadConversations(silent: true);
     });
 
     return RefreshIndicator(
-      onRefresh: () => _loadConversations(),
+      onRefresh: () => ref.read(riderInboxProvider.notifier).loadConversations(),
       color: const Color(0xFF5F2D82),
-      child: _buildBody(),
+      child: _buildBody(inboxState),
     );
-  }
-
-  Future<void> _loadConversations({bool silent = false}) async {
-    if (!silent) setState(() => _isLoading = true);
-    try {
-      final dataSource = ChatRemoteDataSource(DioClient());
-      final conversations = await dataSource.getConversations();
-      if (mounted) {
-        for (final conv in conversations) {
-          final latest = conv.latestMessage?.content ?? '';
-          final previous = _lastMessageByConversation[conv.id];
-          if (previous != null &&
-              previous != latest &&
-              latest.isNotEmpty &&
-              silent) {
-            PushNotificationService.show(
-              title: conv.customer?.name ?? 'New message',
-              body: latest,
-              payload: 'chat_${conv.id}',
-              channelId: 'lezgo_chat',
-              channelName: 'Chat Messages',
-            );
-          }
-          _lastMessageByConversation[conv.id] = latest;
-        }
-        setState(() {
-          _conversations = conversations;
-          _isLoading = false;
-          _error = null;
-        });
-      }
-    } catch (e) {
-      if (mounted && !silent) {
-        setState(() {
-          _isLoading = false;
-          _error = e.toString();
-        });
-      }
-    }
   }
 
   void _openChat(ConversationDto conversation) {
@@ -90,17 +49,21 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
           customerName: customerName,
         ),
       ),
-    );
+    ).then((_) {
+      if (mounted) {
+        ref.read(riderInboxProvider.notifier).loadConversations(silent: true);
+      }
+    });
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
+  Widget _buildBody(RiderInboxState state) {
+    if (state.isLoading && state.conversations.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
       );
     }
 
-    if (_error != null) {
+    if (state.error != null && state.conversations.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -113,46 +76,54 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
             ),
             const SizedBox(height: 8),
             TextButton(
-              onPressed: _loadConversations,
-              child: const Text('Retry', style: TextStyle(color: Color(0xFF5F2D82))),
+              onPressed: () =>
+                  ref.read(riderInboxProvider.notifier).loadConversations(),
+              child: const Text(
+                'Retry',
+                style: TextStyle(color: Color(0xFF5F2D82)),
+              ),
             ),
           ],
         ),
       );
     }
 
-    if (_conversations.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text(
-              'No conversations yet',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
-              ),
+    if (state.conversations.isEmpty) {
+      return ListView(
+        children: const [
+          SizedBox(height: 120),
+          Center(
+            child: Column(
+              children: [
+                Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'No conversations yet',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Chat with customers will appear here\nonce you accept an order.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Chat with customers will appear here\nonce you accept an order.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: _conversations.length,
+      itemCount: state.conversations.length,
       separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
       itemBuilder: (context, index) {
-        final conv = _conversations[index];
+        final conv = state.conversations[index];
         return _ConversationTile(
           conversation: conv,
           onTap: () => _openChat(conv),
@@ -175,78 +146,82 @@ class _ConversationTile extends StatelessWidget {
     final orderId = conversation.orderId;
     final isActive = conversation.status == 'active';
 
-    return ListTile(
-      onTap: onTap,
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundColor: const Color(0xFF5F2D82).withOpacity(0.1),
-        child: Text(
-          customerName.isNotEmpty ? customerName[0].toUpperCase() : 'C',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF5F2D82),
+    return Semantics(
+      button: true,
+      label: 'Chat with $customerName. $lastMsg',
+      child: ListTile(
+        onTap: onTap,
+        leading: CircleAvatar(
+          radius: 24,
+          backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+          child: Text(
+            customerName.isNotEmpty ? customerName[0].toUpperCase() : 'C',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF5F2D82),
+            ),
           ),
         ),
-      ),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
-              customerName,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (orderId != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: isActive
-                    ? const Color(0xFF5F2D82).withOpacity(0.1)
-                    : Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-              ),
+        title: Row(
+          children: [
+            Expanded(
               child: Text(
-                'Order #$orderId',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isActive ? const Color(0xFF5F2D82) : Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+                customerName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (orderId != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? const Color(0xFF5F2D82).withValues(alpha: 0.1)
+                      : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Order #$orderId',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isActive ? const Color(0xFF5F2D82) : Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
+          ],
+        ),
+        subtitle: Text(
+          lastMsg,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isActive ? Colors.green : Colors.grey[400],
+              ),
             ),
-        ],
-      ),
-      subtitle: Text(
-        lastMsg,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isActive ? Colors.green : Colors.grey[400],
+            const SizedBox(height: 4),
+            Text(
+              isActive ? 'Active' : 'Ended',
+              style: TextStyle(
+                fontSize: 10,
+                color: isActive ? Colors.green : Colors.grey[400],
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            isActive ? 'Active' : 'Ended',
-            style: TextStyle(
-              fontSize: 10,
-              color: isActive ? Colors.green : Colors.grey[400],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

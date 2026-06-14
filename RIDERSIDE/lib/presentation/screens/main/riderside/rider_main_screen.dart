@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
@@ -10,6 +11,7 @@ import '../../../provider/main/riderside/rider_profile_provider.dart';
 import '../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../provider/main/riderside/rider_inbox_provider.dart';
 import '../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
 import '../../../widgets/widgets.dart';
 import 'views/rider_profile_view.dart';
@@ -22,6 +24,8 @@ import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
+import '../../../../core/services/connectivity_service.dart';
+import '../../../../core/services/notification_navigation_service.dart';
 
 // Actually, RegisterScaffold is specific to registration. Standard Scaffold is better for Main Screen.
 
@@ -34,34 +38,67 @@ class RiderMainScreen extends ConsumerStatefulWidget {
 
 class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
     with WidgetsBindingObserver, AutoRefreshMixin {
+  late final void Function(int replayedCount) _onOfflineQueueFlushed;
+
   @override
-  Duration get autoRefreshInterval => kScreenAutoRefreshInterval;
+  Duration get autoRefreshInterval => kRiderMainAutoRefreshInterval;
 
   @override
   void onAutoRefresh() {
     final currentTab = ref.read(riderNavProvider).last;
-    refreshRiderScreen(ref, currentTab);
+    final onDuty = ref.read(riderDutyProvider);
+    refreshRiderScreenOnAutoRefresh(ref, currentTab, onDuty: onDuty);
   }
 
   @override
   void initState() {
     super.initState();
+    _onOfflineQueueFlushed = (replayed) {
+      if (!mounted) return;
+      refreshAllRiderScreens(ref, silent: true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            replayed == 1
+                ? '1 offline action synced'
+                : '$replayed offline actions synced',
+          ),
+          backgroundColor: Colors.green.shade700,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    };
+    connectivityService.addOnOfflineQueueFlushedListener(_onOfflineQueueFlushed);
+
     // Check authentication on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationNavigationService.riderTabNavigator = (tab) {
+        ref.read(riderNavProvider.notifier).navigateTo(tab);
+      };
+      NotificationNavigationService.onAppReady();
       _checkAuthentication();
       ref.read(riderDutyProvider.notifier);
       ref.read(riderWalletProvider.notifier).loadWallet();
+      ref.read(riderInboxProvider.notifier).loadConversations(silent: true);
     });
+  }
+
+  @override
+  void dispose() {
+    connectivityService.removeOnOfflineQueueFlushedListener(
+      _onOfflineQueueFlushed,
+    );
+    super.dispose();
   }
 
   void _checkAuthentication() {
     final authState = ref.read(riderAuthProvider);
-    print('🔐 RiderMainScreen: Checking authentication');
-    print('🔐 Is logged in: ${authState.isLoggedIn}');
-    print('🔐 User: ${authState.user?.email}');
-    
+    AppLogger.auth(
+      'RiderMainScreen auth check: loggedIn=${authState.isLoggedIn}, userId=${authState.user?.id}',
+    );
+
     if (!authState.isLoggedIn || authState.user == null) {
-      print('❌ Not authenticated, redirecting to login');
+      AppLogger.auth('RiderMainScreen: redirecting to login');
       // Not authenticated, redirect to login
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -75,7 +112,9 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
         }
       });
     } else {
-      print('✅ Authenticated as: ${authState.user!.email}, Role: ${authState.user!.role}');
+      AppLogger.auth(
+        'RiderMainScreen authenticated: userId=${authState.user!.id}, role=${authState.user!.role}',
+      );
     }
   }
 
@@ -120,6 +159,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
           ref.read(riderWalletProvider.notifier).loadWallet();
           break;
         case RiderNavType.inbox:
+          ref.read(riderInboxProvider.notifier).loadConversations(silent: true);
           ref.read(riderInboxRefreshSignalProvider.notifier).state++;
           break;
       }
@@ -142,12 +182,16 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
                   children: [
                     HomeHeader(
                       action: currentNav == RiderNavType.profile
-                          ? GestureDetector(
-                              onTap: () => _showLogoutDialog(context, ref),
-                              child: const Icon(
-                                Icons.exit_to_app_rounded,
-                                color: Color(0xFFE53935),
-                                size: 26,
+                          ? Semantics(
+                              button: true,
+                              label: 'Log out',
+                              child: GestureDetector(
+                                onTap: () => _showLogoutDialog(context, ref),
+                                child: const Icon(
+                                  Icons.exit_to_app_rounded,
+                                  color: Color(0xFFE53935),
+                                  size: 26,
+                                ),
                               ),
                             )
                           : null,
@@ -216,7 +260,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
       case RiderNavType.profile:
         return 'Profile';
       case RiderNavType.wallet:
-        return 'Wallet';
+        return 'LesPay';
       case RiderNavType.mission:
         return 'Mission';
     }

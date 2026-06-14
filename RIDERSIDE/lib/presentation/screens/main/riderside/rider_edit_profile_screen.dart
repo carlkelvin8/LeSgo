@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../provider/main/riderside/rider_profile_provider.dart';
@@ -102,7 +103,7 @@ class _RiderEditProfileScreenState
             });
           }
         } catch (e) {
-          print('Driver profile update error: $e');
+          AppLogger.error('Driver profile update error', e);
         }
       }
 
@@ -188,9 +189,11 @@ class _RiderEditProfileScreenState
               ),
             )
           : SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: hp,
-                vertical: ResponsiveUtils.spacing(context, 24),
+              padding: EdgeInsets.fromLTRB(
+                hp,
+                ResponsiveUtils.spacing(context, 24),
+                hp,
+                ResponsiveUtils.scrollBottomPaddingForKeyboard(context),
               ),
               child: Form(
                 key: _formKey,

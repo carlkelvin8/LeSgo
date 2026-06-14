@@ -32,36 +32,38 @@ class HomeHeader extends ConsumerWidget {
         color: backgroundColor,
         border: Border(bottom: BorderSide(color: borderColor, width: 1)),
       ),
-      child: Stack(
-        alignment: Alignment.centerLeft,
+      child: Row(
         children: [
-          // Optional Back Button
-          if (showBackButton)
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Icon(
-                Icons.chevron_left_rounded,
-                size: ResponsiveUtils.imageHeight(context, 32),
-                color: const Color(0xFF5F2D82),
+          SizedBox(
+            width: showBackButton || action != null
+                ? ResponsiveUtils.spacing(context, 40)
+                : 0,
+            child: showBackButton
+                ? GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Icon(
+                      Icons.chevron_left_rounded,
+                      size: ResponsiveUtils.imageHeight(context, 32),
+                      color: const Color(0xFF5F2D82),
+                    ),
+                  )
+                : null,
+          ),
+          Expanded(
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/images/Logo.svg',
+                height: ResponsiveUtils.imageHeight(context, 40),
+                colorFilter: ColorFilter.mode(logoColor, BlendMode.srcIn),
               ),
             ),
-
-          // Centered Logo
-          Align(
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              'assets/images/Logo.svg',
-              height: ResponsiveUtils.imageHeight(context, 40),
-              colorFilter: ColorFilter.mode(logoColor, BlendMode.srcIn),
-            ),
           ),
-
-          // Optional action (e.g. logout icon) on the right
-          if (action != null)
-            Align(
-              alignment: Alignment.centerRight,
-              child: action!,
-            ),
+          SizedBox(
+            width: showBackButton || action != null
+                ? ResponsiveUtils.spacing(context, 40)
+                : 0,
+            child: action,
+          ),
         ],
       ),
     );

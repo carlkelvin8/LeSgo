@@ -9,6 +9,8 @@ class MerchantOrderCard extends StatelessWidget {
   final String customerName;
   final String address;
   final String? imageUrl;
+  final String? specialInstructionsPreview;
+  final Widget? trailingBadge;
 
   const MerchantOrderCard({
     super.key,
@@ -18,6 +20,8 @@ class MerchantOrderCard extends StatelessWidget {
     required this.customerName,
     required this.address,
     this.imageUrl,
+    this.specialInstructionsPreview,
+    this.trailingBadge,
   });
 
   @override
@@ -112,6 +116,49 @@ class MerchantOrderCard extends StatelessWidget {
                     color: Colors.black,
                   ),
                 ),
+                if (specialInstructionsPreview != null &&
+                    specialInstructionsPreview!.trim().isNotEmpty) ...[
+                  SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveUtils.spacing(context, 8),
+                      vertical: ResponsiveUtils.spacing(context, 5),
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF8E1),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFFFB300)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.campaign_outlined,
+                          size: ResponsiveUtils.fontSize(context, 11),
+                          color: Colors.orange.shade800,
+                        ),
+                        SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+                        Expanded(
+                          child: Text(
+                            specialInstructionsPreview!.trim(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 9),
+                              fontWeight: FontWeight.w700,
+                              color: Colors.orange.shade900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (trailingBadge != null) ...[
+                  SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                  trailingBadge!,
+                ],
               ],
             ),
           ),

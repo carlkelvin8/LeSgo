@@ -4,7 +4,6 @@ import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/register/register_routes.dart';
 import '../../../provider/register/riderside/rider_register_info_provider.dart';
-import '../../../provider/register/riderside/rider_phone_verification_provider.dart';
 import '../../../widgets/widgets.dart';
 
 class RegisterInfoScreen extends ConsumerStatefulWidget {
@@ -20,6 +19,7 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
   final _lastNameController = TextEditingController();
   final _birthdayController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneNumberController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _licenseNumberController = TextEditingController();
@@ -39,6 +39,9 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
     });
     _emailController.addListener(() {
       ref.read(registerInfoProvider.notifier).updateEmail(_emailController.text);
+    });
+    _phoneNumberController.addListener(() {
+      ref.read(registerInfoProvider.notifier).updatePhoneNumber(_phoneNumberController.text);
     });
     _passwordController.addListener(() {
       ref.read(registerInfoProvider.notifier).updatePassword(_passwordController.text);
@@ -63,6 +66,7 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
     _lastNameController.dispose();
     _birthdayController.dispose();
     _emailController.dispose();
+    _phoneNumberController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _licenseNumberController.dispose();
@@ -108,6 +112,7 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
               lastNameController: _lastNameController,
               birthdayController: _birthdayController,
               emailController: _emailController,
+              phoneNumberController: _phoneNumberController,
               passwordController: _passwordController,
               confirmPasswordController: _confirmPasswordController,
               licenseNumberController: _licenseNumberController,

@@ -79,7 +79,8 @@ class RiderHistoryBookingsList extends StatelessWidget {
             bookingId: booking.id,
             restaurantName: booking.restaurantName,
             address: booking.deliveryAddress ?? booking.address,
-            price: booking.billingAmount.replaceFirst('Order total ', ''),
+            price: booking.earnings?.replaceFirst('Your earnings ', '') ??
+                'PHP 0.00',
             status: statusLabel,
             statusColor: statusColor,
             statusBackgroundColor: statusBackgroundColor,

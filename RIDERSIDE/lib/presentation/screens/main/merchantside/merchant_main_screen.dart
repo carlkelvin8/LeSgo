@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
+import '../../../widgets/main/merchantside/merchant_new_order_watcher.dart';
+import '../../../widgets/main/merchantside/merchant_prep_timer_sync.dart';
 import '../../../widgets/widgets.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
+import '../../../../core/services/notification_navigation_service.dart';
 import 'views/merchant_book_view.dart';
 import 'views/merchant_mission_view.dart';
 import 'views/merchant_menu_view.dart';
@@ -41,6 +45,10 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
     super.initState();
     // Check authentication after a short delay to allow state to settle
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationNavigationService.merchantTabNavigator = (tab) {
+        ref.read(merchantNavProvider.notifier).state = tab;
+      };
+      NotificationNavigationService.onAppReady();
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           _checkAuthentication();
@@ -51,13 +59,12 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
 
   void _checkAuthentication() {
     final authState = ref.read(riderAuthProvider);
-    print('🔐 MerchantMainScreen: Checking authentication');
-    print('🔐 Is logged in: ${authState.isLoggedIn}');
-    print('🔐 User: ${authState.user?.email}');
-    print('🔐 Partner ID: ${authState.user?.partnerId}');
-    
+    AppLogger.auth(
+      'MerchantMainScreen auth check: loggedIn=${authState.isLoggedIn}, userId=${authState.user?.id}, partnerId=${authState.user?.partnerId}',
+    );
+
     if (!authState.isLoggedIn || authState.user == null) {
-      print('❌ Not authenticated, redirecting to login');
+      AppLogger.auth('MerchantMainScreen: redirecting to login');
       // Not authenticated, redirect to login
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -66,7 +73,9 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
         }
       });
     } else {
-      print('✅ Authenticated as: ${authState.user!.email}, Partner ID: ${authState.user!.partnerId}');
+      AppLogger.auth(
+        'MerchantMainScreen authenticated: userId=${authState.user!.id}, partnerId=${authState.user!.partnerId}',
+      );
     }
   }
 
@@ -105,7 +114,9 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
       refreshMerchantScreen(ref, next, silent: false);
     });
 
-    return Scaffold(
+    return MerchantNewOrderWatcher(
+      child: MerchantPrepTimerSync(
+      child: Scaffold(
       backgroundColor: Colors.white,
       body: isMission
           ? const MerchantMissionView()
@@ -141,26 +152,30 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
             ),
       floatingActionButton: showMenuFab
           ? MerchantMenuExpandableFab(
-              onAddCategory: () {
-                Navigator.push(
+              onAddCategory: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const MerchantMenuAddCategoryScreen(),
                   ),
                 );
+                refreshMerchantScreen(ref, MerchantNavType.menu, silent: false);
               },
-              onAddMenu: () {
-                Navigator.push(
+              onAddMenu: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const MerchantMenuAddItemScreen(),
                   ),
                 );
+                refreshMerchantScreen(ref, MerchantNavType.menu, silent: false);
               },
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: const MerchantBottomNavBar(),
+    ),
+    ),
     );
   }
 

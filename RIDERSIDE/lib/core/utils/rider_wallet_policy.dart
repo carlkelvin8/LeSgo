@@ -18,12 +18,12 @@ class RiderWalletPolicy {
     if (canAcceptBooking(balance)) return '';
 
     if (balance <= maintainingBalance) {
-      return 'Your wallet balance is PHP ${balance.toStringAsFixed(2)}. '
-          'Insufficient balance to accept bookings. Please top up your wallet '
+      return 'Your LesPay balance is PHP ${balance.toStringAsFixed(2)}. '
+          'Insufficient balance to accept bookings. Please top up your LesPay '
           '(minimum PHP ${minimumBalanceToAccept.toStringAsFixed(0)} required).';
     }
 
-    return 'Insufficient wallet balance to accept bookings. '
+    return 'Insufficient LesPay balance to accept bookings. '
         'Please top up to at least PHP ${minimumBalanceToAccept.toStringAsFixed(0)}.';
   }
 
@@ -31,11 +31,11 @@ class RiderWalletPolicy {
     if (!shouldShowTopUpWarning(balance)) return '';
 
     if (balance <= maintainingBalance) {
-      return 'Wallet balance is PHP ${balance.toStringAsFixed(2)}. '
+      return 'LesPay balance is PHP ${balance.toStringAsFixed(2)}. '
           'Please top up — insufficient balance to accept new bookings.';
     }
 
-    return 'Wallet balance is below PHP ${minimumBalanceToAccept.toStringAsFixed(0)}. '
+    return 'LesPay balance is below PHP ${minimumBalanceToAccept.toStringAsFixed(0)}. '
         'Top up to accept bookings.';
   }
 }

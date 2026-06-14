@@ -26,6 +26,7 @@ class MainRoutes {
   static const String setLocation = '/set-location';
   static const String addressManagement = '/address-management';
   static const String addressDemo = '/address-demo';
+  static const String paymentMethods = '/payment-methods';
 
   MainRoutes._();
 }

@@ -55,7 +55,7 @@ class RiderBookingMapper {
           'Order total PHP ${order.displayTotalAmount.toStringAsFixed(2)}',
       deliveryFee: isFoodOrder
           ? 'Delivery fee PHP ${order.displayShippingFee.toStringAsFixed(2)}'
-          : 'Wallet hold (shipping only) PHP ${order.walletDeductionAmount.toStringAsFixed(2)}',
+          : 'LesPay hold (shipping only) PHP ${order.walletDeductionAmount.toStringAsFixed(2)}',
       billingMethod: order.paymentMethod.toUpperCase(),
       currentStatus:
           BookingWorkflow.mapApiStatus(order.status, order.serviceId),

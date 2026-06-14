@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/merchant_order_ops_utils.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../auth/rider_auth_provider.dart';
+import 'merchant_prep_timer_provider.dart';
 import 'merchant_profile_provider.dart';
 
 enum MerchantOrderFilter { all, pending, pickUp, forDelivery, delivered }
@@ -65,6 +67,15 @@ final merchantOrderDetailProvider =
   return dataSource.getOrderById(orderId);
 });
 
+final merchantPendingOrderCountProvider = Provider<int>((ref) {
+  final ordersAsync = ref.watch(merchantOrdersProvider);
+  return ordersAsync.maybeWhen(
+    data: (orders) =>
+        orders.where((order) => MerchantOrderOpsUtils.isPending(order.status)).length,
+    orElse: () => 0,
+  );
+});
+
 final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
   final ordersAsync = ref.watch(merchantOrdersProvider);
   final filter = ref.watch(selectedMerchantOrderFilterProvider);
@@ -115,6 +126,7 @@ class MerchantOrderActionNotifier {
   Future<void> acceptOrder(int orderId) async {
     final dataSource = ref.read(merchantDataSourceProvider);
     await dataSource.updateOrderStatus(orderId, 'searching_driver');
+    await ref.read(merchantPrepTimerProvider.notifier).start(orderId);
     await _refresh();
   }
 
@@ -125,6 +137,7 @@ class MerchantOrderActionNotifier {
       'cancelled',
       cancelReason: reason,
     );
+    await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
     await _refresh();
   }
 
@@ -135,12 +148,14 @@ class MerchantOrderActionNotifier {
       'cancelled',
       cancelReason: reason,
     );
+    await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
     await _refresh();
   }
 
   Future<void> markReadyForPickup(int orderId) async {
     final dataSource = ref.read(merchantDataSourceProvider);
     await dataSource.updateOrderStatus(orderId, 'ready_for_pickup');
+    await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
     await _refresh();
   }
 }

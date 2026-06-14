@@ -3,6 +3,7 @@ class RiderRegistrationInfo {
   final String lastName;
   final String birthday;
   final String email;
+  final String phoneNumber;
   final String password;
   final String confirmPassword;
   final String licenseNumber;
@@ -13,6 +14,7 @@ class RiderRegistrationInfo {
     required this.lastName,
     required this.birthday,
     required this.email,
+    required this.phoneNumber,
     required this.password,
     required this.confirmPassword,
     required this.licenseNumber,
@@ -24,6 +26,7 @@ class RiderRegistrationInfo {
     String? lastName,
     String? birthday,
     String? email,
+    String? phoneNumber,
     String? password,
     String? confirmPassword,
     String? licenseNumber,
@@ -34,6 +37,7 @@ class RiderRegistrationInfo {
       lastName: lastName ?? this.lastName,
       birthday: birthday ?? this.birthday,
       email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       password: password ?? this.password,
       confirmPassword: confirmPassword ?? this.confirmPassword,
       licenseNumber: licenseNumber ?? this.licenseNumber,
@@ -46,6 +50,7 @@ class RiderRegistrationInfo {
         lastName.isNotEmpty &&
         birthday.isNotEmpty &&
         email.isNotEmpty &&
+        phoneNumber.isNotEmpty &&
         password.isNotEmpty &&
         confirmPassword.isNotEmpty &&
         password == confirmPassword &&
@@ -58,6 +63,7 @@ class RiderRegistrationInfo {
       'lastName': lastName,
       'birthday': birthday,
       'email': email,
+      'phoneNumber': phoneNumber,
       'licenseNumber': licenseNumber,
       if (licenseExpiryDate != null) 'licenseExpiryDate': licenseExpiryDate,
     };
@@ -69,6 +75,7 @@ class RiderRegistrationInfo {
       lastName: json['lastName'] as String? ?? '',
       birthday: json['birthday'] as String? ?? '',
       email: json['email'] as String? ?? '',
+      phoneNumber: json['phoneNumber'] as String? ?? '',
       password: '',
       confirmPassword: '',
       licenseNumber: json['licenseNumber'] as String? ?? '',
@@ -82,6 +89,7 @@ class RiderRegistrationInfo {
       lastName: '',
       birthday: '',
       email: '',
+      phoneNumber: '',
       password: '',
       confirmPassword: '',
       licenseNumber: '',

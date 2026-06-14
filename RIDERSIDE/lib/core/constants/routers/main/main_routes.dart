@@ -19,6 +19,9 @@ class MainRoutes {
   static const String merchantSecurity = '/merchant/security';
   static const String merchantDocuments = '/merchant/documents';
   static const String merchantEarnings = '/merchant/earnings';
+  static const String merchantWallet = '/merchant/wallet';
+  static const String merchantReviews = '/merchant/reviews';
+  static const String merchantAnalytics = '/merchant/analytics';
 
   MainRoutes._();
 }

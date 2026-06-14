@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
-import '../../../widgets/widgets.dart';
-import '../../../provider/main/merchantside/merchant_add_category_form_provider.dart';
-import 'package:image_picker/image_picker.dart';
+import '../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../../controllers/merchantside/merchant_add_category_form_controller.dart';
+import '../../../provider/main/merchantside/merchant_add_category_form_provider.dart';
+import '../../../widgets/widgets.dart';
+
 class MerchantMenuAddCategoryScreen extends ConsumerStatefulWidget {
-  const MerchantMenuAddCategoryScreen({super.key});
+  final MenuCategoryDto? editingCategory;
+
+  const MerchantMenuAddCategoryScreen({
+    super.key,
+    this.editingCategory,
+  });
 
   @override
   ConsumerState<MerchantMenuAddCategoryScreen> createState() =>
@@ -19,10 +26,29 @@ class _MerchantMenuAddCategoryScreenState
   late MerchantAddCategoryFormController _controller;
   final ImagePicker _picker = ImagePicker();
 
+  bool get _isEditMode => widget.editingCategory != null;
+
   @override
   void initState() {
     super.initState();
-    _controller = MerchantAddCategoryFormController();
+    final category = widget.editingCategory;
+    _controller = MerchantAddCategoryFormController(
+      initialCategoryName: category?.name,
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notifier = ref.read(merchantAddCategoryFormProvider.notifier);
+      if (category != null) {
+        notifier.initForEdit(
+          categoryId: category.id,
+          name: category.name,
+          iconEmoji: category.iconEmoji,
+          imageUrl: category.imageUrl,
+        );
+      } else {
+        notifier.reset();
+      }
+    });
   }
 
   @override
@@ -40,7 +66,9 @@ class _MerchantMenuAddCategoryScreenState
         imageQuality: 85,
       );
       if (image != null) {
-        ref.read(merchantAddCategoryFormProvider.notifier).updateImagePath(image.path);
+        ref
+            .read(merchantAddCategoryFormProvider.notifier)
+            .updateImagePath(image.path);
       }
     } catch (e) {
       if (mounted) {
@@ -53,14 +81,21 @@ class _MerchantMenuAddCategoryScreenState
   Widget build(BuildContext context) {
     final formState = ref.watch(merchantAddCategoryFormProvider);
     final notifier = ref.read(merchantAddCategoryFormProvider.notifier);
+    final dishCount = widget.editingCategory?.availableItems?.length ?? 0;
 
     ref.listen(merchantAddCategoryFormProvider, (previous, next) {
       if (next.errorMessage != null) {
         SnackBarUtils.showError(context, next.errorMessage!);
       }
-      // Handle success - navigate when form state shows success
-      if (next.isSubmitting == false && previous?.isSubmitting == true && next.errorMessage == null) {
-        SnackBarUtils.showSuccess(context, 'Category created successfully');
+      if (next.isSubmitting == false &&
+          previous?.isSubmitting == true &&
+          next.errorMessage == null) {
+        SnackBarUtils.showSuccess(
+          context,
+          _isEditMode
+              ? 'Category updated successfully'
+              : 'Category created successfully',
+        );
         Navigator.pop(context);
       }
     });
@@ -75,11 +110,20 @@ class _MerchantMenuAddCategoryScreenState
             notifier.attemptSubmit();
           }
         },
-        submitLabel: 'Create Category',
+        submitLabel: _isEditMode ? 'Save Changes' : 'Create Category',
         isSubmitting: formState.isSubmitting,
       ),
       children: [
-        // Category Name
+        Text(
+          _isEditMode ? 'Edit Category' : 'New Category',
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 20),
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF5F2D82),
+          ),
+        ),
+        SectionSpacer(units: 20),
         Text(
           'Category Name',
           style: TextStyle(
@@ -95,20 +139,21 @@ class _MerchantMenuAddCategoryScreenState
           controller: _controller.categoryNameController,
         ),
         SectionSpacer(units: 28),
-        // Category Image Section
         MerchantCategoryImageUploadSection(
-          uploadedImagePath: formState.imagePath,
+          uploadedImagePath: formState.previewImageSource,
           onTap: _pickImage,
         ),
         SectionSpacer(units: 24),
-        // Live Preview
         MerchantCategoryLivePreviewSection(
           categoryName: _controller.categoryNameController.text,
+          categoryImagePath: formState.previewImageSource,
+          dishCount: dishCount,
         ),
         SectionSpacer(units: 32),
-        // Pro Tip
         MerchantProTipSection(
-          tipText: 'Use clear, descriptive category names so customers can quickly find what they\'re looking for.',
+          tipText: _isEditMode
+              ? 'Updating the category name or image will reflect across all menu items in this category.'
+              : 'Use clear, descriptive category names so customers can quickly find what they\'re looking for.',
         ),
         SectionSpacer(units: 32),
         SectionSpacer(),

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/provider/main/merchantside/merchant_mission_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_nav_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_orders_provider.dart';
+import '../../presentation/provider/main/merchantside/merchant_reviews_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_profile_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_menu_provider.dart';
+import '../../presentation/provider/main/merchantside/merchant_wallet_provider.dart';
 import '../../presentation/provider/main/riderside/rider_duty_provider.dart';
 import '../../presentation/provider/main/riderside/rider_history_provider.dart';
 import '../../presentation/provider/main/riderside/rider_inbox_refresh_provider.dart';
@@ -15,6 +17,27 @@ import '../../presentation/provider/main/riderside/rider_profile_provider.dart';
 import '../../presentation/provider/main/riderside/rider_wallet_provider.dart';
 
 const Duration kScreenAutoRefreshInterval = Duration(seconds: 10);
+
+/// Slower tab refresh for rider main shell — order polling is owned by
+/// [RiderOrdersNotifier] when the rider is on duty.
+const Duration kRiderMainAutoRefreshInterval = Duration(seconds: 30);
+
+/// Refreshes the visible rider tab without duplicating on-duty order polling.
+void refreshRiderScreenOnAutoRefresh(
+  WidgetRef ref,
+  RiderNavType tab, {
+  required bool onDuty,
+  bool silent = true,
+}) {
+  if (tab == RiderNavType.bookings) {
+    ref.read(riderWalletProvider.notifier).loadWallet(silent: silent);
+    if (!onDuty) {
+      ref.read(riderOrdersProvider.notifier).loadOrders(silent: silent);
+    }
+    return;
+  }
+  refreshRiderScreen(ref, tab, silent: silent);
+}
 
 void refreshRiderScreen(
   WidgetRef ref,
@@ -62,6 +85,8 @@ void refreshMerchantScreen(
       ref.invalidate(merchantReferralCodeProvider);
       ref.invalidate(merchantMenuItemsProvider);
       ref.invalidate(merchantOrdersProvider);
+      ref.invalidate(merchantReviewsDashboardProvider);
+      ref.read(merchantWalletProvider.notifier).loadWallet(silent: silent);
       break;
     case MerchantNavType.menu:
       ref.invalidate(merchantMenuProvider);
@@ -91,4 +116,5 @@ void refreshAllMerchantScreens(WidgetRef ref, {bool silent = true}) {
   ref.invalidate(merchantMenuItemsProvider);
   ref.invalidate(merchantOrdersProvider);
   ref.read(merchantMissionProvider.notifier).loadMissions(silent: silent);
+  ref.read(merchantWalletProvider.notifier).loadWallet(silent: silent);
 }

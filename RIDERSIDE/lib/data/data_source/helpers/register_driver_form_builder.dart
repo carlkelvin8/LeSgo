@@ -19,7 +19,10 @@ Future<FormData> buildRegisterDriverFormData(
   Map<String, String> documents,
 ) async {
   final formData = FormData();
-  final fields = request.toJson()..removeWhere((_, value) => value == null);
+  final fields = Map<String, dynamic>.from(request.toJson())
+    ..removeWhere(
+      (_, value) => value == null || (value is String && value.trim().isEmpty),
+    );
 
   for (final entry in fields.entries) {
     formData.fields.add(MapEntry(entry.key, entry.value.toString()));

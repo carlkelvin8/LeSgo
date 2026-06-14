@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io' show File;
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
@@ -15,13 +13,18 @@ import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../provider/main/riderside/rider_history_provider.dart';
 import '../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/booking_workflow.dart';
 import '../../../../core/utils/media_url_utils.dart';
 import '../../../../core/utils/rider_booking_mapper.dart';
-import 'map/rider_map_screen.dart';
+import '../../../../core/utils/lesbuy_manual_delivery_utils.dart';
+import '../../../../core/utils/offline_feedback_utils.dart';
+import '../../../../core/utils/rider_order_ops_utils.dart';
 import '../../../widgets/chat/rider_chat_button.dart';
-import '../../../widgets/test/simple_map_test.dart';
-import '../../../widgets/test/ultra_simple_map.dart';
+import '../../../widgets/main/riderside/bookings/rider_booking_confirm_dialog.dart';
+import '../../../widgets/main/riderside/bookings/rider_cancel_order_dialog.dart';
+import '../../../widgets/main/riderside/bookings/rider_booking_detail_map_section.dart';
+import '../../../widgets/main/riderside/bookings/rider_booking_proof_upload_section.dart';
 
 class RiderBookingDetailScreen extends ConsumerStatefulWidget {
   final RiderBooking booking;
@@ -45,8 +48,8 @@ class _RiderBookingDetailScreenState
 
   @override
   void onAutoRefresh() {
+    // Order list polling is handled by riderOrdersProvider when on duty.
     _fetchLatestStatus();
-    ref.read(riderOrdersProvider.notifier).loadOrders(silent: true);
   }
 
   late BookingStatus _currentStatus;
@@ -59,7 +62,6 @@ class _RiderBookingDetailScreenState
   final ImagePicker _imagePicker = ImagePicker();
   RiderBooking? _updatedBooking; // Store updated booking with proof URLs
   GoogleMapController? _mapController;
-  bool _mapReady = false;
 
   @override
   void initState() {
@@ -70,27 +72,27 @@ class _RiderBookingDetailScreenState
     
     // Resume order auto-refresh when entering detail screen
     ref.read(riderOrdersProvider.notifier).resumeAutoRefresh();
-    print('🔄 Resumed order auto-refresh in booking detail screen');
+    AppLogger.debug('🔄 Resumed order auto-refresh in booking detail screen');
     
     // Ensure location tracking is active for delivery tracking
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         // Refresh location to ensure we have current position
         ref.read(riderLocationProvider.notifier).refreshLocation();
-        print('📍 Refreshed location for booking detail tracking');
+        AppLogger.debug('📍 Refreshed location for booking detail tracking');
       }
     });
   }
 
   @override
   void dispose() {
-    print('🗑️ RiderBookingDetailScreen dispose called');
+    AppLogger.debug('🗑️ RiderBookingDetailScreen dispose called');
     
     // Clean up map controller
     try {
       _mapController?.dispose();
     } catch (e) {
-      print('⚠️ Error disposing map controller: $e');
+      AppLogger.error('Error disposing map controller', e);
     }
     _mapController = null;
     
@@ -98,7 +100,7 @@ class _RiderBookingDetailScreenState
     // for other screens. The providers will manage their own lifecycle.
     
     super.dispose();
-    print('✅ RiderBookingDetailScreen disposed successfully');
+    AppLogger.debug('✅ RiderBookingDetailScreen disposed successfully');
   }
 
   // Fetch the latest status from API
@@ -111,7 +113,7 @@ class _RiderBookingDetailScreenState
       final orderId = int.tryParse(widget.booking.id);
       if (orderId == null) return;
       
-      print('🔄 Fetching latest status for order #$orderId');
+      AppLogger.debug('🔄 Fetching latest status for order #$orderId');
       final orderData = await ApiService.getOrderById(orderId);
       
       if (orderData != null && mounted) {
@@ -119,9 +121,9 @@ class _RiderBookingDetailScreenState
         final order = RiderOrder.fromJson(orderData);
         final proofUrls = MediaUrlUtils.parseProofImageUrls(orderData);
 
-        print('✅ Latest status from API: $apiStatus');
+        AppLogger.debug('✅ Latest status from API: $apiStatus');
         if (proofUrls.isNotEmpty) {
-          print('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
+          AppLogger.debug('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
         }
 
         if (apiStatus != null) {
@@ -139,11 +141,11 @@ class _RiderBookingDetailScreenState
             );
             _updatedBooking = refreshedBooking;
           });
-          print('📊 Updated UI status to: ${_currentStatus.label}');
+          AppLogger.debug('📊 Updated UI status to: ${_currentStatus.label}');
         }
       }
     } catch (e) {
-      print('❌ Error fetching status: $e');
+      AppLogger.error('Error fetching status', e);
     } finally {
       if (mounted) {
         setState(() => _isFetchingStatus = false);
@@ -156,10 +158,10 @@ class _RiderBookingDetailScreenState
   }
 
   Future<void> _handleStatusChange(BookingStatus newStatus) async {
-    print('🎯 _handleStatusChange called with: ${newStatus.label}');
+    AppLogger.debug('🎯 _handleStatusChange called with: ${newStatus.label}');
     
     if (_isUpdating) {
-      print('⏳ Already updating, ignoring tap');
+      AppLogger.debug('⏳ Already updating, ignoring tap');
       return;
     }
     
@@ -191,7 +193,7 @@ class _RiderBookingDetailScreenState
       // LesRide statuses
       case BookingStatus.onTheWay:
         // This is the initial accepted state for LesRide, can't manually set
-        print('ℹ️ Status ${newStatus.label} is set automatically when order is accepted');
+        AppLogger.debug('ℹ️ Status ${newStatus.label} is set automatically when order is accepted');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${newStatus.label} status is set automatically'),
@@ -210,7 +212,7 @@ class _RiderBookingDetailScreenState
           statusLabel = 'Picked Up';
         } else if (_currentApiStatus == 'picked_up') {
           // Already at this status
-          print('ℹ️ Order is already picked up');
+          AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order is already picked up. Tap Complete to finish.'),
@@ -220,7 +222,7 @@ class _RiderBookingDetailScreenState
           );
           return;
         } else {
-          print('⚠️ Can only update to ${newStatus.label} from accepted, arrived, or in progress status');
+          AppLogger.warn('Can only update to ${newStatus.label} from accepted, arrived, or in progress status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order must be accepted first'),
@@ -262,7 +264,7 @@ class _RiderBookingDetailScreenState
           apiStatus = 'completed';
           statusLabel = 'Completed';
         } else {
-          print('⚠️ Can only complete from picked_up status');
+          AppLogger.warn('Can only complete from picked_up status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order must be picked up first'),
@@ -286,7 +288,7 @@ class _RiderBookingDetailScreenState
           statusLabel = 'Picked Up';
         } else if (_currentApiStatus == 'picked_up') {
           // Already at this status
-          print('ℹ️ Order is already picked up');
+          AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order is already picked up. Tap Delivered/Complete to finish.'),
@@ -296,7 +298,7 @@ class _RiderBookingDetailScreenState
           );
           return;
         } else {
-          print('⚠️ Can only update to ${newStatus.label} from accepted, arrived, or in progress status');
+          AppLogger.warn('Can only update to ${newStatus.label} from accepted, arrived, or in progress status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order must be accepted first'),
@@ -338,7 +340,7 @@ class _RiderBookingDetailScreenState
           apiStatus = 'completed';
           statusLabel = 'Completed';
         } else {
-          print('⚠️ Can only deliver from picked_up status');
+          AppLogger.warn('Can only deliver from picked_up status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order must be picked up first'),
@@ -359,7 +361,7 @@ class _RiderBookingDetailScreenState
           statusLabel = 'Driver Has Arrived';
         } else if (_currentApiStatus == 'picked_up') {
           // Already past this status
-          print('ℹ️ Order is already picked up');
+          AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order has already been picked up. This status was skipped.'),
@@ -369,7 +371,7 @@ class _RiderBookingDetailScreenState
           );
           return;
         } else {
-          print('⚠️ Can only mark arrival from accepted status');
+          AppLogger.warn('Can only mark arrival from accepted status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order must be accepted first'),
@@ -385,7 +387,7 @@ class _RiderBookingDetailScreenState
         // Can transition from: accepted, driver_arrived_at_pickup
         // Cannot transition from: picked_up (already past this status)
         if (_currentApiStatus == 'picked_up') {
-          print('ℹ️ Order is already picked up');
+          AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order has already been picked up. Cannot go back to In Progress.'),
@@ -400,7 +402,7 @@ class _RiderBookingDetailScreenState
           apiStatus = 'in_progress';
           statusLabel = 'In Progress';
         } else {
-          print('⚠️ Can only mark in progress from accepted or arrived status');
+          AppLogger.warn('Can only mark in progress from accepted or arrived status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Order must be accepted or driver must have arrived first'),
@@ -417,7 +419,7 @@ class _RiderBookingDetailScreenState
       case BookingStatus.toBuy:
       case BookingStatus.pending:
       case BookingStatus.cancelled:
-        print('ℹ️ Status ${newStatus.label} is informational only');
+        AppLogger.debug('ℹ️ Status ${newStatus.label} is informational only');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${newStatus.label} status is set automatically'),
@@ -428,11 +430,11 @@ class _RiderBookingDetailScreenState
         return;
     }
 
-    print('📡 Will update to API status: $apiStatus');
+    AppLogger.debug('📡 Will update to API status: $apiStatus');
     
     // Check if we're trying to update to the same status
     if (_currentApiStatus != null && _currentApiStatus == apiStatus) {
-      print('⚠️ Status is already $apiStatus, showing warning');
+      AppLogger.warn('Status is already $apiStatus, showing warning');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -448,7 +450,8 @@ class _RiderBookingDetailScreenState
     }
     
     // Show confirmation dialog
-    final confirmed = await _showConfirmationDialog(
+    final confirmed = await showRiderBookingConfirmDialog(
+      context: context,
       title: 'Update Status',
       message: 'Are you sure you want to update the order status to $statusLabel?',
       confirmText: 'Update',
@@ -456,11 +459,11 @@ class _RiderBookingDetailScreenState
     );
     
     if (!confirmed) {
-      print('❌ User cancelled status update');
+      AppLogger.error('❌ User cancelled status update');
       return;
     }
 
-    print('✅ Status is different ($_currentApiStatus → $apiStatus), proceeding with update');
+    AppLogger.debug('✅ Status is different ($_currentApiStatus → $apiStatus), proceeding with update');
     setState(() => _isUpdating = true);
 
     try {
@@ -495,130 +498,40 @@ class _RiderBookingDetailScreenState
         
         // If completed, go back to main screen and refresh history
         if (apiStatus == 'completed') {
-          print('🎯 Order completed! Starting refresh sequence...');
+          AppLogger.debug('🎯 Order completed! Starting refresh sequence...');
           
           // Multiple refresh attempts with delays to ensure backend has saved
           await Future.delayed(const Duration(milliseconds: 300));
-          print('🔄 First history refresh...');
+          AppLogger.debug('🔄 First history refresh...');
           await ref.read(riderHistoryProvider.notifier).refresh();
           
           await Future.delayed(const Duration(milliseconds: 300));
-          print('🔄 Second history refresh...');
+          AppLogger.debug('🔄 Second history refresh...');
           await ref.read(riderHistoryProvider.notifier).refresh();
           
           await Future.delayed(const Duration(milliseconds: 400));
-          print('✅ Refresh sequence complete, closing screen...');
+          AppLogger.debug('✅ Refresh sequence complete, closing screen...');
           
           if (mounted) {
             Navigator.of(context).pop();
           }
         }
       } else if (mounted) {
-        final error = ref.read(riderOrdersProvider).error ?? 'Failed to update status';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
+        showApiErrorSnackBar(
+          context,
+          ref.read(riderOrdersProvider).error,
+          fallback: 'Failed to update status',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showApiErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) {
         setState(() => _isUpdating = false);
       }
     }
-  }
-
-  // Show confirmation dialog
-  Future<bool> _showConfirmationDialog({
-    required String title,
-    required String message,
-    required String confirmText,
-    required String cancelText,
-  }) async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: const Color(0xFF5F2D82),
-                size: 28,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2D2D2D),
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            message,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 14,
-              color: Colors.grey.shade700,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(
-                cancelText,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5F2D82),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: Text(
-                confirmText,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-    
-    return result ?? false;
   }
 
   // Pick images from gallery or camera
@@ -646,7 +559,7 @@ class _RiderBookingDetailScreenState
         });
       }
     } catch (e) {
-      print('Error picking images: $e');
+      AppLogger.error('Error picking images', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -683,7 +596,7 @@ class _RiderBookingDetailScreenState
         });
       }
     } catch (e) {
-      print('Error taking photo: $e');
+      AppLogger.error('Error taking photo', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -702,6 +615,41 @@ class _RiderBookingDetailScreenState
     });
   }
 
+  Future<void> _handleCancelOrder() async {
+    if (_isUpdating) return;
+
+    final orderId = int.tryParse(widget.booking.id);
+    if (orderId == null) return;
+    if (!RiderOrderOpsUtils.canCancel(_currentApiStatus)) return;
+
+    final reason = await showRiderCancelOrderDialog(context);
+    if (reason == null || !mounted) return;
+
+    setState(() => _isUpdating = true);
+
+    final success =
+        await ref.read(riderOrdersProvider.notifier).cancelOrder(orderId, reason);
+
+    if (!mounted) return;
+    setState(() => _isUpdating = false);
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Order cancelled.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    } else {
+      showApiErrorSnackBar(
+        context,
+        ref.read(riderOrdersProvider).error,
+        fallback: 'Failed to cancel order',
+      );
+    }
+  }
+
   // Upload proof images
   Future<void> _uploadProofImages() async {
     if (_selectedImages.isEmpty) {
@@ -714,7 +662,8 @@ class _RiderBookingDetailScreenState
       return;
     }
 
-    final confirmed = await _showConfirmationDialog(
+    final confirmed = await showRiderBookingConfirmDialog(
+      context: context,
       title: 'Upload Proof',
       message: 'Upload ${_selectedImages.length} image(s) as proof of delivery/completion?',
       confirmText: 'Upload',
@@ -731,12 +680,45 @@ class _RiderBookingDetailScreenState
         throw Exception('Invalid order ID');
       }
 
+      final orderData = await ApiService.getOrderById(orderId);
+      final existingProofs =
+          MediaUrlUtils.parseProofImageUrls(orderData ?? {});
+      final sendPickupLocation = orderData != null &&
+          LesbuyManualDeliveryUtils.needsFirstItemPickupLocation(orderData) &&
+          existingProofs.isEmpty;
+
+      double? uploadLat;
+      double? uploadLng;
+      if (sendPickupLocation) {
+        await ref.read(riderLocationProvider.notifier).refreshLocation();
+        final loc = ref.read(riderLocationProvider);
+        uploadLat = loc.latitude;
+        uploadLng = loc.longitude;
+        if (uploadLat == null || uploadLng == null) {
+          throw Exception(
+            'Turn on location so we can calculate delivery fee from the shop.',
+          );
+        }
+      }
+
       // Use different upload method for web vs mobile
       if (kIsWeb) {
-        await ApiService.uploadProofImagesWeb(orderId, _selectedImages);
+        await ApiService.uploadProofImagesWeb(
+          orderId,
+          _selectedImages,
+          latitude: uploadLat,
+          longitude: uploadLng,
+          firstItemProof: sendPickupLocation,
+        );
       } else {
         final imagePaths = _selectedImages.map((img) => img.path).toList();
-        await ApiService.uploadProofImages(orderId, imagePaths);
+        await ApiService.uploadProofImages(
+          orderId,
+          imagePaths,
+          latitude: uploadLat,
+          longitude: uploadLng,
+          firstItemProof: sendPickupLocation,
+        );
       }
 
       if (mounted) {
@@ -754,29 +736,24 @@ class _RiderBookingDetailScreenState
         setState(() => _showProofUpload = true);
 
         // Refresh order data
-        print('🔄 Refreshing order data after proof upload...');
+        AppLogger.debug('🔄 Refreshing order data after proof upload...');
         await _fetchLatestStatus();
         
         // Refresh the orders list in the provider
-        print('🔄 Refreshing orders list...');
+        AppLogger.debug('🔄 Refreshing orders list...');
         await ref.read(riderOrdersProvider.notifier).loadOrders(silent: true);
         
         // If order is completed, also refresh history
         if (_currentApiStatus == 'completed') {
-          print('🔄 Order is completed, refreshing history...');
+          AppLogger.debug('🔄 Order is completed, refreshing history...');
           await ref.read(riderHistoryProvider.notifier).refresh();
-          print('✅ History refreshed');
+          AppLogger.debug('✅ History refreshed');
         }
       }
     } catch (e) {
-      print('Error uploading proof: $e');
+      AppLogger.error('Error uploading proof', e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to upload proof: ${ApiService.extractError(e)}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showApiErrorSnackBar(context, e, fallback: 'Failed to upload proof');
       }
     } finally {
       if (mounted) {
@@ -802,355 +779,36 @@ class _RiderBookingDetailScreenState
 
   // Build dynamic content based on current status
   Widget _buildStatusContent(BuildContext context, RiderLocationState locationState) {
-    print('🎨 Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
+    AppLogger.debug('🎨 Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
     
     if (_shouldShowProofUpload()) {
-      print('📤 Showing upload section');
-      return Padding(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
-        child: Column(
-          children: [
-            // Selected Images Grid
-            if (_selectedImages.isNotEmpty) ...[
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemCount: _selectedImages.length,
-                itemBuilder: (context, index) {
-                  final image = _selectedImages[index];
-                  return Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: kIsWeb
-                              ? Image.network(
-                                  image.path,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                )
-                              : Image.file(
-                                  File(image.path),
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () => _removeImage(index),
-                          child: Container(
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.close,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            ],
-            
-            // Upload Area
-            Container(
-              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.grey.shade300,
-                  width: 2,
-                  style: BorderStyle.solid,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.upload_file,
-                    size: 64,
-                    color: const Color(0xFF5F2D82).withOpacity(0.5),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                  Text(
-                    'Upload Proof of Delivery',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 16),
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  Text(
-                    'Take photos or select from gallery',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                  Text(
-                    'Max 5 images • JPG, PNG • Max 5MB each',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                  
-                  // Action Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (!kIsWeb) ...[
-                        ElevatedButton.icon(
-                          onPressed: _isUploadingProof ? null : _takePhoto,
-                          icon: const Icon(Icons.camera_alt),
-                          label: const Text('Camera'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF5F2D82),
-                            side: BorderSide(color: const Color(0xFF5F2D82)),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: ResponsiveUtils.spacing(context, 20),
-                              vertical: ResponsiveUtils.spacing(context, 12),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-                      ],
-                      ElevatedButton.icon(
-                        onPressed: _isUploadingProof ? null : _pickImages,
-                        icon: const Icon(Icons.photo_library),
-                        label: const Text('Gallery'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5F2D82),
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: ResponsiveUtils.spacing(context, 20),
-                            vertical: ResponsiveUtils.spacing(context, 12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            
-            // Upload Button
-            if (_selectedImages.isNotEmpty) ...[
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isUploadingProof ? null : _uploadProofImages,
-                  icon: _isUploadingProof
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : const Icon(Icons.cloud_upload),
-                  label: Text(_isUploadingProof ? 'Uploading...' : 'Upload ${_selectedImages.length} Image(s)'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(
-                      vertical: ResponsiveUtils.spacing(context, 16),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+      return RiderBookingProofUploadSection(
+        selectedImages: _selectedImages,
+        isUploading: _isUploadingProof,
+        onPickImages: _pickImages,
+        onTakePhoto: _takePhoto,
+        onRemoveImage: _removeImage,
+        onUpload: _uploadProofImages,
       );
     }
-    
+
     if (_shouldShowRouteMap()) {
-      print('🗺️ Showing route map for API status: $_currentApiStatus');
-      
-      return Container(
-        height: ResponsiveUtils.imageHeight(context, 300),
-        margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.blue.shade200, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            children: [
-              // REAL GOOGLE MAPS
-              GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: widget.booking.pickupLat != null && widget.booking.pickupLng != null
-                      ? LatLng(widget.booking.pickupLat!, widget.booking.pickupLng!)
-                      : const LatLng(8.4542, 124.6319), // Default to Cagayan de Oro
-                  zoom: 13,
-                ),
-                
-                // Enable all interactive gestures
-                zoomGesturesEnabled: true,
-                scrollGesturesEnabled: true,
-                tiltGesturesEnabled: true,
-                rotateGesturesEnabled: true,
-                
-                // Disable built-in controls
-                zoomControlsEnabled: false,
-                myLocationButtonEnabled: false,
-                mapToolbarEnabled: false,
-                compassEnabled: true,
-                
-                // Enable location
-                myLocationEnabled: true,
-                
-                // Add markers and polylines
-                markers: _buildMapMarkers(locationState),
-                polylines: _buildMapPolylines(locationState),
-                
-                onMapCreated: (controller) {
-                  if (mounted) {
-                    _mapController = controller;
-                    _mapReady = true;
-                    
-                    // Fit bounds to show pickup and dropoff
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      Future.delayed(const Duration(milliseconds: 500), () {
-                        if (mounted) {
-                          _fitBounds();
-                        }
-                      });
-                    });
-                    
-                    print('🗺️ Booking detail Google Maps created successfully');
-                  }
-                },
-                
-                onTap: (LatLng position) {
-                  print('🗺️ Booking detail map tapped at: ${position.latitude}, ${position.longitude}');
-                },
-              ),
-              
-              // Live tracking indicator
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'LIVE TRACKING',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              // Tap to expand
-              Positioned(
-                bottom: 8,
-                right: 8,
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => RiderMapScreen(
-                          orderId: int.parse(widget.booking.id),
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.fullscreen,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'View Full Map',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: 11,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      return RiderBookingDetailMapSection(
+        booking: widget.booking,
+        locationState: locationState,
+        currentApiStatus: _currentApiStatus,
+        onMapCreated: (controller) {
+          if (!mounted) return;
+          _mapController = controller;
+        },
+        onFitBounds: () {
+          if (!mounted) return;
+          RiderBookingDetailMapSection.fitBounds(
+            controller: _mapController,
+            booking: widget.booking,
+            locationState: locationState,
+          );
+        },
       );
     }
 
@@ -1200,9 +858,9 @@ class _RiderBookingDetailScreenState
     
     // Log location tracking status
     if (locationState.hasLocation) {
-      print('📍 Location tracking active: ${locationState.latitude}, ${locationState.longitude}');
+      AppLogger.debug('📍 Location tracking active: ${locationState.latitude}, ${locationState.longitude}');
     } else if (locationState.error != null) {
-      print('❌ Location tracking error: ${locationState.error}');
+      AppLogger.error('❌ Location tracking error: ${locationState.error}');
     }
     
     return Scaffold(
@@ -1213,37 +871,31 @@ class _RiderBookingDetailScreenState
             Column(
               children: [
                 // Header with refresh button
-                Stack(
-                  children: [
-                    const HomeHeader(showBackButton: true),
-                    Positioned(
-                      right: 16,
-                      top: 16,
-                      child: IconButton(
-                        onPressed: _isFetchingStatus ? null : _fetchLatestStatus,
-                        icon: _isFetchingStatus
-                            ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    const Color(0xFF5F2D82),
-                                  ),
-                                ),
-                              )
-                            : Icon(
-                                Icons.refresh,
-                                color: const Color(0xFF5F2D82),
+                HomeHeader(
+                  showBackButton: true,
+                  action: IconButton(
+                    onPressed: _isFetchingStatus ? null : _fetchLatestStatus,
+                    icon: _isFetchingStatus
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                const Color(0xFF5F2D82),
                               ),
-                        tooltip: 'Refresh Status',
-                      ),
-                    ),
-                  ],
+                            ),
+                          )
+                        : Icon(
+                            Icons.refresh,
+                            color: const Color(0xFF5F2D82),
+                          ),
+                    tooltip: 'Refresh Status',
+                  ),
                 ),
                 // Banner
                 SizedBox(
-                  height: ResponsiveUtils.imageHeight(context, 120),
+                  height: ResponsiveUtils.adaptiveBannerHeight(context, 120),
                   width: double.infinity,
                   child: SvgPicture.asset(
                     'assets/images/booking/banner.svg',
@@ -1252,6 +904,7 @@ class _RiderBookingDetailScreenState
                 ),
                 Expanded(
                   child: SingleChildScrollView(
+                    padding: ResponsiveUtils.scrollPaddingWithFab(context),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -1304,6 +957,13 @@ class _RiderBookingDetailScreenState
                                 ],
                               ),
                               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                              RiderBookingStatusGrid(
+                                booking: _updatedBooking ?? widget.booking,
+                                currentStatus: _currentStatus,
+                                onStatusTap:
+                                    _isUpdating ? null : _handleStatusChange,
+                              ),
+                              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                               RiderBookingNextActions(
                                 category: widget.booking.category,
                                 apiStatus: _currentApiStatus,
@@ -1312,6 +972,47 @@ class _RiderBookingDetailScreenState
                                 onAction:
                                     _isUpdating ? null : _handleStatusChange,
                               ),
+                              if (RiderOrderOpsUtils.canCancel(
+                                _currentApiStatus,
+                              )) ...[
+                                SizedBox(
+                                  height: ResponsiveUtils.spacing(context, 12),
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed:
+                                        _isUpdating ? null : _handleCancelOrder,
+                                    icon: Icon(
+                                      Icons.cancel_outlined,
+                                      color: Colors.red.shade700,
+                                    ),
+                                    label: Text(
+                                      'Cancel Order',
+                                      style: TextStyle(
+                                        fontFamily: 'TT Fors',
+                                        fontSize: ResponsiveUtils.fontSize(
+                                          context,
+                                          14,
+                                        ),
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.red.shade700,
+                                      ),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      side: BorderSide(
+                                        color: Colors.red.shade700,
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: ResponsiveUtils.spacing(
+                                          context,
+                                          12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -1340,119 +1041,4 @@ class _RiderBookingDetailScreenState
     );
   }
 
-  // Build map markers for pickup and dropoff and driver
-  Set<Marker> _buildMapMarkers(RiderLocationState locationState) {
-    final markers = <Marker>{};
-    
-    // Driver marker
-    if (locationState.hasLocation) {
-      markers.add(Marker(
-        markerId: const MarkerId('driver_location'),
-        position: LatLng(locationState.latitude!, locationState.longitude!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: const InfoWindow(title: 'Your Location'),
-        zIndex: 2,
-      ));
-    }
-    
-    // Pickup marker
-    if (widget.booking.pickupLat != null && widget.booking.pickupLng != null) {
-      markers.add(Marker(
-        markerId: const MarkerId('pickup'),
-        position: LatLng(
-          widget.booking.pickupLat!,
-          widget.booking.pickupLng!,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: const InfoWindow(title: 'Pickup Location'),
-      ));
-    }
-    
-    // Dropoff marker
-    if (widget.booking.dropoffLat != null && widget.booking.dropoffLng != null) {
-      markers.add(Marker(
-        markerId: const MarkerId('dropoff'),
-        position: LatLng(
-          widget.booking.dropoffLat!,
-          widget.booking.dropoffLng!,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        infoWindow: const InfoWindow(title: 'Dropoff Location'),
-      ));
-    }
-    
-    return markers;
-  }
-
-  // Build polyline between pickup and dropoff and driver
-  Set<Polyline> _buildMapPolylines(RiderLocationState locationState) {
-    final polylines = <Polyline>{};
-    
-    if (widget.booking.pickupLat != null && 
-        widget.booking.pickupLng != null &&
-        widget.booking.dropoffLat != null && 
-        widget.booking.dropoffLng != null) {
-        
-      // Draw route between pickup and dropoff
-      polylines.add(Polyline(
-        polylineId: const PolylineId('route_pickup_dropoff'),
-        points: [
-          LatLng(widget.booking.pickupLat!, widget.booking.pickupLng!),
-          LatLng(widget.booking.dropoffLat!, widget.booking.dropoffLng!),
-        ],
-        color: const Color(0xFF5F2D82),
-        width: 4,
-      ));
-      
-      // If driver location is available, draw a line from driver to current destination
-      if (locationState.hasLocation) {
-        final driverLoc = LatLng(locationState.latitude!, locationState.longitude!);
-        LatLng destLoc;
-        
-        final enRouteToPickup = _currentApiStatus == 'accepted' ||
-            _currentApiStatus == 'ready_for_pickup' ||
-            _currentApiStatus == 'driver_arrived_at_pickup' ||
-            _currentApiStatus == 'in_progress';
-        destLoc = enRouteToPickup
-            ? LatLng(widget.booking.pickupLat!, widget.booking.pickupLng!)
-            : LatLng(widget.booking.dropoffLat!, widget.booking.dropoffLng!);
-        
-        polylines.add(Polyline(
-          polylineId: const PolylineId('route_driver_to_dest'),
-          points: [driverLoc, destLoc],
-          color: Colors.blue,
-          width: 4,
-          patterns: [PatternItem.dash(10), PatternItem.gap(10)],
-        ));
-      }
-    }
-    
-    return polylines;
-  }
-
-  // Fit map bounds to show all markers
-  void _fitBounds() {
-    if (!_mapReady || _mapController == null) return;
-    
-    if (widget.booking.pickupLat != null && 
-        widget.booking.pickupLng != null &&
-        widget.booking.dropoffLat != null &&
-        widget.booking.dropoffLng != null) {
-      
-      final bounds = LatLngBounds(
-        southwest: LatLng(
-          math.min(widget.booking.pickupLat!, widget.booking.dropoffLat!),
-          math.min(widget.booking.pickupLng!, widget.booking.dropoffLng!),
-        ),
-        northeast: LatLng(
-          math.max(widget.booking.pickupLat!, widget.booking.dropoffLat!),
-          math.max(widget.booking.pickupLng!, widget.booking.dropoffLng!),
-        ),
-      );
-      
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLngBounds(bounds, 100.0),
-      );
-    }
-  }
 }

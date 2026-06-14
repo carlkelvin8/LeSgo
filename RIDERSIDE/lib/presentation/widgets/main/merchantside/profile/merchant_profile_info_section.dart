@@ -32,7 +32,7 @@ class MerchantProfileInfoSection extends ConsumerWidget {
             _info(context, 'Restaurant:', profile.name),
             _info(context, 'Contact:', profile.supportPhone ?? 'Not set'),
             _info(context, 'Email:', profile.supportEmail ?? 'Not set'),
-            _statusToggle(context, ref, profile.isOpen ?? false),
+            _MerchantStoreStatusToggle(initialIsOpen: profile.isOpen ?? false),
             _info(
               context,
               'Referral Code:',
@@ -79,7 +79,96 @@ class MerchantProfileInfoSection extends ConsumerWidget {
       ),
     );
   }
-  Widget _statusToggle(BuildContext context, WidgetRef ref, bool isOpen) {
+}
+
+class _MerchantStoreStatusToggle extends ConsumerStatefulWidget {
+  const _MerchantStoreStatusToggle({required this.initialIsOpen});
+
+  final bool initialIsOpen;
+
+  @override
+  ConsumerState<_MerchantStoreStatusToggle> createState() =>
+      _MerchantStoreStatusToggleState();
+}
+
+class _MerchantStoreStatusToggleState
+    extends ConsumerState<_MerchantStoreStatusToggle> {
+  late bool _isOpen;
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isOpen = widget.initialIsOpen;
+  }
+
+  @override
+  void didUpdateWidget(covariant _MerchantStoreStatusToggle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isUpdating && oldWidget.initialIsOpen != widget.initialIsOpen) {
+      _isOpen = widget.initialIsOpen;
+    }
+  }
+
+  Future<void> _onChanged(bool value) async {
+    if (_isUpdating) return;
+
+    final previous = _isOpen;
+    setState(() {
+      _isOpen = value;
+      _isUpdating = true;
+    });
+
+    try {
+      final authState = ref.read(riderAuthProvider);
+      final profile = ref.read(merchantProfileProvider).value;
+      final partnerId = authState.user?.partnerId ?? profile?.id;
+
+      if (partnerId == null) {
+        throw Exception('Partner ID not found. Please login again.');
+      }
+
+      final dataSource = ref.read(merchantDataSourceProvider);
+      final updated = await dataSource.updatePartnerProfile(
+        partnerId,
+        UpdatePartnerRequest(isOpen: value),
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _isOpen = updated.isOpen ?? value;
+        _isUpdating = false;
+      });
+      ref.invalidate(merchantProfileProvider);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Store is now ${_isOpen ? "OPEN" : "CLOSED"}'),
+          backgroundColor: _isOpen ? Colors.green : Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isOpen = previous;
+        _isUpdating = false;
+      });
+      ref.invalidate(merchantProfileProvider);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ApiService.extractError(e)),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
       child: Row(
@@ -100,9 +189,9 @@ class MerchantProfileInfoSection extends ConsumerWidget {
                   ),
                 ),
                 TextSpan(
-                  text: isOpen ? 'OPEN' : 'CLOSED',
+                  text: _isOpen ? 'OPEN' : 'CLOSED',
                   style: TextStyle(
-                    color: isOpen ? Colors.green : Colors.red,
+                    color: _isOpen ? Colors.green : Colors.red,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -110,54 +199,10 @@ class MerchantProfileInfoSection extends ConsumerWidget {
             ),
           ),
           Switch(
-            value: isOpen,
-            activeColor: Colors.green,
-            onChanged: (value) async {
-              try {
-                final authState = ref.read(riderAuthProvider);
-                final profile = ref.read(merchantProfileProvider).value;
-                final partnerId = authState.user?.partnerId ?? profile?.id;
-
-                if (partnerId == null) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Partner ID not found. Please login again.'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                  return;
-                }
-
-                final dataSource = ref.read(merchantDataSourceProvider);
-                await dataSource.updatePartnerProfile(
-                  partnerId,
-                  UpdatePartnerRequest(isOpen: value),
-                );
-                ref.invalidate(merchantProfileProvider);
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Store is now ${value ? "OPEN" : "CLOSED"}'),
-                      backgroundColor: value ? Colors.green : Colors.red,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              } catch (e) {
-                ref.invalidate(merchantProfileProvider);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(ApiService.extractError(e)),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
+            value: _isOpen,
+            onChanged: _isUpdating ? null : _onChanged,
+            activeTrackColor: Colors.green.shade300,
+            activeThumbColor: Colors.green,
           ),
         ],
       ),

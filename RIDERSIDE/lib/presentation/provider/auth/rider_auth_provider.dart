@@ -4,6 +4,7 @@ import '../../../core/services/api_service.dart';
 import '../../../core/services/secure_storage_service.dart';
 import '../../../core/services/push_notification_service.dart';
 import '../../../core/services/remember_me_service.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/media_url_utils.dart';
 import '../main/riderside/rider_orders_provider.dart';
 
@@ -151,7 +152,7 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       final partnerId = RiderUser.parsePartnerId(userData);
       if (partnerId != null) return user.copyWith(partnerId: partnerId);
     } catch (e) {
-      print('⚠️ Could not resolve merchant partner_id: $e');
+      AppLogger.warn('Could not resolve merchant partner_id: $e');
     }
     return user;
   }
@@ -178,42 +179,10 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       }
 
       await ApiService.clearToken();
-
-      if (RememberMeService.hasSavedCredentials) {
-        final email = RememberMeService.savedEmail!;
-        final password = RememberMeService.savedPassword!;
-        final accountType = RememberMeService.savedAccountType ?? 'rider';
-
-        final success = await _loginInternal(
-          email,
-          password,
-          rememberMe: true,
-          accountType: accountType,
-        );
-        if (!success) {
-          state = state.copyWith(isLoading: false);
-          return false;
-        }
-
-        final user = state.user;
-        if (accountType == 'merchant' && user != null && !user.isMerchant) {
-          await ApiService.clearToken();
-          state = state.copyWith(isLoading: false, isLoggedIn: false, user: null);
-          return false;
-        }
-        if (accountType == 'rider' && user != null && !user.isDriver) {
-          await ApiService.clearToken();
-          state = state.copyWith(isLoading: false, isLoggedIn: false, user: null);
-          return false;
-        }
-
-        return true;
-      }
-
       state = state.copyWith(isLoading: false);
       return false;
     } catch (e) {
-      print('❌ Restore session failed: $e');
+      AppLogger.error('Restore session failed', e);
       state = state.copyWith(isLoading: false);
       return false;
     }
@@ -243,7 +212,7 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       await PushNotificationService.registerWithBackend();
       return true;
     } catch (e) {
-      print('⚠️ Token restore failed, will try saved credentials: $e');
+      AppLogger.warn('Token restore failed: $e');
       return false;
     }
   }
@@ -310,7 +279,6 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       await RememberMeService.savePreference(
         enabled: rememberMe,
         email: email,
-        password: password,
         accountType: accountType,
       );
 
@@ -347,7 +315,7 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       await RememberMeService.clearSession();
       await ApiService.logout();
     } catch (e) {
-      print('⚠️ Logout cleanup failed: $e');
+      AppLogger.warn('Logout cleanup failed: $e');
       await ApiService.clearToken();
     } finally {
       state = RiderAuthState();

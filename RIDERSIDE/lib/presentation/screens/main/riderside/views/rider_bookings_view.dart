@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
+import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../widgets/common/location_permission_banner.dart';
 import 'rider_bookings_map_view.dart';
 
 class RiderBookingsView extends ConsumerStatefulWidget {
@@ -16,6 +18,33 @@ class RiderBookingsView extends ConsumerStatefulWidget {
 
 class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
   bool _showMapView = false;
+  ProviderSubscription<RiderOrdersState>? _ordersSub;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _ordersSub = ref.listenManual<RiderOrdersState>(
+        riderOrdersProvider,
+        (previous, next) {
+          if (!mounted) return;
+          if (next.activeOrder != null && previous?.activeOrder == null) {
+            setState(() => _showMapView = true);
+          }
+        },
+      );
+      if (ref.read(riderOrdersProvider).activeOrder != null) {
+        setState(() => _showMapView = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ordersSub?.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +52,12 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
 
     return Column(
       children: [
+        const LocationPermissionBanner(),
         Container(
           color: Colors.white,
           child: Column(
             children: [
-              const RiderBookingsHeader(),
+              RiderBookingsHeader(compact: _showMapView && !kIsWeb),
               if (!kIsWeb)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

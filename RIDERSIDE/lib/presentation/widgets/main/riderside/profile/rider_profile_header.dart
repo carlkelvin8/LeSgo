@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../../../core/utils/app_logger.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_profile_provider.dart';
@@ -51,7 +52,7 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader> {
         );
       }
     } catch (e) {
-      print('Error picking image: $e');
+      AppLogger.error('Error picking image', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -89,8 +90,8 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader> {
             child: Stack(
               children: [
                 Container(
-                  width: ResponsiveUtils.spacing(context, 120),
-                  height: ResponsiveUtils.spacing(context, 120),
+                  width: ResponsiveUtils.cardImageSize(context, 90),
+                  height: ResponsiveUtils.cardImageSize(context, 90),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(
@@ -179,9 +180,11 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader> {
                   )
                 : Text(
                     greeting,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 32),
+                      fontSize: ResponsiveUtils.fontSize(context, 28),
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF5F2D82),
                       height: 1.1,

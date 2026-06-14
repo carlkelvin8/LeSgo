@@ -8,7 +8,7 @@ class MenuImageUtils {
     if (imageData == null) return null;
 
     if (imageData is Map) {
-      for (final key in ['url', 'image_url', 'path', 'full_url', 'src']) {
+      for (final key in ['url', 'image_url', 'icon_url', 'path', 'full_url', 'src']) {
         final nested = imageData[key];
         final resolved = resolve(nested);
         if (resolved != null && resolved.isNotEmpty) return resolved;
@@ -75,6 +75,12 @@ class MenuImageUtils {
     root['categories'] = categories.map((category) {
       if (category is! Map) return category;
       final cat = Map<String, dynamic>.from(category);
+      final resolvedCategoryImage = resolve(cat['icon_url'] ?? cat['image_url'] ?? cat['image']);
+      if (resolvedCategoryImage != null) {
+        cat['icon_url'] = resolvedCategoryImage;
+        cat['image_url'] = resolvedCategoryImage;
+      }
+
       final items = cat['available_items'];
       if (items is! List) return cat;
 

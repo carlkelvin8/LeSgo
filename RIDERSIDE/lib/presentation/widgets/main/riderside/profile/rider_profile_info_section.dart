@@ -127,6 +127,7 @@ class RiderProfileInfoSection extends ConsumerWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       child: RichText(
+        softWrap: true,
         text: TextSpan(
           style: TextStyle(
             fontFamily: 'TT Fors',

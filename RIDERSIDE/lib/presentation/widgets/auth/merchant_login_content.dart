@@ -25,21 +25,19 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
   @override
   void initState() {
     super.initState();
-    _loadRememberMeCredentials();
+    _loadRememberedEmail();
   }
 
-  Future<void> _loadRememberMeCredentials() async {
+  Future<void> _loadRememberedEmail() async {
     if (!RememberMeService.isEnabled()) return;
     if (!RememberMeService.matchesAccountType('merchant')) return;
 
     final email = RememberMeService.savedEmail;
-    final password = RememberMeService.savedPassword;
     if (!mounted) return;
 
     setState(() {
       isRememberMe = true;
       if (email != null) _emailController.text = email;
-      if (password != null) _passwordController.text = password;
     });
   }
 
@@ -51,49 +49,30 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
   }
 
   Future<void> _handleLogin() async {
-    print('🔐 MERCHANT LOGIN BUTTON PRESSED');
-    
     if (!(_formKey.currentState?.validate() ?? false)) {
-      print('❌ Form validation failed');
       return;
     }
 
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    
-    print('🔐 Attempting merchant login with email: $email');
 
-    // Perform actual authentication
     final success = await ref.read(riderAuthProvider.notifier).login(
           email,
           password,
           rememberMe: isRememberMe,
           accountType: 'merchant',
         );
-    
-    print('🔐 Merchant login result: ${success ? "SUCCESS" : "FAILED"}');
 
     if (!mounted) return;
 
     if (success) {
-      print('✅ Merchant login successful');
-      
-      // Get user info to verify it's a merchant
-      final user = ref.read(riderAuthProvider).user;
-      print('🔐 User role: ${user?.role}, Is merchant: ${user?.isMerchant}, Partner ID: ${user?.partnerId}');
-      
-      // Wait a bit to ensure state is updated
       await Future.delayed(const Duration(milliseconds: 100));
-      
+
       if (!mounted) return;
-      
-      // Navigate to Merchant Main Screen
-      print('🔐 Navigating to Merchant Main Screen');
+
       AppRouter.pushReplacement(context, MainRoutes.merchantMain);
     } else {
-      // Show error message
       final error = ref.read(riderAuthProvider).error ?? 'Login failed';
-      print('❌ Merchant login failed with error: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error),
@@ -130,8 +109,8 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
             readOnly: authState.isLoading,
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
@@ -155,37 +134,44 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
                     ),
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                  Text(
-                    'Remember for 30 days',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.black87,
+                  Expanded(
+                    child: Text(
+                      'Remember for 30 days',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: authState.isLoading
-                    ? null
-                    : () {
-                        ref.read(forgotPasswordReturnViewProvider.notifier).state =
-                            AuthView.merchantLogin;
-                        ref.read(forgotPasswordProvider.notifier).reset();
-                        ref.read(authViewProvider.notifier).state =
-                            AuthView.forgotPassword;
-                      },
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'Forgot Password?',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade500,
+              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: authState.isLoading
+                      ? null
+                      : () {
+                          ref
+                              .read(forgotPasswordReturnViewProvider.notifier)
+                              .state = AuthView.merchantLogin;
+                          ref.read(forgotPasswordProvider.notifier).reset();
+                          ref.read(authViewProvider.notifier).state =
+                              AuthView.forgotPassword;
+                        },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey.shade500,
+                    ),
                   ),
                 ),
               ),
@@ -194,6 +180,9 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           PrimaryButton(
             text: authState.isLoading ? 'Logging in...' : 'Log In',
+            semanticsLabel: authState.isLoading
+                ? 'Logging in, please wait'
+                : 'Log in to merchant account',
             onPressed: authState.isLoading ? null : _handleLogin,
           ),
         ],
