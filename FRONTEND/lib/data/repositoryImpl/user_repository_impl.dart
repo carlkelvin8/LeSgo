@@ -55,9 +55,9 @@ class UserRepositoryImpl implements UserRepository {
 
     final dto = await remoteDataSource.logout(token);
     if (dto.success != true) {
-      throw Exception(dto.message ?? 'Logout failed');
+      throw Exception(dto.message);
     }
 
-    return dto.message ?? 'Logged out successfully';
+    return dto.message;
   }
 }

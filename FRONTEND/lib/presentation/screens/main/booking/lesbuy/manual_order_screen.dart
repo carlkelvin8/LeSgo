@@ -41,7 +41,6 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
       }
       if (!mounted) return;
 
-      final deliveryAddr = ref.read(addressProvider).deliveryAddress;
       await ref.read(lesbuyCheckoutProvider.notifier).initialize(
             storePartnerId: null,
           );

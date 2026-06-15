@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../di/injection.dart';
 import '../../core/utils/api_error_mapper.dart';

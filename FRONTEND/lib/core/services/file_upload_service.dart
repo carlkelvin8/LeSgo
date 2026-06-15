@@ -1,5 +1,5 @@
-import 'package:cross_file/cross_file.dart';
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:injectable/injectable.dart';
 
 import '../constants/api_constants.dart';

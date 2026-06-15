@@ -41,7 +41,7 @@ class OpeningHoursFormatter {
 
     if (raw is! Map) return null;
 
-    final map = Map<String, dynamic>.from(raw as Map);
+    final map = Map<String, dynamic>.from(raw);
 
     if (map['display'] != null && map['display'].toString().trim().isNotEmpty) {
       return map['display'].toString().trim();

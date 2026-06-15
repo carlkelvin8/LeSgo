@@ -12,7 +12,6 @@ import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../provider/tracking/live_tracking_provider.dart';
 import '../../../../provider/main/profile/profile_provider.dart';
-import '../../../../provider/chat/chat_provider.dart';
 import '../../../../widgets/tracking/order_status_timeline.dart';
 import '../../../../widgets/tracking/driver_info_card.dart';
 import '../../../../widgets/orders/cancel_order_dialog.dart';
@@ -59,8 +58,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.getOrder(int.parse(widget.orderId));
       if (mounted && response.success && response.data != null) {
-        final order = response.data!;
-        final fb = order.fareBreakdown;
+        final order = response.data;
         final meta = order.meta;
 
         // Calculate subtotal from lesbuy_items if available
@@ -202,20 +200,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
     );
   }
 
-  void _rateOrder() {
-    final data = Map<String, dynamic>.from(
-      _currentOrderData ?? widget.orderData ?? {},
-    );
-    AppRouter.pushReplacement(
-      context,
-      BookingRoutes.lesbuyOrderComplete,
-      arguments: {
-        'orderId': widget.orderId,
-        'orderType': widget.orderType,
-        'orderData': data,
-      },
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -944,15 +929,6 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
     return 0.0;
   }
 
-  // Helper method to safely convert values to int
-  int _safeToInt(dynamic value) {
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is String) {
-      return int.tryParse(value) ?? 1;
-    }
-    return 1;
-  }
 
   String _getStatusText(String status) {
     switch (status.toLowerCase()) {

@@ -5,14 +5,10 @@ import '../../../../../core/utils/driver_display_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/api_error_mapper.dart';
 import '../../../../../core/utils/order_cancel_utils.dart';
-import '../../../../../core/constants/routers/app_router.dart';
-import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/utils/order_line_items_parser.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../provider/tracking/live_tracking_provider.dart';
-import '../../../../provider/main/profile/profile_provider.dart';
-import '../../../../provider/chat/chat_provider.dart';
 import '../../../../widgets/tracking/order_status_timeline.dart';
 import '../../../../widgets/tracking/driver_info_card.dart';
 import '../../../../widgets/orders/cancel_order_dialog.dart';
@@ -60,8 +56,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.getOrder(int.parse(widget.orderId));
       if (mounted && response.success && response.data != null) {
-        final order = response.data!;
-        final fb = order.fareBreakdown;
+        final order = response.data;
         final meta = order.meta;
 
         print('===== ORDER DEBUG =====');
@@ -189,7 +184,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
           );
           Navigator.pop(context);
         }
-      } catch (e) {
+    } catch (e) {
         if (mounted) {
           setState(() => _isCancelling = false);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -917,14 +912,6 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
   }
 
   // Helper method to safely convert values to int
-  int _safeToInt(dynamic value) {
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is String) {
-      return int.tryParse(value) ?? 1;
-    }
-    return 1;
-  }
 
   Widget _buildSummaryRow(BuildContext context, String label, String value, {bool isTotal = false}) {
     return Row(

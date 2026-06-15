@@ -1,3 +1,5 @@
+import '../constants/app_config.dart';
+
 class LesbuyManualDeliveryUtils {
   LesbuyManualDeliveryUtils._();
 
@@ -13,7 +15,7 @@ class LesbuyManualDeliveryUtils {
       if (type == 'lesbuy_manual') return true;
     }
     final serviceId = orderData['service_id'];
-    if (serviceId == 4 || serviceId == '4') {
+    if (serviceId == AppConfig.lesBuyServiceId || serviceId == '4') {
       final notes = orderData['notes']?.toString().toLowerCase() ?? '';
       if (notes.contains('manual lesbuy')) return true;
     }

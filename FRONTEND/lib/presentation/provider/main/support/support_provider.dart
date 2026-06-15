@@ -1,5 +1,5 @@
-import 'package:cross_file/cross_file.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/di/injection.dart';

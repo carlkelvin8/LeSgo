@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../presentation/screens/main/riderside/rider_earnings_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_earnings_insights_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_safety_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_schedule_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_scheduled_payout_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_rating_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_vehicle_management_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_document_verification_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_benefits_screens.dart';
 import '../../../../presentation/screens/main/riderside/rider_change_password_screen.dart';
@@ -46,6 +51,14 @@ class MainRouter {
     MainRoutes.riderDocuments: (_) => const RiderDocumentVerificationScreen(),
     MainRoutes.riderEarnings: (_) => const RiderEarningsScreen(),
     MainRoutes.riderSafety: (_) => const RiderSafetyScreen(),
+    MainRoutes.riderSchedule: (_) => const RiderScheduleScreen(),
+    MainRoutes.riderScheduledPayout: (_) =>
+        const RiderScheduledPayoutScreen(),
+    MainRoutes.riderEarningsInsights: (_) =>
+        const RiderEarningsInsightsScreen(),
+    MainRoutes.riderRating: (_) => const RiderRatingScreen(),
+    MainRoutes.riderVehicleManagement: (_) =>
+        const RiderVehicleManagementScreen(),
     MainRoutes.merchantFaqs: (_) => const RiderFaqsScreen(),
     MainRoutes.merchantOffers: (_) => const RiderOffersScreen(),
     MainRoutes.merchantLoyalty: (_) => const RiderLoyaltyScreen(),

@@ -49,7 +49,7 @@ class FaqNotifier extends StateNotifier<FaqState> {
 
       // Exclude the FAQ asking where we deliver (remove from list)
       final filtered = articles.where((article) {
-        final title = article.title?.toLowerCase() ?? '';
+        final title = article.title.toLowerCase();
         return !(title.contains('where') && title.contains('deliver'));
       }).toList();
 

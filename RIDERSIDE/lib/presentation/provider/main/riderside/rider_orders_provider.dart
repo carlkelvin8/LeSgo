@@ -19,12 +19,23 @@ export '../../../../domain/models/rider_order.dart';
 export 'rider_orders_state.dart';
 
 class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
-  RiderOrdersNotifier(this._ref) : super(RiderOrdersState());
+  RiderOrdersNotifier(this._ref) : super(RiderOrdersState()) {
+    _ref.read(riderDutyProvider.notifier).onDutyChanged = _onDutyChanged;
+  }
 
   final Ref _ref;
   Timer? _autoRefreshTimer;
   Set<int> _knownAvailableOrderIds = {};
   String? _lastActiveStatus;
+
+  void _onDutyChanged() {
+    if (_ref.read(riderDutyProvider)) {
+      resumeAutoRefresh();
+      loadOrders(silent: true);
+    } else {
+      stopAutoRefresh();
+    }
+  }
 
   @override
   void dispose() {
@@ -180,6 +191,10 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         final newAvailable =
             state.availableOrders.where((o) => o.id != orderId).toList();
 
+        ApiService.trackAnalyticsEvent('rider_order_accepted', properties: {
+          'order_id': orderId,
+        });
+
         state = state.copyWith(
           availableOrders: newAvailable,
           activeOrder: updated,
@@ -232,6 +247,9 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
     if (ok) {
       await RiderActiveOrderCache.clear();
       state = state.copyWith(clearActiveOrder: true);
+      ApiService.trackAnalyticsEvent('rider_order_completed', properties: {
+        'order_id': orderId,
+      });
     }
     return ok;
   }

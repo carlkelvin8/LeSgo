@@ -17,6 +17,11 @@ class MainRoutes {
   static const String riderDocuments = '/rider/documents';
   static const String riderEarnings = '/rider/earnings';
   static const String riderSafety = '/rider/safety';
+  static const String riderSchedule = '/rider/schedule';
+  static const String riderScheduledPayout = '/rider/scheduled-payout';
+  static const String riderEarningsInsights = '/rider/earnings-insights';
+  static const String riderRating = '/rider/rating';
+  static const String riderVehicleManagement = '/rider/vehicles';
   static const String merchantMain = '/merchant/main';
   static const String merchantOrderDetail = '/merchant/order-detail';
   static const String merchantFaqs = '/merchant/faqs';

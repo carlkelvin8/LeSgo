@@ -178,7 +178,6 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                       case MerchantOrderFilter.delivered:
                         return status == 'completed';
                       case MerchantOrderFilter.all:
-                      default:
                         return true;
                     }
                   }).toList();

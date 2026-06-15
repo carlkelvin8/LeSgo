@@ -13,9 +13,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
-import '../../../../widgets/booking/leseat/checkout/delivery_address_section.dart';
 import '../../../../widgets/booking/leseat/checkout/order_item_card.dart';
-import '../../../../widgets/booking/leseat/checkout/order_summary_section.dart';
 import '../../../../widgets/tracking/driver_info_card.dart';
 import '../../../../../domain/entities/booking/leseat/order_item.dart';
 
@@ -241,7 +239,6 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
   // View 1: Cooking Status
   Widget _buildCookingView(BuildContext context) {
     final orderData = _orderData;
-    final restaurantName = orderData['restaurantName'] ?? 'Restaurant';
     final address = orderData['deliveryAddress'] ?? 'No address';
     final items = orderData['items'] as List<OrderItem>? ?? [];
 
@@ -405,7 +402,6 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
   // View 2: Ready for Delivery (with map)
   Widget _buildReadyForDeliveryView(BuildContext context) {
     final orderData = _orderData;
-    final restaurantName = orderData['restaurantName'] ?? 'Restaurant';
     final address = orderData['deliveryAddress'] ?? 'No address';
     final items = orderData['items'] as List<OrderItem>? ?? [];
 

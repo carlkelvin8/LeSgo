@@ -103,7 +103,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
       
       if (response.success && mounted) {
         final previousStatus = order?.status;
-        final newStatus = response.data?.status;
+        final newStatus = response.data.status;
         
         setState(() {
           order = response.data;

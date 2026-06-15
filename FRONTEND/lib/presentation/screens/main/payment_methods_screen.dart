@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../provider/main/lespay/lespay_provider.dart';
-import '../../widgets/widgets.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
 
@@ -34,8 +33,6 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final lespayState = ref.watch(lespayProvider);
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

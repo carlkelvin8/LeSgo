@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
-import '../../../core/utils/snackbar_utils.dart';
 import '../../provider/review/review_provider.dart';
 import 'rating_stars.dart';
 

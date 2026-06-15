@@ -44,7 +44,6 @@ class _AddressSelectorWidgetState extends ConsumerState<AddressSelectorWidget> {
   @override
   Widget build(BuildContext context) {
     final addressState = ref.watch(addressProvider);
-    final authState = ref.watch(authProvider);
 
     return Container(
       decoration: BoxDecoration(

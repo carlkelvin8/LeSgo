@@ -1,4 +1,5 @@
 import '../../domain/entities/rider_booking.dart';
+import '../constants/app_config.dart';
 
 /// Driver-facing order workflow helpers for progressive status UX.
 class BookingWorkflow {
@@ -6,11 +7,11 @@ class BookingWorkflow {
 
   static BookingCategory categoryFromServiceId(int serviceId) {
     switch (serviceId) {
-      case 3:
+      case AppConfig.leseatServiceId:
         return BookingCategory.lesEat;
-      case 4:
+      case AppConfig.lesBuyServiceId:
         return BookingCategory.lesBuy;
-      case 2:
+      case AppConfig.lesRideServiceId:
         return BookingCategory.lesRide;
       default:
         return BookingCategory.lesRide;

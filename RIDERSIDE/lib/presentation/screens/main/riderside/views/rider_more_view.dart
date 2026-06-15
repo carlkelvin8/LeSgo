@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../screens/main/riderside/views/rider_mission_view.dart';
 import '../../../../screens/main/riderside/views/rider_wallet_view.dart';
+import '../../../../provider/theme_provider.dart';
+import '../../../../screens/main/riderside/rider_language_screen.dart';
+import '../../../../screens/main/riderside/rider_package_tier_screen.dart';
 
 class RiderMoreView extends StatelessWidget {
   const RiderMoreView({super.key});
@@ -33,6 +37,22 @@ class RiderMoreView extends StatelessWidget {
           body: body,
         ),
       ),
+    );
+  }
+
+  void _openLanguageScreen(BuildContext context) {
+    _openSubScreen(
+      context,
+      title: 'Language',
+      body: const RiderLanguageView(),
+    );
+  }
+
+  void _openPackageTierScreen(BuildContext context) {
+    _openSubScreen(
+      context,
+      title: 'Package Tier',
+      body: const RiderPackageTierView(),
     );
   }
 
@@ -76,12 +96,36 @@ class RiderMoreView extends StatelessWidget {
           onTap: () => AppRouter.push(context, MainRoutes.riderEarnings),
         ),
         _MoreTile(
+          icon: Icons.insights,
+          label: 'Earnings Insights',
+          subtitle: 'Charts, projections, and key metrics',
+          onTap: () => AppRouter.push(context, MainRoutes.riderEarningsInsights),
+        ),
+        _MoreTile(
           icon: Icons.star_outline,
           label: 'Missions',
           subtitle: 'Complete missions and earn rewards',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const RiderMissionView()),
           ),
+        ),
+        _MoreTile(
+          icon: Icons.star_half_outlined,
+          label: 'My Rating',
+          subtitle: 'Overall rating, reviews, and performance',
+          onTap: () => AppRouter.push(context, MainRoutes.riderRating),
+        ),
+        _MoreTile(
+          icon: Icons.directions_bike_outlined,
+          label: 'My Vehicles',
+          subtitle: 'Manage your registered vehicles',
+          onTap: () => AppRouter.push(context, MainRoutes.riderVehicleManagement),
+        ),
+        _MoreTile(
+          icon: Icons.schedule,
+          label: 'Scheduled Availability',
+          subtitle: 'Set your on/off duty times',
+          onTap: () => AppRouter.push(context, MainRoutes.riderSchedule),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
         _SectionTitle(title: 'Benefits'),
@@ -129,6 +173,32 @@ class RiderMoreView extends StatelessWidget {
           label: 'Security & 2FA',
           onTap: () => AppRouter.push(context, MainRoutes.riderSecurity),
         ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        _SectionTitle(title: 'Settings'),
+        Consumer(
+          builder: (context, ref, _) {
+            final themeMode = ref.watch(themeModeProvider);
+            final isDark = themeMode == ThemeMode.dark;
+            return _MoreTileWithSwitch(
+              icon: Icons.dark_mode,
+              label: 'Dark Mode',
+              value: isDark,
+              onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
+            );
+          },
+        ),
+        _MoreTile(
+          icon: Icons.language,
+          label: 'Language',
+          subtitle: 'English, Filipino',
+          onTap: () => _openLanguageScreen(context),
+        ),
+        _MoreTile(
+          icon: Icons.workspace_premium_outlined,
+          label: 'Package Tier',
+          subtitle: 'View your current tier and benefits',
+          onTap: () => _openPackageTierScreen(context),
+        ),
       ],
     );
   }
@@ -151,6 +221,50 @@ class _SectionTitle extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: Colors.grey.shade600,
         ),
+      ),
+    );
+  }
+}
+
+class _MoreTileWithSwitch extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _MoreTileWithSwitch({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: SwitchListTile(
+        secondary: CircleAvatar(
+          backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+          child: Icon(icon, color: const Color(0xFF5F2D82), size: 22),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontWeight: FontWeight.w700,
+            fontSize: ResponsiveUtils.fontSize(context, 14),
+          ),
+        ),
+        value: value,
+        activeThumbColor: const Color(0xFF5F2D82),
+        activeTrackColor: const Color(0xFF5F2D82).withValues(alpha: 0.3),
+        onChanged: onChanged,
       ),
     );
   }

@@ -1,8 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
-import 'dto/review/review_dto.dart';
 import 'dto/review/reviews_response_dto.dart';
 import 'dto/review/create_review_request_dto.dart';
 

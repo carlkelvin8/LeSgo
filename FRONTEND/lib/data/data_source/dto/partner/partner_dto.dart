@@ -22,10 +22,6 @@ double? _parseDoubleNullable(dynamic value) {
   return null;
 }
 
-double _parseDouble(dynamic value, [double fallback = 0.0]) {
-  return _parseDoubleNullable(value) ?? fallback;
-}
-
 bool? _parseBoolNullable(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;

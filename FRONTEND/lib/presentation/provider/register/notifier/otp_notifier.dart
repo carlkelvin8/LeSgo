@@ -26,7 +26,7 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
         );
         return true;
       } else {
-        throw Exception(response.message ?? 'Failed to send OTP');
+        throw Exception(response.message);
       }
     } catch (e) {
       String errorMessage = 'Failed to send OTP';
@@ -67,7 +67,7 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
         state = state.copyWith(isLoading: false);
         return true;
       } else {
-        throw Exception(response.message ?? 'Invalid OTP code');
+        throw Exception('Invalid OTP code');
       }
     } catch (e) {
       String errorMessage = 'OTP verification failed';

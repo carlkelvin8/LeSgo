@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
-import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
-import 'dto/address/address_dto.dart';
 import 'dto/address/address_response_dto.dart';
 import 'dto/address/addresses_response_dto.dart';
 import 'dto/address/create_address_request_dto.dart';

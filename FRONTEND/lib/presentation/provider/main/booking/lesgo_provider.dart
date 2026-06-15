@@ -10,7 +10,6 @@ import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
 import '../../../../data/data_source/dto/address/address_dto.dart';
 import '../profile/profile_provider.dart';
-import '../address/address_provider.dart';
 import '../../../../core/services/service_area_checker.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/booking_checkout_payment.dart';

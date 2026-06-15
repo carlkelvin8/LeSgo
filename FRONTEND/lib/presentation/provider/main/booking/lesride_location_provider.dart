@@ -582,57 +582,7 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
     }
   }
 
-  List<LatLng> _decodePolyline(String encoded) {
-    List<LatLng> points = [];
-    if (encoded.isEmpty) return points;
 
-    int index = 0;
-    int len = encoded.length;
-    int lat = 0;
-    int lng = 0;
-
-    try {
-      while (index < len) {
-        // Decode latitude
-        int shift = 0;
-        int result = 0;
-        int b;
-        do {
-          if (index >= len) break;
-          b = encoded.codeUnitAt(index++) - 63;
-          result += (b & 0x1f) << shift;
-          shift += 5;
-        } while (b >= 0x20 && index < len);
-        int dlat = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
-        lat += dlat;
-
-        // Decode longitude
-        shift = 0;
-        result = 0;
-        do {
-          if (index >= len) break;
-          b = encoded.codeUnitAt(index++) - 63;
-          result += (b & 0x1f) << shift;
-          shift += 5;
-        } while (b >= 0x20 && index < len);
-        int dlng = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
-        lng += dlng;
-
-        // Add decoded point
-        final latLng = LatLng(lat / 1e5, lng / 1e5);
-        points.add(latLng);
-      }
-      
-      print('🗺️ Successfully decoded ${points.length} route points');
-      if (points.length >= 2) {
-        print('🗺️ Route from ${points.first} to ${points.last}');
-      }
-    } catch (e) {
-      print('🔴 Error decoding polyline: $e');
-    }
-    
-    return points;
-  }
 
   Future<LocationAddress?> _getAddressFromLocation(LatLng location) async {
     try {

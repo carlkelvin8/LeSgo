@@ -22,21 +22,6 @@ abstract final class RegisterMerchantDocumentPathFields {
   static const dtiPermit = 'dti_permit_path';
 }
 
-const _pathFieldKeys = {
-  RegisterMerchantDocumentFileFields.selfie:
-      RegisterMerchantDocumentPathFields.selfie,
-  RegisterMerchantDocumentFileFields.validId:
-      RegisterMerchantDocumentPathFields.validId,
-  RegisterMerchantDocumentFileFields.digitalSignature:
-      RegisterMerchantDocumentPathFields.digitalSignature,
-  RegisterMerchantDocumentFileFields.barangayPermit:
-      RegisterMerchantDocumentPathFields.barangayPermit,
-  RegisterMerchantDocumentFileFields.mayorsPermit:
-      RegisterMerchantDocumentPathFields.mayorsPermit,
-  RegisterMerchantDocumentFileFields.dtiPermit:
-      RegisterMerchantDocumentPathFields.dtiPermit,
-};
-
 Future<FormData> buildRegisterMerchantFormData(
   RegisterMerchantRequestDto request,
   Map<String, String> documents,
@@ -60,14 +45,6 @@ Future<FormData> buildRegisterMerchantFormData(
   }
 
   return formData;
-}
-
-String _fileExtension(String path) {
-  final parts = path.split('.');
-  if (parts.length > 1) {
-    return parts.last.toLowerCase();
-  }
-  return 'bin';
 }
 
 String? validateRegisterMerchantDocuments(Map<String, String> documents) {

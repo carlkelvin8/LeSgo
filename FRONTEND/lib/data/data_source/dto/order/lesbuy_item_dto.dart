@@ -2,14 +2,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'lesbuy_item_dto.g.dart';
 
-// Helper to parse double from either num or string
-double _parseDouble(dynamic value) {
-  if (value == null) return 0.0;
-  if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value) ?? 0.0;
-  return 0.0;
-}
-
 double? _parseDoubleNullable(dynamic value) {
   if (value == null) return null;
   if (value is num) return value.toDouble();

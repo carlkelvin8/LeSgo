@@ -1,3 +1,5 @@
+import 'dart:ui' show VoidCallback;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,17 +7,20 @@ import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../auth/rider_auth_provider.dart';
 import 'rider_location_provider.dart';
-import 'rider_orders_provider.dart';
 
 const _dutyPrefKey = 'rider_on_duty';
 
 class RiderDutyNotifier extends StateNotifier<bool> {
   final Ref _ref;
   bool _initialized = false;
+  VoidCallback? _onDutyChanged;
 
   RiderDutyNotifier(this._ref) : super(false) {
     _initialize();
   }
+
+  /// Allows external coordination without circular dependency.
+  set onDutyChanged(VoidCallback? callback) => _onDutyChanged = callback;
 
   Future<void> _initialize() async {
     final prefs = await SharedPreferences.getInstance();
@@ -77,16 +82,14 @@ class RiderDutyNotifier extends StateNotifier<bool> {
     }
 
     final locationNotifier = _ref.read(riderLocationProvider.notifier);
-    final ordersNotifier = _ref.read(riderOrdersProvider.notifier);
 
     if (onDuty) {
       await locationNotifier.startTracking();
-      ordersNotifier.resumeAutoRefresh();
-      await ordersNotifier.loadOrders(silent: true);
     } else {
       locationNotifier.stopTracking();
-      ordersNotifier.stopAutoRefresh();
     }
+
+    _onDutyChanged?.call();
   }
 
   Future<void> _syncAvailability(bool onDuty) async {

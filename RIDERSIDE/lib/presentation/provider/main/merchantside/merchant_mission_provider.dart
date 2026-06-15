@@ -105,7 +105,7 @@ class MerchantMissionNotifier extends StateNotifier<MerchantMissionState> {
     try {
       print('💰 Claiming reward for merchant mission $missionId...');
       
-      final response = await ApiService.claimMerchantMissionReward(missionId);
+      await ApiService.claimMerchantMissionReward(missionId);
       
       print('✅ Reward claimed successfully');
       

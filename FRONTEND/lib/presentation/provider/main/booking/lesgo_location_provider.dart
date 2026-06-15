@@ -496,45 +496,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
     }
   }
 
-  List<LatLng> _decodePolyline(String encoded) {
-    List<LatLng> points = [];
-    if (encoded.isEmpty) return points;
 
-    int index = 0;
-    int len = encoded.length;
-    int lat = 0;
-    int lng = 0;
-
-    while (index < len) {
-      // Decode latitude
-      int shift = 0;
-      int result = 0;
-      int b;
-      do {
-        if (index >= len) break;
-        b = encoded.codeUnitAt(index++) - 63;
-        result += (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20 && index < len);
-      int dlat = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
-      lat += dlat;
-
-      // Decode longitude
-      shift = 0;
-      result = 0;
-      do {
-        if (index >= len) break;
-        b = encoded.codeUnitAt(index++) - 63;
-        result += (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20 && index < len);
-      int dlng = ((result & 1) != 0) ? ~(result >> 1) : (result >> 1);
-      lng += dlng;
-
-      points.add(LatLng(lat / 1e5, lng / 1e5));
-    }
-    return points;
-  }
 
   Future<LocationAddress?> _getAddressFromLocation(LatLng location) async {
     try {
@@ -779,6 +741,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       String? sublocalityLevel2;
       String? sublocalityLevel3;
       String? administrativeAreaLevel1; // Province
+
       String? administrativeAreaLevel2; // City/Municipality
       String? administrativeAreaLevel3; // District
       String? postalCode;

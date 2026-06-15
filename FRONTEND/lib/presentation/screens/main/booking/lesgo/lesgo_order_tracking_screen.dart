@@ -4,12 +4,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/api_error_mapper.dart';
 import '../../../../../core/utils/order_cancel_utils.dart';
-import '../../../../../core/constants/routers/app_router.dart';
-import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../provider/tracking/live_tracking_provider.dart';
-import '../../../../provider/main/profile/profile_provider.dart';
 import '../../../../widgets/tracking/order_status_timeline.dart';
 import '../../../../widgets/tracking/driver_info_card.dart';
 import '../../../../widgets/orders/cancel_order_dialog.dart';
@@ -65,8 +62,9 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.getOrder(int.parse(widget.orderId));
       if (response.success && response.data != null && mounted) {
-        final order = response.data!;
+        final order = response.data as dynamic;
         final fb = order.fareBreakdown;
+
         setState(() {
           _fetchedOrderData = {
             'id': order.id,

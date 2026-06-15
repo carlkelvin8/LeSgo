@@ -3,11 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../domain/models/location/location_address.dart';
-import '../../../../data/data_source/dto/address/address_dto.dart';
 import '../../../provider/main/booking/lesgo_location_provider.dart';
-import '../../../provider/main/booking/lesgo_provider.dart';
-import '../../../provider/main/address/address_provider.dart';
-import '../../address/address_selector_widget.dart';
 import '../../widgets.dart';
 
 class LesgoDetailsPanel extends ConsumerWidget {
@@ -81,108 +77,9 @@ class LesgoDetailsPanel extends ConsumerWidget {
     return 'Address not available';
   }
 
-  void _showAddressSelector(
-    BuildContext context,
-    WidgetRef ref,
-    bool isPickup,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Header with options
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isPickup ? 'Select Pickup Location' : 'Select Dropoff Location',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  // Map selection button
-                  ListTile(
-                    leading: Icon(Icons.map, color: Color(0xFF5F2D82)),
-                    title: Text('Select on Map'),
-                    subtitle: Text('Tap on map to choose location'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      if (isPickup) {
-                        onChangeCurrent();
-                      } else {
-                        onChangeDestination();
-                      }
-                    },
-                  ),
-                  Divider(),
-                  Text(
-                    'Or choose from saved addresses:',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Address selector
-            Expanded(
-              child: AddressSelectorWidget(
-                title: '',
-                showManageButton: false,
-                onAddressSelected: (address) {
-                  print('🔍 LesgoDetailsPanel: Address selected - isPickup: $isPickup, address: ${address.addressLine1} (${address.latitude}, ${address.longitude})');
-                  if (isPickup) {
-                    print('🔍 LesgoDetailsPanel: Calling selectPickupAddress');
-                    ref.read(lesgoProvider.notifier).selectPickupAddress(address);
-                  } else {
-                    print('🔍 LesgoDetailsPanel: Calling selectDropoffAddress');
-                    ref.read(lesgoProvider.notifier).selectDropoffAddress(address);
-                  }
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${isPickup ? "Pickup" : "Dropoff"} address updated'),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lesgoState = ref.watch(lesgoProvider);
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(

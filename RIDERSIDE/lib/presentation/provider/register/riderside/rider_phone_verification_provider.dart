@@ -198,7 +198,7 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
         state = state.copyWith(isLoading: false, isVerified: true);
         return true;
       } else {
-        throw Exception(response.message ?? 'Invalid OTP code');
+        throw Exception(response.message);
       }
     } on DioException catch (e) {
       String errorMessage = 'Invalid OTP. Please try again.';

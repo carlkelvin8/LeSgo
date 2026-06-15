@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../provider/chat/chat_provider.dart';
 import '../../widgets/chat/order_chat_widget.dart';
 
 /// Standalone chat screen - wraps OrderChatWidget in a full screen

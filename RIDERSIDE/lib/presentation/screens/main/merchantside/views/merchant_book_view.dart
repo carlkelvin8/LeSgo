@@ -5,18 +5,6 @@ import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../food_detail_screen.dart';
 
-List<String> _parseSizes(String? rawSizes) {
-  if (rawSizes == null || rawSizes.trim().isEmpty) {
-    return const ['Regular'];
-  }
-
-  return rawSizes
-      .split(',')
-      .map((size) => size.trim())
-      .where((size) => size.isNotEmpty)
-      .toList();
-}
-
 class MerchantBookView extends ConsumerWidget {
   const MerchantBookView({super.key});
 

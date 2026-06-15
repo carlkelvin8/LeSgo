@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../../../core/constants/routers/app_router.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_low_balance_banner.dart';
@@ -54,6 +56,75 @@ class RiderWalletView extends ConsumerWidget {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
             const RiderWalletActionsSection(),
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveUtils.horizontalPadding(context),
+              ),
+              child: InkWell(
+                onTap: () =>
+                    AppRouter.push(context, MainRoutes.riderScheduledPayout),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: EdgeInsets.all(
+                    ResponsiveUtils.spacing(context, 16),
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5F2D82).withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF5F2D82).withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.repeat,
+                        color: const Color(0xFF5F2D82),
+                        size: 24,
+                      ),
+                      SizedBox(
+                        width: ResponsiveUtils.spacing(context, 12),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Scheduled Payout',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontWeight: FontWeight.w700,
+                                fontSize:
+                                    ResponsiveUtils.fontSize(context, 14),
+                                color: const Color(0xFF5F2D82),
+                              ),
+                            ),
+                            SizedBox(
+                              height:
+                                  ResponsiveUtils.spacing(context, 2),
+                            ),
+                            Text(
+                              'Set up recurring or one-time auto-payouts',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize:
+                                    ResponsiveUtils.fontSize(context, 12),
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: Color(0xFF5F2D82),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           ],
         ),

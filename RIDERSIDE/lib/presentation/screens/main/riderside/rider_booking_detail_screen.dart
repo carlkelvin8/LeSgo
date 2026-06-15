@@ -8,7 +8,9 @@ import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../widgets/widgets.dart';
 import '../../../../domain/entities/rider_booking.dart';
+import '../../../../core/utils/receipt_generator.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/share_utils.dart';
 import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../provider/main/riderside/rider_history_provider.dart';
 import '../../../provider/main/riderside/rider_location_provider.dart';
@@ -433,8 +435,8 @@ class _RiderBookingDetailScreenState
         return;
     }
 
-    final targetStatus = apiStatus!;
-    final targetLabel = statusLabel!;
+    final targetStatus = apiStatus;
+    final targetLabel = statusLabel;
 
     AppLogger.debug('📡 Will update to API status: $targetStatus');
     
@@ -629,6 +631,28 @@ class _RiderBookingDetailScreenState
     setState(() {
       _selectedImages.removeAt(index);
     });
+  }
+
+  void _shareReceipt() {
+    final booking = _updatedBooking ?? widget.booking;
+    final orderId = int.tryParse(booking.id) ?? 0;
+    final earningsStr = booking.earnings?.replaceAll(RegExp(r'[^0-9.]'), '') ?? '0';
+    final earnings = double.tryParse(earningsStr) ?? 0;
+
+    final receipt = ReceiptGenerator.generateEarningReceipt(
+      orderId: orderId,
+      serviceName: booking.restaurantName,
+      earnings: earnings,
+      completedAt: DateTime.now(),
+      pickupAddress: booking.pickupAddress,
+      dropoffAddress: booking.deliveryAddress,
+    );
+
+    ShareUtils.saveAndShareReceipt(
+      context,
+      receipt,
+      'LeSGo_Receipt_Order_$orderId',
+    );
   }
 
   Future<void> _handleCancelOrder() async {
@@ -1015,6 +1039,44 @@ class _RiderBookingDetailScreenState
                                     style: OutlinedButton.styleFrom(
                                       side: BorderSide(
                                         color: Colors.red.shade700,
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: ResponsiveUtils.spacing(
+                                          context,
+                                          12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (_currentApiStatus == 'completed') ...[
+                                SizedBox(
+                                  height: ResponsiveUtils.spacing(context, 12),
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: _shareReceipt,
+                                    icon: const Icon(
+                                      Icons.receipt_long_outlined,
+                                      color: Color(0xFF5F2D82),
+                                    ),
+                                    label: Text(
+                                      'Get Receipt',
+                                      style: TextStyle(
+                                        fontFamily: 'TT Fors',
+                                        fontSize: ResponsiveUtils.fontSize(
+                                          context,
+                                          14,
+                                        ),
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF5F2D82),
+                                      ),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: Color(0xFF5F2D82),
                                       ),
                                       padding: EdgeInsets.symmetric(
                                         vertical: ResponsiveUtils.spacing(

@@ -1,8 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
-import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
-import 'dto/payment/payment_dto.dart';
 import 'dto/payment/payment_response_dto.dart';
 import 'dto/payment/payments_response_dto.dart';
 import 'dto/payment/create_payment_request_dto.dart';

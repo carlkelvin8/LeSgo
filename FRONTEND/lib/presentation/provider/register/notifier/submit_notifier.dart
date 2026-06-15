@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/di/local_storage_service.dart';
-import 'package:cross_file/cross_file.dart';
 
 import '../../../../data/data_source/auth_remote_datasource.dart';
 import '../../../../data/data_source/dto/auth/register_request_dto.dart';

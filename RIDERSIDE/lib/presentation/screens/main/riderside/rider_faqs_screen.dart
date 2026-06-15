@@ -45,8 +45,8 @@ class _RiderFaqsScreenState extends State<RiderFaqsScreen> {
       ]);
       if (!mounted) return;
       setState(() {
-        _categories = results[0] as List<dynamic>;
-        _articles = results[1] as List<dynamic>;
+        _categories = results[0];
+        _articles = results[1];
         _loading = false;
       });
     } catch (e) {

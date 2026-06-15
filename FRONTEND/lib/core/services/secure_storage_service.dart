@@ -17,7 +17,7 @@ class SecureStorageService {
   static const String _keyUserId = 'user_id';
   static const String _keyUserEmail = 'user_email';
   static const String _keyLastActivity = 'last_activity';
-  static const String _keySessionTimeout = 'session_timeout';
+
   static const String _keyBiometricEnabled = 'biometric_enabled';
 
   /// Save auth token

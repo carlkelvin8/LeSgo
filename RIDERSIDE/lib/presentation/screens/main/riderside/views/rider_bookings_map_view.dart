@@ -17,8 +17,8 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../core/utils/rider_navigation_launcher.dart';
-import '../../../../../domain/entities/rider_booking.dart';
 import '../rider_booking_detail_screen.dart';
+import '../../../../provider/main/riderside/rider_heatmap_provider.dart';
 
 /// Enhanced Bookings View with integrated Waze-style map and ongoing orders
 class RiderBookingsMapView extends ConsumerStatefulWidget {
@@ -35,9 +35,10 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
   bool _isLoadingRoute = false;
-  bool _showOrdersList = true;
   ProviderSubscription<RiderLocationState>? _locationSub;
   ProviderSubscription<RiderOrdersState>? _ordersSub;
+  ProviderSubscription<RiderHeatmapState>? _heatmapSub;
+  Set<Circle> _heatmapCircles = {};
 
   @override
   void initState() {
@@ -77,6 +78,18 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         },
       );
 
+      _heatmapSub = ref.listenManual<RiderHeatmapState>(
+        riderHeatmapProvider,
+        (previous, next) {
+          if (!mounted) return;
+          if (next.showHeatmap) {
+            _updateHeatmapCircles();
+          } else {
+            setState(() => _heatmapCircles = {});
+          }
+        },
+      );
+
       final activeOrderId = ref.read(riderOrdersProvider).activeOrder?.id;
       final notifier = ref.read(riderLocationProvider.notifier);
       notifier.setActiveOrderId(activeOrderId);
@@ -90,6 +103,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   void dispose() {
     _locationSub?.close();
     _ordersSub?.close();
+    _heatmapSub?.close();
     try {
       _mapController?.dispose();
     } catch (_) {}
@@ -276,6 +290,24 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     } catch (_) {}
   }
 
+  void _updateHeatmapCircles() {
+    final state = ref.read(riderHeatmapProvider);
+    setState(() => _heatmapCircles = RiderHeatmapState.toCircles(state.zones));
+  }
+
+  void _handleHeatmapToggle() {
+    final notifier = ref.read(riderHeatmapProvider.notifier);
+    // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+    if (!notifier.state.showHeatmap) {
+      final center = _currentPosition != null
+          ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+          : const LatLng(8.4542, 124.6319);
+      final zones = notifier.getMockZones(center);
+      notifier.updateZones(zones);
+    }
+    notifier.toggleHeatmap();
+  }
+
   LatLngBounds _calculateBounds() {
     final positions = _markers.map((marker) => marker.position).toList();
     
@@ -345,9 +377,10 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         // Enable location features
         myLocationEnabled: true,
         
-        // Add markers and polylines
+        // Add markers, polylines, and heatmap circles
         markers: _markers,
         polylines: _polylines,
+        circles: _heatmapCircles,
         
         onMapCreated: (controller) {
           if (mounted) {
@@ -518,10 +551,6 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
 
   Widget _buildActiveOrderCard(RiderOrder order) {
     final rider = ref.read(riderAuthProvider).user;
-    final riderEarnings = order.earningsFor(
-      packageTier: rider?.packageTier,
-      riderCommissionRate: rider?.commissionRate,
-    );
     // Convert RiderOrder to RiderBooking for detail screen
     final booking = RiderBookingMapper.fromOrder(
       order,
@@ -698,72 +727,6 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         ),
       ),
     );
-  }
-
-  String _calculateEstimatedTime(double distanceKm) {
-    // Average speed in city: 30 km/h
-    final hours = distanceKm / 30;
-    final minutes = (hours * 60).round();
-    
-    if (minutes < 60) {
-      return '$minutes min';
-    } else {
-      final hrs = minutes ~/ 60;
-      final mins = minutes % 60;
-      return '${hrs}h ${mins}min';
-    }
-  }
-
-  // Map API status to BookingStatus enum
-  BookingStatus _mapApiStatusToBookingStatus(String apiStatus, int serviceId) {
-    // For LesRide (serviceId: 2)
-    if (serviceId == 2) {
-      switch (apiStatus.toLowerCase()) {
-        case 'accepted':
-          return BookingStatus.onTheWay;
-        case 'picked_up':
-          return BookingStatus.onTheWayGoing;
-        case 'completed':
-          return BookingStatus.complete;
-        default:
-          return BookingStatus.onTheWay;
-      }
-    }
-    
-    // For LesEat (serviceId: 3)
-    if (serviceId == 3) {
-      switch (apiStatus.toLowerCase()) {
-        case 'pending':
-          return BookingStatus.pending;
-        case 'accepted':
-          return BookingStatus.cooking;
-        case 'picked_up':
-          return BookingStatus.forPickUp;
-        case 'completed':
-          return BookingStatus.delivered;
-        default:
-          return BookingStatus.pending;
-      }
-    }
-    
-    // For LesBuy (serviceId: 4)
-    if (serviceId == 4) {
-      switch (apiStatus.toLowerCase()) {
-        case 'pending':
-          return BookingStatus.pending;
-        case 'accepted':
-          return BookingStatus.toBuy;
-        case 'picked_up':
-          return BookingStatus.forDelivery;
-        case 'completed':
-          return BookingStatus.delivered;
-        default:
-          return BookingStatus.pending;
-      }
-    }
-    
-    // Default
-    return BookingStatus.pending;
   }
 
   Widget _buildAvailableOrderCard(RiderOrder order) {
@@ -975,6 +938,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   @override
   Widget build(BuildContext context) {
     final ordersState = ref.watch(riderOrdersProvider);
+    final heatmapState = ref.watch(riderHeatmapProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1034,6 +998,39 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                                 color: Color(0xFF5F2D82),
                                 size: 24,
                               ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(24),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(24),
+                        onTap: _handleHeatmapToggle,
+                        child: Icon(
+                          heatmapState.showHeatmap
+                              ? Icons.layers_clear
+                              : Icons.layers,
+                          color: heatmapState.showHeatmap
+                              ? Colors.orange
+                              : const Color(0xFF5F2D82),
+                          size: 24,
+                        ),
                       ),
                     ),
                   ),

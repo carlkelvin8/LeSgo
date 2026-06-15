@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../core/utils/media_url_utils.dart';
 import '../../../core/utils/menu_image_utils.dart';
 
 /// Renders local assets, SVG assets, or remote API/storage images.

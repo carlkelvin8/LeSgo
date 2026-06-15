@@ -2,12 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/receipt_generator.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/rider_earnings_utils.dart';
+import '../../../../core/utils/share_utils.dart';
 import '../../../provider/main/riderside/rider_earnings_provider.dart';
 
 class RiderEarningsScreen extends ConsumerWidget {
   const RiderEarningsScreen({super.key});
+
+  void _shareEarnings(BuildContext context, RiderEarningsState state) {
+    final periodLabel = RiderEarningsUtils.periodLabel(state.period);
+    final entries = state.entries
+        .map((e) => {
+              'order_id': e.orderId,
+              'service_name': e.serviceName,
+              'earnings': e.earnings,
+              'completed_at': e.completedAt,
+            })
+        .toList();
+
+    final receipt = ReceiptGenerator.generateEarningSummaryReceipt(
+      period: periodLabel,
+      totalEarnings: state.summary.totalEarnings,
+      completedTrips: state.summary.completedTrips,
+      averagePerTrip: state.summary.averagePerTrip,
+      entries: entries,
+    );
+
+    ShareUtils.saveAndShareReceipt(
+      context,
+      receipt,
+      'LeSGo_Earnings_$periodLabel',
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,6 +59,15 @@ class RiderEarningsScreen extends ConsumerWidget {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            onPressed: earningsAsync is AsyncData
+                ? () => _shareEarnings(context, earningsAsync.value!)
+                : null,
+            tooltip: 'Share Earnings Report',
+          ),
+        ],
       ),
       body: RefreshIndicator(
         color: const Color(0xFF5F2D82),

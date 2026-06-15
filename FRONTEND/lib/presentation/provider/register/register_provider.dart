@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/booking_geo_utils.dart';
 import 'notifier/register_state.dart';
 import 'notifier/terms_notifier.dart';

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+/// Dev-only test widget — not used in production.
+@Deprecated('Remove before production release')
 class UltraSimpleMap extends StatelessWidget {
   const UltraSimpleMap({super.key});
 

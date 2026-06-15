@@ -397,7 +397,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           options: optionsMap.isEmpty ? null : optionsMap,
         );
         
-        await dataSource.updateMenuItem(_itemId!, request);
+        await dataSource.updateMenuItem(_itemId, request);
         print('✅ Menu item updated successfully');
       } else {
         // Add mode - create new item
