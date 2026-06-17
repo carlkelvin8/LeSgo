@@ -124,30 +124,13 @@ class PermissionService {
     return result.isGranted;
   }
 
-  /// Request gallery/photos permission (Android 13+ uses photos).
+  /// Request gallery/photos permission (Android 13+ uses photo picker, no permission needed).
   Future<bool> requestGalleryWithRationale() async {
     if (kIsWeb) return true;
 
     if (Platform.isIOS) {
       final status = await Permission.photos.request();
       return status.isGranted || status.isLimited;
-    }
-
-    if (Platform.isAndroid) {
-      var status = await Permission.photos.status;
-      if (status.isGranted || status.isLimited) return true;
-      if (!status.isPermanentlyDenied) {
-        status = await Permission.photos.request();
-        if (status.isGranted || status.isLimited) return true;
-      }
-
-      final storageStatus = await Permission.storage.status;
-      if (storageStatus.isGranted) return true;
-      if (!storageStatus.isPermanentlyDenied) {
-        final requested = await Permission.storage.request();
-        return requested.isGranted;
-      }
-      return false;
     }
 
     return true;

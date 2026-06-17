@@ -91,7 +91,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.lesgo.app"
+        applicationId = "com.lesgo_customer"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
