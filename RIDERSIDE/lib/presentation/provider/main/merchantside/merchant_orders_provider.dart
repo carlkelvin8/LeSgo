@@ -96,11 +96,12 @@ List<OrderDto> _filterOrders(List<OrderDto> orders, MerchantOrderFilter filter) 
       case MerchantOrderFilter.pending:
         return status == 'pending';
       case MerchantOrderFilter.pickUp:
-        return status == 'searching_driver' ||
-            status == 'accepted' ||
-            status == 'ready_for_pickup';
+        // Orders waiting for pickup (after driver accepted, before pickup)
+        return status == 'searching_driver' || status == 'accepted';
       case MerchantOrderFilter.forDelivery:
-        return status == 'picked_up' ||
+        // Orders picked up by driver (in transit or ready)
+        return status == 'ready_for_pickup' ||
+            status == 'picked_up' ||
             status == 'in_progress' ||
             status == 'driver_arrived_at_pickup';
       case MerchantOrderFilter.delivered:

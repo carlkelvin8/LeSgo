@@ -144,18 +144,40 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
   Future<bool> completeTopUp(MerchantTopUpCheckout checkout) async {
     state = state.copyWith(isProcessingTopUp: true, clearError: true);
     try {
-      await ApiService.dio.post(
-        '/v1/wallets/my/topup',
+      final response = await ApiService.dio.post(
+        '/v1/wallets/my/topup/confirm',
         data: {
-          'amount': checkout.walletAmount,
-          'payment_method': 'xendit',
           'xendit_invoice_id': checkout.invoiceId,
+          'amount': checkout.walletAmount,
         },
       );
-      await loadWallet();
-      state = state.copyWith(isProcessingTopUp: false);
+
+      // Verify response contains updated balance
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null || (data['success'] != true && data['data'] == null)) {
+        throw Exception('TopUp confirmation failed: Invalid response');
+      }
+
+      // Try to get new balance from response
+      final newBalanceFromResponse = data['wallet_balance'] ??
+          (data['data'] is Map ? data['data']['balance'] : null);
+
+      if (newBalanceFromResponse != null) {
+        // Direct update to avoid extra API call
+        final newBalance = _toDouble(newBalanceFromResponse);
+        state = state.copyWith(
+          balance: newBalance,
+          isProcessingTopUp: false,
+        );
+      } else {
+        // Fallback: reload wallet from API
+        await loadWallet();
+        state = state.copyWith(isProcessingTopUp: false);
+      }
+
       return true;
     } catch (e) {
+      debugPrint('Complete topup failed: $e');
       state = state.copyWith(
         isProcessingTopUp: false,
         error: ApiService.extractError(e),
@@ -226,9 +248,16 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
           .toList();
 
       items.sort((a, b) {
-        final aDate = a['created_at']?.toString() ?? '';
-        final bDate = b['created_at']?.toString() ?? '';
-        return bDate.compareTo(aDate);
+        try {
+          final aDate = DateTime.tryParse(a['created_at']?.toString() ?? '') ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          final bDate = DateTime.tryParse(b['created_at']?.toString() ?? '') ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          return bDate.compareTo(aDate);
+        } catch (e) {
+          debugPrint('Error sorting transactions: $e');
+          return 0;
+        }
       });
       return items;
     } catch (e) {

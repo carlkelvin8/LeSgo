@@ -41,11 +41,8 @@ class MerchantOrderAmountUtils {
 
   static bool isPendingEarnings(OrderDto order) {
     if (isCompleted(order) || isCancelled(order)) return false;
+    // Only orders that are picked up or in delivery are pending earnings
     const pendingStatuses = {
-      'pending',
-      'searching_driver',
-      'accepted',
-      'ready_for_pickup',
       'picked_up',
       'in_progress',
       'driver_arrived_at_pickup',
