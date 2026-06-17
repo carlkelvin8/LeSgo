@@ -23,6 +23,7 @@ import '../../../../presentation/screens/main/riderside/rider_quick_stats_screen
 import '../../../../presentation/screens/main/riderside/rider_payout_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_trip_analytics_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_performance_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_chat_list_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_main_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_order_detail_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_reviews_screen.dart';
@@ -68,6 +69,7 @@ class MainRouter {
     MainRoutes.riderPayout: (_) => const RiderPayoutScreen(),
     MainRoutes.riderTripAnalytics: (_) => const RiderTripAnalyticsScreen(),
     MainRoutes.riderPerformance: (_) => const RiderPerformanceScreen(),
+    MainRoutes.riderChatList: (_) => const RiderChatListScreen(),
     MainRoutes.merchantFaqs: (_) => const RiderFaqsScreen(),
     MainRoutes.merchantOffers: (_) => const RiderOffersScreen(),
     MainRoutes.merchantLoyalty: (_) => const RiderLoyaltyScreen(),
