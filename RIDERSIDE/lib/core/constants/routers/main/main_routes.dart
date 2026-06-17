@@ -22,6 +22,8 @@ class MainRoutes {
   static const String riderEarningsInsights = '/rider/earnings-insights';
   static const String riderRating = '/rider/rating';
   static const String riderVehicleManagement = '/rider/vehicles';
+  static const String riderQuickStats = '/rider/quick-stats';
+  static const String riderPayout = '/rider/payout';
   static const String merchantMain = '/merchant/main';
   static const String merchantOrderDetail = '/merchant/order-detail';
   static const String merchantFaqs = '/merchant/faqs';

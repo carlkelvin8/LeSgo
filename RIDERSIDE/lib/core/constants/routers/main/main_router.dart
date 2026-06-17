@@ -19,6 +19,8 @@ import '../../../../presentation/screens/main/riderside/rider_faqs_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_main_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_booking_detail_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_history_detail_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_quick_stats_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_payout_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_main_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_order_detail_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_reviews_screen.dart';
@@ -60,6 +62,8 @@ class MainRouter {
     MainRoutes.riderRating: (_) => const RiderRatingScreen(),
     MainRoutes.riderVehicleManagement: (_) =>
         const RiderVehicleManagementScreen(),
+    MainRoutes.riderQuickStats: (_) => const RiderQuickStatsScreen(),
+    MainRoutes.riderPayout: (_) => const RiderPayoutScreen(),
     MainRoutes.merchantFaqs: (_) => const RiderFaqsScreen(),
     MainRoutes.merchantOffers: (_) => const RiderOffersScreen(),
     MainRoutes.merchantLoyalty: (_) => const RiderLoyaltyScreen(),
