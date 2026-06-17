@@ -41,7 +41,7 @@ class RiderRouteUtils {
     return (
       destination: LatLng(order.dropoffLat, order.dropoffLng),
       routeType: 'to_dropoff',
-      navLabel: 'Dropoff',
+      navLabel: 'Delivery Address',
     );
   }
 
@@ -63,7 +63,7 @@ class RiderRouteUtils {
     }
     return (
       destination: LatLng(dropoffLat, dropoffLng),
-      navLabel: 'Dropoff',
+      navLabel: 'Delivery Address',
     );
   }
 

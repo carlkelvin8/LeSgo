@@ -72,7 +72,7 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
 
       if (!mounted) return;
 
-      if (user != null && user.isMerchant) {
+      if (user != null && (user.isMerchant || user.isStaff)) {
         AppRouter.pushReplacement(context, MainRoutes.merchantMain);
       } else {
         AppRouter.pushReplacement(context, MainRoutes.riderMain);

@@ -42,6 +42,16 @@ class MerchantSettingsSection extends StatelessWidget {
           route: MainRoutes.riderNotifications,
         ),
         _SettingsTile(
+          icon: Icons.group_outlined,
+          label: 'Staff Accounts',
+          route: MainRoutes.merchantStaff,
+        ),
+        _SettingsTile(
+          icon: Icons.print_outlined,
+          label: 'Printer Settings',
+          route: MainRoutes.merchantPrinterSettings,
+        ),
+        _SettingsTile(
           icon: Icons.person_off_outlined,
           label: 'Deactivate account',
           route: MainRoutes.merchantDeactivateAccount,

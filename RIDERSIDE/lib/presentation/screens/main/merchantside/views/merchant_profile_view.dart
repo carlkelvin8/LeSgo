@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/constants/routers/app_router.dart';
+import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
@@ -58,11 +60,9 @@ class MerchantProfileView extends ConsumerWidget {
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantProfileInfoSection(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-              const MerchantWalletPreviewCard(),
-              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-              const MerchantEarningsPreviewCard(),
-              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantAnalyticsPreviewCard(),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              _SalesReportCard(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantReviewsPreviewCard(),
               SizedBox(
@@ -235,6 +235,71 @@ class MerchantProfileView extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _SalesReportCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => AppRouter.push(context, MainRoutes.merchantSalesReport),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3E5F5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE1BEE7)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: ResponsiveUtils.spacing(context, 44),
+              height: ResponsiveUtils.spacing(context, 44),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.download_outlined,
+                color: const Color(0xFF7B1FA2),
+                size: ResponsiveUtils.fontSize(context, 22),
+              ),
+            ),
+            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sales Reports',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 15),
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF4A148C),
+                    ),
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                  Text(
+                    'Download CSV or PDF reports',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 11),
+                      color: const Color(0xFF7B1FA2).withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: const Color(0xFF7B1FA2),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -26,13 +26,25 @@ class MerchantProfileInfoSection extends ConsumerWidget {
           data: (code) => code.isNotEmpty ? code : 'Not set',
         );
 
+        final prepTime = profile.estimatedDeliveryMinutes;
+        final hours = profile.openingHours;
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _info(context, 'Restaurant:', profile.name),
             _info(context, 'Contact:', profile.supportPhone ?? 'Not set'),
             _info(context, 'Email:', profile.supportEmail ?? 'Not set'),
+            if (prepTime != null && prepTime > 0)
+              _info(
+                context,
+                'Prep Time:',
+                '~$prepTime min',
+                valueColor: const Color(0xFF5F2D82),
+              ),
             _MerchantStoreStatusToggle(initialIsOpen: profile.isOpen ?? false),
+            if (hours != null && hours.isNotEmpty)
+              _OperatingHoursSummary(hours: hours),
             _info(
               context,
               'Referral Code:',
@@ -204,6 +216,91 @@ class _MerchantStoreStatusToggleState
             activeTrackColor: Colors.green.shade300,
             activeThumbColor: Colors.green,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OperatingHoursSummary extends StatelessWidget {
+  final Map<String, dynamic> hours;
+
+  const _OperatingHoursSummary({required this.hours});
+
+  static const _dayOrder = [
+    'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+  ];
+
+  static const _dayLabels = {
+    'monday': 'Mon',
+    'tuesday': 'Tue',
+    'wednesday': 'Wed',
+    'thursday': 'Thu',
+    'friday': 'Fri',
+    'saturday': 'Sat',
+    'sunday': 'Sun',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <Widget>[];
+    for (final day in _dayOrder) {
+      final data = hours[day];
+      if (data == null) continue;
+
+      final isClosed = data['closed'] as bool? ?? false;
+      final open = data['open'] as String? ?? '--:--';
+      final close = data['close'] as String? ?? '--:--';
+
+      items.add(
+        Padding(
+          padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 4)),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 36,
+                child: Text(
+                  _dayLabels[day]!,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  isClosed ? 'Closed' : '$open — $close',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    fontWeight: FontWeight.w500,
+                    color: isClosed ? Colors.red.shade400 : Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Operating Hours:',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 14),
+              color: Colors.grey.shade600,
+            ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+          ...items,
         ],
       ),
     );

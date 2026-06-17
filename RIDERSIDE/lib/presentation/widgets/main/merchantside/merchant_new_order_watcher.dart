@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/merchant_order_alert_service.dart';
+import '../../../../core/services/printer_service.dart';
 import '../../../../core/utils/merchant_order_ops_utils.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
+import '../../../provider/main/merchantside/merchant_sound_settings_provider.dart';
+import '../../../provider/main/merchantside/printer_settings_provider.dart';
 
 class MerchantNewOrderWatcher extends ConsumerStatefulWidget {
   final Widget child;
@@ -33,7 +36,9 @@ class _MerchantNewOrderWatcherState extends ConsumerState<MerchantNewOrderWatche
       for (final id in newIds) {
         final order = pendingOrders.firstWhere((item) => item.id == id);
         final orderRef = order.referenceNumber ?? '#${order.id}';
-        MerchantOrderAlertService.alertNewOrder(orderRef: orderRef);
+        final playSound = ref.read(merchantSoundSettingsProvider).isSoundEnabled;
+        MerchantOrderAlertService.alertNewOrder(orderRef: orderRef, playSound: playSound);
+        _autoPrintOrder(order);
       }
     }
 
@@ -43,13 +48,21 @@ class _MerchantNewOrderWatcherState extends ConsumerState<MerchantNewOrderWatche
     _initialized = true;
   }
 
+  void _autoPrintOrder(OrderDto order) {
+    final printerState = ref.read(printerSettingsProvider);
+    if (!printerState.isAutoPrintEnabled) return;
+    if (printerState.connectedAddress == null) return;
+
+    final storeName = order.partner?.name ?? 'Store';
+    PrinterService().printOrder(order, storeName);
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<List<OrderDto>>>(merchantOrdersProvider, (previous, next) {
       next.whenData(_handleOrders);
     });
 
-    // Keep this provider warm while the merchant shell is open.
     ref.watch(merchantOrdersProvider);
 
     return widget.child;

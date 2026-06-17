@@ -21,6 +21,7 @@ class RiderUser {
   final String? profilePhotoUrl;
   final String? packageTier;
   final double? commissionRate;
+  final PartnerStaffInfo? staffInfo;
 
   RiderUser({
     required this.id,
@@ -33,13 +34,21 @@ class RiderUser {
     this.profilePhotoUrl,
     this.packageTier,
     this.commissionRate,
+    this.staffInfo,
   });
 
   bool get isDriver => role == 'driver';
   bool get isMerchant =>
       role == 'merchant' || role == 'partner' || role == 'partner_admin';
+  bool get isStaff => role == 'partner_staff';
 
-  RiderUser copyWith({int? partnerId, String? profilePhotoUrl, String? packageTier, double? commissionRate}) {
+  RiderUser copyWith({
+    int? partnerId,
+    String? profilePhotoUrl,
+    String? packageTier,
+    double? commissionRate,
+    PartnerStaffInfo? staffInfo,
+  }) {
     return RiderUser(
       id: id,
       name: name,
@@ -51,6 +60,7 @@ class RiderUser {
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       packageTier: packageTier ?? this.packageTier,
       commissionRate: commissionRate ?? this.commissionRate,
+      staffInfo: staffInfo ?? this.staffInfo,
     );
   }
 
@@ -91,6 +101,7 @@ class RiderUser {
       profilePhotoUrl: resolveProfilePhotoUrl(json),
       packageTier: packageTier,
       commissionRate: commissionRate,
+      staffInfo: PartnerStaffInfo.fromJson(json),
     );
   }
 
@@ -106,6 +117,38 @@ class RiderUser {
       if (id is String) return int.tryParse(id);
     }
     return null;
+  }
+}
+
+class PartnerStaffInfo {
+  final int id;
+  final String role;
+  final List<String>? permissions;
+  final bool isActive;
+  final String? partnerName;
+
+  PartnerStaffInfo({
+    required this.id,
+    required this.role,
+    this.permissions,
+    required this.isActive,
+    this.partnerName,
+  });
+
+  bool get isAdmin => role == 'admin';
+  bool get isCook => role == 'cook';
+  bool get isCashier => role == 'cashier';
+
+  static PartnerStaffInfo? fromJson(Map<String, dynamic> json) {
+    final staff = json['staff'];
+    if (staff is! Map) return null;
+    return PartnerStaffInfo(
+      id: staff['id'] as int? ?? 0,
+      role: staff['role'] as String? ?? 'cashier',
+      permissions: (staff['permissions'] as List?)?.cast<String>(),
+      isActive: staff['is_active'] as bool? ?? true,
+      partnerName: staff['partner_name'] as String?,
+    );
   }
 }
 
@@ -261,7 +304,7 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       var user = RiderUser.fromJson(userData as Map<String, dynamic>);
       user = await _ensureMerchantPartnerId(user);
 
-      if (!user.isDriver && !user.isMerchant) {
+      if (!user.isDriver && !user.isMerchant && !user.isStaff) {
         state = state.copyWith(
           isLoading: false,
           error: 'This account is not authorized for this app.',
@@ -301,7 +344,8 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
 
   /// Clears local session immediately and returns the login view to show next.
   Future<AuthViewTarget> logout(WidgetRef ref) async {
-    final target = state.user?.isMerchant == true
+    final user = state.user;
+    final target = (user?.isMerchant == true || user?.isStaff == true)
         ? AuthViewTarget.merchant
         : AuthViewTarget.rider;
 
@@ -336,7 +380,7 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       var user = RiderUser.fromJson(userData);
       user = await _ensureMerchantPartnerId(user);
 
-      if (!user.isDriver && !user.isMerchant) {
+      if (!user.isDriver && !user.isMerchant && !user.isStaff) {
         state = state.copyWith(
           isLoading: false,
           error: 'This account is not authorized for this app.',

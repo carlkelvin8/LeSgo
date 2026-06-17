@@ -807,6 +807,7 @@ class _RiderBookingDetailScreenState
     if (status == null) return false;
     if (_showProofUpload) return false;
     return status == 'accepted' ||
+        status == 'ready_for_pickup' ||
         status == 'driver_arrived_at_pickup' ||
         status == 'in_progress' ||
         status == 'picked_up';

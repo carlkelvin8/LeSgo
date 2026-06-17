@@ -11,6 +11,8 @@ class MerchantEditProfileState {
   final String referralCode;
   final String? logoUrl;
   final String? logoPath;
+  final int prepTime;
+  final Map<String, dynamic>? openingHours;
   final bool isSubmitting;
   final String? errorMessage;
 
@@ -21,6 +23,8 @@ class MerchantEditProfileState {
     required this.referralCode,
     this.logoUrl,
     this.logoPath,
+    this.prepTime = 30,
+    this.openingHours,
     this.isSubmitting = false,
     this.errorMessage,
   });
@@ -38,6 +42,8 @@ class MerchantEditProfileState {
     String? logoUrl,
     String? logoPath,
     bool clearLogoPath = false,
+    int? prepTime,
+    Map<String, dynamic>? openingHours,
     bool? isSubmitting,
     String? errorMessage,
   }) {
@@ -48,6 +54,8 @@ class MerchantEditProfileState {
       referralCode: referralCode ?? this.referralCode,
       logoUrl: logoUrl ?? this.logoUrl,
       logoPath: clearLogoPath ? null : (logoPath ?? this.logoPath),
+      prepTime: prepTime ?? this.prepTime,
+      openingHours: openingHours ?? this.openingHours,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       errorMessage: errorMessage,
     );
@@ -93,6 +101,14 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
     state = state.copyWith(logoPath: path);
   }
 
+  void updatePrepTime(int minutes) {
+    state = state.copyWith(prepTime: minutes.clamp(5, 180));
+  }
+
+  void updateOpeningHours(Map<String, dynamic> hours) {
+    state = state.copyWith(openingHours: hours);
+  }
+
   Future<bool> attemptSave() async {
     if (!state.isValid) {
       state = state.copyWith(
@@ -123,6 +139,8 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
         supportEmail: state.email,
         logoUrl: state.logoUrl,
         logoPath: state.logoPath,
+        estimatedDeliveryMinutes: state.prepTime,
+        openingHours: state.openingHours,
       );
 
       final updated = await dataSource.updatePartnerProfile(partnerId, request);
@@ -164,6 +182,16 @@ final merchantEditProfileProvider = StateNotifierProvider.autoDispose<
     referralCode: referralCode,
     logoUrl: profile?.logoUrl,
   );
+
+  final initialPrepTime = profile?.estimatedDeliveryMinutes;
+  if (initialPrepTime != null && initialPrepTime > 0) {
+    notifier.updatePrepTime(initialPrepTime);
+  }
+
+  final initialHours = profile?.openingHours;
+  if (initialHours != null && initialHours.isNotEmpty) {
+    notifier.updateOpeningHours(Map<String, dynamic>.from(initialHours));
+  }
 
   ref.listen<AsyncValue<String>>(merchantReferralCodeProvider, (previous, next) {
     next.whenData(notifier.setReferralCode);

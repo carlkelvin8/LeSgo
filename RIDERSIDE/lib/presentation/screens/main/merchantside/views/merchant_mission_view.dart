@@ -129,7 +129,7 @@ class MerchantMissionView extends ConsumerWidget {
                                               SnackBar(
                                                 content: Text(
                                                   success
-                                                      ? '✅ Reward claimed! ${mission.reward} added to wallet'
+                                                      ? '✅ Reward claimed! Check your balance'
                                                       : '❌ Failed to claim reward',
                                                 ),
                                                 backgroundColor: success ? Colors.green : Colors.red,

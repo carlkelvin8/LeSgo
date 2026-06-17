@@ -244,7 +244,12 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             markerId: const MarkerId('dropoff'),
             position: LatLng(order.dropoffLat, order.dropoffLng),
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-            infoWindow: InfoWindow(title: 'Dropoff: ${order.dropoffAddress}'),
+            infoWindow: InfoWindow(
+              title: order.serviceId == 3 || order.serviceId == 4
+                  ? 'Delivery Address'
+                  : 'Dropoff',
+              snippet: order.dropoffAddress,
+            ),
           ),
         );
 
@@ -372,7 +377,9 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     if (RiderRouteUtils.isEnRouteToPickup(order.status)) {
       return 'Route to Pickup Location';
     }
-    return 'Route to Dropoff Location';
+    return order.serviceId == 3 || order.serviceId == 4
+        ? 'Route to Delivery Address'
+        : 'Route to Dropoff Location';
   }
 
   LatLng _getNavigationDestination(RiderOrder order) {
@@ -581,7 +588,9 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           // Pickup Section
                           _buildLocationCard(
                             icon: Icons.location_on,
-                            title: 'Pickup',
+                            title: currentOrder.serviceId == 3 || currentOrder.serviceId == 4
+                                ? 'Pick up from merchant'
+                                : 'Pickup',
                             address: currentOrder.pickupAddress,
                             onNavigate: () => _openNavigation(
                               currentOrder.pickupLat,
@@ -595,12 +604,14 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           // Dropoff Section
                           _buildLocationCard(
                             icon: Icons.flag,
-                            title: 'Dropoff',
+                            title: currentOrder.serviceId == 3 || currentOrder.serviceId == 4
+                                ? 'Deliver to customer'
+                                : 'Dropoff',
                             address: currentOrder.dropoffAddress,
                             onNavigate: () => _openNavigation(
                               currentOrder.dropoffLat,
                               currentOrder.dropoffLng,
-                              'Dropoff',
+                              'Delivery Address',
                             ),
                           ),
                           

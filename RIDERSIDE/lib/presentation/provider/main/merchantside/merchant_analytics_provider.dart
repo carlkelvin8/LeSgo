@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/merchant_order_amount_utils.dart';
+import '../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
+import 'merchant_menu_provider.dart';
 import 'merchant_orders_provider.dart';
 import 'merchant_profile_provider.dart';
 import 'merchant_reviews_provider.dart';
@@ -48,6 +50,32 @@ class MerchantPeakHour {
   }
 }
 
+class MerchantCustomerInfo {
+  final String name;
+  final int orderCount;
+  final double totalSpent;
+
+  const MerchantCustomerInfo({
+    required this.name,
+    required this.orderCount,
+    required this.totalSpent,
+  });
+}
+
+class MerchantCategoryPerformance {
+  final String categoryName;
+  final int orderCount;
+  final double revenue;
+  final int itemCount;
+
+  const MerchantCategoryPerformance({
+    required this.categoryName,
+    required this.orderCount,
+    required this.revenue,
+    required this.itemCount,
+  });
+}
+
 class MerchantAnalyticsSummary {
   final int totalOrders;
   final int completedOrders;
@@ -62,6 +90,16 @@ class MerchantAnalyticsSummary {
   final double averageRating;
   final int totalReviews;
 
+  // Customer analytics
+  final int newCustomerCount;
+  final int returningCustomerCount;
+  final List<MerchantCustomerInfo> topCustomers;
+  final double avgCustomerLifetimeValue;
+
+  // Product analytics
+  final List<MerchantTopItem> leastSoldItems;
+  final List<MerchantCategoryPerformance> categoryPerformance;
+
   const MerchantAnalyticsSummary({
     this.totalOrders = 0,
     this.completedOrders = 0,
@@ -75,6 +113,12 @@ class MerchantAnalyticsSummary {
     this.topItems = const [],
     this.averageRating = 0,
     this.totalReviews = 0,
+    this.newCustomerCount = 0,
+    this.returningCustomerCount = 0,
+    this.topCustomers = const [],
+    this.avgCustomerLifetimeValue = 0,
+    this.leastSoldItems = const [],
+    this.categoryPerformance = const [],
   });
 }
 
@@ -89,6 +133,7 @@ final merchantAnalyticsSummaryProvider =
   final period = ref.watch(merchantAnalyticsPeriodProvider);
   final profile = ref.watch(merchantProfileProvider).valueOrNull;
   final reviewsAsync = ref.watch(merchantReviewsDashboardProvider);
+  final menuAsync = ref.watch(merchantMenuProvider);
 
   final rating = reviewsAsync.maybeWhen(
     data: (dashboard) => dashboard.statistics.averageRating,
@@ -99,6 +144,18 @@ final merchantAnalyticsSummaryProvider =
     orElse: () => profile?.totalReviews ?? 0,
   );
 
+  final menuItems = menuAsync.when(
+    data: (menu) {
+      if (menu == null) return <MenuItemDto>[];
+      return menu.categories
+          .where((cat) => cat.availableItems != null)
+          .expand((cat) => cat.availableItems!)
+          .toList();
+    },
+    loading: () => <MenuItemDto>[],
+    error: (_, __) => <MenuItemDto>[],
+  );
+
   return ordersAsync.when(
     loading: () => const AsyncValue.loading(),
     error: (error, stack) => AsyncValue.error(error, stack),
@@ -106,6 +163,7 @@ final merchantAnalyticsSummaryProvider =
       _buildSummary(
         orders,
         period,
+        menuItems: menuItems,
         averageRating: rating,
         totalReviews: totalReviews,
       ),
@@ -160,6 +218,7 @@ final merchantTodayOrderCountProvider = Provider<AsyncValue<int>>((ref) {
 MerchantAnalyticsSummary _buildSummary(
   List<OrderDto> orders,
   MerchantEarningsPeriod period, {
+  List<MenuItemDto> menuItems = const [],
   required double averageRating,
   required int totalReviews,
 }) {
@@ -173,11 +232,47 @@ MerchantAnalyticsSummary _buildSummary(
   final hourlyCounts = List<int>.filled(24, 0);
   final trendBuckets = _createTrendBuckets(period);
 
+  // Customer tracking
+  final customerMap = <int, MerchantCustomerInfo>{};
+  // Track all customer order dates to determine new vs returning
+  final allCustomerOrderDates = <int, List<DateTime>>{};
+  final periodStartDate = _periodStartDate(period);
+
   for (final order in orders) {
     if (!_isOrderCreatedInPeriod(order, period)) continue;
 
     totalOrders += 1;
     _addToTrend(trendBuckets, order, period);
+
+    // Track customer
+    if (order.user != null) {
+      final cid = order.user!.id;
+      final spent = MerchantOrderAmountUtils.foodEarnings(order);
+      final existing = customerMap[cid];
+      if (existing == null) {
+        customerMap[cid] = MerchantCustomerInfo(
+          name: order.user!.name,
+          orderCount: 1,
+          totalSpent: spent,
+        );
+      } else {
+        customerMap[cid] = MerchantCustomerInfo(
+          name: existing.name,
+          orderCount: existing.orderCount + 1,
+          totalSpent: existing.totalSpent + spent,
+        );
+      }
+    }
+
+    // Track all dates for new vs returning detection
+    if (order.user != null) {
+      final date = _parseDate(order.createdAt);
+      if (date != null) {
+        allCustomerOrderDates
+            .putIfAbsent(order.user!.id, () => [])
+            .add(date);
+      }
+    }
 
     if (MerchantOrderAmountUtils.isCompleted(order)) {
       completedOrders += 1;
@@ -203,6 +298,31 @@ MerchantAnalyticsSummary _buildSummary(
   final averageOrderValue =
       completedOrders > 0 ? totalRevenue / completedOrders : 0.0;
 
+  // New vs returning customers
+  var newCount = 0;
+  var returningCount = 0;
+  for (final entry in allCustomerOrderDates.entries) {
+    final dates = entry.value;
+    // A customer is "returning" if they have an order BEFORE the period start
+    final hadPriorOrder = dates.any((d) => periodStartDate != null && d.isBefore(periodStartDate));
+    if (hadPriorOrder) {
+      returningCount++;
+    } else {
+      newCount++;
+    }
+  }
+
+  // Top customers (sorted by total spent)
+  final topCustomersList = customerMap.values.toList()
+    ..sort((a, b) => b.totalSpent.compareTo(a.totalSpent));
+
+  // Avg customer lifetime value
+  final uniqueCustomerCount = customerMap.length;
+  final avgLifetimeValue = uniqueCustomerCount > 0
+      ? totalRevenue / uniqueCustomerCount
+      : 0.0;
+
+  // Peak hours
   final peakHours = <MerchantPeakHour>[];
   for (var hour = 0; hour < 24; hour++) {
     if (hourlyCounts[hour] > 0) {
@@ -212,11 +332,60 @@ MerchantAnalyticsSummary _buildSummary(
   peakHours.sort((a, b) => b.orderCount.compareTo(a.orderCount));
   final topPeakHours = peakHours.take(5).toList();
 
+  // Top items
   final topItems = itemMap.values.toList()
     ..sort((a, b) {
       final qty = b.quantitySold.compareTo(a.quantitySold);
       return qty != 0 ? qty : b.revenue.compareTo(a.revenue);
     });
+
+  // Least sold items - items with > 0 sales, sorted ascending
+  final leastSold = itemMap.values.toList()
+    ..sort((a, b) {
+      final qty = a.quantitySold.compareTo(b.quantitySold);
+      return qty != 0 ? qty : a.revenue.compareTo(b.revenue);
+    });
+
+  // Category performance - build menuItemId -> categoryName lookup
+  final itemCategoryMap = <int, String>{};
+  for (final item in menuItems) {
+    final catName = item.category?.name ?? 'Uncategorized';
+    itemCategoryMap[item.id] = catName;
+  }
+
+  final categoryMap = <String, MerchantCategoryPerformance>{};
+  for (final order in orders) {
+    if (!_isOrderCreatedInPeriod(order, period)) continue;
+    if (!MerchantOrderAmountUtils.isCompleted(order)) continue;
+
+    final items = order.orderItems ?? [];
+    for (final item in items) {
+      final catName = item.menuItemId != null
+          ? (itemCategoryMap[item.menuItemId] ?? 'Uncategorized')
+          : 'Uncategorized';
+      final lineRevenue = item.totalPrice ??
+          ((item.unitPrice ?? 0) * item.quantity);
+      final existing = categoryMap[catName];
+      if (existing == null) {
+        categoryMap[catName] = MerchantCategoryPerformance(
+          categoryName: catName,
+          orderCount: 1,
+          revenue: lineRevenue,
+          itemCount: item.quantity,
+        );
+      } else {
+        categoryMap[catName] = MerchantCategoryPerformance(
+          categoryName: existing.categoryName,
+          orderCount: existing.orderCount + 1,
+          revenue: existing.revenue + lineRevenue,
+          itemCount: existing.itemCount + item.quantity,
+        );
+      }
+    }
+  }
+
+  final categoryPerformance = categoryMap.values.toList()
+    ..sort((a, b) => b.revenue.compareTo(a.revenue));
 
   return MerchantAnalyticsSummary(
     totalOrders: totalOrders,
@@ -231,6 +400,12 @@ MerchantAnalyticsSummary _buildSummary(
     topItems: topItems.take(8).toList(),
     averageRating: averageRating,
     totalReviews: totalReviews,
+    newCustomerCount: newCount,
+    returningCustomerCount: returningCount,
+    topCustomers: topCustomersList.take(5).toList(),
+    avgCustomerLifetimeValue: avgLifetimeValue,
+    leastSoldItems: leastSold.take(5).toList(),
+    categoryPerformance: categoryPerformance,
   );
 }
 
@@ -407,4 +582,20 @@ String _formatHour(int hour) {
 String _weekdayLabel(int weekday) {
   const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   return labels[(weekday - 1) % 7];
+}
+
+DateTime? _periodStartDate(MerchantEarningsPeriod period) {
+  final now = DateTime.now();
+  switch (period) {
+    case MerchantEarningsPeriod.today:
+      return DateTime(now.year, now.month, now.day);
+    case MerchantEarningsPeriod.week:
+      return DateTime(now.year, now.month, now.day)
+          .subtract(const Duration(days: 6));
+    case MerchantEarningsPeriod.month:
+      return DateTime(now.year, now.month, 1);
+    case MerchantEarningsPeriod.all:
+      return DateTime(now.year, now.month, now.day)
+          .subtract(const Duration(days: 29));
+  }
 }

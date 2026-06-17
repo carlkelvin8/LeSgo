@@ -4,12 +4,14 @@ import 'push_notification_service.dart';
 class MerchantOrderAlertService {
   MerchantOrderAlertService._();
 
-  static Future<void> alertNewOrder({required String orderRef}) async {
+  static Future<void> alertNewOrder({required String orderRef, bool playSound = true}) async {
     HapticFeedback.heavyImpact();
 
-    try {
-      await SystemSound.play(SystemSoundType.alert);
-    } catch (_) {}
+    if (playSound) {
+      try {
+        await SystemSound.play(SystemSoundType.alert);
+      } catch (_) {}
+    }
 
     await PushNotificationService.show(
       title: 'New Order!',

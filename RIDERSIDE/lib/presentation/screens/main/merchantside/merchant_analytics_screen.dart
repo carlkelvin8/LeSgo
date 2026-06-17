@@ -277,6 +277,10 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                   ],
                 ),
               ),
+              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+              _customerAnalyticsSection(context, summary, horizontalPadding),
+              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+              _productAnalyticsSection(context, summary, horizontalPadding),
             ],
           ),
         ),
@@ -690,6 +694,370 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
           }),
         ),
         duration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
+  Widget _customerAnalyticsSection(
+    BuildContext context,
+    MerchantAnalyticsSummary summary,
+    double horizontalPadding,
+  ) {
+    return _sectionCard(
+      context,
+      horizontalPadding,
+      title: 'Customer Analytics',
+      subtitle: 'New vs returning, top spenders, and lifetime value',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _newVsReturningRow(context, summary),
+          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+          if (summary.topCustomers.isNotEmpty) ...[
+            Text(
+              'Top Customers',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 14),
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            ...summary.topCustomers.asMap().entries.map((entry) {
+              final index = entry.key;
+              final customer = entry.value;
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: ResponsiveUtils.spacing(context, 8),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3EAFF),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${index + 1}',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 11),
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF5F2D82),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            customer.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 13),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${customer.orderCount} order${customer.orderCount == 1 ? '' : 's'} · ${formatMerchantPeso(customer.totalSpent)}',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          Row(
+            children: [
+              Expanded(
+                child: _miniMetric(
+                  context,
+                  label: 'Avg Order Value',
+                  value: formatMerchantPeso(summary.averageOrderValue),
+                  icon: Icons.shopping_cart_outlined,
+                  color: const Color(0xFF5F2D82),
+                ),
+              ),
+              SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+              Expanded(
+                child: _miniMetric(
+                  context,
+                  label: 'Avg Lifetime Value',
+                  value: formatMerchantPeso(summary.avgCustomerLifetimeValue),
+                  icon: Icons.trending_up,
+                  color: const Color(0xFF2E7D32),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _newVsReturningRow(
+    BuildContext context,
+    MerchantAnalyticsSummary summary,
+  ) {
+    final total = summary.newCustomerCount + summary.returningCustomerCount;
+    if (total == 0) return _emptyHint(context, 'No customer data in this period');
+
+    final newFraction = summary.newCustomerCount / total;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'New vs Returning',
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 14),
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 10)),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            height: 24,
+            child: Row(
+              children: [
+                Expanded(
+                  flex: summary.newCustomerCount,
+                  child: Container(
+                    color: const Color(0xFF5F2D82),
+                    alignment: Alignment.center,
+                    child: summary.newCustomerCount > 0
+                        ? Text(
+                            'New ${summary.newCustomerCount}',
+                            style: const TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+                Expanded(
+                  flex: summary.returningCustomerCount,
+                  child: Container(
+                    color: const Color(0xFF9B59B6),
+                    alignment: Alignment.center,
+                    child: summary.returningCustomerCount > 0
+                        ? Text(
+                            'Returning ${summary.returningCustomerCount}',
+                            style: const TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+        Row(
+          children: [
+            _dotLegend(context, 'New', const Color(0xFF5F2D82)),
+            SizedBox(width: ResponsiveUtils.spacing(context, 16)),
+            _dotLegend(context, 'Returning', const Color(0xFF9B59B6)),
+            const Spacer(),
+            Text(
+              '${(newFraction * 100).toStringAsFixed(0)}% new',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 11),
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _dotLegend(BuildContext context, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 12),
+            color: Colors.grey.shade700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _productAnalyticsSection(
+    BuildContext context,
+    MerchantAnalyticsSummary summary,
+    double horizontalPadding,
+  ) {
+    return _sectionCard(
+      context,
+      horizontalPadding,
+      title: 'Product Analytics',
+      subtitle: 'Best & least sellers, category performance',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (summary.leastSoldItems.isNotEmpty) ...[
+            Text(
+              'Least-Selling Items',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 14),
+                fontWeight: FontWeight.w700,
+                color: Colors.red.shade700,
+              ),
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            ...summary.leastSoldItems.map((item) => Padding(
+              padding: EdgeInsets.only(
+                bottom: ResponsiveUtils.spacing(context, 8),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.arrow_downward,
+                      size: 14, color: Colors.red.shade400),
+                  ),
+                  SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 13),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${item.quantitySold} sold · ${formatMerchantPeso(item.revenue)}',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 11),
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )),
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          ],
+          if (summary.categoryPerformance.isNotEmpty) ...[
+            Text(
+              'Category Performance',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 14),
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            ...summary.categoryPerformance.map((cat) {
+              final maxRev = summary.categoryPerformance.first.revenue;
+              final fraction = maxRev > 0 ? cat.revenue / maxRev : 0.0;
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: ResponsiveUtils.spacing(context, 10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          cat.categoryName,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 13),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${formatMerchantPeso(cat.revenue)} · ${cat.itemCount} items',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 11),
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: fraction,
+                        minHeight: 8,
+                        backgroundColor: const Color(0xFFE8D9F5),
+                        color: const Color(0xFF5F2D82),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+          if (summary.categoryPerformance.isEmpty &&
+              summary.leastSoldItems.isEmpty)
+            _emptyHint(context, 'No product data in this period'),
+        ],
       ),
     );
   }

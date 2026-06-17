@@ -124,7 +124,8 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
     ref.listen<RiderAuthState>(riderAuthProvider, (previous, next) {
       if (!mounted) return;
       if ((previous?.isLoggedIn ?? false) && !next.isLoggedIn) {
-        final target = previous?.user?.isMerchant == true
+        final user = previous?.user;
+        final target = (user?.isMerchant == true || user?.isStaff == true)
             ? AuthViewTarget.merchant
             : AuthViewTarget.rider;
         navigateToLoginAfterLogout(context, ref, target: target);

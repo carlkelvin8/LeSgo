@@ -166,11 +166,16 @@ class _RiderBookingDetailMapSectionState
     }
 
     if (booking.pickupLat != null && booking.pickupLng != null) {
+      final isFood = booking.category == BookingCategory.lesEat ||
+          booking.category == BookingCategory.lesBuy;
       markers.add(Marker(
         markerId: const MarkerId('pickup'),
         position: LatLng(booking.pickupLat!, booking.pickupLng!),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: const InfoWindow(title: 'Pickup Location'),
+        infoWindow: InfoWindow(
+          title: isFood ? 'Merchant' : 'Pickup Location',
+          snippet: booking.pickupAddress,
+        ),
       ));
     }
 
@@ -179,7 +184,10 @@ class _RiderBookingDetailMapSectionState
         markerId: const MarkerId('dropoff'),
         position: LatLng(booking.dropoffLat!, booking.dropoffLng!),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        infoWindow: const InfoWindow(title: 'Dropoff Location'),
+        infoWindow: InfoWindow(
+          title: 'Delivery Address',
+          snippet: booking.deliveryAddress ?? booking.address,
+        ),
       ));
     }
 

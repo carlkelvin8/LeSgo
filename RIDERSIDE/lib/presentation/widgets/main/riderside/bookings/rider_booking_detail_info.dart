@@ -167,7 +167,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                 _RouteRow(
                   icon: Icons.circle,
                   iconColor: Colors.green,
-                  label: 'Pick up',
+                  label: _isFoodOrder ? 'Pick up from' : 'Pick up',
                   value: booking.pickupAddress ?? 'N/A',
                 ),
                 Padding(
@@ -183,7 +183,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                 _RouteRow(
                   icon: Icons.place,
                   iconColor: Colors.red,
-                  label: 'Drop off',
+                  label: 'Deliver to',
                   value: booking.deliveryAddress ?? booking.address,
                 ),
               ],

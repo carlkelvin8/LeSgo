@@ -658,6 +658,8 @@ class UpdatePartnerRequest {
   final String? logoUrl;
   final String? logoPath;
   final bool? isOpen;
+  final int? estimatedDeliveryMinutes;
+  final Map<String, dynamic>? openingHours;
   
   UpdatePartnerRequest({
     this.name,
@@ -667,6 +669,8 @@ class UpdatePartnerRequest {
     this.logoUrl,
     this.logoPath,
     this.isOpen,
+    this.estimatedDeliveryMinutes,
+    this.openingHours,
   });
   
   Map<String, dynamic> toJson() {
@@ -676,6 +680,10 @@ class UpdatePartnerRequest {
     if (supportEmail != null) map['support_email'] = supportEmail;
     if (description != null) map['description'] = description;
     if (isOpen != null) map['is_open'] = isOpen;
+    if (estimatedDeliveryMinutes != null) {
+      map['estimated_delivery_minutes'] = estimatedDeliveryMinutes;
+    }
+    if (openingHours != null) map['opening_hours'] = openingHours;
     return map;
   }
 }

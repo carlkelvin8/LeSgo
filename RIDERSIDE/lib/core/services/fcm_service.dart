@@ -12,6 +12,7 @@ import 'api_service.dart';
 import 'fcm_background_handler.dart';
 import 'notification_navigation_service.dart';
 import 'notification_payload.dart';
+import 'order_sound_alert_service.dart';
 import 'secure_storage_service.dart';
 
 class FcmService {
@@ -33,6 +34,13 @@ class FcmService {
     if (kIsWeb) return;
 
     await _initLocalNotifications();
+
+    // Initialize order sound alert service
+    try {
+      await OrderSoundAlertService().initialize();
+    } catch (e) {
+      AppLogger.debug('Could not initialize OrderSoundAlertService: $e');
+    }
 
     if (!SecretsConfig.isFirebaseConfigured &&
         !DefaultFirebaseOptions.isConfigured) {
@@ -199,10 +207,31 @@ class FcmService {
     final notification = message.notification;
     if (notification == null) return;
 
+    // Check if this is an order notification
+    final isOrderNotification = _isOrderNotification(message);
+
+    if (isOrderNotification) {
+      // Play order alert sound
+      try {
+        await OrderSoundAlertService().playOrderAlert();
+      } catch (e) {
+        AppLogger.debug('Could not play order alert sound: $e');
+      }
+    }
+
     await showLocalNotification(
       title: notification.title ?? 'LezGo Rider',
       body: notification.body ?? '',
       payload: _extractPayload(message),
     );
+  }
+
+  /// Check if the message is an order notification
+  bool _isOrderNotification(RemoteMessage message) {
+    final data = message.data;
+    final notificationType = data['type'] ?? data['notification_type'] ?? '';
+    final hasOrderId = data['order_id'] != null || data['orderId'] != null;
+    
+    return notificationType.toLowerCase().contains('order') || hasOrderId;
   }
 }

@@ -207,7 +207,9 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           position: LatLng(order.dropoffLat, order.dropoffLng),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
           infoWindow: InfoWindow(
-            title: 'Dropoff',
+            title: order.serviceId == 3 || order.serviceId == 4
+                ? 'Delivery Address'
+                : 'Dropoff',
             snippet: order.dropoffAddress,
           ),
         ),
@@ -640,15 +642,30 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 ),
                 SizedBox(width: 8.0),
                 Expanded(
-                  child: Text(
-                    order.pickupAddress,
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 13.0,
-                      color: Colors.grey.shade800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order.serviceId == 3 || order.serviceId == 4
+                            ? 'Pick up from merchant'
+                            : 'Pickup',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 10.0,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                      Text(
+                        order.pickupAddress,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 13.0,
+                          color: Colors.grey.shade800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
                 IconButton(
@@ -672,15 +689,30 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 ),
                 SizedBox(width: 8.0),
                 Expanded(
-                  child: Text(
-                    order.dropoffAddress,
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 13.0,
-                      color: Colors.grey.shade800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order.serviceId == 3 || order.serviceId == 4
+                            ? 'Deliver to customer'
+                            : 'Dropoff',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 10.0,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                      Text(
+                        order.dropoffAddress,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 13.0,
+                          color: Colors.grey.shade800,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
                 IconButton(
@@ -688,7 +720,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   onPressed: () => _openNavigation(
                     order.dropoffLat,
                     order.dropoffLng,
-                    'Dropoff',
+                    'Delivery Address',
                   ),
                 ),
               ],
@@ -830,15 +862,29 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               Icon(Icons.location_on, size: 16, color: Colors.green),
               SizedBox(width: 4.0),
               Expanded(
-                child: Text(
-                  order.pickupAddress,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 12.0,
-                    color: Colors.grey.shade700,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (order.serviceId == 3 || order.serviceId == 4)
+                      Text(
+                        'Merchant',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 10.0,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    Text(
+                      order.pickupAddress,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 12.0,
+                        color: Colors.grey.shade700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -851,15 +897,29 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               Icon(Icons.flag, size: 16, color: Colors.red),
               SizedBox(width: 4.0),
               Expanded(
-                child: Text(
-                  order.dropoffAddress,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 12.0,
-                    color: Colors.grey.shade700,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (order.serviceId == 3 || order.serviceId == 4)
+                      Text(
+                        'Delivery Address',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 10.0,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    Text(
+                      order.dropoffAddress,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 12.0,
+                        color: Colors.grey.shade700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
             ],
