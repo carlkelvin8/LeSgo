@@ -43,10 +43,34 @@ val googleMapsApiKey = loadGoogleMapsApiKey(rootProject.projectDir.parentFile)
 val keystoreProperties = loadKeystoreProperties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 
+// Validate Android SDK setup
+fun validateAndroidSdk() {
+    val androidHome = System.getenv("ANDROID_HOME") ?: System.getProperty("android.home")
+    if (androidHome == null || androidHome.isEmpty()) {
+        throw GradleException(
+            "❌ ANDROID_HOME is not set.\n" +
+            "Set ANDROID_HOME to your Android SDK location (e.g., C:\\Users\\USERNAME\\AppData\\Local\\Android\\sdk)\n" +
+            "For detailed setup instructions, see: android/SETUP.md"
+        )
+    }
+    
+    val cmdlineToolsPath = java.io.File(androidHome).resolve("cmdline-tools/latest/bin/sdkmanager.bat")
+    if (!cmdlineToolsPath.exists()) {
+        throw GradleException(
+            "❌ Android SDK cmdline-tools not found at: $cmdlineToolsPath\n" +
+            "Follow the setup instructions in android/SETUP.md to install cmdline-tools\n" +
+            "Quick setup: powershell -ExecutionPolicy Bypass -File android/tool/quick_fix.ps1"
+        )
+    }
+}
+
 android {
     namespace = "com.lesgo.rider"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
+    
+    // Validate Android SDK before building
+    validateAndroidSdk()
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true

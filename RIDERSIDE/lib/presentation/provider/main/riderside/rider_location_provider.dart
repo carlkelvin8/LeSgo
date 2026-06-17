@@ -70,6 +70,7 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
   final Ref _ref;
   StreamSubscription<Position>? _positionStream;
   bool _starting = false;
+  bool _isDisposed = false;
 
   void setActiveOrderId(int? orderId) {
     state = state.copyWith(
@@ -94,14 +95,21 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
     await _getCurrentLocation();
     await _startPositionStream();
     state = state.copyWith(isTracking: true);
+    AppLogger.debug('✅ Location tracking started');
     _starting = false;
   }
 
   Future<void> stopTracking() async {
+    if (_isDisposed) return;
+    
     await _positionStream?.cancel();
     _positionStream = null;
     state = state.copyWith(isTracking: false, clearActiveOrderId: true);
-    await _sendOfflineStatus();
+    
+    // Only send offline status if we still have a valid location and haven't disposed
+    if (!_isDisposed && state.hasLocation) {
+      await _sendOfflineStatus();
+    }
   }
 
   Future<bool> _requestPermissions() async {
@@ -122,11 +130,22 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
 
     state = state.copyWith(clearError: true);
 
+    // Request background location permission on Android (required for active deliveries)
     if (!kIsWeb && Platform.isAndroid) {
       final always = await Permission.locationAlways.request();
       if (!always.isGranted) {
-        debugPrint('Background location not granted — foreground-only tracking');
+        AppLogger.error(
+          '❌ Background location permission denied. This is required for accurate delivery tracking.',
+          null,
+        );
+        state = state.copyWith(
+          error: 'Background location permission is required for deliveries. '
+              'Open Settings to grant "Allow all the time" location access.',
+          needsLocationSettings: true,
+        );
+        return false;
       }
+      AppLogger.debug('✅ Background location permission granted');
     }
 
     return true;
@@ -202,7 +221,13 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
     ).listen(
       (position) async {
         if (!_ref.read(riderDutyProvider) || !state.isTracking) return;
-        if (position.accuracy > 35.0) return;
+        
+        // Allow positions with accuracy up to 50m (more lenient for urban areas)
+        // In areas with poor GPS (urban canyons, tunnels), positions with up to 50m accuracy are still valuable
+        if (position.accuracy > 50.0) {
+          AppLogger.debug('⚠️ Skipping position with poor accuracy: ${position.accuracy.toStringAsFixed(1)}m');
+          return;
+        }
 
         if (state.hasLocation) {
           final distance = Geolocator.distanceBetween(
@@ -211,6 +236,7 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
             position.latitude,
             position.longitude,
           );
+          // Skip if distance is less than 2m (no significant movement)
           if (distance < 2.0) return;
         }
 
@@ -223,7 +249,7 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
         await _sendLocationToBackend(position.latitude, position.longitude);
       },
       onError: (Object e) {
-        debugPrint('Position stream error: $e');
+        AppLogger.warn('Position stream error: $e');
       },
     );
   }
@@ -265,20 +291,20 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
   }
 
   Future<void> _sendOfflineStatus() async {
+    if (_isDisposed || !state.hasLocation) return;
+    
     try {
       final authState = _ref.read(riderAuthProvider);
       final driverProfileId = authState.user?.driverProfileId;
       if (driverProfileId == null) return;
 
-      if (state.hasLocation) {
-        await ApiService.updateDriverLocation(
-          driverProfileId,
-          state.latitude!,
-          state.longitude!,
-          status: 'offline',
-          orderId: state.activeOrderId,
-        );
-      }
+      await ApiService.updateDriverLocation(
+        driverProfileId,
+        state.latitude!,
+        state.longitude!,
+        status: 'offline',
+        orderId: state.activeOrderId,
+      );
     } catch (e) {
       debugPrint('Error sending offline status: $e');
     }
@@ -291,7 +317,9 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _positionStream?.cancel();
+    _positionStream = null;
     super.dispose();
   }
 }
