@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/constants/order_status_constants.dart';
 import '../../../../core/utils/payment_status_utils.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../data/data_source/dto/wallet/wallet_dto.dart';
@@ -134,7 +135,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
             (item) => TransactionItem(
               name: item.name,
               quantity: item.quantity,
-              price: item.actualPrice ?? item.estimatedPrice,
+              price: item.actualPrice ?? item.estimatedPrice ?? 0.0,
               unit: item.unit,
             ),
           )
@@ -270,15 +271,15 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     }
 
     final status = current.selectedStatus?.trim().toLowerCase();
-    if (status == 'completed') {
+    if (status == OrderStatusConstants.completed) {
       filtered = filtered
           .where((t) => t.status == TransactionStatus.completed)
           .toList();
-    } else if (status == 'cancelled') {
+    } else if (status == OrderStatusConstants.cancelled) {
       filtered = filtered
           .where((t) => t.status == TransactionStatus.cancelled)
           .toList();
-    } else if (status == 'pending') {
+    } else if (status == OrderStatusConstants.pending) {
       filtered = filtered
           .where((t) => t.status == TransactionStatus.pending)
           .toList();
@@ -289,13 +290,13 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     if (paymentStatus != null && paymentStatus.isNotEmpty) {
       filtered = filtered.where((t) {
         switch (paymentStatus) {
-          case 'paid':
+          case OrderStatusConstants.paid:
             return t.paymentStatus == PaymentStatus.paid;
-          case 'failed':
-            return t.paymentStatus == PaymentStatus.failed;
-          case 'refunded':
+          case OrderStatusConstants.refunded:
             return t.paymentStatus == PaymentStatus.refunded;
-          case 'pending':
+          case OrderStatusConstants.failed:
+            return t.paymentStatus == PaymentStatus.failed;
+          case OrderStatusConstants.pending_payment:
             return t.paymentStatus == PaymentStatus.pending;
           default:
             return true;

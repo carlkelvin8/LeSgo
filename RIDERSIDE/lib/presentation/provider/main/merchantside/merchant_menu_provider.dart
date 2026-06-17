@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../auth/rider_auth_provider.dart';
@@ -25,19 +26,19 @@ final merchantMenuProvider = FutureProvider.autoDispose<MenuResponse?>((ref) asy
   final partnerId = authState.user?.partnerId ?? profile?.id;
 
   if (partnerId == null) {
-    print('❌ merchantMenuProvider - No partner_id available');
+    AppLogger.warn('merchantMenuProvider - No partner_id available');
     return null;
   }
   
-  print('📋 merchantMenuProvider - Using partner_id: $partnerId');
+  AppLogger.debug('📋 merchantMenuProvider - Using partner_id: $partnerId');
   
   try {
     final dataSource = ref.read(merchantDataSourceProvider);
     final menu = await dataSource.getMerchantMenu(partnerId);
-    print('✅ Loaded menu with ${menu.categories.length} categories');
+    AppLogger.debug('✅ Loaded menu with ${menu.categories.length} categories');
     return menu;
   } catch (e) {
-    print('❌ Error loading menu: $e');
+    AppLogger.error('Error loading menu', e);
     rethrow;
   }
 });
@@ -50,19 +51,19 @@ final merchantMenuItemsProvider = FutureProvider.autoDispose<List<MenuItemDto>>(
   final partnerId = authState.user?.partnerId ?? profile?.id;
 
   if (partnerId == null) {
-    print('❌ merchantMenuItemsProvider - No partner_id available');
+    AppLogger.warn('merchantMenuItemsProvider - No partner_id available');
     return [];
   }
   
-  print('📋 merchantMenuItemsProvider - Using partner_id: $partnerId');
+  AppLogger.debug('📋 merchantMenuItemsProvider - Using partner_id: $partnerId');
   
   try {
     final dataSource = ref.read(merchantDataSourceProvider);
     final items = await dataSource.getMenuItems(partnerId);
-    print('✅ Loaded ${items.length} menu items');
+    AppLogger.debug('✅ Loaded ${items.length} menu items');
     return items;
   } catch (e) {
-    print('❌ Error loading menu items: $e');
+    AppLogger.error('Error loading menu items', e);
     rethrow;
   }
 });

@@ -1,15 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_logger.dart';
-import '../../../../core/utils/rider_earnings_utils.dart';
 
 /// Quick stats dashboard data
 final riderStatsProvider = FutureProvider.autoDispose<RiderStatsState>((ref) async {
   try {
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-
     // Fetch today's earnings
     final todayEarnings = await ApiService.getDriverEarnings(period: 'today');
     final todayTotal = (todayEarnings['summary']?['total_earnings'] as num?)?.toDouble() ?? 0.0;

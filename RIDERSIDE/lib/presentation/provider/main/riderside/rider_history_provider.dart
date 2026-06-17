@@ -235,11 +235,17 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
         // Fallback: calculate from completion rate
         if (bookings.isNotEmpty) {
           final completionRate = completedCount / bookings.length;
-          if (completionRate >= 0.95) stars = 5;
-          else if (completionRate >= 0.85) stars = 4;
-          else if (completionRate >= 0.75) stars = 3;
-          else if (completionRate >= 0.60) stars = 2;
-          else stars = 1;
+          if (completionRate >= 0.95) {
+            stars = 5;
+          } else if (completionRate >= 0.85) {
+            stars = 4;
+          } else if (completionRate >= 0.75) {
+            stars = 3;
+          } else if (completionRate >= 0.60) {
+            stars = 2;
+          } else {
+            stars = 1;
+          }
         }
       }
 

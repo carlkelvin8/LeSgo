@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../../data/data_source/dto/merchant/partner_dto.dart';
 import '../../auth/rider_auth_provider.dart';
@@ -14,19 +15,19 @@ final merchantProfileProvider = FutureProvider.autoDispose<PartnerDto?>((ref) as
   final partnerId = authState.user?.partnerId;
   
   if (partnerId == null) {
-    print('❌ merchantProfileProvider - No partner_id available');
+    AppLogger.warn('merchantProfileProvider - No partner_id available');
     return null;
   }
   
-  print('📋 merchantProfileProvider - Using partner_id: $partnerId');
+  AppLogger.debug('📋 merchantProfileProvider - Using partner_id: $partnerId');
   
   try {
     final dataSource = ref.read(merchantDataSourceProvider);
     final profile = await dataSource.getPartnerProfile(partnerId);
-    print('✅ Loaded merchant profile: ${profile.name}');
+    AppLogger.debug('✅ Loaded merchant profile: ${profile.name}');
     return profile;
   } catch (e) {
-    print('❌ Error loading merchant profile: $e');
+    AppLogger.error('Error loading merchant profile', e);
     rethrow;
   }
 });
@@ -40,7 +41,7 @@ final merchantReferralCodeProvider = FutureProvider.autoDispose<String>((ref) as
     final code = dashboard['referral_code']?.toString().trim();
     if (code != null && code.isNotEmpty) return code;
   } catch (e) {
-    print('⚠️ Referral dashboard fetch failed: $e');
+    AppLogger.warn('Referral dashboard fetch failed: $e');
   }
 
   try {
@@ -51,7 +52,7 @@ final merchantReferralCodeProvider = FutureProvider.autoDispose<String>((ref) as
       if (code != null && code.isNotEmpty) return code;
     }
   } catch (e) {
-    print('⚠️ getMe referral fetch failed: $e');
+    AppLogger.warn('getMe referral fetch failed: $e');
   }
 
   return '';

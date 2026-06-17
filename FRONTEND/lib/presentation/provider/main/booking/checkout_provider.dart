@@ -231,7 +231,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
       dropoffLng = deliveryAddr.longitude;
 
-      deliveryAddress = deliveryAddr.addressLine1;
+      deliveryAddress = deliveryAddr.addressLine1 ?? deliveryAddress;
 
     }
 
@@ -774,9 +774,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
             return false;
           }
         } on DioException catch (e) {
-          final serverMsg = (e.response?.data is Map)
-              ? (e.response!.data['message'] as String? ?? '')
-              : '';
+          final serverMsg = _extractErrorMessage(e, '');
           state = state.copyWith(
             isLoading: false,
             error: serverMsg.isNotEmpty
@@ -874,6 +872,24 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       return 49.0;
     }
     return fee;
+  }
+
+  /// Safely extract error message from various response formats
+  String _extractErrorMessage(dynamic error, String fallback) {
+    try {
+      if (error is DioException && error.response?.data is Map) {
+        final responseData = error.response!.data as Map;
+        if (responseData['message'] is String && (responseData['message'] as String).isNotEmpty) {
+          return responseData['message'] as String;
+        }
+        if (responseData['error'] is String && (responseData['error'] as String).isNotEmpty) {
+          return responseData['error'] as String;
+        }
+      }
+      return fallback;
+    } catch (_) {
+      return fallback;
+    }
   }
 
 }

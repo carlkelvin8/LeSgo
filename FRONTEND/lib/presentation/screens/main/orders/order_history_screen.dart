@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../provider/main/orders/order_history_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/orders/order_card.dart';
+import '../../../../core/constants/order_status_constants.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import 'order_detail_screen.dart';
 import '../../../widgets/common/retry_widget.dart';
@@ -89,18 +90,18 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                     const SizedBox(width: 8),
                     _FilterChip(
                       label: 'Completed',
-                      isSelected: orderState.selectedFilter == 'completed',
+                      isSelected: orderState.selectedFilter == OrderStatusConstants.completed,
                       onTap: () => ref
                           .read(orderHistoryProvider.notifier)
-                          .changeFilter('completed'),
+                          .changeFilter(OrderStatusConstants.completed),
                     ),
                     const SizedBox(width: 8),
                     _FilterChip(
                       label: 'Cancelled',
-                      isSelected: orderState.selectedFilter == 'cancelled',
+                      isSelected: orderState.selectedFilter == OrderStatusConstants.cancelled,
                       onTap: () => ref
                           .read(orderHistoryProvider.notifier)
-                          .changeFilter('cancelled'),
+                          .changeFilter(OrderStatusConstants.cancelled),
                     ),
                   ],
                 ),

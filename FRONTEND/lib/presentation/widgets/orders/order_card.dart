@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../data/data_source/dto/order/order_dto.dart';
+import '../../../core/constants/order_status_constants.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../screens/tracking/live_tracking_screen.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
@@ -72,62 +73,59 @@ class _OrderCardState extends State<OrderCard> {
   }
 
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return Colors.orange;
-      case 'accepted':
-      case 'picked_up':
-      case 'in_transit':
-        return Colors.blue;
-      case 'completed':
-        return Colors.green;
-      case 'cancelled':
-      case 'failed':
-        return Colors.red;
-      default:
-        return Colors.grey;
+    final lowercaseStatus = status.toLowerCase();
+    if (lowercaseStatus == OrderStatusConstants.pending) {
+      return Colors.orange;
+    } else if (lowercaseStatus == OrderStatusConstants.accepted ||
+        lowercaseStatus == OrderStatusConstants.pickedUp ||
+        lowercaseStatus == OrderStatusConstants.inProgress) {
+      return Colors.blue;
+    } else if (lowercaseStatus == OrderStatusConstants.completed) {
+      return Colors.green;
+    } else if (lowercaseStatus == OrderStatusConstants.cancelled ||
+        lowercaseStatus == OrderStatusConstants.failed) {
+      return Colors.red;
     }
+    return Colors.grey;
   }
 
   String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Finding Driver';
-      case 'accepted':
-        return 'Accepted';
-      case 'picked_up':
-        return 'Picked Up';
-      case 'in_transit':
-        return 'On The Way';
-      case 'completed':
-        return 'Completed';
-      case 'cancelled':
-        return 'Cancelled';
-      case 'failed':
-        return 'Failed';
-      default:
-        return status.toUpperCase();
+    final lowercaseStatus = status.toLowerCase();
+    if (lowercaseStatus == OrderStatusConstants.pending) {
+      return 'Finding Driver';
+    } else if (lowercaseStatus == OrderStatusConstants.accepted) {
+      return 'Accepted';
+    } else if (lowercaseStatus == OrderStatusConstants.pickedUp) {
+      return 'Picked Up';
+    } else if (lowercaseStatus == OrderStatusConstants.inProgress) {
+      return 'On The Way';
+    } else if (lowercaseStatus == OrderStatusConstants.completed) {
+      return 'Completed';
+    } else if (lowercaseStatus == OrderStatusConstants.cancelled) {
+      return 'Cancelled';
+    } else if (lowercaseStatus == OrderStatusConstants.failed) {
+      return 'Failed';
     }
+    return status.toUpperCase();
   }
 
   IconData _getStatusIcon(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return Icons.hourglass_empty;
-      case 'accepted':
-        return Icons.check_circle_outline;
-      case 'picked_up':
-        return Icons.shopping_bag_outlined;
-      case 'in_transit':
-        return Icons.local_shipping_outlined;
-      case 'completed':
-        return Icons.done_all;
-      case 'cancelled':
-      case 'failed':
-        return Icons.cancel_outlined;
-      default:
-        return Icons.info_outline;
+    final lowercaseStatus = status.toLowerCase();
+    if (lowercaseStatus == OrderStatusConstants.pending) {
+      return Icons.hourglass_empty;
+    } else if (lowercaseStatus == OrderStatusConstants.accepted) {
+      return Icons.check_circle_outline;
+    } else if (lowercaseStatus == OrderStatusConstants.pickedUp) {
+      return Icons.shopping_bag_outlined;
+    } else if (lowercaseStatus == OrderStatusConstants.inProgress) {
+      return Icons.local_shipping_outlined;
+    } else if (lowercaseStatus == OrderStatusConstants.completed) {
+      return Icons.done_all;
+    } else if (lowercaseStatus == OrderStatusConstants.cancelled ||
+        lowercaseStatus == OrderStatusConstants.failed) {
+      return Icons.cancel_outlined;
     }
+    return Icons.info_outline;
   }
 
   String _getServiceName(int serviceId) {
@@ -149,11 +147,10 @@ class _OrderCardState extends State<OrderCard> {
 
   bool _shouldShowMap(String status) {
     // Show map for active orders
-    return status.toLowerCase() == 'accepted' ||
-        status.toLowerCase() == 'picked_up' ||
-        status.toLowerCase() == 'in_transit' ||
-        status.toLowerCase() == 'driver_arrived_at_pickup' ||
-        status.toLowerCase() == 'in_progress';
+    return status.toLowerCase() == OrderStatusConstants.accepted ||
+        status.toLowerCase() == OrderStatusConstants.pickedUp ||
+        status.toLowerCase() == OrderStatusConstants.inProgress ||
+        status.toLowerCase() == OrderStatusConstants.driverArrivedAtPickup;
   }
 
   Set<Marker> _buildMapMarkers() {

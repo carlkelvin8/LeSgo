@@ -5,6 +5,7 @@ import '../../provider/main/transactions/transactions_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../widgets/common/payment_status_badge.dart';
 import '../../widgets/transactions/order_transaction_detail_sheet.dart';
+import '../../../core/constants/order_status_constants.dart';
 import '../../../core/services/order_receipt_service.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
@@ -269,12 +270,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   }
 
   String _statusLabel(String raw) {
-    switch (raw.toLowerCase()) {
-      case 'completed': return 'Completed';
-      case 'cancelled': return 'Cancelled';
-      case 'failed': return 'Failed';
-      default: return raw.replaceAll('_', ' ').toUpperCase();
-    }
+    return OrderStatusConstants.displayName(raw);
   }
 
   @override
@@ -565,11 +561,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             _buildFilterChip(context, 'Paid', state.selectedPaymentStatus == 'paid', () {
               ref.read(transactionsProvider.notifier).filterByPaymentStatus('paid');
             }),
-            _buildFilterChip(context, 'Pending', state.selectedPaymentStatus == 'pending', () {
-              ref.read(transactionsProvider.notifier).filterByPaymentStatus('pending');
+            _buildFilterChip(context, 'Pending', state.selectedPaymentStatus == OrderStatusConstants.pending_payment, () {
+              ref.read(transactionsProvider.notifier).filterByPaymentStatus(OrderStatusConstants.pending_payment);
             }),
-            _buildFilterChip(context, 'Failed', state.selectedPaymentStatus == 'failed', () {
-              ref.read(transactionsProvider.notifier).filterByPaymentStatus('failed');
+            _buildFilterChip(context, 'Failed', state.selectedPaymentStatus == OrderStatusConstants.failed, () {
+              ref.read(transactionsProvider.notifier).filterByPaymentStatus(OrderStatusConstants.failed);
             }),
             _buildFilterChip(context, 'Refunded', state.selectedPaymentStatus == 'refunded', () {
               ref.read(transactionsProvider.notifier).filterByPaymentStatus('refunded');
@@ -630,11 +626,11 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             _buildFilterChip(context, 'All', state.selectedStatus == null, () {
               ref.read(transactionsProvider.notifier).filterByStatus(null);
             }),
-            _buildFilterChip(context, 'Completed', state.selectedStatus == 'completed', () {
-              ref.read(transactionsProvider.notifier).filterByStatus('completed');
+            _buildFilterChip(context, 'Completed', state.selectedStatus == OrderStatusConstants.completed, () {
+              ref.read(transactionsProvider.notifier).filterByStatus(OrderStatusConstants.completed);
             }),
-            _buildFilterChip(context, 'Pending', state.selectedStatus == 'pending', () {
-              ref.read(transactionsProvider.notifier).filterByStatus('pending');
+            _buildFilterChip(context, 'Pending', state.selectedStatus == OrderStatusConstants.pending, () {
+              ref.read(transactionsProvider.notifier).filterByStatus(OrderStatusConstants.pending);
             }),
             _buildFilterChip(context, 'Cancelled', state.selectedStatus == 'cancelled', () {
               ref.read(transactionsProvider.notifier).filterByStatus('cancelled');

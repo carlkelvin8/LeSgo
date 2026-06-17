@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/utils/responsive_utils.dart';
-import '../../../provider/main/riderside/rider_chat_provider.dart';
 import 'rider_chat_screen.dart';
 
 class RiderChatListScreen extends ConsumerWidget {

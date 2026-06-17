@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_stats_provider.dart';
 
@@ -237,7 +236,6 @@ class RiderQuickStatsScreen extends ConsumerWidget {
     required String value,
     String? subtitle,
   }) {
-    final hp = ResponsiveUtils.horizontalPadding(context);
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(

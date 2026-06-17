@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_chat_provider.dart';
-import '../../../../domain/entities/rider_booking.dart';
 
 class RiderChatScreen extends ConsumerStatefulWidget {
   final String orderId;

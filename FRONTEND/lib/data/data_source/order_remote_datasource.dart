@@ -81,44 +81,38 @@ class OrderRemoteDataSource {
       if (paymentStatus != null) queryParams['payment_status'] = paymentStatus;
       if (serviceId != null) queryParams['service_id'] = serviceId;
 
-      print('🔵 OrderRemoteDataSource: Making API call to ${ApiConstants.orders}');
-      print('🔵 OrderRemoteDataSource: Query params: $queryParams');
-      print('🔵 OrderRemoteDataSource: Base URL: ${ApiConstants.baseUrl}');
-
       final response = await dio.get(
         ApiConstants.orders,
         queryParameters: queryParams,
       );
 
-      print('🟢 OrderRemoteDataSource: API response status: ${response.statusCode}');
-      print('🟢 OrderRemoteDataSource: Response data type: ${response.data.runtimeType}');
-
       if (response.data == null) {
-        print('🔴 OrderRemoteDataSource: Response data is null');
         throw Exception('API returned null data');
       }
 
       if (response.data is! Map) {
-        print('🔴 OrderRemoteDataSource: Response data is not a Map: ${response.data}');
         throw Exception('API returned invalid data format');
       }
 
       final responseMap = response.data as Map<String, dynamic>;
-      print('🟢 OrderRemoteDataSource: Response keys: ${responseMap.keys.toList()}');
 
       if (!responseMap.containsKey('success')) {
-        print('🔴 OrderRemoteDataSource: Response missing success field');
         throw Exception('API response missing success field');
       }
 
       if (!responseMap.containsKey('data')) {
-        print('🔴 OrderRemoteDataSource: Response missing data field');
         throw Exception('API response missing data field');
       }
 
+      // Validate that data field exists and is not null
+      final dataField = responseMap['data'];
+      if (dataField == null) {
+        throw Exception('API response data field is null');
+      }
+
       // Workaround: Inject cached meta/items + resolve proof image URLs
-      if (responseMap['data'] is List) {
-        final List dataList = responseMap['data'];
+      if (dataField is List) {
+        final List dataList = dataField;
         for (var i = 0; i < dataList.length; i++) {
           final item = dataList[i];
           if (item is Map<String, dynamic>) {
@@ -132,15 +126,9 @@ class OrderRemoteDataSource {
       }
 
       final result = OrdersResponseDto.fromJson(responseMap);
-      print('🟢 OrderRemoteDataSource: Parsed ${result.data.length} orders');
 
       return result;
     } on DioException catch (dioError) {
-      print('🔴 OrderRemoteDataSource: Dio error - ${dioError.type}');
-      print('🔴 OrderRemoteDataSource: Dio message - ${dioError.message}');
-      print('🔴 OrderRemoteDataSource: Dio response - ${dioError.response?.data}');
-      print('🔴 OrderRemoteDataSource: Dio status code - ${dioError.response?.statusCode}');
-
       if (dioError.response?.statusCode == 401) {
         throw Exception('Authentication failed. Please login again.');
       } else if (dioError.response?.statusCode == 403) {
@@ -149,8 +137,6 @@ class OrderRemoteDataSource {
         throw Exception('Network error: ${dioError.message}');
       }
     } catch (e) {
-      print('🔴 OrderRemoteDataSource: General error - $e');
-      print('🔴 OrderRemoteDataSource: Error type: ${e.runtimeType}');
       throw Exception('Failed to get orders: $e');
     }
   }
@@ -160,8 +146,6 @@ class OrderRemoteDataSource {
     final dio = _dioClient.dio;
     try {
       final requestData = request.toJson();
-      print('=== CREATE ORDER REQUEST ===');
-      print(requestData);
       final response = await dio.post(
         ApiConstants.orders,
         data: requestData,
@@ -191,9 +175,6 @@ class OrderRemoteDataSource {
 
       return dto;
     } on DioException catch (e) {
-      print('=== CREATE ORDER ERROR ===');
-      print('Status: ${e.response?.statusCode}');
-      print('Response data: ${e.response?.data}');
       // Extract a readable message from the backend response
       final responseData = e.response?.data;
       String errorMsg;
@@ -228,7 +209,7 @@ class OrderRemoteDataSource {
       );
       return ProofImageUtils.fromOrderMap(orderJson);
     } catch (e) {
-      print('Failed to fetch proof images for order $id: $e');
+      // Silently handle error for proof image fetch
       return [];
     }
   }

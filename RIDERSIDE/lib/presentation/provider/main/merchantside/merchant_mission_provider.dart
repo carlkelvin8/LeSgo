@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/api_service.dart';
+import '../../../../../core/utils/app_logger.dart';
 
 class MerchantMission {
   final int id;
@@ -77,7 +78,7 @@ class MerchantMissionNotifier extends StateNotifier<MerchantMissionState> {
       state = state.copyWith(isLoading: true, clearError: true);
     }
     try {
-      print('🎯 Fetching merchant missions from API...');
+      AppLogger.debug('🎯 Fetching merchant missions from API...');
       
       final data = await ApiService.getMerchantMissions();
       final missionsData = data['missions'] as List<dynamic>? ?? [];
@@ -86,14 +87,14 @@ class MerchantMissionNotifier extends StateNotifier<MerchantMissionState> {
           .map((m) => MerchantMission.fromJson(m as Map<String, dynamic>))
           .toList();
 
-      print('✅ Loaded ${missions.length} merchant missions');
+      AppLogger.debug('✅ Loaded ${missions.length} merchant missions');
       
       state = state.copyWith(
         missions: missions,
         isLoading: false,
       );
     } catch (e) {
-      print('❌ Error loading merchant missions: $e');
+      AppLogger.error('Error loading merchant missions', e);
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),
@@ -103,18 +104,18 @@ class MerchantMissionNotifier extends StateNotifier<MerchantMissionState> {
 
   Future<bool> claimReward(int missionId) async {
     try {
-      print('💰 Claiming reward for merchant mission $missionId...');
+      AppLogger.debug('💰 Claiming reward for merchant mission $missionId...');
       
       await ApiService.claimMerchantMissionReward(missionId);
       
-      print('✅ Reward claimed successfully');
+      AppLogger.debug('✅ Reward claimed successfully');
       
       // Reload missions to update state
       await loadMissions();
       
       return true;
     } catch (e) {
-      print('❌ Error claiming reward: $e');
+      AppLogger.error('Error claiming reward', e);
       state = state.copyWith(
         error: ApiService.extractError(e),
       );
