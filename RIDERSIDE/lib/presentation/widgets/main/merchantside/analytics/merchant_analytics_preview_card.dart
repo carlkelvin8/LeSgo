@@ -5,7 +5,6 @@ import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_analytics_provider.dart';
-import '../../../../provider/main/merchantside/merchant_earnings_provider.dart';
 
 class MerchantAnalyticsPreviewCard extends ConsumerWidget {
   const MerchantAnalyticsPreviewCard({super.key});

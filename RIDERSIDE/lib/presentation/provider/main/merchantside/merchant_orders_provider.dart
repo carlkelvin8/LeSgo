@@ -91,7 +91,8 @@ List<OrderDto> _filterOrders(List<OrderDto> orders, MerchantOrderFilter filter) 
   if (filter == MerchantOrderFilter.all) return orders;
 
   return orders.where((order) {
-    final status = order.status.toLowerCase();
+    // Safely handle null status
+    final status = order.status?.toLowerCase() ?? 'unknown';
     switch (filter) {
       case MerchantOrderFilter.pending:
         return status == 'pending';

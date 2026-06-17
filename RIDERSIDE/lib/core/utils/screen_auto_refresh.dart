@@ -6,7 +6,6 @@ import '../../presentation/provider/main/merchantside/merchant_orders_provider.d
 import '../../presentation/provider/main/merchantside/merchant_reviews_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_profile_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_menu_provider.dart';
-import '../../presentation/provider/main/merchantside/merchant_wallet_provider.dart';
 import '../../presentation/provider/main/riderside/rider_duty_provider.dart';
 import '../../presentation/provider/main/riderside/rider_history_provider.dart';
 import '../../presentation/provider/main/riderside/rider_inbox_refresh_provider.dart';
@@ -90,7 +89,6 @@ void refreshMerchantScreen(
       ref.invalidate(merchantMenuItemsProvider);
       ref.invalidate(merchantOrdersProvider);
       ref.invalidate(merchantReviewsDashboardProvider);
-      ref.read(merchantWalletProvider.notifier).loadWallet(silent: silent);
       break;
     case MerchantNavType.menu:
       ref.invalidate(merchantMenuProvider);
@@ -120,5 +118,4 @@ void refreshAllMerchantScreens(WidgetRef ref, {bool silent = true}) {
   ref.invalidate(merchantMenuItemsProvider);
   ref.invalidate(merchantOrdersProvider);
   ref.read(merchantMissionProvider.notifier).loadMissions(silent: silent);
-  ref.read(merchantWalletProvider.notifier).loadWallet(silent: silent);
 }

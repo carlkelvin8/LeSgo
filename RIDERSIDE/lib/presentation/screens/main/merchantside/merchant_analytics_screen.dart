@@ -7,7 +7,6 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/merchantside/merchant_analytics_provider.dart';
-import '../../../provider/main/merchantside/merchant_earnings_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../widgets/main/merchantside/reviews/merchant_rating_stars_display.dart';
 
