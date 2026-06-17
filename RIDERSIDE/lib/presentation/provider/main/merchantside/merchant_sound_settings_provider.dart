@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/services/order_sound_alert_service.dart';
+import '../../../../core/services/order_sound_alert_service.dart';
 
 // Providers for sound alert settings
 final soundEnabledProvider = StateNotifierProvider<SoundEnabledNotifier, bool>(
@@ -24,13 +24,14 @@ final availableSoundsProvider = Provider<Map<String, String>>((ref) {
 
 // Notifiers
 class SoundEnabledNotifier extends StateNotifier<bool> {
-  final _service = OrderSoundAlertService();
+  late final OrderSoundAlertService _service;
 
   SoundEnabledNotifier() : super(false) {
     _init();
   }
 
   Future<void> _init() async {
+    _service = OrderSoundAlertService();
     await _service.initialize();
     state = _service.getSoundEnabled();
   }
@@ -47,13 +48,14 @@ class SoundEnabledNotifier extends StateNotifier<bool> {
 }
 
 class SoundVolumeNotifier extends StateNotifier<double> {
-  final _service = OrderSoundAlertService();
+  late final OrderSoundAlertService _service;
 
   SoundVolumeNotifier() : super(0.7) {
     _init();
   }
 
   Future<void> _init() async {
+    _service = OrderSoundAlertService();
     await _service.initialize();
     state = _service.getVolume();
   }
@@ -65,13 +67,14 @@ class SoundVolumeNotifier extends StateNotifier<double> {
 }
 
 class SelectedSoundNotifier extends StateNotifier<String> {
-  final _service = OrderSoundAlertService();
+  late final OrderSoundAlertService _service;
 
   SelectedSoundNotifier() : super('bell') {
     _init();
   }
 
   Future<void> _init() async {
+    _service = OrderSoundAlertService();
     await _service.initialize();
     state = _service.getSelectedSound();
   }
@@ -83,13 +86,14 @@ class SelectedSoundNotifier extends StateNotifier<String> {
 }
 
 class VibrationEnabledNotifier extends StateNotifier<bool> {
-  final _service = OrderSoundAlertService();
+  late final OrderSoundAlertService _service;
 
   VibrationEnabledNotifier() : super(true) {
     _init();
   }
 
   Future<void> _init() async {
+    _service = OrderSoundAlertService();
     await _service.initialize();
     state = _service.getVibrationEnabled();
   }

@@ -121,7 +121,10 @@ class MerchantOrderActionNotifier {
   final Ref ref;
   MerchantOrderActionNotifier(this.ref);
 
-  Future<void> _refresh() async {
+  Future<void> _refresh(int orderId) async {
+    // Invalidate both the list and the specific order detail
+    // to ensure complete cache invalidation
+    ref.invalidate(merchantOrderDetailProvider(orderId));
     ref.invalidate(merchantOrdersProvider);
   }
 
@@ -129,7 +132,7 @@ class MerchantOrderActionNotifier {
     final dataSource = ref.read(merchantDataSourceProvider);
     await dataSource.updateOrderStatus(orderId, 'searching_driver');
     await ref.read(merchantPrepTimerProvider.notifier).start(orderId);
-    await _refresh();
+    await _refresh(orderId);
   }
 
   Future<void> rejectOrder(int orderId, String reason) async {
@@ -140,7 +143,7 @@ class MerchantOrderActionNotifier {
       cancelReason: reason,
     );
     await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
-    await _refresh();
+    await _refresh(orderId);
   }
 
   Future<void> cancelOrder(int orderId, String reason) async {
@@ -151,13 +154,13 @@ class MerchantOrderActionNotifier {
       cancelReason: reason,
     );
     await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
-    await _refresh();
+    await _refresh(orderId);
   }
 
   Future<void> markReadyForPickup(int orderId) async {
     final dataSource = ref.read(merchantDataSourceProvider);
     await dataSource.updateOrderStatus(orderId, 'ready_for_pickup');
     await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
-    await _refresh();
+    await _refresh(orderId);
   }
 }

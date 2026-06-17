@@ -21,9 +21,6 @@ import '../../../../presentation/screens/main/riderside/rider_booking_detail_scr
 import '../../../../presentation/screens/main/riderside/rider_history_detail_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_main_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_order_detail_screen.dart';
-import '../../../../presentation/screens/main/merchantside/merchant_earnings_screen.dart';
-import '../../../../presentation/screens/main/merchantside/merchant_wallet_screen.dart';
-import '../../../../presentation/screens/main/merchantside/merchant_payout_history_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_reviews_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_analytics_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_sales_report_screen.dart';
@@ -76,10 +73,6 @@ class MainRouter {
     MainRoutes.merchantDeleteAccount: (_) => const RiderDeleteAccountScreen(),
     MainRoutes.merchantDocuments: (_) => const RiderDocumentVerificationScreen(),
     MainRoutes.merchantMain: (_) => const MerchantMainScreen(),
-    MainRoutes.merchantEarnings: (_) => const MerchantEarningsScreen(),
-    MainRoutes.merchantWallet: (_) => const MerchantWalletScreen(),
-    MainRoutes.merchantPayoutHistory: (_) =>
-        const MerchantPayoutHistoryScreen(),
     MainRoutes.merchantReviews: (_) => const MerchantReviewsScreen(),
     MainRoutes.merchantAnalytics: (_) => const MerchantAnalyticsScreen(),
     MainRoutes.merchantSalesReport: (_) => const MerchantSalesReportScreen(),

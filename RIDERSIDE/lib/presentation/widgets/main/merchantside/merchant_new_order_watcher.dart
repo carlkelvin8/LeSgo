@@ -36,7 +36,7 @@ class _MerchantNewOrderWatcherState extends ConsumerState<MerchantNewOrderWatche
       for (final id in newIds) {
         final order = pendingOrders.firstWhere((item) => item.id == id);
         final orderRef = order.referenceNumber ?? '#${order.id}';
-        final playSound = ref.read(merchantSoundSettingsProvider).isSoundEnabled;
+        final playSound = ref.read(soundEnabledProvider);
         MerchantOrderAlertService.alertNewOrder(orderRef: orderRef, playSound: playSound);
         _autoPrintOrder(order);
       }
