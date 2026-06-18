@@ -338,7 +338,7 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
   }
 
   Future<void> _confirmTopUpOnServer(RiderTopUpCheckout checkout) async {
-    await ApiService.dio.post(
+    final response = await ApiService.dio.post(
       '/v1/wallets/my/topup',
       data: {
         'amount': checkout.walletAmount,
@@ -346,6 +346,19 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
         'xendit_invoice_id': checkout.invoiceId,
       },
     );
+    
+    // Verify response contains success confirmation
+    final data = response.data as Map<String, dynamic>?;
+    if (data == null) {
+      throw Exception('TopUp confirmation failed: No response data');
+    }
+    
+    // Check for success flag
+    final success = data['success'] as bool?;
+    if (success == false) {
+      final message = data['message'] as String? ?? 'TopUp confirmation failed';
+      throw Exception(message);
+    }
   }
 
   Future<bool> _pollGatewayInvoicePaid(String invoiceId) async {

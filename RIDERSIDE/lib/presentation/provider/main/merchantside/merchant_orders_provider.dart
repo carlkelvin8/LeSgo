@@ -5,7 +5,7 @@ import '../../auth/rider_auth_provider.dart';
 import 'merchant_prep_timer_provider.dart';
 import 'merchant_profile_provider.dart';
 
-enum MerchantOrderFilter { all, pending, pickUp, forDelivery, delivered }
+enum MerchantOrderFilter { all, pending, pickUp, ready, forDelivery, completed, cancelled }
 
 extension MerchantOrderFilterX on MerchantOrderFilter {
   String get label {
@@ -16,10 +16,14 @@ extension MerchantOrderFilterX on MerchantOrderFilter {
         return 'Pending';
       case MerchantOrderFilter.pickUp:
         return 'For Pick Up';
+      case MerchantOrderFilter.ready:
+        return 'Ready';
       case MerchantOrderFilter.forDelivery:
         return 'For Delivery';
-      case MerchantOrderFilter.delivered:
-        return 'Delivered';
+      case MerchantOrderFilter.completed:
+        return 'Completed';
+      case MerchantOrderFilter.cancelled:
+        return 'Cancelled';
     }
   }
 
@@ -31,10 +35,14 @@ extension MerchantOrderFilterX on MerchantOrderFilter {
         return 'pending';
       case MerchantOrderFilter.pickUp:
         return 'accepted';
+      case MerchantOrderFilter.ready:
+        return 'ready_for_pickup';
       case MerchantOrderFilter.forDelivery:
         return 'picked_up';
-      case MerchantOrderFilter.delivered:
+      case MerchantOrderFilter.completed:
         return 'completed';
+      case MerchantOrderFilter.cancelled:
+        return 'cancelled';
     }
   }
 }
@@ -91,23 +99,33 @@ List<OrderDto> _filterOrders(List<OrderDto> orders, MerchantOrderFilter filter) 
   if (filter == MerchantOrderFilter.all) return orders;
 
   return orders.where((order) {
-    // Safely handle status
     final status = order.status.toLowerCase();
     switch (filter) {
       case MerchantOrderFilter.pending:
         return status == 'pending';
+      
       case MerchantOrderFilter.pickUp:
-        // Orders waiting for pickup (after driver accepted, before pickup)
-        return status == 'searching_driver' || status == 'accepted';
+        // Orders waiting for pickup (after driver accepted, before ready)
+        return status == 'searching_driver' || 
+               status == 'accepted';
+      
+      case MerchantOrderFilter.ready:
+        // Ready and waiting for driver to pick up
+        return status == 'ready_for_pickup';
+      
       case MerchantOrderFilter.forDelivery:
-        // Orders picked up by driver (in transit or ready)
-        return status == 'ready_for_pickup' ||
-            status == 'picked_up' ||
-            status == 'in_progress' ||
-            status == 'driver_arrived_at_pickup';
-      case MerchantOrderFilter.delivered:
+        // Orders picked up by driver and in transit
+        return status == 'picked_up' || 
+               status == 'in_progress' ||
+               status == 'driver_arrived_at_pickup';
+      
+      case MerchantOrderFilter.completed:
         return status == 'completed';
-      default:
+      
+      case MerchantOrderFilter.cancelled:
+        return status == 'cancelled';
+      
+      case MerchantOrderFilter.all:
         return true;
     }
   }).toList();
