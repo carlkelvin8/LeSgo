@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/di/local_storage_service.dart';
 
@@ -146,40 +147,53 @@ mixin SubmitNotifier on StateNotifier<RegisterState> {
       return true;
     } catch (e) {
       print('❌ EXCEPTION in submitRegistration: $e');
-      print('  Stack trace:');
-      print(e);
+      print('  Exception type: ${e.runtimeType}');
       
       String errorMessage = 'Registration failed. Please try again.';
       
       // Extract detailed error message from DioException
-      if (e.toString().contains('DioException')) {
-        try {
-          final dioError = e as dynamic;
-          if (dioError.response != null) {
-            final responseData = dioError.response?.data;
-            print('🔍 DEBUG - Response data: $responseData');
+      try {
+        if (e is DioException) {
+          print('🔍 DEBUG - DioException detected');
+          print('  Response: ${e.response}');
+          print('  Response data: ${e.response?.data}');
+          print('  Response statusCode: ${e.response?.statusCode}');
+          
+          if (e.response != null && e.response!.data != null) {
+            final responseData = e.response!.data;
+            print('🔍 DEBUG - Response data type: ${responseData.runtimeType}');
             
             if (responseData is Map) {
-              // Check for validation errors
+              // Check for Laravel validation errors
               if (responseData.containsKey('errors')) {
-                final errors = responseData['errors'] as Map;
+                print('✅ Found validation errors in response');
+                final errors = responseData['errors'];
+                print('  Errors: $errors');
                 final errorMessages = <String>[];
-                errors.forEach((key, value) {
-                  if (value is List) {
-                    errorMessages.addAll(value.map((e) => e.toString()));
-                  } else {
-                    errorMessages.add(value.toString());
-                  }
-                });
-                errorMessage = errorMessages.join('\n');
+                if (errors is Map) {
+                  errors.forEach((key, value) {
+                    if (value is List) {
+                      errorMessages.addAll(value.map((e) => e.toString()));
+                    } else {
+                      errorMessages.add(value.toString());
+                    }
+                  });
+                }
+                if (errorMessages.isNotEmpty) {
+                  errorMessage = errorMessages.join('\n');
+                }
               } else if (responseData.containsKey('message')) {
+                print('✅ Found message in response');
                 errorMessage = responseData['message'].toString();
               }
+            } else if (responseData is String) {
+              print('✅ Response data is string');
+              errorMessage = responseData;
             }
           }
-        } catch (parseError) {
-          print('⚠️ Could not parse error response: $parseError');
         }
+      } catch (parseError) {
+        print('⚠️ Could not parse error response: $parseError');
       }
       
       state = state.copyWith(
@@ -188,7 +202,7 @@ mixin SubmitNotifier on StateNotifier<RegisterState> {
         registeredUser: null,
       );
       print('🚫 submitRegistration - FAILED, returning false');
-      print('📝 Error message shown to user: $errorMessage');
+      print('📝 Error message shown to user: "$errorMessage"');
       return false;
     }
   }
