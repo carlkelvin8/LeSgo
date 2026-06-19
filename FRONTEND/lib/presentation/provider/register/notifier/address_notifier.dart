@@ -246,6 +246,12 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
     required String zipCode,
     required String landmark,
   }) {
+    print('🔍 DEBUG updateAddressFromForm INPUTS:');
+    print('  - houseNumberStreet: "$houseNumberStreet"');
+    print('  - subdivBarangay: "$subdivBarangay"');
+    print('  - cityProvince: "$cityProvince"');
+    print('  - zipCode: "$zipCode"');
+    
     String houseNumber = '';
     String streetName = houseNumberStreet.trim();
 
@@ -281,6 +287,15 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
         city = cityProvinceParts[0].trim();
       }
     }
+
+    print('🔍 DEBUG updateAddressFromForm PARSED:');
+    print('  - houseNumber: "$houseNumber"');
+    print('  - streetName: "$streetName"');
+    print('  - subdivision: "$subdivision"');
+    print('  - barangay: "$barangay"');
+    print('  - city: "$city"');
+    print('  - province: "$province"');
+    print('  - zipCode: "${zipCode.trim()}"');
 
     updateAddress(
       houseNumber: houseNumber,
@@ -346,6 +361,16 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
 
     try {
       final address = state.data.address;
+      
+      // Debug logging
+      print('🔍 DEBUG saveAddress - address: $address');
+      print('🔍 DEBUG saveAddress - address.isComplete: ${address?.isComplete}');
+      print('🔍 DEBUG saveAddress - houseNumber: ${address?.houseNumber}');
+      print('🔍 DEBUG saveAddress - streetName: ${address?.streetName}');
+      print('🔍 DEBUG saveAddress - barangay: ${address?.barangay}');
+      print('🔍 DEBUG saveAddress - city: ${address?.city}');
+      print('🔍 DEBUG saveAddress - zipCode: ${address?.zipCode}');
+      
       if (address == null || !address.isComplete) {
         throw Exception('Please complete all required address fields');
       }
@@ -353,6 +378,7 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
+      print('❌ ERROR saveAddress: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
