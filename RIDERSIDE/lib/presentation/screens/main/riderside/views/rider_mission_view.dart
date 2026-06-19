@@ -131,7 +131,7 @@ class RiderMissionView extends ConsumerWidget {
                                         onClaim: () async {
                                           final success = await ref
                                               .read(riderMissionProvider.notifier)
-                                              .claimReward(mission.id);
+                                              .claimReward(mission.id, ref);
                                           
                                           if (context.mounted) {
                                             ScaffoldMessenger.of(context).showSnackBar(

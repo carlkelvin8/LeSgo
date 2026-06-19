@@ -27,8 +27,10 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   Timer? _autoRefreshTimer;
   Set<int> _knownAvailableOrderIds = {};
   String? _lastActiveStatus;
+  bool _isDisposed = false;
 
   void _onDutyChanged() {
+    if (_isDisposed) return;
     if (_ref.read(riderDutyProvider)) {
       resumeAutoRefresh();
       loadOrders(silent: true);
@@ -39,7 +41,9 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = null;
     super.dispose();
   }
 
@@ -49,6 +53,8 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   }
 
   void _scheduleNextRefresh() {
+    if (_isDisposed) return;
+    
     final hasActiveOrder = state.activeOrder != null;
     final pushEnabled = FcmService.instance.isReady;
     final interval = pushEnabled
@@ -60,9 +66,8 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
             : const Duration(seconds: 30));
 
     _autoRefreshTimer = Timer(interval, () {
-      if (_ref.read(riderDutyProvider)) {
-        loadOrders(silent: true);
-      }
+      if (_isDisposed || !_ref.read(riderDutyProvider)) return;
+      loadOrders(silent: true);
       _scheduleNextRefresh();
     });
   }
@@ -73,11 +78,13 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   }
 
   void resumeAutoRefresh() {
+    if (_isDisposed) return;
     _autoRefreshTimer?.cancel();
     _startAutoRefresh();
   }
 
   void reset() {
+    if (_isDisposed) return;
     stopAutoRefresh();
     _knownAvailableOrderIds = {};
     _lastActiveStatus = null;
@@ -375,9 +382,16 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
     try {
       final orderData = data['data'] ?? data['order'];
       if (orderData is Map<String, dynamic>) {
+        // Validate required fields before parsing
+        if (orderData['id'] == null || orderData['status'] == null) {
+          AppLogger.warn('⚠️ Order data missing required fields: id or status');
+          return null;
+        }
         return _enrichAcceptedOrder(RiderOrder.fromJson(orderData));
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.error('❌ Error parsing order data: $e');
+    }
     return null;
   }
 }

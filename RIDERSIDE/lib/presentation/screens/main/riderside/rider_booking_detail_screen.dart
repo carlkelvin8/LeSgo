@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:io' show File;
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../widgets/widgets.dart';
@@ -61,6 +63,7 @@ class _RiderBookingDetailScreenState
   late String? _currentApiStatus;
   bool _isUpdating = false;
   bool _isFetchingStatus = false;
+  bool _isHandlingStatusChange = false; // NEW: Prevent concurrent status changes
   final List<XFile> _selectedImages = [];
   bool _isUploadingProof = false;
   bool _showProofUpload = false;
@@ -93,13 +96,19 @@ class _RiderBookingDetailScreenState
   void dispose() {
     AppLogger.debug('🗑️ RiderBookingDetailScreen dispose called');
     
-    // Clean up map controller
+    // Clean up map controller carefully
     try {
-      _mapController?.dispose();
+      // First, remove any listeners to prevent them firing after dispose
+      if (_mapController != null) {
+        // Cancel any pending marker/polyline operations
+        _mapController!.dispose();
+        AppLogger.debug('✅ Map controller disposed successfully');
+      }
     } catch (e) {
       AppLogger.error('Error disposing map controller', e);
+    } finally {
+      _mapController = null;
     }
-    _mapController = null;
     
     // Don't stop location tracking or auto-refresh here - let them continue
     // for other screens. The providers will manage their own lifecycle.
@@ -110,7 +119,7 @@ class _RiderBookingDetailScreenState
 
   // Fetch the latest status from API
   Future<void> _fetchLatestStatus() async {
-    if (_isFetchingStatus) return;
+    if (_isFetchingStatus || _isHandlingStatusChange) return;
     
     setState(() => _isFetchingStatus = true);
     
@@ -121,33 +130,36 @@ class _RiderBookingDetailScreenState
       AppLogger.debug('🔄 Fetching latest status for order #$orderId');
       final orderData = await ApiService.getOrderById(orderId);
       
-      if (orderData != null && mounted) {
-        final apiStatus = orderData['status'] as String?;
-        final order = RiderOrder.fromJson(orderData);
-        final proofUrls = MediaUrlUtils.parseProofImageUrls(orderData);
+      // Check if widget is still mounted and no status change is in progress
+      if (orderData == null || !mounted || _isHandlingStatusChange) {
+        return;
+      }
+      
+      final apiStatus = orderData['status'] as String?;
+      final order = RiderOrder.fromJson(orderData);
+      final proofUrls = MediaUrlUtils.parseProofImageUrls(orderData);
 
-        AppLogger.debug('✅ Latest status from API: $apiStatus');
-        if (proofUrls.isNotEmpty) {
-          AppLogger.debug('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
-        }
+      AppLogger.debug('✅ Latest status from API: $apiStatus');
+      if (proofUrls.isNotEmpty) {
+        AppLogger.debug('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
+      }
 
-        if (apiStatus != null) {
-          final refreshedBooking = RiderBookingMapper.fromOrder(
-            order,
-            proofOfDeliveryUrls:
-                proofUrls.isEmpty ? widget.booking.proofOfDeliveryUrls : proofUrls,
+      if (apiStatus != null && mounted && !_isHandlingStatusChange) {
+        final refreshedBooking = RiderBookingMapper.fromOrder(
+          order,
+          proofOfDeliveryUrls:
+              proofUrls.isEmpty ? widget.booking.proofOfDeliveryUrls : proofUrls,
+        );
+
+        setState(() {
+          _currentApiStatus = apiStatus;
+          _currentStatus = _mapApiStatusToBookingStatus(
+            apiStatus,
+            order.serviceId,
           );
-
-          setState(() {
-            _currentApiStatus = apiStatus;
-            _currentStatus = _mapApiStatusToBookingStatus(
-              apiStatus,
-              order.serviceId,
-            );
-            _updatedBooking = refreshedBooking;
-          });
-          AppLogger.debug('📊 Updated UI status to: ${_currentStatus.label}');
-        }
+          _updatedBooking = refreshedBooking;
+        });
+        AppLogger.debug('📊 Updated UI status to: ${_currentStatus.label}');
       }
     } catch (e) {
       AppLogger.error('Error fetching status', e);
@@ -165,48 +177,39 @@ class _RiderBookingDetailScreenState
   Future<void> _handleStatusChange(BookingStatus newStatus) async {
     AppLogger.debug('🎯 _handleStatusChange called with: ${newStatus.label}');
     
-    if (_isUpdating) {
+    // Prevent concurrent status changes with a double guard
+    if (_isUpdating || _isHandlingStatusChange) {
       AppLogger.debug('⏳ Already updating, ignoring tap');
       return;
     }
     
-    // Map BookingStatus to API status string based on service type
-    String? apiStatus;
-    String? statusLabel;
+    setState(() => _isHandlingStatusChange = true);
     
-    // Get service ID from booking
-    final orderId = int.tryParse(widget.booking.id);
-    if (orderId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid order ID'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    try {
+      // Helper to return early while clearing the flag
+      Future<void> returnEarly() async {
+        _isHandlingStatusChange = false;
+      }
     
-    // Fetch latest to get service_id
-    await _fetchLatestStatus();
-    
-    // Determine service type from current status mapping
-    // For LesRide: onTheWay (accepted) → onTheWayGoing (picked_up) → complete (completed)
-    // For LesEat: cooking (accepted) → forPickUp (picked_up) → delivered (completed)
-    // For LesBuy: toBuy (accepted) → forDelivery (picked_up) → delivered (completed)
-    
-    switch (newStatus) {
-      // LesRide statuses
-      case BookingStatus.onTheWay:
-        // This is the initial accepted state for LesRide, can't manually set
-        AppLogger.debug('ℹ️ Status ${newStatus.label} is set automatically when order is accepted');
+      // Get service ID from booking
+      final orderId = int.tryParse(widget.booking.id);
+      if (orderId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${newStatus.label} status is set automatically'),
-            backgroundColor: Colors.blue,
-            duration: const Duration(seconds: 2),
+          const SnackBar(
+            content: Text('Invalid order ID'),
+            backgroundColor: Colors.red,
           ),
         );
+        await returnEarly();
         return;
+      }
+      
+      // Fetch latest to get service_id
+      await _fetchLatestStatus();
+      
+      // Map BookingStatus to API status string based on service type
+      String? apiStatus;
+      String? statusLabel;
         
       case BookingStatus.onTheWayGoing:
         // LesRide: Can transition from accepted, driver_arrived_at_pickup, or in_progress → picked_up
@@ -547,9 +550,41 @@ class _RiderBookingDetailScreenState
       }
     } finally {
       if (mounted) {
-        setState(() => _isUpdating = false);
+        setState(() {
+          _isUpdating = false;
+          _isHandlingStatusChange = false;
+        });
+      } else {
+        _isHandlingStatusChange = false;
       }
     }
+  }
+
+  // Request camera permission
+  Future<bool> _requestCameraPermission() async {
+    final status = await Permission.camera.request();
+    if (status.isDenied) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera permission is required to take photos'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return false;
+    } else if (status.isPermanentlyDenied) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera permission is permanently denied. Open Settings to enable it.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return false;
+    }
+    return true;
   }
 
   // Pick images from gallery or camera
@@ -562,8 +597,36 @@ class _RiderBookingDetailScreenState
       );
       
       if (images.isNotEmpty) {
+        // Validate file sizes before adding
+        final validImages = <XFile>[];
+        for (final image in images) {
+          try {
+            final file = File(image.path);
+            final sizeInMb = file.lengthSync() / (1024 * 1024);
+            if (sizeInMb > 25) {
+              AppLogger.warn('Image too large: ${sizeInMb.toStringAsFixed(2)}MB, skipping');
+              continue;
+            }
+            validImages.add(image);
+          } catch (e) {
+            AppLogger.error('Error checking image size', e);
+          }
+        }
+        
+        if (validImages.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('All images were too large (max 25MB each)'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+        
         setState(() {
-          _selectedImages.addAll(images);
+          _selectedImages.addAll(validImages);
           // Limit to 5 images
           if (_selectedImages.length > 5) {
             _selectedImages.removeRange(5, _selectedImages.length);
@@ -592,6 +655,9 @@ class _RiderBookingDetailScreenState
   // Take photo with camera
   Future<void> _takePhoto() async {
     try {
+      final hasPermission = await _requestCameraPermission();
+      if (!hasPermission) return;
+      
       final XFile? photo = await _imagePicker.pickImage(
         source: ImageSource.camera,
         maxWidth: 1920,
@@ -600,6 +666,25 @@ class _RiderBookingDetailScreenState
       );
       
       if (photo != null) {
+        // Validate file size
+        try {
+          final file = File(photo.path);
+          final sizeInMb = file.lengthSync() / (1024 * 1024);
+          if (sizeInMb > 25) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Image too large: ${sizeInMb.toStringAsFixed(2)}MB (max 25MB)'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+            return;
+          }
+        } catch (e) {
+          AppLogger.error('Error checking photo size', e);
+        }
+        
         setState(() {
           if (_selectedImages.length < 5) {
             _selectedImages.add(photo);

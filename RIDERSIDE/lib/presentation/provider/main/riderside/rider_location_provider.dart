@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/location_permission_utils.dart';
 import '../../auth/rider_auth_provider.dart';
 import 'rider_duty_provider.dart';

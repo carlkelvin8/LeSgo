@@ -97,7 +97,22 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   void dispose() {
     AppLogger.debug('🗺️ RiderMapScreen dispose called');
     ref.read(riderLocationProvider.notifier).setActiveOrderId(null);
-    _mapController = null;
+    
+    // Properly dispose map controller
+    if (_mapController != null) {
+      _mapController!.dispose();
+      _mapController = null;
+    }
+    
+    // Complete the completer if not already done to prevent memory leaks
+    if (!_controller.isCompleted) {
+      try {
+        _controller.completeError('Map disposed');
+      } catch (_) {
+        // Completer was already completed
+      }
+    }
+    
     super.dispose();
   }
 
@@ -270,9 +285,11 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   Future<void> _fetchRouteToOrder(RiderOrder order) async {
     if (_currentPosition == null || _isLoadingRoute) return;
 
-    setState(() {
-      _isLoadingRoute = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoadingRoute = true;
+      });
+    }
 
     try {
       AppLogger.debug('🗺️ Fetching route for order ${order.id}');
@@ -285,9 +302,11 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
 
       if (polylines.isEmpty) {
         AppLogger.warn('Order status ${order.status} - no route needed');
-        setState(() {
-          _isLoadingRoute = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoadingRoute = false;
+          });
+        }
         return;
       }
 
@@ -302,9 +321,11 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
       AppLogger.debug('✅ Route created for order ${order.id}');
     } catch (e) {
       AppLogger.error('Error fetching route', e);
-      setState(() {
-        _isLoadingRoute = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingRoute = false;
+        });
+      }
     }
   }
 

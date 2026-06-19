@@ -71,10 +71,11 @@ class Address {
   }
 
   bool get isComplete {
+    // Allow empty zipCode if we have coordinates (GPS-based address)
+    // zipCode is optional for locations selected via map
     return (houseNumber.isNotEmpty || streetName.isNotEmpty) &&
         barangay.isNotEmpty &&
-        city.isNotEmpty &&
-        zipCode.isNotEmpty;
+        city.isNotEmpty;
   }
 
   Map<String, dynamic> toJson() {

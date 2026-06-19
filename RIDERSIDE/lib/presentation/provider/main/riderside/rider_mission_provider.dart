@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/api_service.dart';
 import '../../../../../core/utils/app_logger.dart';
+import 'rider_wallet_provider.dart';
 
 class RiderMission {
   final int id;
@@ -102,20 +103,30 @@ class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
     }
   }
 
-  Future<bool> claimReward(int missionId) async {
+  Future<bool> claimReward(int missionId, Ref? ref) async {
     try {
-      AppLogger.debug('Claiming reward for mission $missionId');
+      AppLogger.debug('💰 Claiming reward for mission $missionId');
       
       await ApiService.claimMissionReward(missionId);
       
-      AppLogger.debug('Reward claimed successfully');
+      AppLogger.debug('✅ Reward claimed successfully');
       
       // Reload missions to update state
       await loadMissions();
       
+      // Also refresh wallet if ref is provided, so user sees updated balance immediately
+      if (ref != null) {
+        try {
+          await ref.read(riderWalletProvider.notifier).loadWallet(silent: true);
+          AppLogger.debug('✅ Wallet refreshed after reward claim');
+        } catch (e) {
+          AppLogger.warn('Could not refresh wallet after reward: $e');
+        }
+      }
+      
       return true;
     } catch (e) {
-      AppLogger.error('Error claiming reward', e);
+      AppLogger.error('❌ Error claiming reward', e);
       state = state.copyWith(
         error: ApiService.extractError(e),
       );

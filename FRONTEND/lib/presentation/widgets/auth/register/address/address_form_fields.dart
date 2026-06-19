@@ -52,7 +52,7 @@ class AddressFormFields extends StatelessWidget {
 
         CustomTextField(
           controller: zipCodeController,
-          labelText: 'Zip Code',
+          labelText: 'Zip Code (Optional)',
           keyboardType: TextInputType.number,
           validator: AddressValidator.zipCode,
         ),

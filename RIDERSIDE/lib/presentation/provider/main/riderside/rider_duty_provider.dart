@@ -78,7 +78,11 @@ class RiderDutyNotifier extends StateNotifier<bool> {
 
   Future<void> _applySideEffects(bool onDuty, {required bool syncApi}) async {
     if (syncApi) {
-      await _syncAvailability(onDuty);
+      final syncError = await _syncAvailability(onDuty);
+      if (syncError != null && _onDutyChanged != null) {
+        // Notify UI of sync failure through callback if available
+        AppLogger.error('❌ Duty sync failed: $syncError');
+      }
     }
 
     final locationNotifier = _ref.read(riderLocationProvider.notifier);
@@ -86,21 +90,25 @@ class RiderDutyNotifier extends StateNotifier<bool> {
     if (onDuty) {
       await locationNotifier.startTracking();
     } else {
-      locationNotifier.stopTracking();
+      await locationNotifier.stopTracking();
     }
 
     _onDutyChanged?.call();
   }
 
-  Future<void> _syncAvailability(bool onDuty) async {
+  Future<String?> _syncAvailability(bool onDuty) async {
     try {
       final authState = _ref.read(riderAuthProvider);
       final driverProfileId = authState.user?.driverProfileId;
-      if (driverProfileId == null) return;
+      if (driverProfileId == null) return null;
 
       await ApiService.updateDriverAvailability(driverProfileId, onDuty);
+      AppLogger.debug('✅ Driver availability synced: ${onDuty ? "online" : "offline"}');
+      return null;
     } catch (e) {
-      AppLogger.warn('Failed to sync driver availability: $e');
+      final errorMsg = 'Failed to sync driver availability: $e';
+      AppLogger.error('❌ $errorMsg');
+      return errorMsg;
     }
   }
 }

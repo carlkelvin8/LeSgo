@@ -31,8 +31,9 @@ class AddressValidator {
   }
 
   static String? zipCode(String? value) {
+    // Make zip code optional - GPS locations might not have accurate zip codes
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter your zip code';
+      return null; // Allow empty
     }
     
     final cleanValue = value.trim().replaceAll(' ', '');

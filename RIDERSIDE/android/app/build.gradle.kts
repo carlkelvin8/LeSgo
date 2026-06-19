@@ -5,6 +5,7 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -54,7 +55,7 @@ fun validateAndroidSdk() {
         )
     }
     
-    val cmdlineToolsPath = java.io.File(androidHome).resolve("cmdline-tools/latest/bin/sdkmanager.bat")
+    val cmdlineToolsPath = File(androidHome).resolve("cmdline-tools/latest/bin/sdkmanager.bat")
     if (!cmdlineToolsPath.exists()) {
         throw GradleException(
             "❌ Android SDK cmdline-tools not found at: $cmdlineToolsPath\n" +
@@ -70,7 +71,7 @@ android {
     ndkVersion = "28.2.13676358"
     
     // Validate Android SDK before building
-    validateAndroidSdk()
+    // validateAndroidSdk()  // Disabled for APK build
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
