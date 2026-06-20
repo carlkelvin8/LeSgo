@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/menu_item_options.dart';
 import '../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
@@ -398,7 +399,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
         );
         
         await dataSource.updateMenuItem(_itemId, request);
-        print('✅ Menu item updated successfully');
+        AppLogger.debug('Menu item updated successfully');
       } else {
         // Add mode - create new item
         // Get partner_id from auth state
@@ -414,7 +415,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
           return false;
         }
         
-        print('🔍 Using partner_id from auth: $partnerId');
+        AppLogger.debug('Using partner_id from auth: $partnerId');
         
         final request = CreateMenuItemRequest(
           menuCategoryId: menuCategoryId,
@@ -430,7 +431,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
         );
         
         await dataSource.createMenuItem(partnerId, request);
-        print('✅ Menu item created successfully');
+        AppLogger.debug('Menu item created successfully');
       }
       
       // Refresh menu providers
@@ -441,7 +442,7 @@ class MerchantMenuItemFormNotifier extends StateNotifier<MerchantMenuItemFormSta
       state = state.copyWith(isSubmitting: false);
       return true;
     } catch (e) {
-      print('❌ Error saving menu item: $e');
+      AppLogger.error('Error saving menu item', e);
       state = state.copyWith(
         isSubmitting: false,
         errorMessage: ApiService.extractError(e),

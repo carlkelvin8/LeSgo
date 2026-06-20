@@ -495,7 +495,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       final createOrderRequest = CreateOrderRequestDto(
                         serviceId: 4,
                         estimatedDistanceM: isManualOnlyCheckout
-                            ? 0
+                            ? 1000  // Default to 1km for manual orders (backend requires min:1)
                             : checkoutQuote.estimatedDistanceM,
                         pickup: OrderAddressDto(
                           address: isManualOnlyCheckout

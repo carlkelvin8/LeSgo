@@ -210,7 +210,8 @@ class _RiderBookingDetailScreenState
       // Map BookingStatus to API status string based on service type
       String? apiStatus;
       String? statusLabel;
-        
+
+      switch (newStatus) {
       case BookingStatus.onTheWayGoing:
         // LesRide: Can transition from accepted, driver_arrived_at_pickup, or in_progress → picked_up
         if (_currentApiStatus == 'accepted' || 
@@ -423,6 +424,7 @@ class _RiderBookingDetailScreenState
         break;
         
       // Informational statuses
+      case BookingStatus.onTheWay:
       case BookingStatus.cooking:
       case BookingStatus.toBuy:
       case BookingStatus.pending:
@@ -558,7 +560,15 @@ class _RiderBookingDetailScreenState
         _isHandlingStatusChange = false;
       }
     }
+  } catch (e) {
+    AppLogger.error('Status change error', e);
+    if (mounted) {
+      showApiErrorSnackBar(context, e);
+    }
+  } finally {
+    _isHandlingStatusChange = false;
   }
+}  // end _handleStatusChange
 
   // Request camera permission
   Future<bool> _requestCameraPermission() async {

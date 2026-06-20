@@ -5,7 +5,7 @@ import '../../auth/rider_auth_provider.dart';
 import 'merchant_prep_timer_provider.dart';
 import 'merchant_profile_provider.dart';
 
-enum MerchantOrderFilter { all, pending, pickUp, ready, forDelivery, completed, cancelled }
+enum MerchantOrderFilter { all, pending, pickUp, ready, forDelivery, delivered, completed, cancelled }
 
 extension MerchantOrderFilterX on MerchantOrderFilter {
   String get label {
@@ -20,6 +20,8 @@ extension MerchantOrderFilterX on MerchantOrderFilter {
         return 'Ready';
       case MerchantOrderFilter.forDelivery:
         return 'For Delivery';
+      case MerchantOrderFilter.delivered:
+        return 'Delivered';
       case MerchantOrderFilter.completed:
         return 'Completed';
       case MerchantOrderFilter.cancelled:
@@ -39,6 +41,8 @@ extension MerchantOrderFilterX on MerchantOrderFilter {
         return 'ready_for_pickup';
       case MerchantOrderFilter.forDelivery:
         return 'picked_up';
+      case MerchantOrderFilter.delivered:
+        return 'completed';
       case MerchantOrderFilter.completed:
         return 'completed';
       case MerchantOrderFilter.cancelled:
@@ -119,6 +123,7 @@ List<OrderDto> _filterOrders(List<OrderDto> orders, MerchantOrderFilter filter) 
                status == 'in_progress' ||
                status == 'driver_arrived_at_pickup';
       
+      case MerchantOrderFilter.delivered:
       case MerchantOrderFilter.completed:
         return status == 'completed';
       

@@ -69,7 +69,7 @@ class RiderDutyNotifier extends StateNotifier<bool> {
       state = true;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_dutyPrefKey, true);
-      await _applySideEffects(true, syncApi: false);
+      await _applySideEffects(true, syncApi: true);
       return null;
     } catch (e) {
       return ApiService.extractError(e);

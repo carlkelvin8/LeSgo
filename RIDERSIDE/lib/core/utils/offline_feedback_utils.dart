@@ -23,7 +23,7 @@ void showApiErrorSnackBar(
   final queued = isOfflineQueuedError(error);
   final message = queued
       ? 'Saved offline — will upload when connection returns.'
-      : (fallback ?? ApiService.extractError(error));
+      : ApiService.extractError(error);
 
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(

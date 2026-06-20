@@ -70,7 +70,9 @@ class RiderMissionState {
 }
 
 class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
-  RiderMissionNotifier() : super(const RiderMissionState()) {
+  final Ref _ref;
+
+  RiderMissionNotifier(this._ref) : super(const RiderMissionState()) {
     loadMissions();
   }
 
@@ -103,7 +105,7 @@ class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
     }
   }
 
-  Future<bool> claimReward(int missionId, Ref? ref) async {
+  Future<bool> claimReward(int missionId) async {
     try {
       AppLogger.debug('💰 Claiming reward for mission $missionId');
       
@@ -114,14 +116,12 @@ class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
       // Reload missions to update state
       await loadMissions();
       
-      // Also refresh wallet if ref is provided, so user sees updated balance immediately
-      if (ref != null) {
-        try {
-          await ref.read(riderWalletProvider.notifier).loadWallet(silent: true);
-          AppLogger.debug('✅ Wallet refreshed after reward claim');
-        } catch (e) {
-          AppLogger.warn('Could not refresh wallet after reward: $e');
-        }
+      // Also refresh wallet, so user sees updated balance immediately
+      try {
+        await _ref.read(riderWalletProvider.notifier).loadWallet(silent: true);
+        AppLogger.debug('✅ Wallet refreshed after reward claim');
+      } catch (e) {
+        AppLogger.warn('Could not refresh wallet after reward: $e');
       }
       
       return true;
@@ -137,5 +137,5 @@ class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
 
 final riderMissionProvider =
     StateNotifierProvider<RiderMissionNotifier, RiderMissionState>(
-      (ref) => RiderMissionNotifier(),
+      (ref) => RiderMissionNotifier(ref),
     );

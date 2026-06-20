@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/constants/app_config.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/location_permission_utils.dart';
 import '../auth/rider_auth_provider.dart';
 import '../main/merchantside/merchant_profile_provider.dart';
 import 'cart_provider.dart';
@@ -59,15 +61,18 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
       final partner = await _ref.read(merchantProfileProvider.future);
       final pickupAddress = partner?.name ?? 'Store pickup';
 
-      double lat = 8.4542;
-      double lng = 124.6319;
-      try {
-        final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-        );
-        lat = position.latitude;
-        lng = position.longitude;
-      } catch (_) {}
+      double pickupLat = 8.4542;
+      double pickupLng = 124.6319;
+      final locationStatus = await Permission.locationWhenInUse.request();
+      if (locationStatus.isGranted) {
+        try {
+          final position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.medium,
+          );
+          pickupLat = position.latitude;
+          pickupLng = position.longitude;
+        } catch (_) {}
+      }
 
       final items = cart.items
           .map(
@@ -88,15 +93,15 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
         'notes': 'Merchant self-order from app cart',
         'pickup': {
           'address': pickupAddress,
-          'lat': lat,
-          'lng': lng,
+          'lat': pickupLat,
+          'lng': pickupLng,
           'contact_name': auth.user?.name,
           'contact_phone': auth.user?.phone,
         },
         'dropoff': {
           'address': deliveryAddress,
-          'lat': lat,
-          'lng': lng,
+          'lat': pickupLat,
+          'lng': pickupLng,
           'contact_name': auth.user?.name,
           'contact_phone': auth.user?.phone,
         },

@@ -231,11 +231,9 @@ class RiderBookingsList extends ConsumerWidget {
                       ),
                     );
                   } else {
-                    final error = ref.read(riderOrdersProvider).error ??
-                        'Failed to accept order';
                     showApiErrorSnackBar(
                       context,
-                      error,
+                      ref.read(riderOrdersProvider).error,
                       fallback: 'Failed to accept order',
                     );
                   }

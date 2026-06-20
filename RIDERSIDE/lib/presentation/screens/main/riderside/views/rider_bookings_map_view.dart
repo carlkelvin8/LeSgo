@@ -17,6 +17,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../core/utils/rider_navigation_launcher.dart';
+import '../../../../../core/utils/offline_feedback_utils.dart';
 import '../rider_booking_detail_screen.dart';
 import '../../../../provider/main/riderside/rider_heatmap_provider.dart';
 
@@ -949,15 +950,11 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         _updateMarkers();
                         _fitBounds();
                       } else {
-                        final error = ref.read(riderOrdersProvider).error;
-                        if (error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(error),
-                              backgroundColor: Colors.orange.shade800,
-                            ),
-                          );
-                        }
+                        showApiErrorSnackBar(
+                          context,
+                          ref.read(riderOrdersProvider).error,
+                          fallback: 'Failed to accept order',
+                        );
                       }
                     },
               style: ElevatedButton.styleFrom(

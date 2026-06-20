@@ -171,12 +171,17 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                         return status == 'searching_driver' ||
                             status == 'accepted' ||
                             status == 'ready_for_pickup';
+                      case MerchantOrderFilter.ready:
+                        return status == 'ready_for_pickup';
                       case MerchantOrderFilter.forDelivery:
                         return status == 'picked_up' ||
                             status == 'in_progress' ||
                             status == 'driver_arrived_at_pickup';
                       case MerchantOrderFilter.delivered:
+                      case MerchantOrderFilter.completed:
                         return status == 'completed';
+                      case MerchantOrderFilter.cancelled:
+                        return status == 'cancelled';
                       case MerchantOrderFilter.all:
                         return true;
                     }

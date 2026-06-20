@@ -217,7 +217,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
           ),
         ),
         value: state.isAutoPrintEnabled,
-        activeColor: const Color(0xFF5F2D82),
+        activeThumbColor: const Color(0xFF5F2D82),
         onChanged: state.connectedAddress == null
             ? null
             : (v) {
