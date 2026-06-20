@@ -104,6 +104,7 @@ export 'main/riderside/bookings/rider_booking_next_actions.dart';
 export 'main/riderside/bookings/rider_bookings_header.dart';
 export 'main/riderside/bookings/rider_bookings_list.dart';
 export 'main/riderside/bookings/rider_duty_toggle.dart';
+export 'main/riderside/rider_shift_summary_sheet.dart';
 export 'main/riderside/bookings/rider_swipe_accept_button.dart';
 export 'main/merchantside/cart/cart_screen_header.dart';
 export 'main/merchantside/cart/cart_empty_state.dart';

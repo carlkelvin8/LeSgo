@@ -115,6 +115,22 @@ class NotificationHelper {
     );
   }
 
+  /// Show rating reminder notification
+  static void showRatingReminder(
+    BuildContext context, {
+    required String orderId,
+    String? riderName,
+  }) {
+    _service.showNotificationByType(
+      context,
+      type: NotificationType.orderRatingReminder,
+      message: riderName != null
+          ? "How was your delivery from $riderName? Tap to rate your experience."
+          : 'How was your delivery? Tap to rate your experience.',
+      data: {'order_id': orderId},
+    );
+  }
+
   /// Show system alert notification
   static void showSystemAlert(
     BuildContext context, {

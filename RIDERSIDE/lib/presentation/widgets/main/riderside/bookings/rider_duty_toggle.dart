@@ -4,6 +4,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
+import '../../../../provider/main/riderside/rider_shift_provider.dart';
+import '../rider_shift_summary_sheet.dart';
 
 class RiderDutyToggle extends ConsumerStatefulWidget {
   const RiderDutyToggle({super.key});
@@ -52,6 +54,15 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
       }
 
       await ref.read(riderDutyProvider.notifier).setOnDuty(false);
+
+      if (mounted) {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => const RiderShiftSummarySheet(),
+        );
+      }
       return;
     }
 
@@ -101,6 +112,7 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
         ),
       );
     } else {
+      await ref.read(riderShiftProvider).recordShiftStart();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Attendance photo na-upload. Naka ON DUTY ka na.'),
