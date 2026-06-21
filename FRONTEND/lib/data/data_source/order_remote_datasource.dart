@@ -179,11 +179,23 @@ class OrderRemoteDataSource {
       final responseData = e.response?.data;
       String errorMsg;
       if (responseData is Map) {
-        errorMsg = (responseData['message'] as String?)?.isNotEmpty == true
-            ? responseData['message'] as String
-            : (responseData['error'] as String?)?.isNotEmpty == true
-                ? responseData['error'] as String
-                : e.message ?? 'Failed to create order';
+        // Check for validation errors first
+        if (responseData['errors'] is Map) {
+          final errors = responseData['errors'] as Map;
+          final errorMessages = errors.values
+              .expand((v) => v is List ? v : [v])
+              .map((e) => e.toString())
+              .toList();
+          errorMsg = errorMessages.isNotEmpty 
+              ? errorMessages.join('\n')
+              : 'Validation failed';
+        } else {
+          errorMsg = (responseData['message'] as String?)?.isNotEmpty == true
+              ? responseData['message'] as String
+              : (responseData['error'] as String?)?.isNotEmpty == true
+                  ? responseData['error'] as String
+                  : e.message ?? 'Failed to create order';
+        }
       } else {
         errorMsg = e.message ?? 'Failed to create order';
       }

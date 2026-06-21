@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -602,6 +603,11 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       }
                     } catch (e) {
                       print('🔴 LesBuy: Error creating order - $e');
+                      // Debug: Print full error details
+                      if (e is DioException) {
+                        print('🔴 DioException status: ${e.response?.statusCode}');
+                        print('🔴 DioException data: ${e.response?.data}');
+                      }
                       if (context.mounted) {
                         final raw = e.toString();
                         final msg = raw.startsWith('Exception: ')
