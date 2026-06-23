@@ -1,5 +1,6 @@
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
+import 'package:flutter/foundation.dart';
 import 'dto/chat/message_dto.dart';
 
 class ChatRemoteDataSource {
@@ -22,7 +23,7 @@ class ChatRemoteDataSource {
   // Get or create conversation for order
   Future<ConversationDto> getOrCreateConversation(int orderId) async {
     final response = await _dioClient.dio.get(
-      ApiConstants.chatConversationByOrder.replaceAll('{order_id}', orderId.toString()),
+      ApiConstants.chatConversationByOrder(orderId),
     );
     
     if (response.data['success'] == true && response.data['data'] != null) {
@@ -34,7 +35,7 @@ class ChatRemoteDataSource {
   // Get messages for conversation
   Future<List<MessageDto>> getMessages(int conversationId, {int page = 1, int limit = 50}) async {
     final response = await _dioClient.dio.get(
-      ApiConstants.chatMessages.replaceAll('{id}', conversationId.toString()),
+      ApiConstants.chatMessages(conversationId),
       queryParameters: {
         'page': page,
         'per_page': limit,
@@ -52,7 +53,7 @@ class ChatRemoteDataSource {
   // Send message
   Future<MessageDto> sendMessage(int conversationId, SendMessageRequestDto request) async {
     final response = await _dioClient.dio.post(
-      ApiConstants.chatSendMessage.replaceAll('{id}', conversationId.toString()),
+      ApiConstants.chatSendMessage(conversationId),
       data: request.toJson(),
     );
     
@@ -76,10 +77,13 @@ class ChatRemoteDataSource {
   Future<void> markAsRead(int conversationId) async {
     try {
       await _dioClient.dio.post(
-        ApiConstants.chatMarkAsRead.replaceAll('{id}', conversationId.toString()),
+        ApiConstants.chatMarkAsRead(conversationId),
       );
-    } catch (_) {
-      // Silently ignore — not critical if mark-as-read fails
+    } catch (e) {
+      // Log but don't throw — not critical if mark-as-read fails
+      if (kDebugMode) {
+        debugPrint('⚠️ Mark as read failed for conversation $conversationId: $e');
+      }
     }
   }
 }

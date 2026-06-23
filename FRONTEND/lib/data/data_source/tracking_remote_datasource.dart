@@ -1,4 +1,5 @@
 import 'package:injectable/injectable.dart';
+import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/utils/driver_display_utils.dart';
@@ -78,11 +79,19 @@ class TrackingRemoteDataSource {
     try {
       final response = await dio.get(ApiConstants.trackingLive(orderId));
       final body = response.data as Map<String, dynamic>;
-      if (body['success'] != true) return null;
+      
+      if (body['success'] != true) {
+        // Server returned unsuccessful response
+        return null;
+      }
+      
       final data = body['data'];
-      if (data is! Map) return null;
+      if (data is! Map) {
+        // No tracking data available yet (legitimate case)
+        return null;
+      }
+      
       final map = Map<String, dynamic>.from(data);
-
       final coords = _extractDriverCoordinates(map);
       final status = map['current_status'] ??
           map['status'] ??
@@ -97,8 +106,13 @@ class TrackingRemoteDataSource {
         'eta_minutes': map['eta_minutes'],
         'distance_to_destination_km': map['distance_to_destination_km'],
       };
-    } catch (_) {
-      return null;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // Order doesn't have tracking data yet (legitimate)
+        return null;
+      }
+      // For other errors (auth, network, server), rethrow to let caller handle
+      rethrow;
     }
   }
 

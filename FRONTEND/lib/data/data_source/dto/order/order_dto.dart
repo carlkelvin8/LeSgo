@@ -1,21 +1,55 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/utils/proof_image_utils.dart';
 import 'lesbuy_item_dto.dart';
 
 part 'order_dto.g.dart';
 
-// Helper to parse double from either num or string
-double _parseDouble(dynamic value) {
-  if (value == null) return 0.0;
-  if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value) ?? 0.0;
+// Helper to parse double from either num or string with error logging
+double _parseDouble(dynamic value, {String? fieldName}) {
+  if (value == null) {
+    if (kDebugMode && fieldName != null) {
+      debugPrint('⚠️ OrderDto: Null value for numeric field: $fieldName');
+    }
+    return 0.0;
+  }
+  
+  if (value is num) {
+    return value.toDouble();
+  }
+  
+  if (value is String) {
+    final parsed = double.tryParse(value);
+    if (parsed == null && kDebugMode) {
+      debugPrint('⚠️ OrderDto: Failed to parse ${fieldName ?? 'field'}: "$value"');
+    }
+    return parsed ?? 0.0;
+  }
+  
+  if (kDebugMode) {
+    debugPrint('⚠️ OrderDto: Unexpected type for ${fieldName ?? 'field'}: ${value.runtimeType}');
+  }
   return 0.0;
 }
 
-double? _parseDoubleNullable(dynamic value) {
+double? _parseDoubleNullable(dynamic value, {String? fieldName}) {
   if (value == null) return null;
-  if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value);
+  
+  if (value is num) {
+    return value.toDouble();
+  }
+  
+  if (value is String) {
+    final parsed = double.tryParse(value);
+    if (parsed == null && kDebugMode) {
+      debugPrint('⚠️ OrderDto: Failed to parse nullable ${fieldName ?? 'field'}: "$value"');
+    }
+    return parsed;
+  }
+  
+  if (kDebugMode) {
+    debugPrint('⚠️ OrderDto: Unexpected type for nullable ${fieldName ?? 'field'}: ${value.runtimeType}');
+  }
   return null;
 }
 

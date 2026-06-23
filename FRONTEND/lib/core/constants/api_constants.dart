@@ -59,15 +59,15 @@ class ApiConstants {
   static const String servicesEndpoint = '/v1/services';
   static String serviceByIdEndpoint(int id) => '/v1/services/$id';
 
-  // Chat endpoints
+  // Chat endpoints - using functions for type safety
   static const String chatConversations = '/v1/chat/conversations';
-  static const String chatConversationByOrder = '/v1/chat/conversations/order/{order_id}';
-  static const String chatMessages = '/v1/chat/conversations/{id}/messages';
-  static const String chatSendMessage = '/v1/chat/conversations/{id}/messages';
-  static const String chatSendSystemMessage = '/v1/chat/conversations/{id}/system-message';
-  static const String chatEndConversation = '/v1/chat/conversations/{id}/end';
+  static String chatConversationByOrder(int orderId) => '/v1/chat/conversations/order/$orderId';
+  static String chatMessages(int conversationId) => '/v1/chat/conversations/$conversationId/messages';
+  static String chatSendMessage(int conversationId) => '/v1/chat/conversations/$conversationId/messages';
+  static String chatSendSystemMessage(int conversationId) => '/v1/chat/conversations/$conversationId/system-message';
+  static String chatEndConversation(int conversationId) => '/v1/chat/conversations/$conversationId/end';
   static const String chatUnreadCount = '/v1/chat/unread-count';
-  static const String chatMarkAsRead = '/v1/chat/conversations/{id}/read';
+  static String chatMarkAsRead(int conversationId) => '/v1/chat/conversations/$conversationId/read';
 
   // Missions, vouchers, FAQ, loyalty
   static const String missions = '/v1/missions';
