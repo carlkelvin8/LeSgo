@@ -20,7 +20,11 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
   double _dragOffset = 0.0;
   bool _isAccepted = false;
   late AnimationController _slideBackController;
-  late Animation<double> _slideBackAnimation;
+  Animation<double>? _slideBackAnimation;
+  double _maxWidth = 0;
+  double _height = 0;
+
+  double get _thumbWidth => (_height * 1.5) + 8;
 
   @override
   void initState() {
@@ -29,11 +33,6 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _slideBackController.addListener(() {
-      setState(() {
-        _dragOffset = _slideBackAnimation.value;
-      });
-    });
   }
 
   @override
@@ -42,35 +41,28 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
     super.dispose();
   }
 
-  void _onDragUpdate(
-    DragUpdateDetails details,
-    double maxWidth,
-    double thumbWidth,
-  ) {
+  void _onDragUpdate(DragUpdateDetails details) {
     if (_isAccepted) return;
 
     setState(() {
       _dragOffset += details.primaryDelta!;
-      // Constrain dragging: prevent moving left of start, or past max width (minus thumb size)
       if (_dragOffset < 0) {
         _dragOffset = 0;
-      } else if (_dragOffset > maxWidth - thumbWidth) {
-        _dragOffset = maxWidth - thumbWidth;
+      } else if (_dragOffset > _maxWidth - _thumbWidth) {
+        _dragOffset = _maxWidth - _thumbWidth;
       }
     });
   }
 
-  void _onDragEnd(DragEndDetails details, double maxWidth, double thumbWidth) {
+  void _onDragEnd(DragEndDetails details) {
     if (_isAccepted) return;
 
-    // Threshold = 75% of the actual draggable range (not total width)
-    final double maxDrag = maxWidth - thumbWidth;
+    final double maxDrag = _maxWidth - _thumbWidth;
     final double threshold = maxDrag * 0.75;
     if (_dragOffset >= threshold) {
       setState(() => _dragOffset = maxDrag);
       _accept();
     } else {
-      // Animate back to original position
       _slideBackAnimation = Tween<double>(begin: _dragOffset, end: 0.0).animate(
         CurvedAnimation(parent: _slideBackController, curve: Curves.easeOut),
       );
@@ -86,122 +78,114 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
 
   @override
   Widget build(BuildContext context) {
-    final height = ResponsiveUtils.spacing(context, 48);
+    _height = ResponsiveUtils.spacing(context, 48);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        LayoutBuilder(
-      builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth;
+        AnimatedBuilder(
+          animation: _slideBackController,
+          builder: (context, child) {
+            final displayOffset = (_slideBackController.isAnimating && _slideBackAnimation != null)
+                ? _slideBackAnimation!.value
+                : _dragOffset;
 
-        return Semantics(
-          label: widget.text,
-          hint: 'Swipe right to accept this booking',
-          child: Container(
-          width: double.infinity,
-          height: height,
-          decoration: BoxDecoration(
-            color: const Color(0xFF9035E3), // Primary purple from Lesgo scheme
-            borderRadius: BorderRadius.circular(height / 2),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF5F2D82).withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // Centered Text - Clipped so the thumb naturally covers it as it moves right
-              Positioned.fill(
-                child: _isAccepted
-                    ? const SizedBox.shrink()
-                    : ClipRect(
-                        // The text will slowly disappear as the thumb drags over it
-                        clipper: _SwipeTextClipper(
-                          dragOffset: _dragOffset,
-                          thumbWidth:
-                              (height * 1.5) +
-                              8, // Accurate width representing thumb + margin
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                _maxWidth = constraints.maxWidth;
+
+                return Semantics(
+                  label: widget.text,
+                  hint: 'Swipe right to accept this booking',
+                  child: Container(
+                    width: double.infinity,
+                    height: _height,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF9035E3),
+                      borderRadius: BorderRadius.circular(_height / 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF5F2D82).withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              left: ResponsiveUtils.spacing(context, 24),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: _isAccepted
+                              ? const SizedBox.shrink()
+                              : ClipRect(
+                                  clipper: _SwipeTextClipper(
+                                    dragOffset: displayOffset,
+                                    thumbWidth: _thumbWidth,
+                                  ),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(
+                                        left: ResponsiveUtils.spacing(context, 24),
+                                      ),
+                                      child: Text(
+                                        widget.text,
+                                        style: TextStyle(
+                                          fontFamily: 'TT Fors',
+                                          fontSize: ResponsiveUtils.fontSize(context, 14),
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                        if (_isAccepted)
+                          Positioned.fill(
+                            child: Center(
+                              child: Text(
+                                'Accepted',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
-                            child: Text(
-                              widget.text,
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 14),
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                          ),
+                        Positioned(
+                          left: displayOffset,
+                          top: 0,
+                          bottom: 0,
+                          child: GestureDetector(
+                            onHorizontalDragUpdate: _onDragUpdate,
+                            onHorizontalDragEnd: _onDragEnd,
+                            child: Container(
+                              width: _height * 1.5,
+                              margin: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(_height / 2),
+                                color: const Color.fromARGB(255, 234, 215, 247),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  _isAccepted ? Icons.check : Icons.arrow_forward_rounded,
+                                  color: const Color(0xFF9035E3),
+                                  size: ResponsiveUtils.fontSize(context, 20),
+                                  weight: 400,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-              ),
-              // "Accepted" label shown full-width when swiped
-              if (_isAccepted)
-                Positioned.fill(
-                  child: Center(
-                    child: Text(
-                      'Accepted',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 14),
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                      ],
                     ),
                   ),
-                ),
-              // Draggable Thumb
-              Positioned(
-                left: _dragOffset,
-                top: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) =>
-                      _onDragUpdate(details, maxWidth, (height * 1.5) + 8),
-                  onHorizontalDragEnd: (details) =>
-                      _onDragEnd(details, maxWidth, (height * 1.5) + 8),
-                  child: Container(
-                    width:
-                        height *
-                        1.5, // Make the width 1.5x the height for a capsule look
-                    margin: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(height / 2),
-                      color: const Color.fromARGB(
-                        255,
-                        234,
-                        215,
-                        247,
-                      ), // Light purple to match design
-                    ),
-                    child: Center(
-                      child: Icon(
-                        _isAccepted ? Icons.check : Icons.arrow_forward_rounded,
-                        color: const Color(
-                          0xFF9035E3,
-                        ), // Dark purple arrow against light background
-                        size: ResponsiveUtils.fontSize(context, 20),
-                        weight: 400, // Explicitly requesting thinner weight
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+                );
+              },
+            );
+          },
         ),
-        );
-      },
-    ),
         if (!_isAccepted) ...[
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           Semantics(

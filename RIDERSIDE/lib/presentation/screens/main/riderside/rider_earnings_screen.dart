@@ -84,9 +84,11 @@ class RiderEarningsScreen extends ConsumerWidget {
             ResponsiveUtils.scrollBottomPaddingForBottomNav(context),
           ),
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+            SizedBox(
+              height: ResponsiveUtils.spacing(context, 36),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const ClampingScrollPhysics(),
                 children: RiderEarningsPeriod.values.map((p) {
                   final selected = p == period;
                   return Padding(

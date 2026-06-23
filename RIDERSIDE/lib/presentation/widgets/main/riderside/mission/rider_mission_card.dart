@@ -119,101 +119,11 @@ class _RiderMissionCardState extends State<RiderMissionCard> {
                     // Progress Bar / Badge Container
                     SizedBox(
                       height: ResponsiveUtils.spacing(context, 24),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return Stack(
-                            children: [
-                              // Background (transparent yellow with border)
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFBE478).withValues(alpha: 0.3),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: const Color(0xFFFBE478),
-                                      width: 1,
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Filled Progress (solid yellow)
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 1000),
-                                  curve: Curves.easeOutCubic,
-                                  width: constraints.maxWidth * widget.mission.progress,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFBE478),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                              
-                              // Progress Text + reward (no overlap)
-                              Positioned.fill(
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                          left: ResponsiveUtils.spacing(context, 12),
-                                        ),
-                                        child: Text(
-                                          '${widget.mission.currentProgress} / ${widget.mission.goalTarget}',
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontFamily: 'TT Fors',
-                                            color: Colors.white,
-                                            fontSize: ResponsiveUtils.fontSize(context, 12),
-                                            fontWeight: FontWeight.bold,
-                                            shadows: const [
-                                              Shadow(
-                                                color: Colors.black45,
-                                                blurRadius: 2,
-                                                offset: Offset(0, 1),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Flexible(
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: ResponsiveUtils.spacing(context, 8),
-                                        ),
-                                        child: Text(
-                                          widget.mission.reward,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          textAlign: TextAlign.end,
-                                          style: TextStyle(
-                                            fontFamily: 'TT Fors',
-                                            color: Colors.white,
-                                            fontSize: ResponsiveUtils.fontSize(context, 12),
-                                            fontWeight: FontWeight.bold,
-                                            shadows: const [
-                                              Shadow(
-                                                color: Colors.black45,
-                                                blurRadius: 2,
-                                                offset: Offset(0, 1),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                      child: _MissionProgressBar(
+                        progress: widget.mission.progress,
+                        currentProgress: widget.mission.currentProgress,
+                        goalTarget: widget.mission.goalTarget,
+                        reward: widget.mission.reward,
                       ),
                     ),
 
@@ -242,6 +152,114 @@ class _RiderMissionCardState extends State<RiderMissionCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MissionProgressBar extends StatelessWidget {
+  final double progress;
+  final int currentProgress;
+  final int goalTarget;
+  final String reward;
+
+  const _MissionProgressBar({
+    required this.progress,
+    required this.currentProgress,
+    required this.goalTarget,
+    required this.reward,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFBE478).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFFBE478),
+                    width: 1,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: maxWidth * progress,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFBE478),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: ResponsiveUtils.spacing(context, 12),
+                      ),
+                      child: Text(
+                        '$currentProgress / $goalTarget',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          color: Colors.white,
+                          fontSize: ResponsiveUtils.fontSize(context, 12),
+                          fontWeight: FontWeight.bold,
+                          shadows: const [
+                            Shadow(
+                              color: Colors.black45,
+                              blurRadius: 2,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Flexible(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.spacing(context, 8),
+                      ),
+                      child: Text(
+                        reward,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          color: Colors.white,
+                          fontSize: ResponsiveUtils.fontSize(context, 12),
+                          fontWeight: FontWeight.bold,
+                          shadows: const [
+                            Shadow(
+                              color: Colors.black45,
+                              blurRadius: 2,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

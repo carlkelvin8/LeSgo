@@ -11,30 +11,28 @@ class LesportFormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const LestransportUserInfo(
-              userName: 'Juan Dela Cruz',
-              userLocation: 'Brgy 6, Claveria, Cagayan',
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-            const LestransportCoverageMap(),
-            SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-            LestransportSenderForm(
-              nameController: controllers.nameController,
-              contactController: controllers.contactController,
-              addressController: controllers.addressController,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            LestransportDeliveryMethod(
-              branchAddressController: controllers.branchAddressController,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-          ],
-        ),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const LestransportUserInfo(
+            userName: 'Juan Dela Cruz',
+            userLocation: 'Brgy 6, Claveria, Cagayan',
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+          const LestransportCoverageMap(),
+          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+          LestransportSenderForm(
+            nameController: controllers.nameController,
+            contactController: controllers.contactController,
+            addressController: controllers.addressController,
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+          LestransportDeliveryMethod(
+            branchAddressController: controllers.branchAddressController,
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        ],
       ),
     );
   }

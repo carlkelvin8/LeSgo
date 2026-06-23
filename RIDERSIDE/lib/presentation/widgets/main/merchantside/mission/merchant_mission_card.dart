@@ -114,93 +114,11 @@ class _MerchantMissionCardState extends State<MerchantMissionCard> {
                     SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                     SizedBox(
                       height: ResponsiveUtils.spacing(context, 24),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          return Stack(
-                            children: [
-                              Positioned.fill(
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFBE478).withValues(alpha: 0.3),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: const Color(0xFFFBE478),
-                                      width: 1,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 1000),
-                                  curve: Curves.easeOutCubic,
-                                  width: constraints.maxWidth * widget.mission.progress,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFBE478),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                left: ResponsiveUtils.spacing(context, 12),
-                                top: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: Text(
-                                    '${widget.mission.currentProgress} / ${widget.mission.goalTarget}',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      color: Colors.white,
-                                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                                      fontWeight: FontWeight.bold,
-                                      shadows: const [
-                                        Shadow(
-                                          color: Colors.black45,
-                                          blurRadius: 2,
-                                          offset: Offset(0, 1),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                bottom: 0,
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: ResponsiveUtils.spacing(context, 16),
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    widget.mission.reward,
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      color: Colors.white,
-                                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                                      fontWeight: FontWeight.bold,
-                                      shadows: const [
-                                        Shadow(
-                                          color: Colors.black45,
-                                          blurRadius: 2,
-                                          offset: Offset(0, 1),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                      child: _MerchantMissionProgressBar(
+                        progress: widget.mission.progress,
+                        currentProgress: widget.mission.currentProgress,
+                        goalTarget: widget.mission.goalTarget,
+                        reward: widget.mission.reward,
                       ),
                     ),
                     AnimatedSize(
@@ -227,6 +145,111 @@ class _MerchantMissionCardState extends State<MerchantMissionCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MerchantMissionProgressBar extends StatelessWidget {
+  final double progress;
+  final int currentProgress;
+  final int goalTarget;
+  final String reward;
+
+  const _MerchantMissionProgressBar({
+    required this.progress,
+    required this.currentProgress,
+    required this.goalTarget,
+    required this.reward,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFBE478).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFFBE478),
+                    width: 1,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: maxWidth * progress,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFBE478),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            Positioned(
+              left: ResponsiveUtils.spacing(context, 12),
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: Text(
+                  '$currentProgress / $goalTarget',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    color: Colors.white,
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    fontWeight: FontWeight.bold,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black45,
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveUtils.spacing(context, 16),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  reward,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    color: Colors.white,
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    fontWeight: FontWeight.bold,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black45,
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
