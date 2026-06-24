@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
+  final lang = ProviderScope.containerOf(context).read(appLanguageProvider);
   final controller = TextEditingController();
   final result = await showDialog<String>(
     context: context,
@@ -14,7 +17,7 @@ Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
           SizedBox(width: ResponsiveUtils.spacing(context, 12)),
           Expanded(
             child: Text(
-              'Cancel Order',
+              AppLocalization.translate('cancel_order', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -29,7 +32,7 @@ Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Please provide a reason for cancelling this order.',
+            AppLocalization.translate('please_provide_reason', lang),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -41,7 +44,7 @@ Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
             controller: controller,
             maxLines: 3,
             decoration: InputDecoration(
-              hintText: 'Reason for cancellation',
+              hintText: AppLocalization.translate('reason_for_cancellation', lang),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -53,7 +56,7 @@ Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
           child: Text(
-            'Keep Order',
+            AppLocalization.translate('keep_order', lang),
             style: TextStyle(
               fontFamily: 'TT Fors',
               color: Colors.grey.shade600,
@@ -70,8 +73,8 @@ Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
             backgroundColor: Colors.red.shade700,
             foregroundColor: Colors.white,
           ),
-          child: const Text(
-            'Cancel Order',
+          child: Text(
+            AppLocalization.translate('cancel_order', lang),
             style: TextStyle(fontFamily: 'TT Fors'),
           ),
         ),

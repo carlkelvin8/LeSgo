@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_main_nav_provider.dart';
 import '../../../../provider/main/riderside/rider_mission_provider.dart';
@@ -14,6 +15,7 @@ class RiderProfileSummarySection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final wallet = ref.watch(riderWalletProvider);
     final missions = ref.watch(riderMissionProvider);
     final orders = ref.watch(riderOrdersProvider);
@@ -31,7 +33,7 @@ class RiderProfileSummarySection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Overview',
+            AppLocalization.translate('overview', lang),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 15),
@@ -44,7 +46,7 @@ class RiderProfileSummarySection extends ConsumerWidget {
             _AlertCard(
               icon: Icons.account_balance_wallet_outlined,
               color: Colors.orange,
-              title: 'Low LesPay balance',
+              title: AppLocalization.translate('low_lespay_balance', lang),
               subtitle: wallet.lowBalanceWarningMessage,
               onTap: () =>
                   ref.read(riderNavProvider.notifier).navigateTo(RiderNavType.more),
@@ -55,7 +57,7 @@ class RiderProfileSummarySection extends ConsumerWidget {
             _AlertCard(
               icon: Icons.delivery_dining,
               color: const Color(0xFF5F2D82),
-              title: 'Active delivery',
+              title: AppLocalization.translate('active_delivery', lang),
               subtitle:
                   'Order #${orders.activeOrder!.id} • ${orders.activeOrder!.status.replaceAll('_', ' ')}',
               onTap: null,
@@ -66,7 +68,7 @@ class RiderProfileSummarySection extends ConsumerWidget {
             _AlertCard(
               icon: Icons.card_giftcard,
               color: Colors.green,
-              title: 'Mission reward ready',
+              title: AppLocalization.translate('mission_reward_ready', lang),
               subtitle:
                   '$claimable reward${claimable == 1 ? '' : 's'} waiting to claim',
               onTap: null,
@@ -76,7 +78,7 @@ class RiderProfileSummarySection extends ConsumerWidget {
             _AlertCard(
               icon: Icons.flag_outlined,
               color: const Color(0xFF5F2D82),
-              title: 'Missions in progress',
+              title: AppLocalization.translate('missions_in_progress', lang),
               subtitle: '$missionInProgress active mission${missionInProgress == 1 ? '' : 's'}',
               onTap: null,
             ),
@@ -84,7 +86,7 @@ class RiderProfileSummarySection extends ConsumerWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           _QuickLinkRow(
             icon: Icons.verified_user_outlined,
-            label: 'Document verification',
+            label: AppLocalization.translate('document_verification', lang),
             onTap: () =>
                 AppRouter.push(context, MainRoutes.riderDocuments),
           ),

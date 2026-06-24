@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/app_localization.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../provider/main/riderside/rider_shift_provider.dart';
@@ -21,6 +22,7 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
   Future<void> _handleToggle(bool wantOnDuty) async {
     if (_isProcessing) return;
 
+    final lang = ref.read(appLanguageProvider);
     final isOnDuty = ref.read(riderDutyProvider);
     if (wantOnDuty == isOnDuty) return;
 
@@ -30,22 +32,22 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Go Off Duty?'),
+            title: Text(AppLocalization.translate('go_off_duty_question', lang)),
             content: Text(
-              'May active order ka pa (Order #${activeOrder.id}). '
-              'Sigurado ka bang gusto mong mag-OFF DUTY?',
+              '${AppLocalization.translate('may_active_order', lang)} (Order #${activeOrder.id}). '
+              '${AppLocalization.translate('confirm_go_off_duty', lang)}',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: Text(AppLocalization.translate('cancel', lang)),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red.shade700,
                 ),
-                child: const Text('Go Off Duty'),
+                child: Text(AppLocalization.translate('go_off_duty', lang)),
               ),
             ],
           ),
@@ -69,19 +71,16 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
     final proceed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Attendance Photo'),
-        content: const Text(
-          'Kailangan ng attendance photo bago maging ON DUTY. '
-          'Kunan ng selfie na nakasuot ng uniform para ma-verify.',
-        ),
+        title: Text(AppLocalization.translate('attendance_photo', lang)),
+        content: Text(AppLocalization.translate('need_attendance_photo', lang)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalization.translate('cancel', lang)),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Open Camera'),
+            child: Text(AppLocalization.translate('open_camera', lang)),
           ),
         ],
       ),
@@ -114,9 +113,9 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
     } else {
       await ref.read(riderShiftProvider).recordShiftStart();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Attendance photo na-upload. Naka ON DUTY ka na.'),
-          backgroundColor: Color(0xFF5F2D82),
+        SnackBar(
+          content: Text(AppLocalization.translate('attendance_photo_uploaded', lang)),
+          backgroundColor: const Color(0xFF5F2D82),
         ),
       );
     }
@@ -125,6 +124,8 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
   @override
   Widget build(BuildContext context) {
     final isOnDuty = ref.watch(riderDutyProvider);
+
+    final lang = ref.watch(appLanguageProvider);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -138,8 +139,8 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
         else
           Semantics(
             label: isOnDuty
-                ? 'On duty. Double tap to go off duty'
-                : 'Off duty. Double tap to go on duty with attendance photo',
+                ? AppLocalization.translate('on_duty_semantics', lang)
+                : AppLocalization.translate('off_duty_semantics', lang),
             toggled: isOnDuty,
             child: Switch(
               value: isOnDuty,
@@ -152,8 +153,10 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
         SizedBox(width: ResponsiveUtils.spacing(context, 8)),
         Text(
           _isProcessing
-              ? 'UPLOADING...'
-              : (isOnDuty ? 'ON DUTY' : 'OFF DUTY'),
+              ? AppLocalization.translate('uploading', lang)
+              : (isOnDuty
+                  ? AppLocalization.translate('on_duty_label', lang)
+                  : AppLocalization.translate('off_duty_label', lang)),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),

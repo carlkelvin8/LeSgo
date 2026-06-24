@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 
@@ -14,14 +15,23 @@ class AnalyticsService {
   Future<void> trackEvent(
     String eventType, {
     Map<String, dynamic>? properties,
+    String? eventCategory,
+    String? eventAction,
+    String? eventLabel,
+    double? eventValue,
   }) async {
     try {
       await _dioClient.dio.post(
         ApiConstants.analyticsTrackEvent,
         data: {
           'event_type': eventType,
+          if (eventCategory != null) 'event_category': eventCategory,
+          if (eventAction != null) 'event_action': eventAction,
+          if (eventLabel != null) 'event_label': eventLabel,
+          if (eventValue != null) 'event_value': eventValue,
           if (properties != null) 'properties': properties,
         },
+        options: Options(extra: const {'skipOfflineQueue': true}),
       );
     } catch (e) {
       debugPrint('Analytics track skipped: $e');
@@ -31,6 +41,9 @@ class AnalyticsService {
   Future<void> trackScreenView(String screenName) {
     return trackEvent(
       'screen_view',
+      eventCategory: 'navigation',
+      eventAction: 'view',
+      eventLabel: screenName,
       properties: {'screen': screenName},
     );
   }

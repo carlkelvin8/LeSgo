@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/notification_api.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../widgets/common/retry_widget.dart';
 
-class RiderNotificationCenterScreen extends StatefulWidget {
+class RiderNotificationCenterScreen extends ConsumerStatefulWidget {
   const RiderNotificationCenterScreen({super.key});
 
   @override
-  State<RiderNotificationCenterScreen> createState() =>
+  ConsumerState<RiderNotificationCenterScreen> createState() =>
       _RiderNotificationCenterScreenState();
 }
 
 class _RiderNotificationCenterScreenState
-    extends State<RiderNotificationCenterScreen> {
+    extends ConsumerState<RiderNotificationCenterScreen> {
   List<AppNotification> _notifications = [];
   bool _loading = true;
   String? _error;
@@ -57,8 +59,9 @@ class _RiderNotificationCenterScreenState
       await ApiService.markAllNotificationsRead();
       await _load();
       if (mounted) {
+        final lang = ref.read(appLanguageProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All notifications marked as read')),
+          SnackBar(content: Text(AppLocalization.translate('all_marked_read', lang))),
         );
       }
     } catch (e) {
@@ -87,13 +90,14 @@ class _RiderNotificationCenterScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF5F2D82),
         title: Text(
-          'Notifications',
+          AppLocalization.translate('notifications', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w700,
@@ -127,7 +131,7 @@ class _RiderNotificationCenterScreenState
                             SizedBox(height: ResponsiveUtils.spacing(context, 80)),
                             Center(
                               child: Text(
-                                'No notifications yet',
+                                AppLocalization.translate('no_notifications', lang),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   color: Colors.grey.shade600,

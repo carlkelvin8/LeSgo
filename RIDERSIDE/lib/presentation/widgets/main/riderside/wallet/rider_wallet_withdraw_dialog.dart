@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import 'rider_wallet_link_account_dialog.dart';
@@ -88,24 +89,26 @@ class _RiderWalletWithdrawDialogState
   }
 
   String? _validateAmount(String? value) {
+    final lang = ref.read(appLanguageProvider);
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter an amount';
+      return AppLocalization.translate('please_enter_amount', lang);
     }
     final amount = double.tryParse(value.trim());
-    if (amount == null) return 'Please enter a valid number';
-    if (amount < 10) return 'Minimum withdrawal is PHP 10.00';
+    if (amount == null) return AppLocalization.translate('please_enter_valid_number', lang);
+    if (amount < 10) return AppLocalization.translate('minimum_withdrawal_10', lang);
     final balance = ref.read(riderWalletProvider).balance;
     if (amount > balance) {
-      return 'Insufficient balance';
+      return AppLocalization.translate('insufficient_balance', lang);
     }
     return null;
   }
 
   Future<void> _submit() async {
     if (_methodForProvider(_method) == null) {
+      final lang = ref.read(appLanguageProvider);
       SnackBarUtils.showError(
         context,
-        'Link your ${_method == 'gcash' ? 'GCash' : 'Maya'} account first.',
+        'Link your ${AppLocalization.translate(_method == 'gcash' ? 'gcash' : 'maya', lang)} account first.',
       );
       return;
     }
@@ -124,17 +127,19 @@ class _RiderWalletWithdrawDialogState
     if (success) {
       Navigator.of(context).pop();
       if (widget.parentContext.mounted) {
-        SnackBarUtils.showSuccess(
+        final lang = ref.read(appLanguageProvider);
+      SnackBarUtils.showSuccess(
           widget.parentContext,
-          'PHP ${amount.toStringAsFixed(2)} sent to your '
-          '${_method == 'gcash' ? 'GCash' : 'Maya'} via Xendit.',
+          AppLocalization.translate('amount_sent', lang)
+              .replaceAll('{{amount}}', amount.toStringAsFixed(2))
+              .replaceAll('{{provider}}', AppLocalization.translate(_method == 'gcash' ? 'gcash' : 'maya', lang)),
         );
       }
     } else {
       final error = ref.read(riderWalletProvider).error;
       SnackBarUtils.showError(
         context,
-        error ?? 'Withdrawal failed. Please try again.',
+        error ?? AppLocalization.translate('withdrawal_failed', ref.read(appLanguageProvider)),
       );
     }
   }
@@ -145,13 +150,13 @@ class _RiderWalletWithdrawDialogState
       return ListTile(
         contentPadding: EdgeInsets.zero,
         title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
-        subtitle: const Text(
-          'Not linked',
+        subtitle: Text(
+          AppLocalization.translate('not_linked', ref.read(appLanguageProvider)),
           style: TextStyle(fontFamily: 'TT Fors', color: Colors.orange),
         ),
         trailing: TextButton(
           onPressed: _submitting ? null : () => _linkAccount(provider, label),
-          child: const Text('Link'),
+          child: Text(AppLocalization.translate('link_account', ref.read(appLanguageProvider))),
         ),
       );
     }
@@ -177,9 +182,11 @@ class _RiderWalletWithdrawDialogState
   Widget build(BuildContext context) {
     final liveBalance = ref.watch(riderWalletProvider).balance;
 
+    final lang = ref.watch(appLanguageProvider);
+
     return AlertDialog(
-      title: const Text(
-        'Withdraw via Xendit',
+      title: Text(
+        AppLocalization.translate('withdraw_via_xendit', lang),
         style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.bold),
       ),
       content: _loadingAccounts
@@ -211,13 +218,13 @@ class _RiderWalletWithdrawDialogState
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _linkedSummary('gcash', 'GCash'),
-                    _linkedSummary('maya', 'Maya'),
+                    _linkedSummary('gcash', AppLocalization.translate('gcash', lang)),
+                    _linkedSummary('maya', AppLocalization.translate('maya', lang)),
                     const SizedBox(height: 8),
                     SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment(value: 'gcash', label: Text('GCash')),
-                        ButtonSegment(value: 'maya', label: Text('Maya')),
+                      segments: [
+                        ButtonSegment(value: 'gcash', label: Text(AppLocalization.translate('gcash', lang))),
+                        ButtonSegment(value: 'maya', label: Text(AppLocalization.translate('maya', lang))),
                       ],
                       selected: {_method},
                       onSelectionChanged: _submitting
@@ -231,8 +238,8 @@ class _RiderWalletWithdrawDialogState
                       controller: _amountController,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Amount',
+                      decoration: InputDecoration(
+                        labelText: AppLocalization.translate('amount', lang),
                         prefixText: 'PHP ',
                         border: OutlineInputBorder(),
                       ),
@@ -246,7 +253,7 @@ class _RiderWalletWithdrawDialogState
       actions: [
         TextButton(
           onPressed: _submitting ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.translate('cancel', lang)),
         ),
         ElevatedButton(
           onPressed: _submitting || !_hasLinkedPayoutAccount ? null : _submit,
@@ -263,7 +270,7 @@ class _RiderWalletWithdrawDialogState
                     color: Colors.white,
                   ),
                 )
-              : const Text('Withdraw'),
+              : Text(AppLocalization.translate('withdraw', lang)),
         ),
       ],
     );

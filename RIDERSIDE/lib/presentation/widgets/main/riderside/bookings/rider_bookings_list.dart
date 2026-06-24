@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/offline_feedback_utils.dart';
 import '../../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/app_localization.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
@@ -18,6 +19,7 @@ class RiderBookingsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final ordersState = ref.watch(riderOrdersProvider);
     final wallet = ref.watch(riderWalletProvider);
     final rider = ref.watch(riderAuthProvider).user;
@@ -46,7 +48,7 @@ class RiderBookingsList extends ConsumerWidget {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             Text(
-              'Failed to load bookings',
+              AppLocalization.translate('failed_to_load_bookings', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -70,7 +72,7 @@ class RiderBookingsList extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
               ),
-              child: const Text('Retry'),
+              child: Text(AppLocalization.translate('retry', lang)),
             ),
           ],
         ),
@@ -100,7 +102,7 @@ class RiderBookingsList extends ConsumerWidget {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             Text(
-              'No available bookings',
+              AppLocalization.translate('no_available_bookings', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -110,7 +112,7 @@ class RiderBookingsList extends ConsumerWidget {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
             Text(
-              'New bookings will appear here',
+              AppLocalization.translate('new_bookings_will_appear', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -121,7 +123,7 @@ class RiderBookingsList extends ConsumerWidget {
             ElevatedButton.icon(
               onPressed: () => ref.read(riderOrdersProvider.notifier).loadOrders(),
               icon: const Icon(Icons.refresh),
-              label: const Text('Refresh'),
+              label: Text(AppLocalization.translate('refresh', lang)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
               ),
@@ -164,7 +166,7 @@ class RiderBookingsList extends ConsumerWidget {
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                   Text(
-                    'Updating bookings...',
+                    AppLocalization.translate('updating_bookings', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -181,7 +183,7 @@ class RiderBookingsList extends ConsumerWidget {
           ],
           // Active Order Section (if exists)
           if (ordersState.activeOrder != null) ...[
-            _buildActiveOrderCard(context, ref, ordersState.activeOrder!),
+            _buildActiveOrderCard(context, ref, ordersState.activeOrder!, lang),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             
             // Divider
@@ -191,7 +193,7 @@ class RiderBookingsList extends ConsumerWidget {
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.spacing(context, 16)),
                   child: Text(
-                    'Available Orders',
+                    AppLocalization.translate('available_orders', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -226,7 +228,10 @@ class RiderBookingsList extends ConsumerWidget {
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Order #${order.id} accepted!'),
+                        content: Text(
+                          AppLocalization.translate('order_accepted_id', lang)
+                              .replaceAll('{{id}}', '${order.id}'),
+                        ),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -234,7 +239,7 @@ class RiderBookingsList extends ConsumerWidget {
                     showApiErrorSnackBar(
                       context,
                       ref.read(riderOrdersProvider).error,
-                      fallback: 'Failed to accept order',
+                      fallback: AppLocalization.translate('failed_to_accept_order', lang),
                     );
                   }
                 },
@@ -247,7 +252,7 @@ class RiderBookingsList extends ConsumerWidget {
     );
   }
 
-  Widget _buildActiveOrderCard(BuildContext context, WidgetRef ref, RiderOrder order) {
+  Widget _buildActiveOrderCard(BuildContext context, WidgetRef ref, RiderOrder order, AppLanguage lang) {
     final rider = ref.read(riderAuthProvider).user;
     final booking = RiderBookingMapper.fromOrder(
       order,
@@ -385,7 +390,7 @@ class RiderBookingsList extends ConsumerWidget {
                   );
                 },
                 icon: Icon(Icons.visibility, size: 18),
-                label: Text('View Details & Track'),
+                label: Text(AppLocalization.translate('view_details_track', lang)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5F2D82),
                   foregroundColor: Colors.white,

@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/services/mobile_config_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
-class RiderSafetyScreen extends StatefulWidget {
+class RiderSafetyScreen extends ConsumerStatefulWidget {
   const RiderSafetyScreen({super.key});
 
   @override
-  State<RiderSafetyScreen> createState() => _RiderSafetyScreenState();
+  ConsumerState<RiderSafetyScreen> createState() => _RiderSafetyScreenState();
 }
 
-class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
+class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
   String _supportPhone = '+639171234567';
   String _emergencyNumber = '911';
   bool _loadingConfig = true;
@@ -34,6 +36,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
   }
 
   Widget _buildSOSSection(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
       decoration: BoxDecoration(
@@ -56,7 +59,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
                   color: Colors.white, size: 28),
               const SizedBox(width: 8),
               Text(
-                'SOS EMERGENCY ALERT',
+                AppLocalization.translate('sos_emergency_alert', lang),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontWeight: FontWeight.w800,
@@ -68,7 +71,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
           Text(
-            'Press the panic button to instantly share your location with emergency contacts via SMS.',
+            AppLocalization.translate('panic_button_desc', lang),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'TT Fors',
@@ -94,7 +97,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
               onPressed: () => _triggerSOS(context),
               icon: const Icon(Icons.warning_amber_rounded, size: 32),
               label: Text(
-                'PANIC BUTTON — SOS',
+                AppLocalization.translate('panic_button_sos', lang),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontWeight: FontWeight.w800,
@@ -109,18 +112,19 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
   }
 
   Future<void> _triggerSOS(BuildContext context) async {
+    final lang = ref.read(appLanguageProvider);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
-            SizedBox(width: 8),
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Send SOS Alert?',
-                style: TextStyle(
+                AppLocalization.translate('send_sos_alert', lang),
+                style: const TextStyle(
                   fontFamily: 'TT Fors',
                   fontWeight: FontWeight.w800,
                 ),
@@ -129,7 +133,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
           ],
         ),
         content: Text(
-          'Your current location will be sent via SMS to emergency contacts.',
+          AppLocalization.translate('your_location_sent', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 14,
@@ -149,9 +153,9 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
               backgroundColor: Colors.red.shade700,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'SEND SOS',
-              style: TextStyle(
+            child: Text(
+              AppLocalization.translate('send_sos', lang),
+              style: const TextStyle(
                 fontFamily: 'TT Fors',
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
@@ -172,8 +176,8 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not get location. Please enable GPS.'),
+        SnackBar(
+          content: Text(AppLocalization.translate('could_not_get_location_gps', lang)),
         ),
       );
       return;
@@ -197,7 +201,9 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('SOS sent. Location: $locString'),
+        content: Text(AppLocalization.translate('sos_sent', lang)
+            .replaceAll('{{lat}}', position.latitude.toStringAsFixed(6))
+            .replaceAll('{{lng}}', position.longitude.toStringAsFixed(6))),
         backgroundColor: Colors.red.shade700,
       ),
     );
@@ -211,14 +217,15 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
   }
 
   void _showSafetyTips(BuildContext context) {
+    final lang = ref.read(appLanguageProvider);
     final tips = [
-      ('verified_user', 'Verify order details before pickup'),
-      ('map', 'Avoid unsafe areas, especially at night'),
-      ('pedal_bike', 'Always wear your helmet'),
-      ('lock', 'Lock your vehicle when unattended'),
-      ('phone_in_talk', 'Keep your phone charged and accessible'),
-      ('group', 'Share your live location with trusted contacts'),
-      ('warning', 'Report any suspicious behavior to support immediately'),
+      ('verified_user', 'tip_verify_order'),
+      ('map', 'tip_avoid_unsafe'),
+      ('pedal_bike', 'tip_wear_helmet'),
+      ('lock', 'tip_lock_vehicle'),
+      ('phone_in_talk', 'tip_keep_phone_charged'),
+      ('group', 'tip_share_location'),
+      ('warning', 'tip_report_suspicious'),
     ];
     showModalBottomSheet(
       context: context,
@@ -244,7 +251,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
               Text(
-                'Safety Tips',
+                AppLocalization.translate('safety_tips', lang),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -268,7 +275,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          t.$2,
+                          AppLocalization.translate(t.$2, lang),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -312,6 +319,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
   @override
   Widget build(BuildContext context) {
     final hp = ResponsiveUtils.horizontalPadding(context);
+    final lang = ref.watch(appLanguageProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -320,7 +328,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'Safety & SOS',
+          AppLocalization.translate('safety_sos', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -354,7 +362,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
                           Icon(Icons.emergency, color: Colors.red.shade700),
                           const SizedBox(width: 8),
                           Text(
-                            'Emergency',
+                            AppLocalization.translate('emergency', lang),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontWeight: FontWeight.w800,
@@ -366,7 +374,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                       Text(
-                        'If you are in immediate danger, call emergency services right away.',
+                        AppLocalization.translate('if_immediate_danger', lang),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -386,7 +394,7 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
                           onPressed: () => _callNumber(_emergencyNumber),
                           icon: const Icon(Icons.phone),
                           label: Text(
-                            'Call $_emergencyNumber',
+                            AppLocalization.translate('call_support', lang).replaceAll('{{number}}', _emergencyNumber),
                             style: const TextStyle(
                               fontFamily: 'TT Fors',
                               fontWeight: FontWeight.w700,
@@ -400,13 +408,13 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
                 SizedBox(height: ResponsiveUtils.spacing(context, 20)),
                 _ActionTile(
                   icon: Icons.support_agent,
-                  title: 'LeSGo Rider Support',
-                  subtitle: 'Report incidents, accidents, or unsafe customers',
+                  title: AppLocalization.translate('lesgo_rider_support', lang),
+                  subtitle: AppLocalization.translate('report_incidents', lang),
                   onTap: () => _callNumber(_supportPhone),
                 ),
                 _ActionTile(
                   icon: Icons.share_location_outlined,
-                  title: 'Share live location',
+                  title: AppLocalization.translate('share_live_location', lang),
                   subtitle:
                       'Share your current location via maps',
                   onTap: () async {
@@ -423,8 +431,8 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
                     } catch (_) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Could not get current location.'),
+                          SnackBar(
+                            content: Text(AppLocalization.translate('could_not_get_location', lang)),
                           ),
                         );
                       }
@@ -433,9 +441,8 @@ class _RiderSafetyScreenState extends State<RiderSafetyScreen> {
                 ),
                 _ActionTile(
                   icon: Icons.info_outline,
-                  title: 'Safety tips',
-                  subtitle:
-                      'Verify order details, avoid unsafe areas at night, wear helmet',
+                  title: AppLocalization.translate('safety_tips', lang),
+                  subtitle: AppLocalization.translate('safety_tips_list', lang),
                   onTap: () => _showSafetyTips(context),
                 ),
               ],

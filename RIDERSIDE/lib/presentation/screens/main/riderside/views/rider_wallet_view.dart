@@ -6,6 +6,7 @@ import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_low_balance_banner.dart';
 import '../../../../widgets/widgets.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class RiderWalletView extends ConsumerWidget {
   const RiderWalletView({super.key});
@@ -13,6 +14,7 @@ class RiderWalletView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = ref.watch(riderWalletProvider);
+    final lang = ref.watch(appLanguageProvider);
 
     return RefreshIndicator(
       color: const Color(0xFF5F2D82),
@@ -91,7 +93,7 @@ class RiderWalletView extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Scheduled Payout',
+                              AppLocalization.translate('scheduled_payout', lang),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontWeight: FontWeight.w700,

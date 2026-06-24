@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
+import '../../../../../../core/utils/app_localization.dart';
 import 'rider_swipe_accept_button.dart';
 
-class RiderBookingCard extends StatelessWidget {
+class RiderBookingCard extends ConsumerWidget {
   final RiderBooking booking;
   final VoidCallback onAccept;
   final VoidCallback? onTap;
@@ -16,10 +18,11 @@ class RiderBookingCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     return Semantics(
       label:
-          'Booking from ${booking.restaurantName}. ${booking.address}. Earnings ${booking.earnings ?? 'unknown'} pesos.',
+          '${AppLocalization.translate('booking_from', lang)} ${booking.restaurantName}. ${booking.address}. Earnings ${booking.earnings ?? 'unknown'} pesos.',
       button: onTap != null,
       child: GestureDetector(
       onTap: onTap,

@@ -25,7 +25,6 @@ import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
-import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/notification_navigation_service.dart';
 
 // Actually, RegisterScaffold is specific to registration. Standard Scaffold is better for Main Screen.
@@ -39,8 +38,6 @@ class RiderMainScreen extends ConsumerStatefulWidget {
 
 class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
     with WidgetsBindingObserver, AutoRefreshMixin {
-  late final void Function(int replayedCount) _onOfflineQueueFlushed;
-
   @override
   Duration get autoRefreshInterval => kRiderMainAutoRefreshInterval;
 
@@ -54,22 +51,6 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
   @override
   void initState() {
     super.initState();
-    _onOfflineQueueFlushed = (replayed) {
-      if (!mounted) return;
-      refreshAllRiderScreens(ref, silent: true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            replayed == 1
-                ? '1 offline action synced'
-                : '$replayed offline actions synced',
-          ),
-          backgroundColor: Colors.green.shade700,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    };
-    connectivityService.addOnOfflineQueueFlushedListener(_onOfflineQueueFlushed);
 
     // Check authentication on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -86,9 +67,6 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
 
   @override
   void dispose() {
-    connectivityService.removeOnOfflineQueueFlushedListener(
-      _onOfflineQueueFlushed,
-    );
     super.dispose();
   }
 

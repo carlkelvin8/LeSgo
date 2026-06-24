@@ -1,20 +1,22 @@
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
-class RiderDocumentVerificationScreen extends StatefulWidget {
+class RiderDocumentVerificationScreen extends ConsumerStatefulWidget {
   const RiderDocumentVerificationScreen({super.key});
 
   @override
-  State<RiderDocumentVerificationScreen> createState() =>
+  ConsumerState<RiderDocumentVerificationScreen> createState() =>
       _RiderDocumentVerificationScreenState();
 }
 
 class _RiderDocumentVerificationScreenState
-    extends State<RiderDocumentVerificationScreen> {
+    extends ConsumerState<RiderDocumentVerificationScreen> {
   List<dynamic> _documents = [];
   List<dynamic> _types = [];
   Map<String, dynamic> _status = {};
@@ -127,7 +129,7 @@ class _RiderDocumentVerificationScreenState
                   }
                   Navigator.pop(context, true);
                 },
-                child: const Text('Continue'),
+                child: Text(AppLocalization.translate('continue_document', ref.read(appLanguageProvider))),
               ),
             ],
           ),
@@ -150,8 +152,9 @@ class _RiderDocumentVerificationScreenState
       );
       await _load();
       if (mounted) {
+        final l = ref.read(appLanguageProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Document submitted for review')),
+          SnackBar(content: Text(AppLocalization.translate('document_submitted', l))),
         );
       }
     } catch (e) {
@@ -165,7 +168,7 @@ class _RiderDocumentVerificationScreenState
     }
   }
 
-  Future<void> _openDocumentDetail(int docId, Map<String, dynamic> summary) async {
+  Future<void> _openDocumentDetail(int docId, Map<String, dynamic> summary, AppLanguage lang) async {
     try {
       final detail = await ApiService.getDocumentById(docId);
       if (!mounted) return;
@@ -214,9 +217,9 @@ class _RiderDocumentVerificationScreenState
                   child: Image.network(
                     url.toString(),
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const ListTile(
-                      leading: Icon(Icons.description),
-                      title: Text('Document file'),
+                    errorBuilder: (_, __, ___) => ListTile(
+                      leading: const Icon(Icons.description),
+                      title: Text(AppLocalization.translate('document_file', lang)),
                     ),
                   ),
                 ),
@@ -231,7 +234,7 @@ class _RiderDocumentVerificationScreenState
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF5F2D82),
                   ),
-                  child: const Text('Resubmit document'),
+                  child: Text(AppLocalization.translate('resubmit_document', lang)),
                 ),
               ],
             ],
@@ -300,7 +303,7 @@ class _RiderDocumentVerificationScreenState
                   if (numberController.text.trim().isEmpty || files.isEmpty) return;
                   Navigator.pop(context, true);
                 },
-                child: const Text('Resubmit'),
+                child: Text(AppLocalization.translate('resubmit', ref.read(appLanguageProvider))),
               ),
             ],
           ),
@@ -323,8 +326,9 @@ class _RiderDocumentVerificationScreenState
       );
       await _load();
       if (mounted) {
+        final l = ref.read(appLanguageProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Document resubmitted for review')),
+          SnackBar(content: Text(AppLocalization.translate('document_resubmitted', l))),
         );
       }
     } catch (e) {
@@ -340,12 +344,13 @@ class _RiderDocumentVerificationScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF5F2D82),
-        title: const Text('Documents', style: TextStyle(fontFamily: 'TT Fors')),
+        title: Text(AppLocalization.translate('documents', lang), style: const TextStyle(fontFamily: 'TT Fors')),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF5F2D82)))
@@ -355,7 +360,7 @@ class _RiderDocumentVerificationScreenState
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(_error!, textAlign: TextAlign.center),
-                      TextButton(onPressed: _load, child: const Text('Retry')),
+                      TextButton(onPressed: _load, child: Text(AppLocalization.translate('retry', lang))),
                     ],
                   ),
                 )
@@ -391,14 +396,14 @@ class _RiderDocumentVerificationScreenState
                           trailing: const Icon(Icons.chevron_right),
                           onTap: docId == null
                               ? null
-                              : () => _openDocumentDetail(docId, map),
+                              : () => _openDocumentDetail(docId, map, lang),
                         );
                       }),
                       const SizedBox(height: 16),
                       OutlinedButton.icon(
                         onPressed: _submitting ? null : _showSubmitSheet,
                         icon: const Icon(Icons.upload_file),
-                        label: Text(_submitting ? 'Submitting...' : 'Submit Document'),
+                        label: Text(_submitting ? 'Submitting...' : AppLocalization.translate('documents', lang)),
                       ),
                     ],
                   ),

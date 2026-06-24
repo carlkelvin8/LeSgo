@@ -7,6 +7,7 @@ import 'rider_top_up_dialog.dart';
 import 'rider_wallet_action_item.dart';
 import 'rider_wallet_link_account_dialog.dart';
 import 'rider_wallet_withdraw_dialog.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class RiderWalletActionsSection extends ConsumerWidget {
   const RiderWalletActionsSection({super.key});
@@ -51,6 +52,7 @@ class RiderWalletActionsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = ref.watch(riderWalletProvider);
+    final lang = ref.watch(appLanguageProvider);
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Padding(
@@ -59,22 +61,22 @@ class RiderWalletActionsSection extends ConsumerWidget {
         children: [
           RiderWalletActionItem(
             iconAsset: 'assets/images/wallet/Plus.svg',
-            title: 'Top up',
+            title: AppLocalization.translate('top_up', lang),
             subtitle: 'GCash, Maya, or card via Xendit',
             onTap: () => _showTopUp(context),
           ),
           RiderWalletActionItem(
             iconAsset: 'assets/images/wallet/Minus.svg',
-            title: 'Withdraw',
+            title: AppLocalization.translate('withdraw', lang),
             subtitle: wallet.isProviderLinked('gcash') ||
                     wallet.isProviderLinked('maya')
-                ? 'Send to linked GCash or Maya'
-                : 'Link GCash or Maya first',
+                ? AppLocalization.translate('send_to_gcash_maya', lang)
+                : AppLocalization.translate('link_gcash_maya_first', lang),
             onTap: () => _showWithdraw(context, ref),
           ),
           RiderWalletActionItem(
             iconAsset: 'assets/images/wallet/Maya.svg',
-            title: 'Link PayMaya Account',
+            title: AppLocalization.translate('link_paymaya_account', lang),
             subtitle: wallet.linkedAccountSubtitle('maya'),
             onTap: () => _showLinkAccount(context, 'maya', 'PayMaya'),
           ),

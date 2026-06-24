@@ -38,7 +38,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(riderEarningsInsightsProvider);
+    final insightsAsync = ref.watch(riderEarningsInsightsProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
@@ -60,27 +60,98 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.download_outlined),
-            onPressed: () => _shareReport(context, state),
+            onPressed: insightsAsync.maybeWhen(
+              data: (state) => () => _shareReport(context, state),
+              orElse: () => null,
+            ),
             tooltip: 'Download/Share Report',
           ),
         ],
       ),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          hp,
-          ResponsiveUtils.spacing(context, 16),
-          hp,
-          ResponsiveUtils.scrollBottomPaddingForBottomNav(context),
+      body: RefreshIndicator(
+        color: const Color(0xFF5F2D82),
+        onRefresh: () async {
+          ref.invalidate(riderEarningsInsightsProvider);
+          await ref.read(riderEarningsInsightsProvider.future);
+        },
+        child: insightsAsync.when(
+          loading: () => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: const [
+              Padding(
+                padding: EdgeInsets.all(48),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          ),
+          error: (error, _) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.all(hp),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Text(
+                      'Could not load earnings insights',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$error',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.red.shade700),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.invalidate(riderEarningsInsightsProvider);
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          data: (state) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              hp,
+              ResponsiveUtils.spacing(context, 16),
+              hp,
+              ResponsiveUtils.scrollBottomPaddingForBottomNav(context),
+            ),
+            children: [
+              if (state.totalTrips == 0 && state.totalEarnings == 0)
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: ResponsiveUtils.spacing(context, 16),
+                  ),
+                  child: Text(
+                    'No completed trips in the last 30 days yet.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              _buildTotalCard(context, state),
+              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+              _buildChart(context, state),
+              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+              _buildMetricsGrid(context, state),
+              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+              _buildProjectionCard(context, state),
+            ],
+          ),
         ),
-        children: [
-          _buildTotalCard(context, state),
-          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-          _buildChart(context, state),
-          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-          _buildMetricsGrid(context, state),
-          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-          _buildProjectionCard(context, state),
-        ],
       ),
     );
   }
@@ -137,7 +208,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
         : state.dailyEarnings;
     final maxY = displayData
         .fold<double>(0, (max, d) => d.earnings > max ? d.earnings : max);
-    final ceiling = ((maxY / 200).ceil() * 200).toDouble();
+    final ceiling = maxY <= 0 ? 200.0 : ((maxY / 200).ceil() * 200).toDouble();
 
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),

@@ -114,12 +114,22 @@ class BenefitsApi {
   static Future<void> trackAnalyticsEvent(
     String eventType, {
     Map<String, dynamic>? properties,
+    String? eventCategory,
+    String? eventAction,
+    String? eventLabel,
   }) async {
     try {
-      await _dio.post(ApiConstants.analyticsTrackEvent, data: {
-        'event_type': eventType,
-        if (properties != null) 'properties': properties,
-      });
+      await _dio.post(
+        ApiConstants.analyticsTrackEvent,
+        data: {
+          'event_type': eventType,
+          if (eventCategory != null) 'event_category': eventCategory,
+          if (eventAction != null) 'event_action': eventAction,
+          if (eventLabel != null) 'event_label': eventLabel,
+          if (properties != null) 'properties': properties,
+        },
+        options: Options(extra: const {'skipOfflineQueue': true}),
+      );
     } catch (_) {}
   }
 

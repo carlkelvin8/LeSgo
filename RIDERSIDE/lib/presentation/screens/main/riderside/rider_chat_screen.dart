@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../provider/main/riderside/rider_chat_provider.dart';
 
 class RiderChatScreen extends ConsumerStatefulWidget {
@@ -49,7 +50,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
+        SnackBar(content: Text(AppLocalization.translate('failed_to_pick_image', ref.read(appLanguageProvider)).replaceAll('{{error}}', '$e'))),
       );
     }
   }
@@ -62,13 +63,14 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to take photo: $e')),
+        SnackBar(content: Text(AppLocalization.translate('failed_to_take_photo', ref.read(appLanguageProvider)).replaceAll('{{error}}', '$e'))),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final chatState = ref.watch(riderChatProvider(widget.orderId));
     final quickReplies = ref.watch(quickRepliesProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
@@ -92,7 +94,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
               ),
             ),
             Text(
-              'Order #${widget.orderId.substring(0, 8).toUpperCase()}',
+              AppLocalization.translate('order_id', lang).replaceAll('{{id}}', widget.orderId.substring(0, 8).toUpperCase()),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -116,7 +118,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                 : chatState.messages.isEmpty
                     ? Center(
                         child: Text(
-                          'No messages yet',
+                          AppLocalization.translate('no_messages_yet', lang),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -159,7 +161,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Quick replies',
+                      AppLocalization.translate('quick_replies', lang),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -240,7 +242,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                       child: TextField(
                         controller: _messageController,
                         decoration: InputDecoration(
-                          hintText: 'Type a message...',
+                          hintText: AppLocalization.translate('type_a_message', ref.read(appLanguageProvider)),
                           hintStyle: TextStyle(
                             fontFamily: 'TT Fors',
                             color: Colors.grey.shade400,
@@ -285,13 +287,13 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                   children: [
                     _buildActionButton(
                       icon: Icons.image,
-                      label: 'Photo',
+                      label: AppLocalization.translate('photo', lang),
                       color: const Color(0xFF2196F3),
                       onPressed: _pickAndSendImage,
                     ),
                     _buildActionButton(
                       icon: Icons.camera_alt,
-                      label: 'Proof',
+                      label: AppLocalization.translate('delivery_proof', lang),
                       color: const Color(0xFF4CAF50),
                       onPressed: _pickAndSendDeliveryProof,
                     ),

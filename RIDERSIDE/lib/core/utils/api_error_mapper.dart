@@ -1,7 +1,5 @@
 import 'package:dio/dio.dart';
 
-import '../network/offline_exceptions.dart';
-
 /// Maps API/network errors to short, user-friendly messages.
 class ApiErrorMapper {
   ApiErrorMapper._();
@@ -13,15 +11,6 @@ class ApiErrorMapper {
   }) {
     if (error == null) {
       return _pick(fallbackEn, fallbackTl, _defaultEn, _defaultTl);
-    }
-
-    if (error is OfflineQueuedException) {
-      return _pick(
-        fallbackEn,
-        fallbackTl,
-        'You\'re offline. This action will retry when connection returns.',
-        'Walang internet. Isusubok muli ang aksyon kapag bumalik ang koneksyon.',
-      );
     }
 
     if (error is DioException) {
@@ -53,15 +42,6 @@ class ApiErrorMapper {
     String? fallbackEn,
     String? fallbackTl,
   }) {
-    if (error.error is OfflineQueuedException) {
-      return _pick(
-        fallbackEn,
-        fallbackTl,
-        'You\'re offline. This action will retry when connection returns.',
-        'Walang internet. Isusubok muli ang aksyon kapag bumalik ang koneksyon.',
-      );
-    }
-
     final apiMsg = _extractApiMessage(error.response?.data);
     if (apiMsg != null) return apiMsg;
 
@@ -72,15 +52,15 @@ class ApiErrorMapper {
         return _pick(
           fallbackEn,
           fallbackTl,
-          'Connection timed out. Check your internet and try again.',
-          'Nag-timeout ang koneksyon. Suriin ang internet at subukan muli.',
+          'Request timed out. Please try again.',
+          'Nag-timeout ang request. Subukan muli.',
         );
       case DioExceptionType.connectionError:
         return _pick(
           fallbackEn,
           fallbackTl,
-          'Cannot reach the server. Check your internet connection.',
-          'Hindi maabot ang server. Suriin ang iyong internet.',
+          'Cannot reach LeSGo server. Try again in a moment.',
+          'Hindi maabot ang LeSGo server. Subukan muli maya-maya.',
         );
       default:
         break;

@@ -32,6 +32,7 @@ import '../../../widgets/main/riderside/bookings/rider_booking_proof_upload_sect
 import '../../../widgets/main/riderside/bookings/rider_cod_confirm_dialog.dart';
 import '../../../widgets/main/riderside/bookings/rider_customer_rating_dialog.dart';
 import '../../../../core/utils/rider_payment_utils.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class RiderBookingDetailScreen extends ConsumerStatefulWidget {
   final RiderBooking booking;
@@ -186,6 +187,8 @@ class _RiderBookingDetailScreenState
     setState(() => _isHandlingStatusChange = true);
     
     try {
+      final lang = ref.read(appLanguageProvider);
+      
       // Helper to return early while clearing the flag
       Future<void> returnEarly() async {
         _isHandlingStatusChange = false;
@@ -195,8 +198,8 @@ class _RiderBookingDetailScreenState
       final orderId = int.tryParse(widget.booking.id);
       if (orderId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid order ID'),
+          SnackBar(
+            content: Text(AppLocalization.translate('invalid_order_id', lang)),
             backgroundColor: Colors.red,
           ),
         );
@@ -224,7 +227,7 @@ class _RiderBookingDetailScreenState
           AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order is already picked up. Tap Complete to finish.'),
+              content: Text(AppLocalization.translate('order_already_picked_up_tap', lang)),
               backgroundColor: Colors.blue,
               duration: const Duration(seconds: 2),
             ),
@@ -234,7 +237,7 @@ class _RiderBookingDetailScreenState
           AppLogger.warn('Can only update to ${newStatus.label} from accepted, arrived, or in progress status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order must be accepted first'),
+              content: Text(AppLocalization.translate('order_must_be_accepted', lang)),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 2),
             ),
@@ -249,7 +252,7 @@ class _RiderBookingDetailScreenState
           if (!_showProofUpload) {
             setState(() => _showProofUpload = true);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text(
                   'Upload proof of delivery, then tap Complete again.',
                 ),
@@ -263,8 +266,8 @@ class _RiderBookingDetailScreenState
               (_updatedBooking?.proofOfDeliveryUrls?.isNotEmpty ?? false);
           if (!hasProof) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please upload at least one proof photo first.'),
+              SnackBar(
+                content: Text(AppLocalization.translate('minimum_1_photo_required', lang)),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -276,7 +279,7 @@ class _RiderBookingDetailScreenState
           AppLogger.warn('Can only complete from picked_up status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order must be picked up first'),
+              content: Text(AppLocalization.translate('order_must_be_picked_up_first', lang)),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 2),
             ),
@@ -300,7 +303,7 @@ class _RiderBookingDetailScreenState
           AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order is already picked up. Tap Delivered/Complete to finish.'),
+              content: Text(AppLocalization.translate('order_already_picked_up_tap_delivered', lang)),
               backgroundColor: Colors.blue,
               duration: const Duration(seconds: 2),
             ),
@@ -310,7 +313,7 @@ class _RiderBookingDetailScreenState
           AppLogger.warn('Can only update to ${newStatus.label} from accepted, arrived, or in progress status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order must be accepted first'),
+              content: Text(AppLocalization.translate('order_must_be_accepted', lang)),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 2),
             ),
@@ -325,7 +328,7 @@ class _RiderBookingDetailScreenState
           if (!_showProofUpload) {
             setState(() => _showProofUpload = true);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
+              SnackBar(
                 content: Text(
                   'Upload proof of delivery, then tap Complete again.',
                 ),
@@ -339,8 +342,8 @@ class _RiderBookingDetailScreenState
               (_updatedBooking?.proofOfDeliveryUrls?.isNotEmpty ?? false);
           if (!hasProof) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please upload at least one proof photo first.'),
+              SnackBar(
+                content: Text(AppLocalization.translate('minimum_1_photo_required', lang)),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -352,7 +355,7 @@ class _RiderBookingDetailScreenState
           AppLogger.warn('Can only deliver from picked_up status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order must be picked up first'),
+              content: Text(AppLocalization.translate('order_must_be_picked_up_first', lang)),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 2),
             ),
@@ -373,7 +376,7 @@ class _RiderBookingDetailScreenState
           AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order has already been picked up. This status was skipped.'),
+              content: Text(AppLocalization.translate('order_already_picked_up_skip', lang)),
               backgroundColor: Colors.blue,
               duration: const Duration(seconds: 2),
             ),
@@ -383,7 +386,7 @@ class _RiderBookingDetailScreenState
           AppLogger.warn('Can only mark arrival from accepted status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order must be accepted first'),
+              content: Text(AppLocalization.translate('order_must_be_accepted', lang)),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 2),
             ),
@@ -399,7 +402,7 @@ class _RiderBookingDetailScreenState
           AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order has already been picked up. Cannot go back to In Progress.'),
+              content: Text(AppLocalization.translate('order_already_picked_up', lang)),
               backgroundColor: Colors.blue,
               duration: const Duration(seconds: 2),
             ),
@@ -414,7 +417,7 @@ class _RiderBookingDetailScreenState
           AppLogger.warn('Can only mark in progress from accepted or arrived status');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Order must be accepted or driver must have arrived first'),
+              content: Text(AppLocalization.translate('order_must_be_accepted_or_arrived', lang)),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 2),
             ),
@@ -432,7 +435,7 @@ class _RiderBookingDetailScreenState
         AppLogger.debug('ℹ️ Status ${newStatus.label} is informational only');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${newStatus.label} status is set automatically'),
+            content: Text(AppLocalization.translate('status_set_automatically', lang).replaceAll('{{status}}', newStatus.label)),
             backgroundColor: Colors.blue,
             duration: const Duration(seconds: 2),
           ),
@@ -479,7 +482,7 @@ class _RiderBookingDetailScreenState
       title: 'Update Status',
       message: 'Are you sure you want to update the order status to $targetLabel?',
       confirmText: 'Update',
-      cancelText: 'Cancel',
+      cancelText: AppLocalization.translate('cancel', lang),
     );
     
     if (!confirmed) {
@@ -515,7 +518,7 @@ class _RiderBookingDetailScreenState
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Status updated to $targetLabel'),
+            content: Text('✅ ${AppLocalization.translate('status_updated_to', lang).replaceAll('{{status}}', targetLabel ?? '')}'),
             backgroundColor: Colors.green,
           ),
         );
@@ -572,12 +575,13 @@ class _RiderBookingDetailScreenState
 
   // Request camera permission
   Future<bool> _requestCameraPermission() async {
+    final lang = ref.read(appLanguageProvider);
     final status = await Permission.camera.request();
     if (status.isDenied) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Camera permission is required to take photos'),
+          SnackBar(
+            content: Text(AppLocalization.translate('camera_permission_required', lang)),
             backgroundColor: Colors.orange,
           ),
         );
@@ -586,8 +590,8 @@ class _RiderBookingDetailScreenState
     } else if (status.isPermanentlyDenied) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Camera permission is permanently denied. Open Settings to enable it.'),
+          SnackBar(
+            content: Text(AppLocalization.translate('camera_permission_denied', lang)),
             backgroundColor: Colors.red,
           ),
         );
@@ -599,6 +603,7 @@ class _RiderBookingDetailScreenState
 
   // Pick images from gallery or camera
   Future<void> _pickImages() async {
+    final lang = ref.read(appLanguageProvider);
     try {
       final List<XFile> images = await _imagePicker.pickMultiImage(
         maxWidth: 1920,
@@ -626,8 +631,8 @@ class _RiderBookingDetailScreenState
         if (validImages.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('All images were too large (max 25MB each)'),
+              SnackBar(
+                content: Text(AppLocalization.translate('all_images_too_large', lang)),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -641,8 +646,8 @@ class _RiderBookingDetailScreenState
           if (_selectedImages.length > 5) {
             _selectedImages.removeRange(5, _selectedImages.length);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Maximum 5 images allowed'),
+              SnackBar(
+                content: Text(AppLocalization.translate('maximum_5_images', lang)),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -654,7 +659,7 @@ class _RiderBookingDetailScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to pick images: $e'),
+            content: Text(AppLocalization.translate('failed_to_pick_images', lang).replaceAll('{{error}}', e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -664,6 +669,7 @@ class _RiderBookingDetailScreenState
 
   // Take photo with camera
   Future<void> _takePhoto() async {
+    final lang = ref.read(appLanguageProvider);
     try {
       final hasPermission = await _requestCameraPermission();
       if (!hasPermission) return;
@@ -684,7 +690,7 @@ class _RiderBookingDetailScreenState
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Image too large: ${sizeInMb.toStringAsFixed(2)}MB (max 25MB)'),
+                  content: Text(AppLocalization.translate('image_too_large', lang).replaceAll('{{name}}', '${sizeInMb.toStringAsFixed(2)}MB')),
                   backgroundColor: Colors.orange,
                 ),
               );
@@ -700,8 +706,8 @@ class _RiderBookingDetailScreenState
             _selectedImages.add(photo);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Maximum 5 images allowed'),
+              SnackBar(
+                content: Text(AppLocalization.translate('maximum_5_images', lang)),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -713,7 +719,7 @@ class _RiderBookingDetailScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to take photo: $e'),
+            content: Text(AppLocalization.translate('failed_to_take_photo', lang).replaceAll('{{error}}', e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -751,6 +757,7 @@ class _RiderBookingDetailScreenState
   }
 
   Future<void> _handleCancelOrder() async {
+    final lang = ref.read(appLanguageProvider);
     if (_isUpdating) return;
 
     final orderId = int.tryParse(widget.booking.id);
@@ -770,8 +777,8 @@ class _RiderBookingDetailScreenState
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order cancelled.'),
+        SnackBar(
+          content: Text(AppLocalization.translate('order_cancelled', lang)),
           backgroundColor: Colors.green,
         ),
       );
@@ -787,10 +794,11 @@ class _RiderBookingDetailScreenState
 
   // Upload proof images
   Future<void> _uploadProofImages() async {
+    final lang = ref.read(appLanguageProvider);
     if (_selectedImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select at least one image'),
+        SnackBar(
+          content: Text(AppLocalization.translate('please_select_at_least_one_image', lang)),
           backgroundColor: Colors.orange,
         ),
       );
@@ -802,7 +810,7 @@ class _RiderBookingDetailScreenState
       title: 'Upload Proof',
       message: 'Upload ${_selectedImages.length} image(s) as proof of delivery/completion?',
       confirmText: 'Upload',
-      cancelText: 'Cancel',
+      cancelText: AppLocalization.translate('cancel', lang),
     );
 
     if (!confirmed) return;
@@ -812,7 +820,7 @@ class _RiderBookingDetailScreenState
     try {
       final orderId = int.tryParse(widget.booking.id);
       if (orderId == null) {
-        throw Exception('Invalid order ID');
+        throw Exception(AppLocalization.translate('invalid_order_id', lang));
       }
 
       final orderData = await ApiService.getOrderById(orderId);
@@ -862,8 +870,8 @@ class _RiderBookingDetailScreenState
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Proof images uploaded successfully!'),
+          SnackBar(
+            content: Text('✅ ${AppLocalization.translate('proof_images_uploaded', lang)}'),
             backgroundColor: Colors.green,
           ),
         );
@@ -956,6 +964,7 @@ class _RiderBookingDetailScreenState
   Widget build(BuildContext context) {
     // Watch location provider to ensure tracking continues
     final locationState = ref.watch(riderLocationProvider);
+    final lang = ref.watch(appLanguageProvider);
     
     // Listen for order updates to refresh status
     ref.listen<RiderOrdersState>(riderOrdersProvider, (previous, next) {
@@ -1023,7 +1032,7 @@ class _RiderBookingDetailScreenState
                             Icons.refresh,
                             color: const Color(0xFF5F2D82),
                           ),
-                    tooltip: 'Refresh Status',
+                    tooltip: AppLocalization.translate('refresh_status', lang),
                   ),
                 ),
                 // Banner
@@ -1121,7 +1130,7 @@ class _RiderBookingDetailScreenState
                                       color: Colors.red.shade700,
                                     ),
                                     label: Text(
-                                      'Cancel Order',
+                                      AppLocalization.translate('cancel_order', lang),
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(

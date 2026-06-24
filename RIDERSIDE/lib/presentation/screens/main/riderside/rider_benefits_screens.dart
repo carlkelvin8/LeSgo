@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
-class RiderOffersScreen extends StatefulWidget {
+class RiderOffersScreen extends ConsumerStatefulWidget {
   const RiderOffersScreen({super.key});
 
   @override
-  State<RiderOffersScreen> createState() => _RiderOffersScreenState();
+  ConsumerState<RiderOffersScreen> createState() => _RiderOffersScreenState();
 }
 
-class _RiderOffersScreenState extends State<RiderOffersScreen> {
+class _RiderOffersScreenState extends ConsumerState<RiderOffersScreen> {
   List<dynamic> _offers = [];
   bool _loading = true;
   String? _error;
@@ -51,7 +53,7 @@ class _RiderOffersScreenState extends State<RiderOffersScreen> {
       await ApiService.claimVoucher(code);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Claimed $code successfully')),
+        SnackBar(content: Text(AppLocalization.translate('claimed_successfully', ref.read(appLanguageProvider)).replaceAll('{{code}}', code))),
       );
       await _load();
     } catch (e) {
@@ -66,8 +68,9 @@ class _RiderOffersScreenState extends State<RiderOffersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return _RiderApiScaffold(
-      title: 'Offers',
+      title: AppLocalization.translate('offers', lang),
       loading: _loading,
       error: _error,
       onRetry: _load,
@@ -101,9 +104,9 @@ class _RiderOffersScreenState extends State<RiderOffersScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Claim'),
+                          : Text(AppLocalization.translate('claim', lang)),
                     )
-                  : const Text('Claimed', style: TextStyle(color: Colors.grey)),
+                  : Text(AppLocalization.translate('locked', lang), style: const TextStyle(color: Colors.grey)),
             ),
           );
         },
@@ -112,14 +115,14 @@ class _RiderOffersScreenState extends State<RiderOffersScreen> {
   }
 }
 
-class RiderLoyaltyScreen extends StatefulWidget {
+class RiderLoyaltyScreen extends ConsumerStatefulWidget {
   const RiderLoyaltyScreen({super.key});
 
   @override
-  State<RiderLoyaltyScreen> createState() => _RiderLoyaltyScreenState();
+  ConsumerState<RiderLoyaltyScreen> createState() => _RiderLoyaltyScreenState();
 }
 
-class _RiderLoyaltyScreenState extends State<RiderLoyaltyScreen> {
+class _RiderLoyaltyScreenState extends ConsumerState<RiderLoyaltyScreen> {
   List<dynamic> _rewards = [];
   bool _loading = true;
   String? _error;
@@ -159,10 +162,11 @@ class _RiderLoyaltyScreenState extends State<RiderLoyaltyScreen> {
     try {
       final result = await ApiService.redeemLoyaltyReward(rewardId);
       if (!mounted) return;
+      final lang = ref.read(appLanguageProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            result['reward_title']?.toString() ?? 'Reward redeemed',
+            result['reward_title']?.toString() ?? AppLocalization.translate('reward_redeemed', lang),
           ),
         ),
       );
@@ -179,8 +183,9 @@ class _RiderLoyaltyScreenState extends State<RiderLoyaltyScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return _RiderApiScaffold(
-      title: 'Loyalty Rewards',
+      title: AppLocalization.translate('loyalty_rewards', lang),
       loading: _loading,
       error: _error,
       onRetry: _load,
@@ -213,9 +218,9 @@ class _RiderLoyaltyScreenState extends State<RiderLoyaltyScreen> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Redeem'),
+                        : Text(AppLocalization.translate('redeem', lang)),
                   )
-                : const Text('Locked', style: TextStyle(color: Colors.grey)),
+                : Text(AppLocalization.translate('locked', lang), style: TextStyle(color: Colors.grey)),
           );
         },
       ),
@@ -223,14 +228,14 @@ class _RiderLoyaltyScreenState extends State<RiderLoyaltyScreen> {
   }
 }
 
-class RiderReferralScreen extends StatefulWidget {
+class RiderReferralScreen extends ConsumerStatefulWidget {
   const RiderReferralScreen({super.key});
 
   @override
-  State<RiderReferralScreen> createState() => _RiderReferralScreenState();
+  ConsumerState<RiderReferralScreen> createState() => _RiderReferralScreenState();
 }
 
-class _RiderReferralScreenState extends State<RiderReferralScreen> {
+class _RiderReferralScreenState extends ConsumerState<RiderReferralScreen> {
   Map<String, dynamic> _dashboard = {};
   bool _loading = true;
   String? _error;
@@ -264,40 +269,42 @@ class _RiderReferralScreenState extends State<RiderReferralScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return _RiderApiScaffold(
-      title: 'Referral Dashboard',
+      title: AppLocalization.translate('referral_dashboard', lang),
       loading: _loading,
       error: _error,
       onRetry: _load,
       child: ListView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         children: [
-          _StatTile('Referral Code', _dashboard['referral_code']?.toString() ?? '—'),
+          _StatTile(AppLocalization.translate('referral_code', lang), _dashboard['referral_code']?.toString() ?? '—'),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
               onPressed: () {
                 final code = _dashboard['referral_code']?.toString();
                 if (code == null || code.isEmpty) return;
+                final l = ref.read(appLanguageProvider);
                 Clipboard.setData(ClipboardData(text: code));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Referral code copied')),
+                  SnackBar(content: Text(AppLocalization.translate('referral_code_copied', l))),
                 );
               },
               icon: const Icon(Icons.copy, size: 16),
-              label: const Text('Copy code'),
+              label: Text(AppLocalization.translate('copy_referral_code', lang)),
             ),
           ),
-          _StatTile('Invites Sent', '${_dashboard['invites_sent'] ?? 0}'),
-          _StatTile('Friends Joined', '${_dashboard['friends_joined'] ?? 0}'),
-          _StatTile('Points Earned', '${_dashboard['points_earned'] ?? 0}'),
+          _StatTile(AppLocalization.translate('invites_sent', lang), '${_dashboard['invites_sent'] ?? 0}'),
+          _StatTile(AppLocalization.translate('friends_joined', lang), '${_dashboard['friends_joined'] ?? 0}'),
+          _StatTile(AppLocalization.translate('points_earned', lang), '${_dashboard['points_earned'] ?? 0}'),
         ],
       ),
     );
   }
 }
 
-class _RiderApiScaffold extends StatelessWidget {
+class _RiderApiScaffold extends ConsumerWidget {
   const _RiderApiScaffold({
     required this.title,
     required this.loading,
@@ -313,7 +320,8 @@ class _RiderApiScaffold extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -329,7 +337,7 @@ class _RiderApiScaffold extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(error!, textAlign: TextAlign.center),
-                      TextButton(onPressed: onRetry, child: const Text('Retry')),
+                      TextButton(onPressed: onRetry, child: Text(AppLocalization.translate('retry', lang))),
                     ],
                   ),
                 )

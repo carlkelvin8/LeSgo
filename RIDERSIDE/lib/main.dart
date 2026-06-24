@@ -9,6 +9,7 @@ import 'core/services/api_service.dart';
 import 'core/services/app_crash_reporter.dart';
 import 'core/services/app_version_service.dart';
 import 'core/services/fcm_service.dart';
+import 'core/services/mobile_config_service.dart';
 import 'core/services/notification_navigation_service.dart';
 import 'core/services/remember_me_service.dart';
 import 'core/services/secure_storage_service.dart';
@@ -20,6 +21,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await configureGoogleMapsForPlatform();
   await RememberMeService.init();
+  await MobileConfigService.instance.load();
 
   final existingToken = await SecureStorageService.getToken();
   AppLogger.auth(

@@ -1,10 +1,9 @@
 import 'package:dio/dio.dart';
 
 import '../constants/api_constants.dart';
-import '../services/secure_storage_service.dart';
 import 'auth_token_interceptor.dart';
-import 'offline_interceptor.dart';
 
+/// Shared HTTP client — same shape as the customer app (no offline queue).
 class DioClient {
   static final DioClient _instance = DioClient._internal();
   factory DioClient() => _instance;
@@ -27,16 +26,6 @@ class DioClient {
       ),
     );
 
-    _dio.interceptors.addAll([
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final deviceId = await SecureStorageService.getDeviceId();
-          options.headers['X-Device-ID'] = deviceId;
-          handler.next(options);
-        },
-      ),
-      OfflineInterceptor(),
-      AuthTokenInterceptor(_dio),
-    ]);
+    _dio.interceptors.add(AuthTokenInterceptor(_dio));
   }
 }

@@ -4,13 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/app_localization.dart';
 import '../../../../screens/main/riderside/views/rider_mission_view.dart';
 import '../../../../screens/main/riderside/views/rider_wallet_view.dart';
 import '../../../../provider/theme_provider.dart';
 import '../../../../screens/main/riderside/rider_language_screen.dart';
 import '../../../../screens/main/riderside/rider_package_tier_screen.dart';
 
-class RiderMoreView extends StatelessWidget {
+class RiderMoreView extends ConsumerWidget {
   const RiderMoreView({super.key});
 
   void _openSubScreen(
@@ -40,24 +41,25 @@ class RiderMoreView extends StatelessWidget {
     );
   }
 
-  void _openLanguageScreen(BuildContext context) {
+  void _openLanguageScreen(BuildContext context, AppLanguage lang) {
     _openSubScreen(
       context,
-      title: 'Language',
+      title: AppLocalization.translate('language', lang),
       body: const RiderLanguageView(),
     );
   }
 
-  void _openPackageTierScreen(BuildContext context) {
+  void _openPackageTierScreen(BuildContext context, AppLanguage lang) {
     _openSubScreen(
       context,
-      title: 'Package Tier',
+      title: AppLocalization.translate('package_tier', lang),
       body: const RiderPackageTierView(),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return ListView(
@@ -69,7 +71,7 @@ class RiderMoreView extends StatelessWidget {
       ),
       children: [
         Text(
-          'More',
+          AppLocalization.translate('more', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 22),
@@ -78,20 +80,20 @@ class RiderMoreView extends StatelessWidget {
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-        _SectionTitle(title: 'Work'),
+        _SectionTitle(title: AppLocalization.translate('work_section', lang)),
         _MoreTile(
           icon: Icons.account_balance_wallet_outlined,
-          label: 'LesPay Wallet',
+          label: AppLocalization.translate('wallet', lang),
           subtitle: 'Balance, top-up, withdraw',
           onTap: () => _openSubScreen(
             context,
-            title: 'LesPay Wallet',
+            title: AppLocalization.translate('wallet', lang),
             body: const RiderWalletView(),
           ),
         ),
         _MoreTile(
           icon: Icons.payments_outlined,
-          label: 'My Earnings',
+          label: AppLocalization.translate('earnings', lang),
           subtitle: 'Today, week, and trip breakdown',
           onTap: () => AppRouter.push(context, MainRoutes.riderEarnings),
         ),
@@ -103,7 +105,7 @@ class RiderMoreView extends StatelessWidget {
         ),
         _MoreTile(
           icon: Icons.star_outline,
-          label: 'Missions',
+          label: AppLocalization.translate('missions', lang),
           subtitle: 'Complete missions and earn rewards',
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const RiderMissionView()),
@@ -111,70 +113,70 @@ class RiderMoreView extends StatelessWidget {
         ),
         _MoreTile(
           icon: Icons.star_half_outlined,
-          label: 'My Rating',
+          label: AppLocalization.translate('my_rating', lang),
           subtitle: 'Overall rating, reviews, and performance',
           onTap: () => AppRouter.push(context, MainRoutes.riderRating),
         ),
         _MoreTile(
           icon: Icons.directions_bike_outlined,
-          label: 'My Vehicles',
+          label: AppLocalization.translate('my_vehicles', lang),
           subtitle: 'Manage your registered vehicles',
           onTap: () => AppRouter.push(context, MainRoutes.riderVehicleManagement),
         ),
         _MoreTile(
           icon: Icons.schedule,
-          label: 'Scheduled Availability',
+          label: AppLocalization.translate('scheduled_availability', lang),
           subtitle: 'Set your on/off duty times',
           onTap: () => AppRouter.push(context, MainRoutes.riderSchedule),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-        _SectionTitle(title: 'Benefits'),
+        _SectionTitle(title: AppLocalization.translate('benefits_section', lang)),
         _MoreTile(
           icon: Icons.local_offer_outlined,
-          label: 'Offers & vouchers',
+          label: AppLocalization.translate('offers_vouchers', lang),
           onTap: () => AppRouter.push(context, MainRoutes.riderOffers),
         ),
         _MoreTile(
           icon: Icons.loyalty_outlined,
-          label: 'Loyalty rewards',
+          label: AppLocalization.translate('loyalty_rewards_short', lang),
           onTap: () => AppRouter.push(context, MainRoutes.riderLoyalty),
         ),
         _MoreTile(
           icon: Icons.group_add_outlined,
-          label: 'Referral program',
+          label: AppLocalization.translate('referral_program', lang),
           onTap: () => AppRouter.push(context, MainRoutes.riderReferral),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-        _SectionTitle(title: 'Help'),
+        _SectionTitle(title: AppLocalization.translate('help_section', lang)),
         _MoreTile(
           icon: Icons.notifications_outlined,
-          label: 'Notifications',
+          label: AppLocalization.translate('notifications', lang),
           subtitle: 'Order alerts, missions, and promos',
           onTap: () => AppRouter.push(context, MainRoutes.riderNotifications),
         ),
         _MoreTile(
           icon: Icons.help_outline,
-          label: 'FAQs',
+          label: AppLocalization.translate('faqs', lang),
           onTap: () => AppRouter.push(context, MainRoutes.riderFaqs),
         ),
         _MoreTile(
           icon: Icons.support_agent_outlined,
-          label: 'Support tickets',
+          label: AppLocalization.translate('support_tickets', lang),
           subtitle: 'Contact LeSGo support',
           onTap: () => AppRouter.push(context, MainRoutes.riderSupportTickets),
         ),
         _MoreTile(
           icon: Icons.emergency_outlined,
-          label: 'Safety & SOS',
+          label: AppLocalization.translate('safety_sos', lang),
           onTap: () => AppRouter.push(context, MainRoutes.riderSafety),
         ),
         _MoreTile(
           icon: Icons.security,
-          label: 'Security & 2FA',
+          label: AppLocalization.translate('security', lang),
           onTap: () => AppRouter.push(context, MainRoutes.riderSecurity),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-        _SectionTitle(title: 'Settings'),
+        _SectionTitle(title: AppLocalization.translate('settings', lang)),
         Consumer(
           builder: (context, ref, _) {
             final themeMode = ref.watch(themeModeProvider);
@@ -189,15 +191,15 @@ class RiderMoreView extends StatelessWidget {
         ),
         _MoreTile(
           icon: Icons.language,
-          label: 'Language',
-          subtitle: 'English, Filipino',
-          onTap: () => _openLanguageScreen(context),
+          label: AppLocalization.translate('language', lang),
+          subtitle: AppLocalization.translate('english_filipino', lang),
+          onTap: () => _openLanguageScreen(context, lang),
         ),
         _MoreTile(
           icon: Icons.workspace_premium_outlined,
-          label: 'Package Tier',
-          subtitle: 'View your current tier and benefits',
-          onTap: () => _openPackageTierScreen(context),
+          label: AppLocalization.translate('package_tier', lang),
+          subtitle: AppLocalization.translate('view_tier_benefits', lang),
+          onTap: () => _openPackageTierScreen(context, lang),
         ),
       ],
     );

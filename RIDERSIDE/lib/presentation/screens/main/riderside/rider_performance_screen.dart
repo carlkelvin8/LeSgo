@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_performance_provider.dart';
 
@@ -15,6 +16,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
       }
     });
 
+    final lang = ref.watch(appLanguageProvider);
     final performanceState = ref.watch(riderPerformanceProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
@@ -25,7 +27,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'Performance Dashboard',
+          AppLocalization.translate('performance', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -45,7 +47,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Loading performance data...',
+                    AppLocalization.translate('loading', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -162,24 +164,24 @@ class RiderPerformanceScreen extends ConsumerWidget {
                   // Completion Rate
                   _buildPerformanceIndicator(
                     context,
-                    label: 'Completion Rate',
+                    label: AppLocalization.translate('completion_rate', lang),
                     value: performanceState.completionRateFormatted,
                     percentage: performanceState.completionRate,
                     color: const Color(0xFF2196F3),
                     icon: Icons.check_circle,
-                    description: 'Orders completed successfully',
+                    description: AppLocalization.translate('orders_completed', lang),
                   ),
                   const SizedBox(height: 12),
 
                   // On-Time Rate
                   _buildPerformanceIndicator(
                     context,
-                    label: 'On-Time Rate',
+                    label: AppLocalization.translate('on_time_rate', lang),
                     value: performanceState.onTimeRateFormatted,
                     percentage: performanceState.onTimeRate,
                     color: const Color(0xFFFFC107),
                     icon: Icons.schedule,
-                    description: '${performanceState.lateArrivals} late arrivals',
+                    description: '${performanceState.lateArrivals} ${AppLocalization.translate('late_arrivals', lang).toLowerCase()}',
                   ),
                   const SizedBox(height: 24),
 
@@ -201,7 +203,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                         child: _buildStatCard(
                           context,
                           icon: Icons.cancel,
-                          label: 'Cancellations',
+                          label: AppLocalization.translate('cancellations', lang),
                           value: performanceState.cancellations.toString(),
                           color: const Color(0xFFF44336),
                         ),
@@ -211,7 +213,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                         child: _buildStatCard(
                           context,
                           icon: Icons.schedule,
-                          label: 'Late Arrivals',
+                          label: AppLocalization.translate('late_arrivals', lang),
                           value: performanceState.lateArrivals.toString(),
                           color: const Color(0xFFFF9800),
                         ),
@@ -221,7 +223,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                         child: _buildStatCard(
                           context,
                           icon: Icons.star,
-                          label: 'Reviews',
+                          label: AppLocalization.translate('reviews', lang),
                           value: performanceState.totalReviews.toString(),
                           color: const Color(0xFF5F2D82),
                         ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/mobile_config_service.dart';
 import '../../../../core/services/support_api.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_support_provider.dart';
 import '../../../widgets/common/retry_widget.dart';
@@ -53,6 +54,7 @@ class _RiderSupportTicketsScreenState
   }
 
   Future<void> _showCreateDialog() async {
+    final lang = ref.read(appLanguageProvider);
     final subjectController = TextEditingController();
     final descriptionController = TextEditingController();
     var category = _selectedCategory;
@@ -61,14 +63,14 @@ class _RiderSupportTicketsScreenState
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('New Support Ticket'),
+          title: Text(AppLocalization.translate('new_support_ticket', lang)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: subjectController,
-                  decoration: const InputDecoration(labelText: 'Subject'),
+                  decoration: InputDecoration(labelText: AppLocalization.translate('subject', lang)),
                 ),
                 if (_categories.isNotEmpty)
                   DropdownButtonFormField<String>(
@@ -84,16 +86,16 @@ class _RiderSupportTicketsScreenState
                     onChanged: (v) {
                       if (v != null) setDialogState(() => category = v);
                     },
-                    decoration: const InputDecoration(labelText: 'Category'),
+                    decoration: InputDecoration(labelText: 'Category'),
                   )
                 else
                   TextField(
-                    decoration: const InputDecoration(labelText: 'Category'),
+                    decoration: InputDecoration(labelText: 'Category'),
                     onChanged: (v) => category = v.trim().isEmpty ? 'general' : v.trim(),
                   ),
                 TextField(
                   controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
+                  decoration: InputDecoration(labelText: AppLocalization.translate('description', lang)),
                   maxLines: 4,
                 ),
               ],
@@ -102,11 +104,11 @@ class _RiderSupportTicketsScreenState
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.translate('cancel', lang)),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Submit'),
+              child: Text(AppLocalization.translate('submit', lang)),
             ),
           ],
         ),
@@ -128,7 +130,9 @@ class _RiderSupportTicketsScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ok ? 'Support ticket created.' : 'Could not create ticket.',
+          ok
+              ? AppLocalization.translate('support_ticket_created', lang)
+              : AppLocalization.translate('could_not_create_ticket', lang),
         ),
         backgroundColor: ok ? Colors.green : Colors.red,
       ),
@@ -138,6 +142,7 @@ class _RiderSupportTicketsScreenState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(riderSupportProvider);
+    final lang = ref.watch(appLanguageProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -145,7 +150,7 @@ class _RiderSupportTicketsScreenState
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF5F2D82),
         title: Text(
-          'Support',
+          AppLocalization.translate('support', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w700,
@@ -174,15 +179,15 @@ class _RiderSupportTicketsScreenState
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _StatBadge(
-                    label: 'Open',
+                    label: AppLocalization.translate('open', lang),
                     value: '${_stats['open'] ?? _stats['open_count'] ?? 0}',
                   ),
                   _StatBadge(
-                    label: 'In progress',
+                    label: AppLocalization.translate('in_progress', lang),
                     value: '${_stats['in_progress'] ?? _stats['in_progress_count'] ?? 0}',
                   ),
                   _StatBadge(
-                    label: 'Resolved',
+                    label: AppLocalization.translate('resolved', lang),
                     value: '${_stats['resolved'] ?? _stats['resolved_count'] ?? 0}',
                   ),
                 ],
@@ -216,7 +221,7 @@ class _RiderSupportTicketsScreenState
                                   ),
                                   Center(
                                     child: Text(
-                                      'No support tickets yet.\nTap + to contact LeSGo support.',
+                                      AppLocalization.translate('no_support_tickets', lang),
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',

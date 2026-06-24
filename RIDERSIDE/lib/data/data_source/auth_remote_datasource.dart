@@ -149,7 +149,7 @@ class AuthRemoteDataSource {
   Future<LoginResponseDto> login(LoginRequestDto request) async {
     try {
       final response = await _dioClient.dio.post(
-        '/v1/auth/login',
+        ApiConstants.loginEndpoint,
         data: request.toJson(),
       );
 

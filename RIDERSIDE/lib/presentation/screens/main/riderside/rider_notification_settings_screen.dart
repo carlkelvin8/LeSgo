@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/app_preferences_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 
-class RiderNotificationSettingsScreen extends StatefulWidget {
+class RiderNotificationSettingsScreen extends ConsumerStatefulWidget {
   const RiderNotificationSettingsScreen({super.key});
 
   @override
-  State<RiderNotificationSettingsScreen> createState() =>
+  ConsumerState<RiderNotificationSettingsScreen> createState() =>
       _RiderNotificationSettingsScreenState();
 }
 
 class _RiderNotificationSettingsScreenState
-    extends State<RiderNotificationSettingsScreen> {
+    extends ConsumerState<RiderNotificationSettingsScreen> {
   bool _promotions = true;
   bool _orderUpdates = true;
   bool _missionReminders = true;
@@ -60,17 +62,21 @@ class _RiderNotificationSettingsScreenState
     );
     if (mounted) {
       setState(() => _saving = false);
-      SnackBarUtils.showSuccess(context, 'Notification preferences saved.');
+      SnackBarUtils.showSuccess(
+        context,
+        AppLocalization.translate('notif_preferences_saved', ref.read(appLanguageProvider)),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Notification Settings',
-          style: TextStyle(fontFamily: 'TT Fors'),
+        title: Text(
+          AppLocalization.translate('notif_settings_title', lang),
+          style: const TextStyle(fontFamily: 'TT Fors'),
         ),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
@@ -83,52 +89,52 @@ class _RiderNotificationSettingsScreenState
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               children: [
                 SwitchListTile(
-                  title: const Text(
-                    'Promotions & offers',
-                    style: TextStyle(fontFamily: 'TT Fors'),
+                  title: Text(
+                    AppLocalization.translate('promotions_offers', lang),
+                    style: const TextStyle(fontFamily: 'TT Fors'),
                   ),
-                  subtitle: const Text(
-                    'Daily promos and voucher alerts',
-                    style: TextStyle(fontFamily: 'TT Fors'),
+                  subtitle: Text(
+                    AppLocalization.translate('daily_promo_alerts', lang),
+                    style: const TextStyle(fontFamily: 'TT Fors'),
                   ),
                   value: _promotions,
                   activeThumbColor: const Color(0xFF5F2D82),
                   onChanged: (v) => setState(() => _promotions = v),
                 ),
                 SwitchListTile(
-                  title: const Text(
-                    'Order updates',
-                    style: TextStyle(fontFamily: 'TT Fors'),
+                  title: Text(
+                    AppLocalization.translate('order_updates', lang),
+                    style: const TextStyle(fontFamily: 'TT Fors'),
                   ),
-                  subtitle: const Text(
-                    'New bookings, status changes, cancellations',
-                    style: TextStyle(fontFamily: 'TT Fors'),
+                  subtitle: Text(
+                    AppLocalization.translate('new_bookings_status_changes', lang),
+                    style: const TextStyle(fontFamily: 'TT Fors'),
                   ),
                   value: _orderUpdates,
                   activeThumbColor: const Color(0xFF5F2D82),
                   onChanged: (v) => setState(() => _orderUpdates = v),
                 ),
                 SwitchListTile(
-                  title: const Text(
-                    'Mission reminders',
-                    style: TextStyle(fontFamily: 'TT Fors'),
+                  title: Text(
+                    AppLocalization.translate('mission_reminders', lang),
+                    style: const TextStyle(fontFamily: 'TT Fors'),
                   ),
-                  subtitle: const Text(
-                    'Mission progress and reward alerts',
-                    style: TextStyle(fontFamily: 'TT Fors'),
+                  subtitle: Text(
+                    AppLocalization.translate('mission_progress_alerts', lang),
+                    style: const TextStyle(fontFamily: 'TT Fors'),
                   ),
                   value: _missionReminders,
                   activeThumbColor: const Color(0xFF5F2D82),
                   onChanged: (v) => setState(() => _missionReminders = v),
                 ),
                 SwitchListTile(
-                  title: const Text(
-                    'Chat messages',
-                    style: TextStyle(fontFamily: 'TT Fors'),
+                  title: Text(
+                    AppLocalization.translate('chat_messages', lang),
+                    style: const TextStyle(fontFamily: 'TT Fors'),
                   ),
-                  subtitle: const Text(
-                    'Customer chat notifications',
-                    style: TextStyle(fontFamily: 'TT Fors'),
+                  subtitle: Text(
+                    AppLocalization.translate('customer_chat_notifications', lang),
+                    style: const TextStyle(fontFamily: 'TT Fors'),
                   ),
                   value: _chatMessages,
                   activeThumbColor: const Color(0xFF5F2D82),
@@ -150,9 +156,9 @@ class _RiderNotificationSettingsScreenState
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'Save preferences',
-                          style: TextStyle(fontFamily: 'TT Fors'),
+                      : Text(
+                          AppLocalization.translate('save_preferences', lang),
+                          style: const TextStyle(fontFamily: 'TT Fors'),
                         ),
                 ),
               ],

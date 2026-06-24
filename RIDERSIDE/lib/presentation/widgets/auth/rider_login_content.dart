@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/remember_me_service.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
@@ -21,11 +23,24 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool isRememberMe = false;
+  String? _buildLabel;
 
   @override
   void initState() {
     super.initState();
     _loadRememberedEmail();
+    _loadBuildLabel();
+  }
+
+  Future<void> _loadBuildLabel() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (!mounted) return;
+      setState(() {
+        _buildLabel =
+            'v${info.version} (${info.buildNumber}) · ${ApiConstants.baseUrl}';
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadRememberedEmail() async {
@@ -191,6 +206,19 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
                 : 'Log in to rider account',
             onPressed: authState.isLoading ? null : _handleLogin,
           ),
+          if (_buildLabel != null) ...[
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            Text(
+              _buildLabel!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 10),
+                color: Colors.grey.shade500,
+                height: 1.3,
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/app_localization.dart';
 
-class RiderProfileSettingsSection extends StatelessWidget {
+class RiderProfileSettingsSection extends ConsumerWidget {
   const RiderProfileSettingsSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hp = ResponsiveUtils.horizontalPadding(context);
+    final lang = ref.watch(appLanguageProvider);
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: hp),
@@ -17,7 +20,7 @@ class RiderProfileSettingsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Settings & Support',
+            AppLocalization.translate('settings_support', lang),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 15),
@@ -27,73 +30,73 @@ class RiderProfileSettingsSection extends StatelessWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           _SettingsTile(
             icon: Icons.lock_outline,
-            label: 'Change password',
+            label: AppLocalization.translate('change_password', lang),
             route: MainRoutes.riderChangePassword,
           ),
           _SettingsTile(
             icon: Icons.security,
-            label: 'Security & 2FA',
+            label: AppLocalization.translate('security', lang),
             route: MainRoutes.riderSecurity,
           ),
           _SettingsTile(
             icon: Icons.description_outlined,
-            label: 'Document verification',
+            label: AppLocalization.translate('document_verification', lang),
             route: MainRoutes.riderDocuments,
           ),
           _SettingsTile(
             icon: Icons.card_giftcard_outlined,
-            label: 'Offers & vouchers',
+            label: AppLocalization.translate('offers_vouchers', lang),
             route: MainRoutes.riderOffers,
           ),
           _SettingsTile(
             icon: Icons.stars_outlined,
-            label: 'Loyalty rewards',
+            label: AppLocalization.translate('loyalty_rewards_short', lang),
             route: MainRoutes.riderLoyalty,
           ),
           _SettingsTile(
             icon: Icons.group_add_outlined,
-            label: 'Referral program',
+            label: AppLocalization.translate('referral_program', lang),
             route: MainRoutes.riderReferral,
           ),
           _SettingsTile(
             icon: Icons.help_outline,
-            label: 'FAQs',
+            label: AppLocalization.translate('faqs', lang),
             route: MainRoutes.riderFaqs,
           ),
           _SettingsTile(
             icon: Icons.emergency_outlined,
-            label: 'Safety & SOS',
+            label: AppLocalization.translate('safety_sos', lang),
             route: MainRoutes.riderSafety,
           ),
           _SettingsTile(
             icon: Icons.notifications_outlined,
-            label: 'Notifications',
+            label: AppLocalization.translate('notifications', lang),
             route: MainRoutes.riderNotifications,
           ),
           _SettingsTile(
             icon: Icons.tune,
-            label: 'Notification settings',
+            label: AppLocalization.translate('notification_settings', lang),
             route: MainRoutes.riderNotificationSettings,
           ),
           _SettingsTile(
             icon: Icons.smart_toy_outlined,
-            label: 'AI Support Chat',
+            label: AppLocalization.translate('ai_support_chat', lang),
             route: MainRoutes.riderCustomerServiceChat,
           ),
           _SettingsTile(
             icon: Icons.support_agent_outlined,
-            label: 'Support tickets',
+            label: AppLocalization.translate('support_tickets', lang),
             route: MainRoutes.riderSupportTickets,
           ),
           _SettingsTile(
             icon: Icons.person_off_outlined,
-            label: 'Deactivate account',
+            label: AppLocalization.translate('deactivate_account', lang),
             route: MainRoutes.riderDeactivateAccount,
             isDestructive: true,
           ),
           _SettingsTile(
             icon: Icons.delete_forever_outlined,
-            label: 'Delete account permanently',
+            label: AppLocalization.translate('delete_account_permanently', lang),
             route: MainRoutes.riderDeleteAccount,
             isDestructive: true,
           ),

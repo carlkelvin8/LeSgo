@@ -1,7 +1,17 @@
+import com.android.build.gradle.LibraryExtension
+
 allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+}
+
+gradle.beforeProject {
+    pluginManager.withPlugin("com.android.library") {
+        extensions.configure<LibraryExtension>("android") {
+            compileSdk = 34
+        }
     }
 }
 

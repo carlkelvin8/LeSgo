@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_customer_service_chat_provider.dart';
 
@@ -47,6 +48,7 @@ class _RiderCustomerServiceChatScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final chatState = ref.watch(riderCustomerServiceChatProvider);
     ref.listen(riderCustomerServiceChatProvider, (_, __) => _scrollToBottom());
 
@@ -100,12 +102,15 @@ class _RiderCustomerServiceChatScreenState
                   break;
               }
             },
-            itemBuilder: (context) => const [
+            itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'human',
-                child: Text('Talk to human support'),
+                child: Text(AppLocalization.translate('talk_to_human_support', lang)),
               ),
-              PopupMenuItem(value: 'clear', child: Text('Clear chat')),
+              PopupMenuItem(
+                value: 'clear',
+                child: Text(AppLocalization.translate('clear_chat', lang)),
+              ),
             ],
           ),
         ],

@@ -15,6 +15,10 @@ class LesgoDetailsPanel extends ConsumerWidget {
     required this.paymentMethod,
     required this.onPaymentChanged,
     required this.onBook,
+    this.appliedVoucher,
+    this.onApplyVoucher,
+    this.onRemoveVoucher,
+    this.voucherEnabled = true,
     required this.itemLocationController,
     required this.itemWeightController,
     this.onItemLocationChanged,
@@ -28,6 +32,10 @@ class LesgoDetailsPanel extends ConsumerWidget {
   final String paymentMethod;
   final ValueChanged<String?> onPaymentChanged;
   final VoidCallback onBook;
+  final String? appliedVoucher;
+  final VoidCallback? onApplyVoucher;
+  final VoidCallback? onRemoveVoucher;
+  final bool voucherEnabled;
   final TextEditingController itemLocationController;
   final TextEditingController itemWeightController;
   final ValueChanged<String>? onItemLocationChanged;
@@ -140,6 +148,13 @@ class LesgoDetailsPanel extends ConsumerWidget {
             LesgoPaymentSection(
               paymentMethod: paymentMethod,
               onPaymentChanged: onPaymentChanged,
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            VoucherSection(
+              enabled: voucherEnabled,
+              appliedVoucher: appliedVoucher,
+              onApplyTap: onApplyVoucher,
+              onRemoveTap: onRemoveVoucher,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             PrimaryButton(text: 'Book', onPressed: onBook),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../presentation/provider/auth/rider_auth_provider.dart';
 
@@ -8,6 +9,7 @@ class RiderPackageTierView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final authState = ref.watch(riderAuthProvider);
     final user = authState.user;
     final currentTier = user?.packageTier ?? 'Standard';
@@ -17,16 +19,16 @@ class RiderPackageTierView extends ConsumerWidget {
       padding: EdgeInsets.symmetric(horizontal: hp),
       children: [
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        _TierHeader(tier: currentTier),
+        _TierHeader(tier: currentTier, lang: lang),
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        _SectionTitle(title: 'Features'),
+        _SectionTitle(title: AppLocalization.translate('features', lang)),
         ..._featuresForTier(currentTier).map(
           (f) => _FeatureTile(icon: f.icon, label: f.label, included: f.included),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        _SectionTitle(title: 'Upgrade Options'),
+        _SectionTitle(title: AppLocalization.translate('upgrade_options', lang)),
         ..._availableTiers(currentTier).map(
-          (t) => _UpgradeTile(tier: t.name, price: t.price, features: t.features, current: t.name == currentTier),
+          (t) => _UpgradeTile(tier: t.name, price: t.price, features: t.features, current: t.name == currentTier, lang: lang),
         ),
       ],
     );
@@ -77,8 +79,9 @@ class RiderPackageTierView extends ConsumerWidget {
 
 class _TierHeader extends StatelessWidget {
   final String tier;
+  final AppLanguage lang;
 
-  const _TierHeader({required this.tier});
+  const _TierHeader({required this.tier, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +115,7 @@ class _TierHeader extends StatelessWidget {
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
           Text(
-            isHighTier ? 'Premium Package' : 'Basic Package',
+            isHighTier ? AppLocalization.translate('premium_package', lang) : AppLocalization.translate('standard_package', lang),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -197,12 +200,14 @@ class _UpgradeTile extends StatelessWidget {
   final String price;
   final List<String> features;
   final bool current;
+  final AppLanguage lang;
 
   const _UpgradeTile({
     required this.tier,
     required this.price,
     required this.features,
     required this.current,
+    required this.lang,
   });
 
   @override
@@ -271,7 +276,7 @@ class _UpgradeTile extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Upgrade option coming soon')),
+                      SnackBar(content: Text(AppLocalization.translate('upgrade_option_soon', lang))),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -281,7 +286,7 @@ class _UpgradeTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text('Upgrade to $tier'),
+                  child: Text(AppLocalization.translate('upgrade_to', lang).replaceAll('{{tier}}', tier)),
                 ),
               ),
             ],

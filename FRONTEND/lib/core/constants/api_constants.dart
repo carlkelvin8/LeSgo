@@ -23,6 +23,7 @@ class ApiConstants {
 
   static const String loginEndpoint = '/v1/auth/login';
   static const String logoutEndpoint = '/v1/auth/logout';
+  static const String configMobile = '/v1/config/mobile';
   static const String authRefresh = '/v1/auth/refresh';
   static const String authChangePassword = '/v1/auth/change-password';
   static const String authDeactivateAccount = '/v1/auth/account/deactivate';

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/rider_commission_utils.dart';
+import '../../../../../../core/utils/app_localization.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 
@@ -12,6 +13,7 @@ class RiderWalletCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = ref.watch(riderWalletProvider);
+    final lang = ref.watch(appLanguageProvider);
     final packageTier = ref.watch(riderAuthProvider).user?.packageTier;
     final packageLabel = RiderCommissionUtils.labelForPackage(packageTier);
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
@@ -60,13 +62,13 @@ class RiderWalletCard extends ConsumerWidget {
                         children: [
                           _buildCardText(
                             context,
-                            'Balance',
+                            AppLocalization.translate('balance', lang),
                             wallet.balanceFormatted,
                           ),
                           const Spacer(),
                           _buildCardText(
                             context,
-                            'Rider Package Type:',
+                            AppLocalization.translate('rider_package_type', lang),
                             packageLabel,
                           ),
                         ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/utils/responsive_utils.dart';
-import '../../../../../../core/utils/rider_wallet_policy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/rider_wallet_policy.dart';
 
-class RiderWalletLowBalanceBanner extends StatelessWidget {
+class RiderWalletLowBalanceBanner extends ConsumerWidget {
   final double balance;
 
   const RiderWalletLowBalanceBanner({
@@ -11,7 +13,7 @@ class RiderWalletLowBalanceBanner extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final message = RiderWalletPolicy.lowBalanceWarningMessage(balance);
     if (message.isEmpty) return const SizedBox.shrink();
 

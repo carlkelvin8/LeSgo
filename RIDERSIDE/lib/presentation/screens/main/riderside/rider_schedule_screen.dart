@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_schedule_provider.dart';
 
@@ -11,6 +12,7 @@ class RiderScheduleScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final state = ref.watch(riderScheduleProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
@@ -21,7 +23,7 @@ class RiderScheduleScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'Scheduled Availability',
+          AppLocalization.translate('schedule', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -33,11 +35,11 @@ class RiderScheduleScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: const Color(0xFF5F2D82),
-        onPressed: () => _showAddDialog(context, ref),
+        onPressed: () => _showAddDialog(context, ref, lang),
         icon: const Icon(Icons.add),
-        label: const Text(
-          'Add Schedule',
-          style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
+        label: Text(
+          AppLocalization.translate('add_schedule', lang),
+          style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
         ),
       ),
       body: state.entries.isEmpty
@@ -48,7 +50,7 @@ class RiderScheduleScreen extends ConsumerWidget {
                   Icon(Icons.schedule, size: 64, color: Colors.grey.shade400),
                   SizedBox(height: 16),
                   Text(
-                    'No schedules yet',
+                    AppLocalization.translate('no_schedules_yet', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -57,7 +59,7 @@ class RiderScheduleScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Tap + to add your availability',
+                    AppLocalization.translate('tap_to_add_availability', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -108,7 +110,7 @@ class RiderScheduleScreen extends ConsumerWidget {
                       ),
                     ),
                     subtitle: Text(
-                      entry.isEnabled ? 'Active' : 'Inactive',
+                      entry.isEnabled ? AppLocalization.translate('active', lang) : AppLocalization.translate('inactive', lang),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -142,7 +144,7 @@ class RiderScheduleScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddDialog(BuildContext context, WidgetRef ref) {
+  void _showAddDialog(BuildContext context, WidgetRef ref, AppLanguage lang) {
     int selectedDay = 1;
     TimeOfDay startTime = const TimeOfDay(hour: 9, minute: 0);
     TimeOfDay endTime = const TimeOfDay(hour: 17, minute: 0);
@@ -151,9 +153,9 @@ class RiderScheduleScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text(
-            'Add Schedule',
-            style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
+          title: Text(
+            AppLocalization.translate('add_schedule', lang),
+            style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -161,7 +163,7 @@ class RiderScheduleScreen extends ConsumerWidget {
               DropdownButtonFormField<int>(
                 value: selectedDay,
                 decoration:
-                    const InputDecoration(labelText: 'Day of Week'),
+                    InputDecoration(labelText: AppLocalization.translate('day_of_week', lang)),
                 items: List.generate(
                   7,
                   (i) => DropdownMenuItem(
@@ -176,9 +178,9 @@ class RiderScheduleScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               ListTile(
-                title: const Text(
-                  'Start Time',
-                  style: TextStyle(fontFamily: 'TT Fors'),
+                title: Text(
+                  AppLocalization.translate('start_time', lang),
+                  style: const TextStyle(fontFamily: 'TT Fors'),
                 ),
                 trailing: Text(
                   startTime.format(context),
@@ -198,9 +200,9 @@ class RiderScheduleScreen extends ConsumerWidget {
                 },
               ),
               ListTile(
-                title: const Text(
-                  'End Time',
-                  style: TextStyle(fontFamily: 'TT Fors'),
+                title: Text(
+                  AppLocalization.translate('end_time', lang),
+                  style: const TextStyle(fontFamily: 'TT Fors'),
                 ),
                 trailing: Text(
                   endTime.format(context),
@@ -224,7 +226,7 @@ class RiderScheduleScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.translate('cancel', lang)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -240,9 +242,9 @@ class RiderScheduleScreen extends ConsumerWidget {
                     );
                 Navigator.of(dialogContext).pop();
               },
-              child: const Text(
-                'Add',
-                style: TextStyle(color: Colors.white),
+              child: Text(
+                AppLocalization.translate('add', lang),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ],

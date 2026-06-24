@@ -19,7 +19,7 @@ class NetworkGuard {
       builder: (dialogContext) => AlertDialog(
         title: const Text('No internet connection'),
         content: const Text(
-          'Please check your Wi‑Fi or mobile data, then try again.',
+          'Please turn on Wi‑Fi or mobile data, then try again.',
         ),
         actions: [
           TextButton(

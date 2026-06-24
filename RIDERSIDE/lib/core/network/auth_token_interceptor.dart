@@ -11,7 +11,7 @@ class AuthTokenInterceptor extends QueuedInterceptor {
   final Dio _dio;
 
   static const _skipRefreshPaths = <String>{
-    '/v1/auth/login',
+    ApiConstants.loginEndpoint,
     ApiConstants.authRefresh,
     '/v1/auth/register',
     '/v1/auth/google',

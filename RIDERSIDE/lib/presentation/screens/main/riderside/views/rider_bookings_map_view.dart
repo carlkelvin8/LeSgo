@@ -11,6 +11,7 @@ import '../../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
 import '../../../../../core/config/secrets_config.dart';
+import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/app_logger.dart';
 import '../../../../../core/utils/location_permission_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -71,11 +72,23 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         (previous, next) {
           if (!mounted) return;
           final activeOrderId = next.activeOrder?.id;
+          final prevActiveId = previous?.activeOrder?.id;
+          final prevStatus = previous?.activeOrder?.status;
+          final nextStatus = next.activeOrder?.status;
+          if (activeOrderId != prevActiveId || prevStatus != nextStatus) {
+            RiderRouteUtils.clearRouteCache();
+          }
+          if (ref.read(riderHeatmapProvider).showHeatmap) {
+            ref.read(riderHeatmapProvider.notifier).updateZones(
+                  RiderHeatmapNotifier.zonesFromOrders(next.availableOrders),
+                );
+            _updateHeatmapCircles();
+          }
           ref
               .read(riderLocationProvider.notifier)
               .setActiveOrderId(activeOrderId);
           _updateMarkers();
-          _updateActiveOrderRoute();
+          _updateActiveOrderRoute(force: true);
         },
       );
 
@@ -179,7 +192,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           markerId: const MarkerId('current_location'),
           position: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          infoWindow: const InfoWindow(title: 'Your Location'),
+          infoWindow: InfoWindow(title: AppLocalization.translate('your_location', ref.read(appLanguageProvider))),
         ),
       );
     }
@@ -195,7 +208,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           position: LatLng(order.pickupLat, order.pickupLng),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
           infoWindow: InfoWindow(
-            title: 'Pickup',
+            title: AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
             snippet: order.pickupAddress,
           ),
         ),
@@ -209,8 +222,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
           infoWindow: InfoWindow(
             title: order.serviceId == 3 || order.serviceId == 4
-                ? 'Delivery Address'
-                : 'Dropoff',
+                ? AppLocalization.translate('delivery_address', ref.read(appLanguageProvider))
+                : AppLocalization.translate('dropoff', ref.read(appLanguageProvider)),
             snippet: order.dropoffAddress,
           ),
         ),
@@ -241,7 +254,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     }
   }
 
-  Future<void> _updateActiveOrderRoute() async {
+  Future<void> _updateActiveOrderRoute({bool force = false}) async {
     final activeOrder = ref.read(riderOrdersProvider).activeOrder;
     if (activeOrder == null || _currentPosition == null || _isLoadingRoute) {
       if (mounted && activeOrder == null) {
@@ -257,6 +270,17 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
       return;
     }
 
+    final target = RiderRouteUtils.navigationTarget(activeOrder);
+    if (!force &&
+        !RiderRouteUtils.needsRouteRefresh(
+          riderLat: _currentPosition!.latitude,
+          riderLng: _currentPosition!.longitude,
+          destLat: target.destination.latitude,
+          destLng: target.destination.longitude,
+        )) {
+      return;
+    }
+
     setState(() => _isLoadingRoute = true);
 
     try {
@@ -264,6 +288,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         order: activeOrder,
         riderLat: _currentPosition!.latitude,
         riderLng: _currentPosition!.longitude,
+        forceRefresh: force,
       );
       if (mounted) {
         setState(() {
@@ -302,11 +327,21 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     final notifier = ref.read(riderHeatmapProvider.notifier);
     // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
     if (!notifier.state.showHeatmap) {
-      final center = _currentPosition != null
-          ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
-          : const LatLng(8.4542, 124.6319);
-      final zones = notifier.getMockZones(center);
+      final orders = ref.read(riderOrdersProvider).availableOrders;
+      final zones = RiderHeatmapNotifier.zonesFromOrders(orders);
       notifier.updateZones(zones);
+      if (zones.isEmpty && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalization.translate(
+                'no_demand_zones_available',
+                ref.read(appLanguageProvider),
+              ),
+            ),
+          ),
+        );
+      }
     }
     notifier.toggleHeatmap();
   }
@@ -412,47 +447,132 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     );
   }
 
-  Widget _buildOrdersList() {
+  Widget _buildOrdersSheet(ScrollController scrollController) {
     final ordersState = ref.watch(riderOrdersProvider);
     final isOnDuty = ref.watch(riderDutyProvider);
+    final lang = ref.watch(appLanguageProvider);
 
     if (!isOnDuty) {
       return Container(
-        padding: EdgeInsets.all(16.0),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.pause_circle_outline,
-                size: 48,
-                color: Colors.grey.shade400,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(16),
+          children: [
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.pause_circle_outline,
+                    size: 48,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    AppLocalization.translate('you_are_off_duty_short', lang),
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    AppLocalization.translate('turn_on_duty_to_receive', lang),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(height: 12.0),
-              Text(
-                'You are OFF DUTY',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade700,
-                ),
-              ),
-              SizedBox(height: 4.0),
-              Text(
-                'Turn ON DUTY to receive bookings',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 14.0,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
+
+    final sheetChildren = <Widget>[
+      Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        alignment: Alignment.center,
+        child: Container(
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ),
+      if (ordersState.activeOrder != null) ...[
+        _buildActiveOrderCard(ordersState.activeOrder!),
+        Divider(height: 1, color: Colors.grey.shade200),
+      ],
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              AppLocalization.translate('available_orders', lang),
+              style: const TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF5F2D82),
+              ),
+            ),
+            if (ordersState.isRefreshing)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ];
+
+    if (ordersState.availableOrders.isEmpty) {
+      sheetChildren.add(
+        Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            AppLocalization.translate('no_available_orders_now', lang),
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ),
+      );
+    } else {
+      for (var i = 0; i < ordersState.availableOrders.length; i++) {
+        if (i > 0) {
+          sheetChildren.add(const SizedBox(height: 12));
+        }
+        sheetChildren.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildAvailableOrderCard(ordersState.availableOrders[i]),
+          ),
+        );
+      }
+    }
+
+    sheetChildren.add(const SizedBox(height: 16));
 
     return Container(
       decoration: BoxDecoration(
@@ -460,94 +580,16 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 8.0),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // Active Order Section
-          if (ordersState.activeOrder != null) ...[
-            _buildActiveOrderCard(ordersState.activeOrder!),
-            Divider(height: 1, color: Colors.grey.shade200),
-          ],
-
-          // Available Orders Section
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Available Orders',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF5F2D82),
-                  ),
-                ),
-                if (ordersState.isRefreshing)
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        const Color(0xFF5F2D82),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          // Available Orders List
-          if (ordersState.availableOrders.isEmpty)
-            Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Text(
-                'No available orders at the moment',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 14.0,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(
-                horizontal: 16.0,
-              ),
-              itemCount: ordersState.availableOrders.length,
-              separatorBuilder: (context, index) => SizedBox(
-                height: 12.0,
-              ),
-              itemBuilder: (context, index) {
-                final order = ordersState.availableOrders[index];
-                return _buildAvailableOrderCard(order);
-              },
-            ),
-
-          SizedBox(height: 16.0),
-        ],
+      child: ListView(
+        controller: scrollController,
+        padding: EdgeInsets.zero,
+        children: sheetChildren,
       ),
     );
   }
@@ -648,8 +690,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     children: [
                       Text(
                         order.serviceId == 3 || order.serviceId == 4
-                            ? 'Pick up from merchant'
-                            : 'Pickup',
+                            ?                     AppLocalization.translate('pick_up_from_merchant', ref.read(appLanguageProvider))
+                            : AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
@@ -674,7 +716,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   onPressed: () => _openNavigation(
                     order.pickupLat,
                     order.pickupLng,
-                    'Pickup',
+                    AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
                   ),
                 ),
               ],
@@ -695,8 +737,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     children: [
                       Text(
                         order.serviceId == 3 || order.serviceId == 4
-                            ? 'Deliver to customer'
-                            : 'Dropoff',
+                            ?                     AppLocalization.translate('deliver_to_customer', ref.read(appLanguageProvider))
+                            : AppLocalization.translate('dropoff', ref.read(appLanguageProvider)),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
@@ -721,7 +763,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   onPressed: () => _openNavigation(
                     order.dropoffLat,
                     order.dropoffLng,
-                    'Delivery Address',
+                    AppLocalization.translate('delivery_address', ref.read(appLanguageProvider)),
                   ),
                 ),
               ],
@@ -745,7 +787,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   );
                 },
                 icon: Icon(Icons.visibility, size: 18),
-                label: Text('View Details & Track'),
+                label: Text(AppLocalization.translate('view_details_track', ref.read(appLanguageProvider))),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF5F2D82),
                   foregroundColor: Colors.white,
@@ -903,7 +945,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   children: [
                     if (order.serviceId == 3 || order.serviceId == 4)
                       Text(
-                        'Delivery Address',
+                        AppLocalization.translate('delivery_address', ref.read(appLanguageProvider)),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
@@ -943,7 +985,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       if (success) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Order #${order.id} accepted!'),
+                            content: Text(AppLocalization.translate('order_accepted', ref.read(appLanguageProvider)).replaceAll('{{rider}}', 'Order #${order.id}')),
                             backgroundColor: Colors.green,
                           ),
                         );
@@ -953,7 +995,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         showApiErrorSnackBar(
                           context,
                           ref.read(riderOrdersProvider).error,
-                          fallback: 'Failed to accept order',
+                          fallback: AppLocalization.translate('failed_to_accept_order', ref.read(appLanguageProvider)),
                         );
                       }
                     },
@@ -1094,19 +1136,13 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 ],
               ),
             ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
+            Positioned.fill(
               child: DraggableScrollableSheet(
                 initialChildSize: sheetInitial,
                 minChildSize: 0.18,
                 maxChildSize: sheetMax,
                 builder: (context, scrollController) {
-                  return SingleChildScrollView(
-                    controller: scrollController,
-                    child: _buildOrdersList(),
-                  );
+                  return _buildOrdersSheet(scrollController);
                 },
               ),
             ),

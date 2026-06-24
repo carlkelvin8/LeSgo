@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../widgets/common/retry_widget.dart';
 
-class RiderFaqsScreen extends StatefulWidget {
+class RiderFaqsScreen extends ConsumerStatefulWidget {
   const RiderFaqsScreen({super.key});
 
   @override
-  State<RiderFaqsScreen> createState() => _RiderFaqsScreenState();
+  ConsumerState<RiderFaqsScreen> createState() => _RiderFaqsScreenState();
 }
 
-class _RiderFaqsScreenState extends State<RiderFaqsScreen> {
+class _RiderFaqsScreenState extends ConsumerState<RiderFaqsScreen> {
   final _searchController = TextEditingController();
   List<dynamic> _categories = [];
   List<dynamic> _articles = [];
@@ -121,9 +123,10 @@ class _RiderFaqsScreenState extends State<RiderFaqsScreen> {
       await ApiService.markFaqHelpful(articleId, helpful: helpful);
       if (!mounted) return;
       setState(() => _votedArticleIds.add(articleId));
+      final l = ref.read(appLanguageProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(helpful ? 'Thanks for your feedback!' : 'Feedback recorded'),
+          content: Text(helpful ? AppLocalization.translate('thank_you_feedback', l) : AppLocalization.translate('feedback_recorded', l)),
         ),
       );
     } catch (e) {
@@ -137,12 +140,13 @@ class _RiderFaqsScreenState extends State<RiderFaqsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF5F2D82),
-        title: const Text('FAQs', style: TextStyle(fontFamily: 'TT Fors')),
+        title: Text(AppLocalization.translate('faqs', lang), style: const TextStyle(fontFamily: 'TT Fors')),
       ),
       body: Column(
         children: [
@@ -151,7 +155,7 @@ class _RiderFaqsScreenState extends State<RiderFaqsScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search FAQs...',
+                hintText: AppLocalization.translate('search_faqs', lang),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -286,7 +290,7 @@ class _RiderFaqsScreenState extends State<RiderFaqsScreen> {
                                                         Icons.thumb_up_outlined,
                                                         size: 18,
                                                       ),
-                                                      label: const Text('Yes'),
+                                                      label: Text(AppLocalization.translate('yes', lang)),
                                                     ),
                                                     TextButton.icon(
                                                       onPressed: () =>
@@ -298,7 +302,7 @@ class _RiderFaqsScreenState extends State<RiderFaqsScreen> {
                                                         Icons.thumb_down_outlined,
                                                         size: 18,
                                                       ),
-                                                      label: const Text('No'),
+                                                      label: Text(AppLocalization.translate('no', lang)),
                                                     ),
                                                   ],
                                                 ),

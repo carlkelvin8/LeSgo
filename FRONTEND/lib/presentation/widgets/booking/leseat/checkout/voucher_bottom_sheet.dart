@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/voucher_service_utils.dart';
 import '../../../../../data/data_source/voucher_remote_datasource.dart';
 import '../../../../../data/data_source/dto/voucher/voucher_dto.dart';
 import '../../../../../core/di/injection.dart';
 
 /// Shows a bottom sheet with available vouchers from the API.
 /// Returns the selected voucher code or null if dismissed.
-Future<String?> showVoucherBottomSheet(BuildContext context) {
+Future<String?> showVoucherBottomSheet(
+  BuildContext context, {
+  int? serviceId,
+  String? title,
+}) {
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
@@ -14,12 +19,21 @@ Future<String?> showVoucherBottomSheet(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => const _VoucherBottomSheet(),
+    builder: (_) => _VoucherBottomSheet(
+      serviceId: serviceId,
+      title: title,
+    ),
   );
 }
 
 class _VoucherBottomSheet extends ConsumerStatefulWidget {
-  const _VoucherBottomSheet();
+  const _VoucherBottomSheet({
+    this.serviceId,
+    this.title,
+  });
+
+  final int? serviceId;
+  final String? title;
 
   @override
   ConsumerState<_VoucherBottomSheet> createState() =>
@@ -47,10 +61,15 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
   Future<void> _loadVouchers() async {
     try {
       final ds = getIt<VoucherRemoteDataSource>();
-      final response = await ds.getAvailableVouchers();
+      final response = await ds.getAvailableVouchers(
+        serviceId: widget.serviceId,
+      );
+      final vouchers = widget.serviceId == null
+          ? response.data
+          : filterVouchersForService(response.data, widget.serviceId!);
       if (mounted) {
         setState(() {
-          _vouchers = response.data;
+          _vouchers = vouchers;
           _isLoading = false;
         });
       }
@@ -89,8 +108,8 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Row(
               children: [
-                const Text(
-                  'Apply Voucher',
+                Text(
+                  widget.title ?? 'Apply Voucher',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 18,
@@ -189,7 +208,9 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
                                     size: 48, color: Colors.grey[300]),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'No vouchers available',
+                                  widget.serviceId == null
+                                      ? 'No vouchers available'
+                                      : 'No LesGo vouchers available',
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     color: Colors.grey[500],

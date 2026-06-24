@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/services/api_service.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 Future<void> showRiderCustomerRatingDialog(
   BuildContext context, {
@@ -18,7 +20,7 @@ Future<void> showRiderCustomerRatingDialog(
   );
 }
 
-class _RiderCustomerRatingDialog extends StatefulWidget {
+class _RiderCustomerRatingDialog extends ConsumerStatefulWidget {
   const _RiderCustomerRatingDialog({
     required this.orderId,
     this.customerName,
@@ -28,11 +30,11 @@ class _RiderCustomerRatingDialog extends StatefulWidget {
   final String? customerName;
 
   @override
-  State<_RiderCustomerRatingDialog> createState() =>
+  ConsumerState<_RiderCustomerRatingDialog> createState() =>
       _RiderCustomerRatingDialogState();
 }
 
-class _RiderCustomerRatingDialogState extends State<_RiderCustomerRatingDialog> {
+class _RiderCustomerRatingDialogState extends ConsumerState<_RiderCustomerRatingDialog> {
   int _rating = 5;
   bool _submitting = false;
   final _commentController = TextEditingController();
@@ -44,6 +46,7 @@ class _RiderCustomerRatingDialogState extends State<_RiderCustomerRatingDialog> 
   }
 
   Future<void> _submit() async {
+    final lang = ref.read(appLanguageProvider);
     if (_submitting) return;
     setState(() => _submitting = true);
     try {
@@ -70,7 +73,7 @@ class _RiderCustomerRatingDialogState extends State<_RiderCustomerRatingDialog> 
           context,
           ApiService.extractError(e).isNotEmpty
               ? ApiService.extractError(e)
-              : 'Could not save rating. Please try again.',
+              : AppLocalization.translate('could_not_save_rating', lang),
         );
       }
     } finally {
@@ -80,10 +83,11 @@ class _RiderCustomerRatingDialogState extends State<_RiderCustomerRatingDialog> 
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
-        'Rate ${widget.customerName ?? 'customer'}',
+        AppLocalization.translate('rate_customer', lang).replaceAll('{{name}}', widget.customerName ?? 'customer'),
         style: const TextStyle(
           fontFamily: 'TT Fors',
           fontWeight: FontWeight.w700,
@@ -113,7 +117,7 @@ class _RiderCustomerRatingDialogState extends State<_RiderCustomerRatingDialog> 
               enabled: !_submitting,
               maxLines: 3,
               decoration: InputDecoration(
-                hintText: 'Optional note (e.g. polite, easy handoff)',
+                hintText: AppLocalization.translate('optional_note', lang),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -125,7 +129,7 @@ class _RiderCustomerRatingDialogState extends State<_RiderCustomerRatingDialog> 
       actions: [
         TextButton(
           onPressed: _submitting ? null : () => Navigator.pop(context),
-          child: const Text('Skip'),
+          child: Text(AppLocalization.translate('skip', lang)),
         ),
         FilledButton(
           style: FilledButton.styleFrom(
@@ -141,7 +145,7 @@ class _RiderCustomerRatingDialogState extends State<_RiderCustomerRatingDialog> 
                     color: Colors.white,
                   ),
                 )
-              : const Text('Submit'),
+              : Text(AppLocalization.translate('submit', lang)),
         ),
       ],
     );

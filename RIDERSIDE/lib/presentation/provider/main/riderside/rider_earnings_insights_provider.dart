@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/rider_earnings_utils.dart';
+
 class RiderEarningsDayData {
   final DateTime date;
   final double earnings;
@@ -42,91 +45,164 @@ class RiderEarningsInsightsState {
   });
 }
 
-class RiderEarningsInsightsNotifier
-    extends StateNotifier<RiderEarningsInsightsState> {
-  RiderEarningsInsightsNotifier() : super(const RiderEarningsInsightsState()) {
-    _generateSampleData();
+final riderEarningsInsightsProvider =
+    FutureProvider.autoDispose<RiderEarningsInsightsState>((ref) async {
+  final monthData = await ApiService.getDriverEarnings(period: 'month');
+  final entries = _parseEntries(monthData);
+  final summaryRaw = monthData['summary'] as Map<String, dynamic>? ?? {};
+
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final dayBuckets = <DateTime, _DayAggregate>{};
+
+  for (int i = 29; i >= 0; i--) {
+    final date = today.subtract(Duration(days: i));
+    dayBuckets[date] = _DayAggregate();
   }
 
-  void _generateSampleData() {
-    final now = DateTime.now();
-    final daily = <RiderEarningsDayData>[];
+  for (final entry in entries) {
+    final completedAt = entry.completedAt;
+    if (completedAt == null) continue;
 
-    double totalEarnings = 0;
-    int totalTrips = 0;
-    double totalHours = 0;
+    final day = DateTime(
+      completedAt.year,
+      completedAt.month,
+      completedAt.day,
+    );
+    final bucket = dayBuckets[day];
+    if (bucket == null) continue;
 
-    for (int i = 29; i >= 0; i--) {
-      final date = now.subtract(Duration(days: i));
-      final baseEarnings = 400.0 + (i % 7) * 50.0 + (i % 3) * 30.0;
-      final trips = 3 + (i % 5);
-      final dayEarnings = baseEarnings + (trips * 20.0);
-      daily.add(RiderEarningsDayData(
-        date: date,
-        earnings: dayEarnings,
-        trips: trips,
-      ));
-      totalEarnings += dayEarnings;
-      totalTrips += trips;
-      totalHours += 4.0 + (trips * 0.5);
-    }
+    bucket.earnings += entry.earnings;
+    bucket.trips += 1;
+  }
 
-    final avgPerDay = totalEarnings / 30;
-    final avgPerTrip = totalTrips > 0 ? totalEarnings / totalTrips : 0.0;
-    final avgPerHour = totalHours > 0 ? totalEarnings / totalHours : 0.0;
+  final dailyEarnings = dayBuckets.entries
+      .map(
+        (entry) => RiderEarningsDayData(
+          date: entry.key,
+          earnings: entry.value.earnings,
+          trips: entry.value.trips,
+        ),
+      )
+      .toList();
 
-    final currentWeekEarnings = daily
-        .sublist(daily.length - 7)
-        .fold<double>(0, (sum, d) => sum + d.earnings);
-    final prevWeekEarnings = daily
-        .sublist(daily.length - 14, daily.length - 7)
-        .fold<double>(0, (sum, d) => sum + d.earnings);
-    final change = prevWeekEarnings > 0
-        ? ((currentWeekEarnings - prevWeekEarnings) / prevWeekEarnings) * 100
-        : 0.0;
+  final totalEarnings =
+      (summaryRaw['total_earnings'] as num?)?.toDouble() ??
+      dailyEarnings.fold<double>(0, (sum, day) => sum + day.earnings);
+  final totalTrips = (summaryRaw['completed_trips'] as num?)?.toInt() ??
+      dailyEarnings.fold<int>(0, (sum, day) => sum + day.trips);
 
-    final dayTotals = <int, double>{};
-    for (final d in daily) {
-      final day = d.date.weekday;
-      dayTotals[day] = (dayTotals[day] ?? 0) + d.earnings;
-    }
-    final bestDayNum = dayTotals.entries
+  final daysWithData =
+      dailyEarnings.where((day) => day.earnings > 0 || day.trips > 0).length;
+  final divisor = daysWithData > 0 ? daysWithData : dailyEarnings.length;
+
+  final avgPerDay = totalEarnings / divisor;
+  final avgPerTrip = totalTrips > 0 ? totalEarnings / totalTrips : 0.0;
+  const minutesPerTrip = 25.0;
+  final totalHoursOnline = (totalTrips * minutesPerTrip) / 60;
+  final avgPerHour =
+      totalHoursOnline > 0 ? totalEarnings / totalHoursOnline : 0.0;
+
+  final currentWeekEarnings = dailyEarnings
+      .sublist(dailyEarnings.length - 7)
+      .fold<double>(0, (sum, day) => sum + day.earnings);
+  final previousPeriodEarnings = dailyEarnings
+      .sublist(dailyEarnings.length - 14, dailyEarnings.length - 7)
+      .fold<double>(0, (sum, day) => sum + day.earnings);
+  final percentageChange = previousPeriodEarnings > 0
+      ? ((currentWeekEarnings - previousPeriodEarnings) /
+              previousPeriodEarnings) *
+          100
+      : 0.0;
+
+  final projectedEarnings = avgPerDay * 7;
+
+  var bestDay = '--';
+  var bestHourRange = '--';
+
+  final dayTotals = <int, double>{};
+  for (final day in dailyEarnings) {
+    if (day.earnings <= 0) continue;
+    final weekday = day.date.weekday;
+    dayTotals[weekday] = (dayTotals[weekday] ?? 0) + day.earnings;
+  }
+  if (dayTotals.isNotEmpty) {
+    final bestWeekday = dayTotals.entries
         .reduce((a, b) => a.value > b.value ? a : b)
         .key;
+    bestDay = _weekdayName(bestWeekday);
+  }
 
-    final proj = (totalEarnings / 30) * 7 + currentWeekEarnings;
-
-    state = RiderEarningsInsightsState(
-      dailyEarnings: daily,
-      totalEarnings: totalEarnings,
-      averageEarningsPerDay: avgPerDay,
-      averageEarningsPerTrip: avgPerTrip,
-      averageEarningsPerHour: avgPerHour,
-      totalTrips: totalTrips,
-      totalHoursOnline: totalHours,
-      bestDay: _dayName(bestDayNum),
-      bestHourRange: '9 AM - 12 PM',
-      projectedEarnings: proj,
-      previousPeriodEarnings: prevWeekEarnings,
-      percentageChange: change,
+  try {
+    final analyticsResponse = await ApiService.dio.get(
+      '/v1/drivers/me/trips/analytics',
+      queryParameters: {'period': 'month'},
     );
+    final analytics =
+        (analyticsResponse.data['data'] ?? analyticsResponse.data)
+            as Map<String, dynamic>;
+
+    final peakHour = analytics['peak_hour']?.toString().trim();
+    if (peakHour != null && peakHour.isNotEmpty) {
+      bestHourRange = peakHour;
+    }
+
+    final analyticsBestDay = analytics['best_earning_day']?.toString().trim();
+    if (analyticsBestDay != null && analyticsBestDay.isNotEmpty) {
+      bestDay = analyticsBestDay;
+    }
+  } catch (_) {
+    // Trip analytics is optional; weekday totals above are the fallback.
   }
 
-  String _dayName(int day) {
-    const names = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-    return names[day - 1];
-  }
+  return RiderEarningsInsightsState(
+    dailyEarnings: dailyEarnings,
+    totalEarnings: totalEarnings,
+    averageEarningsPerDay: avgPerDay,
+    averageEarningsPerTrip: avgPerTrip,
+    averageEarningsPerHour: avgPerHour,
+    totalTrips: totalTrips,
+    totalHoursOnline: totalHoursOnline,
+    bestDay: bestDay,
+    bestHourRange: bestHourRange,
+    projectedEarnings: projectedEarnings,
+    previousPeriodEarnings: previousPeriodEarnings,
+    percentageChange: percentageChange,
+  );
+});
+
+List<RiderEarningsEntry> _parseEntries(Map<String, dynamic> data) {
+  final entriesRaw = data['entries'] as List<dynamic>? ?? [];
+  return entriesRaw
+      .whereType<Map>()
+      .map((item) {
+        final map = Map<String, dynamic>.from(item);
+        return RiderEarningsEntry(
+          orderId: (map['order_id'] as num?)?.toInt() ?? 0,
+          serviceName: map['service_name']?.toString() ?? 'Order',
+          earnings: (map['earnings'] as num?)?.toDouble() ?? 0,
+          completedAt: map['completed_at'] != null
+              ? DateTime.tryParse(map['completed_at'].toString())?.toLocal()
+              : null,
+        );
+      })
+      .toList();
 }
 
-final riderEarningsInsightsProvider = StateNotifierProvider<
-    RiderEarningsInsightsNotifier, RiderEarningsInsightsState>(
-  (ref) => RiderEarningsInsightsNotifier(),
-);
+String _weekdayName(int weekday) {
+  const names = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  return names[weekday - 1];
+}
+
+class _DayAggregate {
+  double earnings = 0;
+  int trips = 0;
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
@@ -36,7 +37,7 @@ class _RiderWalletPaymentScreenState
       if (!launched) {
         SnackBarUtils.showError(
           context,
-          'Could not open payment page. Tap the button below.',
+          AppLocalization.translate('could_not_open_payment_page', ref.read(appLanguageProvider)),
         );
       }
     }
@@ -55,7 +56,7 @@ class _RiderWalletPaymentScreenState
       final error = ref.read(riderWalletProvider).error;
       SnackBarUtils.showError(
         context,
-        error ?? 'Payment verification failed. Try again in a moment.',
+        error ?? AppLocalization.translate('payment_verification_failed', ref.read(appLanguageProvider)),
       );
     }
   }
@@ -88,13 +89,14 @@ class _RiderWalletPaymentScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final walletState = ref.watch(riderWalletProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Complete Payment',
-          style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
+        title: Text(
+          AppLocalization.translate('complete_payment', lang),
+          style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
         ),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
@@ -107,8 +109,8 @@ class _RiderWalletPaymentScreenState
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             Text(
               _openedBrowser
-                  ? 'Finish payment in your browser (GCash, Maya, or card), then return here and confirm.'
-                  : 'Open the payment page, complete payment, then confirm below.',
+                  ? AppLocalization.translate('finish_payment_in_browser', lang)
+                  : AppLocalization.translate('open_payment_page_desc', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -116,18 +118,18 @@ class _RiderWalletPaymentScreenState
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            _summaryRow('LesPay credit', widget.checkout.walletAmount),
-            _summaryRow('Top-up fee (3%)', widget.checkout.feeAmount),
+            _summaryRow(AppLocalization.translate('lespay_credit', lang), widget.checkout.walletAmount),
+            _summaryRow(AppLocalization.translate('top_up_fee_percent', lang), widget.checkout.feeAmount),
             const Divider(),
             _summaryRow(
-              'Total to pay',
+              AppLocalization.translate('total_to_pay', lang),
               widget.checkout.totalCharge,
               bold: true,
             ),
             const Spacer(),
             OutlinedButton(
               onPressed: _openPaymentPage,
-              child: const Text('Open payment page'),
+              child: Text(AppLocalization.translate('open_payment_page', lang)),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             ElevatedButton(
@@ -146,7 +148,7 @@ class _RiderWalletPaymentScreenState
                         color: Colors.white,
                       ),
                     )
-                  : const Text("I've completed payment"),
+                  : Text(AppLocalization.translate('i_completed_payment', lang)),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           ],

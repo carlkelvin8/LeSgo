@@ -4,6 +4,7 @@ import '../../../core/services/api_service.dart';
 import '../../../core/services/secure_storage_service.dart';
 import '../../../core/services/push_notification_service.dart';
 import '../../../core/services/remember_me_service.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/media_url_utils.dart';
 import '../main/riderside/rider_orders_provider.dart';
@@ -336,10 +337,18 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: ApiService.extractError(e),
+        error: _loginErrorMessage(e),
       );
       return false;
     }
+  }
+
+  String _loginErrorMessage(Object e) {
+    return ApiErrorMapper.message(
+      e,
+      fallbackEn: 'Cannot sign in right now. Please try again.',
+      fallbackTl: 'Hindi makapag-sign in ngayon. Subukan muli.',
+    );
   }
 
   /// Clears local session immediately and returns the login view to show next.

@@ -1,15 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/utils/responsive_utils.dart';
-import 'rider_chat_screen.dart';
 
-class RiderChatListScreen extends ConsumerWidget {
+import '../../../../core/utils/app_localization.dart';
+import '../../../../core/utils/responsive_utils.dart';
+import '../../../../data/data_source/dto/chat/chat_dto.dart';
+import '../../../provider/main/riderside/rider_inbox_provider.dart';
+import '../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
+import '../../chat/rider_chat_screen.dart';
+
+class RiderChatListScreen extends ConsumerStatefulWidget {
   const RiderChatListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RiderChatListScreen> createState() =>
+      _RiderChatListScreenState();
+}
+
+class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(riderInboxProvider.notifier).loadConversations();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
+    final inboxState = ref.watch(riderInboxProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
+
+    ref.listen<int>(riderInboxRefreshSignalProvider, (previous, next) {
+      if (previous == next) return;
+      ref.read(riderInboxProvider.notifier).loadConversations(silent: true);
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -17,7 +43,7 @@ class RiderChatListScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          'Messages',
+          AppLocalization.translate('messages', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 20),
@@ -27,216 +53,277 @@ class RiderChatListScreen extends ConsumerWidget {
         ),
         centerTitle: false,
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: Text(
-                '3', // Mock: replace with actual unread count
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  backgroundColor: const Color(0xFFF44336),
+          if (inboxState.unreadCount > 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF44336),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    inboxState.unreadCount > 99
+                        ? '99+'
+                        : inboxState.unreadCount.toString(),
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
-      body: ListView(
-        padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.spacing(context, 8)),
-        children: [
-          // Mock conversation list
-          ..._buildMockConversations(context, hp),
-        ],
+      body: RefreshIndicator(
+        color: const Color(0xFF5F2D82),
+        onRefresh: () =>
+            ref.read(riderInboxProvider.notifier).loadConversations(),
+        child: _buildBody(inboxState, hp, lang),
       ),
     );
   }
 
-  List<Widget> _buildMockConversations(BuildContext context, double hp) {
-    final conversations = [
-      {
-        'orderId': 'ORD-001',
-        'customerName': 'John Doe',
-        'lastMessage': 'On my way, I will be there in 5 minutes',
-        'timestamp': DateTime.now().subtract(const Duration(minutes: 2)),
-        'unread': 1,
-        'avatar': '🧑',
-      },
-      {
-        'orderId': 'ORD-002',
-        'customerName': 'Maria Santos',
-        'lastMessage': 'Thank you for the fast delivery!',
-        'timestamp': DateTime.now().subtract(const Duration(hours: 1)),
-        'unread': 0,
-        'avatar': '👩',
-      },
-      {
-        'orderId': 'ORD-003',
-        'customerName': 'Ahmed Hassan',
-        'lastMessage': 'Can you wait 5 minutes?',
-        'timestamp': DateTime.now().subtract(const Duration(hours: 3)),
-        'unread': 0,
-        'avatar': '🧔',
-      },
-    ];
-
-    return conversations.map((conv) {
-      final orderId = conv['orderId'] as String;
-      final customerName = conv['customerName'] as String;
-      final lastMessage = conv['lastMessage'] as String;
-      final timestamp = conv['timestamp'] as DateTime;
-      final unread = conv['unread'] as int;
-      final avatar = conv['avatar'] as String;
-
-      return _buildConversationItem(
-        context: context,
-        hp: hp,
-        orderId: orderId,
-        customerName: customerName,
-        lastMessage: lastMessage,
-        timestamp: timestamp,
-        unread: unread,
-        avatar: avatar,
+  Widget _buildBody(RiderInboxState state, double hp, AppLanguage lang) {
+    if (state.isLoading && state.conversations.isEmpty) {
+      return ListView(
+        children: const [
+          SizedBox(height: 200),
+          Center(
+            child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+          ),
+        ],
       );
-    }).toList();
+    }
+
+    if (state.error != null && state.conversations.isEmpty) {
+      return ListView(
+        children: [
+          SizedBox(height: ResponsiveUtils.spacing(context, 120)),
+          Center(
+            child: Column(
+              children: [
+                Icon(Icons.error_outline, size: 56, color: Colors.grey[400]),
+                const SizedBox(height: 12),
+                Text(
+                  AppLocalization.translate('could_not_load_messages', lang),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => ref
+                      .read(riderInboxProvider.notifier)
+                      .loadConversations(),
+                  child: Text(
+                    AppLocalization.translate('retry', lang),
+                    style: const TextStyle(color: Color(0xFF5F2D82)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (state.conversations.isEmpty) {
+      return ListView(
+        children: [
+          SizedBox(height: ResponsiveUtils.spacing(context, 120)),
+          Center(
+            child: Column(
+              children: [
+                Icon(Icons.chat_bubble_outline,
+                    size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalization.translate('no_conversations_yet', lang),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: hp),
+                  child: Text(
+                    AppLocalization.translate(
+                        'chat_appears_after_accept_order', lang),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.symmetric(
+        vertical: ResponsiveUtils.spacing(context, 8),
+        horizontal: hp,
+      ),
+      itemCount: state.conversations.length,
+      itemBuilder: (context, index) {
+        final conv = state.conversations[index];
+        return _ConversationTile(
+          conversation: conv,
+          onTap: () => _openChat(conv),
+        );
+      },
+    );
   }
 
-  Widget _buildConversationItem({
-    required BuildContext context,
-    required double hp,
-    required String orderId,
-    required String customerName,
-    required String lastMessage,
-    required DateTime timestamp,
-    required int unread,
-    required String avatar,
-  }) {
-    final isUnread = unread > 0;
-    final timeAgo = _getTimeAgo(timestamp);
+  void _openChat(ConversationDto conversation) {
+    final orderId = conversation.orderId ?? 0;
+    if (orderId <= 0) return;
+
+    final customerName = conversation.customer?.name ?? 'Customer';
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RiderChatScreen(
+          orderId: orderId,
+          customerName: customerName,
+        ),
+      ),
+    ).then((_) {
+      if (mounted) {
+        ref.read(riderInboxProvider.notifier).loadConversations(silent: true);
+      }
+    });
+  }
+}
+
+class _ConversationTile extends StatelessWidget {
+  const _ConversationTile({
+    required this.conversation,
+    required this.onTap,
+  });
+
+  final ConversationDto conversation;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final customerName = conversation.customer?.name ?? 'Customer';
+    final lastMsg = conversation.latestMessage?.content ?? 'No messages yet';
+    final orderId = conversation.orderId;
+    final isActive = conversation.status == 'active';
+    final latest = conversation.latestMessage;
+    final hasUnread = latest != null &&
+        latest.readAt == null &&
+        latest.senderType.toLowerCase() == 'customer';
+    final timestamp = _parseTimestamp(
+      conversation.lastMessageAt ?? latest?.createdAt,
+    );
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (ctx) => RiderChatScreen(
-                orderId: orderId,
-                customerName: customerName,
-              ),
-            ),
-          );
-        },
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-          margin: EdgeInsets.symmetric(
-            horizontal: hp,
-            vertical: ResponsiveUtils.spacing(context, 4),
-          ),
+          margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 4)),
           decoration: BoxDecoration(
-            color: isUnread ? Colors.white : const Color(0xFFF8F9FA),
-            border: isUnread
-                ? Border(
-                    left: BorderSide(
-                      color: const Color(0xFF5F2D82),
-                      width: 3,
-                    ),
-                  )
+            color: hasUnread ? Colors.white : const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(12),
+            border: hasUnread
+                ? Border.all(color: const Color(0xFF5F2D82).withValues(alpha: 0.2))
                 : null,
           ),
           child: Row(
             children: [
-              // Avatar
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF5F2D82).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Center(
-                  child: Text(
-                    avatar,
-                    style: const TextStyle(fontSize: 24),
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                child: Text(
+                  customerName.isNotEmpty
+                      ? customerName[0].toUpperCase()
+                      : 'C',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF5F2D82),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-
-              // Content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          customerName,
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 14),
-                            fontWeight:
-                                isUnread ? FontWeight.w700 : FontWeight.w600,
-                            color: Colors.black87,
+                        Expanded(
+                          child: Text(
+                            customerName,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize:
+                                  ResponsiveUtils.fontSize(context, 14),
+                              fontWeight: hasUnread
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        Text(
-                          timeAgo,
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 11),
-                            color: isUnread
-                                ? const Color(0xFF5F2D82)
-                                : Colors.grey.shade600,
-                            fontWeight:
-                                isUnread ? FontWeight.w600 : FontWeight.w400,
+                        if (timestamp != null)
+                          Text(
+                            _formatTimeAgo(timestamp),
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize:
+                                  ResponsiveUtils.fontSize(context, 11),
+                              color: hasUnread
+                                  ? const Color(0xFF5F2D82)
+                                  : Colors.grey.shade600,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
-                            lastMessage,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 12),
-                              color: isUnread
-                                  ? Colors.black87
-                                  : Colors.grey.shade600,
-                              fontWeight:
-                                  isUnread ? FontWeight.w500 : FontWeight.w400,
-                            ),
+                            lastMsg,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize:
+                                  ResponsiveUtils.fontSize(context, 12),
+                              color: hasUnread
+                                  ? Colors.black87
+                                  : Colors.grey.shade600,
+                            ),
                           ),
                         ),
-                        if (unread > 0)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF5F2D82),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              unread.toString(),
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize:
-                                    ResponsiveUtils.fontSize(context, 10),
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
+                        if (orderId != null)
+                          Text(
+                            '#$orderId',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize:
+                                  ResponsiveUtils.fontSize(context, 10),
+                              color: isActive
+                                  ? Colors.green.shade700
+                                  : Colors.grey.shade500,
                             ),
                           ),
                       ],
@@ -251,20 +338,21 @@ class RiderChatListScreen extends ConsumerWidget {
     );
   }
 
-  String _getTimeAgo(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inSeconds < 60) {
-      return 'now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d';
-    } else {
-      return DateFormat('MMM d').format(dateTime);
+  DateTime? _parseTimestamp(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      return DateTime.parse(raw).toLocal();
+    } catch (_) {
+      return null;
     }
+  }
+
+  String _formatTimeAgo(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+    if (difference.inSeconds < 60) return 'now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}m';
+    if (difference.inHours < 24) return '${difference.inHours}h';
+    if (difference.inDays < 7) return '${difference.inDays}d';
+    return DateFormat('MMM d').format(dateTime);
   }
 }

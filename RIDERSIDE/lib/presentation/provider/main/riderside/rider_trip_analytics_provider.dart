@@ -80,9 +80,9 @@ class RiderTripAnalyticsState {
   final String period;
 
   const RiderTripAnalyticsState({
-    this.bestEarningDay = 'Monday',
+    this.bestEarningDay = '',
     this.bestEarningDayAmount = 0.0,
-    this.peakHour = '18:00',
+    this.peakHour = '',
     this.avgEarningsPerTrip = 0.0,
     this.totalDistanceTraveled = 0.0,
     this.totalTrips = 0,
@@ -95,6 +95,9 @@ class RiderTripAnalyticsState {
   });
 
   String get bestEarningDayFormatted => 'PHP ${bestEarningDayAmount.toStringAsFixed(2)}';
+  String get bestEarningDayDisplay =>
+      bestEarningDay.isEmpty ? '—' : bestEarningDay;
+  String get peakHourDisplay => peakHour.isEmpty ? '—' : peakHour;
   String get avgEarningsPerTripFormatted => 'PHP ${avgEarningsPerTrip.toStringAsFixed(2)}';
   String get totalDistanceFormatted => '${totalDistanceTraveled.toStringAsFixed(1)} km';
   String get totalEarningsFormatted => 'PHP ${totalEarnings.toStringAsFixed(2)}';

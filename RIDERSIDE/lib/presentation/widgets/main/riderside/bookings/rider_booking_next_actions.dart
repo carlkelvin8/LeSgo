@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/booking_workflow.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/app_localization.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 
-class RiderBookingNextActions extends StatelessWidget {
+class RiderBookingNextActions extends ConsumerWidget {
   final BookingCategory category;
   final String? apiStatus;
   final bool isUpdating;
@@ -32,7 +34,8 @@ class RiderBookingNextActions extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final actions = BookingWorkflow.nextActions(
       apiStatus: apiStatus,
       category: category,
@@ -62,7 +65,7 @@ class RiderBookingNextActions extends StatelessWidget {
                 SizedBox(width: ResponsiveUtils.spacing(context, 12)),
                 Expanded(
                   child: Text(
-                    'This order is finished. Great job!',
+                    AppLocalization.translate('order_finished', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontWeight: FontWeight.w600,
@@ -75,7 +78,7 @@ class RiderBookingNextActions extends StatelessWidget {
           )
         else if (actions.isEmpty)
           Text(
-            'Waiting for the next step…',
+            AppLocalization.translate('waiting_next_step', lang),
             style: TextStyle(
               fontFamily: 'TT Fors',
               color: Colors.grey.shade600,

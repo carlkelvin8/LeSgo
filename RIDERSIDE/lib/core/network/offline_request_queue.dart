@@ -29,14 +29,22 @@ class OfflineRequestQueue {
     final restored = await OfflineQueueStorage.load();
     _pending
       ..clear()
-      ..addAll(restored);
+      ..addAll(restored.where((item) => !_isNonCriticalPath(item.path)));
     _emitCount();
 
-    if (restored.isNotEmpty) {
+    final dropped = restored.length - _pending.length;
+    if (dropped > 0) {
+      await _persist();
+      AppLogger.debug('Dropped $dropped non-critical offline request(s)');
+    }
+
+    if (_pending.isNotEmpty) {
       AppLogger.debug(
-        'Restored ${restored.length} offline request(s) from storage',
+        'Restored ${_pending.length} offline request(s) from storage',
       );
     }
+
+    await pruneNonCriticalPaths();
   }
 
   bool _isMutating(String method) {
@@ -50,7 +58,27 @@ class OfflineRequestQueue {
   bool canQueue(RequestOptions options) {
     if (!_isMutating(options.method)) return false;
     if (options.extra['skipOfflineQueue'] == true) return false;
+    if (_isNonCriticalPath(options.path)) return false;
     return true;
+  }
+
+  static bool _isNonCriticalPath(String path) {
+    final normalized = path.toLowerCase();
+    return normalized.contains('/analytics/') ||
+        normalized.contains('/auth/') ||
+        normalized.contains('/config/mobile') ||
+        normalized.contains('/devices/register');
+  }
+
+  Future<void> pruneNonCriticalPaths() async {
+    final before = _pending.length;
+    _pending.removeWhere((item) => _isNonCriticalPath(item.path));
+    if (_pending.length == before) return;
+    _emitCount();
+    await _persist();
+    AppLogger.debug(
+      'Pruned ${before - _pending.length} non-critical offline request(s)',
+    );
   }
 
   Future<void> enqueue(RequestOptions options) async {

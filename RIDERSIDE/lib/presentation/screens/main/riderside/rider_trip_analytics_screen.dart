@@ -70,7 +70,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                           context,
                           icon: Icons.trending_up,
                           label: 'Best Earning Day',
-                          value: analyticsState.bestEarningDay,
+                          value: analyticsState.bestEarningDayDisplay,
                           subValue: analyticsState.bestEarningDayFormatted,
                           color: const Color(0xFF4CAF50),
                         ),
@@ -81,7 +81,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                           context,
                           icon: Icons.schedule,
                           label: 'Peak Hour',
-                          value: analyticsState.peakHour,
+                          value: analyticsState.peakHourDisplay,
                           subValue: 'Most active',
                           color: const Color(0xFFFF9800),
                         ),
@@ -229,7 +229,19 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                   else
                     Column(
                       children: analyticsState.hourlyBreakdown
-                          .map((hourly) => _buildHourlyItem(context, hourly))
+                          .map(
+                            (hourly) => _buildHourlyItem(
+                              context,
+                              hourly,
+                              analyticsState.hourlyBreakdown
+                                  .map((item) => item.earnings)
+                                  .fold<double>(
+                                    0,
+                                    (max, value) =>
+                                        value > max ? value : max,
+                                  ),
+                            ),
+                          )
                           .toList(),
                     ),
                   const SizedBox(height: 24),
@@ -346,9 +358,15 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHourlyItem(BuildContext context, HourlyBreakdown hourly) {
-    final maxEarnings = 5000.0; // Mock max for bar height calculation
-    final barHeight = (hourly.earnings / maxEarnings * 60).clamp(5, 60).toDouble();
+  Widget _buildHourlyItem(
+    BuildContext context,
+    HourlyBreakdown hourly,
+    double maxEarnings,
+  ) {
+    final scaleMax = maxEarnings > 0 ? maxEarnings : hourly.earnings;
+    final barHeight = scaleMax > 0
+        ? (hourly.earnings / scaleMax * 60).clamp(5, 60).toDouble()
+        : 5.0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

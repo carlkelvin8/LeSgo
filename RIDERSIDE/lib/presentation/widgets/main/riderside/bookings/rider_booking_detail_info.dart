@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
-class RiderBookingDetailInfo extends StatelessWidget {
+class RiderBookingDetailInfo extends ConsumerWidget {
   final RiderBooking booking;
 
   const RiderBookingDetailInfo({super.key, required this.booking});
@@ -13,7 +15,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
       booking.category == BookingCategory.lesEat ||
       booking.category == BookingCategory.lesBuy;
 
-  Future<void> _callCustomer(BuildContext context) async {
+  Future<void> _callCustomer(BuildContext context, AppLanguage lang) async {
     final phone = booking.customerPhone;
     if (phone == null || phone.isEmpty) return;
     final uri = Uri.parse('tel:$phone');
@@ -21,13 +23,14 @@ class RiderBookingDetailInfo extends StatelessWidget {
       await launchUrl(uri);
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot open phone dialer')),
+        SnackBar(content: Text(AppLocalization.translate('cannot_open_dialer', lang))),
       );
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Padding(
@@ -43,7 +46,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
               _ServiceBadge(category: booking.category),
               const Spacer(),
               Text(
-                'Order #${booking.id}',
+                AppLocalization.translate('order_id', lang).replaceAll('{{id}}', '${booking.id}'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -77,7 +80,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isFoodOrder ? 'Pickup' : 'Trip',
+                        _isFoodOrder ? AppLocalization.translate('pickup', lang) : AppLocalization.translate('trip', lang),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -104,7 +107,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Customer',
+                  AppLocalization.translate('customer', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -124,7 +127,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                     booking.customerPhone!.isNotEmpty) ...[
                   SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                   InkWell(
-                    onTap: () => _callCustomer(context),
+                    onTap: () => _callCustomer(context, lang),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -150,7 +153,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                   ),
                 ] else
                   Text(
-                    'No contact number on file',
+                    AppLocalization.translate('no_contact_number', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -167,7 +170,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                 _RouteRow(
                   icon: Icons.circle,
                   iconColor: Colors.green,
-                  label: _isFoodOrder ? 'Pick up from' : 'Pick up',
+                  label: _isFoodOrder ? AppLocalization.translate('pick_up_from', lang) : AppLocalization.translate('pick_up_label', lang),
                   value: booking.pickupAddress ?? 'N/A',
                 ),
                 Padding(
@@ -183,7 +186,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                 _RouteRow(
                   icon: Icons.place,
                   iconColor: Colors.red,
-                  label: 'Deliver to',
+                  label: AppLocalization.translate('deliver_to', lang),
                   value: booking.deliveryAddress ?? booking.address,
                 ),
               ],
@@ -199,7 +202,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Items subtotal',
+                        AppLocalization.translate('items_subtotal', lang),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -223,7 +226,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Delivery fee',
+                        AppLocalization.translate('delivery_fee', lang),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -248,7 +251,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Order total',
+                      AppLocalization.translate('order_total', lang),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontWeight: FontWeight.w700,
@@ -289,7 +292,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
                   const Divider(height: 1),
                   SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                   Text(
-                    'Items',
+                    AppLocalization.translate('items', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontWeight: FontWeight.w700,
@@ -334,7 +337,7 @@ class RiderBookingDetailInfo extends StatelessWidget {
           if (booking.proofOfDeliveryUrls != null &&
               booking.proofOfDeliveryUrls!.isNotEmpty) ...[
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            _ProofGrid(urls: booking.proofOfDeliveryUrls!),
+            _ProofGrid(urls: booking.proofOfDeliveryUrls!, lang: lang),
           ],
         ],
       ),
@@ -438,8 +441,9 @@ class _RouteRow extends StatelessWidget {
 
 class _ProofGrid extends StatelessWidget {
   final List<String> urls;
+  final AppLanguage lang;
 
-  const _ProofGrid({required this.urls});
+  const _ProofGrid({required this.urls, required this.lang});
 
   @override
   Widget build(BuildContext context) {
@@ -447,7 +451,7 @@ class _ProofGrid extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Proof of delivery',
+          AppLocalization.translate('proof_of_delivery', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w700,

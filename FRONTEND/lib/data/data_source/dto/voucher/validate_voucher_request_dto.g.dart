@@ -11,6 +11,7 @@ ValidateVoucherRequestDto _$ValidateVoucherRequestDtoFromJson(
 ) => ValidateVoucherRequestDto(
   voucherCode: json['voucher_code'] as String,
   orderValue: (json['order_value'] as num).toDouble(),
+  serviceId: (json['service_id'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$ValidateVoucherRequestDtoToJson(
@@ -18,4 +19,5 @@ Map<String, dynamic> _$ValidateVoucherRequestDtoToJson(
 ) => <String, dynamic>{
   'voucher_code': instance.voucherCode,
   'order_value': instance.orderValue,
+  if (instance.serviceId case final value?) 'service_id': value,
 };

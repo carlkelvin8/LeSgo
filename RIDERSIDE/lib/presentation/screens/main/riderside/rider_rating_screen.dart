@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../provider/main/riderside/rider_rating_provider.dart';
 
 class RiderRatingScreen extends ConsumerWidget {
@@ -11,6 +12,7 @@ class RiderRatingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final ratingAsync = ref.watch(riderRatingProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
@@ -21,7 +23,7 @@ class RiderRatingScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'My Rating',
+          AppLocalization.translate('my_rating', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -53,9 +55,30 @@ class RiderRatingScreen extends ConsumerWidget {
               ),
               error: (e, _) => Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Could not load ratings: $e',
-                  style: TextStyle(color: Colors.red.shade700),
+                child: Column(
+                  children: [
+                    Text(
+                      AppLocalization.translate('error_occurred', lang),
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$e',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.red.shade700),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.invalidate(riderRatingProvider);
+                      },
+                      child: Text(AppLocalization.translate('retry', lang)),
+                    ),
+                  ],
                 ),
               ),
               data: (state) {

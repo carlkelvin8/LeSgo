@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 Future<bool> showRiderBookingConfirmDialog({
   required BuildContext context,
   required String title,
   required String message,
-  String confirmText = 'Confirm',
-  String cancelText = 'Cancel',
+  String? confirmText,
+  String? cancelText,
 }) async {
+  final lang = ProviderScope.containerOf(context).read(appLanguageProvider);
+  final effectiveConfirmText = confirmText ?? AppLocalization.translate('confirm', lang);
+  final effectiveCancelText = cancelText ?? AppLocalization.translate('cancel', lang);
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
@@ -42,7 +47,7 @@ Future<bool> showRiderBookingConfirmDialog({
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
-              cancelText,
+              effectiveCancelText,
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 14,
@@ -62,7 +67,7 @@ Future<bool> showRiderBookingConfirmDialog({
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: Text(
-              confirmText,
+              effectiveConfirmText,
               style: const TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 14,

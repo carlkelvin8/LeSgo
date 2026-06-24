@@ -53,15 +53,20 @@ class ApiService {
     String email,
     String password,
   ) async {
-    AppLogger.network('POST', '/v1/auth/login');
+    AppLogger.network('POST', ApiConstants.loginEndpoint);
     try {
-      final deviceId = await SecureStorageService.getDeviceId();
-      final res = await _dio.post('/v1/auth/login', data: {
-        'email': email,
-        'password': password,
-        'device_id': deviceId,
-      });
-      AppLogger.network('POST', '/v1/auth/login', statusCode: res.statusCode);
+      final res = await _dio.post(
+        ApiConstants.loginEndpoint,
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+      AppLogger.network(
+        'POST',
+        ApiConstants.loginEndpoint,
+        statusCode: res.statusCode,
+      );
       return res.data as Map<String, dynamic>;
     } catch (e) {
       AppLogger.error('Login request failed', e);
@@ -256,12 +261,14 @@ class ApiService {
     required double originLng,
     required double destLat,
     required double destLng,
+    String travelMode = 'two_wheeler',
   }) =>
       TrackingApi.getRoute(
         originLat: originLat,
         originLng: originLng,
         destLat: destLat,
         destLng: destLng,
+        travelMode: travelMode,
       );
 
   // ── Profile & documents ──────────────────────────────────────────────────

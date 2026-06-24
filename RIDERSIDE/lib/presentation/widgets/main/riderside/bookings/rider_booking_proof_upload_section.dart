@@ -2,11 +2,13 @@ import 'dart:io' show File;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/app_localization.dart';
 
-class RiderBookingProofUploadSection extends StatelessWidget {
+class RiderBookingProofUploadSection extends ConsumerWidget {
   const RiderBookingProofUploadSection({
     super.key,
     required this.selectedImages,
@@ -25,7 +27,8 @@ class RiderBookingProofUploadSection extends StatelessWidget {
   final VoidCallback onUpload;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     return Padding(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
       child: Column(
@@ -106,7 +109,7 @@ class RiderBookingProofUploadSection extends StatelessWidget {
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                 Text(
-                  'Upload Proof of Delivery',
+                  AppLocalization.translate('upload_proof_delivery', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -116,7 +119,7 @@ class RiderBookingProofUploadSection extends StatelessWidget {
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                 Text(
-                  'Take photos or select from gallery',
+                  AppLocalization.translate('take_photos_or_gallery', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -125,7 +128,7 @@ class RiderBookingProofUploadSection extends StatelessWidget {
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                 Text(
-                  'Max 5 images • JPG, PNG • Max 5MB each',
+                  AppLocalization.translate('max_5_images', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -140,7 +143,7 @@ class RiderBookingProofUploadSection extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: isUploading ? null : onTakePhoto,
                         icon: const Icon(Icons.camera_alt),
-                        label: const Text('Camera'),
+                        label: Text(AppLocalization.translate('camera', lang)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: const Color(0xFF5F2D82),
@@ -152,7 +155,7 @@ class RiderBookingProofUploadSection extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: isUploading ? null : onPickImages,
                       icon: const Icon(Icons.photo_library),
-                      label: const Text('Gallery'),
+                      label: Text(AppLocalization.translate('gallery', lang)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF5F2D82),
                         foregroundColor: Colors.white,
@@ -182,8 +185,9 @@ class RiderBookingProofUploadSection extends StatelessWidget {
                     : const Icon(Icons.cloud_upload),
                 label: Text(
                   isUploading
-                      ? 'Uploading...'
-                      : 'Upload ${selectedImages.length} Image(s)',
+                      ? AppLocalization.translate('uploading_images', lang)
+                      : AppLocalization.translate('upload_images_count', lang)
+                          .replaceAll('{{count}}', '${selectedImages.length}'),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,

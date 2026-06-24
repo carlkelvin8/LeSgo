@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_inbox_provider.dart';
 import '../../../provider/main/riderside/rider_main_nav_provider.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class RiderBottomNavBar extends ConsumerWidget {
   const RiderBottomNavBar({super.key});
@@ -12,6 +13,7 @@ class RiderBottomNavBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentNav = ref.watch(riderNavProvider).last;
     final unreadCount = ref.watch(riderInboxProvider).unreadCount;
+    final lang = ref.watch(appLanguageProvider);
     final selectedColor = const Color(0xFF5F2D82);
     final unselectedColor = Colors.grey.shade400;
 
@@ -39,7 +41,7 @@ class RiderBottomNavBar extends ConsumerWidget {
             context, ref,
             type: RiderNavType.bookings,
             svgAsset: 'assets/images/navbar/riderside/booking.svg',
-            label: 'Bookings',
+            label: AppLocalization.translate('bookings', lang),
             isSelected: currentNav == RiderNavType.bookings,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
@@ -48,7 +50,7 @@ class RiderBottomNavBar extends ConsumerWidget {
             context, ref,
             type: RiderNavType.history,
             svgAsset: 'assets/images/navbar/riderside/time.svg',
-            label: 'History',
+            label: AppLocalization.translate('history', lang),
             isSelected: currentNav == RiderNavType.history,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
@@ -57,7 +59,7 @@ class RiderBottomNavBar extends ConsumerWidget {
             context, ref,
             type: RiderNavType.inbox,
             icon: Icons.chat_bubble_outline,
-            label: 'Inbox',
+            label: AppLocalization.translate('inbox', lang),
             badgeCount: unreadCount,
             isSelected: currentNav == RiderNavType.inbox,
             selectedColor: selectedColor,
@@ -67,7 +69,7 @@ class RiderBottomNavBar extends ConsumerWidget {
             context, ref,
             type: RiderNavType.profile,
             svgAsset: 'assets/images/navbar/riderside/profile.svg',
-            label: 'Profile',
+            label: AppLocalization.translate('profile', lang),
             isSelected: currentNav == RiderNavType.profile,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
@@ -76,7 +78,7 @@ class RiderBottomNavBar extends ConsumerWidget {
             context, ref,
             type: RiderNavType.more,
             icon: Icons.grid_view_rounded,
-            label: 'More',
+            label: AppLocalization.translate('more', lang),
             isSelected: currentNav == RiderNavType.more,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,

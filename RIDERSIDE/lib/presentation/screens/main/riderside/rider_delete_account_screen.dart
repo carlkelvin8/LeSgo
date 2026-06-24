@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
@@ -34,10 +35,11 @@ class _RiderDeleteAccountScreenState
   }
 
   Future<void> _deleteAccount() async {
+    final lang = ref.read(appLanguageProvider);
     if (!_confirmed) {
       SnackBarUtils.showError(
         context,
-        'Please confirm that you understand this action is permanent.',
+        AppLocalization.translate('confirm_understand_permanent', lang),
       );
       return;
     }
@@ -46,21 +48,19 @@ class _RiderDeleteAccountScreenState
     final proceed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete account permanently?'),
-        content: const Text(
-          'This cannot be undone. Your profile, documents, and personal '
-          'information will be removed. Complete active deliveries and empty '
-          'your LesPay wallet before continuing.',
+        title: Text(AppLocalization.translate('delete_account_question', lang)),
+        content: Text(
+          AppLocalization.translate('permanent_deletion', lang),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalization.translate('cancel', lang)),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete forever'),
+            child: Text(AppLocalization.translate('delete_forever', lang)),
           ),
         ],
       ),
@@ -81,7 +81,7 @@ class _RiderDeleteAccountScreenState
       if (!mounted) return;
       SnackBarUtils.showSuccess(
         context,
-        'Your account has been permanently deleted.',
+        AppLocalization.translate('account_deleted', lang),
       );
       navigateToLoginAfterLogout(context, ref, target: target);
     } catch (e) {
@@ -90,7 +90,7 @@ class _RiderDeleteAccountScreenState
         context,
         ApiService.extractError(e).isNotEmpty
             ? ApiService.extractError(e)
-            : 'Could not delete account. Check your password and try again.',
+            : AppLocalization.translate('could_not_delete', lang),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -99,10 +99,11 @@ class _RiderDeleteAccountScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Delete Account'),
+        title: Text(AppLocalization.translate('delete_account', lang)),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
       ),
@@ -126,8 +127,7 @@ class _RiderDeleteAccountScreenState
                   border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
                 ),
                 child: Text(
-                  'Permanent deletion removes your personal data and signs you out '
-                  'immediately. You cannot recover this account or log in again.',
+                  AppLocalization.translate('permanent_deletion', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -142,12 +142,12 @@ class _RiderDeleteAccountScreenState
                 obscureText: _obscurePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Password is required';
+                    return AppLocalization.translate('password_required', lang);
                   }
                   return null;
                 },
                 decoration: InputDecoration(
-                  labelText: 'Confirm password',
+                  labelText: AppLocalization.translate('confirm_password', lang),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -170,12 +170,12 @@ class _RiderDeleteAccountScreenState
                 textCapitalization: TextCapitalization.characters,
                 validator: (value) {
                   if (value == null || value.trim().toUpperCase() != 'DELETE') {
-                    return 'Type DELETE to confirm';
+                    return AppLocalization.translate('type_delete_to_confirm', lang);
                   }
                   return null;
                 },
                 decoration: InputDecoration(
-                  labelText: 'Type DELETE to confirm',
+                  labelText: AppLocalization.translate('type_delete_to_confirm', lang),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -188,7 +188,7 @@ class _RiderDeleteAccountScreenState
                 controller: _reasonController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Reason (optional)',
+                  labelText: AppLocalization.translate('reason_optional', lang),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -205,7 +205,7 @@ class _RiderDeleteAccountScreenState
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
                 title: Text(
-                  'I understand my account and personal data will be permanently deleted.',
+                  AppLocalization.translate('i_understand_delete', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -228,7 +228,7 @@ class _RiderDeleteAccountScreenState
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Delete account permanently'),
+                    : Text(AppLocalization.translate('delete_account_permanently', lang)),
               ),
             ],
           ),

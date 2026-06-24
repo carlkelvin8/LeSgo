@@ -1,13 +1,10 @@
-import 'package:flutter/foundation.dart';
-
-import '../config/secrets_config.dart';
-
 class ApiConstants {
-  static const String stagingBaseUrl =
+  /// Same staging server as the customer app — hardcoded for release builds.
+  static String get baseUrl =>
       'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
-  static const String productionBaseUrl = 'https://api.lesgo.com/api';
 
-  static String get baseUrl => ApiEnvironment.resolveBaseUrl();
+  static const String loginEndpoint = '/v1/auth/login';
+  static const String logoutEndpoint = '/v1/auth/logout';
 
   static const String authRefresh = '/v1/auth/refresh';
   static const String authChangePassword = '/v1/auth/change-password';
@@ -104,53 +101,4 @@ class ApiConstants {
   static const String authMe = '/v1/auth/me';
 
   ApiConstants._();
-}
-
-/// Resolves API host from compile-time defines (`secrets.json`) with safe defaults.
-class ApiEnvironment {
-  ApiEnvironment._();
-
-  static String resolveBaseUrl() {
-    final explicit = SecretsConfig.apiBaseUrl.trim();
-    if (explicit.isNotEmpty && !_isPlaceholder(explicit)) {
-      return normalizeBaseUrl(explicit);
-    }
-
-    switch (_normalizedEnv(SecretsConfig.apiEnv)) {
-      case 'prod':
-      case 'production':
-        return ApiConstants.productionBaseUrl;
-      case 'staging':
-        return ApiConstants.stagingBaseUrl;
-      case 'dev':
-      case 'development':
-        return _developmentBaseUrl;
-      default:
-        return kReleaseMode
-            ? ApiConstants.productionBaseUrl
-            : ApiConstants.stagingBaseUrl;
-    }
-  }
-
-  static String get _developmentBaseUrl =>
-      kIsWeb ? 'http://127.0.0.1:8000/api' : 'http://10.0.2.2:8000/api';
-
-  static String normalizeBaseUrl(String url) {
-    var normalized = url.trim();
-    while (normalized.endsWith('/')) {
-      normalized = normalized.substring(0, normalized.length - 1);
-    }
-    return normalized;
-  }
-
-  static String _normalizedEnv(String value) =>
-      value.trim().toLowerCase().replaceAll('_', '-');
-
-  static bool _isPlaceholder(String value) {
-    final lower = value.toLowerCase();
-    return lower.startsWith('your-') ||
-        lower.startsWith('your_') ||
-        lower.startsWith('http://your-') ||
-        lower.contains('example.com');
-  }
 }

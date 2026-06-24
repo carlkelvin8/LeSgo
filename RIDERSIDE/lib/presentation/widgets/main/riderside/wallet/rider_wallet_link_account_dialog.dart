@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
@@ -66,12 +67,13 @@ class _RiderWalletLinkAccountDialogState
   }
 
   String? _validatePhone(String? value) {
+    final lang = ref.read(appLanguageProvider);
     if (value == null || value.trim().isEmpty) {
-      return 'Enter your mobile number';
+      return AppLocalization.translate('enter_mobile_number', lang);
     }
     final digits = value.replaceAll(RegExp(r'\D'), '');
     if (digits.length < 10 || digits.length > 12) {
-      return 'Enter a valid PH mobile number';
+      return AppLocalization.translate('enter_valid_ph_mobile', lang);
     }
     return null;
   }
@@ -94,14 +96,14 @@ class _RiderWalletLinkAccountDialogState
       if (widget.parentContext.mounted) {
         SnackBarUtils.showSuccess(
           widget.parentContext,
-          '${widget.title} linked for Xendit withdrawals.',
+          '${AppLocalization.translate(widget.provider == 'gcash' ? 'gcash' : 'maya', ref.read(appLanguageProvider))} linked for Xendit withdrawals.',
         );
       }
     } else {
       final error = ref.read(riderWalletProvider).error;
       SnackBarUtils.showError(
         context,
-        error ?? 'Could not link account.',
+        error ?? AppLocalization.translate('could_not_link_account', ref.read(appLanguageProvider)),
       );
     }
   }
@@ -120,27 +122,30 @@ class _RiderWalletLinkAccountDialogState
       if (widget.parentContext.mounted) {
         SnackBarUtils.showSuccess(
           widget.parentContext,
-          '${widget.title} account removed.',
+          '${AppLocalization.translate(widget.provider == 'gcash' ? 'gcash' : 'maya', ref.read(appLanguageProvider))} account removed.',
         );
       }
     } else {
       final error = ref.read(riderWalletProvider).error;
       SnackBarUtils.showError(
         context,
-        error ?? 'Could not remove account.',
+        error ?? AppLocalization.translate('could_not_remove_account', ref.read(appLanguageProvider)),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final wallet = ref.watch(riderWalletProvider);
     final isLinked = wallet.isProviderLinked(widget.provider);
     final busy = _submitting || _unlinking;
 
     return AlertDialog(
       title: Text(
-        isLinked ? 'Manage ${widget.title}' : 'Link ${widget.title}',
+        isLinked
+            ? AppLocalization.translate('manage_account', lang).replaceAll('{{provider}}', widget.title)
+            : '${AppLocalization.translate('link_account', lang)} ${widget.title}',
         style: const TextStyle(
           fontFamily: 'TT Fors',
           fontWeight: FontWeight.bold,
@@ -162,12 +167,12 @@ class _RiderWalletLinkAccountDialogState
             const SizedBox(height: 12),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Account holder name',
+              decoration: InputDecoration(
+                labelText: AppLocalization.translate('account_holder_name', lang),
                 border: OutlineInputBorder(),
               ),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                  (v == null || v.trim().isEmpty) ? AppLocalization.translate('name_is_required', ref.read(appLanguageProvider)) : null,
               enabled: !busy,
             ),
             const SizedBox(height: 12),
@@ -190,13 +195,13 @@ class _RiderWalletLinkAccountDialogState
           TextButton(
             onPressed: busy ? null : _unlink,
             child: Text(
-              'Unlink',
+              AppLocalization.translate('unlink_account', lang),
               style: TextStyle(color: Colors.red.shade700),
             ),
           ),
         TextButton(
           onPressed: busy ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.translate('cancel', lang)),
         ),
         ElevatedButton(
           onPressed: busy ? null : _submit,
@@ -213,7 +218,7 @@ class _RiderWalletLinkAccountDialogState
                     color: Colors.white,
                   ),
                 )
-              : Text(isLinked ? 'Update' : 'Link account'),
+              : Text(isLinked ? 'Update' : AppLocalization.translate('link_account', lang)),
         ),
       ],
     );

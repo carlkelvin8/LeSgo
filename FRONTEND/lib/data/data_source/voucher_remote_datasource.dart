@@ -14,8 +14,13 @@ class VoucherRemoteDataSource {
 
   VoucherRemoteDataSource(this._dioClient);
 
-  Future<AvailableVouchersResponseDto> getAvailableVouchers() async {
-    final response = await _dioClient.dio.get(ApiConstants.vouchersAvailable);
+  Future<AvailableVouchersResponseDto> getAvailableVouchers({
+    int? serviceId,
+  }) async {
+    final response = await _dioClient.dio.get(
+      ApiConstants.vouchersAvailable,
+      queryParameters: serviceId == null ? null : {'service_id': serviceId},
+    );
     return AvailableVouchersResponseDto.fromJson(
       response.data as Map<String, dynamic>,
     );

@@ -8,6 +8,10 @@ import '../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
+import '../../../../data/data_source/dto/voucher/validate_voucher_request_dto.dart';
+import '../../../../data/data_source/voucher_remote_datasource.dart';
+import '../../../../core/utils/api_error_mapper.dart';
+import '../../../../core/utils/voucher_service_utils.dart';
 import '../../../../data/data_source/dto/address/address_dto.dart';
 import '../profile/profile_provider.dart';
 import '../../../../core/services/service_area_checker.dart';
@@ -24,6 +28,10 @@ class LesgoState {
   final bool shouldCollapseAfterFullscreen;
   final String itemDescription;
   final String itemWeight;
+  final String? voucherCode;
+  final double discount;
+  final bool isValidatingVoucher;
+  final String? voucherError;
   final AddressDto? selectedPickupAddress;
   final AddressDto? selectedDropoffAddress;
 
@@ -35,6 +43,10 @@ class LesgoState {
     this.shouldCollapseAfterFullscreen = false,
     this.itemDescription = '',
     this.itemWeight = '',
+    this.voucherCode,
+    this.discount = 0,
+    this.isValidatingVoucher = false,
+    this.voucherError,
     this.selectedPickupAddress,
     this.selectedDropoffAddress,
   });
@@ -47,7 +59,13 @@ class LesgoState {
     bool? shouldCollapseAfterFullscreen,
     String? itemDescription,
     String? itemWeight,
+    String? voucherCode,
+    double? discount,
+    bool? isValidatingVoucher,
+    String? voucherError,
     AddressDto? selectedPickupAddress,
+    bool clearVoucher = false,
+    bool clearVoucherError = false,
     AddressDto? selectedDropoffAddress,
     bool clearPickupAddress = false,
     bool clearDropoffAddress = false,
@@ -61,6 +79,11 @@ class LesgoState {
           shouldCollapseAfterFullscreen ?? this.shouldCollapseAfterFullscreen,
       itemDescription: itemDescription ?? this.itemDescription,
       itemWeight: itemWeight ?? this.itemWeight,
+      voucherCode: clearVoucher ? null : (voucherCode ?? this.voucherCode),
+      discount: clearVoucher ? 0 : (discount ?? this.discount),
+      isValidatingVoucher: isValidatingVoucher ?? this.isValidatingVoucher,
+      voucherError:
+          clearVoucherError ? null : (voucherError ?? this.voucherError),
       selectedPickupAddress: clearPickupAddress
           ? null
           : (selectedPickupAddress ?? this.selectedPickupAddress),
@@ -75,6 +98,10 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   final Ref _ref;
   GoogleMapController? _mainMapController;
   GoogleMapController? _overlayMapController;
+  final VoucherRemoteDataSource _voucherDataSource =
+      getIt<VoucherRemoteDataSource>();
+  final OrderRemoteDataSource _orderDataSource =
+      getIt<OrderRemoteDataSource>();
   static const double _sheetMin = 0.04;
   static const double _sheetMax = 0.55;
   static const double _sheetDefault =
@@ -113,6 +140,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       shouldCollapseAfterFullscreen: false,
       clearPickupAddress: true,
       clearDropoffAddress: true,
+      clearVoucher: true,
+      clearVoucherError: true,
     );
 
     await notifier.getCurrentLocation();
@@ -365,6 +394,90 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     state = state.copyWith(paymentMethod: method);
   }
 
+  Future<double?> _estimateOrderValue() async {
+    final locationState = _ref.read(lesgoLocationProvider);
+    final pickup = locationState.pickupLocation;
+    final dropoff = locationState.destinationLocation;
+    if (pickup == null || dropoff == null) return null;
+
+    final distanceM = locationState.distanceInKm != null
+        ? (locationState.distanceInKm! * 1000).round()
+        : 5000;
+
+    return _orderDataSource.getFareEstimateRaw(
+      serviceId: BookingServiceIds.lesgo,
+      estimatedDistanceM: distanceM,
+      pickupLat: pickup.latitude,
+      pickupLng: pickup.longitude,
+      dropoffLat: dropoff.latitude,
+      dropoffLng: dropoff.longitude,
+    );
+  }
+
+  Future<String?> applyVoucher(String voucherCode) async {
+    final trimmed = voucherCode.trim();
+    if (trimmed.isEmpty) return 'Enter a voucher code';
+
+    final orderValue = await _estimateOrderValue();
+    if (orderValue == null) {
+      return 'Select pickup and drop-off locations first';
+    }
+
+    state = state.copyWith(isValidatingVoucher: true, clearVoucherError: true);
+
+    try {
+      final response = await _voucherDataSource.validateVoucher(
+        ValidateVoucherRequestDto(
+          voucherCode: trimmed,
+          orderValue: orderValue,
+          serviceId: BookingServiceIds.lesgo,
+        ),
+      );
+
+      final data = response.data;
+      if (!data.valid) {
+        final msg = data.error ?? response.message;
+        state = state.copyWith(
+          isValidatingVoucher: false,
+          voucherError: msg,
+        );
+        return msg;
+      }
+
+      state = state.copyWith(
+        isValidatingVoucher: false,
+        voucherCode: trimmed.toUpperCase(),
+        discount: data.discountAmount ?? 0,
+        clearVoucherError: true,
+      );
+      return null;
+    } catch (e) {
+      final msg = ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not apply voucher. Please try again.',
+        fallbackTl: 'Hindi ma-apply ang voucher. Subukan muli.',
+      );
+      state = state.copyWith(
+        isValidatingVoucher: false,
+        voucherError: msg,
+      );
+      return msg;
+    }
+  }
+
+  void removeVoucher() {
+    state = state.copyWith(
+      clearVoucher: true,
+      clearVoucherError: true,
+    );
+  }
+
+  bool get canApplyVoucher {
+    final locationState = _ref.read(lesgoLocationProvider);
+    return locationState.pickupLocation != null &&
+        locationState.destinationLocation != null;
+  }
+
   void selectPickupAddress(AddressDto address) {
     print(
       '🔍 LesGo: selectPickupAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
@@ -566,11 +679,13 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
         final profileState = _ref.read(profileProvider);
         final user = profileState.user;
 
+        final estimatedDistanceM = (updatedLocationState.distanceInKm != null)
+            ? (updatedLocationState.distanceInKm! * 1000).round()
+            : 5000;
+
         final createOrderRequest = CreateOrderRequestDto(
-          serviceId: 1, // LesGo service ID
-          estimatedDistanceM: (updatedLocationState.distanceInKm != null)
-              ? (updatedLocationState.distanceInKm! * 1000).round()
-              : 5000,
+          serviceId: BookingServiceIds.lesgo,
+          estimatedDistanceM: estimatedDistanceM,
           pickup: OrderAddressDto(
             address: updatedLocationState.pickupAddress?.toString() ??
                 state.selectedPickupAddress?.addressLine1 ??
@@ -603,6 +718,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
           ),
           notes: 'LesGo delivery booking',
           paymentMethod: state.paymentMethod,
+          voucherCode: state.voucherCode,
+          discountAmount: state.discount > 0 ? state.discount : null,
           meta: {
             'item_description': state.itemDescription,
             'item_weight': state.itemWeight,
@@ -613,7 +730,7 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
         );
 
         final estimatedFare = await orderDataSource.getFareEstimateRaw(
-              serviceId: 1,
+              serviceId: BookingServiceIds.lesgo,
               estimatedDistanceM: createOrderRequest.estimatedDistanceM,
               pickupLat: pickup.latitude,
               pickupLng: pickup.longitude,
@@ -622,9 +739,13 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
             ) ??
             0.0;
 
+        final payableFare = (estimatedFare > 0 ? estimatedFare : 50.0) -
+            state.discount;
+        final walletAmount = payableFare > 0 ? payableFare : 0.0;
+
         final walletOk = await validateWalletBalanceForOrder(
           _ref,
-          amount: estimatedFare > 0 ? estimatedFare : 50.0,
+          amount: walletAmount,
           paymentMethod: state.paymentMethod,
           context: context,
         );
@@ -667,6 +788,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
               'itemDescription': state.itemDescription,
               'itemWeight': state.itemWeight,
               'paymentMethod': state.paymentMethod,
+              'voucherCode': state.voucherCode,
+              'discount': state.discount,
               'fare': payAmount,
               'total': payAmount,
               'estimated_fare': order.estimatedFare,

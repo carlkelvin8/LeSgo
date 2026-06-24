@@ -16,6 +16,7 @@ import '../../../../../core/utils/app_logger.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../core/utils/rider_navigation_launcher.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 // Custom painter for map pattern
 class MapPatternPainter extends CustomPainter {
@@ -232,7 +233,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
           markerId: const MarkerId('current_location'),
           position: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          infoWindow: const InfoWindow(title: 'Your Location'),
+          infoWindow: InfoWindow(title: AppLocalization.translate('your_location', ref.read(appLanguageProvider))),
         ),
       );
     }
@@ -249,7 +250,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             markerId: const MarkerId('pickup'),
             position: LatLng(order.pickupLat, order.pickupLng),
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-            infoWindow: InfoWindow(title: 'Pickup: ${order.pickupAddress}'),
+            infoWindow: InfoWindow(title: '${AppLocalization.translate('pickup', ref.read(appLanguageProvider))}: ${order.pickupAddress}'),
           ),
         );
         
@@ -261,8 +262,8 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             infoWindow: InfoWindow(
               title: order.serviceId == 3 || order.serviceId == 4
-                  ? 'Delivery Address'
-                  : 'Dropoff',
+                  ? AppLocalization.translate('delivery_address', ref.read(appLanguageProvider))
+                  : AppLocalization.translate('dropoff', ref.read(appLanguageProvider)),
               snippet: order.dropoffAddress,
             ),
           ),
@@ -282,8 +283,19 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     }
   }
 
-  Future<void> _fetchRouteToOrder(RiderOrder order) async {
+  Future<void> _fetchRouteToOrder(RiderOrder order, {bool force = false}) async {
     if (_currentPosition == null || _isLoadingRoute) return;
+
+    final target = RiderRouteUtils.navigationTarget(order);
+    if (!force &&
+        !RiderRouteUtils.needsRouteRefresh(
+          riderLat: _currentPosition!.latitude,
+          riderLng: _currentPosition!.longitude,
+          destLat: target.destination.latitude,
+          destLng: target.destination.longitude,
+        )) {
+      return;
+    }
 
     if (mounted) {
       setState(() {
@@ -298,6 +310,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
         order: order,
         riderLat: _currentPosition!.latitude,
         riderLng: _currentPosition!.longitude,
+        forceRefresh: force,
       );
 
       if (polylines.isEmpty) {
@@ -395,12 +408,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   }
 
   String _getRouteTitle(RiderOrder order) {
+    final lang = ref.read(appLanguageProvider);
     if (RiderRouteUtils.isEnRouteToPickup(order.status)) {
-      return 'Route to Pickup Location';
+      return AppLocalization.translate('route_to_pickup', lang);
     }
     return order.serviceId == 3 || order.serviceId == 4
-        ? 'Route to Delivery Address'
-        : 'Route to Dropoff Location';
+        ? AppLocalization.translate('route_to_delivery', lang)
+        : AppLocalization.translate('route_to_dropoff', lang);
   }
 
   LatLng _getNavigationDestination(RiderOrder order) {
@@ -473,7 +487,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                       children: [
                         if (currentOrder != null) ...[
                           Text(
-                            'Order #${currentOrder.id}',
+                            AppLocalization.translate('order_id', ref.read(appLanguageProvider)).replaceAll('{{id}}', '${currentOrder.id}'),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -514,7 +528,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                           ),
                                         ),
                                         Text(
-                                          'Route displayed on map',
+                                          AppLocalization.translate('route_displayed', ref.read(appLanguageProvider)),
                                           style: TextStyle(
                                             fontFamily: 'TT Fors',
                                             fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -551,7 +565,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                   ),
                                   icon: const Icon(Icons.navigation, size: 18),
                                   label: Text(
-                                    'Navigate to ${_getNavigationLabel(currentOrder)}',
+                                    AppLocalization.translate('navigate_to', ref.read(appLanguageProvider)).replaceAll('{{address}}', _getNavigationLabel(currentOrder)),
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -583,7 +597,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                     )
                                   : const Icon(Icons.refresh, size: 18),
                                 label: Text(
-                                  'Refresh',
+                                  AppLocalization.translate('refresh', ref.read(appLanguageProvider)),
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -610,13 +624,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           _buildLocationCard(
                             icon: Icons.location_on,
                             title: currentOrder.serviceId == 3 || currentOrder.serviceId == 4
-                                ? 'Pick up from merchant'
-                                : 'Pickup',
+                                ? AppLocalization.translate('pick_up_from_merchant', ref.read(appLanguageProvider))
+                                : AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
                             address: currentOrder.pickupAddress,
                             onNavigate: () => _openNavigation(
                               currentOrder.pickupLat,
                               currentOrder.pickupLng,
-                              'Pickup',
+                              AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
                             ),
                           ),
                           
@@ -626,13 +640,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           _buildLocationCard(
                             icon: Icons.flag,
                             title: currentOrder.serviceId == 3 || currentOrder.serviceId == 4
-                                ? 'Deliver to customer'
-                                : 'Dropoff',
+                                ? AppLocalization.translate('deliver_to_customer', ref.read(appLanguageProvider))
+                                : AppLocalization.translate('dropoff', ref.read(appLanguageProvider)),
                             address: currentOrder.dropoffAddress,
                             onNavigate: () => _openNavigation(
                               currentOrder.dropoffLat,
                               currentOrder.dropoffLng,
-                              'Delivery Address',
+                              AppLocalization.translate('delivery_address', ref.read(appLanguageProvider)),
                             ),
                           ),
                           
@@ -649,7 +663,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Order Details',
+                                  AppLocalization.translate('order_details', ref.read(appLanguageProvider)),
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -662,7 +676,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'Estimated Fare',
+                                      AppLocalization.translate('estimated_fare', ref.read(appLanguageProvider)),
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -685,7 +699,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'Distance',
+                                      AppLocalization.translate('distance', ref.read(appLanguageProvider)),
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -709,7 +723,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                         ] else ...[
                           // No specific order - show general info
                           Text(
-                            'Map View',
+                            AppLocalization.translate('map_view', ref.read(appLanguageProvider)),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -719,7 +733,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                           Text(
-                            'Your current location is shown on the map.',
+                            AppLocalization.translate('your_current_location', ref.read(appLanguageProvider)),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -751,8 +765,8 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                     Expanded(
                                       child: Text(
                                         isOnDuty
-                                            ? 'You are ON DUTY and receiving orders'
-                                            : 'You are OFF DUTY - turn on to receive orders',
+                                            ? AppLocalization.translate('you_are_on_duty', ref.read(appLanguageProvider))
+                                            : AppLocalization.translate('you_are_off_duty', ref.read(appLanguageProvider)),
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -840,7 +854,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
               ),
             ),
             child: Text(
-              'Navigate',
+              AppLocalization.translate('navigate', ref.read(appLanguageProvider)),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -874,7 +888,9 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.orderId != null ? 'Order Navigation' : 'Map View - Interactive',
+          widget.orderId != null
+              ? AppLocalization.translate('order_navigation', ref.read(appLanguageProvider))
+              : AppLocalization.translate('map_view_interactive', ref.read(appLanguageProvider)),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_vehicle_provider.dart';
 
@@ -29,6 +30,7 @@ class _RiderVehicleManagementScreenState
     extends ConsumerState<RiderVehicleManagementScreen> {
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final vehicleState = ref.watch(riderVehicleProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
@@ -39,7 +41,7 @@ class _RiderVehicleManagementScreenState
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'My Vehicles',
+          AppLocalization.translate('my_vehicles', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -84,7 +86,7 @@ class _RiderVehicleManagementScreenState
                           height:
                               ResponsiveUtils.spacing(context, 12)),
                       Text(
-                        'No vehicles added yet',
+                        AppLocalization.translate('no_vehicles_added', lang),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize:
@@ -119,7 +121,7 @@ class _RiderVehicleManagementScreenState
                   onPressed: () => _showVehicleForm(context),
                   icon: const Icon(Icons.add),
                   label: Text(
-                    'Add Vehicle',
+                    AppLocalization.translate('add_vehicle', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize:
@@ -137,22 +139,23 @@ class _RiderVehicleManagementScreenState
   }
 
   void _confirmDelete(RiderVehicle vehicle) {
+    final lang = ref.read(appLanguageProvider);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(
-          'Remove Vehicle',
-          style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
+        title: Text(
+          AppLocalization.translate('remove_vehicle', lang),
+          style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
         ),
         content: Text(
-          'Are you sure you want to remove ${vehicle.makeModel} (${vehicle.plateNumber})?',
+          AppLocalization.translate('are_you_sure_remove_vehicle', lang).replaceAll('{{model}}', '${vehicle.makeModel} (${vehicle.plateNumber})'),
           style: const TextStyle(fontFamily: 'TT Fors'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(
-              'Cancel',
+              AppLocalization.translate('cancel', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 color: Colors.grey.shade700,
@@ -166,9 +169,9 @@ class _RiderVehicleManagementScreenState
                   .read(riderVehicleProvider.notifier)
                   .deleteVehicle(vehicle.id);
             },
-            child: const Text(
-              'Remove',
-              style: TextStyle(
+            child: Text(
+              AppLocalization.translate('remove', lang),
+              style: const TextStyle(
                 fontFamily: 'TT Fors',
                 color: Colors.red,
                 fontWeight: FontWeight.w600,
@@ -191,7 +194,7 @@ class _RiderVehicleManagementScreenState
   }
 }
 
-class _VehicleCard extends StatelessWidget {
+class _VehicleCard extends ConsumerWidget {
   final RiderVehicle vehicle;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -203,7 +206,8 @@ class _VehicleCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     return Container(
       margin: EdgeInsets.only(
           bottom: ResponsiveUtils.spacing(context, 10)),
@@ -254,7 +258,7 @@ class _VehicleCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          'Default',
+                          AppLocalization.translate('default_vehicle', lang),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize:
@@ -385,13 +389,14 @@ class _VehicleFormScreenState
 
     if (mounted) {
       setState(() => _isSaving = false);
+      final l = ref.read(appLanguageProvider);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               _isEditing
-                  ? 'Vehicle updated successfully'
-                  : 'Vehicle added successfully',
+                  ? AppLocalization.translate('vehicle_updated', l)
+                  : AppLocalization.translate('vehicle_added', l),
             ),
             backgroundColor: Colors.green,
           ),
@@ -399,8 +404,8 @@ class _VehicleFormScreenState
         Navigator.of(context).pop();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save vehicle'),
+          SnackBar(
+            content: Text(AppLocalization.translate('failed_save_vehicle', l)),
             backgroundColor: Colors.red,
           ),
         );
@@ -410,6 +415,7 @@ class _VehicleFormScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
@@ -423,7 +429,7 @@ class _VehicleFormScreenState
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          _isEditing ? 'Edit Vehicle' : 'Add Vehicle',
+          _isEditing ? AppLocalization.translate('edit_vehicle', lang) : AppLocalization.translate('add_vehicle', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -446,7 +452,7 @@ class _VehicleFormScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Vehicle Type',
+                AppLocalization.translate('vehicle_type', lang),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize:
@@ -514,15 +520,15 @@ class _VehicleFormScreenState
                       ResponsiveUtils.spacing(context, 16)),
               _buildField(
                 context,
-                label: 'Plate Number',
+                label: AppLocalization.translate('plate_number', lang),
                 controller: _plateController,
-                hint: 'e.g. ABC 1234',
+                hint: AppLocalization.translate('plate_number_hint', lang),
                 textCapitalization:
                     TextCapitalization.characters,
                 validator: (v) {
                   if (_selectedType != VehicleType.bicycle &&
                       (v == null || v.trim().isEmpty)) {
-                    return 'Plate number is required';
+                    return AppLocalization.translate('plate_number_required', lang);
                   }
                   return null;
                 },
@@ -532,12 +538,12 @@ class _VehicleFormScreenState
                       ResponsiveUtils.spacing(context, 16)),
               _buildField(
                 context,
-                label: 'Make & Model',
+                label: AppLocalization.translate('make_model', lang),
                 controller: _makeModelController,
-                hint: 'e.g. Honda Beat 2023',
+                hint: AppLocalization.translate('make_model_hint', lang),
                 validator: (v) =>
                     v == null || v.trim().isEmpty
-                        ? 'Make & model is required'
+                        ? AppLocalization.translate('make_model_required', lang)
                         : null,
               ),
               SizedBox(
@@ -545,12 +551,12 @@ class _VehicleFormScreenState
                       ResponsiveUtils.spacing(context, 16)),
               _buildField(
                 context,
-                label: 'Color',
+                label: AppLocalization.translate('color', lang),
                 controller: _colorController,
-                hint: 'e.g. Red',
+                hint: AppLocalization.translate('color_hint', lang),
                 validator: (v) =>
                     v == null || v.trim().isEmpty
-                        ? 'Color is required'
+                        ? AppLocalization.translate('color_required', lang)
                         : null,
               ),
               SizedBox(
@@ -580,8 +586,8 @@ class _VehicleFormScreenState
                         )
                       : Text(
                           _isEditing
-                              ? 'Save Changes'
-                              : 'Add Vehicle',
+                              ? AppLocalization.translate('save_changes', lang)
+                              : AppLocalization.translate('add_vehicle', lang),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(

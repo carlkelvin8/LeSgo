@@ -102,6 +102,7 @@ class TrackingApi {
     required double originLng,
     required double destLat,
     required double destLng,
+    String travelMode = 'two_wheeler',
   }) async {
     try {
       final res = await _dio.get('/v1/tracking/route', queryParameters: {
@@ -109,6 +110,7 @@ class TrackingApi {
         'origin_lng': originLng,
         'dest_lat': destLat,
         'dest_lng': destLng,
+        'travel_mode': travelMode,
       });
       return res.data as Map<String, dynamic>;
     } catch (e) {

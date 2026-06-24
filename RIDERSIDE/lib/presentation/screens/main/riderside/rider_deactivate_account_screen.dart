@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
@@ -32,10 +33,11 @@ class _RiderDeactivateAccountScreenState
   }
 
   Future<void> _deactivate() async {
+    final lang = ref.read(appLanguageProvider);
     if (!_confirmed) {
       SnackBarUtils.showError(
         context,
-        'Please confirm that you understand this action.',
+        AppLocalization.translate('confirm_understand_action', lang),
       );
       return;
     }
@@ -44,20 +46,17 @@ class _RiderDeactivateAccountScreenState
     final proceed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Deactivate account?'),
-        content: const Text(
-          'Your account will be deactivated and you will be signed out. '
-          'Contact support if you need to reactivate later.',
-        ),
+        title: Text(AppLocalization.translate('deactivate_account_question', lang)),
+        content: Text(AppLocalization.translate('deactivate_dialog_message', lang)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalization.translate('cancel', lang)),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Deactivate'),
+            child: Text(AppLocalization.translate('deactivate', lang)),
           ),
         ],
       ),
@@ -75,7 +74,7 @@ class _RiderDeactivateAccountScreenState
       final target = await ref.read(riderAuthProvider.notifier).logout(ref);
 
       if (!mounted) return;
-      SnackBarUtils.showSuccess(context, 'Your account has been deactivated.');
+      SnackBarUtils.showSuccess(context, AppLocalization.translate('account_deactivated', lang));
       navigateToLoginAfterLogout(context, ref, target: target);
     } catch (e) {
       if (!mounted) return;
@@ -83,7 +82,7 @@ class _RiderDeactivateAccountScreenState
         context,
         ApiService.extractError(e).isNotEmpty
             ? ApiService.extractError(e)
-            : 'Could not deactivate account. Check your password.',
+            : AppLocalization.translate('could_not_deactivate', lang),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -92,10 +91,11 @@ class _RiderDeactivateAccountScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Deactivate Account'),
+        title: Text(AppLocalization.translate('deactivate_account', lang)),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
       ),
@@ -119,8 +119,7 @@ class _RiderDeactivateAccountScreenState
                   border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
                 ),
                 child: Text(
-                  'Deactivating your account signs you out and limits access to '
-                  'LeSGo rider/merchant services. Contact support to request reactivation.',
+                  AppLocalization.translate('deactivating_signs_out', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -135,12 +134,12 @@ class _RiderDeactivateAccountScreenState
                 obscureText: _obscurePassword,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Password is required';
+                    return AppLocalization.translate('password_required', lang);
                   }
                   return null;
                 },
                 decoration: InputDecoration(
-                  labelText: 'Confirm password',
+                  labelText: AppLocalization.translate('confirm_password', lang),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -162,7 +161,7 @@ class _RiderDeactivateAccountScreenState
                 controller: _reasonController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Reason (optional)',
+                  labelText: AppLocalization.translate('reason_optional', lang),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -179,7 +178,7 @@ class _RiderDeactivateAccountScreenState
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
                 title: Text(
-                  'I understand my account will be deactivated.',
+                  AppLocalization.translate('i_understand_deactivate', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -202,7 +201,7 @@ class _RiderDeactivateAccountScreenState
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Deactivate account'),
+                    : Text(AppLocalization.translate('deactivate_account', lang)),
               ),
             ],
           ),

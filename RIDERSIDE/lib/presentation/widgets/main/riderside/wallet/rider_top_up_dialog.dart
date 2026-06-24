@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/lespay_topup_fee.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
@@ -30,13 +31,14 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
   }
 
   String? _validateAmount(String? value) {
+    final lang = ref.read(appLanguageProvider);
     if (value == null || value.trim().isEmpty) {
-      return 'Please enter an amount';
+      return AppLocalization.translate('please_enter_amount', lang);
     }
     final amount = double.tryParse(value.trim());
-    if (amount == null) return 'Please enter a valid number';
-    if (amount < 10) return 'Minimum amount is PHP 10.00';
-    if (amount > 100000) return 'Maximum amount is PHP 100,000.00';
+    if (amount == null) return AppLocalization.translate('please_enter_valid_number', lang);
+    if (amount < 10) return AppLocalization.translate('minimum_amount_10', lang);
+    if (amount > 100000) return AppLocalization.translate('maximum_amount_100k', lang);
     return null;
   }
 
@@ -67,9 +69,10 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
     if (paid == true) {
       await ref.read(riderWalletProvider.notifier).loadWallet();
       if (widget.parentContext.mounted) {
+        final lang = ref.read(appLanguageProvider);
         SnackBarUtils.showSuccess(
           widget.parentContext,
-          'PHP ${amount.toStringAsFixed(2)} added to your LesPay!',
+          AppLocalization.translate('amount_added_lespay', lang).replaceAll('{{amount}}', amount.toStringAsFixed(2)),
         );
       }
     }
@@ -77,12 +80,13 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final walletState = ref.watch(riderWalletProvider);
     final pricing = LespayTopupFee.calculate(_parsedAmount);
 
     return AlertDialog(
       title: Text(
-        'Top Up (3% fee)',
+        AppLocalization.translate('top_up_fee', lang),
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -96,7 +100,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Pay with GCash, Maya, or card via our secure checkout.',
+              AppLocalization.translate('pay_with_gcash_maya', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -109,8 +113,8 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
               onChanged: (_) => setState(() {}),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Amount to add to LesPay',
+              decoration: InputDecoration(
+                labelText: AppLocalization.translate('amount_to_add', lang),
                 prefixText: 'PHP ',
                 border: OutlineInputBorder(),
               ),
@@ -133,7 +137,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
             if (_parsedAmount >= 10) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 10)),
               Text(
-                'Fee (3%): PHP ${pricing.feeAmount.toStringAsFixed(2)}',
+                AppLocalization.translate('fee_percent', lang).replaceAll('{{amount}}', pricing.feeAmount.toStringAsFixed(2)),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -141,7 +145,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
                 ),
               ),
               Text(
-                'Total to pay: PHP ${pricing.totalCharge.toStringAsFixed(2)}',
+                AppLocalization.translate('total_to_pay_amount', lang).replaceAll('{{amount}}', pricing.totalCharge.toStringAsFixed(2)),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -178,7 +182,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
           onPressed: walletState.isProcessingTopUp
               ? null
               : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.translate('cancel', lang)),
         ),
         ElevatedButton(
           onPressed: walletState.isProcessingTopUp ? null : _startTopUp,
@@ -195,7 +199,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('Continue to payment'),
+              : Text(AppLocalization.translate('continue_to_payment', lang)),
         ),
       ],
     );

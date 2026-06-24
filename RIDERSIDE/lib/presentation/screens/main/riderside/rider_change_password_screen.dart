@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/token_refresh_service.dart';
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/utils/validators/login_validator.dart';
@@ -35,6 +36,7 @@ class _RiderChangePasswordScreenState
   }
 
   Future<void> _submit() async {
+    final lang = ref.read(appLanguageProvider);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
@@ -48,7 +50,7 @@ class _RiderChangePasswordScreenState
       await TokenRefreshService.instance.persistAuthTokens(response);
 
       if (!mounted) return;
-      SnackBarUtils.showSuccess(context, 'Password updated successfully.');
+      SnackBarUtils.showSuccess(context, AppLocalization.translate('password_updated', lang));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
@@ -56,7 +58,7 @@ class _RiderChangePasswordScreenState
         context,
         ApiService.extractError(e).isNotEmpty
             ? ApiService.extractError(e)
-            : 'Could not change password. Check your current password.',
+            : AppLocalization.translate('could_not_change_password', lang),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -65,10 +67,11 @@ class _RiderChangePasswordScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Change Password'),
+        title: Text(AppLocalization.translate('change_password', lang)),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
       ),
@@ -85,7 +88,7 @@ class _RiderChangePasswordScreenState
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Enter your current password, then choose a new one.',
+                AppLocalization.translate('change_password_instructions', lang),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -95,7 +98,7 @@ class _RiderChangePasswordScreenState
               SizedBox(height: ResponsiveUtils.spacing(context, 24)),
               _passwordField(
                 controller: _currentController,
-                label: 'Current password',
+                label: AppLocalization.translate('current_password', lang),
                 obscure: _obscureCurrent,
                 onToggle: () =>
                     setState(() => _obscureCurrent = !_obscureCurrent),
@@ -103,7 +106,7 @@ class _RiderChangePasswordScreenState
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
               _passwordField(
                 controller: _newController,
-                label: 'New password',
+                label: AppLocalization.translate('new_password', lang),
                 obscure: _obscureNew,
                 onToggle: () => setState(() => _obscureNew = !_obscureNew),
                 validator: LoginValidator.strongPassword,
@@ -111,13 +114,13 @@ class _RiderChangePasswordScreenState
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
               _passwordField(
                 controller: _confirmController,
-                label: 'Confirm new password',
+                label: AppLocalization.translate('confirm_new_password', lang),
                 obscure: _obscureConfirm,
                 onToggle: () =>
                     setState(() => _obscureConfirm = !_obscureConfirm),
                 validator: (value) {
                   if (value != _newController.text) {
-                    return 'Passwords do not match';
+                    return AppLocalization.translate('passwords_do_not_match', lang);
                   }
                   return LoginValidator.strongPassword(value);
                 },
@@ -138,7 +141,7 @@ class _RiderChangePasswordScreenState
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Update password'),
+                    : Text(AppLocalization.translate('change_password', lang)),
               ),
             ],
           ),

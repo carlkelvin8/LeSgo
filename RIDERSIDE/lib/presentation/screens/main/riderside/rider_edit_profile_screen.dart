@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../provider/main/riderside/rider_profile_provider.dart';
@@ -69,8 +70,9 @@ class _RiderEditProfileScreenState
     if (code.isEmpty) return;
     await Clipboard.setData(ClipboardData(text: code));
     if (mounted) {
+      final lang = ref.read(appLanguageProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Referral code copied')),
+        SnackBar(content: Text(AppLocalization.translate('referral_code_copied', lang))),
       );
     }
   }
@@ -110,9 +112,10 @@ class _RiderEditProfileScreenState
       await ref.read(riderProfileProvider.notifier).loadProfile();
 
       if (mounted) {
+        final lang = ref.read(appLanguageProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
+          SnackBar(
+            content: Text(AppLocalization.translate('profile_updated', lang)),
             backgroundColor: Colors.green,
           ),
         );
@@ -120,9 +123,13 @@ class _RiderEditProfileScreenState
       }
     } catch (e) {
       if (mounted) {
+        final lang = ref.read(appLanguageProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update: ${ApiService.extractError(e)}'),
+            content: Text(
+              AppLocalization.translate('failed_to_update_profile', lang)
+                  .replaceAll('{{error}}', ApiService.extractError(e)),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -134,6 +141,7 @@ class _RiderEditProfileScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final profile = ref.watch(riderProfileProvider);
     _hydrateFromProfile(profile);
     final hp = ResponsiveUtils.horizontalPadding(context);
@@ -148,7 +156,7 @@ class _RiderEditProfileScreenState
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Edit Profile',
+          AppLocalization.translate('edit_profile', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -171,7 +179,7 @@ class _RiderEditProfileScreenState
                     ),
                   )
                 : Text(
-                    'Save',
+                    AppLocalization.translate('save', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -202,17 +210,17 @@ class _RiderEditProfileScreenState
                   children: [
                     _buildField(
                       context,
-                      label: 'Full Name',
+                      label: AppLocalization.translate('full_name', lang),
                       controller: _nameController,
-                      hint: 'Enter your full name',
+                      hint: AppLocalization.translate('enter_full_name', lang),
                       validator: (v) => v == null || v.trim().isEmpty
-                          ? 'Name is required'
+                          ? AppLocalization.translate('name_required', lang)
                           : null,
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                     _buildField(
                       context,
-                      label: 'Contact Number',
+                      label: AppLocalization.translate('contact_number', lang),
                       controller: _phoneController,
                       hint: '+639XXXXXXXXX',
                       keyboardType: TextInputType.phone,
@@ -220,39 +228,39 @@ class _RiderEditProfileScreenState
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                     _buildField(
                       context,
-                      label: 'Address',
+                      label: AppLocalization.translate('address', lang),
                       controller: _addressController,
-                      hint: 'Enter your address',
+                      hint: AppLocalization.translate('enter_address', lang),
                       maxLines: 2,
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                     _buildField(
                       context,
-                      label: 'Vehicle Type',
+                      label: AppLocalization.translate('vehicle_type', lang),
                       controller: _vehicleController,
                       hint: 'e.g. Motorcycle, Bicycle',
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                     _buildField(
                       context,
-                      label: 'Plate Number',
+                      label: AppLocalization.translate('plate_number', lang),
                       controller: _plateController,
-                      hint: 'e.g. ABC 1234',
+                      hint: AppLocalization.translate('plate_number_hint', lang),
                       textCapitalization: TextCapitalization.characters,
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                     _buildField(
                       context,
-                      label: 'Referral Code',
+                      label: AppLocalization.translate('referral_code', lang),
                       controller: _referralController,
-                      hint: 'Loading referral code…',
+                      hint: AppLocalization.translate('loading_referral_code', lang),
                       readOnly: true,
                       suffix: IconButton(
                         onPressed: _referralController.text.trim().isEmpty
                             ? null
                             : _copyReferralCode,
                         icon: const Icon(Icons.copy, color: Color(0xFF5F2D82)),
-                        tooltip: 'Copy referral code',
+                        tooltip: AppLocalization.translate('copy_referral_code', lang),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 40)),
@@ -274,7 +282,7 @@ class _RiderEditProfileScreenState
                                     Colors.white),
                               )
                             : Text(
-                                'Save Changes',
+                                AppLocalization.translate('save_changes', lang),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize:

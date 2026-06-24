@@ -133,11 +133,11 @@ class RiderVehicleNotifier extends StateNotifier<RiderVehicleState> {
 
       state = state.copyWith(vehicles: vehicles, isLoading: false);
     } catch (e) {
-      AppLogger.error('Failed to load vehicles, using fallback', e);
+      AppLogger.error('Failed to load vehicles', e);
       state = state.copyWith(
-        vehicles: _mockVehicles(),
+        vehicles: const [],
         isLoading: false,
-        error: null,
+        error: ApiService.extractError(e),
       );
     }
   }
@@ -149,11 +149,8 @@ class RiderVehicleNotifier extends StateNotifier<RiderVehicleState> {
       return true;
     } catch (e) {
       AppLogger.error('Failed to add vehicle', e);
-      state = state.copyWith(
-        vehicles: [...state.vehicles, vehicle],
-        error: null,
-      );
-      return true;
+      state = state.copyWith(error: ApiService.extractError(e));
+      return false;
     }
   }
 
@@ -164,11 +161,8 @@ class RiderVehicleNotifier extends StateNotifier<RiderVehicleState> {
       return true;
     } catch (e) {
       AppLogger.error('Failed to update vehicle', e);
-      final vehicles = state.vehicles.map((v) {
-        return v.id == id ? updated : v;
-      }).toList();
-      state = state.copyWith(vehicles: vehicles);
-      return true;
+      state = state.copyWith(error: ApiService.extractError(e));
+      return false;
     }
   }
 
@@ -179,10 +173,8 @@ class RiderVehicleNotifier extends StateNotifier<RiderVehicleState> {
       return true;
     } catch (e) {
       AppLogger.error('Failed to delete vehicle', e);
-      state = state.copyWith(
-        vehicles: state.vehicles.where((v) => v.id != id).toList(),
-      );
-      return true;
+      state = state.copyWith(error: ApiService.extractError(e));
+      return false;
     }
   }
 }
@@ -191,23 +183,3 @@ final riderVehicleProvider =
     StateNotifierProvider<RiderVehicleNotifier, RiderVehicleState>(
   (ref) => RiderVehicleNotifier(),
 );
-
-List<RiderVehicle> _mockVehicles() {
-  return [
-    const RiderVehicle(
-      id: 'v1',
-      type: VehicleType.motorcycle,
-      plateNumber: 'ABC 1234',
-      makeModel: 'Honda Beat 2023',
-      color: 'Red',
-      isDefault: true,
-    ),
-    const RiderVehicle(
-      id: 'v2',
-      type: VehicleType.bicycle,
-      plateNumber: 'N/A',
-      makeModel: 'Mountain Bike Pro',
-      color: 'Blue',
-    ),
-  ];
-}

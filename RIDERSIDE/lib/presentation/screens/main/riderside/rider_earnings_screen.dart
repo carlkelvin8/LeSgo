@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/receipt_generator.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/rider_earnings_utils.dart';
@@ -42,6 +43,7 @@ class RiderEarningsScreen extends ConsumerWidget {
     final period = ref.watch(riderEarningsPeriodProvider);
     final earningsAsync = ref.watch(riderEarningsProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
+    final lang = ref.watch(appLanguageProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -50,7 +52,7 @@ class RiderEarningsScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'My Earnings',
+          AppLocalization.translate('earnings', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -65,7 +67,7 @@ class RiderEarningsScreen extends ConsumerWidget {
             onPressed: earningsAsync is AsyncData
                 ? () => _shareEarnings(context, earningsAsync.value!)
                 : null,
-            tooltip: 'Share Earnings Report',
+            tooltip: AppLocalization.translate('share_earnings_report', lang),
           ),
         ],
       ),

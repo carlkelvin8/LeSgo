@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/app_localization.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../widgets/widgets.dart';
@@ -48,6 +49,7 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final isOnDuty = ref.watch(riderDutyProvider);
 
     return Column(
@@ -66,7 +68,7 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
                       Expanded(
                         child: _buildViewToggleButton(
                           icon: Icons.map,
-                          label: 'Map View',
+                          label: AppLocalization.translate('map_view', lang),
                           isSelected: _showMapView,
                           onTap: () => setState(() => _showMapView = true),
                         ),
@@ -75,7 +77,7 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
                       Expanded(
                         child: _buildViewToggleButton(
                           icon: Icons.list,
-                          label: 'List View',
+                          label: AppLocalization.translate('list_view', lang),
                           isSelected: !_showMapView,
                           onTap: () => setState(() => _showMapView = false),
                         ),

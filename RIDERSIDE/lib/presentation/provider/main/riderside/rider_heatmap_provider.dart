@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../core/utils/rider_route_utils.dart';
+import '../../../../domain/models/rider_order.dart';
+
 class RiderHeatmapState {
   final bool showHeatmap;
   final List<DemandZone> zones;
@@ -26,7 +29,9 @@ class RiderHeatmapState {
               ? Colors.orange
               : Colors.yellow;
       return Circle(
-        circleId: CircleId('demand_${zone.center.latitude}_${zone.center.longitude}'),
+        circleId: CircleId(
+          'demand_${zone.center.latitude}_${zone.center.longitude}',
+        ),
         center: zone.center,
         radius: zone.radius,
         fillColor: color.withValues(alpha: 0.15),
@@ -67,39 +72,33 @@ class RiderHeatmapNotifier extends StateNotifier<RiderHeatmapState> {
     state = state.copyWith(zones: zones);
   }
 
-  List<DemandZone> getMockZones(LatLng center) {
-    return [
-      DemandZone(
-        center: LatLng(center.latitude + 0.01, center.longitude + 0.01),
-        radius: 800,
-        intensity: 0.9,
-        label: 'High demand',
-      ),
-      DemandZone(
-        center: LatLng(center.latitude - 0.008, center.longitude + 0.015),
-        radius: 600,
-        intensity: 0.7,
-        label: 'Medium demand',
-      ),
-      DemandZone(
-        center: LatLng(center.latitude + 0.015, center.longitude - 0.01),
-        radius: 500,
-        intensity: 0.5,
-        label: 'Low demand',
-      ),
-      DemandZone(
-        center: LatLng(center.latitude - 0.012, center.longitude - 0.008),
-        radius: 700,
-        intensity: 0.8,
-        label: 'High demand',
-      ),
-      DemandZone(
-        center: LatLng(center.latitude + 0.005, center.longitude - 0.015),
-        radius: 400,
-        intensity: 0.3,
-        label: 'Low demand',
-      ),
-    ];
-  }
+  /// Builds demand zones from real available order pickup locations.
+  static List<DemandZone> zonesFromOrders(List<RiderOrder> orders) {
+    final validOrders = orders
+        .where(
+          (order) => RiderRouteUtils.hasValidCoordinates(
+            order.pickupLat,
+            order.pickupLng,
+          ),
+        )
+        .toList();
 
+    if (validOrders.isEmpty) return const [];
+
+    final maxEarnings = validOrders
+        .map((order) => order.displayEarnings)
+        .fold<double>(0, (max, value) => value > max ? value : max);
+
+    return validOrders.map((order) {
+      final intensity = maxEarnings > 0
+          ? (order.displayEarnings / maxEarnings).clamp(0.35, 1.0)
+          : 0.5;
+      return DemandZone(
+        center: LatLng(order.pickupLat, order.pickupLng),
+        radius: 450 + (order.distanceKm.clamp(0.5, 8) * 40),
+        intensity: intensity,
+        label: 'Order #${order.id}',
+      );
+    }).toList();
+  }
 }

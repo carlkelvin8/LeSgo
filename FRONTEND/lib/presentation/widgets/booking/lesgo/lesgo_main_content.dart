@@ -5,7 +5,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesgo_location_provider.dart';
 import '../../../provider/main/booking/lesgo_provider.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/voucher_service_utils.dart';
 import '../../widgets.dart';
+import '../leseat/checkout/voucher_bottom_sheet.dart';
 
 class LesgoMainContent extends ConsumerWidget {
   final DraggableScrollableController sheetController;
@@ -40,6 +42,12 @@ class LesgoMainContent extends ConsumerWidget {
     final paymentMethod = ref.watch(
       lesgoProvider.select((s) => s.paymentMethod),
     );
+    final voucherCode = ref.watch(
+      lesgoProvider.select((s) => s.voucherCode),
+    );
+    final canApplyVoucher = ref.watch(lesgoLocationProvider.select(
+      (s) => s.pickupLocation != null && s.destinationLocation != null,
+    ));
     final selectingDestination = ref.watch(
       lesgoProvider.select((s) => s.selectingDestination),
     );
@@ -47,6 +55,25 @@ class LesgoMainContent extends ConsumerWidget {
       lesgoLocationProvider.select((s) => s.pickupAddress),
     );
     final notifier = ref.read(lesgoProvider.notifier);
+
+    Future<void> showVoucherPicker(BuildContext context) async {
+      final code = await showVoucherBottomSheet(
+        context,
+        serviceId: BookingServiceIds.lesgo,
+        title: 'LesGo Vouchers',
+      );
+      if (code == null || !context.mounted) return;
+
+      final error = await notifier.applyVoucher(code);
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error ?? 'LesGo voucher applied'),
+          backgroundColor: error != null ? Colors.red : Colors.green,
+        ),
+      );
+    }
 
     // Handle post-frame callbacks
     if (shouldCollapse && !isFullscreen) {
@@ -94,6 +121,10 @@ class LesgoMainContent extends ConsumerWidget {
                   }
                 },
                 onBook: () => notifier.handleBook(context),
+                appliedVoucher: voucherCode,
+                voucherEnabled: canApplyVoucher,
+                onApplyVoucher: () => showVoucherPicker(context),
+                onRemoveVoucher: () => notifier.removeVoucher(),
                 itemLocationController: itemLocationController,
                 itemWeightController: itemWeightController,
                 onItemLocationChanged: onItemLocationChanged,

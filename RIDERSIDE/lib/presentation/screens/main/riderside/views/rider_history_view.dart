@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/app_localization.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_history_provider.dart';
 import '../../../../widgets/widgets.dart';
@@ -10,6 +11,7 @@ class RiderHistoryView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(appLanguageProvider);
     final state = ref.watch(riderHistoryProvider);
 
     return Column(
@@ -79,7 +81,7 @@ class RiderHistoryView extends ConsumerWidget {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF5F2D82),
                             ),
-                            child: const Text('Retry'),
+                            child: Text(AppLocalization.translate('retry', lang)),
                           ),
                         ],
                       ),

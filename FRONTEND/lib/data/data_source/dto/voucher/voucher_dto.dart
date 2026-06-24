@@ -19,6 +19,14 @@ double? _parseDoubleNullable(dynamic value) {
   return null;
 }
 
+int? _parseIntNullable(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
 bool _parseBool(dynamic value, [bool fallback = false]) {
   if (value == null) return fallback;
   if (value is bool) return value;
@@ -42,6 +50,8 @@ class VoucherDto {
   final double minOrder;
   @JsonKey(name: 'expires_at')
   final String? expiresAt;
+  @JsonKey(name: 'service_id', fromJson: _parseIntNullable)
+  final int? serviceId;
   @JsonKey(fromJson: _parseBool)
   final bool eligible;
   @JsonKey(fromJson: _parseBool)
@@ -54,6 +64,7 @@ class VoucherDto {
     this.discountText,
     required this.minOrder,
     this.expiresAt,
+    this.serviceId,
     required this.eligible,
     this.claimed = false,
   });
