@@ -28,17 +28,17 @@ class BookingWorkflow {
     if (category == BookingCategory.lesRide) {
       switch (status) {
         case 'accepted':
-          return BookingStatus.onTheWay;
+          return BookingStatus.pending;
         case 'driver_arrived_at_pickup':
-          return BookingStatus.driverHasArrived;
+          return BookingStatus.forPickUp;
         case 'in_progress':
           return BookingStatus.inProgress;
         case 'picked_up':
-          return BookingStatus.onTheWayGoing;
+          return BookingStatus.forDelivery;
         case 'completed':
-          return BookingStatus.complete;
+          return BookingStatus.delivered;
         default:
-          return BookingStatus.onTheWay;
+          return BookingStatus.pending;
       }
     }
 
@@ -47,9 +47,10 @@ class BookingWorkflow {
         case 'pending':
           return BookingStatus.pending;
         case 'accepted':
+          return BookingStatus.pending;
         case 'driver_arrived_at_pickup':
         case 'in_progress':
-          return BookingStatus.cooking;
+          return BookingStatus.inProgress;
         case 'ready_for_pickup':
           return BookingStatus.forPickUp;
         case 'picked_up':
@@ -57,7 +58,7 @@ class BookingWorkflow {
         case 'completed':
           return BookingStatus.delivered;
         default:
-          return BookingStatus.cooking;
+          return BookingStatus.pending;
       }
     }
 
@@ -68,7 +69,7 @@ class BookingWorkflow {
         case 'accepted':
         case 'driver_arrived_at_pickup':
         case 'in_progress':
-          return BookingStatus.toBuy;
+          return BookingStatus.inProgress;
         case 'ready_for_pickup':
           return BookingStatus.forPickUp;
         case 'picked_up':
@@ -76,7 +77,7 @@ class BookingWorkflow {
         case 'completed':
           return BookingStatus.delivered;
         default:
-          return BookingStatus.toBuy;
+          return BookingStatus.pending;
       }
     }
 
@@ -153,8 +154,7 @@ class BookingWorkflow {
   }
 
   static bool isProcessingBookingStatus(BookingStatus status) {
-    return status != BookingStatus.complete &&
-        status != BookingStatus.delivered &&
+    return status.workflowStep != BookingStatus.delivered &&
         status != BookingStatus.cancelled;
   }
 
@@ -239,20 +239,11 @@ class BookingWorkflow {
   }
 
   static BookingStatus _pickedUpStatus(BookingCategory category) {
-    switch (category) {
-      case BookingCategory.lesEat:
-        return BookingStatus.forPickUp;
-      case BookingCategory.lesBuy:
-        return BookingStatus.forDelivery;
-      case BookingCategory.lesRide:
-        return BookingStatus.onTheWayGoing;
-    }
+    return BookingStatus.forDelivery;
   }
 
   static BookingStatus _completeStatus(BookingCategory category) {
-    return category == BookingCategory.lesRide
-        ? BookingStatus.complete
-        : BookingStatus.delivered;
+    return BookingStatus.delivered;
   }
 }
 

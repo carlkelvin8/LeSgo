@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/constants/routers/app_router.dart';
-import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_customer_service_chat_provider.dart';
 
 class RiderCustomerServiceChatScreen extends ConsumerStatefulWidget {
-  const RiderCustomerServiceChatScreen({super.key});
+  final bool requestAdminCallbackOnOpen;
+
+  const RiderCustomerServiceChatScreen({
+    super.key,
+    this.requestAdminCallbackOnOpen = false,
+  });
 
   @override
   ConsumerState<RiderCustomerServiceChatScreen> createState() =>
@@ -19,6 +22,17 @@ class _RiderCustomerServiceChatScreenState
     extends ConsumerState<RiderCustomerServiceChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.requestAdminCallbackOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(riderCustomerServiceChatProvider.notifier).requestAdminCallback();
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -53,7 +67,7 @@ class _RiderCustomerServiceChatScreenState
     ref.listen(riderCustomerServiceChatProvider, (_, __) => _scrollToBottom());
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
@@ -70,7 +84,7 @@ class _RiderCustomerServiceChatScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'LeSGo Partner Assistant',
+                  AppLocalization.translate('lesgo_rider_support', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -78,7 +92,7 @@ class _RiderCustomerServiceChatScreenState
                   ),
                 ),
                 Text(
-                  chatState.isConfigured ? 'AI Support' : 'Setup required',
+                  AppLocalization.translate('admin_support_chat_subtitle', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -94,8 +108,10 @@ class _RiderCustomerServiceChatScreenState
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
               switch (value) {
-                case 'human':
-                  AppRouter.push(context, MainRoutes.riderSupportTickets);
+                case 'callback':
+                  ref
+                      .read(riderCustomerServiceChatProvider.notifier)
+                      .requestAdminCallback();
                   break;
                 case 'clear':
                   ref.read(riderCustomerServiceChatProvider.notifier).clearChat();
@@ -104,8 +120,8 @@ class _RiderCustomerServiceChatScreenState
             },
             itemBuilder: (context) => [
               PopupMenuItem(
-                value: 'human',
-                child: Text(AppLocalization.translate('talk_to_human_support', lang)),
+                value: 'callback',
+                child: Text(AppLocalization.translate('call_admin_support', lang)),
               ),
               PopupMenuItem(
                 value: 'clear',

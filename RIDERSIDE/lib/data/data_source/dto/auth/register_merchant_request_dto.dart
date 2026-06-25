@@ -16,6 +16,8 @@ class RegisterMerchantRequestDto {
   final String? address;
   @JsonKey(name: 'zip_code')
   final String? zipCode;
+  final double? latitude;
+  final double? longitude;
   @JsonKey(name: 'terms_accepted')
   final bool termsAccepted;
   @JsonKey(name: 'privacy_accepted')
@@ -43,6 +45,8 @@ class RegisterMerchantRequestDto {
     required this.restaurantName,
     this.address,
     this.zipCode,
+    this.latitude,
+    this.longitude,
     this.termsAccepted = true,
     this.privacyAccepted = true,
     this.selfiePath,

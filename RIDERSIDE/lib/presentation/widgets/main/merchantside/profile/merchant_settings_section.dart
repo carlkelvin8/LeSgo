@@ -23,8 +23,8 @@ class MerchantSettingsSection extends StatelessWidget {
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
         _SettingsTile(
           icon: Icons.support_agent_outlined,
-          label: 'Support tickets',
-          route: MainRoutes.merchantSupportTickets,
+          label: 'Admin support chat',
+          route: MainRoutes.riderCustomerServiceChat,
         ),
         _SettingsTile(
           icon: Icons.security,

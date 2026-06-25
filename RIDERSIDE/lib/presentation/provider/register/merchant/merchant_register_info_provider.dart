@@ -136,6 +136,13 @@ class MerchantRegisterInfoNotifier
     state = state.copyWith(info: state.info.copyWith(zipCode: value));
   }
 
+  void updateLocation(double latitude, double longitude) {
+    state = state.copyWith(
+      info: state.info.copyWith(latitude: latitude, longitude: longitude),
+      clearError: true,
+    );
+  }
+
   void updatePassword(String value) {
     state = state.copyWith(info: state.info.copyWith(password: value));
   }
@@ -287,7 +294,9 @@ class MerchantRegisterInfoNotifier
     // Validate using entity logic
     if (!state.info.isValid) {
       state = state.copyWith(
-        errorMessage: 'Please fill in all required fields correctly.',
+        errorMessage: !state.info.hasPinLocation
+            ? 'Please pin your restaurant location on the map.'
+            : 'Please fill in all required fields correctly.',
       );
       return;
     }
@@ -317,6 +326,8 @@ class MerchantRegisterInfoNotifier
         restaurantName: state.info.restaurantName,
         address: state.info.address,
         zipCode: state.info.zipCode,
+        latitude: state.info.latitude,
+        longitude: state.info.longitude,
         termsAccepted: true,
         privacyAccepted: true,
       );

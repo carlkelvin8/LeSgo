@@ -14,7 +14,7 @@ import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/services/notification_navigation_service.dart';
 import 'views/merchant_book_view.dart';
-import 'views/merchant_mission_view.dart';
+import 'views/merchant_lespay_view.dart';
 import 'views/merchant_menu_view.dart';
 import 'views/merchant_orders_view.dart';
 import 'views/merchant_profile_view.dart';
@@ -105,7 +105,7 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
     });
 
     final currentNav = ref.watch(merchantNavProvider);
-    final isMission = currentNav == MerchantNavType.mission;
+    final isLespay = currentNav == MerchantNavType.lespay;
     final showMenuFab = currentNav == MerchantNavType.menu;
 
     ref.listen<MerchantNavType>(merchantNavProvider, (previous, next) {
@@ -118,8 +118,8 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
       child: MerchantPrepTimerSync(
       child: Scaffold(
       backgroundColor: Colors.white,
-      body: isMission
-          ? const MerchantMissionView()
+      body: isLespay
+          ? const MerchantLespayView()
           : SafeArea(
               child: Column(
                 children: [
@@ -215,8 +215,8 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
         return 'Profile';
       case MerchantNavType.menu:
         return 'Menu';
-      case MerchantNavType.mission:
-        return 'Mission';
+      case MerchantNavType.lespay:
+        return 'LeSpay';
     }
   }
 }

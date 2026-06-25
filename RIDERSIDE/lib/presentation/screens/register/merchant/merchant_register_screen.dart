@@ -157,6 +157,11 @@ class _MerchantRegisterScreenState
               zipCodeController: _zipCodeController,
               passwordController: _passwordController,
               confirmPasswordController: _confirmPasswordController,
+              latitude: state.info.latitude,
+              longitude: state.info.longitude,
+              showPinError:
+                  state.hasAttemptedSubmit && !state.info.hasPinLocation,
+              onLocationChanged: controller.updateLocation,
             ),
 
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),

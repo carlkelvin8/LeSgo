@@ -108,7 +108,9 @@ class RiderMoreView extends ConsumerWidget {
           label: AppLocalization.translate('missions', lang),
           subtitle: 'Complete missions and earn rewards',
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const RiderMissionView()),
+            MaterialPageRoute(
+              builder: (_) => const RiderMissionView(includeBottomNavPadding: false),
+            ),
           ),
         ),
         _MoreTile(
@@ -162,8 +164,8 @@ class RiderMoreView extends ConsumerWidget {
         _MoreTile(
           icon: Icons.support_agent_outlined,
           label: AppLocalization.translate('support_tickets', lang),
-          subtitle: 'Contact LeSGo support',
-          onTap: () => AppRouter.push(context, MainRoutes.riderSupportTickets),
+          subtitle: 'Chat with LeSgo admin support',
+          onTap: () => AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
         ),
         _MoreTile(
           icon: Icons.emergency_outlined,

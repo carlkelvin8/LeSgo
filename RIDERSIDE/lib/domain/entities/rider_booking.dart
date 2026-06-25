@@ -35,32 +35,51 @@ enum BookingStatus {
 }
 
 extension BookingStatusX on BookingStatus {
+  /// Unified rider-facing labels for the order workflow.
   String get label {
     switch (this) {
       case BookingStatus.pending:
-        return 'Pending';
-      case BookingStatus.cooking:
-        return 'Cooking';
+      case BookingStatus.onTheWay:
+        return 'Order Booked';
       case BookingStatus.forPickUp:
-        return 'For Pick Up';
+      case BookingStatus.driverHasArrived:
+        return 'For Pickup';
+      case BookingStatus.cooking:
+      case BookingStatus.toBuy:
+      case BookingStatus.inProgress:
+        return 'Order in Progress';
       case BookingStatus.forDelivery:
+      case BookingStatus.onTheWayGoing:
         return 'For Delivery';
       case BookingStatus.delivered:
-        return 'Delivered';
-      case BookingStatus.toBuy:
-        return 'To Buy';
-      case BookingStatus.onTheWay:
-        return 'On The Way';
-      case BookingStatus.onTheWayGoing:
-        return 'On The Way (Going)';
-      case BookingStatus.driverHasArrived:
-        return 'Driver Arrived';
-      case BookingStatus.inProgress:
-        return 'In Progress';
       case BookingStatus.complete:
-        return 'Complete';
+        return 'Delivered';
       case BookingStatus.cancelled:
         return 'Cancelled';
+    }
+  }
+
+  /// Maps legacy/internal statuses to the unified workflow step.
+  BookingStatus get workflowStep {
+    switch (this) {
+      case BookingStatus.pending:
+      case BookingStatus.onTheWay:
+        return BookingStatus.pending;
+      case BookingStatus.forPickUp:
+      case BookingStatus.driverHasArrived:
+        return BookingStatus.forPickUp;
+      case BookingStatus.cooking:
+      case BookingStatus.toBuy:
+      case BookingStatus.inProgress:
+        return BookingStatus.inProgress;
+      case BookingStatus.forDelivery:
+      case BookingStatus.onTheWayGoing:
+        return BookingStatus.forDelivery;
+      case BookingStatus.delivered:
+      case BookingStatus.complete:
+        return BookingStatus.delivered;
+      case BookingStatus.cancelled:
+        return BookingStatus.cancelled;
     }
   }
 
@@ -83,33 +102,15 @@ extension BookingStatusX on BookingStatus {
 }
 
 extension BookingCategoryStatuses on BookingCategory {
-  List<BookingStatus> get statuses {
-    switch (this) {
-      case BookingCategory.lesEat:
-        return [
-          BookingStatus.pending,
-          BookingStatus.cooking,
-          BookingStatus.forPickUp,
-          BookingStatus.forDelivery,
-          BookingStatus.delivered,
-        ];
-      case BookingCategory.lesBuy:
-        return [
-          BookingStatus.pending,
-          BookingStatus.toBuy,
-          BookingStatus.forDelivery,
-          BookingStatus.delivered,
-        ];
-      case BookingCategory.lesRide:
-        return [
-          BookingStatus.onTheWay,
-          BookingStatus.onTheWayGoing,
-          BookingStatus.driverHasArrived,
-          BookingStatus.inProgress,
-          BookingStatus.complete,
-        ];
-    }
-  }
+  static const List<BookingStatus> unifiedWorkflow = [
+    BookingStatus.pending,
+    BookingStatus.forPickUp,
+    BookingStatus.inProgress,
+    BookingStatus.forDelivery,
+    BookingStatus.delivered,
+  ];
+
+  List<BookingStatus> get statuses => unifiedWorkflow;
 }
 
 class RiderBooking {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/merchant_staff_permissions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/merchant/partner_staff_dto.dart';
@@ -81,6 +82,15 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                   onChanged: (v) {
                     if (v != null) setDialogState(() => selectedRole = v);
                   },
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  MerchantStaffPermissions.descriptionForRole(selectedRole),
+                  style: const TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 12,
+                    color: Colors.black54,
+                  ),
                 ),
               ],
             ),

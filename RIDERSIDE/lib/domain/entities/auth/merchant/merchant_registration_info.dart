@@ -6,6 +6,8 @@ class MerchantRegistrationInfo {
   final String contactNumber;
   final String address;
   final String zipCode;
+  final double? latitude;
+  final double? longitude;
   final String password;
   final String confirmPassword;
 
@@ -17,9 +19,13 @@ class MerchantRegistrationInfo {
     required this.contactNumber,
     required this.address,
     required this.zipCode,
+    this.latitude,
+    this.longitude,
     required this.password,
     required this.confirmPassword,
   });
+
+  bool get hasPinLocation => latitude != null && longitude != null;
 
   bool get isValid =>
       restaurantName.isNotEmpty &&
@@ -29,6 +35,7 @@ class MerchantRegistrationInfo {
       contactNumber.isNotEmpty &&
       address.isNotEmpty &&
       zipCode.isNotEmpty &&
+      hasPinLocation &&
       password.isNotEmpty &&
       confirmPassword.isNotEmpty &&
       password == confirmPassword;
@@ -41,6 +48,8 @@ class MerchantRegistrationInfo {
     String? contactNumber,
     String? address,
     String? zipCode,
+    double? latitude,
+    double? longitude,
     String? password,
     String? confirmPassword,
   }) {
@@ -52,6 +61,8 @@ class MerchantRegistrationInfo {
       contactNumber: contactNumber ?? this.contactNumber,
       address: address ?? this.address,
       zipCode: zipCode ?? this.zipCode,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       password: password ?? this.password,
       confirmPassword: confirmPassword ?? this.confirmPassword,
     );

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../presentation/provider/main/merchantside/merchant_mission_provider.dart';
+import '../../presentation/provider/main/merchantside/merchant_wallet_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_nav_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_orders_provider.dart';
 import '../../presentation/provider/main/merchantside/merchant_reviews_provider.dart';
@@ -94,8 +94,8 @@ void refreshMerchantScreen(
       ref.invalidate(merchantMenuProvider);
       ref.invalidate(merchantMenuItemsProvider);
       break;
-    case MerchantNavType.mission:
-      ref.read(merchantMissionProvider.notifier).loadMissions(silent: silent);
+    case MerchantNavType.lespay:
+      ref.read(merchantWalletProvider.notifier).loadWallet(silent: silent);
       break;
   }
 }
@@ -117,5 +117,5 @@ void refreshAllMerchantScreens(WidgetRef ref, {bool silent = true}) {
   ref.invalidate(merchantMenuProvider);
   ref.invalidate(merchantMenuItemsProvider);
   ref.invalidate(merchantOrdersProvider);
-  ref.read(merchantMissionProvider.notifier).loadMissions(silent: silent);
+  ref.read(merchantWalletProvider.notifier).loadWallet(silent: silent);
 }

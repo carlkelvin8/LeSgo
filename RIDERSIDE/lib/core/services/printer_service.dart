@@ -16,8 +16,11 @@ class PrinterService {
   PrinterService._();
 
   BluetoothConnection? _activeConnection;
+  String? _connectedAddress;
 
   bool get isConnected => _activeConnection != null;
+
+  String? get connectedAddress => _connectedAddress;
 
   Future<List<PrinterDevice>> discoverPrinters() async {
     final bluetooth = FlutterBluetoothSerial.instance;
@@ -63,12 +66,27 @@ class PrinterService {
       await disconnect();
       final connection = await BluetoothConnection.toAddress(address);
       _activeConnection = connection;
-      connection.input?.listen(null);
+      _connectedAddress = address;
+      connection.input?.listen(
+        null,
+        onDone: () {
+          debugPrint('Printer Bluetooth connection closed');
+          _activeConnection = null;
+          _connectedAddress = null;
+        },
+      );
       return true;
     } catch (e) {
       debugPrint('Printer connect error: $e');
+      _activeConnection = null;
+      _connectedAddress = null;
       return false;
     }
+  }
+
+  Future<bool> ensureConnected(String address) async {
+    if (isConnected && _connectedAddress == address) return true;
+    return connect(address);
   }
 
   Future<void> disconnect() async {
@@ -76,6 +94,7 @@ class PrinterService {
       await _activeConnection?.close();
     } catch (_) {}
     _activeConnection = null;
+    _connectedAddress = null;
   }
 
   Future<bool> printBytes(List<int> bytes) async {
@@ -86,6 +105,8 @@ class PrinterService {
       return true;
     } catch (e) {
       debugPrint('Printer write error: $e');
+      _activeConnection = null;
+      _connectedAddress = null;
       return false;
     }
   }

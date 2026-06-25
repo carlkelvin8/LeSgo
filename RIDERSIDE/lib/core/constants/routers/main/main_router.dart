@@ -30,7 +30,6 @@ import '../../../../presentation/screens/main/merchantside/merchant_reviews_scre
 import '../../../../presentation/screens/main/merchantside/merchant_analytics_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_sales_report_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_staff_screen.dart';
-import '../../../../presentation/screens/main/merchantside/merchant_support_tickets_screen.dart';
 import '../../../../presentation/screens/main/merchantside/printer_settings_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_missions_screen.dart';
 import '../../../../domain/entities/rider_booking.dart';
@@ -43,7 +42,8 @@ class MainRouter {
     MainRoutes.riderChangePassword: (_) => const RiderChangePasswordScreen(),
     MainRoutes.riderDeactivateAccount: (_) => const RiderDeactivateAccountScreen(),
     MainRoutes.riderDeleteAccount: (_) => const RiderDeleteAccountScreen(),
-    MainRoutes.riderSupportTickets: (_) => const RiderSupportTicketsScreen(),
+    MainRoutes.riderSupportTickets: (_) =>
+        const RiderCustomerServiceChatScreen(),
     MainRoutes.riderNotifications: (_) => const RiderNotificationCenterScreen(),
     MainRoutes.riderNotificationSettings: (_) =>
         const RiderNotificationSettingsScreen(),
@@ -76,7 +76,7 @@ class MainRouter {
     MainRoutes.merchantReferral: (_) => const RiderReferralScreen(),
     MainRoutes.merchantSecurity: (_) => const RiderSecurityScreen(),
     MainRoutes.merchantSupportTickets: (_) =>
-        const MerchantSupportTicketsScreen(),
+        const RiderCustomerServiceChatScreen(),
     MainRoutes.merchantMissions: (_) => const MerchantMissionsScreen(),
     MainRoutes.merchantDeactivateAccount: (_) =>
         const RiderDeactivateAccountScreen(),

@@ -73,10 +73,16 @@ class PrinterSettingsScreen extends ConsumerWidget {
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            if (state.connectedAddress != null) ...[
+            if (state.hasSavedPrinter) ...[
               Row(
                 children: [
-                  const Icon(Icons.print, color: Color(0xFF5F2D82), size: 32),
+                  Icon(
+                    state.isLiveConnected ? Icons.print : Icons.print_outlined,
+                    color: state.isLiveConnected
+                        ? const Color(0xFF5F2D82)
+                        : Colors.orange.shade700,
+                    size: 32,
+                  ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 12)),
                   Expanded(
                     child: Column(
@@ -98,13 +104,69 @@ class PrinterSettingsScreen extends ConsumerWidget {
                             color: Colors.grey.shade600,
                           ),
                         ),
+                        if (state.isConnecting)
+                          Text(
+                            'Reconnecting...',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
+                              color: const Color(0xFF5F2D82),
+                            ),
+                          )
+                        else if (!state.isLiveConnected)
+                          Text(
+                            'Saved — not connected',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
+                              color: Colors.orange.shade800,
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                  Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+                  Icon(
+                    state.isLiveConnected
+                        ? Icons.check_circle
+                        : Icons.warning_amber_rounded,
+                    color: state.isLiveConnected
+                        ? Colors.green.shade600
+                        : Colors.orange.shade700,
+                    size: 20,
+                  ),
                 ],
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              if (!state.isLiveConnected && !state.isConnecting)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.bluetooth_connected, size: 18),
+                    label: const Text('Reconnect'),
+                    onPressed: () async {
+                      final ok = await ref
+                          .read(printerSettingsProvider.notifier)
+                          .reconnectSavedPrinter();
+                      if (context.mounted) {
+                        if (ok) {
+                          SnackBarUtils.showSuccess(context, 'Printer reconnected');
+                        } else {
+                          SnackBarUtils.showError(
+                            context,
+                            ref.read(printerSettingsProvider).lastError ??
+                                'Reconnect failed',
+                          );
+                        }
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF5F2D82),
+                      side: const BorderSide(color: Color(0xFF5F2D82)),
+                    ),
+                  ),
+                ),
+              if (!state.isLiveConnected && !state.isConnecting)
+                SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               Row(
                 children: [
                   Expanded(
@@ -218,7 +280,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
         ),
         value: state.isAutoPrintEnabled,
         activeThumbColor: const Color(0xFF5F2D82),
-        onChanged: state.connectedAddress == null
+        onChanged: state.hasSavedPrinter
             ? null
             : (v) {
                 ref.read(printerSettingsProvider.notifier).toggleAutoPrint(v);
@@ -309,7 +371,8 @@ class PrinterSettingsScreen extends ConsumerWidget {
     PrinterDevice device,
     PrinterSettingsState state,
   ) {
-    final isConnected = device.address == state.connectedAddress;
+    final isConnected =
+        device.address == state.connectedAddress && state.isLiveConnected;
 
     return ListTile(
       contentPadding: EdgeInsets.zero,

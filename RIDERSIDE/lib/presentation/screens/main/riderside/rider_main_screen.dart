@@ -160,7 +160,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: isFullBleed
             ? _buildBody(currentNav)
             : SafeArea(

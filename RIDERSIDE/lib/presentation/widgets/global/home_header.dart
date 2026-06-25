@@ -5,17 +5,21 @@ import '../../../core/utils/responsive_utils.dart';
 
 class HomeHeader extends ConsumerWidget {
   final bool showBackButton;
+  final VoidCallback? onBack;
   final Color backgroundColor;
   final Color logoColor;
   final Color borderColor;
+  final Color? backIconColor;
   final Widget? action;
 
   const HomeHeader({
     super.key,
     this.showBackButton = false,
+    this.onBack,
     this.backgroundColor = Colors.white,
     this.logoColor = const Color(0xFF5F2D82),
     this.borderColor = const Color(0xFFEEEEEE),
+    this.backIconColor,
     this.action,
   });
 
@@ -40,11 +44,11 @@ class HomeHeader extends ConsumerWidget {
                 : 0,
             child: showBackButton
                 ? GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: onBack ?? () => Navigator.pop(context),
                     child: Icon(
                       Icons.chevron_left_rounded,
                       size: ResponsiveUtils.imageHeight(context, 32),
-                      color: const Color(0xFF5F2D82),
+                      color: backIconColor ?? const Color(0xFF5F2D82),
                     ),
                   )
                 : null,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/merchant_order_alert_service.dart';
-import '../../../../core/services/printer_service.dart';
 import '../../../../core/utils/merchant_order_ops_utils.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
@@ -21,9 +20,32 @@ class MerchantNewOrderWatcher extends ConsumerStatefulWidget {
       _MerchantNewOrderWatcherState();
 }
 
-class _MerchantNewOrderWatcherState extends ConsumerState<MerchantNewOrderWatcher> {
+class _MerchantNewOrderWatcherState extends ConsumerState<MerchantNewOrderWatcher>
+    with WidgetsBindingObserver {
   final Set<int> _knownPendingIds = {};
   bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(printerSettingsProvider.notifier).reconnectSavedPrinter(silent: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(printerSettingsProvider.notifier).reconnectSavedPrinter(silent: true);
+    }
+  }
 
   void _handleOrders(List<OrderDto> orders) {
     final pendingOrders = orders
@@ -37,7 +59,10 @@ class _MerchantNewOrderWatcherState extends ConsumerState<MerchantNewOrderWatche
         final order = pendingOrders.firstWhere((item) => item.id == id);
         final orderRef = order.referenceNumber ?? '#${order.id}';
         final playSound = ref.read(soundEnabledProvider);
-        MerchantOrderAlertService.alertNewOrder(orderRef: orderRef, playSound: playSound);
+        MerchantOrderAlertService.alertNewOrder(
+          orderRef: orderRef,
+          playSound: playSound,
+        );
         _autoPrintOrder(order);
       }
     }
@@ -48,13 +73,9 @@ class _MerchantNewOrderWatcherState extends ConsumerState<MerchantNewOrderWatche
     _initialized = true;
   }
 
-  void _autoPrintOrder(OrderDto order) {
-    final printerState = ref.read(printerSettingsProvider);
-    if (!printerState.isAutoPrintEnabled) return;
-    if (printerState.connectedAddress == null) return;
-
+  Future<void> _autoPrintOrder(OrderDto order) async {
     final storeName = order.partner?.name ?? 'Store';
-    PrinterService().printOrder(order, storeName);
+    await ref.read(printerSettingsProvider.notifier).printOrder(order, storeName);
   }
 
   @override
@@ -63,6 +84,7 @@ class _MerchantNewOrderWatcherState extends ConsumerState<MerchantNewOrderWatche
       next.whenData(_handleOrders);
     });
 
+    ref.watch(printerSettingsProvider);
     ref.watch(merchantOrdersProvider);
 
     return widget.child;

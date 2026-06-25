@@ -100,18 +100,69 @@ class _LesgoAppState extends State<LesgoApp> {
   }
 
   ThemeData _darkTheme() {
+    const violet = Color(0xFF5F2D82);
+    const violetDark = Color(0xFF3D1F57);
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF5F2D82),
-        brightness: Brightness.dark,
-      ),
       fontFamily: 'TT Fors',
-      scaffoldBackgroundColor: const Color(0xFF121212),
+      scaffoldBackgroundColor: violetDark,
+      colorScheme: const ColorScheme.dark(
+        primary: violet,
+        onPrimary: Colors.white,
+        secondary: Color(0xFFB388FF),
+        onSecondary: Colors.white,
+        surface: violet,
+        onSurface: Colors.white,
+        onSurfaceVariant: Colors.white70,
+        outline: Colors.white24,
+      ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF1E1E1E),
-        iconTheme: IconThemeData(color: Color(0xFFB388FF)),
+        backgroundColor: violet,
+        foregroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          fontFamily: 'TT Fors',
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 18,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: violet,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      dividerTheme: const DividerThemeData(color: Colors.white24),
+      iconTheme: const IconThemeData(color: Colors.white),
+      listTileTheme: const ListTileThemeData(
+        iconColor: Colors.white,
+        textColor: Colors.white,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: violet,
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: violet,
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.white
+              : Colors.white70,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? const Color(0xFFB388FF)
+              : Colors.white24,
+        ),
       ),
     );
   }

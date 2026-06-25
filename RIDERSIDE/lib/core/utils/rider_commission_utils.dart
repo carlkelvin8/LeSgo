@@ -42,6 +42,20 @@ class RiderCommissionUtils {
     }
   }
 
+  static String profitShareLabel(String? packageTier) {
+    switch (normalizePackageTier(packageTier)) {
+      case 'advance':
+        return '80/20 profit share (you keep 80%)';
+      case 'pro':
+        return '90/10 profit share (you keep 90%)';
+      case 'employee':
+        return 'Fixed daily salary';
+      case 'basic':
+      default:
+        return '70/30 profit share (you keep 70%)';
+    }
+  }
+
   static double earningsFromShipping({
     required double shippingFee,
     double? driverShare,

@@ -79,6 +79,8 @@ class ApiConstants {
   // Driver earnings
   static const String driverMyEarnings = '/v1/drivers/me/earnings';
 
+  static const String walletTransferToRider = '/v1/wallets/my/transfer';
+
   // Support tickets
   static const String supportTickets = '/v1/support/tickets';
   static const String supportTicketStatistics = '/v1/support/tickets/statistics';

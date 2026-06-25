@@ -79,14 +79,9 @@ class RiderProfileSettingsSection extends ConsumerWidget {
             route: MainRoutes.riderNotificationSettings,
           ),
           _SettingsTile(
-            icon: Icons.smart_toy_outlined,
-            label: AppLocalization.translate('ai_support_chat', lang),
-            route: MainRoutes.riderCustomerServiceChat,
-          ),
-          _SettingsTile(
             icon: Icons.support_agent_outlined,
             label: AppLocalization.translate('support_tickets', lang),
-            route: MainRoutes.riderSupportTickets,
+            route: MainRoutes.riderCustomerServiceChat,
           ),
           _SettingsTile(
             icon: Icons.person_off_outlined,

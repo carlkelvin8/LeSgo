@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/constants/routers/app_router.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/services/mobile_config_service.dart';
 import '../../../../core/utils/app_localization.dart';
+import 'rider_customer_service_chat_screen.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
 class RiderSafetyScreen extends ConsumerStatefulWidget {
@@ -15,7 +18,6 @@ class RiderSafetyScreen extends ConsumerStatefulWidget {
 }
 
 class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
-  String _supportPhone = '+639171234567';
   String _emergencyNumber = '911';
   bool _loadingConfig = true;
 
@@ -29,7 +31,6 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
     await MobileConfigService.instance.load();
     if (!mounted) return;
     setState(() {
-      _supportPhone = MobileConfigService.instance.supportPhone;
       _emergencyNumber = MobileConfigService.instance.emergencyNumber;
       _loadingConfig = false;
     });
@@ -407,10 +408,27 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 20)),
                 _ActionTile(
-                  icon: Icons.support_agent,
-                  title: AppLocalization.translate('lesgo_rider_support', lang),
-                  subtitle: AppLocalization.translate('report_incidents', lang),
-                  onTap: () => _callNumber(_supportPhone),
+                  icon: Icons.chat_bubble_outline,
+                  title: AppLocalization.translate('chat_admin_support', lang),
+                  subtitle:
+                      AppLocalization.translate('admin_support_chat_subtitle', lang),
+                  onTap: () =>
+                      AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
+                ),
+                _ActionTile(
+                  icon: Icons.call_outlined,
+                  title: AppLocalization.translate('call_admin_support', lang),
+                  subtitle: AppLocalization.translate(
+                    'admin_call_request_subtitle',
+                    lang,
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const RiderCustomerServiceChatScreen(
+                        requestAdminCallbackOnOpen: true,
+                      ),
+                    ),
+                  ),
                 ),
                 _ActionTile(
                   icon: Icons.share_location_outlined,

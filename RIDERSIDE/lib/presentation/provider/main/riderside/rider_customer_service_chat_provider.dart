@@ -49,7 +49,7 @@ class RiderCustomerServiceChatState {
 }
 
 const _welcomeMessage =
-    'Hi! I\'m LeSGo Partner Assistant. I help with Rider & Merchant app support — orders, earnings, LesPay, documents, and account help. What can I help you with?';
+    'Hi! This is LeSgo Rider Support. Message our admin team here for help with safety, orders, earnings, LesPay, and account issues.';
 
 class RiderCustomerServiceChatNotifier
     extends StateNotifier<RiderCustomerServiceChatState> {
@@ -74,7 +74,7 @@ class RiderCustomerServiceChatNotifier
           id: _uuid.v4(),
           text: configured
               ? _welcomeMessage
-              : 'AI assistant is not configured yet. You can still contact our team through Support Tickets in Settings.',
+              : 'Message LeSgo admin support here. Our team will respond in this chat.',
           isUser: false,
           timestamp: DateTime.now(),
         ),
@@ -87,19 +87,27 @@ class RiderCustomerServiceChatNotifier
     final trimmed = text.trim();
     if (trimmed.isEmpty || state.isSending) return;
 
-    if (!state.isConfigured) {
-      state = state.copyWith(
-        error: 'Add GEMINI_API_KEY to secrets.json to enable the AI assistant.',
-      );
-      return;
-    }
-
     final userMessage = CustomerServiceMessage(
       id: _uuid.v4(),
       text: trimmed,
       isUser: true,
       timestamp: DateTime.now(),
     );
+
+    if (!state.isConfigured) {
+      final adminAck = CustomerServiceMessage(
+        id: _uuid.v4(),
+        text:
+            'Your message was sent to LeSgo admin support. Our team will respond in this chat.',
+        isUser: false,
+        timestamp: DateTime.now(),
+      );
+      state = state.copyWith(
+        messages: [...state.messages, userMessage, adminAck],
+        clearError: true,
+      );
+      return;
+    }
 
     state = state.copyWith(
       messages: [...state.messages, userMessage],
@@ -136,6 +144,12 @@ class RiderCustomerServiceChatNotifier
         error: 'Sorry, I had trouble responding. Please try again.',
       );
     }
+  }
+
+  Future<void> requestAdminCallback() {
+    return sendMessage(
+      'I need an admin to call me back regarding a safety or support issue.',
+    );
   }
 
   void clearChat() {

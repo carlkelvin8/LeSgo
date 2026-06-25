@@ -345,8 +345,20 @@ class AppLocalization {
     'emergency': 'Emergency',
     'if_immediate_danger': 'If you are in immediate danger, call emergency services right away.',
     'call_support': 'Call {{number}}',
-    'lesgo_rider_support': 'LeSGo Rider Support',
-    'report_incidents': 'Report incidents, accidents, or unsafe customers',
+    'lesgo_rider_support': 'LeSgo Rider Support',
+    'report_incidents': 'Chat or call admin support — not a phone hotline',
+    'chat_admin_support': 'Chat with admin',
+    'call_admin_support': 'Request admin call',
+    'admin_support_chat_subtitle': 'Message our admin team in-app',
+    'admin_call_request_subtitle': 'Request a callback through admin chat',
+    'order_booked': 'Order Booked',
+    'for_pickup': 'For Pickup',
+    'order_in_progress': 'Order in Progress',
+    'one_time_payment': 'one-time',
+    'profit_share_basic': '70/30 profit share (you keep 70%)',
+    'profit_share_advance': '80/20 profit share (you keep 80%)',
+    'profit_share_pro': '90/10 profit share (you keep 90%)',
+    'profit_share_employee': 'Fixed daily salary',
     'share_live_location': 'Share live location',
     'cannot_open_dialer': 'Cannot open phone dialer',
     'safety_tips': 'Safety Tips',
@@ -420,7 +432,7 @@ class AppLocalization {
 
     // Support & FAQs
     'faqs': 'FAQs',
-    'support_tickets': 'Support tickets',
+    'support_tickets': 'Admin support chat',
     'new_support_ticket': 'New Support Ticket',
     'subject': 'Subject',
     'description': 'Description',
@@ -576,7 +588,7 @@ class AppLocalization {
     'save_preferences': 'Save preferences',
     'notif_settings_title': 'Notification Settings',
     'notif_preferences_saved': 'Notification preferences saved.',
-    'no_support_tickets': 'No support tickets yet.\nTap + to contact LeSGo support.',
+    'no_support_tickets': 'Message LeSgo admin support in the chat below.',
     'support': 'Support',
   };
 
@@ -892,8 +904,12 @@ class AppLocalization {
     'emergency': 'Emergency',
     'if_immediate_danger': 'Kung ikaw ay nasa agarang panganib, tumawag agad sa emergency services.',
     'call_support': 'Tumawag sa {{number}}',
-    'lesgo_rider_support': 'LeSGo Rider Support',
-    'report_incidents': 'Mag-ulat ng mga insidente, aksidente, o hindi ligtas na customer',
+    'lesgo_rider_support': 'LeSgo Rider Support',
+    'report_incidents': 'Makipag-chat o humiling ng tawag sa admin — hindi phone hotline',
+    'chat_admin_support': 'Mag-chat sa admin',
+    'call_admin_support': 'Humiling ng tawag sa admin',
+    'admin_support_chat_subtitle': 'Mag-message sa admin team sa app',
+    'admin_call_request_subtitle': 'Humiling ng callback sa admin chat',
     'share_live_location': 'I-share ang live location',
     'cannot_open_dialer': 'Hindi mabuksan ang phone dialer',
     'safety_tips': 'Mga Safety Tip',
@@ -967,7 +983,7 @@ class AppLocalization {
 
     // Support & FAQs
     'faqs': 'Mga FAQ',
-    'support_tickets': 'Support tickets',
+    'support_tickets': 'Admin support chat',
     'new_support_ticket': 'Bagong Support Ticket',
     'subject': 'Paksa',
     'description': 'Paglalarawan',
@@ -1123,7 +1139,7 @@ class AppLocalization {
     'save_preferences': 'I-save ang preferences',
     'notif_settings_title': 'Settings ng Notipikasyon',
     'notif_preferences_saved': 'Na-save ang notification preferences.',
-    'no_support_tickets': 'Wala pang support ticket.\nI-tap ang + para makipag-ugnayan sa LeSGo support.',
+    'no_support_tickets': 'Mag-message sa LeSgo admin support sa chat.',
     'support': 'Suporta',
   };
 }

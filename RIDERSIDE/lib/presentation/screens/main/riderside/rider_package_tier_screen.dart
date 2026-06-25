@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/rider_commission_utils.dart';
 import '../../../../presentation/provider/auth/rider_auth_provider.dart';
 
 class RiderPackageTierView extends ConsumerWidget {
@@ -12,57 +14,74 @@ class RiderPackageTierView extends ConsumerWidget {
     final lang = ref.watch(appLanguageProvider);
     final authState = ref.watch(riderAuthProvider);
     final user = authState.user;
-    final currentTier = user?.packageTier ?? 'Standard';
+    final normalizedTier = RiderCommissionUtils.normalizePackageTier(
+      user?.packageTier,
+    );
+    final currentLabel = RiderCommissionUtils.labelForPackage(user?.packageTier);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: hp),
       children: [
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        _TierHeader(tier: currentTier, lang: lang),
+        _TierHeader(
+          tier: currentLabel,
+          profitShare: RiderCommissionUtils.profitShareLabel(user?.packageTier),
+          lang: lang,
+        ),
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
         _SectionTitle(title: AppLocalization.translate('features', lang)),
-        ..._featuresForTier(currentTier).map(
+        ..._featuresForTier(normalizedTier, user?.packageTier).map(
           (f) => _FeatureTile(icon: f.icon, label: f.label, included: f.included),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
         _SectionTitle(title: AppLocalization.translate('upgrade_options', lang)),
-        ..._availableTiers(currentTier).map(
-          (t) => _UpgradeTile(tier: t.name, price: t.price, features: t.features, current: t.name == currentTier, lang: lang),
+        ..._availableTiers(normalizedTier).map(
+          (t) => _UpgradeTile(
+            tier: t.name,
+            price: t.price,
+            features: t.features,
+            current: t.key == normalizedTier,
+            lang: lang,
+          ),
         ),
       ],
     );
   }
 
-  List<_TierFeature> _featuresForTier(String tier) {
+  List<_TierFeature> _featuresForTier(String tier, String? rawTier) {
+    final profitShare = RiderCommissionUtils.profitShareLabel(rawTier);
     switch (tier) {
-      case 'Premium':
-        return const [
+      case 'advance':
+        return [
+          _TierFeature(Icons.trending_up, profitShare, true),
           _TierFeature(Icons.directions_car, 'Priority booking assignment', true),
-          _TierFeature(Icons.trending_up, 'Higher earnings per trip', true),
-          _TierFeature(Icons.support_agent, '24/7 priority support', true),
+          _TierFeature(Icons.support_agent, 'Priority admin support', true),
           _TierFeature(Icons.insights, 'Advanced earnings analytics', true),
           _TierFeature(Icons.flash_on, 'Faster payout processing', true),
-          _TierFeature(Icons.local_offer, 'Exclusive promotions', true),
         ];
-      case 'Elite':
-        return const [
-          _TierFeature(Icons.directions_car, 'Priority booking assignment', true),
-          _TierFeature(Icons.trending_up, 'Highest earnings per trip', true),
-          _TierFeature(Icons.support_agent, '24/7 VIP support', true),
+      case 'pro':
+        return [
+          _TierFeature(Icons.trending_up, profitShare, true),
+          _TierFeature(Icons.directions_car, 'Top priority bookings', true),
+          _TierFeature(Icons.support_agent, 'VIP admin support', true),
           _TierFeature(Icons.insights, 'Advanced earnings analytics', true),
           _TierFeature(Icons.flash_on, 'Instant payout processing', true),
           _TierFeature(Icons.local_offer, 'Exclusive promotions', true),
-          _TierFeature(Icons.diamond, 'Dedicated account manager', true),
-          _TierFeature(Icons.airport_shuttle, 'Airport & event priority', true),
+        ];
+      case 'employee':
+        return [
+          _TierFeature(Icons.payments, profitShare, true),
+          _TierFeature(Icons.schedule, 'Company-assigned schedule', true),
+          _TierFeature(Icons.support_agent, 'Employer admin support', true),
+          _TierFeature(Icons.verified_user, 'Company-managed account', true),
         ];
       default:
-        return const [
+        return [
+          _TierFeature(Icons.trending_up, profitShare, true),
           _TierFeature(Icons.directions_car, 'Standard booking access', true),
-          _TierFeature(Icons.trending_up, 'Standard earnings per trip', true),
-          _TierFeature(Icons.support_agent, 'Standard support', true),
+          _TierFeature(Icons.support_agent, 'Standard admin support', true),
           _TierFeature(Icons.insights, 'Basic earnings view', true),
-          _TierFeature(Icons.flash_on, 'Standard payout processing', true),
           _TierFeature(Icons.lock, 'Exclusive promotions', false),
         ];
     }
@@ -70,36 +89,77 @@ class RiderPackageTierView extends ConsumerWidget {
 
   List<_TierOption> _availableTiers(String current) {
     return [
-      _TierOption('Standard', 'Free', const ['Basic booking access', 'Standard earnings', 'Standard support']),
-      _TierOption('Premium', '₱499/mo', const ['Priority booking', 'Higher earnings', '24/7 priority support', 'Exclusive promotions']),
-      _TierOption('Elite', '₱999/mo', const ['Highest earnings', 'VIP support', 'Instant payout', 'Dedicated manager']),
+      _TierOption(
+        'basic',
+        'Basic',
+        'Free',
+        [
+          RiderCommissionUtils.profitShareLabel('basic'),
+          'Standard booking access',
+          'Standard admin support',
+        ],
+      ),
+      _TierOption(
+        'advance',
+        'Advance',
+        '₱2,499 one-time',
+        [
+          RiderCommissionUtils.profitShareLabel('advance'),
+          'Priority booking assignment',
+          'Priority admin support',
+        ],
+      ),
+      _TierOption(
+        'pro',
+        'Pro',
+        '₱4,999 one-time',
+        [
+          RiderCommissionUtils.profitShareLabel('pro'),
+          'Top priority bookings',
+          'VIP admin support',
+        ],
+      ),
+      _TierOption(
+        'employee',
+        'Employee',
+        'Employer assigned',
+        [
+          RiderCommissionUtils.profitShareLabel('employee'),
+          'Company-managed package',
+        ],
+      ),
     ];
   }
 }
 
 class _TierHeader extends StatelessWidget {
   final String tier;
+  final String profitShare;
   final AppLanguage lang;
 
-  const _TierHeader({required this.tier, required this.lang});
+  const _TierHeader({
+    required this.tier,
+    required this.profitShare,
+    required this.lang,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isHighTier = tier != 'Standard';
+    final isBasic = tier == 'Basic';
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isHighTier
-              ? [const Color(0xFF5F2D82), const Color(0xFF7B1FA2)]
-              : [Colors.grey.shade300, Colors.grey.shade400],
+          colors: isBasic
+              ? [Colors.grey.shade500, Colors.grey.shade600]
+              : [const Color(0xFF5F2D82), const Color(0xFF7B1FA2)],
         ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
           Icon(
-            isHighTier ? Icons.workspace_premium : Icons.person_outline,
+            isBasic ? Icons.person_outline : Icons.workspace_premium,
             size: 56,
             color: Colors.white,
           ),
@@ -115,7 +175,8 @@ class _TierHeader extends StatelessWidget {
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
           Text(
-            isHighTier ? AppLocalization.translate('premium_package', lang) : AppLocalization.translate('standard_package', lang),
+            profitShare,
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -257,12 +318,14 @@ class _UpgradeTile extends StatelessWidget {
                   children: [
                     Icon(Icons.check, size: 16, color: Colors.green.shade600),
                     SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                    Text(
-                      f,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: Colors.grey.shade700,
+                    Expanded(
+                      child: Text(
+                        f,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                          color: Colors.grey.shade700,
+                        ),
                       ),
                     ),
                   ],
@@ -276,7 +339,11 @@ class _UpgradeTile extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppLocalization.translate('upgrade_option_soon', lang))),
+                      SnackBar(
+                        content: Text(
+                          AppLocalization.translate('upgrade_option_soon', lang),
+                        ),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -286,7 +353,10 @@ class _UpgradeTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text(AppLocalization.translate('upgrade_to', lang).replaceAll('{{tier}}', tier)),
+                  child: Text(
+                    AppLocalization.translate('upgrade_to', lang)
+                        .replaceAll('{{tier}}', tier),
+                  ),
                 ),
               ),
             ],
@@ -306,9 +376,10 @@ class _TierFeature {
 }
 
 class _TierOption {
+  final String key;
   final String name;
   final String price;
   final List<String> features;
 
-  const _TierOption(this.name, this.price, this.features);
+  const _TierOption(this.key, this.name, this.price, this.features);
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/utils.dart';
 
 import '../../../widgets.dart';
+import 'merchant_location_pin_picker.dart';
 
-class MerchantInfoFormFields extends StatelessWidget {
+class MerchantInfoFormFields extends ConsumerWidget {
   final TextEditingController restaurantNameController;
   final TextEditingController ownerFirstNameController;
   final TextEditingController ownerLastNameController;
@@ -13,6 +15,10 @@ class MerchantInfoFormFields extends StatelessWidget {
   final TextEditingController zipCodeController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
+  final double? latitude;
+  final double? longitude;
+  final bool showPinError;
+  final void Function(double latitude, double longitude) onLocationChanged;
 
   const MerchantInfoFormFields({
     super.key,
@@ -25,10 +31,14 @@ class MerchantInfoFormFields extends StatelessWidget {
     required this.zipCodeController,
     required this.passwordController,
     required this.confirmPasswordController,
+    required this.latitude,
+    required this.longitude,
+    required this.showPinError,
+    required this.onLocationChanged,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -83,6 +93,13 @@ class MerchantInfoFormFields extends StatelessWidget {
           hintText: '',
           validator: (value) =>
               value == null || value.isEmpty ? 'Address is required' : null,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        MerchantLocationPinPicker(
+          latitude: latitude,
+          longitude: longitude,
+          hasError: showPinError,
+          onLocationChanged: onLocationChanged,
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 

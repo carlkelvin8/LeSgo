@@ -39,7 +39,7 @@ class RiderBookingStatusGrid extends StatelessWidget {
               width: chipWidth,
               child: RiderBookingStatusButton(
                 status: status,
-                isActive: status == currentStatus,
+                isActive: status == currentStatus.workflowStep,
                 onTap: onStatusTap != null ? () => onStatusTap!(status) : null,
               ),
             ),

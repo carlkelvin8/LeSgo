@@ -5,6 +5,7 @@ class MainRoutes {
   static const String riderChangePassword = '/rider/change-password';
   static const String riderDeactivateAccount = '/rider/deactivate-account';
   static const String riderDeleteAccount = '/rider/delete-account';
+  /// Legacy path — opens admin support chat (same as [riderCustomerServiceChat]).
   static const String riderSupportTickets = '/rider/support-tickets';
   static const String riderFaqs = '/rider/faqs';
   static const String riderOffers = '/rider/offers';
@@ -35,6 +36,7 @@ class MainRoutes {
   static const String merchantLoyalty = '/merchant/loyalty';
   static const String merchantReferral = '/merchant/referral';
   static const String merchantSecurity = '/merchant/security';
+  /// Legacy path — opens admin support chat (same as [riderCustomerServiceChat]).
   static const String merchantSupportTickets = '/merchant/support-tickets';
   static const String merchantMissions = '/merchant/missions';
   static const String merchantDeactivateAccount = '/merchant/deactivate-account';

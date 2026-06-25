@@ -74,10 +74,10 @@ class MerchantBottomNavBar extends ConsumerWidget {
           ),
           _buildNavItem(
             context, ref,
-            type: MerchantNavType.mission,
+            type: MerchantNavType.lespay,
             svgAsset: 'assets/images/navbar/merchant/star.svg',
-            label: 'Mission',
-            isSelected: currentNav == MerchantNavType.mission,
+            label: 'LeSpay',
+            isSelected: currentNav == MerchantNavType.lespay,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
           ),
