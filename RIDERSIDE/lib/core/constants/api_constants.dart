@@ -78,6 +78,8 @@ class ApiConstants {
 
   // Driver earnings
   static const String driverMyEarnings = '/v1/drivers/me/earnings';
+  static const String driverPackageTiers = '/v1/drivers/me/package-tiers';
+  static const String driverPackageUpgrade = '/v1/drivers/me/package-upgrade';
 
   static const String walletTransferToRider = '/v1/wallets/my/transfer';
 

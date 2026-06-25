@@ -379,6 +379,20 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
 
   void clearError() => state = state.copyWith(clearError: true);
 
+  void updatePackageTier({
+    required String packageTier,
+    double? commissionRate,
+  }) {
+    final user = state.user;
+    if (user == null) return;
+    state = state.copyWith(
+      user: user.copyWith(
+        packageTier: packageTier,
+        commissionRate: commissionRate,
+      ),
+    );
+  }
+
   Future<bool> establishSession({
     required String token,
     required Map<String, dynamic> userData,

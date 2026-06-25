@@ -5,6 +5,8 @@ class RiderCommissionUtils {
   static const basicRate = 0.70;
   static const advanceRate = 0.80;
   static const proRate = 0.90;
+  static const advanceOneTimePrice = 999.0;
+  static const proOneTimePrice = 1999.0;
 
   static double rateForPackage(String? packageTier) {
     switch (normalizePackageTier(packageTier)) {

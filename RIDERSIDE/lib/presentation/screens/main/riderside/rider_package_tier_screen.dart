@@ -1,133 +1,188 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/rider_package_api.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
-import '../../../../core/utils/rider_commission_utils.dart';
-import '../../../../presentation/provider/auth/rider_auth_provider.dart';
+import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../presentation/provider/main/riderside/rider_package_provider.dart';
+import '../../../../presentation/provider/main/riderside/rider_wallet_provider.dart';
+import 'rider_package_payment_screen.dart';
 
-class RiderPackageTierView extends ConsumerWidget {
+class RiderPackageTierView extends ConsumerStatefulWidget {
   const RiderPackageTierView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(appLanguageProvider);
-    final authState = ref.watch(riderAuthProvider);
-    final user = authState.user;
-    final normalizedTier = RiderCommissionUtils.normalizePackageTier(
-      user?.packageTier,
-    );
-    final currentLabel = RiderCommissionUtils.labelForPackage(user?.packageTier);
-    final hp = ResponsiveUtils.horizontalPadding(context);
+  ConsumerState<RiderPackageTierView> createState() =>
+      _RiderPackageTierViewState();
+}
 
-    return ListView(
-      padding: EdgeInsets.symmetric(horizontal: hp),
-      children: [
-        SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        _TierHeader(
-          tier: currentLabel,
-          profitShare: RiderCommissionUtils.profitShareLabel(user?.packageTier),
-          lang: lang,
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        _SectionTitle(title: AppLocalization.translate('features', lang)),
-        ..._featuresForTier(normalizedTier, user?.packageTier).map(
-          (f) => _FeatureTile(icon: f.icon, label: f.label, included: f.included),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        _SectionTitle(title: AppLocalization.translate('upgrade_options', lang)),
-        ..._availableTiers(normalizedTier).map(
-          (t) => _UpgradeTile(
-            tier: t.name,
-            price: t.price,
-            features: t.features,
-            current: t.key == normalizedTier,
-            lang: lang,
-          ),
-        ),
-      ],
+class _RiderPackageTierViewState extends ConsumerState<RiderPackageTierView> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => ref.read(riderPackageProvider.notifier).loadCatalog(),
     );
   }
 
-  List<_TierFeature> _featuresForTier(String tier, String? rawTier) {
-    final profitShare = RiderCommissionUtils.profitShareLabel(rawTier);
-    switch (tier) {
-      case 'advance':
-        return [
-          _TierFeature(Icons.trending_up, profitShare, true),
-          _TierFeature(Icons.directions_car, 'Priority booking assignment', true),
-          _TierFeature(Icons.support_agent, 'Priority admin support', true),
-          _TierFeature(Icons.insights, 'Advanced earnings analytics', true),
-          _TierFeature(Icons.flash_on, 'Faster payout processing', true),
-        ];
-      case 'pro':
-        return [
-          _TierFeature(Icons.trending_up, profitShare, true),
-          _TierFeature(Icons.directions_car, 'Top priority bookings', true),
-          _TierFeature(Icons.support_agent, 'VIP admin support', true),
-          _TierFeature(Icons.insights, 'Advanced earnings analytics', true),
-          _TierFeature(Icons.flash_on, 'Instant payout processing', true),
-          _TierFeature(Icons.local_offer, 'Exclusive promotions', true),
-        ];
-      case 'employee':
-        return [
-          _TierFeature(Icons.payments, profitShare, true),
-          _TierFeature(Icons.schedule, 'Company-assigned schedule', true),
-          _TierFeature(Icons.support_agent, 'Employer admin support', true),
-          _TierFeature(Icons.verified_user, 'Company-managed account', true),
-        ];
-      default:
-        return [
-          _TierFeature(Icons.trending_up, profitShare, true),
-          _TierFeature(Icons.directions_car, 'Standard booking access', true),
-          _TierFeature(Icons.support_agent, 'Standard admin support', true),
-          _TierFeature(Icons.insights, 'Basic earnings view', true),
-          _TierFeature(Icons.lock, 'Exclusive promotions', false),
-        ];
+  Future<void> _handleUpgrade(RiderPackageOption option) async {
+    final lang = ref.read(appLanguageProvider);
+    final wallet = ref.read(riderWalletProvider);
+    final price = option.oneTimePrice ?? 0;
+    final canUseLesPay = wallet.balance >= price;
+
+    final paymentMethod = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          AppLocalization.translate('upgrade_to', lang)
+              .replaceAll('{{tier}}', option.label),
+        ),
+        content: Text(
+          '${option.priceLabel}\n${option.profitShareLabel}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalization.translate('cancel', lang)),
+          ),
+          if (canUseLesPay)
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, 'lespay'),
+              child: const Text('Pay with LesPay'),
+            ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, 'xendit'),
+            child: const Text('Pay online'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || paymentMethod == null) return;
+
+    final notifier = ref.read(riderPackageProvider.notifier);
+    final checkout = paymentMethod == 'lespay'
+        ? await notifier.upgradeWithLesPay(option.tier)
+        : await notifier.startXenditUpgrade(option.tier);
+
+    if (!mounted || checkout == null) {
+      final error = ref.read(riderPackageProvider).error;
+      if (error != null) {
+        SnackBarUtils.showError(context, error);
+      }
+      return;
+    }
+
+    if (checkout.isCompleted) {
+      SnackBarUtils.showSuccess(
+        context,
+        'Upgraded to ${checkout.targetLabel}',
+      );
+      return;
+    }
+
+    if (checkout.needsPayment && checkout.invoiceUrl != null) {
+      final success = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => RiderPackagePaymentScreen(checkout: checkout),
+        ),
+      );
+      if (!mounted) return;
+      if (success == true) {
+        SnackBarUtils.showSuccess(
+          context,
+          'Upgraded to ${checkout.targetLabel}',
+        );
+      }
     }
   }
 
-  List<_TierOption> _availableTiers(String current) {
+  @override
+  Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
+    final packageState = ref.watch(riderPackageProvider);
+    final catalog = packageState.catalog;
+    final hp = ResponsiveUtils.horizontalPadding(context);
+
+    if (packageState.isLoading && catalog == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (catalog == null) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(hp),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(packageState.error ?? 'Could not load packages'),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () =>
+                    ref.read(riderPackageProvider.notifier).loadCatalog(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final currentPackage = catalog.packages.firstWhere(
+      (p) => p.isCurrent,
+      orElse: () => catalog.packages.first,
+    );
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(riderPackageProvider.notifier).loadCatalog(),
+      child: ListView(
+        padding: EdgeInsets.symmetric(horizontal: hp),
+        children: [
+          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+          _TierHeader(
+            tier: catalog.currentLabel,
+            profitShare: currentPackage.profitShareLabel,
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+          _SectionTitle(title: AppLocalization.translate('features', lang)),
+          ..._featuresForPackage(currentPackage).map(
+            (f) => _FeatureTile(
+              icon: f.icon,
+              label: f.label,
+              included: f.included,
+            ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+          _SectionTitle(
+            title: AppLocalization.translate('upgrade_options', lang),
+          ),
+          ...catalog.packages.map(
+            (option) => _UpgradeTile(
+              option: option,
+              lang: lang,
+              isProcessing: packageState.isProcessing,
+              onUpgrade: option.isUpgradeable
+                  ? () => _handleUpgrade(option)
+                  : null,
+            ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+        ],
+      ),
+    );
+  }
+
+  List<_TierFeature> _featuresForPackage(RiderPackageOption option) {
     return [
-      _TierOption(
-        'basic',
-        'Basic',
-        'Free',
-        [
-          RiderCommissionUtils.profitShareLabel('basic'),
-          'Standard booking access',
-          'Standard admin support',
-        ],
-      ),
-      _TierOption(
-        'advance',
-        'Advance',
-        '₱2,499 one-time',
-        [
-          RiderCommissionUtils.profitShareLabel('advance'),
-          'Priority booking assignment',
-          'Priority admin support',
-        ],
-      ),
-      _TierOption(
-        'pro',
-        'Pro',
-        '₱4,999 one-time',
-        [
-          RiderCommissionUtils.profitShareLabel('pro'),
-          'Top priority bookings',
-          'VIP admin support',
-        ],
-      ),
-      _TierOption(
-        'employee',
-        'Employee',
-        'Employer assigned',
-        [
-          RiderCommissionUtils.profitShareLabel('employee'),
-          'Company-managed package',
-        ],
-      ),
+      _TierFeature(Icons.trending_up, option.profitShareLabel, true),
+      _TierFeature(Icons.directions_car, 'Booking access', true),
+      _TierFeature(Icons.support_agent, 'Admin support', true),
+      if (option.tier == 'pro')
+        _TierFeature(Icons.local_offer, 'Exclusive promotions', true),
+      if (option.tier == 'employee')
+        _TierFeature(Icons.payments, 'Company-managed salary', true),
     ];
   }
 }
@@ -135,12 +190,10 @@ class RiderPackageTierView extends ConsumerWidget {
 class _TierHeader extends StatelessWidget {
   final String tier;
   final String profitShare;
-  final AppLanguage lang;
 
   const _TierHeader({
     required this.tier,
     required this.profitShare,
-    required this.lang,
   });
 
   @override
@@ -257,18 +310,16 @@ class _FeatureTile extends StatelessWidget {
 }
 
 class _UpgradeTile extends StatelessWidget {
-  final String tier;
-  final String price;
-  final List<String> features;
-  final bool current;
+  final RiderPackageOption option;
   final AppLanguage lang;
+  final bool isProcessing;
+  final VoidCallback? onUpgrade;
 
   const _UpgradeTile({
-    required this.tier,
-    required this.price,
-    required this.features,
-    required this.current,
+    required this.option,
     required this.lang,
+    required this.isProcessing,
+    required this.onUpgrade,
   });
 
   @override
@@ -279,8 +330,10 @@ class _UpgradeTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: current ? const Color(0xFF5F2D82) : Colors.grey.shade200,
-          width: current ? 2 : 1,
+          color: option.isCurrent
+              ? const Color(0xFF5F2D82)
+              : Colors.grey.shade200,
+          width: option.isCurrent ? 2 : 1,
         ),
       ),
       child: Padding(
@@ -292,7 +345,7 @@ class _UpgradeTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  tier,
+                  option.label,
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -300,7 +353,7 @@ class _UpgradeTile extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  price,
+                  option.priceLabel,
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -311,41 +364,20 @@ class _UpgradeTile extends StatelessWidget {
               ],
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-            ...features.map(
-              (f) => Padding(
-                padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 4)),
-                child: Row(
-                  children: [
-                    Icon(Icons.check, size: 16, color: Colors.green.shade600),
-                    SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                    Expanded(
-                      child: Text(
-                        f,
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            Text(
+              option.profitShareLabel,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 13),
+                color: Colors.grey.shade700,
               ),
             ),
-            if (!current) ...[
+            if (onUpgrade != null) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          AppLocalization.translate('upgrade_option_soon', lang),
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: isProcessing ? null : onUpgrade,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5F2D82),
                     foregroundColor: Colors.white,
@@ -353,10 +385,30 @@ class _UpgradeTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text(
-                    AppLocalization.translate('upgrade_to', lang)
-                        .replaceAll('{{tier}}', tier),
-                  ),
+                  child: isProcessing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          AppLocalization.translate('upgrade_to', lang)
+                              .replaceAll('{{tier}}', option.label),
+                        ),
+                ),
+              ),
+            ] else if (option.isCurrent) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              Text(
+                'Current package',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  color: Colors.green.shade700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -373,13 +425,4 @@ class _TierFeature {
   final bool included;
 
   const _TierFeature(this.icon, this.label, this.included);
-}
-
-class _TierOption {
-  final String key;
-  final String name;
-  final String price;
-  final List<String> features;
-
-  const _TierOption(this.key, this.name, this.price, this.features);
 }
