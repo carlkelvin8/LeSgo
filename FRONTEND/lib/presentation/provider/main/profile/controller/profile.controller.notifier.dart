@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/services/permission_service.dart';
-import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../profile_provider.dart';
 
@@ -22,142 +21,18 @@ class ProfileControllers {
         address1Controller = TextEditingController(text: address1),
         address2Controller = TextEditingController(text: address2);
 
+  /// Profile photos must be taken with the live camera (no gallery upload).
   Future<void> showImagePicker(
     BuildContext context,
     WidgetRef ref,
   ) async {
+    if (_isModalOpen) return;
     _isModalOpen = true;
-    final ImagePicker picker = ImagePicker();
 
-    await showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      isDismissible: true,
-      enableDrag: true,
-      useRootNavigator: true,
-      builder: (BuildContext modalContext) {
-        return WillPopScope(
-          onWillPop: () async {
-            _isModalOpen = false;
-            return true;
-          },
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.all(ResponsiveUtils.spacing(modalContext, 20)),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      _isModalOpen = false;
-                      Navigator.pop(modalContext);
-                      Future.delayed(const Duration(milliseconds: 150), () {
-                        _pickImageFromGallery(context, ref, picker);
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      child: Row(
-                        children: const [
-                          Icon(
-                            Icons.photo_library,
-                            color: Color(0xFF5F2D82),
-                          ),
-                          SizedBox(width: 16),
-                          Text(
-                            'Choose from gallery',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  InkWell(
-                    onTap: () {
-                      _isModalOpen = false;
-                      Navigator.pop(modalContext);
-                      Future.delayed(const Duration(milliseconds: 150), () {
-                        _pickImageFromCamera(context, ref, picker);
-                      });
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      child: Row(
-                        children: const [
-                          Icon(
-                            Icons.camera_alt,
-                            color: Color(0xFF5F2D82),
-                          ),
-                          SizedBox(width: 16),
-                          Text(
-                            'Take a photo',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(modalContext, 10)),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    _isModalOpen = false;
-  }
-
-  Future<void> _pickImageFromGallery(
-    BuildContext context,
-    WidgetRef ref,
-    ImagePicker picker,
-  ) async {
-    final permissionService = getIt<PermissionService>();
-    final hasPermission = await permissionService.requestGalleryWithRationale();
-    if (!hasPermission) {
-      if (context.mounted) {
-        SnackBarUtils.showError(
-          context,
-          'Gallery permission is required to choose a photo.',
-        );
-      }
-      return;
-    }
-
-    final XFile? image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-      maxWidth: 1200,
-    );
-    if (image != null && context.mounted) {
-      await _updateProfileImage(context, ref, image);
+    try {
+      await _pickImageFromCamera(context, ref, ImagePicker());
+    } finally {
+      _isModalOpen = false;
     }
   }
 
@@ -172,7 +47,7 @@ class ProfileControllers {
       if (context.mounted) {
         SnackBarUtils.showError(
           context,
-          'Camera permission is required to take a photo.',
+          'Camera permission is required to take a profile photo.',
         );
       }
       return;

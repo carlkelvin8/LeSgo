@@ -67,7 +67,10 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
       backgroundColor: Colors.white,
       appBar: lesgoState.isFullscreen
           ? null
-          : const BookingServiceHeader(title: 'LesGo'),
+          : const BookingServiceHeader(
+              title: 'LesGo',
+              action: SizedBox.shrink(),
+            ),
       body: SafeArea(
         child: LesgoMainContent(
           sheetController: _sheetController,

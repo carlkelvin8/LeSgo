@@ -83,11 +83,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   Future<void> _handleCancelOrder() async {
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => CancelOrderDialog(
-        onConfirm: (reason) {
-          Navigator.of(context).pop(reason);
-        },
-      ),
+      builder: (context) => const CancelOrderDialog(),
     );
 
     if (result != null && mounted) {

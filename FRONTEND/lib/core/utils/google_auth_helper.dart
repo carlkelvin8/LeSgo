@@ -1,0 +1,56 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../constants/routers/app_router.dart';
+import '../constants/routers/main/main_routes.dart';
+import '../di/injection.dart';
+import '../network/dio_client.dart';
+import '../services/google_auth_service.dart';
+import '../utils/snackbar_utils.dart';
+import '../../presentation/provider/auth/auth_provider.dart';
+
+/// Shared Google sign-in / sign-up handler for login and registration flows.
+class GoogleAuthHelper {
+  GoogleAuthHelper._();
+
+  static Future<void> signIn(BuildContext context, WidgetRef ref) async {
+    try {
+      SnackBarUtils.showInfo(context, 'Signing in with Google...');
+
+      final result = await GoogleAuthService.signIn(getIt<DioClient>());
+
+      if (!context.mounted) return;
+
+      if (result.success && result.token != null) {
+        final ok = await ref.read(authProvider.notifier).completeGoogleSignIn(
+              token: result.token!,
+              refreshToken: result.refreshToken,
+            );
+
+        if (!context.mounted) return;
+
+        if (ok) {
+          SnackBarUtils.showSuccess(
+            context,
+            result.isNewUser ? 'Welcome! Account created.' : 'Welcome back!',
+          );
+          AppRouter.pushReplacement(context, MainRoutes.home);
+        } else {
+          SnackBarUtils.showError(
+            context,
+            'Signed in with Google but could not load your profile. Please try again.',
+          );
+        }
+      } else {
+        final error = result.error ?? 'Google sign-in failed';
+        if (error != 'Sign-in cancelled') {
+          SnackBarUtils.showError(context, error);
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, 'Google sign-in error: $e');
+      }
+    }
+  }
+}

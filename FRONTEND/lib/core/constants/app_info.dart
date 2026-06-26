@@ -2,10 +2,17 @@
 class AppInfo {
   AppInfo._();
 
-  static const String appName = 'LeSGo';
-  static const String companyName = 'LeSGo Philippines';
+  static const String appName = 'LeSgo';
+  static const String companyName = 'LeSgo Philippines';
   static const String tagline =
       'Your all-in-one super app for rides, food, delivery, and payments.';
+
+  static const String aboutDescription =
+      'LeSgo Philippines is your all-in-one super app for rides, food delivery, '
+      'shopping, parcel delivery, and digital payments. We connect customers, '
+      'riders, and partner merchants so everyday errands are faster, safer, and '
+      'more convenient — proudly serving communities across the Philippines from '
+      'our home base in Kilkiling, Claveria, Cagayan.';
 
   static const String version = '1.0.0';
   static const String buildNumber = '1';

@@ -8,9 +8,9 @@ class MarkerUtils {
     final pictureRecorder = ui.PictureRecorder();
     final canvas = Canvas(pictureRecorder);
     
-    const double width = 40.0;
-    const double height = 50.0;
-    const double circleRadius = 15.0;
+    const double width = 56.0;
+    const double height = 70.0;
+    const double circleRadius = 22.0;
     
     // Draw the pin shape
     final path = Path();

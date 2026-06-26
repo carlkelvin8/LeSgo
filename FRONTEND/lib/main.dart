@@ -10,6 +10,7 @@ import 'core/services/app_preferences_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/promo_notification_service.dart';
 import 'core/services/websocket_service.dart';
+import 'presentation/provider/theme_provider.dart';
 import 'presentation/widgets/common/offline_banner.dart';
 
 AnalyticsRouteObserver? _analyticsRouteObserver;
@@ -38,22 +39,23 @@ class LesgoApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp(
       navigatorKey: AppRouter.navigatorKey,
       navigatorObservers: [
         if (_analyticsRouteObserver != null) _analyticsRouteObserver!,
       ],
-      title: 'Lezgo',
+      title: 'LeSgo',
       debugShowCheckedModeBanner: false,
       locale: _localeFromPrefs(),
       supportedLocales: const [
         Locale('en'),
         Locale('fil'),
       ],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-      ),
+      theme: _lightTheme(),
+      darkTheme: _darkTheme(),
+      themeMode: themeMode,
       initialRoute: LoginRoutes.startup,
       onGenerateRoute: AppRouter.onGenerateRoute,
       builder: (context, child) {
@@ -69,6 +71,77 @@ class LesgoApp extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+
+  ThemeData _lightTheme() {
+    return ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5F2D82)),
+      useMaterial3: true,
+      fontFamily: 'TT Fors',
+      scaffoldBackgroundColor: Colors.white,
+    );
+  }
+
+  ThemeData _darkTheme() {
+    const violet = Color(0xFF5F2D82);
+    const violetDark = Color(0xFF3D1F57);
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      fontFamily: 'TT Fors',
+      scaffoldBackgroundColor: violetDark,
+      colorScheme: const ColorScheme.dark(
+        primary: violet,
+        onPrimary: Colors.white,
+        secondary: Color(0xFFB388FF),
+        onSecondary: Colors.white,
+        surface: violet,
+        onSurface: Colors.white,
+        onSurfaceVariant: Colors.white70,
+        outline: Colors.white24,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: violet,
+        foregroundColor: Colors.white,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          fontFamily: 'TT Fors',
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 18,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: violet,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      dividerTheme: const DividerThemeData(color: Colors.white24),
+      iconTheme: const IconThemeData(color: Colors.white),
+      listTileTheme: const ListTileThemeData(
+        iconColor: Colors.white,
+        textColor: Colors.white,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: violet,
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.white
+              : Colors.white70,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? const Color(0xFFB388FF)
+              : Colors.white24,
+        ),
+      ),
     );
   }
 }

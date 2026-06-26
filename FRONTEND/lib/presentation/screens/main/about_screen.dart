@@ -76,7 +76,7 @@ class AboutScreen extends StatelessWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           _InfoCard(
             title: 'About us',
-            body: '${AppInfo.companyName}\n\n${AppInfo.tagline}',
+            body: '${AppInfo.companyName}\n\n${AppInfo.aboutDescription}',
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           _InfoCard(
@@ -97,7 +97,7 @@ class AboutScreen extends StatelessWidget {
           _LinkTile(
             icon: Icons.description_outlined,
             title: 'Terms of Service',
-            subtitle: 'Rules for using LeSGo services',
+            subtitle: 'Rules for using LeSgo services',
             onTap: () => AppRouter.push(context, MainRoutes.termsOfService),
           ),
         ],

@@ -2,31 +2,60 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../provider/main/lespay/lespay_provider.dart';
+import '../../../core/constants/routers/app_router.dart';
+import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
+import '../../provider/main/lespay/lespay_provider.dart';
 
 class PaymentMethodsScreen extends ConsumerStatefulWidget {
   const PaymentMethodsScreen({super.key});
 
   @override
-  ConsumerState<PaymentMethodsScreen> createState() => _PaymentMethodsScreenState();
+  ConsumerState<PaymentMethodsScreen> createState() =>
+      _PaymentMethodsScreenState();
 }
 
 class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Load linked accounts here if needed
-    });
+  void _showAddWalletDialog(BuildContext context, {String? initialProvider}) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => _AddWalletDialog(
+        parentContext: context,
+        initialProvider: initialProvider,
+      ),
+    );
   }
 
-  void _showAddPaymentMethodDialog(BuildContext context) {
-    showDialog<String>(
+  void _handleCardTap(BuildContext context) {
+    showDialog<void>(
       context: context,
-      builder: (dialogContext) => _AddPaymentMethodDialog(
-        parentContext: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Credit / Debit Card',
+          style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Card payments are processed securely through Xendit when you top up '
+          'LesPay or pay at checkout. No card details are stored on our servers.',
+          style: TextStyle(fontFamily: 'TT Fors', height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              AppRouter.push(context, MainRoutes.lespay);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5F2D82),
+            ),
+            child: const Text('Go to LesPay'),
+          ),
+        ],
       ),
     );
   }
@@ -65,43 +94,36 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    
-                    // GCash Card
                     _PaymentMethodCard(
                       provider: 'gcash',
                       icon: 'assets/images/wallet/Gcash.svg',
                       title: 'GCash',
                       subtitle: 'Mobile wallet',
                       isLinked: false,
-                      onTap: () => _showAddPaymentMethodDialog(context),
+                      onTap: () => _showAddWalletDialog(context, initialProvider: 'gcash'),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    
-                    // PayMaya Card
                     _PaymentMethodCard(
                       provider: 'maya',
                       icon: 'assets/images/wallet/Maya.svg',
                       title: 'PayMaya',
                       subtitle: 'Digital wallet',
                       isLinked: false,
-                      onTap: () => _showAddPaymentMethodDialog(context),
+                      onTap: () => _showAddWalletDialog(context, initialProvider: 'maya'),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    
-                    // Credit/Debit Card
                     _PaymentMethodCard(
                       provider: 'card',
                       icon: Icons.credit_card,
                       title: 'Credit/Debit Card',
-                      subtitle: 'Visa, Mastercard',
+                      subtitle: 'Visa, Mastercard via Xendit',
                       isLinked: false,
-                      onTap: () => _showAddPaymentMethodDialog(context),
+                      onTap: () => _handleCardTap(context),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                    
-                    // Info box
                     Container(
-                      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
+                      padding:
+                          EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(8),
@@ -111,7 +133,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'ℹ️ Payment Information',
+                            'Payment Information',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -121,7 +143,10 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                           Text(
-                            'Payment methods are processed securely through Xendit. Your card information is never stored on our servers.',
+                            'GCash and PayMaya can be linked to your LesPay wallet. '
+                            'Credit and debit cards are charged securely through Xendit '
+                            'at checkout or top-up — your card details are never stored '
+                            'on our servers.',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -235,35 +260,32 @@ class _PaymentMethodCard extends StatelessWidget {
   }
 }
 
-class _AddPaymentMethodDialog extends ConsumerStatefulWidget {
+class _AddWalletDialog extends ConsumerStatefulWidget {
   final BuildContext parentContext;
+  final String? initialProvider;
 
-  const _AddPaymentMethodDialog({required this.parentContext});
+  const _AddWalletDialog({
+    required this.parentContext,
+    this.initialProvider,
+  });
 
   @override
-  ConsumerState<_AddPaymentMethodDialog> createState() =>
-      _AddPaymentMethodDialogState();
+  ConsumerState<_AddWalletDialog> createState() => _AddWalletDialogState();
 }
 
-class _AddPaymentMethodDialogState
-    extends ConsumerState<_AddPaymentMethodDialog> {
+class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
   String? _selectedMethod;
-  final _formKey = GlobalKey<FormState>();
-  final _accountNumberController = TextEditingController();
-  final _accountNameController = TextEditingController();
   bool _submitting = false;
 
   @override
-  void dispose() {
-    _accountNumberController.dispose();
-    _accountNameController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _selectedMethod = widget.initialProvider;
   }
 
   Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_selectedMethod == null) {
-      SnackBarUtils.showError(context, 'Please select a payment method');
+      SnackBarUtils.showError(context, 'Please select GCash or PayMaya');
       return;
     }
 
@@ -279,14 +301,14 @@ class _AddPaymentMethodDialogState
       if (success) {
         SnackBarUtils.showSuccess(
           widget.parentContext,
-          'Payment method added successfully',
+          'Payment method linked successfully',
         );
         Navigator.pop(context);
       } else {
         final error = ref.read(lespayProvider).error;
         SnackBarUtils.showError(
           context,
-          error ?? 'Failed to add payment method',
+          error ?? 'Failed to link payment method',
         );
       }
     } catch (e) {
@@ -303,63 +325,32 @@ class _AddPaymentMethodDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(
-        'Add Payment Method',
-        style: TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: ResponsiveUtils.fontSize(context, 16),
-          fontWeight: FontWeight.bold,
-        ),
+      title: const Text(
+        'Link Wallet',
+        style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.bold),
       ),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Select Payment Method',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-              _buildMethodOption('gcash', 'GCash'),
-              _buildMethodOption('maya', 'PayMaya'),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              TextFormField(
-                controller: _accountNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Account Number / Mobile Number',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Account number is required';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-              TextFormField(
-                controller: _accountNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Account Holder Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Name is required';
-                  }
-                  return null;
-                },
-              ),
-            ],
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Choose a wallet to link to LesPay:',
+            style: TextStyle(fontFamily: 'TT Fors'),
           ),
-        ),
+          const SizedBox(height: 12),
+          _buildMethodOption('gcash', 'GCash'),
+          _buildMethodOption('maya', 'PayMaya'),
+          const SizedBox(height: 12),
+          Text(
+            'You will verify your account through our secure Xendit payment partner.',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 12,
+              color: Colors.grey.shade600,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -380,24 +371,24 @@ class _AddPaymentMethodDialogState
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text('Add Method'),
+              : const Text('Link Account'),
         ),
       ],
     );
   }
 
   Widget _buildMethodOption(String value, String label) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
-      child: ListTile(
-        dense: true,
-        title: Text(label),
-        leading: Radio<String>(
-          value: value,
-          groupValue: _selectedMethod,
-          onChanged: (v) => setState(() => _selectedMethod = v),
-        ),
+    return ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
+      leading: Radio<String>(
+        value: value,
+        groupValue: _selectedMethod,
+        activeColor: const Color(0xFF5F2D82),
+        onChanged: (v) => setState(() => _selectedMethod = v),
       ),
+      onTap: () => setState(() => _selectedMethod = value),
     );
   }
 }

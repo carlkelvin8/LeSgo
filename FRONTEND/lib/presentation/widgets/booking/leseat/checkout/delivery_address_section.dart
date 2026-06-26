@@ -13,12 +13,8 @@ class DeliveryAddressSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-      margin: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.spacing(context, 16),
-        vertical: ResponsiveUtils.spacing(context, 8),
-      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -46,19 +42,55 @@ class DeliveryAddressSection extends StatelessWidget {
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
-                    decoration: TextDecoration.underline,
+                    decoration: onTap != null ? TextDecoration.underline : null,
                   ),
                 ),
               ],
             ),
           ),
-          if (onTap != null)
+          if (onTap != null) ...[
+            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+            Text(
+              'Edit',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 13),
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF5F2D82),
+              ),
+            ),
             Icon(
               Icons.chevron_right,
               color: Colors.grey[600],
               size: ResponsiveUtils.fontSize(context, 24),
             ),
+          ],
         ],
+      ),
+    );
+
+    final padded = Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.spacing(context, 16),
+        vertical: ResponsiveUtils.spacing(context, 8),
+      ),
+      child: card,
+    );
+
+    if (onTap == null) return padded;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.spacing(context, 16),
+        vertical: ResponsiveUtils.spacing(context, 8),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: card,
+        ),
       ),
     );
   }

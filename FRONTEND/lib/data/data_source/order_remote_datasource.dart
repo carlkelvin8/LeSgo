@@ -233,6 +233,8 @@ class OrderRemoteDataSource {
       final response = await dio.get(ApiConstants.orderById(id));
       final responseData = Map<String, dynamic>.from(response.data);
 
+      _normalizeSingleOrderResponse(responseData, id);
+
       if (responseData['data'] is Map<String, dynamic>) {
         final data = Map<String, dynamic>.from(responseData['data'] as Map);
         OrderSnapshotCache.enrichOrderJson(data, id);
@@ -242,6 +244,36 @@ class OrderRemoteDataSource {
       return OrderResponseDto.fromJson(responseData);
     } catch (e) {
       throw Exception('Failed to get order: $e');
+    }
+  }
+
+  /// Normalize API payloads that use `order` instead of `data`.
+  void _normalizeSingleOrderResponse(
+    Map<String, dynamic> json,
+    int orderId, {
+    String? fallbackStatus,
+    String? cancelReason,
+  }) {
+    if (json['data'] == null && json['order'] is Map) {
+      json['data'] = json['order'];
+    }
+    if (json['success'] == null) {
+      json['success'] = true;
+    }
+    if (json['data'] == null && fallbackStatus != null) {
+      json['data'] = <String, dynamic>{
+        'id': orderId,
+        'status': fallbackStatus,
+        if (cancelReason != null) 'cancel_reason': cancelReason,
+      };
+    }
+    if (json['data'] is Map<String, dynamic>) {
+      final data = Map<String, dynamic>.from(json['data'] as Map);
+      data['id'] ??= orderId;
+      if (fallbackStatus != null && (data['status'] == null || data['status'] == '')) {
+        data['status'] = fallbackStatus;
+      }
+      json['data'] = data;
     }
   }
 
@@ -266,6 +298,12 @@ class OrderRemoteDataSource {
         data: data,
       );
       final responseData = Map<String, dynamic>.from(response.data as Map);
+      _normalizeSingleOrderResponse(
+        responseData,
+        id,
+        fallbackStatus: status,
+        cancelReason: cancelReason,
+      );
 
       if (responseData['data'] is Map<String, dynamic>) {
         OrderSnapshotCache.enrichOrderJson(

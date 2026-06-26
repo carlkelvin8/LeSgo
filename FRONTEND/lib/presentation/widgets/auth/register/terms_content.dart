@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../core/constants/legal_content.dart';
+import '../../../../core/utils/google_auth_helper.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../widgets.dart';
 
-class TermsContent extends StatelessWidget {
+class TermsContent extends ConsumerWidget {
   const TermsContent({
     super.key,
     required this.onAccept,
@@ -14,7 +17,7 @@ class TermsContent extends StatelessWidget {
   final VoidCallback onDecline;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Padding(
@@ -37,75 +40,55 @@ class TermsContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Terms of Service',
+                      'Terms and Conditions',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(
-                          context,
-                          20,
-                        ),
+                        fontSize: ResponsiveUtils.fontSize(context, 20),
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(
-                      height: ResponsiveUtils.spacing(context, 24),
-                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                     Text(
-                      'Summary',
+                      'Last updated: ${LegalContent.lastUpdated}',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(
-                          context,
-                          16,
-                        ),
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                        color: Colors.grey[600],
                       ),
                     ),
-                    SizedBox(
-                      height: ResponsiveUtils.spacing(context, 12),
-                    ),
-                    Text(
-                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(
-                          context,
-                          14,
+                    SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+                    ...LegalContent.termsSections.map(
+                      (section) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom: ResponsiveUtils.spacing(context, 16),
                         ),
-                        color: Colors.grey[700],
-                        height: 1.6,
-                      ),
-                    ),
-                    SizedBox(
-                      height: ResponsiveUtils.spacing(context, 24),
-                    ),
-                    Text(
-                      'Terms',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(
-                          context,
-                          16,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              section.title,
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: ResponsiveUtils.fontSize(context, 15),
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 8),
+                            ),
+                            Text(
+                              section.body,
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: ResponsiveUtils.fontSize(context, 14),
+                                color: Colors.grey[700],
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
                         ),
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    SizedBox(
-                      height: ResponsiveUtils.spacing(context, 12),
-                    ),
-                    Text(
-                      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(
-                          context,
-                          14,
-                        ),
-                        color: Colors.grey[700],
-                        height: 1.6,
                       ),
                     ),
                   ],
@@ -113,7 +96,14 @@ class TermsContent extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+          SocialLoginButton(
+            text: 'Sign up with Google',
+            iconUrl: 'https://www.google.com/favicon.ico',
+            iconData: Icons.g_mobiledata,
+            onPressed: () => GoogleAuthHelper.signIn(context, ref),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           DualActionButtons(
             primaryText: 'Accept',
             secondaryText: 'Decline',
@@ -128,4 +118,3 @@ class TermsContent extends StatelessWidget {
     );
   }
 }
-

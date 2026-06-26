@@ -8,6 +8,7 @@ class AppPreferencesService {
   static const appLanguageKey = 'pref_app_language';
   static const biometricUnlockKey = 'pref_biometric_unlock';
   static const lespayBalanceVisibleKey = 'pref_lespay_balance_visible';
+  static const darkModeKey = 'pref_dark_mode';
 
   final SharedPreferences _prefs;
 
@@ -30,6 +31,8 @@ class AppPreferencesService {
 
   String get appLanguage => _prefs.getString(appLanguageKey) ?? 'en';
 
+  bool get darkModeEnabled => _prefs.getBool(darkModeKey) ?? false;
+
   Future<void> setPushPromotionsEnabled(bool value) =>
       _prefs.setBool(pushPromotionsKey, value);
 
@@ -47,4 +50,7 @@ class AppPreferencesService {
 
   Future<void> setAppLanguage(String languageCode) =>
       _prefs.setString(appLanguageKey, languageCode);
+
+  Future<void> setDarkModeEnabled(bool value) =>
+      _prefs.setBool(darkModeKey, value);
 }

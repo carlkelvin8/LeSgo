@@ -69,7 +69,7 @@ class _CustomerServiceChatScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'LeSGo Assistant',
+                  'LeSgo Support',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -77,7 +77,7 @@ class _CustomerServiceChatScreenState
                   ),
                 ),
                 Text(
-                  chatState.isConfigured ? 'AI Customer Service' : 'Setup required',
+                  chatState.isConfigured ? 'Customer Service' : 'Setup required',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../core/constants/routers/register/register_routes.dart';
 import '../../../core/constants/routers/app_router.dart';
+import '../../../core/utils/google_auth_helper.dart';
+import '../../widgets/widgets.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -121,6 +124,14 @@ class WelcomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+              ),
+              
+              const SizedBox(height: 16),
+
+              SocialLoginButton(
+                text: 'Sign up with Google',
+                iconData: Icons.g_mobiledata,
+                onPressed: () => GoogleAuthHelper.signIn(context, ref),
               ),
               
               const SizedBox(height: 32),

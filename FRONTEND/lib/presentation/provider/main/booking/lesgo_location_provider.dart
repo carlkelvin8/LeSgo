@@ -429,8 +429,8 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         final polyline = Polyline(
           polylineId: const PolylineId('route'),
           points: directions.points,
-          color: const Color(0xFF1976D2),
-          width: 6,
+          color: const Color(0xFF5F2D82),
+          width: 8,
           geodesic: true,
         );
 
@@ -452,7 +452,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         final polyline = Polyline(
           polylineId: const PolylineId('route'),
           points: [origin, destination],
-          color: const Color(0xFF1976D2),
+          color: const Color(0xFF5F2D82),
           width: 8,
           patterns: [PatternItem.dash(20), PatternItem.gap(10)],
           geodesic: true,
@@ -480,7 +480,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       final polyline = Polyline(
         polylineId: const PolylineId('route'),
         points: [origin, destination],
-        color: const Color(0xFF1976D2), // Darker blue
+        color: const Color(0xFF5F2D82),
         width: 8, // Thicker line
         patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         geodesic: true,

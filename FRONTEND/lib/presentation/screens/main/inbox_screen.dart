@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/constants/routers/app_router.dart';
+import '../../../core/constants/routers/main/main_routes.dart';
 import '../../provider/chat/chat_provider.dart';
 import '../../widgets/widgets.dart';
-import '../../widgets/chat/order_chat_widget.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/order_service_labels.dart';
 import '../../../data/data_source/dto/chat/message_dto.dart';
@@ -23,6 +24,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(chatProviderGlobal.notifier).loadConversations();
     });
+  }
+
+  void _openCustomerService() {
+    AppRouter.push(context, MainRoutes.customerServiceChat);
   }
 
   void _openConversation(ConversationDto conversation, {String? driverName}) {
@@ -133,48 +138,71 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                       ),
                     )
                   : chatState.error != null && conversations.isEmpty
-                      ? RetryWidget(
-                          message: chatState.error!,
-                          isLoading: chatState.isLoading,
-                          onRetry: () => ref
-                              .read(chatProviderGlobal.notifier)
-                              .loadConversations(),
+                      ? ListView(
+                          padding: EdgeInsets.symmetric(
+                            vertical: ResponsiveUtils.spacing(context, 8),
+                          ),
+                          children: [
+                            _buildAdminSupportItem(context),
+                            Padding(
+                              padding: EdgeInsets.all(
+                                ResponsiveUtils.spacing(context, 24),
+                              ),
+                              child: RetryWidget(
+                                message: chatState.error!,
+                                isLoading: chatState.isLoading,
+                                onRetry: () => ref
+                                    .read(chatProviderGlobal.notifier)
+                                    .loadConversations(),
+                              ),
+                            ),
+                          ],
                         )
                       : conversations.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.chat_bubble_outline,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                              SizedBox(
-                                  height:
-                                      ResponsiveUtils.spacing(context, 16)),
-                              Text(
-                                'No conversations yet',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize:
-                                      ResponsiveUtils.fontSize(context, 16),
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              SizedBox(
-                                  height: ResponsiveUtils.spacing(context, 8)),
-                              Text(
-                                'Start chatting with your drivers',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize:
-                                      ResponsiveUtils.fontSize(context, 14),
-                                  color: Colors.grey[500],
-                                ),
-                              ),
-                            ],
+                      ? ListView(
+                          padding: EdgeInsets.symmetric(
+                            vertical: ResponsiveUtils.spacing(context, 8),
                           ),
+                          children: [
+                            _buildAdminSupportItem(context),
+                            Padding(
+                              padding: EdgeInsets.all(
+                                ResponsiveUtils.spacing(context, 32),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.chat_bubble_outline,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  SizedBox(
+                                    height: ResponsiveUtils.spacing(context, 12),
+                                  ),
+                                  Text(
+                                    'No order chats yet',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize:
+                                          ResponsiveUtils.fontSize(context, 15),
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                  Text(
+                                    'Driver conversations appear here when you have active orders',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize:
+                                          ResponsiveUtils.fontSize(context, 13),
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         )
                       : RefreshIndicator(
                           onRefresh: () => ref
@@ -185,11 +213,14 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                             padding: EdgeInsets.symmetric(
                               vertical: ResponsiveUtils.spacing(context, 8),
                             ),
-                            itemCount: conversations.length,
+                            itemCount: conversations.length + 1,
                             separatorBuilder: (context, index) =>
                                 const Divider(height: 1),
                             itemBuilder: (context, index) {
-                              final conversation = conversations[index];
+                              if (index == 0) {
+                                return _buildAdminSupportItem(context);
+                              }
+                              final conversation = conversations[index - 1];
                               return _buildConversationItem(
                                   context, conversation);
                             },
@@ -197,6 +228,58 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                         ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminSupportItem(BuildContext context) {
+    return Container(
+      color: const Color(0xFFF3E8FF),
+      child: InkWell(
+        onTap: _openCustomerService,
+        child: Padding(
+          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.15),
+                child: const Icon(
+                  Icons.support_agent,
+                  color: Color(0xFF5F2D82),
+                  size: 28,
+                ),
+              ),
+              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'LeSgo Customer Service',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 16),
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF5F2D82),
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                    Text(
+                      'Chat with our support team anytime',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 13),
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF5F2D82)),
+            ],
+          ),
         ),
       ),
     );
@@ -228,7 +311,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   CircleAvatar(
                     radius: 28,
                     backgroundColor:
-                        const Color(0xFF5F2D82).withOpacity(0.1),
+                        const Color(0xFF5F2D82).withValues(alpha: 0.1),
                     child: driverName != null
                         ? Text(
                             driverName.substring(0, 1).toUpperCase(),

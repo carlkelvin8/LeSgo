@@ -179,7 +179,7 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
           return order;
         }).toList();
 
-        state = state.copyWith(orders: updatedOrders);
+        state = state.copyWith(orders: updatedOrders, clearError: true);
         return true;
       }
       return false;

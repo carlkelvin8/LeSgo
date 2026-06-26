@@ -113,6 +113,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return message;
   }
 
+  /// After Google OAuth, persist tokens and load the user profile into state.
+  Future<bool> completeGoogleSignIn({
+    required String token,
+    String? refreshToken,
+  }) async {
+    await _localStorageService.saveToken(token);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _localStorageService.saveRefreshToken(refreshToken);
+    }
+
+    try {
+      final response = await getIt<UserRemoteDataSource>().getMe();
+      final profile = response.data;
+
+      if (response.success != true || profile == null) {
+        return false;
+      }
+
+      state = state.copyWith(
+        user: User(
+          id: profile.id.toString(),
+          email: profile.email,
+          name: profile.name,
+          token: token,
+        ),
+        clearError: true,
+      );
+
+      await getIt<PromoNotificationService>().registerDeviceToken();
+      await getIt<NotificationService>().refreshFromBackend();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> restoreSession() async {
     if (!_localStorageService.isRememberMeSessionValid()) {
       return false;

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../domain/entities/booking/booking_service.dart';
 import '../../../core/utils/responsive_utils.dart';
-import '../../../core/utils/snackbar_utils.dart';
 
 class ServiceCard extends StatelessWidget {
   final BookingService service;
@@ -17,11 +16,8 @@ class ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isComingSoon =
-        service.type == ServiceType.lesride || service.type == ServiceType.lesport;
-
-    final effectiveOnTap = isComingSoon
-        ? () => SnackBarUtils.showInfo(context, 'Coming soon')
-        : onTap;
+        service.type == ServiceType.lesride ||
+        service.type == ServiceType.lesport;
 
     return Container(
       decoration: BoxDecoration(
@@ -45,104 +41,98 @@ class ServiceCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
-          onTap: effectiveOnTap,
+          onTap: isComingSoon ? null : onTap,
           borderRadius: BorderRadius.circular(24),
           child: Stack(
-            clipBehavior: Clip.none,
             children: [
-              Container(
-                padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-                child: Row(
-                  children: [
-                    Container(
-                      width: ResponsiveUtils.spacing(context, 110),
-                      height: ResponsiveUtils.spacing(context, 110),
-                      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(16),
+              Opacity(
+                opacity: isComingSoon ? 0.45 : 1,
+                child: Container(
+                  padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: ResponsiveUtils.spacing(context, 110),
+                        height: ResponsiveUtils.spacing(context, 110),
+                        padding:
+                            EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: SvgPicture.asset(
+                          service.iconPath,
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                      child: SvgPicture.asset(
-                        service.iconPath,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    SizedBox(width: ResponsiveUtils.spacing(context, 16)),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            service.name,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 18),
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                      SizedBox(width: ResponsiveUtils.spacing(context, 16)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              service.name,
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize:
+                                    ResponsiveUtils.fontSize(context, 18),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                          Text(
-                            service.description,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 13),
-                              color: Colors.grey[600],
-                              height: 1.4,
+                            SizedBox(
+                                height: ResponsiveUtils.spacing(context, 4)),
+                            Text(
+                              service.description,
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize:
+                                    ResponsiveUtils.fontSize(context, 13),
+                                color: Colors.grey[600],
+                                height: 1.4,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-
               if (isComingSoon)
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.18),
+                      color: Colors.white.withValues(alpha: 0.55),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                  ),
-                ),
-
-              if (isComingSoon)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    ignoring: true,
-                    child: Center(
-                      child: Transform.rotate(
-                        angle: -0.28,
-                        child: Container(
-                          width: MediaQuery.of(context).size.width * 1.24,
-                          height: ResponsiveUtils.spacing(context, 16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF5F2D82),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.18),
-                                blurRadius: 5,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.spacing(context, 20),
+                        vertical: ResponsiveUtils.spacing(context, 10),
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF5F2D82),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          child: Center(
-                            child: Text(
-                              'COMING SOON',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: ResponsiveUtils.fontSize(context, 10),
-                                letterSpacing: 1.1,
-                              ),
-                            ),
-                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'Coming Soon',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: ResponsiveUtils.fontSize(context, 16),
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),

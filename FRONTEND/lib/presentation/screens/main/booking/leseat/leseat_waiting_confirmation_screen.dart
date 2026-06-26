@@ -85,35 +85,34 @@ class _LeseatWaitingConfirmationScreenState
   }
 
   Future<void> _showCancelDialog() async {
-    await showDialog<void>(
+    final result = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => CancelOrderDialog(
-        onConfirm: (reason) async {
-          setState(() => _isCancelling = true);
-          try {
-            await getIt<OrderRemoteDataSource>().cancelOrder(
-              widget.orderId,
-              reason,
-            );
-            await CartCleanup.clearAllCarts(ref);
-            if (!mounted) return;
-            Navigator.of(dialogContext).pop();
-            SnackBarUtils.showSuccess(context, 'Order cancelled.');
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          } catch (e) {
-            if (mounted) {
-              setState(() => _isCancelling = false);
-              SnackBarUtils.showErrorFrom(
-                context,
-                e,
-                fallbackEn: 'Could not cancel order.',
-                fallbackTl: 'Hindi makansela ang order.',
-              );
-            }
-          }
-        },
-      ),
+      builder: (context) => const CancelOrderDialog(),
     );
+
+    if (result == null || !mounted) return;
+
+    setState(() => _isCancelling = true);
+    try {
+      await getIt<OrderRemoteDataSource>().cancelOrder(
+        widget.orderId,
+        result,
+      );
+      await CartCleanup.clearAllCarts(ref);
+      if (!mounted) return;
+      SnackBarUtils.showSuccess(context, 'Order cancelled.');
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isCancelling = false);
+        SnackBarUtils.showErrorFrom(
+          context,
+          e,
+          fallbackEn: 'Could not cancel order.',
+          fallbackTl: 'Hindi makansela ang order.',
+        );
+      }
+    }
   }
 
   @override

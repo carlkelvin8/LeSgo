@@ -12,6 +12,7 @@ class ProfileHeader extends StatelessWidget {
   final String phone;
   final String? profileImageUrl;
   final VoidCallback? onImageTap;
+  final VoidCallback? onChangePhoneTap;
 
   const ProfileHeader({
     super.key,
@@ -21,6 +22,7 @@ class ProfileHeader extends StatelessWidget {
     required this.phone,
     this.profileImageUrl,
     this.onImageTap,
+    this.onChangePhoneTap,
   });
 
   @override
@@ -80,13 +82,37 @@ class ProfileHeader extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    Text(
-                      phone,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.black87,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            phone,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 14),
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                        if (onChangePhoneTap != null)
+                          TextButton(
+                            onPressed: onChangePhoneTap,
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              'Change',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: ResponsiveUtils.fontSize(context, 12),
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF5F2D82),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),

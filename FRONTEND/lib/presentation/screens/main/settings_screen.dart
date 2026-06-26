@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/constants/routers/app_router.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
+import '../../provider/theme_provider.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -88,6 +91,17 @@ class SettingsScreen extends StatelessWidget {
                 subtitle: 'English or Filipino',
                 onTap: () => AppRouter.push(context, MainRoutes.languageSettings),
               ),
+              _SettingsItem(
+                icon: Icons.dark_mode_outlined,
+                title: 'Dark Mode',
+                subtitle: isDark ? 'Violet theme enabled' : 'Light theme',
+                trailing: Switch(
+                  value: isDark,
+                  activeThumbColor: const Color(0xFF5F2D82),
+                  onChanged: (value) =>
+                      ref.read(themeModeProvider.notifier).setDarkMode(value),
+                ),
+              ),
             ],
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -96,8 +110,8 @@ class SettingsScreen extends StatelessWidget {
             items: [
               _SettingsItem(
                 icon: Icons.smart_toy_outlined,
-                title: 'LeSGo Assistant',
-                subtitle: 'Chat with our AI customer service bot',
+                title: 'LeSgo Support',
+                subtitle: 'Chat with our customer service team',
                 onTap: () =>
                     AppRouter.push(context, MainRoutes.customerServiceChat),
               ),
@@ -201,13 +215,15 @@ class _SettingsItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final Widget? trailing;
 
   const _SettingsItem({
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.onTap,
+    this.onTap,
+    this.trailing,
   });
 
   @override
@@ -243,11 +259,12 @@ class _SettingsItem extends StatelessWidget {
           fontFamily: 'TT Fors',
         ),
       ),
-      trailing: Icon(
-        Icons.arrow_forward_ios,
-        size: 16,
-        color: Colors.grey[400],
-      ),
+      trailing: trailing ??
+          Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: Colors.grey[400],
+          ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );

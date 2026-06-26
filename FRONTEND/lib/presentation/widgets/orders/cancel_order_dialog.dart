@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
 class CancelOrderDialog extends StatefulWidget {
-  final Function(String reason) onConfirm;
-
-  const CancelOrderDialog({
-    Key? key,
-    required this.onConfirm,
-  }) : super(key: key);
+  const CancelOrderDialog({super.key});
 
   @override
   State<CancelOrderDialog> createState() => _CancelOrderDialogState();
@@ -16,7 +11,6 @@ class CancelOrderDialog extends StatefulWidget {
 class _CancelOrderDialogState extends State<CancelOrderDialog> {
   String? _selectedReason;
   final TextEditingController _otherReasonController = TextEditingController();
-  bool _isProcessing = false;
 
   final List<String> _cancellationReasons = [
     'Changed my mind',
@@ -59,8 +53,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
       reason = _otherReasonController.text.trim();
     }
 
-    setState(() => _isProcessing = true);
-    widget.onConfirm(reason);
+    Navigator.of(context).pop(reason);
   }
 
   @override
@@ -112,18 +105,15 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                 activeColor: const Color(0xFF5F2D82),
                 contentPadding: EdgeInsets.zero,
                 dense: true,
-                onChanged: _isProcessing
-                    ? null
-                    : (value) {
-                        setState(() => _selectedReason = value);
-                      },
+                onChanged: (value) {
+                  setState(() => _selectedReason = value);
+                },
               );
             }),
             if (_selectedReason == 'Other') ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               TextField(
                 controller: _otherReasonController,
-                enabled: !_isProcessing,
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Please specify your reason...',
@@ -178,7 +168,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _isProcessing ? null : () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pop(),
           child: Text(
             'Keep Order',
             style: TextStyle(
@@ -189,27 +179,18 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
           ),
         ),
         ElevatedButton(
-          onPressed: _isProcessing ? null : _handleConfirm,
+          onPressed: _handleConfirm,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red[700],
             foregroundColor: Colors.white,
           ),
-          child: _isProcessing
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : Text(
-                  'Cancel Order',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                  ),
-                ),
+          child: Text(
+            'Cancel Order',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 14),
+            ),
+          ),
         ),
       ],
     );

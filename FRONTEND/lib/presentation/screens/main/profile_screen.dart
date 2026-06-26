@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../provider/main/profile/profile_provider.dart';
 import '../../provider/main/profile/controller/profile.controller.notifier.dart';
+import '../../widgets/profile/change_phone_sheet.dart';
 import '../../widgets/widgets.dart';
 import '../../widgets/common/retry_widget.dart';
 
@@ -69,13 +70,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                      child: ProfileHeader(
+                      child:                       ProfileHeader(
                         name: profileState.name,
                         birthdate: profileState.birthdate,
                         email: profileState.email,
                         phone: profileState.phone,
                         profileImageUrl: profileState.profileImageUrl,
-                        onImageTap: () => _controllers.showImagePicker(context, ref),
+                        onImageTap: () =>
+                            _controllers.showImagePicker(context, ref),
+                        onChangePhoneTap: () => ChangePhoneSheet.show(
+                          context,
+                          profileState.phone,
+                        ),
                       ),
                     ),
                     
