@@ -17,48 +17,87 @@ class PrinterService {
 
   BluetoothConnection? _activeConnection;
   String? _connectedAddress;
+  bool _isEnabling = false; // Guard against multiple enable requests
 
   bool get isConnected => _activeConnection != null;
 
   String? get connectedAddress => _connectedAddress;
 
-  Future<List<PrinterDevice>> discoverPrinters() async {
-    final bluetooth = FlutterBluetoothSerial.instance;
-
-    if (await bluetooth.isEnabled != true) {
-      await bluetooth.requestEnable();
+  Future<bool> _ensureBluetoothEnabled() async {
+    try {
+      final bluetooth = FlutterBluetoothSerial.instance;
+      
+      // Check if already enabled
+      final isEnabled = await bluetooth.isEnabled;
+      if (isEnabled == true) return true;
+      
+      // Prevent multiple simultaneous enable requests
+      if (_isEnabling) {
+        debugPrint('Bluetooth enable already in progress');
+        return false;
+      }
+      
+      _isEnabling = true;
+      try {
+        final result = await bluetooth.requestEnable();
+        return result == true;
+      } finally {
+        _isEnabling = false;
+      }
+    } catch (e) {
+      debugPrint('Bluetooth enable error: $e');
+      _isEnabling = false;
+      return false;
     }
+  }
 
-    final bonded = await bluetooth.getBondedDevices();
-    return bonded
-        .where((d) =>
-            (d.name ?? '').toLowerCase().contains('printer') ||
-            (d.name ?? '').toLowerCase().contains('thermal') ||
-            (d.name ?? '').toLowerCase().contains('pos') ||
-            (d.name ?? '').toLowerCase().contains('receipt') ||
-            (d.name ?? '').toLowerCase().contains('58mm') ||
-            (d.name ?? '').toLowerCase().contains('80mm'))
-        .map((d) => PrinterDevice(
-              name: d.name ?? 'Unknown',
-              address: d.address,
-            ))
-        .toList();
+  Future<List<PrinterDevice>> discoverPrinters() async {
+    try {
+      if (!await _ensureBluetoothEnabled()) {
+        throw Exception('Bluetooth not enabled');
+      }
+
+      final bluetooth = FlutterBluetoothSerial.instance;
+      final bonded = await bluetooth.getBondedDevices();
+      
+      return bonded
+          .where((d) =>
+              (d.name ?? '').toLowerCase().contains('printer') ||
+              (d.name ?? '').toLowerCase().contains('thermal') ||
+              (d.name ?? '').toLowerCase().contains('pos') ||
+              (d.name ?? '').toLowerCase().contains('receipt') ||
+              (d.name ?? '').toLowerCase().contains('58mm') ||
+              (d.name ?? '').toLowerCase().contains('80mm'))
+          .map((d) => PrinterDevice(
+                name: d.name ?? 'Unknown',
+                address: d.address,
+              ))
+          .toList();
+    } catch (e) {
+      debugPrint('Discover printers error: $e');
+      return [];
+    }
   }
 
   Future<List<PrinterDevice>> getAllBondedDevices() async {
-    final bluetooth = FlutterBluetoothSerial.instance;
+    try {
+      if (!await _ensureBluetoothEnabled()) {
+        throw Exception('Bluetooth not enabled');
+      }
 
-    if (await bluetooth.isEnabled != true) {
-      await bluetooth.requestEnable();
+      final bluetooth = FlutterBluetoothSerial.instance;
+      final bonded = await bluetooth.getBondedDevices();
+      
+      return bonded
+          .map((d) => PrinterDevice(
+                name: d.name ?? 'Unknown',
+                address: d.address,
+              ))
+          .toList();
+    } catch (e) {
+      debugPrint('Get bonded devices error: $e');
+      return [];
     }
-
-    final bonded = await bluetooth.getBondedDevices();
-    return bonded
-        .map((d) => PrinterDevice(
-              name: d.name ?? 'Unknown',
-              address: d.address,
-            ))
-        .toList();
   }
 
   Future<bool> connect(String address) async {
