@@ -555,6 +555,31 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     }
   }
 
+  // Helper method to sync locations from selected addresses
+  Future<void> _syncLocationsFromAddresses() async {
+    final locationState = _ref.read(lesgoLocationProvider);
+    
+    // Sync dropoff location from selected address if needed
+    if (locationState.destinationLocation == null && state.selectedDropoffAddress != null) {
+      final address = state.selectedDropoffAddress!;
+      await _ref.read(lesgoLocationProvider.notifier).updateDestinationWithAddress(
+        LatLng(address.latitude, address.longitude),
+        address.addressLine1,
+        null,
+      );
+    }
+
+    // Sync pickup location from selected address if needed
+    if (locationState.pickupLocation == null && state.selectedPickupAddress != null) {
+      final address = state.selectedPickupAddress!;
+      await _ref.read(lesgoLocationProvider.notifier).updatePickupWithAddress(
+        LatLng(address.latitude, address.longitude),
+        address.addressLine1,
+        null,
+      );
+    }
+  }
+
   // Handle booking action with validation and API integration
   Future<void> handleBook(BuildContext context) async {
     if (!await NetworkGuard.ensureOnline(context)) return;
@@ -572,70 +597,24 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print('  - selectedDropoffAddress: ${state.selectedDropoffAddress}');
     print('  - selectedPickupAddress: ${state.selectedPickupAddress}');
 
-    // Check if destination is set (allow booking if location is set even if address is null)
-    if (locationState.destinationLocation == null &&
-        state.selectedDropoffAddress == null) {
-      // For testing purposes, create a default destination near the pickup location
-      if (locationState.pickupLocation != null) {
-        print('🔧 LesGo: Creating default destination for testing');
-        final pickup = locationState.pickupLocation!;
-        // Create a destination 0.01 degrees away (roughly 1km)
-        final defaultDestination = LatLng(
-          pickup.latitude + 0.01,
-          pickup.longitude + 0.01,
-        );
-
-        await _ref
-            .read(lesgoLocationProvider.notifier)
-            .updateDestination(defaultDestination);
-
-        // Show info message
-        SnackBarUtils.showInfo(
-          context,
-          'Using default destination for testing. You can change it by tapping on the map.',
-        );
-      } else {
-        // Show helpful message and automatically open destination selection
-        SnackBarUtils.showWarning(
-          context,
-          'Please select a destination to continue booking',
-        );
-
-        // Automatically open destination selection to help user
-        Future.delayed(const Duration(milliseconds: 500), () {
-          openDestinationSelection();
-        });
-        return;
-      }
+    // Strict validation - destination is required
+    if (locationState.destinationLocation == null) {
+      SnackBarUtils.showWarning(
+        context,
+        'Please select a destination before booking',
+      );
+      
+      // Automatically open destination selection to help user
+      Future.delayed(const Duration(milliseconds: 500), () {
+        openDestinationSelection();
+      });
+      return;
     }
 
-    // If we have a selected dropoff address but no destination location, update the location
-    if (locationState.destinationLocation == null &&
-        state.selectedDropoffAddress != null) {
-      final address = state.selectedDropoffAddress!;
-      await _ref
-          .read(lesgoLocationProvider.notifier)
-          .updateDestinationWithAddress(
-            LatLng(address.latitude, address.longitude),
-            address.addressLine1,
-            null,
-          );
-    }
+    // Sync locations from selected addresses if needed
+    await _syncLocationsFromAddresses();
 
-    // If we have a selected pickup address but no pickup location, update the location
-    if (locationState.pickupLocation == null &&
-        state.selectedPickupAddress != null) {
-      final address = state.selectedPickupAddress!;
-      await _ref
-          .read(lesgoLocationProvider.notifier)
-          .updatePickupWithAddress(
-            LatLng(address.latitude, address.longitude),
-            address.addressLine1,
-            null,
-          );
-    }
-
-    // Re-read the location state after potential updates
+    // Re-read state after potential sync
     final updatedLocationState = _ref.read(lesgoLocationProvider);
 
     // Final validation - ensure both pickup and destination are set

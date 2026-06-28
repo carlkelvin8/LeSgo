@@ -320,31 +320,27 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
     // Split by comma and assign to appropriate fields
     final parts = formattedAddress.split(',').map((e) => e.trim()).toList();
 
-    if (parts.isEmpty) return null;
-
-    // For city/region names like "Malolos, Bulacan, Philippines"
-    // We'll use the first part as subdivisionBarangay and combine city/province
-    String? subdivisionBarangay;
-    String? cityProvince;
-
     if (parts.isEmpty) {
-      subdivisionBarangay = parts[0];
+      return null; // No parts to parse
     }
 
-    if (parts.length >= 2) {
-      // Combine city and province (e.g., "Bulacan, Philippines" -> "Bulacan, Philippines")
-      cityProvince = parts.sublist(1).join(', ');
-    } else if (parts.length == 1) {
-      // If only one part, use it as cityProvince
-      cityProvince = parts[0];
-      subdivisionBarangay = null;
+    // For single part (e.g., just "Malolos")
+    if (parts.length == 1) {
+      return LocationAddress(
+        houseNumberStreet: null,
+        subdivisionBarangay: null,
+        cityProvince: parts[0],
+        zipCode: null,
+      );
     }
 
+    // For multiple parts (e.g., "Malolos, Bulacan, Philippines")
+    // First part is subdivision/barangay, rest is city/province
     return LocationAddress(
-      houseNumberStreet: null, // Not available from formatted address
-      subdivisionBarangay: subdivisionBarangay,
-      cityProvince: cityProvince,
-      zipCode: null, // Not available from formatted address
+      houseNumberStreet: null,
+      subdivisionBarangay: parts[0],
+      cityProvince: parts.sublist(1).join(', '),
+      zipCode: null,
     );
   }
 
