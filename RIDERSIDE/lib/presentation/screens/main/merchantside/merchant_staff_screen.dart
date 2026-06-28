@@ -25,102 +25,22 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
   }
 
   Future<void> _showInviteDialog() async {
-    final nameCtrl = TextEditingController();
-    final emailCtrl = TextEditingController();
-    final passCtrl = TextEditingController();
     var selectedRole = 'cashier';
 
-    final confirmed = await showDialog<bool>(
+    final result = await showDialog<Map<String, String>>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text(
-            'Invite Staff',
-            style: TextStyle(fontFamily: 'TT Fors'),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: emailCtrl,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: passCtrl,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Temporary Password',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: selectedRole,
-                  decoration: const InputDecoration(
-                    labelText: 'Role',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                    DropdownMenuItem(value: 'cook', child: Text('Cook')),
-                    DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) setDialogState(() => selectedRole = v);
-                  },
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  MerchantStaffPermissions.descriptionForRole(selectedRole),
-                  style: const TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 12,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF5F2D82),
-              ),
-              child: const Text('Invite'),
-            ),
-          ],
-        ),
+      builder: (ctx) => _InviteStaffDialogContent(
+        initialRole: selectedRole,
+        onRoleChanged: (role) => selectedRole = role,
       ),
     );
 
-    if (confirmed != true) return;
+    if (result == null || !mounted) return;
 
-    final name = nameCtrl.text.trim();
-    final email = emailCtrl.text.trim();
-    final password = passCtrl.text.trim();
-
-    nameCtrl.dispose();
-    emailCtrl.dispose();
-    passCtrl.dispose();
+    final name = result['name'] ?? '';
+    final email = result['email'] ?? '';
+    final password = result['password'] ?? '';
+    final role = result['role'] ?? 'cashier';
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
       SnackBarUtils.showError(context, 'All fields are required');
@@ -129,7 +49,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
 
     final ok = await ref
         .read(merchantStaffProvider.notifier)
-        .inviteStaff(name: name, email: email, password: password, role: selectedRole);
+        .inviteStaff(name: name, email: email, password: password, role: role);
 
     if (!mounted) return;
 
@@ -481,6 +401,136 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+// StatefulWidget for Invite Staff Dialog
+class _InviteStaffDialogContent extends StatefulWidget {
+  final String initialRole;
+  final Function(String) onRoleChanged;
+
+  const _InviteStaffDialogContent({
+    required this.initialRole,
+    required this.onRoleChanged,
+  });
+
+  @override
+  State<_InviteStaffDialogContent> createState() => _InviteStaffDialogContentState();
+}
+
+class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _emailCtrl;
+  late final TextEditingController _passCtrl;
+  late String _selectedRole;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController();
+    _emailCtrl = TextEditingController();
+    _passCtrl = TextEditingController();
+    _selectedRole = widget.initialRole;
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text(
+        'Invite Staff',
+        style: TextStyle(fontFamily: 'TT Fors'),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Full Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _emailCtrl,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _passCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Temporary Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: _selectedRole,
+              decoration: const InputDecoration(
+                labelText: 'Role',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                DropdownMenuItem(value: 'cook', child: Text('Cook')),
+                DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
+              ],
+              onChanged: (v) {
+                if (v != null) {
+                  setState(() => _selectedRole = v);
+                  widget.onRoleChanged(v);
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+            Text(
+              MerchantStaffPermissions.descriptionForRole(_selectedRole),
+              style: const TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: 12,
+                color: Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final result = {
+              'name': _nameCtrl.text.trim(),
+              'email': _emailCtrl.text.trim(),
+              'password': _passCtrl.text.trim(),
+              'role': _selectedRole,
+            };
+            Navigator.pop(context, result);
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF5F2D82),
+          ),
+          child: const Text('Invite'),
+        ),
+      ],
     );
   }
 }
