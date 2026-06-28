@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 // Guard to prevent duplicate dialogs
 final Set<String> _activeDialogs = {};
 
-// Stateful dialog content to properly manage TextEditingController lifecycle
+// Stateful dialog content to properly manage dropdown selection
 class _CancelReasonDialogContent extends StatefulWidget {
   final String title;
-  final String hint;
 
   const _CancelReasonDialogContent({
     required this.title,
-    required this.hint,
   });
 
   @override
@@ -18,29 +16,63 @@ class _CancelReasonDialogContent extends StatefulWidget {
 }
 
 class _CancelReasonDialogContentState extends State<_CancelReasonDialogContent> {
-  late final TextEditingController _controller;
+  // Predefined rejection reasons
+  static const List<String> _rejectionReasons = [
+    'Out of stock',
+    'Restaurant closed',
+    'Too busy to fulfill order',
+    'Item unavailable',
+    'Incorrect order details',
+    'Unable to contact customer',
+    'Other reason',
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  String? _selectedReason;
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(widget.title),
-      content: TextField(
-        controller: _controller,
-        decoration: InputDecoration(hintText: widget.hint),
-        maxLines: 2,
-        autofocus: true,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Select reason for rejection:',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                value: _selectedReason,
+                hint: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('Choose a reason'),
+                ),
+                items: _rejectionReasons.map((reason) {
+                  return DropdownMenuItem<String>(
+                    value: reason,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(reason),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedReason = value;
+                  });
+                },
+              ),
+            ),
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -48,11 +80,11 @@ class _CancelReasonDialogContentState extends State<_CancelReasonDialogContent> 
           child: const Text('Back'),
         ),
         ElevatedButton(
-          onPressed: () {
-            final reason = _controller.text.trim();
-            if (reason.isEmpty) return;
-            Navigator.of(context).pop(reason);
-          },
+          onPressed: _selectedReason == null
+              ? null
+              : () {
+                  Navigator.of(context).pop(_selectedReason);
+                },
           child: const Text('Confirm'),
         ),
       ],
@@ -63,7 +95,6 @@ class _CancelReasonDialogContentState extends State<_CancelReasonDialogContent> 
 Future<String?> showMerchantCancelReasonDialog(
   BuildContext context, {
   required String title,
-  String hint = 'Reason for cancellation',
 }) async {
   // Create unique dialog ID
   final dialogId = 'cancel_reason_${context.hashCode}';
@@ -82,7 +113,6 @@ Future<String?> showMerchantCancelReasonDialog(
       barrierDismissible: false, // Must tap button to close
       builder: (dialogContext) => _CancelReasonDialogContent(
         title: title,
-        hint: hint,
       ),
     );
     return result;

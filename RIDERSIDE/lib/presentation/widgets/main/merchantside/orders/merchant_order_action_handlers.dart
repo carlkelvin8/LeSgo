@@ -40,7 +40,6 @@ class MerchantOrderActionHandlers {
     final reason = await showMerchantCancelReasonDialog(
       context,
       title: 'Reject Order',
-      hint: 'Reason for rejecting this order',
     );
     if (reason == null || !context.mounted) return;
 
@@ -63,7 +62,6 @@ class MerchantOrderActionHandlers {
     final reason = await showMerchantCancelReasonDialog(
       context,
       title: 'Cancel Order',
-      hint: 'Reason for cancelling this order',
     );
     if (reason == null || !context.mounted) return;
 
