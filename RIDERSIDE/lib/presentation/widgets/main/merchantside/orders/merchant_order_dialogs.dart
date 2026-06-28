@@ -19,8 +19,10 @@ Future<String?> showMerchantCancelReasonDialog(
   
   _activeDialogs.add(dialogId);
   
+  TextEditingController? controller;
+  
   try {
-    final controller = TextEditingController();
+    controller = TextEditingController();
     final result = await showDialog<String>(
       context: context,
       barrierDismissible: false, // Must tap button to close
@@ -28,7 +30,7 @@ Future<String?> showMerchantCancelReasonDialog(
         key: ValueKey(dialogId), // Unique key per dialog
         title: Text(title),
         content: TextField(
-          controller: controller,
+          controller: controller!,
           decoration: InputDecoration(hintText: hint),
           maxLines: 2,
           autofocus: true,
@@ -40,7 +42,7 @@ Future<String?> showMerchantCancelReasonDialog(
           ),
           ElevatedButton(
             onPressed: () {
-              final reason = controller.text.trim();
+              final reason = controller!.text.trim();
               if (reason.isEmpty) return;
               Navigator.of(dialogContext).pop(reason);
             },
@@ -49,9 +51,10 @@ Future<String?> showMerchantCancelReasonDialog(
         ],
       ),
     );
-    controller.dispose();
     return result;
   } finally {
+    // Dispose controller after dialog is closed
+    controller?.dispose();
     _activeDialogs.remove(dialogId);
   }
 }
