@@ -128,9 +128,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1010.NotificationService>(
       () => _i1010.NotificationService(gh<_i407.FcmService>()),
     );
-    gh.lazySingleton<_i45.AnalyticsService>(
-      () => _i45.AnalyticsService(gh<_i214.DioClient>()),
-    );
     gh.lazySingleton<_i285.FileUploadService>(
       () => _i285.FileUploadService(gh<_i214.DioClient>()),
     );
@@ -211,6 +208,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i675.MissionsRemoteDataSource>(
       () => _i675.MissionsRemoteDataSource(gh<_i214.DioClient>()),
+    );
+    gh.lazySingleton<_i45.AnalyticsService>(
+      () => _i45.AnalyticsService(
+        gh<_i214.DioClient>(),
+        gh<_i584.LocalStorageService>(),
+      ),
     );
     gh.lazySingleton<_i579.PromoNotificationService>(
       () => _i579.PromoNotificationService(

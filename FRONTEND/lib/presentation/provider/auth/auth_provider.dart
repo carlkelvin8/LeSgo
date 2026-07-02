@@ -75,6 +75,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _loginUseCase(request);
 
+      // ✅ Role validation for customer app
+      if (user.role != null && user.role != 'customer') {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'This account is for ${user.role}s. Please use the ${user.role} app to login.',
+          clearSuccessMessage: true,
+        );
+        return;
+      }
+
       state = state.copyWith(
         user: user,
         isLoading: false,
@@ -137,9 +147,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
           email: profile.email,
           name: profile.name,
           token: token,
+          role: profile.role,
         ),
         clearError: true,
       );
+
+      // ✅ Role validation for customer app
+      if (profile.role != 'customer') {
+        state = AuthState(); // Clear state
+        return false;
+      }
 
       await getIt<PromoNotificationService>().registerDeviceToken();
       await getIt<NotificationService>().refreshFromBackend();
@@ -173,10 +190,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
           email: profile.email,
           name: profile.name,
           token: token,
+          role: profile.role,
         ),
         rememberMe: true,
         clearError: true,
       );
+
+      // ✅ Role validation for customer app
+      if (profile.role != 'customer') {
+        state = AuthState(); // Clear state
+        return false;
+      }
 
       await _localStorageService.refreshRememberMeExpiry();
       await getIt<PromoNotificationService>().registerDeviceToken();

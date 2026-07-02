@@ -29,6 +29,7 @@ UserPayloadDto _$UserPayloadDtoFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num?)?.toInt(),
       name: json['name'] as String?,
       email: json['email'] as String?,
+      role: json['role'] as String?,
     );
 
 Map<String, dynamic> _$UserPayloadDtoToJson(UserPayloadDto instance) =>
@@ -36,4 +37,5 @@ Map<String, dynamic> _$UserPayloadDtoToJson(UserPayloadDto instance) =>
       'id': instance.id,
       'name': instance.name,
       'email': instance.email,
+      'role': instance.role,
     };

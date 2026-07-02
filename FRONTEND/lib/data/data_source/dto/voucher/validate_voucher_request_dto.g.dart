@@ -19,5 +19,5 @@ Map<String, dynamic> _$ValidateVoucherRequestDtoToJson(
 ) => <String, dynamic>{
   'voucher_code': instance.voucherCode,
   'order_value': instance.orderValue,
-  if (instance.serviceId case final value?) 'service_id': value,
+  'service_id': ?instance.serviceId,
 };

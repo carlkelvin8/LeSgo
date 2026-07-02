@@ -107,9 +107,48 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider(widget.orderId));
+
+    // When used full-screen (height == double.infinity), let the parent
+    // Scaffold handle the resize via resizeToAvoidBottomInset.
+    final isFullScreen = widget.height == double.infinity;
+
+    Widget content = Column(
+      children: [
+        // Header
+        if (widget.showHeader) _buildHeader(context),
+        
+        // Messages list
+        Expanded(
+          child: _buildMessagesList(chatState),
+        ),
+        
+        // Input — always allow typing; send is blocked internally if no conversation
+        ChatInputWidget(
+          onSendMessage: _sendMessage,
+          isLoading: chatState.isSending,
+          enabled: true,
+        ),
+      ],
+    );
+
+    if (isFullScreen) {
+      // Full screen mode (inside a Scaffold) — just fill parent
+      return Container(
+        color: Colors.white,
+        child: content,
+      );
+    }
+
+    // Bottom sheet mode with isScrollControlled: true
+    // Use the standard pattern: wrap in Padding with viewInsets.bottom
+    // so the sheet pushes up above the keyboard.
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
     
     return Container(
-      height: widget.height ?? MediaQuery.of(context).size.height * 0.6,
+      height: (widget.height ?? MediaQuery.of(context).size.height * 0.6) + bottomPadding,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: widget.showHeader 
@@ -123,23 +162,9 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
           ),
         ] : null,
       ),
-      child: Column(
-        children: [
-          // Header
-          if (widget.showHeader) _buildHeader(context),
-          
-          // Messages list
-          Expanded(
-            child: _buildMessagesList(chatState),
-          ),
-          
-          // Input — always allow typing; send is blocked internally if no conversation
-          ChatInputWidget(
-            onSendMessage: _sendMessage,
-            isLoading: chatState.isSending,
-            enabled: true,
-          ),
-        ],
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomPadding),
+        child: content,
       ),
     );
   }

@@ -22,6 +22,7 @@ CreateOrderRequestDto _$CreateOrderRequestDtoFromJson(
   meta: json['meta'] as Map<String, dynamic>?,
   voucherCode: json['voucher_code'] as String?,
   discountAmount: (json['discount_amount'] as num?)?.toDouble(),
+  scheduledDeliveryTime: json['scheduled_delivery_time'] as String?,
 );
 
 Map<String, dynamic> _$CreateOrderRequestDtoToJson(
@@ -38,6 +39,7 @@ Map<String, dynamic> _$CreateOrderRequestDtoToJson(
   'meta': instance.meta,
   'voucher_code': instance.voucherCode,
   'discount_amount': instance.discountAmount,
+  'scheduled_delivery_time': instance.scheduledDeliveryTime,
 };
 
 OrderAddressDto _$OrderAddressDtoFromJson(Map<String, dynamic> json) =>

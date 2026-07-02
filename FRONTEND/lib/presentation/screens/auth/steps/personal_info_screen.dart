@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/common/common_widgets.dart';
 import '../../../provider/register/controller/personal_info.controller.notifier.dart';
+import '../../../../core/utils/google_auth_helper.dart';
 import '../../../../core/utils/validators/register_validator.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/validators/otp_validator.dart';
@@ -78,6 +79,45 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 32),
+                            ),
+
+                            // Sign up with Google (quick option)
+                            SocialLoginButton(
+                              text: 'Sign up with Google',
+                              iconUrl: 'https://www.google.com/favicon.ico',
+                              iconData: Icons.g_mobiledata,
+                              onPressed: () =>
+                                  GoogleAuthHelper.signIn(context, ref),
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 20),
+                            ),
+
+                            // OR divider
+                            Row(
+                              children: [
+                                const Expanded(child: Divider(thickness: 1)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal:
+                                        ResponsiveUtils.spacing(context, 12),
+                                  ),
+                                  child: Text(
+                                    'OR',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize:
+                                          ResponsiveUtils.fontSize(context, 12),
+                                      color: Colors.grey[500],
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const Expanded(child: Divider(thickness: 1)),
+                              ],
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 20),
                             ),
 
                             // First Name with real-time validation

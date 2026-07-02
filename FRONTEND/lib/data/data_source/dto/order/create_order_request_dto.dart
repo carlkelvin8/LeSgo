@@ -23,6 +23,8 @@ class CreateOrderRequestDto {
   final String? voucherCode;
   @JsonKey(name: 'discount_amount')
   final double? discountAmount;
+  @JsonKey(name: 'scheduled_delivery_time')
+  final String? scheduledDeliveryTime;
 
   CreateOrderRequestDto({
     required this.serviceId,
@@ -36,6 +38,7 @@ class CreateOrderRequestDto {
     this.meta,
     this.voucherCode,
     this.discountAmount,
+    this.scheduledDeliveryTime,
   });
 
   factory CreateOrderRequestDto.fromJson(Map<String, dynamic> json) =>

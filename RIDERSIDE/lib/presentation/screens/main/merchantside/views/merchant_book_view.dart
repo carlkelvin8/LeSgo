@@ -72,6 +72,7 @@ class MerchantBookView extends ConsumerWidget {
                           child: MerchantFoodCategoryChip(
                             label: entry.value.name,
                             icon: entry.value.iconEmoji ?? '🍽️',
+                            imageUrl: entry.value.imageUrl,
                             isSelected: selectedCategory == entry.value.id,
                           ),
                         ),

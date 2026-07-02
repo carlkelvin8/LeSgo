@@ -43,7 +43,13 @@ class UserRepositoryImpl implements UserRepository {
       await localStorageService.saveRefreshToken(refreshToken);
     }
 
-    return User(id: dto.id, email: dto.email, name: dto.name, token: token);
+    return User(
+      id: dto.id,
+      email: dto.email,
+      name: dto.name,
+      token: token,
+      role: dto.role,
+    );
   }
 
   @override

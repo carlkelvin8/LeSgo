@@ -15,12 +15,18 @@
                        "services":  {
                                         "appinvite_service":  {
                                                                   "other_platform_oauth_client":  [
-
+                                                                                                      {
+                                                                                                          "client_id":  "410330550746-qibfkvmljkd4ktug5c79h6p73gv2oint.apps.googleusercontent.com",
+                                                                                                          "client_type":  3
+                                                                                                      }
                                                                                                   ]
                                                               }
                                     },
                        "oauth_client":  [
-
+                                            {
+                                                "client_id":  "410330550746-qibfkvmljkd4ktug5c79h6p73gv2oint.apps.googleusercontent.com",
+                                                "client_type":  3
+                                            }
                                         ]
                    }
                ],

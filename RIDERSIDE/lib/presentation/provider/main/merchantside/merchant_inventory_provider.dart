@@ -23,7 +23,10 @@ Future<void> updateMerchantItemStock(
     autoHideWhenEmpty: true,
   );
 
-  final liveOnMenu = item.isAvailable || !inventory.isSoldOut;
+  // Respect the merchant's manual visibility choice. Only auto-hide happens
+  // via resolveAvailability when sold out — a manually hidden item must NOT
+  // be forced back to available just because stock > 0.
+  final liveOnMenu = item.isAvailable;
   final resolvedAvailability = inventory.resolveAvailability(
     liveOnMenu: liveOnMenu,
   );

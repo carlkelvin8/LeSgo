@@ -225,51 +225,71 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   }
 
   Future<bool> updateProfileImage(dynamic imageFile) async {
+    print('🔵 ProfileProvider: updateProfileImage called');
+    print('🔵 ProfileProvider: imageFile type: ${imageFile.runtimeType}');
+    
     state = state.copyWith(isUpdating: true, error: null);
     try {
       final XFile xFile = imageFile is XFile
           ? imageFile
           : XFile(imageFile as String);
 
+      print('🔵 ProfileProvider: XFile created - path: ${xFile.path}');
+
       final userDataSource = getIt<UserRemoteDataSource>();
       UserProfileDto? updatedUser;
 
       try {
+        print('🔵 ProfileProvider: Attempting FileUploadService upload...');
         final uploaded = await getIt<FileUploadService>().uploadFile(
           xFile,
           context: 'profile',
         );
+        print('✅ ProfileProvider: File uploaded! URL: ${uploaded.url}');
+        
         final response = await userDataSource.updateMe(
           UpdateUserRequestDto(profilePhoto: uploaded.url),
         );
+        print('🔵 ProfileProvider: updateMe response - success: ${response.success}');
+        
         if (response.success && response.data != null) {
           updatedUser = response.data;
+          print('✅ ProfileProvider: User updated via FileUploadService!');
         }
       } catch (mediaError) {
-        debugPrint('Profile upload via media failed: $mediaError');
+        print('⚠️ ProfileProvider: FileUploadService failed: $mediaError');
+        print('🔵 ProfileProvider: Trying direct uploadProfilePicture...');
+        
         final response = await userDataSource.uploadProfilePicture(xFile);
+        print('🔵 ProfileProvider: uploadProfilePicture response - success: ${response.success}');
+        
         if (response.success && response.data != null) {
           updatedUser = response.data;
+          print('✅ ProfileProvider: User updated via uploadProfilePicture!');
         }
       }
 
       if (updatedUser != null) {
+        final resolvedUrl = _resolveProfileImageUrl(updatedUser);
+        print('✅ ProfileProvider: Profile updated! New URL: $resolvedUrl');
+        
         state = state.copyWith(
           user: updatedUser,
-          profileImageUrl: _resolveProfileImageUrl(updatedUser),
+          profileImageUrl: resolvedUrl,
           isUpdating: false,
           error: null,
         );
         return true;
       }
 
+      print('❌ ProfileProvider: No updated user received');
       state = state.copyWith(
         isUpdating: false,
         error: 'Failed to upload profile picture',
       );
       return false;
     } catch (e, stackTrace) {
-      debugPrint('Profile image upload error: $e\n$stackTrace');
+      debugPrint('❌ ProfileProvider: Profile image upload error: $e\n$stackTrace');
       state = state.copyWith(
         isUpdating: false,
         error: e.toString(),

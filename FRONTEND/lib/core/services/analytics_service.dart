@@ -3,14 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
 
 import '../constants/api_constants.dart';
+import '../di/local_storage_service.dart';
 import '../network/dio_client.dart';
 
 /// Fire-and-forget analytics event tracking for the customer app.
 @lazySingleton
 class AnalyticsService {
   final DioClient _dioClient;
+  final LocalStorageService _localStorageService;
 
-  AnalyticsService(this._dioClient);
+  AnalyticsService(this._dioClient, this._localStorageService);
 
   Future<void> trackEvent(
     String eventType, {
@@ -20,6 +22,13 @@ class AnalyticsService {
     String? eventLabel,
     double? eventValue,
   }) async {
+    // Analytics endpoint requires authentication. Skip tracking when the user
+    // is not logged in to avoid noisy 401 errors on pre-auth screens.
+    final token = _localStorageService.token;
+    if (token == null || token.isEmpty) {
+      return;
+    }
+
     try {
       await _dioClient.dio.post(
         ApiConstants.analyticsTrackEvent,

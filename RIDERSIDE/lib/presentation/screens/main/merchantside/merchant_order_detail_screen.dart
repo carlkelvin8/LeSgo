@@ -419,7 +419,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                         style: TextStyle(fontFamily: 'TT Fors', color: Colors.black54),
                       ),
                       Text(
-                        'PHP ${(resolvedOrder.estimatedFare ?? resolvedOrder.totalFare ?? resolvedOrder.distanceFare ?? 0.0).toStringAsFixed(2)}',
+                        'PHP ${(resolvedOrder.totalFare ?? resolvedOrder.estimatedFare ?? resolvedOrder.distanceFare ?? 0.0).toStringAsFixed(2)}',
                         style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -513,7 +513,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                         ),
                       ),
                       Text(
-                        'PHP ${(itemSubtotal + (resolvedOrder.estimatedFare ?? resolvedOrder.totalFare ?? resolvedOrder.distanceFare ?? 0.0)).toStringAsFixed(2)}',
+                        'PHP ${(itemSubtotal + (resolvedOrder.totalFare ?? resolvedOrder.estimatedFare ?? resolvedOrder.distanceFare ?? 0.0)).toStringAsFixed(2)}',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 18),

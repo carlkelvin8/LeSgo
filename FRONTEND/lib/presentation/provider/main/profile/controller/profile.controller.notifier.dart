@@ -26,13 +26,19 @@ class ProfileControllers {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    if (_isModalOpen) return;
+    print('🔵 ProfileControllers: showImagePicker called!');
+    if (_isModalOpen) {
+      print('⚠️ ProfileControllers: Modal already open, returning...');
+      return;
+    }
     _isModalOpen = true;
+    print('🔵 ProfileControllers: Opening camera picker...');
 
     try {
       await _pickImageFromCamera(context, ref, ImagePicker());
     } finally {
       _isModalOpen = false;
+      print('🔵 ProfileControllers: Modal closed.');
     }
   }
 
@@ -41,9 +47,13 @@ class ProfileControllers {
     WidgetRef ref,
     ImagePicker picker,
   ) async {
+    print('🔵 ProfileControllers: Requesting camera permission...');
     final permissionService = getIt<PermissionService>();
     final hasPermission = await permissionService.requestCameraWithRationale();
+    print('🔵 ProfileControllers: Camera permission result: $hasPermission');
+    
     if (!hasPermission) {
+      print('❌ ProfileControllers: Camera permission denied');
       if (context.mounted) {
         SnackBarUtils.showError(
           context,
@@ -53,14 +63,21 @@ class ProfileControllers {
       return;
     }
 
+    print('🔵 ProfileControllers: Opening camera...');
     final XFile? image = await picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 85,
       maxWidth: 1200,
       preferredCameraDevice: CameraDevice.front,
     );
-    if (image != null && context.mounted) {
-      await _updateProfileImage(context, ref, image);
+    
+    if (image != null) {
+      print('✅ ProfileControllers: Image captured! Path: ${image.path}');
+      if (context.mounted) {
+        await _updateProfileImage(context, ref, image);
+      }
+    } else {
+      print('⚠️ ProfileControllers: No image captured (user cancelled?)');
     }
   }
 
@@ -69,18 +86,25 @@ class ProfileControllers {
     WidgetRef ref,
     XFile imageFile,
   ) async {
+    print('🔵 ProfileControllers: Starting profile image update...');
+    print('🔵 ProfileControllers: Image file path: ${imageFile.path}');
+    
     final success =
         await ref.read(profileProvider.notifier).updateProfileImage(imageFile);
+
+    print('🔵 ProfileControllers: Update result: $success');
 
     if (!context.mounted) return;
 
     if (success) {
+      print('✅ ProfileControllers: Profile picture updated successfully!');
       SnackBarUtils.showSuccess(
         context,
         'Profile picture updated successfully!',
       );
     } else {
       final error = ref.read(profileProvider).error;
+      print('❌ ProfileControllers: Update failed! Error: $error');
       SnackBarUtils.showError(
         context,
         error ?? 'Failed to update profile picture. Please try again.',

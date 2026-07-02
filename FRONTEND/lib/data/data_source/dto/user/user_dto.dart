@@ -29,6 +29,8 @@ class UserDto {
 
   String get name => user?.name ?? '';
 
+  String get role => user?.role ?? '';
+
   factory UserDto.withError(String errorMessage) {
     return UserDto(
       user: null,
@@ -45,8 +47,9 @@ class UserPayloadDto {
   final int? id;
   final String? name;
   final String? email;
+  final String? role;
 
-  UserPayloadDto({this.id, this.name, this.email});
+  UserPayloadDto({this.id, this.name, this.email, this.role});
 
   factory UserPayloadDto.fromJson(Map<String, dynamic> json) =>
       _$UserPayloadDtoFromJson(json);

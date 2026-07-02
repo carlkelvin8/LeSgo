@@ -37,61 +37,73 @@ class AuthScreen extends ConsumerWidget {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        resizeToAvoidBottomInset: true,
         body: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-            ),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: ResponsiveUtils.spacing(context, 40),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
                 ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: ResponsiveUtils.spacing(context, 40),
+                        ),
 
-                // Top bar with logo + back button
-                const AuthTopBar(),
+                        // Top bar with logo + back button
+                        const AuthTopBar(),
 
-                const Spacer(flex: 2),
+                        const Spacer(flex: 2),
 
-                // Circular illustration
-                const AuthIllustration(),
+                        // Circular illustration
+                        const AuthIllustration(),
 
-                const Spacer(flex: 2),
+                        const Spacer(flex: 2),
 
-                const Spacer(flex: 1),
+                        const Spacer(flex: 1),
 
-                // Animated buttons section
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  switchInCurve: Curves.easeInOut,
-                  switchOutCurve: Curves.easeInOut,
-                  transitionBuilder: (child, animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.2),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: switch (authView) {
-                    AuthView.merchantLogin =>
-                      const MerchantLoginContent(),
-                    AuthView.riderLogin => const RiderLoginContent(),
-                    AuthView.forgotPassword =>
-                      const ForgotPasswordContent(),
-                    AuthView.login => const LoginContent(),
-                    AuthView.register => const RegisterContent(),
-                    AuthView.welcome => const WelcomeContent(),
-                  },
+                        // Animated buttons section
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          switchInCurve: Curves.easeInOut,
+                          switchOutCurve: Curves.easeInOut,
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: const Offset(0, 0.2),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: switch (authView) {
+                            AuthView.merchantLogin =>
+                              const MerchantLoginContent(),
+                            AuthView.riderLogin => const RiderLoginContent(),
+                            AuthView.forgotPassword =>
+                              const ForgotPasswordContent(),
+                            AuthView.login => const LoginContent(),
+                            AuthView.register => const RegisterContent(),
+                            AuthView.welcome => const WelcomeContent(),
+                          },
+                        ),
+
+                        const Spacer(flex: 2),
+                      ],
+                    ),
+                  ),
                 ),
-
-                const Spacer(flex: 2),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

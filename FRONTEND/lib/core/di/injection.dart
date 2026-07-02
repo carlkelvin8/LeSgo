@@ -159,7 +159,7 @@ Future<void> configureDependencies() async {
 
   if (!getIt.isRegistered<AnalyticsService>()) {
     getIt.registerLazySingleton<AnalyticsService>(
-      () => AnalyticsService(getIt<DioClient>()),
+      () => AnalyticsService(getIt<DioClient>(), getIt<LocalStorageService>()),
     );
   }
 

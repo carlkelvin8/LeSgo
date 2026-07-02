@@ -169,15 +169,13 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                         return status == 'pending';
                       case MerchantOrderFilter.pickUp:
                         return status == 'searching_driver' ||
-                            status == 'accepted' ||
-                            status == 'ready_for_pickup';
+                            status == 'accepted';
                       case MerchantOrderFilter.ready:
                         return status == 'ready_for_pickup';
                       case MerchantOrderFilter.forDelivery:
                         return status == 'picked_up' ||
                             status == 'in_progress' ||
                             status == 'driver_arrived_at_pickup';
-                      case MerchantOrderFilter.delivered:
                       case MerchantOrderFilter.completed:
                         return status == 'completed';
                       case MerchantOrderFilter.cancelled:
@@ -235,7 +233,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                         }
                       }
                       final double deliveryFee =
-                          order.estimatedFare ?? order.totalFare ?? order.distanceFare ?? 0.0;
+                          order.totalFare ?? order.estimatedFare ?? order.distanceFare ?? 0.0;
                       final double totalAmount = itemSubtotal + deliveryFee;
                       final status = order.status.toLowerCase();
                       String? firstItemImage;
