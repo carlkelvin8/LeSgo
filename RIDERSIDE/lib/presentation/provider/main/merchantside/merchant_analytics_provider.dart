@@ -359,28 +359,41 @@ MerchantAnalyticsSummary _buildSummary(
     if (!MerchantOrderAmountUtils.isCompleted(order)) continue;
 
     final items = order.orderItems ?? [];
+    // Track which categories this order touches (count per order, not per item)
+    final categoriesInOrder = <String>{};
     for (final item in items) {
       final catName = item.menuItemId != null
           ? (itemCategoryMap[item.menuItemId] ?? 'Uncategorized')
           : 'Uncategorized';
+      categoriesInOrder.add(catName);
       final lineRevenue = item.totalPrice ??
           ((item.unitPrice ?? 0) * item.quantity);
       final existing = categoryMap[catName];
       if (existing == null) {
         categoryMap[catName] = MerchantCategoryPerformance(
           categoryName: catName,
-          orderCount: 1,
+          orderCount: 0, // will increment below per-order
           revenue: lineRevenue,
           itemCount: item.quantity,
         );
       } else {
         categoryMap[catName] = MerchantCategoryPerformance(
           categoryName: existing.categoryName,
-          orderCount: existing.orderCount + 1,
+          orderCount: existing.orderCount, // don't increment here
           revenue: existing.revenue + lineRevenue,
           itemCount: existing.itemCount + item.quantity,
         );
       }
+    }
+    // Increment orderCount once per order per category
+    for (final catName in categoriesInOrder) {
+      final existing = categoryMap[catName]!;
+      categoryMap[catName] = MerchantCategoryPerformance(
+        categoryName: existing.categoryName,
+        orderCount: existing.orderCount + 1,
+        revenue: existing.revenue,
+        itemCount: existing.itemCount,
+      );
     }
   }
 

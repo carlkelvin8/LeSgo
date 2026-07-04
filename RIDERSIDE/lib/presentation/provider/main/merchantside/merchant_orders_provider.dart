@@ -89,13 +89,13 @@ final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
   final filter = ref.watch(selectedMerchantOrderFilterProvider);
 
   return ordersAsync.when(
-    data: (orders) => _filterOrders(orders, filter),
+    data: (orders) => filterMerchantOrders(orders, filter),
     loading: () => [],
     error: (_, __) => [],
   );
 });
 
-List<OrderDto> _filterOrders(List<OrderDto> orders, MerchantOrderFilter filter) {
+List<OrderDto> filterMerchantOrders(List<OrderDto> orders, MerchantOrderFilter filter) {
   if (filter == MerchantOrderFilter.all) return orders;
 
   return orders.where((order) {

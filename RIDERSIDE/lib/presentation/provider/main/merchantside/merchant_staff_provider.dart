@@ -47,7 +47,16 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
 
       final response = await ApiService.dio.get('/v1/partners/$partnerId/staff');
       final data = response.data;
-      final rawList = (data['data'] as List?) ?? (data as List?) ?? [];
+      // Handle both paginated {data: [...]} and direct [...] responses
+      List rawList;
+      if (data is List) {
+        rawList = data;
+      } else if (data is Map) {
+        final nested = data['data'];
+        rawList = nested is List ? nested : [];
+      } else {
+        rawList = [];
+      }
       final staff = rawList
           .map((e) => PartnerStaffDto.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -98,6 +107,7 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
   }
 
   Future<bool> updateStaff(int staffId, {String? role, bool? isActive}) async {
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final partnerId = await _resolvePartnerId();
       if (partnerId == null) return false;
@@ -120,6 +130,7 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
   }
 
   Future<bool> removeStaff(int staffId) async {
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final partnerId = await _resolvePartnerId();
       if (partnerId == null) return false;

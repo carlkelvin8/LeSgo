@@ -104,7 +104,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     double itemSubtotal = 0;
     if (resolvedOrder.orderItems != null) {
       for (var item in resolvedOrder.orderItems!) {
-        itemSubtotal += (item.unitPrice ?? 0.0) * (item.quantity);
+        itemSubtotal += item.totalPrice ?? ((item.unitPrice ?? 0.0) * item.quantity);
       }
     }
     

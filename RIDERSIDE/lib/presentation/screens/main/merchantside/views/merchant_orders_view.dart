@@ -162,28 +162,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                   ],
                 ),
                 data: (allOrders) {
-                  final orders = allOrders.where((order) {
-                    final status = order.status.toLowerCase();
-                    switch (selectedFilter) {
-                      case MerchantOrderFilter.pending:
-                        return status == 'pending';
-                      case MerchantOrderFilter.pickUp:
-                        return status == 'searching_driver' ||
-                            status == 'accepted';
-                      case MerchantOrderFilter.ready:
-                        return status == 'ready_for_pickup';
-                      case MerchantOrderFilter.forDelivery:
-                        return status == 'picked_up' ||
-                            status == 'in_progress' ||
-                            status == 'driver_arrived_at_pickup';
-                      case MerchantOrderFilter.completed:
-                        return status == 'completed';
-                      case MerchantOrderFilter.cancelled:
-                        return status == 'cancelled';
-                      case MerchantOrderFilter.all:
-                        return true;
-                    }
-                  }).toList();
+                  final orders = filterMerchantOrders(allOrders, selectedFilter);
 
                   if (orders.isEmpty) {
                     return ListView(
@@ -229,7 +208,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                       double itemSubtotal = 0;
                       if (order.orderItems != null) {
                         for (var item in order.orderItems!) {
-                          itemSubtotal += (item.unitPrice ?? 0.0) * (item.quantity);
+                          itemSubtotal += item.totalPrice ?? ((item.unitPrice ?? 0.0) * item.quantity);
                         }
                       }
                       final double deliveryFee =
