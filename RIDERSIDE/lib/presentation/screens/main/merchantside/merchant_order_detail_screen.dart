@@ -15,7 +15,9 @@ import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_action_handlers.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
+import '../../../widgets/main/merchantside/orders/merchant_prep_time_estimate.dart';
 import '../../../widgets/main/merchantside/orders/merchant_prep_timer_badge.dart';
+import '../../../widgets/main/merchantside/orders/merchant_quick_reply_section.dart';
 import '../../../widgets/main/merchantside/orders/merchant_special_instructions_banner.dart';
 
 class MerchantOrderDetailScreen extends ConsumerStatefulWidget {
@@ -199,6 +201,10 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                       prepTimer != null) ...[
                     SizedBox(height: ResponsiveUtils.spacing(context, 10)),
                     MerchantPrepTimerBadge(timer: prepTimer),
+                  ],
+                  if (status != 'cancelled' && status != 'completed') ...[
+                    SizedBox(height: ResponsiveUtils.spacing(context, 10)),
+                    MerchantPrepTimeEstimate(order: resolvedOrder),
                   ],
                 ],
               ),
@@ -664,6 +670,15 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                       ),
                   ],
                 ),
+              ),
+            ],
+
+            // Quick Reply Section
+            if (status != 'completed' && status != 'cancelled') ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: MerchantQuickReplySection(orderId: resolvedOrder.id),
               ),
             ],
             

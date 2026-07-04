@@ -36,7 +36,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
 
   void _handleNext() {
     if (_controllers.validateAndSave(ref)) {
-      AppRouter.push(context, RegisterRoutes.address);
+      AppRouter.push(context, RegisterRoutes.otpVerification);
     }
   }
 

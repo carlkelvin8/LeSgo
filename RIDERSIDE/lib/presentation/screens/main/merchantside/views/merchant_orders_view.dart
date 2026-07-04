@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/utils/merchant_csv_export_utils.dart';
 import '../../../../../core/utils/merchant_order_ops_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/order_dto.dart';
@@ -123,6 +124,35 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                   ),
                 ),
               ),
+              GestureDetector(
+                onTap: () {
+                  final orders = ref.read(merchantOrdersProvider).valueOrNull;
+                  if (orders != null) {
+                    MerchantCsvExportUtils.exportAndShare(context, orders);
+                  }
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.file_download_outlined,
+                      size: ResponsiveUtils.fontSize(context, 16),
+                      color: const Color(0xFF5F2D82),
+                    ),
+                    SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+                    Text(
+                      'Export',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 13),
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF5F2D82),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
               Text(
                 'Status',
                 style: TextStyle(

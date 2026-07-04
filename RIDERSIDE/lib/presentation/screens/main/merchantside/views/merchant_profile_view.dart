@@ -9,14 +9,43 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
+import '../../../../provider/main/merchantside/merchant_daily_summary_provider.dart';
+import '../../../../../core/services/daily_sales_summary_service.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../widgets/main/merchantside/profile/merchant_settings_section.dart';
+import '../../../../widgets/main/merchantside/profile/merchant_store_toggle_card.dart';
+import '../../../../widgets/main/merchantside/analytics/merchant_revenue_chart.dart';
+import '../../../../widgets/main/merchantside/analytics/merchant_popular_items_section.dart';
 import '../merchant_edit_information_screen.dart';
 import '../merchant_menu_edit_item_screen.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 
 class MerchantProfileView extends ConsumerWidget {
   const MerchantProfileView({super.key});
+
+  Widget _buildDailySummaryBanner(WidgetRef ref) {
+    final dismissed = ref.watch(merchantDailySummaryDismissedProvider);
+    if (dismissed) return const SizedBox.shrink();
+
+    final summaryAsync = ref.watch(merchantDailySummaryProvider);
+    return summaryAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (data) {
+        if (data == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: DailySalesSummaryBanner(
+            data: data,
+            onDismiss: () {
+              ref.read(merchantDailySummaryDismissedProvider.notifier).state = true;
+              DailySalesSummaryService.markShown();
+            },
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -56,11 +85,18 @@ class MerchantProfileView extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const MerchantStoreToggleCard(),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              _buildDailySummaryBanner(ref),
               const MerchantProfileHeader(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantProfileInfoSection(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantAnalyticsPreviewCard(),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              const MerchantRevenueChart(),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              const MerchantPopularItemsSection(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               _SalesReportCard(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),

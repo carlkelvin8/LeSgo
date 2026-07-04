@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/register/register_routes.dart';
+import '../../../../core/services/api_service.dart';
 
 import '../../../provider/register/merchant/merchant_register_info_provider.dart';
 import '../../../widgets/global/primary_button.dart';
@@ -98,9 +99,67 @@ class _MerchantRegisterScreenState
 
   void _handleSubmit() {
     // Trigger visual validation in UI
-    _formKey.currentState?.validate();
-    // Attempt submit (controller handles logic validation)
-    ref.read(merchantRegisterInfoProvider.notifier).attemptSubmit();
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) {
+      ref.read(merchantRegisterInfoProvider.notifier).attemptSubmit();
+      return;
+    }
+
+    // Phone must be provided
+    final phone = _contactNumberController.text.trim();
+    if (phone.isEmpty || phone.length < 11) {
+      SnackBarUtils.showError(context, 'Please enter a valid phone number');
+      return;
+    }
+
+    // Show OTP verification bottom sheet before submitting
+    _showOtpVerification(phone);
+  }
+
+  Future<void> _showOtpVerification(String phone) async {
+    // Normalize phone to E.164
+    String normalizedPhone = phone;
+    if (phone.startsWith('09')) {
+      normalizedPhone = '+63${phone.substring(1)}';
+    } else if (!phone.startsWith('+')) {
+      normalizedPhone = '+63$phone';
+    }
+
+    // Send OTP
+    try {
+      final response = await ApiService.dio.post('/v1/auth/otp/send', data: {
+        'phone_number': normalizedPhone,
+        'channel': 'sms',
+      });
+
+      final data = response.data;
+      final fallbackOtp = data['otp']; // For fallback/testing mode
+
+      if (!mounted) return;
+
+      // Show OTP input dialog
+      final verified = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => _OtpBottomSheet(
+          phone: normalizedPhone,
+          fallbackOtp: fallbackOtp?.toString(),
+        ),
+      );
+
+      if (verified == true && mounted) {
+        // OTP verified — proceed with actual registration
+        ref.read(merchantRegisterInfoProvider.notifier).attemptSubmit();
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarUtils.showError(context, 'Failed to send OTP. Please try again.');
+      }
+    }
   }
 
   @override
@@ -214,6 +273,172 @@ class _MerchantRegisterScreenState
             SizedBox(height: ResponsiveUtils.spacing(context, 32)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+/// OTP verification bottom sheet for merchant registration
+class _OtpBottomSheet extends StatefulWidget {
+  final String phone;
+  final String? fallbackOtp;
+
+  const _OtpBottomSheet({required this.phone, this.fallbackOtp});
+
+  @override
+  State<_OtpBottomSheet> createState() => _OtpBottomSheetState();
+}
+
+class _OtpBottomSheetState extends State<_OtpBottomSheet> {
+  final _otpController = TextEditingController();
+  bool _isVerifying = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _otpController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _verify() async {
+    final otp = _otpController.text.trim();
+    if (otp.length < 4) {
+      setState(() => _error = 'Please enter the OTP code');
+      return;
+    }
+
+    setState(() {
+      _isVerifying = true;
+      _error = null;
+    });
+
+    try {
+      final response = await ApiService.dio.post('/v1/auth/otp/verify', data: {
+        'phone_number': widget.phone,
+        'otp': otp,
+      });
+
+      final data = response.data;
+      if (data['success'] == true && (data['valid'] == true || data['verified'] == true)) {
+        if (mounted) Navigator.pop(context, true);
+      } else {
+        setState(() {
+          _isVerifying = false;
+          _error = data['message'] ?? 'Invalid OTP code';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isVerifying = false;
+        _error = 'Verification failed. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Verify Phone Number',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Enter the OTP code sent to ${widget.phone}',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+          if (widget.fallbackOtp != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Test OTP: ${widget.fallbackOtp}',
+              style: const TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: 12,
+                color: Colors.orange,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          TextField(
+            controller: _otpController,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 8,
+            ),
+            decoration: InputDecoration(
+              hintText: '000000',
+              counterText: '',
+              errorText: _error,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF5F2D82), width: 2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _isVerifying ? null : _verify,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5F2D82),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: _isVerifying
+                ? const SizedBox(
+                    height: 20, width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white,
+                    ),
+                  )
+                : const Text(
+                    'Verify OTP',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

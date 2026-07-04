@@ -9,6 +9,7 @@ import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_inventory_provider.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
+import '../../../../widgets/main/merchantside/menu/merchant_low_stock_banner.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_inventory_badge.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_stock_controls.dart';
 import 'dart:convert';
@@ -16,6 +17,7 @@ import 'dart:convert';
 import '../merchant_menu_add_category_screen.dart';
 import '../merchant_menu_edit_item_screen.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
+import '../../../../widgets/main/merchantside/menu/merchant_menu_item_duplicate.dart';
 import '../../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 
 class MerchantMenuView extends ConsumerStatefulWidget {
@@ -242,6 +244,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
             SizedBox(height: ResponsiveUtils.spacing(context, 14)),
             const Divider(height: 1, color: Color(0xFFE4E4E7)),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            const MerchantLowStockBanner(),
             Row(
               children: [
                 Expanded(
@@ -347,6 +350,14 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                           itemId: item.id,
                           itemName: item.name,
                         ),
+                        onDuplicateTap: () async {
+                          await duplicateMerchantMenuItem(
+                            context,
+                            ref,
+                            item: item,
+                          );
+                          await _refreshMenu();
+                        },
                       );
                     },
                   );

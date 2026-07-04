@@ -53,33 +53,40 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            horizontalPadding,
-            horizontalPadding,
-            horizontalPadding + MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const AuthHeader(title: 'SIGN UP'),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              const OtpVerificationIllustration(),
-              OtpContactSection(
-                phoneController: _controllers.phoneController,
-                onResend: () => _controllers.resendOtp(context, ref),
-                otpSent: otpSent,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(horizontalPadding),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const AuthHeader(title: 'SIGN UP'),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                      const OtpVerificationIllustration(),
+                      OtpContactSection(
+                        phoneController: _controllers.phoneController,
+                        onResend: () => _controllers.resendOtp(context, ref),
+                        otpSent: otpSent,
+                      ),
+                      if (otpSent) OtpCodeSection(controllers: _controllers),
+                      const Spacer(),
+                      OtpActions(
+                        isLoading: registerState.isLoading,
+                        onContinue: otpSent ? _handleContinue : _handleSendOtp,
+                        text: otpSent ? 'Verify' : 'Send OTP',
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    ],
+                  ),
+                ),
               ),
-              if (otpSent) OtpCodeSection(controllers: _controllers),
-              const Spacer(),
-              OtpActions(
-                isLoading: registerState.isLoading,
-                onContinue: otpSent ? _handleContinue : _handleSendOtp,
-                text: otpSent ? 'Verify' : 'Send OTP',
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

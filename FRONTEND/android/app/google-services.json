@@ -24,6 +24,14 @@
                                     },
                        "oauth_client":  [
                                             {
+                                                "client_id":  "410330550746-finvpf5q8oogdito598q6t3p4kjbakl1.apps.googleusercontent.com",
+                                                "client_type":  1,
+                                                "android_info":  {
+                                                                     "package_name":  "com.lesgo_customer",
+                                                                     "certificate_hash":  "0cd4c1536873c5eb8f32983dafb78ae9bcc63a2f"
+                                                                 }
+                                            },
+                                            {
                                                 "client_id":  "410330550746-qibfkvmljkd4ktug5c79h6p73gv2oint.apps.googleusercontent.com",
                                                 "client_type":  3
                                             }

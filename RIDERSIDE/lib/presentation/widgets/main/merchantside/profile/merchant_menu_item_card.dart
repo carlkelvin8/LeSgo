@@ -11,6 +11,7 @@ class MerchantMenuItemCard extends StatelessWidget {
   final String? imageUrl;
   final VoidCallback onEditTap;
   final VoidCallback? onDeleteTap;
+  final VoidCallback? onDuplicateTap;
   final Widget? inventoryBadge;
   final Widget? stockControls;
 
@@ -23,6 +24,7 @@ class MerchantMenuItemCard extends StatelessWidget {
     this.imageUrl,
     required this.onEditTap,
     this.onDeleteTap,
+    this.onDuplicateTap,
     this.inventoryBadge,
     this.stockControls,
   });
@@ -142,6 +144,32 @@ class MerchantMenuItemCard extends StatelessWidget {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
                               color: Colors.red.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (onDuplicateTap != null) ...[
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResponsiveUtils.spacing(context, 8),
+                          ),
+                          child: Text(
+                            '|',
+                            style: TextStyle(
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: onDuplicateTap,
+                          child: Text(
+                            'Duplicate',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
+                              color: const Color(0xFF5F2D82),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
