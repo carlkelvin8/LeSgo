@@ -13,7 +13,6 @@ import '../../../../provider/main/merchantside/merchant_daily_summary_provider.d
 import '../../../../../core/services/daily_sales_summary_service.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../widgets/main/merchantside/profile/merchant_settings_section.dart';
-import '../../../../widgets/main/merchantside/profile/merchant_store_toggle_card.dart';
 import '../../../../widgets/main/merchantside/analytics/merchant_revenue_chart.dart';
 import '../../../../widgets/main/merchantside/analytics/merchant_popular_items_section.dart';
 import '../merchant_edit_information_screen.dart';
@@ -85,8 +84,6 @@ class MerchantProfileView extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const MerchantStoreToggleCard(),
-              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               _buildDailySummaryBanner(ref),
               const MerchantProfileHeader(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
