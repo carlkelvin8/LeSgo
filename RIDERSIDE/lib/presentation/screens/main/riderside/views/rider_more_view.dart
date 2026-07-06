@@ -215,6 +215,7 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
       child: Text(
@@ -223,7 +224,7 @@ class _SectionTitle extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 13),
           fontWeight: FontWeight.w700,
-          color: Colors.grey.shade600,
+          color: isDark ? Colors.white70 : Colors.grey.shade600,
         ),
       ),
     );
@@ -245,12 +246,13 @@ class _MoreTileWithSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade200),
       ),
       child: SwitchListTile(
         secondary: CircleAvatar(
@@ -263,6 +265,7 @@ class _MoreTileWithSwitch extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w700,
             fontSize: ResponsiveUtils.fontSize(context, 14),
+            color: isDark ? Colors.white : null,
           ),
         ),
         value: value,
@@ -289,12 +292,13 @@ class _MoreTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade200),
       ),
       child: ListTile(
         leading: CircleAvatar(
@@ -307,6 +311,7 @@ class _MoreTile extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w700,
             fontSize: ResponsiveUtils.fontSize(context, 14),
+            color: isDark ? Colors.white : null,
           ),
         ),
         subtitle: subtitle != null
@@ -315,11 +320,14 @@ class _MoreTile extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.grey.shade600,
+                  color: isDark ? Colors.white60 : Colors.grey.shade600,
                 ),
               )
             : null,
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: isDark ? Colors.white54 : null,
+        ),
         onTap: onTap,
       ),
     );
