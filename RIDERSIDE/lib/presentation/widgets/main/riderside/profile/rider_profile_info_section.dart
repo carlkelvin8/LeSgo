@@ -92,18 +92,21 @@ class RiderProfileInfoSection extends ConsumerWidget {
                   ),
                 );
               },
-              icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF5F2D82)),
+              icon: Icon(Icons.edit_outlined, size: 18, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF5F2D82)),
               label: Text(
                 'Edit Profile',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF5F2D82),
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF5F2D82),
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF5F2D82), width: 1.5),
+                side: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : const Color(0xFF5F2D82),
+                  width: 1.5,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -124,6 +127,7 @@ class RiderProfileInfoSection extends ConsumerWidget {
     String value, {
     Color? valueColor,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       child: RichText(
@@ -137,14 +141,14 @@ class RiderProfileInfoSection extends ConsumerWidget {
             TextSpan(
               text: ' $label ',
               style: TextStyle(
-                color: Colors.grey.shade500,
+                color: isDark ? Colors.white60 : Colors.grey.shade500,
                 fontWeight: FontWeight.w400,
               ),
             ),
             TextSpan(
               text: value,
               style: TextStyle(
-                color: valueColor ?? Colors.black87,
+                color: valueColor ?? (isDark ? Colors.white : Colors.black87),
                 fontWeight: FontWeight.w600,
               ),
             ),

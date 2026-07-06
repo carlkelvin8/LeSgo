@@ -38,7 +38,9 @@ class RiderProfileSummarySection extends ConsumerWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 15),
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF2D2D2D),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : const Color(0xFF2D2D2D),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -144,7 +146,9 @@ class _AlertCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade700,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white60
+                            : Colors.grey.shade700,
                       ),
                     ),
                   ],
@@ -171,6 +175,7 @@ class _QuickLinkRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: const Color(0xFF5F2D82)),
@@ -180,9 +185,10 @@ class _QuickLinkRow extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 14),
           fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white : null,
         ),
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: Icon(Icons.chevron_right, color: isDark ? Colors.white54 : null),
       onTap: onTap,
     );
   }

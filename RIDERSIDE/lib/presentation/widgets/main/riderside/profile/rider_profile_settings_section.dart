@@ -13,6 +13,7 @@ class RiderProfileSettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hp = ResponsiveUtils.horizontalPadding(context);
     final lang = ref.watch(appLanguageProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: hp),
@@ -25,6 +26,7 @@ class RiderProfileSettingsSection extends ConsumerWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 15),
               fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : null,
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -116,6 +118,7 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = isDestructive ? Colors.red.shade700 : const Color(0xFF5F2D82);
 
     return ListTile(
@@ -127,10 +130,12 @@ class _SettingsTile extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 14),
           fontWeight: FontWeight.w600,
-          color: isDestructive ? Colors.red.shade700 : Colors.black87,
+          color: isDestructive
+              ? Colors.red.shade700
+              : (isDark ? Colors.white : Colors.black87),
         ),
       ),
-      trailing: Icon(Icons.chevron_right, color: Colors.grey.shade400),
+      trailing: Icon(Icons.chevron_right, color: isDark ? Colors.white54 : Colors.grey.shade400),
       onTap: () => AppRouter.push(context, route),
     );
   }
