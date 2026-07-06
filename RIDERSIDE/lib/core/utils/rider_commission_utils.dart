@@ -5,8 +5,9 @@ class RiderCommissionUtils {
   static const basicRate = 0.70;
   static const advanceRate = 0.80;
   static const proRate = 0.90;
-  static const advanceOneTimePrice = 999.0;
-  static const proOneTimePrice = 1999.0;
+  static const basicOneTimePrice = 999.0;
+  static const advanceOneTimePrice = 2499.0;
+  static const proOneTimePrice = 3499.0;
 
   static double rateForPackage(String? packageTier) {
     switch (normalizePackageTier(packageTier)) {
@@ -33,7 +34,7 @@ class RiderCommissionUtils {
   static String labelForPackage(String? packageTier) {
     switch (normalizePackageTier(packageTier)) {
       case 'advance':
-        return 'Advance';
+        return 'Advanced';
       case 'pro':
         return 'Pro';
       case 'employee':
@@ -47,9 +48,9 @@ class RiderCommissionUtils {
   static String profitShareLabel(String? packageTier) {
     switch (normalizePackageTier(packageTier)) {
       case 'advance':
-        return '80/20 profit share (you keep 80%)';
+        return '80/20 profit share with free uniform and bag';
       case 'pro':
-        return '90/10 profit share (you keep 90%)';
+        return '90/10 profit share with free uniform and bag';
       case 'employee':
         return 'Fixed daily salary';
       case 'basic':
