@@ -13,6 +13,18 @@ class MerchantStoreToggleCard extends ConsumerWidget {
     final toggleState = ref.watch(merchantStoreToggleProvider);
     final isLoading = toggleState is AsyncLoading;
 
+    // Show error snackbar if toggle failed
+    ref.listen<AsyncValue<void>>(merchantStoreToggleProvider, (prev, next) {
+      if (next is AsyncError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to toggle store: ${next.error}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
+
     final open = isOpen ?? false;
 
     return Container(

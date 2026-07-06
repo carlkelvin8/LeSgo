@@ -486,6 +486,20 @@ class MerchantRemoteDataSource {
     }
   }
 
+  /// Toggle store open/close status using dedicated endpoint
+  Future<PartnerDto> toggleStoreStatus(int partnerId, bool isOpen) async {
+    try {
+      final response = await _dio.post(
+        '/v1/partners/$partnerId/toggle-status',
+        data: {'is_open': isOpen},
+      );
+      final responseData = response.data['data'] ?? response.data;
+      return PartnerDto.fromJson(responseData as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Failed to toggle store status: ${ApiService.extractError(e)}');
+    }
+  }
+
   Future<String?> _resolvePartnerLogoUrl({
     String? logoUrl,
     String? logoPath,

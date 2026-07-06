@@ -29,10 +29,7 @@ class MerchantStoreToggleNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       final dataSource = ref.read(merchantDataSourceProvider);
-      await dataSource.updatePartnerProfile(
-        partnerId,
-        UpdatePartnerRequest(isOpen: isOpen),
-      );
+      await dataSource.toggleStoreStatus(partnerId, isOpen);
       // Refresh the profile to reflect the new state
       ref.invalidate(merchantProfileProvider);
       state = const AsyncValue.data(null);

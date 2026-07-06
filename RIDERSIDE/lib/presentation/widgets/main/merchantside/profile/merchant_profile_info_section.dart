@@ -141,10 +141,7 @@ class _MerchantStoreStatusToggleState
       }
 
       final dataSource = ref.read(merchantDataSourceProvider);
-      final updated = await dataSource.updatePartnerProfile(
-        partnerId,
-        UpdatePartnerRequest(isOpen: value),
-      );
+      final updated = await dataSource.toggleStoreStatus(partnerId, value);
 
       if (!mounted) return;
 
