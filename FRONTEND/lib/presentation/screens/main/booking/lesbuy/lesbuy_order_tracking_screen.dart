@@ -523,7 +523,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                                           ),
                                         ),
                                         Text(
-                                          'Your order is on the way',
+                                          _getStatusSubtext(trackingState.orderStatus),
                                           style: TextStyle(
                                             fontFamily: 'TT Fors',
                                             fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -946,6 +946,34 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
         return 'Cancelled';
       default:
         return 'Processing';
+    }
+  }
+
+  String _getStatusSubtext(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Looking for a nearby rider';
+      case 'accepted':
+        return 'Your rider is heading to the store';
+      case 'driver_arrived_at_pickup':
+        return 'Rider arrived at the store';
+      case 'in_progress':
+      case 'ready_for_pickup':
+        return 'Your order is being prepared';
+      case 'picked_up':
+      case 'pickedup':
+        return 'Your order is on its way to you';
+      case 'in_transit':
+      case 'intransit':
+      case 'on_the_way':
+        return 'Your rider is heading to your location';
+      case 'completed':
+      case 'delivered':
+        return 'Your order has been delivered';
+      case 'cancelled':
+        return 'This order was cancelled';
+      default:
+        return 'Your order is being processed';
     }
   }
 }

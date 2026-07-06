@@ -233,6 +233,32 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
     }
   }
 
+  String _getStatusSubtext(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Looking for a nearby rider';
+      case 'accepted':
+        return 'Your rider is on the way to the restaurant';
+      case 'driver_arrived_at_pickup':
+        return 'Rider arrived at the restaurant';
+      case 'in_progress':
+      case 'ready_for_pickup':
+        return 'Your food is being prepared';
+      case 'picked_up':
+        return 'Your order is on its way to you';
+      case 'in_transit':
+        return 'Your rider is heading to your location';
+      case 'completed':
+        return 'Your order has been delivered';
+      case 'cancelled':
+        return 'This order was cancelled';
+      case 'failed':
+        return 'Something went wrong with this order';
+      default:
+        return 'Your food is being prepared';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final trackingState = ref.watch(liveTrackingProvider(int.parse(widget.orderId)));
@@ -559,7 +585,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
                                           ),
                                         ),
                                         Text(
-                                          'Your food is being prepared',
+                                          _getStatusSubtext(trackingState.orderStatus),
                                           style: TextStyle(
                                             fontFamily: 'TT Fors',
                                             fontSize: ResponsiveUtils.fontSize(context, 12),
