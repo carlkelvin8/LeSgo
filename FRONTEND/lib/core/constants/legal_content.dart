@@ -4,7 +4,7 @@ import 'app_info.dart';
 class LegalContent {
   LegalContent._();
 
-  static const String lastUpdated = 'April 18, 2026';
+  static const String lastUpdated = 'June 11, 2026';
 
   static const String aboutUsDescription =
       'LeSgo Philippines is your all-in-one super app for rides, food delivery, '
@@ -152,89 +152,189 @@ class LegalContent {
 
   static List<({String title, String body})> get privacySections => [
         (
-          title: '1. Information We Collect',
+          title: 'Introduction',
           body:
-              'We collect information you provide directly to us, including:\n\n'
-              '• Personal information (name, email, phone number)\n'
-              '• Location data for delivery services\n'
-              '• Payment information\n'
-              '• Order history and preferences\n'
-              '• Device information and usage data',
+              'LeSgo Courier Services ("we," "our," or "us") values your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, disclose, store, and protect information when you use any LesGo platform services, including:\n\n'
+              '• LeSgo Customer App\n'
+              '• LeSgo Rider App\n'
+              '• LeSgo Merchant App\n'
+              '• LeSgo Motor Taxi Service\n'
+              '• LeSgo Padala Service\n'
+              '• LeSgo Delivery Services\n'
+              '• LeSgo Website and Related Platforms\n\n'
+              'By accessing or using any LeSgo service, you agree to the collection and use of information described in this Privacy Policy.',
         ),
         (
-          title: '2. How We Use Your Information',
+          title: 'A. Personal Information',
           body:
-              'We use the information we collect to:\n\n'
-              '• Process and deliver your orders\n'
-              '• Communicate with you about your orders\n'
-              '• Improve our services\n'
-              '• Send promotional offers (with your consent)\n'
-              '• Ensure security and prevent fraud',
+              'We may collect information that identifies you directly or indirectly, including:\n\n'
+              '• Full name\n'
+              '• Mobile phone number\n'
+              '• Email address\n'
+              '• Profile picture\n'
+              '• Date of birth\n'
+              '• Gender (optional)\n'
+              '• Residential address\n'
+              '• Pickup and drop-off addresses\n'
+              '• Emergency contact details\n'
+              '• Government-issued identification\n'
+              '• Business registration documents (for merchants)\n'
+              '• Driver\'s license (for riders)\n'
+              '• Vehicle registration documents\n'
+              '• Vehicle details',
         ),
         (
-          title: '3. Location Data',
+          title: 'B. Location Information',
           body:
-              'We collect and use your location data to:\n\n'
-              '• Show nearby restaurants and stores\n'
-              '• Calculate delivery fees and ETAs\n'
-              '• Track delivery progress\n'
-              '• Improve service quality\n\n'
-              'You can disable location services in your device settings, but this may '
-              'limit app functionality.',
+              'To provide transportation, delivery, and logistics services, LeSgo may collect:\n\n'
+              '• Real-time GPS location\n'
+              '• Current location\n'
+              '• Background location during active services\n'
+              '• Pickup locations\n'
+              '• Drop-off locations\n'
+              '• Delivery destinations\n'
+              '• Route history\n'
+              '• Travel patterns related to service fulfillment\n\n'
+              'Location data may be collected even when the application is running in the background if necessary to support active rides, deliveries, or tracking features.',
         ),
         (
-          title: '4. Data Sharing',
+          title: 'C. Transaction Information',
           body:
-              'We may share your information with:\n\n'
-              '• Delivery drivers (only information necessary for delivery)\n'
-              '• Partner restaurants and stores\n'
-              '• Payment processors such as Xendit\n'
-              '• Service providers who assist our operations\n\n'
-              'We do not sell your personal information to third parties.',
+              'We may collect:\n\n'
+              '• Booking information\n'
+              '• Ride history\n'
+              '• Delivery history\n'
+              '• Order history\n'
+              '• Payment transactions\n'
+              '• Merchant sales records\n'
+              '• Rider earnings records\n'
+              '• Refund requests\n'
+              '• Wallet balances and transactions',
         ),
         (
-          title: '5. Data Security',
+          title: 'D. Merchant Information',
           body:
-              'We implement appropriate technical and organizational measures to protect '
-              'your personal information. However, no method of transmission over the '
-              'Internet is 100% secure.',
+              'For merchants using the LeSgo Merchant App, we may collect:\n\n'
+              '• Business name\n'
+              '• Business address\n'
+              '• Store location\n'
+              '• Contact information\n'
+              '• Business permits\n'
+              '• Tax information\n'
+              '• Product listings\n'
+              '• Pricing information\n'
+              '• Operating hours\n'
+              '• Sales reports',
         ),
         (
-          title: '6. Your Rights',
+          title: 'E. Rider Information',
           body:
-              'You have the right to:\n\n'
-              '• Access your personal information\n'
-              '• Correct inaccurate data\n'
-              '• Request deletion of your data\n'
-              '• Opt out of marketing communications\n'
-              '• Withdraw consent where applicable',
+              'For riders using the LeSgo Rider App, we may collect:\n\n'
+              '• Driver\'s license information\n'
+              '• Vehicle details\n'
+              '• Vehicle registration\n'
+              '• Insurance information\n'
+              '• Profile photo\n'
+              '• Background verification documents\n'
+              '• Performance metrics\n'
+              '• Delivery and trip records',
         ),
         (
-          title: '7. Data Retention',
+          title: 'F. Device Information',
           body:
-              'We retain your information for as long as necessary to provide services '
-              'and comply with legal obligations.',
+              'We may automatically collect:\n\n'
+              '• Device model\n'
+              '• Operating system version\n'
+              '• Device identifiers\n'
+              '• Mobile network information\n'
+              '• IP address\n'
+              '• Browser type\n'
+              '• Application version\n'
+              '• Crash logs\n'
+              '• Diagnostic information',
         ),
         (
-          title: '8. Children\'s Privacy',
+          title: 'How We Use Your Information',
           body:
-              'Our services are not intended for users under 18. We do not knowingly '
-              'collect information from children.',
+              'We use the collected information to create and manage user accounts, verify identities, and process bookings and deliveries. This data allows us to match customers with riders, facilitate merchant operations, process payments and settlements, and provide customer support. Additionally, we utilize it to improve service quality, monitor platform performance, detect fraud and suspicious activities, and enforce our terms and policies. Finally, your information helps us send notifications and updates, conduct analytics and research, and ensure compliance with our legal obligations.',
         ),
         (
-          title: '9. Changes to This Policy',
+          title: 'Location Services',
           body:
-              'We may update this privacy policy from time to time. We will notify you of '
-              'any changes by posting the new policy on this page and updating the '
-              '"Last Updated" date.',
+              'LeSgo uses location services to identify nearby riders, enable real-time tracking, and calculate routes and fares. This data also helps improve navigation, verify trip and delivery completion, and enhance both rider and customer safety while preventing fraudulent activity. For riders, location data may continue to be collected in the background while they are actively accepting, completing, or managing rides and deliveries.',
         ),
         (
-          title: '10. Contact Us',
+          title: 'Camera Access',
           body:
-              'If you have questions about this privacy policy, please contact us:\n\n'
-              'Email: ${AppInfo.privacyEmail}\n'
-              'Address: ${AppInfo.companyAddress}\n\n'
-              '${AppInfo.companyName}',
+              'LeSgo may request camera access for profile photo uploads, identity verification, driver\'s license verification, and vehicle documentation. Additionally, it is used for merchant document submission and delivery proof photos. Camera access is utilized only when necessary and strictly with user permission.',
+        ),
+        (
+          title: 'Photo and Media Access',
+          body:
+              'LeSgo may request access to device photos, media files, and documents. This allows users to upload profile photos, identification documents, business permits, vehicle documents, and delivery confirmation photos.',
+        ),
+        (
+          title: 'Notifications',
+          body:
+              'LeSgo may send notifications regarding booking updates, ride status, delivery status, merchant orders, and rider assignments. These alerts also cover promotional offers, security alerts, and account updates. Users retain full control and may manage their notification preferences directly through their device settings.',
+        ),
+        (
+          title: 'Payment Information',
+          body:
+              'LeSgo may process payments through third-party payment providers, which involves collecting payment transaction records, digital wallet information, payout information, and settlement information. To ensure security, sensitive payment information is handled by authorized payment processors and is not stored directly by LeSgo.',
+        ),
+        (
+          title: 'Information Sharing',
+          body:
+              'We may share necessary information across our platform ecosystem to facilitate seamless services. Customers can view a rider\'s name, profile photo, vehicle information, and contact details when necessary, while riders can view a customer\'s name, pickup location, drop-off location, and relevant contact information. Similarly, merchants are provided with customer order details, delivery information, and contact info required for order fulfillment.\n\n'
+              'Beyond platform users, information may be shared with trusted service providers supporting our cloud hosting, payment processing, analytics, customer support, and mapping services. Finally, we may disclose information to legal authorities when required by applicable laws, court orders, government agencies, regulatory authorities, or law enforcement requests.',
+        ),
+        (
+          title: 'Data Retention',
+          body:
+              'We retain personal information only as long as necessary to provide services, maintain records, resolve disputes, and detect fraud. This retention period also ensures we can enforce agreements and comply with legal obligations. Ultimately, information is deleted, anonymized, or archived once it is no longer required.',
+        ),
+        (
+          title: 'Data Security',
+          body:
+              'LeSgo implements appropriate security measures designed to protect personal information against unauthorized access, loss, theft, misuse, alteration, and disclosure. These safety measures include encrypted communications, secure databases, access controls, authentication mechanisms, and continuous security monitoring. However, users should note that no electronic transmission or storage method can be guaranteed to be completely secure.',
+        ),
+        (
+          title: 'Your Rights',
+          body:
+              'Depending on applicable laws, users may have the right to access their personal information, request corrections, or request deletion. They may also withdraw consent, restrict processing, request a copy of their data, and submit privacy-related complaints. All such requests may be formally submitted through our designated support channels.',
+        ),
+        (
+          title: 'Children\'s Privacy',
+          body:
+              'LeSgo services are intended only for individuals who are at least eighteen (18) years old or the minimum legal age required under applicable laws. Consequently, we do not knowingly collect personal information from children. If we learn that a child has provided personal information, we will take reasonable steps to remove such information immediately.',
+        ),
+        (
+          title: 'Third-Party Services',
+          body:
+              'LeSgo may integrate with various third-party services, including Google Play Services, Google Maps Platform, Firebase Analytics, and Firebase Crashlytics. It also integrates with payment gateways, SMS and communication providers, and cloud hosting providers. These third parties may collect information according to their own independent privacy policies.',
+        ),
+        (
+          title: 'International Data Processing',
+          body:
+              'Information may be processed, stored, or transferred through secure servers operated by LeSgo or its service providers, strictly in accordance with applicable data protection laws.',
+        ),
+        (
+          title: 'Compliance with Philippine Data Privacy Act',
+          body:
+              'LeSgo is committed to complying with Republic Act No. 10173, also known as the Data Privacy Act of 2012, alongside all applicable regulations issued by the National Privacy Commission (NPC) of the Philippines. Under this commitment, all personal information is processed lawfully, fairly, securely, and transparently.',
+        ),
+        (
+          title: 'Changes to This Privacy Policy',
+          body:
+              'We may update this Privacy Policy from time to time. Any changes will be posted within the application, website, or other official communication channels. Your continued use of LeSgo services after these updates are posted constitutes acceptance of the revised Privacy Policy.',
+        ),
+        (
+          title: 'Contact Us',
+          body:
+              'If you have questions, concerns, or requests regarding this Privacy Policy, please contact the LeSgo Support Team via email at lesgoclaveria@gmail.com or visit our website at https://lesgo.ph.\n\n'
+              'By downloading, registering, accessing, or using any LeSgo application or service — including the Customer App, Rider App, Merchant App, Motor Taxi Service, and Padala Service — you acknowledge that you have read, understood, and agreed to this Privacy Policy.\n\n'
+              '© 2026 LeSgo. All Rights Reserved.',
         ),
       ];
 }

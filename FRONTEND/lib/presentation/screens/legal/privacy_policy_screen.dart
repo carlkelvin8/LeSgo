@@ -33,7 +33,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSection('Last Updated', LegalContent.lastUpdated),
+            _buildSection('Effective Date', LegalContent.lastUpdated),
             const SizedBox(height: 24),
             for (final section in LegalContent.privacySections) ...[
               _buildSection(section.title, section.body),
