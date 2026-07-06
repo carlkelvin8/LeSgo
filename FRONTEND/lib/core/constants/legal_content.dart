@@ -1,5 +1,3 @@
-import 'app_info.dart';
-
 /// Shared legal copy aligned with lesgo.ph Terms & Conditions and Privacy Policy.
 class LegalContent {
   LegalContent._();
@@ -14,129 +12,91 @@ class LegalContent {
       'our home base in Kilkiling, Claveria, Cagayan.';
 
   static const String termsIntro =
-      'By accessing and using the LeSgo app, you accept and agree to be bound by '
-      'these Terms and Conditions. If you do not agree, please do not use our services.';
+      'These User Terms and Conditions ("Terms") govern the relationship between LeSgo Courier Services '
+      '("Company," "we," "us," or "our") and the individual user (referred to as the "User," "Customer," or "you") '
+      'accessing or using the LeSgo mobile application, website, and on-demand delivery platform (collectively, the "Platform").\n\n'
+      'By creating an account, accessing, or using our services, you explicitly acknowledge that you have read, '
+      'understood, and agree to be bound by these Terms.';
 
   static List<({String title, String body})> get termsSections => [
-        (title: '1. Acceptance of Terms', body: termsIntro),
+        (title: 'Terms and Conditions', body: termsIntro),
         (
-          title: '2. Services Provided',
+          title: '1. The Service and Account Integrity',
           body:
-              'LeSgo provides on-demand services including:\n\n'
-              '• Food delivery (LesEat)\n'
-              '• Shopping delivery (LesBuy)\n'
-              '• Transportation services (LesRide)\n'
-              '• Package delivery (LesGo)\n'
-              '• Logistics (LesTransport)\n'
-              '• Digital wallet services (LesPay)',
+              'Platform Provision: LeSgo provides an on-demand marketplace platform connecting Users with independent '
+              'third-party delivery providers ("Riders") and merchant establishments ("Partners").\n\n'
+              'Single Account Policy: Users are strictly permitted to maintain only one (1) active account on the Platform. '
+              'Creating duplicate accounts to exploit promotions, bypass restrictions, or manipulate system data is prohibited.\n\n'
+              'Accuracy of Information: You agree to provide truthful, precise, and up-to-date information when registering, '
+              'creating orders, or inputting delivery addresses. You must present valid proof of identity upon reasonable request by the Company.',
         ),
         (
-          title: '3. User Accounts',
+          title: '2. User Conduct and Prohibited Activities',
           body:
-              'To use our services, you must:\n\n'
-              '• Be at least 18 years old\n'
-              '• Provide accurate and complete information\n'
-              '• Maintain the security of your account\n'
-              '• Notify us immediately of any unauthorized access\n'
-              '• Be responsible for all activities under your account',
+              'System Integrity: You shall not engage in any activity designed to exploit, harass, undermine, or damage the Platform, '
+              'its Riders, or its Partners. Any known bugs, glitches, or system exploits must be reported to management immediately.\n\n'
+              'Prohibited Items: Users may not request the delivery of items that are illegal, dangerous, hazardous, or restricted '
+              'under the laws of the Republic of the Philippines.\n\n'
+              'Professional Conduct: Users are expected to treat Riders and Partners with courtesy and respect. Verbal abuse, '
+              'harassment, or physical threats will result in immediate and permanent account termination.',
         ),
         (
-          title: '4. Orders and Payments',
+          title: '3. Orders, Pricing, and Payments',
           body:
-              '• All orders are subject to acceptance and availability\n'
-              '• Prices are subject to change without notice\n'
-              '• Payment must be made at the time of order unless otherwise stated\n'
-              '• Delivery fees and service charges apply\n'
-              '• Refunds are processed according to our refund policy',
+              'Delivery Rates: Delivery rates are dynamic and calculated based on distance, time, and volume. You acknowledge that '
+              'delivery rates may change without prior notice, and it is your responsibility to review the final cost displayed before confirming an order.\n\n'
+              'Payment Methods: Payments may be made via cash, electronic wallets (such as GCash), or other methods integrated into the Platform.',
+        ),
+        (
+          title: '4. Fake Bookings and No-Show Policies',
+          body:
+              'Definition of Fake Booking: Placing an order with no intent to receive or pay for it, providing a deliberately false '
+              'delivery address, or failing to appear/respond to the Rider during a delivery attempt constitutes a "Fake Booking."\n\n'
+              'Legal and Financial Accountability: LeSgo takes fake bookings seriously. While the Company provides a safety mechanism '
+              'to reimburse its Riders for the value of products/earnings lost to fake bookings, the Company reserves all rights to '
+              'pursue strict legal and criminal action against the offending User.\n\n'
+              'Partner Responsibilities: If a fake booking is traced back to being intentionally generated, manipulated, or falsified '
+              'by a Partner establishment, the Partner shall directly reimburse the Rider or Company.',
         ),
         (
           title: '5. Cancellations and Refunds',
           body:
-              '• You may cancel orders before driver assignment\n'
-              '• Cancellation fees may apply after driver assignment\n'
-              '• Refunds are processed within 5–7 business days\n'
-              '• Refund eligibility is determined on a case-by-case basis',
+              'Cancellation Window: Orders cannot be canceled once a Rider has purchased the items from the Partner or is already en route to the delivery location.\n\n'
+              'Refusal of Delivery: If a User refuses to accept an order without valid justification (e.g., severe item damage prior to handover), '
+              'the User remains fully liable for the full cost of the items and delivery fees.',
         ),
         (
-          title: '6. User Conduct',
+          title: '6. Cargo, Liabilities, and Disclaimers',
           body:
-              'You agree not to:\n\n'
-              '• Use the service for illegal purposes\n'
-              '• Harass or abuse drivers, merchants, or support staff\n'
-              '• Provide false or misleading information\n'
-              '• Attempt to manipulate prices or promotions\n'
-              '• Reverse engineer or copy the app\n'
-              '• Use automated systems to access the service',
+              'Independent Contractors: You acknowledge that Riders are independent contractors and not employees of LeSgo.\n\n'
+              'Rider Liability ("Your Delivery, Your Cargo"): Riders operate under a strict cargo policy. If an item is damaged, '
+              'mishandled, or if food/beverages are spilled during transit due to Rider negligence, the Rider is mandated to replace or financially compensate for the damaged goods.\n\n'
+              'Limitation of Liability: LeSgo serves as the platform provider and holds no direct liability for traffic violations, accidents, '
+              'or breaches of local road laws committed by the Rider during the fulfillment of a delivery.\n\n'
+              'GCash Disbursements: Where applicable, GCash payments processed through the system will be disbursed directly via the system/clerk protocols to ensure transaction transparency.\n\n'
+              'Rider Upfront Payment: For Partner orders, the assigned Rider pays for your product/service upfront at the merchant\'s establishment. '
+              'Upon delivery, you are strictly obligated to reimburse the Rider for the full value of the item plus the designated delivery fee.',
         ),
         (
-          title: '7. Delivery',
+          title: '7. Termination of Use',
           body:
-              '• Delivery times are estimates and not guaranteed\n'
-              '• You must be available to receive deliveries\n'
-              '• Provide accurate delivery addresses\n'
-              '• We are not responsible for delays beyond our control\n'
-              '• Undeliverable orders may incur additional fees',
+              'LeSgo reserves the right to suspend, restrict, or permanently terminate your access to the Platform at any time, with or without cause, '
+              'and without prior notice, particularly for violations concerning fake bookings, account duplication, or abusive behavior.',
         ),
         (
-          title: '8. Intellectual Property',
+          title: '8. Modifications to Terms',
           body:
-              'All content, trademarks, and intellectual property in the app are owned '
-              'by LeSgo Philippines or our licensors. You may not use, copy, or distribute '
-              'any content without permission.',
+              'The Company reserves the right to modify these Terms and its service agreements at any time without prior notice. '
+              'Users have the ongoing responsibility to regularly review these terms. Continued use of the Platform following any modifications constitutes full acceptance of the revised Terms.',
         ),
         (
-          title: '9. Limitation of Liability',
+          title: '9. Governing Law and Dispute Resolution',
           body:
-              'LeSgo is not liable for:\n\n'
-              '• Indirect, incidental, or consequential damages\n'
-              '• Loss of profits or data\n'
-              '• Service interruptions or errors\n'
-              '• Third-party actions or content\n'
-              '• Food quality issues (contact the restaurant directly)',
-        ),
-        (
-          title: '10. Promotions and Discounts',
-          body:
-              '• Promotions are subject to these terms\n'
-              '• Promo codes cannot be combined unless stated\n'
-              '• We reserve the right to modify or cancel promotions\n'
-              '• Abuse of promotions may result in account suspension',
-        ),
-        (
-          title: '11. Privacy',
-          body:
-              'Your use of the service is also governed by our Privacy Policy. '
-              'Please review it to understand our data practices.',
-        ),
-        (
-          title: '12. Termination',
-          body:
-              'We may suspend or terminate your account if you:\n\n'
-              '• Violate these terms\n'
-              '• Engage in fraudulent activity\n'
-              '• Abuse the service or staff\n'
-              '• Fail to pay for services',
-        ),
-        (
-          title: '13. Changes to Terms',
-          body:
-              'We reserve the right to modify these terms at any time. Continued use '
-              'of the service after changes constitutes acceptance of the new terms.',
-        ),
-        (
-          title: '14. Governing Law',
-          body:
-              'These terms are governed by the laws of the Republic of the Philippines. '
-              'Any disputes shall be resolved in the courts of Cagayan, Philippines.',
-        ),
-        (
-          title: '15. Contact Information',
-          body:
-              'For questions about these terms, contact us:\n\n'
-              'Email: ${AppInfo.supportEmail}\n'
-              'Phone: ${AppInfo.supportPhone}\n'
-              'Address: ${AppInfo.companyAddress}\n\n'
-              '${AppInfo.companyName}',
+              'These Terms shall be governed by, construed, and enforced in accordance with the laws of the Republic of the Philippines.\n\n'
+              'Any disputes, controversies, or claims arising out of or relating to these Terms, including the validity or breach thereof, '
+              'shall be settled through binding arbitration in accordance with the rules of Philippine arbitration bodies.\n\n'
+              'By clicking "Accept," creating an account, or continuing to use LeSgo Courier Services, you affirm that you have read, '
+              'understood, and agreed to be legally bound by this agreement.',
         ),
       ];
 
