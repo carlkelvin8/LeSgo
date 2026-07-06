@@ -249,6 +249,7 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       child: Text(
@@ -257,7 +258,7 @@ class _SectionTitle extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 16),
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF5F2D82),
+          color: isDark ? Colors.white : const Color(0xFF5F2D82),
         ),
       ),
     );
@@ -296,7 +297,9 @@ class _FeatureTile extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
             fontWeight: FontWeight.w600,
-            color: included ? Colors.black87 : Colors.grey,
+            color: included
+                ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87)
+                : Colors.grey,
           ),
         ),
         trailing: Icon(
@@ -350,15 +353,25 @@ class _UpgradeTile extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.w700,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : null,
                   ),
                 ),
-                Text(
-                  option.priceLabel,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF5F2D82),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade700,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    option.priceLabel,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 13),
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
@@ -369,7 +382,9 @@ class _UpgradeTile extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.grey.shade700,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white70
+                    : Colors.grey.shade700,
               ),
             ),
             if (onUpgrade != null) ...[
