@@ -191,7 +191,9 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.front,
         imageQuality: 85,
+        maxWidth: 1200,
       );
 
       if (image != null) {
@@ -205,7 +207,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isSelfieLoading: false,
-        errorMessage: 'Failed to upload selfie: ${e.toString()}',
+        errorMessage: 'Failed to capture selfie: ${e.toString()}',
       );
     }
   }

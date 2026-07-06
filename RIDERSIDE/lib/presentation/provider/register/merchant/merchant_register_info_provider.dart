@@ -157,7 +157,9 @@ class MerchantRegisterInfoNotifier
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.front,
         imageQuality: 85,
+        maxWidth: 1200,
       );
       if (image != null) {
         state = state.copyWith(
@@ -165,7 +167,7 @@ class MerchantRegisterInfoNotifier
         );
       }
     } catch (e) {
-      state = state.copyWith(errorMessage: 'Failed to upload selfie: $e');
+      state = state.copyWith(errorMessage: 'Failed to capture selfie: $e');
     } finally {
       state = state.copyWith(isSelfieLoading: false);
     }
