@@ -18,6 +18,7 @@ RegisterDriverRequestDto _$RegisterDriverRequestDtoFromJson(
       licenseExpiryDate: json['license_expiry_date'] as String?,
       lastLatitude: (json['last_latitude'] as num?)?.toDouble(),
       lastLongitude: (json['last_longitude'] as num?)?.toDouble(),
+      packageTier: json['package_tier'] as String?,
     );
 
 Map<String, dynamic> _$RegisterDriverRequestDtoToJson(
@@ -32,4 +33,5 @@ Map<String, dynamic> _$RegisterDriverRequestDtoToJson(
       'license_expiry_date': instance.licenseExpiryDate,
       'last_latitude': instance.lastLatitude,
       'last_longitude': instance.lastLongitude,
+      'package_tier': instance.packageTier,
     };

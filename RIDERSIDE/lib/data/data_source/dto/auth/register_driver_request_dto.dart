@@ -19,6 +19,8 @@ class RegisterDriverRequestDto {
   final double? lastLatitude;
   @JsonKey(name: 'last_longitude')
   final double? lastLongitude;
+  @JsonKey(name: 'package_tier')
+  final String? packageTier;
 
   RegisterDriverRequestDto({
     required this.name,
@@ -30,10 +32,16 @@ class RegisterDriverRequestDto {
     this.licenseExpiryDate,
     this.lastLatitude,
     this.lastLongitude,
+    this.packageTier,
   });
 
   factory RegisterDriverRequestDto.fromJson(Map<String, dynamic> json) =>
       _$RegisterDriverRequestDtoFromJson(json);
 
-  Map<String, dynamic> toJson() => _$RegisterDriverRequestDtoToJson(this);
+  Map<String, dynamic> toJson() {
+    final json = _$RegisterDriverRequestDtoToJson(this);
+    // Remove null values so backend doesn't get confused
+    json.removeWhere((key, value) => value == null);
+    return json;
+  }
 }

@@ -6,6 +6,7 @@ import '../../../../core/constants/routers/register/register_routes.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../provider/register/riderside/rider_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
+import '../../../widgets/register/rider/package/rider_package_selection_step.dart';
 
 class RegisterInfoScreen extends ConsumerStatefulWidget {
   const RegisterInfoScreen({super.key});
@@ -89,8 +90,34 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
       return;
     }
 
-    // Show OTP verification before submitting
-    _showOtpVerification(phone);
+    // Show package selection before OTP
+    _showPackageSelection(phone);
+  }
+
+  void _showPackageSelection(String phone) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        expand: false,
+        builder: (_, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          child: RiderPackageSelectionStep(
+            onPackageSelected: () {
+              Navigator.pop(ctx);
+              _showOtpVerification(phone);
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _showOtpVerification(String phone) async {
@@ -126,7 +153,11 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
       );
 
       if (verified == true && mounted) {
-        ref.read(registerInfoProvider.notifier).attemptSubmit(isFormFieldsValid: true);
+        final selectedPkg = ref.read(selectedRegistrationPackageProvider);
+        ref.read(registerInfoProvider.notifier).attemptSubmit(
+          isFormFieldsValid: true,
+          selectedPackage: selectedPkg,
+        );
       }
     } catch (e) {
       if (mounted) {

@@ -408,14 +408,14 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
 
   /// Validates form fields and documents, then submits if valid.
   /// The [isFormFieldsValid] parameter comes from Form.validate() in the UI.
-  void attemptSubmit({required bool isFormFieldsValid}) {
+  void attemptSubmit({required bool isFormFieldsValid, String? selectedPackage}) {
     state = state.copyWith(hasAttemptedSubmit: true);
 
     // Guard against multiple submissions
     if (state.isSubmitting || state.isSubmitted) return;
 
     if (isFormFieldsValid && state.documents.isComplete) {
-      submitForm();
+      submitForm(selectedPackage: selectedPackage);
     } else {
       state = state.copyWith(
         errorMessage:
@@ -424,7 +424,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     }
   }
 
-  Future<void> submitForm() async {
+  Future<void> submitForm({String? selectedPackage}) async {
     if (!state.isFormValid) {
       state = state.copyWith(
         errorMessage:
@@ -447,6 +447,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
         passwordConfirmation: info.confirmPassword,
         licenseNumber: info.licenseNumber,
         licenseExpiryDate: _formatDateForApi(info.licenseExpiryDate),
+        packageTier: selectedPackage,
       );
 
       final documents = registerDriverDocumentsFromPaths(
