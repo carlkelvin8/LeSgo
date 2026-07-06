@@ -62,6 +62,8 @@ class RiderMoreView extends ConsumerWidget {
     final lang = ref.watch(appLanguageProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return ListView(
       padding: EdgeInsets.fromLTRB(
         hp,
@@ -76,7 +78,7 @@ class RiderMoreView extends ConsumerWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 22),
             fontWeight: FontWeight.w800,
-            color: const Color(0xFF5F2D82),
+            color: isDark ? Colors.white : const Color(0xFF5F2D82),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
