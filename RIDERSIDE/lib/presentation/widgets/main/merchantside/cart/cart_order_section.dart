@@ -8,6 +8,7 @@ class CartOrderSection extends StatelessWidget {
   final List<CartItem> items;
   final ValueChanged<String> onDecrease;
   final ValueChanged<String> onIncrease;
+  final ValueChanged<String>? onRemove;
   final VoidCallback onAddMoreItems;
 
   const CartOrderSection({
@@ -15,6 +16,7 @@ class CartOrderSection extends StatelessWidget {
     required this.items,
     required this.onDecrease,
     required this.onIncrease,
+    this.onRemove,
     required this.onAddMoreItems,
   });
 
@@ -41,12 +43,33 @@ class CartOrderSection extends StatelessWidget {
           ...items.map((item) {
             return Padding(
               padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
-              child: CartItemCard(
-                name: item.name,
-                unitPrice: item.unitPrice,
-                quantity: item.quantity,
-                onDecrease: () => onDecrease(item.id),
-                onIncrease: () => onIncrease(item.id),
+              child: Dismissible(
+                key: ValueKey(item.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.delete, color: Colors.red.shade700),
+                ),
+                onDismissed: (_) => onRemove?.call(item.id),
+                child: CartItemCard(
+                  name: item.name,
+                  unitPrice: item.unitPrice,
+                  quantity: item.quantity,
+                  onDecrease: () {
+                    if (item.quantity <= 1) {
+                      onRemove?.call(item.id);
+                    } else {
+                      onDecrease(item.id);
+                    }
+                  },
+                  onIncrease: () => onIncrease(item.id),
+                  showDeleteAtMin: item.quantity <= 1,
+                ),
               ),
             );
           }),

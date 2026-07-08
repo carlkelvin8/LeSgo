@@ -405,6 +405,9 @@ class CartScreen extends ConsumerWidget {
                       onIncrease: (itemId) {
                         ref.read(cartProvider.notifier).incrementItemQuantity(itemId);
                       },
+                      onRemove: (itemId) {
+                        ref.read(cartProvider.notifier).removeItem(itemId);
+                      },
                       onAddMoreItems: () => Navigator.pop(context),
                     ),
                   ),

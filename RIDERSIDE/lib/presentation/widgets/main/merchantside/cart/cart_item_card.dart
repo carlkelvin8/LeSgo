@@ -7,6 +7,7 @@ class CartItemCard extends StatelessWidget {
   final int quantity;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
+  final bool showDeleteAtMin;
 
   const CartItemCard({
     super.key,
@@ -15,6 +16,7 @@ class CartItemCard extends StatelessWidget {
     required this.quantity,
     required this.onDecrease,
     required this.onIncrease,
+    this.showDeleteAtMin = false,
   });
 
   @override
@@ -75,7 +77,16 @@ class CartItemCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              _StepAction(symbol: '-', onTap: onDecrease),
+              showDeleteAtMin
+                  ? GestureDetector(
+                      onTap: onDecrease,
+                      child: Icon(
+                        Icons.delete_outline,
+                        size: ResponsiveUtils.fontSize(context, 18),
+                        color: Colors.red.shade600,
+                      ),
+                    )
+                  : _StepAction(symbol: '-', onTap: onDecrease),
               SizedBox(width: ResponsiveUtils.spacing(context, 14)),
               Text(
                 '$quantity',
