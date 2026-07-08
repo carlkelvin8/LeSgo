@@ -3,7 +3,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/constants/app_config.dart';
 import '../../../../core/services/api_service.dart';
-import '../../../../core/utils/location_permission_utils.dart';
 import '../auth/rider_auth_provider.dart';
 import '../main/merchantside/merchant_profile_provider.dart';
 import 'cart_provider.dart';

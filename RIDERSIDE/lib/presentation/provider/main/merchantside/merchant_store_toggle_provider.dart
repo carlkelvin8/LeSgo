@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_logger.dart';
-import '../../../../data/data_source/merchant_remote_datasource.dart';
 import 'merchant_profile_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 

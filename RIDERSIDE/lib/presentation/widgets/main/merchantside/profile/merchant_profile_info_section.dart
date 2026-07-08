@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/services/api_service.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
-import '../../../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 
 class MerchantProfileInfoSection extends ConsumerWidget {

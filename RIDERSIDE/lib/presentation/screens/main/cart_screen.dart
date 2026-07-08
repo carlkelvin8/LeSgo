@@ -6,7 +6,6 @@ import '../../provider/cart/cart_checkout_provider.dart';
 import '../../provider/cart/cart_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../../core/utils/responsive_utils.dart';
-import '../../../core/services/api_service.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});

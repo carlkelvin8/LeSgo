@@ -571,7 +571,7 @@ class _RiderBookingDetailScreenState
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ ${AppLocalization.translate('status_updated_to', lang).replaceAll('{{status}}', targetLabel ?? '')}'),
+            content: Text('✅ ${AppLocalization.translate('status_updated_to', lang).replaceAll('{{status}}', targetLabel ?? 'Updated')}'),
             backgroundColor: Colors.green,
           ),
         );
