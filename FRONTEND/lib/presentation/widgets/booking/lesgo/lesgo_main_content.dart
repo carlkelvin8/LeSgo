@@ -18,6 +18,8 @@ class LesgoMainContent extends ConsumerWidget {
   final TextEditingController itemWeightController;
   final ValueChanged<String>? onItemLocationChanged;
   final ValueChanged<String>? onItemWeightChanged;
+  final TextEditingController? pickupNotesController;
+  final TextEditingController? dropoffNotesController;
 
   const LesgoMainContent({
     super.key,
@@ -29,6 +31,8 @@ class LesgoMainContent extends ConsumerWidget {
     required this.itemWeightController,
     this.onItemLocationChanged,
     this.onItemWeightChanged,
+    this.pickupNotesController,
+    this.dropoffNotesController,
   });
 
   @override
@@ -129,6 +133,8 @@ class LesgoMainContent extends ConsumerWidget {
                 itemWeightController: itemWeightController,
                 onItemLocationChanged: onItemLocationChanged,
                 onItemWeightChanged: onItemWeightChanged,
+                pickupNotesController: pickupNotesController,
+                dropoffNotesController: dropoffNotesController,
                 scrollController: scrollController,
               );
             },

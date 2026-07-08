@@ -20,12 +20,16 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
   // Item details controllers
   late final TextEditingController _itemLocationController;
   late final TextEditingController _itemWeightController;
+  late final TextEditingController _pickupNotesController;
+  late final TextEditingController _dropoffNotesController;
 
   @override
   void initState() {
     super.initState();
     _itemLocationController = TextEditingController();
     _itemWeightController = TextEditingController();
+    _pickupNotesController = TextEditingController();
+    _dropoffNotesController = TextEditingController();
     Future.microtask(() {
       _notifier = ref.read(lesgoProvider.notifier);
       _notifier?.initialize();
@@ -37,6 +41,8 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
     _sheetController.dispose();
     _itemLocationController.dispose();
     _itemWeightController.dispose();
+    _pickupNotesController.dispose();
+    _dropoffNotesController.dispose();
     _notifier?.cleanup();
     super.dispose();
   }
@@ -79,6 +85,8 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
           onCollapseSheet: _collapseSheet,
           itemLocationController: _itemLocationController,
           itemWeightController: _itemWeightController,
+          pickupNotesController: _pickupNotesController,
+          dropoffNotesController: _dropoffNotesController,
         ),
       ),
     );

@@ -24,6 +24,8 @@ class LesgoDetailsPanel extends ConsumerWidget {
     this.onItemLocationChanged,
     this.onItemWeightChanged,
     this.scrollController,
+    this.pickupNotesController,
+    this.dropoffNotesController,
   });
 
   final LesgoLocationState locationState;
@@ -41,6 +43,8 @@ class LesgoDetailsPanel extends ConsumerWidget {
   final ValueChanged<String>? onItemLocationChanged;
   final ValueChanged<String>? onItemWeightChanged;
   final ScrollController? scrollController;
+  final TextEditingController? pickupNotesController;
+  final TextEditingController? dropoffNotesController;
 
   String _formatAddress(LocationAddress address) {
     // For the cityProvince field, we're now storing the full detailed address
@@ -125,6 +129,48 @@ class LesgoDetailsPanel extends ConsumerWidget {
                 onPressed: () => onChangeCurrent(),
               ),
             ),
+            if (locationState.pickupLocation != null && pickupNotesController != null)
+              Padding(
+                padding: EdgeInsets.only(
+                  top: ResponsiveUtils.spacing(context, 8),
+                  left: ResponsiveUtils.spacing(context, 4),
+                  right: ResponsiveUtils.spacing(context, 4),
+                ),
+                child: TextField(
+                  controller: pickupNotesController,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Unit #, floor, building name, landmark (optional)',
+                    hintStyle: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey.shade400,
+                    ),
+                    prefixIcon: Icon(Icons.apartment, size: 18, color: Colors.grey.shade500),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveUtils.spacing(context, 12),
+                      vertical: ResponsiveUtils.spacing(context, 10),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF5F2D82)),
+                    ),
+                  ),
+                ),
+              ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             LesrideLocationTile(
               title: 'Drop-off Location',
@@ -137,6 +183,48 @@ class LesgoDetailsPanel extends ConsumerWidget {
                 onPressed: () => onChangeDestination(),
               ),
             ),
+            if (locationState.destinationLocation != null && dropoffNotesController != null)
+              Padding(
+                padding: EdgeInsets.only(
+                  top: ResponsiveUtils.spacing(context, 8),
+                  left: ResponsiveUtils.spacing(context, 4),
+                  right: ResponsiveUtils.spacing(context, 4),
+                ),
+                child: TextField(
+                  controller: dropoffNotesController,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Unit #, floor, building name, landmark (optional)',
+                    hintStyle: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey.shade400,
+                    ),
+                    prefixIcon: Icon(Icons.apartment, size: 18, color: Colors.grey.shade500),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: ResponsiveUtils.spacing(context, 12),
+                      vertical: ResponsiveUtils.spacing(context, 10),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade200),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF5F2D82)),
+                    ),
+                  ),
+                ),
+              ),
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),
             LesgoItemDetailsSection(
               itemLocationController: itemLocationController,
