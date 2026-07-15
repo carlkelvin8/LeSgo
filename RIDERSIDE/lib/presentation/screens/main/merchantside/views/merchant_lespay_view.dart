@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/services/merchant_wallet_api.dart';
 import '../../../../../core/utils/merchant_transfer_commission_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_wallet_provider.dart';
@@ -54,6 +55,9 @@ class MerchantLespayView extends ConsumerWidget {
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 20)),
               _BalanceCard(wallet: wallet),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              if (notifier.canManageWallet)
+                _TopUpCard(notifier: notifier, wallet: wallet),
               if (wallet.error != null) ...[
                 SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                 Text(
@@ -140,6 +144,153 @@ class _BalanceCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TopUpCard extends ConsumerStatefulWidget {
+  const _TopUpCard({required this.notifier, required this.wallet});
+
+  final MerchantWalletNotifier notifier;
+  final MerchantWalletState wallet;
+
+  @override
+  ConsumerState<_TopUpCard> createState() => _TopUpCardState();
+}
+
+class _TopUpCardState extends ConsumerState<_TopUpCard> {
+  final _amountController = TextEditingController();
+  bool _isProcessing = false;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _topUp() async {
+    final amount = double.tryParse(_amountController.text.trim()) ?? 0;
+    if (amount < 50) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Minimum top-up is PHP 50'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+    try {
+      final result = await MerchantWalletApi.createTopUpInvoice(amount: amount);
+      if (!mounted) return;
+
+      final invoiceUrl = result['invoice_url']?.toString();
+      if (invoiceUrl != null && invoiceUrl.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Top-up invoice created: PHP ${amount.toStringAsFixed(0)}'),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+        _amountController.clear();
+        // Refresh wallet after a delay to pick up the payment
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) widget.notifier.loadWallet();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']?.toString() ?? 'Top-up initiated'),
+            backgroundColor: Colors.green.shade700,
+          ),
+        );
+        _amountController.clear();
+        widget.notifier.loadWallet();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Top-up failed: ${MerchantWalletApi.extractError(e)}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: Colors.green.shade200),
+      ),
+      color: Colors.green.shade50,
+      child: Padding(
+        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.add_circle_outline, color: Colors.green.shade700, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Top Up Wallet',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Amount (PHP)',
+                      hintText: 'Min. 50',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _isProcessing ? null : _topUp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: _isProcessing
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Top Up', style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
