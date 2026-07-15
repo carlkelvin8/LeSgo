@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/snackbar_utils.dart';
+import '../../../core/services/api_service.dart';
 import '../../provider/cart/cart_checkout_provider.dart';
 import '../../provider/cart/cart_provider.dart';
 import '../../widgets/widgets.dart';
@@ -271,6 +272,21 @@ class CartScreen extends ConsumerWidget {
   Future<Map<String, dynamic>?> _openMapPicker(BuildContext context, LatLng? initial) async {
     LatLng selectedLatLng = initial ?? const LatLng(18.6058, 121.0779); // Default: Claveria
     String? selectedAddress;
+    bool isGeocoding = false;
+
+    Future<String?> reverseGeocode(LatLng latLng) async {
+      try {
+        final apiKey = const String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');
+        if (apiKey.isEmpty) return null;
+        final url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}&key=$apiKey';
+        final response = await ApiService.dio.get(url);
+        final results = response.data['results'] as List?;
+        if (results != null && results.isNotEmpty) {
+          return results[0]['formatted_address'] as String?;
+        }
+      } catch (_) {}
+      return null;
+    }
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -310,10 +326,16 @@ class CartScreen extends ConsumerWidget {
                     target: selectedLatLng,
                     zoom: 16,
                   ),
-                  onTap: (latLng) {
+                  onTap: (latLng) async {
                     setState(() {
                       selectedLatLng = latLng;
-                      selectedAddress = '${latLng.latitude.toStringAsFixed(5)}, ${latLng.longitude.toStringAsFixed(5)}';
+                      selectedAddress = 'Getting address...';
+                      isGeocoding = true;
+                    });
+                    final addr = await reverseGeocode(latLng);
+                    setState(() {
+                      selectedAddress = addr ?? '${latLng.latitude.toStringAsFixed(5)}, ${latLng.longitude.toStringAsFixed(5)}';
+                      isGeocoding = false;
                     });
                   },
                   markers: {
@@ -321,10 +343,16 @@ class CartScreen extends ConsumerWidget {
                       markerId: const MarkerId('delivery_pin'),
                       position: selectedLatLng,
                       draggable: true,
-                      onDragEnd: (latLng) {
+                      onDragEnd: (latLng) async {
                         setState(() {
                           selectedLatLng = latLng;
-                          selectedAddress = '${latLng.latitude.toStringAsFixed(5)}, ${latLng.longitude.toStringAsFixed(5)}';
+                          selectedAddress = 'Getting address...';
+                          isGeocoding = true;
+                        });
+                        final addr = await reverseGeocode(latLng);
+                        setState(() {
+                          selectedAddress = addr ?? '${latLng.latitude.toStringAsFixed(5)}, ${latLng.longitude.toStringAsFixed(5)}';
+                          isGeocoding = false;
                         });
                       },
                     ),
@@ -348,14 +376,44 @@ class CartScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    child: Text(
-                      '📍 Tap on the map or drag the pin to set delivery location',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 13,
-                        color: Colors.grey.shade700,
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (selectedAddress != null && selectedAddress!.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on, color: Color(0xFF5F2D82), size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  selectedAddress!,
+                                  style: const TextStyle(
+                                    fontFamily: 'TT Fors',
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (isGeocoding)
+                                const SizedBox(
+                                  width: 14, height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                            ],
+                          ),
+                        ] else
+                          Text(
+                            '📍 Tap on the map or drag the pin to set delivery location',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 13,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
