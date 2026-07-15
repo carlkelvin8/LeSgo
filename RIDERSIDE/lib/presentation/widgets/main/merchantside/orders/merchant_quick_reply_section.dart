@@ -28,17 +28,42 @@ class _MerchantQuickReplySectionState
     setState(() => _sending = true);
 
     try {
-      // Get or create conversation for this order
-      final convResponse = await ApiService.dio.get(
-        ApiConstants.chatConversationByOrder
-            .replaceAll('{order_id}', widget.orderId.toString()),
-      );
+      int? conversationId;
 
-      final convData = convResponse.data['data'];
-      if (convData == null) {
-        throw Exception('No conversation found');
+      // Try to get existing conversation for this order
+      try {
+        final convResponse = await ApiService.dio.get(
+          ApiConstants.chatConversationByOrder
+              .replaceAll('{order_id}', widget.orderId.toString()),
+        );
+        final convData = convResponse.data['data'];
+        if (convData != null) {
+          conversationId = convData['id'] as int;
+        }
+      } catch (e) {
+        // Conversation doesn't exist yet, will create one
+        AppLogger.debug('No existing conversation, creating one...');
       }
-      final conversationId = convData['id'] as int;
+
+      // Create conversation if it doesn't exist
+      if (conversationId == null) {
+        try {
+          final createResponse = await ApiService.dio.post(
+            ApiConstants.chatConversations,
+            data: {'order_id': widget.orderId},
+          );
+          final createData = createResponse.data['data'];
+          if (createData != null) {
+            conversationId = createData['id'] as int;
+          }
+        } catch (e) {
+          AppLogger.error('Failed to create conversation', e);
+        }
+      }
+
+      if (conversationId == null) {
+        throw Exception('Could not get or create conversation');
+      }
 
       // Send message
       await ApiService.dio.post(
