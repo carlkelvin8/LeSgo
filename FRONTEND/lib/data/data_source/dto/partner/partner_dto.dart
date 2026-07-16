@@ -15,13 +15,6 @@ int? _parseIntNullable(dynamic value) {
   return _parseInt(value);
 }
 
-double? _parseDoubleNullable(dynamic value) {
-  if (value == null) return null;
-  if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value);
-  return null;
-}
-
 bool? _parseBoolNullable(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;

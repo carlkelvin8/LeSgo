@@ -109,12 +109,12 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
           order = response.data;
           isLoading = false;
           // Show map if order is active
-          _showMap = _isOrderActive(response.data?.status ?? '');
+          _showMap = _isOrderActive(response.data.status);
         });
         
         // Show notification if status changed
         if (previousStatus != null && previousStatus != newStatus) {
-          _showStatusChangeNotification(previousStatus, newStatus ?? '');
+          _showStatusChangeNotification(previousStatus, newStatus);
         }
       } else if (mounted) {
         setState(() {
@@ -236,7 +236,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      floatingActionButton: order != null && _isOrderActive(order!.status ?? '')
+      floatingActionButton: order != null && _isOrderActive(order!.status)
           ? FloatingChatButton(
               orderId: widget.orderId,
               orderType: 'lesride',

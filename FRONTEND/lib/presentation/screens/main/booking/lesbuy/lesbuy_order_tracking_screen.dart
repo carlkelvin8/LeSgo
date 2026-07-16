@@ -55,7 +55,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
     try {
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.getOrder(int.parse(widget.orderId));
-      if (mounted && response.success && response.data != null) {
+      if (response.success && mounted) {
         final order = response.data;
         final meta = order.meta;
 

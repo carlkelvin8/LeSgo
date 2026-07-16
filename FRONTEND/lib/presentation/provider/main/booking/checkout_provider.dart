@@ -231,7 +231,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
       dropoffLng = deliveryAddr.longitude;
 
-      deliveryAddress = deliveryAddr.addressLine1 ?? deliveryAddress;
+      deliveryAddress = deliveryAddr.addressLine1;
 
     }
 

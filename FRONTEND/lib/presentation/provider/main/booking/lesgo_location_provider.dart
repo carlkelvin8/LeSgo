@@ -736,8 +736,8 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       String? sublocalityLevel1;
       String? sublocalityLevel2;
       String? sublocalityLevel3;
-      String? administrativeAreaLevel1; // Province
-
+      // administrativeAreaLevel1 - Province (used for display only)
+      String? administrativeAreaLevel1;
       String? administrativeAreaLevel2; // City/Municipality
       String? administrativeAreaLevel3; // District
       String? postalCode;

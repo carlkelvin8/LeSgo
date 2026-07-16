@@ -19,6 +19,7 @@ class InvoiceDto {
   final String? paidAt;
   @JsonKey(name: 'expires_at')
   final String expiresAt;
+  final String? provider;
 
   InvoiceDto({
     required this.invoiceId,
@@ -30,6 +31,7 @@ class InvoiceDto {
     required this.paymentMethod,
     this.paidAt,
     required this.expiresAt,
+    this.provider,
   });
 
   factory InvoiceDto.fromJson(Map<String, dynamic> json) =>

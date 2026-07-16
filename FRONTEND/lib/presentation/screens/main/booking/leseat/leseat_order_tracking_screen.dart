@@ -55,7 +55,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
     try {
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.getOrder(int.parse(widget.orderId));
-      if (mounted && response.success && response.data != null) {
+      if (response.success && mounted) {
         final order = response.data;
         final meta = order.meta;
 
@@ -111,7 +111,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
               'quantity': item.quantity,
               'estimated_price': item.estimatedPrice,
               'actual_price': item.actualPrice,
-            }).toList() ?? [],
+            }).toList(),
           };
         });
       }

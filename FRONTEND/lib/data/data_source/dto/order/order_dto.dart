@@ -328,7 +328,7 @@ class OrderDto {
         final itemsData = meta!['items'] as List;
         return itemsData.map((item) {
           final map = item is Map
-              ? Map<String, dynamic>.from(item as Map)
+              ? Map<String, dynamic>.from(item)
               : <String, dynamic>{'name': item.toString()};
           return LesbuyItemDto(
             id: int.tryParse(map['id']?.toString() ?? '') ?? 0,

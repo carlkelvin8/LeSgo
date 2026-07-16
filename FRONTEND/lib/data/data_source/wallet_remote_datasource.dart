@@ -33,7 +33,7 @@ class WalletRemoteDataSource {
     final path = await _transactionsPath();
     final response = await _dioClient.dio.get(
       path,
-      queryParameters: type != null ? {'type': type} : null,
+      queryParameters: type != null ? {'type' : type} : null,
     );
     final data = response.data;
     final list = (data is Map ? data['data'] : data) as List<dynamic>? ?? [];
@@ -42,26 +42,30 @@ class WalletRemoteDataSource {
         .toList();
   }
 
-  /// Creates a Xendit checkout invoice for LesPay top-up.
+  /// Creates a payment checkout invoice for LesPay top-up.
+  /// [provider] defaults to 'paymongo'. Use 'xendit' for fallback.
   Future<Map<String, dynamic>> createTopUpInvoice({
     required double amount,
-    String paymentMethod = 'xendit',
+    String paymentMethod = 'paymongo',
+    String? provider,
   }) async {
     final response = await _dioClient.dio.post(
       '/v1/wallets/my/topup',
       data: {
         'amount': amount,
         'payment_method': paymentMethod,
+        if (provider != null) 'provider': provider,
       },
     );
     final body = response.data as Map<String, dynamic>;
     return (body['data'] as Map<String, dynamic>?) ?? body;
   }
 
-  /// Verifies Xendit payment and credits wallet (call after user pays).
+  /// Verifies payment and credits wallet (call after user pays).
   Future<void> confirmTopUp({
     required double amount,
     required String paymentMethod,
+    String? gatewayReference,
     String? xenditInvoiceId,
     String? externalReference,
   }) async {
@@ -70,6 +74,7 @@ class WalletRemoteDataSource {
       data: {
         'amount': amount,
         'payment_method': paymentMethod,
+        if (gatewayReference != null) 'gateway_reference': gatewayReference,
         if (xenditInvoiceId != null) 'xendit_invoice_id': xenditInvoiceId,
         if (externalReference != null) 'external_reference': externalReference,
       },

@@ -43,7 +43,7 @@ class MerchantWalletApi {
       '/v1/wallets/my/topup',
       data: {
         'amount': amount,
-        'payment_method': 'xendit',
+        'payment_method': 'paymongo',
       },
     );
     final body = response.data;

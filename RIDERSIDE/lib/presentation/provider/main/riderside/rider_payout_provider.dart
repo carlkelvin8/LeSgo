@@ -74,22 +74,20 @@ class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
         '/v1/wallets/my/withdraw',
         data: {
           'amount': amount,
-          'payment_method': paymentMethod,
-          'account_number': accountNumber,
+          'withdrawal_method': paymentMethod,
         },
       );
 
       final data = response.data['data'] ?? response.data;
-      final withdrawalId = data['id'] ?? '';
+      final payout = data['payout'] ?? data;
 
-      // Update available balance
       state = state.copyWith(
         availableBalance: state.availableBalance - amount,
         pendingBalance: state.pendingBalance + amount,
         isProcessing: false,
       );
 
-      AppLogger.info('Withdrawal request submitted: $withdrawalId');
+      AppLogger.info('Withdrawal request submitted: ${payout['id'] ?? ''}');
     } catch (e) {
       AppLogger.error('Withdrawal request failed', e);
       state = state.copyWith(

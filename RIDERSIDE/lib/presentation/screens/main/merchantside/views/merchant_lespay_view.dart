@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/services/merchant_wallet_api.dart';
 import '../../../../../core/utils/merchant_transfer_commission_utils.dart';
@@ -188,24 +189,16 @@ class _TopUpCardState extends ConsumerState<_TopUpCard> {
 
       final invoiceUrl = result['invoice_url']?.toString();
       if (invoiceUrl != null && invoiceUrl.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Top-up invoice created: PHP ${amount.toStringAsFixed(0)}'),
-            backgroundColor: Colors.green.shade700,
-          ),
-        );
+        final uri = Uri.tryParse(invoiceUrl);
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
         _amountController.clear();
-        // Refresh wallet after a delay to pick up the payment
-        Future.delayed(const Duration(seconds: 3), () {
+        // Poll for confirmation after a delay
+        Future.delayed(const Duration(seconds: 5), () {
           if (mounted) widget.notifier.loadWallet();
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message']?.toString() ?? 'Top-up initiated'),
-            backgroundColor: Colors.green.shade700,
-          ),
-        );
         _amountController.clear();
         widget.notifier.loadWallet();
       }
@@ -219,7 +212,9 @@ class _TopUpCardState extends ConsumerState<_TopUpCard> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isProcessing = false);
+      if (mounted) setState(() {
+        _isProcessing = false;
+      });
     }
   }
 

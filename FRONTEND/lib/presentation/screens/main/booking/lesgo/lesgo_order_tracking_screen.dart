@@ -61,7 +61,7 @@ class _LesgoOrderTrackingScreenState extends ConsumerState<LesgoOrderTrackingScr
     try {
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.getOrder(int.parse(widget.orderId));
-      if (response.success && response.data != null && mounted) {
+      if (response.success && mounted) {
         final order = response.data as dynamic;
         final fb = order.fareBreakdown;
 

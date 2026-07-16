@@ -62,7 +62,7 @@ class RiderWalletActionsSection extends ConsumerWidget {
           RiderWalletActionItem(
             iconAsset: 'assets/images/wallet/Plus.svg',
             title: AppLocalization.translate('top_up', lang),
-            subtitle: 'GCash, Maya, or card via Xendit',
+            subtitle: 'GCash, Maya, or card via PayMongo',
             onTap: () => _showTopUp(context),
           ),
           RiderWalletActionItem(

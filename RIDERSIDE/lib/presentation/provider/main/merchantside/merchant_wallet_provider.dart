@@ -5,6 +5,16 @@ import '../../../../core/utils/merchant_staff_permissions.dart';
 import '../../../../core/utils/merchant_transfer_commission_utils.dart';
 import '../../auth/rider_auth_provider.dart';
 
+class MerchantTopUpCheckout {
+  final String invoiceId;
+  final String invoiceUrl;
+
+  const MerchantTopUpCheckout({
+    required this.invoiceId,
+    required this.invoiceUrl,
+  });
+}
+
 class MerchantWalletState {
   final double balance;
   final bool isLoading;

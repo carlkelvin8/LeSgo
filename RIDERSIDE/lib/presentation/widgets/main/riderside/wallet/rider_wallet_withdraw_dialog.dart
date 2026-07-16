@@ -185,9 +185,20 @@ class _RiderWalletWithdrawDialogState
     final lang = ref.watch(appLanguageProvider);
 
     return AlertDialog(
-      title: Text(
-        AppLocalization.translate('withdraw_via_xendit', lang),
-        style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.bold),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppLocalization.translate('withdraw_via_xendit', lang),
+            style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Withdrawals are sent via PayMongo to your linked account.',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+        ],
       ),
       content: _loadingAccounts
           ? const SizedBox(
@@ -210,7 +221,7 @@ class _RiderWalletWithdrawDialogState
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Funds are sent to your linked GCash or Maya using Xendit payouts.',
+                      'Funds are sent to your linked GCash or Maya via PayMongo.',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12,

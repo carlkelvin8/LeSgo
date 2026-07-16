@@ -240,7 +240,7 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
         '/v1/wallets/my/topup',
         data: {
           'amount': pricing.walletAmount,
-          'payment_method': 'xendit',
+          'payment_method': 'paymongo',
         },
       );
       final checkout = _checkoutFromResponse(response.data, pricing);
@@ -255,7 +255,7 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
         data: {
           'amount': pricing.walletAmount,
           'description': description,
-          'payment_method': 'xendit',
+          'payment_method': 'paymongo',
           'metadata': {
             'wallet_amount': pricing.walletAmount,
             'fee_amount': pricing.feeAmount,
@@ -342,8 +342,8 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
       '/v1/wallets/my/topup',
       data: {
         'amount': checkout.walletAmount,
-        'payment_method': 'xendit',
-        'xendit_invoice_id': checkout.invoiceId,
+          'payment_method': 'paymongo',
+          'gateway_reference': checkout.invoiceId,
       },
     );
     

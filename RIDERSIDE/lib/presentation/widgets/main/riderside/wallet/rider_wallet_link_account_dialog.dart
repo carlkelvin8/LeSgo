@@ -96,7 +96,7 @@ class _RiderWalletLinkAccountDialogState
       if (widget.parentContext.mounted) {
         SnackBarUtils.showSuccess(
           widget.parentContext,
-          '${AppLocalization.translate(widget.provider == 'gcash' ? 'gcash' : 'maya', ref.read(appLanguageProvider))} linked for Xendit withdrawals.',
+          '${AppLocalization.translate(widget.provider == 'gcash' ? 'gcash' : 'maya', ref.read(appLanguageProvider))} linked for PayMongo payouts.',
         );
       }
     } else {
@@ -157,7 +157,7 @@ class _RiderWalletLinkAccountDialogState
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Enter the ${widget.title} mobile number that will receive withdrawals via Xendit.',
+              'Enter the ${widget.title} mobile number that will receive withdrawals via PayMongo.',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 13,

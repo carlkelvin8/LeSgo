@@ -22,6 +22,7 @@ class TopUpCheckout {
   final double totalCharge;
   final TopUpInvoiceSource source;
   final String? externalId;
+  final String provider;
 
   const TopUpCheckout({
     required this.invoiceId,
@@ -31,6 +32,7 @@ class TopUpCheckout {
     required this.totalCharge,
     required this.source,
     this.externalId,
+    this.provider = 'paymongo',
   });
 }
 
@@ -151,7 +153,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
     }
   }
 
-  Future<TopUpCheckout?> startXenditTopUp(double amount) async {
+  Future<TopUpCheckout?> startTopUp(double amount) async {
     state = state.copyWith(
       isProcessingTopUp: true,
       clearError: true,
@@ -181,6 +183,8 @@ class LespayNotifier extends StateNotifier<LespayState> {
     }
   }
 
+  Future<TopUpCheckout?> startXenditTopUp(double amount) => startTopUp(amount);
+
   Future<bool> completeTopUp(TopUpCheckout checkout) async {
     state = state.copyWith(isProcessingTopUp: true, clearError: true);
 
@@ -198,8 +202,11 @@ class LespayNotifier extends StateNotifier<LespayState> {
       try {
         await getIt<WalletRemoteDataSource>().confirmTopUp(
           amount: checkout.walletAmount,
-          paymentMethod: 'xendit',
-          xenditInvoiceId: checkout.invoiceId,
+          paymentMethod: checkout.provider,
+          gatewayReference: checkout.invoiceId,
+          xenditInvoiceId: checkout.source == TopUpInvoiceSource.xenditDirect
+              ? checkout.invoiceId
+              : null,
           externalReference: checkout.externalId,
         );
       } on DioException catch (e) {
@@ -213,7 +220,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
             error: serverMsg.isNotEmpty
                 ? serverMsg
                 : 'Payment was received but could not be saved. '
-                    'Please contact support with invoice ID: ${checkout.invoiceId}',
+                    'Please contact support with reference: ${checkout.invoiceId}',
           );
           return false;
         }
@@ -246,22 +253,22 @@ class LespayNotifier extends StateNotifier<LespayState> {
   }
 
   Future<bool> _isInvoicePaid(TopUpCheckout checkout) async {
-    if (checkout.source == TopUpInvoiceSource.xenditDirect) {
-      final invoice =
-          await getIt<XenditRemoteDataSource>().getInvoice(checkout.invoiceId);
-      return invoice.isPaid;
-    }
-
     try {
       final response = await getIt<PaymentGatewayRemoteDataSource>()
           .getInvoiceStatus(checkout.invoiceId);
       final status = response.data.status.toLowerCase();
       return status == 'paid' || status == 'completed';
-    } catch (_) {
-      final invoice =
-          await getIt<XenditRemoteDataSource>().getInvoice(checkout.invoiceId);
-      return invoice.isPaid;
+    } catch (_) {}
+
+    if (checkout.source == TopUpInvoiceSource.xenditDirect) {
+      try {
+        final invoice =
+            await getIt<XenditRemoteDataSource>().getInvoice(checkout.invoiceId);
+        return invoice.isPaid;
+      } catch (_) {}
     }
+
+    return false;
   }
 
   Future<void> withdraw(double amount, {String method = 'bank'}) async {
@@ -319,7 +326,6 @@ class LespayNotifier extends StateNotifier<LespayState> {
     }
   }
 
-  /// Refresh wallet balance after an order paid with LesPay.
   Future<void> syncAfterWalletOrder(double amount) async {
     if (amount <= 0) return;
     await loadWallet();
@@ -347,6 +353,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
           .createTopUpInvoice(amount: pricing.walletAmount);
       final invoiceId = invoiceData['invoice_id']?.toString();
       final invoiceUrl = invoiceData['invoice_url']?.toString();
+      final provider = invoiceData['provider']?.toString() ?? 'paymongo';
       if (invoiceId != null &&
           invoiceId.isNotEmpty &&
           invoiceUrl != null &&
@@ -359,6 +366,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
           totalCharge: pricing.totalCharge,
           source: TopUpInvoiceSource.walletApi,
           externalId: invoiceData['external_id']?.toString(),
+          provider: provider,
         );
       }
     } catch (e) {
@@ -370,11 +378,13 @@ class LespayNotifier extends StateNotifier<LespayState> {
         InvoiceRequestDto(
           amount: pricing.walletAmount,
           description: description,
-          paymentMethod: 'xendit',
+          paymentMethod: 'paymongo',
           metadata: {
             'wallet_amount': pricing.walletAmount,
             'fee_amount': pricing.feeAmount,
             'purpose': 'lespay_topup',
+            'type': 'wallet_topup',
+            'provider': 'paymongo',
           },
         ),
       );
@@ -388,10 +398,11 @@ class LespayNotifier extends StateNotifier<LespayState> {
           feeAmount: pricing.feeAmount,
           totalCharge: pricing.totalCharge,
           source: TopUpInvoiceSource.backendGateway,
+          provider: gateway.data.provider ?? 'paymongo',
         );
       }
     } catch (e) {
-      debugPrint('Gateway top-up invoice failed, trying direct payment link: $e');
+      debugPrint('Gateway top-up invoice failed, trying direct: $e');
     }
 
     final invoice = await getIt<XenditRemoteDataSource>().createTopUpInvoice(
@@ -413,6 +424,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
       totalCharge: pricing.totalCharge,
       source: TopUpInvoiceSource.xenditDirect,
       externalId: invoice.externalId,
+      provider: 'xendit',
     );
   }
 

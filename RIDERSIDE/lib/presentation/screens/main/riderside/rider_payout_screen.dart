@@ -376,6 +376,8 @@ class RiderPayoutScreen extends ConsumerWidget {
     switch (method.toLowerCase()) {
       case 'gcash':
         return Icons.phone_android;
+      case 'maya':
+        return Icons.phone_iphone;
       case 'bank':
       case 'bankaccount':
         return Icons.account_balance;
@@ -442,7 +444,6 @@ class _WithdrawalDialog extends StatefulWidget {
 
 class _WithdrawalDialogState extends State<_WithdrawalDialog> {
   late TextEditingController _amountController;
-  late TextEditingController _accountController;
   String _selectedMethod = 'gcash';
   bool _isSubmitting = false;
 
@@ -450,13 +451,11 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
   void initState() {
     super.initState();
     _amountController = TextEditingController();
-    _accountController = TextEditingController();
   }
 
   @override
   void dispose() {
     _amountController.dispose();
-    _accountController.dispose();
     super.dispose();
   }
 
@@ -484,6 +483,11 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
                 color: Colors.grey.shade600,
               ),
             ),
+            const SizedBox(height: 8),
+            const Text(
+              'Make sure your GCash/Maya is linked in the wallet page before withdrawing.',
+              style: TextStyle(fontSize: 11, color: Colors.black54),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: _amountController,
@@ -510,23 +514,11 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
             DropdownButton<String>(
               value: _selectedMethod,
               isExpanded: true,
-              items: [
-                DropdownMenuItem(value: 'gcash', child: const Text('GCash')),
-                DropdownMenuItem(value: 'bank', child: const Text('Bank Transfer')),
-                DropdownMenuItem(value: 'paypal', child: const Text('PayPal')),
+              items: const [
+                DropdownMenuItem(value: 'gcash', child: Text('GCash (via PayMongo)')),
+                DropdownMenuItem(value: 'maya', child: Text('Maya (via PayMongo)')),
               ],
               onChanged: (val) => setState(() => _selectedMethod = val ?? 'gcash'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _accountController,
-              decoration: InputDecoration(
-                labelText: 'Account Number',
-                hintText: 'Enter your ${_selectedMethod == 'gcash' ? 'GCash' : 'account'} number',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
             ),
           ],
         ),
@@ -547,15 +539,9 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
                     );
                     return;
                   }
-                  if (_accountController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Enter account number')),
-                    );
-                    return;
-                  }
 
                   setState(() => _isSubmitting = true);
-                  await widget.onWithdraw(amount, _selectedMethod, _accountController.text);
+                  await widget.onWithdraw(amount, _selectedMethod, '');
                 },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF5F2D82),

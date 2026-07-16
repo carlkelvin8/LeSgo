@@ -27,7 +27,8 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('Xendit checkout URL: ${widget.checkout.invoiceUrl}');
+    debugPrint('Payment checkout URL: ${widget.checkout.invoiceUrl} '
+        '(provider: ${widget.checkout.provider})');
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(

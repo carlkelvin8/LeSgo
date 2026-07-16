@@ -39,7 +39,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
     final rootNav = Navigator.of(context, rootNavigator: true);
 
     final checkout =
-        await ref.read(lespayProvider.notifier).startXenditTopUp(amount);
+        await ref.read(lespayProvider.notifier).startTopUp(amount);
 
     if (!mounted) return;
 
