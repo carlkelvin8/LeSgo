@@ -189,16 +189,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
     state = state.copyWith(isProcessingTopUp: true, clearError: true);
 
     try {
-      final paid = await _isInvoicePaid(checkout);
-      if (!paid) {
-        state = state.copyWith(
-          isProcessingTopUp: false,
-          error:
-              'Payment not completed yet. Finish paying on the payment page, then tap again.',
-        );
-        return false;
-      }
-
+      // Directly confirm with backend — it will verify payment status with PayMongo
       try {
         await getIt<WalletRemoteDataSource>().confirmTopUp(
           amount: checkout.walletAmount,
@@ -211,6 +202,15 @@ class LespayNotifier extends StateNotifier<LespayState> {
         );
       } on DioException catch (e) {
         final code = e.response?.statusCode;
+        if (code == 402 || code == 400) {
+          // Payment genuinely not completed yet
+          state = state.copyWith(
+            isProcessingTopUp: false,
+            error:
+                'Payment not completed yet. Finish paying on the payment page, then tap again.',
+          );
+          return false;
+        }
         if (code != 409) {
           final serverMsg = (e.response?.data is Map)
               ? (e.response!.data['message'] as String? ?? '')
@@ -224,6 +224,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
           );
           return false;
         }
+        // 409 = already processed, treat as success
       }
 
       await loadWallet();
