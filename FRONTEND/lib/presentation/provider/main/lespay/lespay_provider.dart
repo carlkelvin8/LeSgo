@@ -402,30 +402,11 @@ class LespayNotifier extends StateNotifier<LespayState> {
         );
       }
     } catch (e) {
-      debugPrint('Gateway top-up invoice failed, trying direct: $e');
+      debugPrint('Gateway top-up invoice failed: $e');
     }
 
-    final invoice = await getIt<XenditRemoteDataSource>().createTopUpInvoice(
-      amount: pricing.walletAmount,
-      chargeAmount: pricing.totalCharge,
-      description: description,
-    );
-
-    final directUrl = invoice.invoiceUrl;
-    if (directUrl == null || directUrl.isEmpty) {
-      throw Exception('Could not create a payment link for top-up.');
-    }
-
-    return TopUpCheckout(
-      invoiceId: invoice.id,
-      invoiceUrl: directUrl,
-      walletAmount: pricing.walletAmount,
-      feeAmount: pricing.feeAmount,
-      totalCharge: pricing.totalCharge,
-      source: TopUpInvoiceSource.xenditDirect,
-      externalId: invoice.externalId,
-      provider: 'xendit',
-    );
+    // If both PayMongo attempts fail, throw error (no Xendit fallback)
+    throw Exception('Could not create a payment link. Please try again later.');
   }
 
   String _extractError(Object error) {
