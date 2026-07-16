@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:dio/dio.dart';
 import '../config/mobile_config_service.dart';
+import '../config/secrets_config.dart';
 import '../network/dio_client.dart';
 import '../constants/api_constants.dart';
 
@@ -24,10 +25,22 @@ class GoogleAuthResult {
 }
 
 class GoogleAuthService {
-  static String? get _webClientId {
-    final id = MobileConfigService.instance.googleWebClientId;
-    if (MobileConfigService.instance.isGoogleSignInConfigured) return id;
-    return null;
+  // Use SecretsConfig directly (baked in at build time via --dart-define-from-file)
+  // as the primary source, falling back to MobileConfigService (remote config)
+  static String get _webClientId {
+    final fromSecrets = SecretsConfig.googleWebClientId;
+    if (fromSecrets.isNotEmpty && fromSecrets.contains('.apps.googleusercontent.com')) {
+      return fromSecrets;
+    }
+    return MobileConfigService.instance.googleWebClientId;
+  }
+
+  static bool get _isConfigured {
+    final id = _webClientId;
+    return id.isNotEmpty &&
+        !id.startsWith('YOUR_') &&
+        !id.startsWith('your-') &&
+        id.contains('.apps.googleusercontent.com');
   }
 
   static GoogleSignIn get _googleSignIn => GoogleSignIn(
@@ -37,7 +50,7 @@ class GoogleAuthService {
 
   /// Sign in with Google and authenticate with your backend.
   static Future<GoogleAuthResult> signIn(DioClient dioClient) async {
-    if (!MobileConfigService.instance.isGoogleSignInConfigured) {
+    if (!_isConfigured) {
       return GoogleAuthResult(
         success: false,
         error:
