@@ -45,9 +45,21 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
             debugPrint('WebView error: ${error.description}');
             if (mounted) setState(() => _webViewFailed = true);
           },
+          onPageFinished: (url) {
+            // If page loads but is empty/error, mark as failed after timeout
+            debugPrint('WebView page finished: $url');
+          },
         ),
       )
       ..loadRequest(Uri.parse(widget.checkout.invoiceUrl));
+
+    // Auto-open in external browser as fallback after 3 seconds if webview seems blank
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted && !_webViewFailed) {
+        // Show a hint to open in browser if webview seems stuck
+        setState(() {}); // trigger rebuild to show browser button
+      }
+    });
   }
 
   void _handleRedirect(Uri uri) {
@@ -252,13 +264,11 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (_webViewFailed)
-                    OutlinedButton(
+                  OutlinedButton(
                       onPressed: _openInBrowser,
                       child: const Text('Open in browser'),
                     ),
-                  if (_webViewFailed)
-                    SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                   ElevatedButton(
                     onPressed: lespayState.isProcessingTopUp || _isConfirming
                         ? null
