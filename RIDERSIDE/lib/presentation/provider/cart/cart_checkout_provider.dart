@@ -40,6 +40,8 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
   Future<bool> checkout({
     required String deliveryAddress,
     required String paymentMethod,
+    double? deliveryLat,
+    double? deliveryLng,
   }) async {
     final cart = _ref.read(cartProvider);
     if (cart.items.isEmpty) {
@@ -84,6 +86,10 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
           )
           .toList();
 
+      // Use pinned delivery coordinates if available, otherwise fallback to merchant location
+      final dropLat = deliveryLat ?? pickupLat;
+      final dropLng = deliveryLng ?? pickupLng;
+
       final response = await ApiService.createOrder({
         'service_id': AppConfig.leseatServiceId,
         'partner_id': partnerId,
@@ -99,8 +105,8 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
         },
         'dropoff': {
           'address': deliveryAddress,
-          'lat': pickupLat,
-          'lng': pickupLng,
+          'lat': dropLat,
+          'lng': dropLng,
           'contact_name': auth.user?.name,
           'contact_phone': auth.user?.phone,
         },

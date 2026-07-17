@@ -57,8 +57,14 @@ class CartScreen extends ConsumerWidget {
                       setState(() {
                         pinLocation = result['latLng'] as LatLng;
                         pinAddress = result['address'] as String?;
-                        if (pinAddress != null && addressController.text.isEmpty) {
+                        // Always update the address field with pinned location
+                        if (pinAddress != null && pinAddress!.isNotEmpty) {
                           addressController.text = pinAddress!;
+                        } else {
+                          // Fallback to coordinates if geocoding failed
+                          final lat = (result['latLng'] as LatLng).latitude.toStringAsFixed(5);
+                          final lng = (result['latLng'] as LatLng).longitude.toStringAsFixed(5);
+                          addressController.text = '$lat, $lng';
                         }
                       });
                     }
@@ -250,6 +256,8 @@ class CartScreen extends ConsumerWidget {
     final success = await ref.read(cartCheckoutStateProvider.notifier).checkout(
           deliveryAddress: fullAddress,
           paymentMethod: paymentMethod,
+          deliveryLat: pinLocation?.latitude,
+          deliveryLng: pinLocation?.longitude,
         );
 
     if (!context.mounted) return;
