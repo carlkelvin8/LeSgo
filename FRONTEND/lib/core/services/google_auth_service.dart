@@ -60,7 +60,16 @@ class GoogleAuthService {
 
     try {
       // Trigger the Google sign-in flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleUser;
+      try {
+        googleUser = await _googleSignIn.signIn();
+      } catch (e) {
+        // Google Sign-In plugin can throw type errors on certain emulator versions
+        return GoogleAuthResult(
+          success: false,
+          error: 'Google Sign-In unavailable on this device. Please use email/password login.',
+        );
+      }
 
       if (googleUser == null) {
         // User cancelled the sign-in
