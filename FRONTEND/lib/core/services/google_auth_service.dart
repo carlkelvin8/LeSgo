@@ -90,17 +90,31 @@ class GoogleAuthService {
       );
 
       final data = response.data;
-      final payload = data is Map && data['data'] is Map
-          ? Map<String, dynamic>.from(data['data'] as Map)
-          : Map<String, dynamic>.from(data as Map);
+      
+      // Safely extract payload - handle both {data: {...}} and direct {...} responses
+      Map<String, dynamic> payload;
+      if (data is Map) {
+        final dataMap = Map<String, dynamic>.from(data);
+        if (dataMap['data'] is Map) {
+          payload = Map<String, dynamic>.from(dataMap['data'] as Map);
+        } else {
+          payload = dataMap;
+        }
+      } else {
+        return GoogleAuthResult(
+          success: false,
+          error: 'Unexpected response format from server',
+        );
+      }
 
-      if (data['success'] == true) {
+      final success = data['success'] == true || payload['token'] != null;
+      if (success) {
         return GoogleAuthResult(
           success: true,
-          token: payload['token'] ?? data['token'],
-          refreshToken: payload['refresh_token'] ?? data['refresh_token'],
-          user: payload['user'] ?? data['user'],
-          isNewUser: data['is_new_user'] ?? payload['is_new_user'] ?? false,
+          token: (payload['token'] ?? data['token'])?.toString(),
+          refreshToken: (payload['refresh_token'] ?? data['refresh_token'])?.toString(),
+          user: payload['user'] is Map ? Map<String, dynamic>.from(payload['user'] as Map) : null,
+          isNewUser: data['is_new_user'] == true || payload['is_new_user'] == true,
         );
       }
 
@@ -112,7 +126,7 @@ class GoogleAuthService {
       final message = e.response?.data?['message'] ?? e.message ?? 'Network error';
       return GoogleAuthResult(success: false, error: message);
     } catch (e) {
-      return GoogleAuthResult(success: false, error: e.toString());
+      return GoogleAuthResult(success: false, error: 'Google sign-in error: ${e.runtimeType}: $e');
     }
   }
 
