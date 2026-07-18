@@ -1,6 +1,6 @@
-/// LesPay top-up fee: 3% of the wallet credit amount (paid on top).
+/// LesPay top-up fee: 1.5% of the wallet credit amount (paid on top).
 class LespayTopupFee {
-  static const double feeRate = 0.03;
+  static const double feeRate = 0.015;
 
   final double walletAmount;
   final double feeAmount;

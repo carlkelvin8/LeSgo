@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../core/services/merchant_wallet_api.dart';
-import '../../../../../core/utils/merchant_transfer_commission_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_wallet_provider.dart';
 import '../../../../widgets/widgets.dart';
@@ -17,152 +16,311 @@ class MerchantLespayView extends ConsumerWidget {
     final notifier = ref.read(merchantWalletProvider.notifier);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          color: const Color(0xFF5F2D82),
-          onRefresh: () => notifier.loadWallet(),
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: ResponsiveUtils.horizontalPadding(context),
-              vertical: ResponsiveUtils.spacing(context, 16),
-            ),
-            children: [
-              const HomeHeader(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+              child: const HomeHeader(
                 backgroundColor: Colors.transparent,
                 logoColor: Color(0xFF5F2D82),
-                borderColor: Color(0x335F2D82),
+                borderColor: Colors.transparent,
               ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              Text(
-                'LeSpay',
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveUtils.spacing(context, 16),
+              ),
+              child: Text(
+                'LesPay',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 24),
+                  fontSize: ResponsiveUtils.fontSize(context, 20),
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF5F2D82),
+                  color: Colors.black87,
                 ),
               ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-              Text(
-                'Pay riders directly from your merchant wallet.',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 13),
-                  color: Colors.grey.shade700,
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+            // Balance Card (similar to customer)
+            _MerchantWalletCard(wallet: wallet, onRefresh: () => notifier.loadWallet()),
+
+            if (wallet.error != null) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveUtils.spacing(context, 16),
                 ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-              _BalanceCard(wallet: wallet),
-              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-              if (notifier.canManageWallet)
-                _TopUpCard(notifier: notifier, wallet: wallet),
-              if (wallet.error != null) ...[
-                SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                Text(
-                  wallet.error!,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.red.shade700,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ),
-              ],
-              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-              if (notifier.canManageWallet)
-                _PayRiderCard(notifier: notifier, wallet: wallet)
-              else
-                _RestrictedCard(),
-              SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-              Text(
-                'Recent transactions',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 16),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-              if (wallet.isLoading && wallet.transactions.isEmpty)
-                const Center(child: CircularProgressIndicator())
-              else if (wallet.transactions.isEmpty)
-                Text(
-                  'No LesPay activity yet.',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    color: Colors.grey.shade600,
-                  ),
-                )
-              else
-                ...wallet.transactions.take(10).map(
-                      (tx) => _TransactionTile(transaction: tx),
+                  child: Text(
+                    wallet.error!,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.red.shade700,
                     ),
+                  ),
+                ),
+              ),
             ],
-          ),
+
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+            Expanded(
+              child: RefreshIndicator(
+                color: const Color(0xFF5F2D82),
+                onRefresh: () async {
+                  await notifier.loadWallet();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.only(
+                    bottom: ResponsiveUtils.spacing(context, 24),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Actions
+                      if (notifier.canManageWallet) ...[
+                        _ActionItem(
+                          icon: Icons.add_circle_outline,
+                          title: 'Top up',
+                          subtitle: 'Add funds via QR PH',
+                          onTap: () => _showTopUpDialog(context, ref),
+                        ),
+                        _ActionItem(
+                          icon: Icons.send_outlined,
+                          title: 'Pay Rider',
+                          subtitle: 'Send payment to rider',
+                          onTap: () => _showPayRiderDialog(context, ref),
+                        ),
+                      ],
+
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: ResponsiveUtils.spacing(context, 16),
+                          vertical: ResponsiveUtils.spacing(context, 12),
+                        ),
+                        child: Text(
+                          'Transaction History',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 16),
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+
+                      if (wallet.isLoading && wallet.transactions.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (wallet.transactions.isEmpty)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResponsiveUtils.spacing(context, 16),
+                          ),
+                          child: Text(
+                            'No transactions yet.',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              color: Colors.grey.shade500,
+                              fontSize: ResponsiveUtils.fontSize(context, 13),
+                            ),
+                          ),
+                        )
+                      else
+                        ...wallet.transactions.take(20).map(
+                              (tx) => _TransactionTile(transaction: tx),
+                            ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  void _showTopUpDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _TopUpDialog(parentContext: context),
+    );
+  }
+
+  void _showPayRiderDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => _PayRiderDialog(parentContext: context),
+    );
+  }
 }
 
-class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({required this.wallet});
+// ─── Wallet Card ───────────────────────────────────────────────────────────────
+
+class _MerchantWalletCard extends StatelessWidget {
+  const _MerchantWalletCard({required this.wallet, required this.onRefresh});
 
   final MerchantWalletState wallet;
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF5F2D82), Color(0xFF7B3FA0)],
+    return GestureDetector(
+      onTap: onRefresh,
+      child: Container(
+        margin: EdgeInsets.symmetric(
+          horizontal: ResponsiveUtils.spacing(context, 16),
         ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Available balance',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              color: Colors.white70,
-              fontSize: 13,
-            ),
+        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF5F2D82), Color(0xFF7B3FA0)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          const SizedBox(height: 8),
-          Text(
-            wallet.isLoading ? '...' : wallet.balanceFormatted,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              color: Colors.white,
-              fontSize: ResponsiveUtils.fontSize(context, 28),
-              fontWeight: FontWeight.w800,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF5F2D82).withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(
+              wallet.isLoading ? '...' : wallet.balanceFormatted,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                color: Colors.white,
+                fontSize: ResponsiveUtils.fontSize(context, 32),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            Text(
+              'Merchant Wallet',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                color: Colors.white.withOpacity(0.85),
+                fontSize: ResponsiveUtils.fontSize(context, 13),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _TopUpCard extends ConsumerStatefulWidget {
-  const _TopUpCard({required this.notifier, required this.wallet});
+// ─── Action Item ───────────────────────────────────────────────────────────────
 
-  final MerchantWalletNotifier notifier;
-  final MerchantWalletState wallet;
+class _ActionItem extends StatelessWidget {
+  const _ActionItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
   @override
-  ConsumerState<_TopUpCard> createState() => _TopUpCardState();
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveUtils.spacing(context, 16),
+          vertical: ResponsiveUtils.spacing(context, 14),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF5F2D82).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: const Color(0xFF5F2D82), size: 22),
+            ),
+            SizedBox(width: ResponsiveUtils.spacing(context, 14)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 15),
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade400),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _TopUpCardState extends ConsumerState<_TopUpCard> {
+// ─── Top Up Dialog (matches customer style) ────────────────────────────────────
+
+class _TopUpDialog extends ConsumerStatefulWidget {
+  final BuildContext parentContext;
+  const _TopUpDialog({required this.parentContext});
+
+  @override
+  ConsumerState<_TopUpDialog> createState() => _TopUpDialogState();
+}
+
+class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
   final _amountController = TextEditingController();
+  static const _quickAmounts = [100.0, 200.0, 500.0, 1000.0];
   bool _isProcessing = false;
+
+  double get _parsedAmount =>
+      double.tryParse(_amountController.text.trim()) ?? 0;
+
+  double get _fee => _parsedAmount * 0.015;
+  double get _total => _parsedAmount + _fee;
 
   @override
   void dispose() {
@@ -171,13 +329,10 @@ class _TopUpCardState extends ConsumerState<_TopUpCard> {
   }
 
   Future<void> _topUp() async {
-    final amount = double.tryParse(_amountController.text.trim()) ?? 0;
+    final amount = _parsedAmount;
     if (amount < 50) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Minimum top-up is PHP 50'),
-          backgroundColor: Colors.orange,
-        ),
+      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+        const SnackBar(content: Text('Minimum top-up is ₱50'), backgroundColor: Colors.orange),
       );
       return;
     }
@@ -189,22 +344,19 @@ class _TopUpCardState extends ConsumerState<_TopUpCard> {
 
       final invoiceUrl = result['invoice_url']?.toString();
       if (invoiceUrl != null && invoiceUrl.isNotEmpty) {
+        Navigator.of(context).pop();
         final uri = Uri.tryParse(invoiceUrl);
         if (uri != null && await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
-        _amountController.clear();
-        // Poll for confirmation after a delay
+        // Refresh wallet after delay
         Future.delayed(const Duration(seconds: 5), () {
-          if (mounted) widget.notifier.loadWallet();
+          ref.read(merchantWalletProvider.notifier).loadWallet();
         });
-      } else {
-        _amountController.clear();
-        widget.notifier.loadWallet();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
           SnackBar(
             content: Text('Top-up failed: ${MerchantWalletApi.extractError(e)}'),
             backgroundColor: Colors.red,
@@ -212,96 +364,122 @@ class _TopUpCardState extends ConsumerState<_TopUpCard> {
         );
       }
     } finally {
-      if (mounted) setState(() {
-        _isProcessing = false;
-      });
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.green.shade200),
+    return AlertDialog(
+      title: const Text(
+        'Top Up (1.5% fee)',
+        style: TextStyle(fontFamily: 'TT Fors', fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      color: Colors.green.shade50,
-      child: Padding(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.add_circle_outline, color: Colors.green.shade700, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Top Up Wallet',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                    color: Colors.green.shade800,
-                  ),
-                ),
-              ],
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'A 1.5% top-up fee applies. You pay the total below using QR PH.',
+            style: TextStyle(fontFamily: 'TT Fors', fontSize: 13, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _amountController,
+            onChanged: (_) => setState(() {}),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Amount to add to wallet',
+              prefixText: '₱ ',
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _amountController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Amount (PHP)',
-                      hintText: 'Min. 50',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton(
-                  onPressed: _isProcessing ? null : _topUp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: _isProcessing
-                      ? const SizedBox(
-                          width: 18, height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Top Up', style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700)),
-                ),
-              ],
-            ),
+            enabled: !_isProcessing,
+          ),
+          const SizedBox(height: 12),
+
+          // Fee summary
+          if (_parsedAmount > 0) ...[
+            _summaryRow('Amount to wallet', '₱${_parsedAmount.toStringAsFixed(2)}'),
+            _summaryRow('Top-up fee (1.5%)', '₱${_fee.toStringAsFixed(2)}'),
+            const Divider(),
+            _summaryRow('Total to pay', '₱${_total.toStringAsFixed(2)}', bold: true),
+            const SizedBox(height: 8),
           ],
+
+          // Quick amounts
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _quickAmounts.map((value) {
+              return ChoiceChip(
+                label: Text('₱${value.toStringAsFixed(0)}'),
+                selected: _amountController.text == value.toStringAsFixed(0),
+                onSelected: _isProcessing
+                    ? null
+                    : (_) {
+                        setState(() {
+                          _amountController.text = value.toStringAsFixed(0);
+                        });
+                      },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isProcessing ? null : () => Navigator.of(context).pop(),
+          child: Text('Cancel', style: TextStyle(fontFamily: 'TT Fors', color: Colors.grey[600])),
         ),
+        ElevatedButton(
+          onPressed: _isProcessing ? null : _topUp,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5F2D82),
+            foregroundColor: Colors.white,
+          ),
+          child: _isProcessing
+              ? const SizedBox(
+                  height: 18, width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Continue to payment', style: TextStyle(fontFamily: 'TT Fors')),
+        ),
+      ],
+    );
+  }
+
+  Widget _summaryRow(String label, String value, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(
+            fontFamily: 'TT Fors', fontSize: 13,
+            fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          )),
+          Text(value, style: TextStyle(
+            fontFamily: 'TT Fors', fontSize: 14,
+            fontWeight: bold ? FontWeight.bold : FontWeight.w600,
+            color: bold ? const Color(0xFF5F2D82) : Colors.black87,
+          )),
+        ],
       ),
     );
   }
 }
 
-class _PayRiderCard extends ConsumerStatefulWidget {
-  const _PayRiderCard({required this.notifier, required this.wallet});
+// ─── Pay Rider Dialog ──────────────────────────────────────────────────────────
 
-  final MerchantWalletNotifier notifier;
-  final MerchantWalletState wallet;
+class _PayRiderDialog extends ConsumerStatefulWidget {
+  final BuildContext parentContext;
+  const _PayRiderDialog({required this.parentContext});
 
   @override
-  ConsumerState<_PayRiderCard> createState() => _PayRiderCardState();
+  ConsumerState<_PayRiderDialog> createState() => _PayRiderDialogState();
 }
 
-class _PayRiderCardState extends ConsumerState<_PayRiderCard> {
+class _PayRiderDialogState extends ConsumerState<_PayRiderDialog> {
   final _emailController = TextEditingController();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
@@ -316,133 +494,91 @@ class _PayRiderCardState extends ConsumerState<_PayRiderCard> {
 
   Future<void> _submit() async {
     final amount = double.tryParse(_amountController.text.trim()) ?? 0;
-    final success = await widget.notifier.transferToRider(
+    if (amount <= 0) return;
+
+    final notifier = ref.read(merchantWalletProvider.notifier);
+    final success = await notifier.transferToRider(
       recipientEmail: _emailController.text.trim(),
       amount: amount,
       note: _noteController.text.trim(),
     );
     if (!mounted) return;
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: Text(
-            'Sent ${widget.notifier.transferPreview(amount)}',
-          ),
+          content: Text('₱${amount.toStringAsFixed(2)} sent to rider!'),
           backgroundColor: Colors.green.shade700,
         ),
       );
-      _amountController.clear();
-      _noteController.clear();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final amount = double.tryParse(_amountController.text.trim()) ?? 0;
-    final preview = amount > 0 ? widget.notifier.transferPreview(amount) : null;
+    final wallet = ref.watch(merchantWalletProvider);
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+    return AlertDialog(
+      title: const Text(
+        'Pay Rider',
+        style: TextStyle(fontFamily: 'TT Fors', fontSize: 18, fontWeight: FontWeight.bold),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Pay rider',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-              ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              labelText: 'Rider email',
+              prefixIcon: Icon(Icons.person_outline, size: 20),
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Rider email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Amount (PHP)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            if (preview != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                preview,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 12,
-                  color: Colors.grey.shade700,
-                ),
-              ),
-              Text(
-                'LesGo fee (${(MerchantTransferCommissionUtils.platformRate * 100).toStringAsFixed(0)}%) is deducted before the rider is credited.',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 11,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            TextField(
-              controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: 'Note (optional)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5F2D82),
-                ),
-                onPressed: widget.wallet.isTransferring ? null : _submit,
-                child: Text(
-                  widget.wallet.isTransferring ? 'Sending...' : 'Send payment',
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RestrictedCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          'Your staff role cannot access LesPay payments. Ask the store admin or use a cashier/admin account.',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            color: Colors.grey.shade700,
           ),
-        ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _amountController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Amount (PHP)',
+              prefixText: '₱ ',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _noteController,
+            decoration: const InputDecoration(
+              labelText: 'Note (optional)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancel', style: TextStyle(fontFamily: 'TT Fors', color: Colors.grey[600])),
+        ),
+        ElevatedButton(
+          onPressed: wallet.isTransferring ? null : _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF5F2D82),
+            foregroundColor: Colors.white,
+          ),
+          child: wallet.isTransferring
+              ? const SizedBox(
+                  height: 18, width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Send payment', style: TextStyle(fontFamily: 'TT Fors')),
+        ),
+      ],
     );
   }
 }
+
+// ─── Transaction Tile ──────────────────────────────────────────────────────────
 
 class _TransactionTile extends StatelessWidget {
   const _TransactionTile({required this.transaction});
@@ -452,24 +588,68 @@ class _TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = transaction['type']?.toString() ?? '';
-    final amount = transaction['amount']?.toString() ?? '0';
+    final amount = double.tryParse(transaction['amount']?.toString() ?? '0') ?? 0;
     final description = transaction['description']?.toString() ?? 'Transaction';
+    final date = transaction['created_at']?.toString();
     final isCredit = type == 'credit';
 
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        isCredit ? Icons.arrow_downward : Icons.arrow_upward,
-        color: isCredit ? Colors.green : Colors.red,
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.spacing(context, 16),
+        vertical: ResponsiveUtils.spacing(context, 6),
       ),
-      title: Text(description, style: const TextStyle(fontFamily: 'TT Fors')),
-      trailing: Text(
-        '${isCredit ? '+' : '-'}PHP $amount',
-        style: TextStyle(
-          fontFamily: 'TT Fors',
-          fontWeight: FontWeight.w700,
-          color: isCredit ? Colors.green.shade700 : Colors.red.shade700,
-        ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isCredit ? Colors.green.shade50 : Colors.red.shade50,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isCredit ? Icons.arrow_downward : Icons.arrow_upward,
+              color: isCredit ? Colors.green.shade700 : Colors.red.shade700,
+              size: 18,
+            ),
+          ),
+          SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (date != null)
+                  Text(
+                    date.length > 16 ? date.substring(0, 16) : date,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 11),
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Text(
+            '${isCredit ? '+' : '-'}₱${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 14),
+              fontWeight: FontWeight.w700,
+              color: isCredit ? Colors.green.shade700 : Colors.red.shade700,
+            ),
+          ),
+        ],
       ),
     );
   }

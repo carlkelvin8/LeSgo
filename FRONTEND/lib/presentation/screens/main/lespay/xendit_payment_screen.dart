@@ -221,7 +221,7 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
                 ),
                 _summaryRow(
                   context,
-                  'Top-up fee (3%)',
+                  'Top-up fee (1.5%)',
                   widget.checkout.feeAmount,
                 ),
                 Divider(height: ResponsiveUtils.spacing(context, 12)),
