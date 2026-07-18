@@ -224,7 +224,7 @@ class OrderReceiptService {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('Service fee (3%)'),
+                  pw.Text('Service fee (1.5%)'),
                   pw.Text('PHP ${feeAmount.toStringAsFixed(2)}'),
                 ],
               ),

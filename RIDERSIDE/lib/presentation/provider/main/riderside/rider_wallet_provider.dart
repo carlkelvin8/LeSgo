@@ -233,7 +233,7 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
   Future<RiderTopUpCheckout?> _createTopUpCheckout(LespayTopupFee pricing) async {
     final description =
         'LesPay Top-up PHP ${pricing.walletAmount.toStringAsFixed(2)} '
-        '+ 3% fee (PHP ${pricing.feeAmount.toStringAsFixed(2)})';
+        '+ 1.5% fee (PHP ${pricing.feeAmount.toStringAsFixed(2)})';
 
     try {
       final response = await ApiService.dio.post(

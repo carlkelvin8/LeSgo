@@ -347,7 +347,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
     final pricing = LespayTopupFee.calculate(walletAmount);
     final description =
         'LesPay Top-up ₱${pricing.walletAmount.toStringAsFixed(2)} '
-        '+ 3% fee (₱${pricing.feeAmount.toStringAsFixed(2)})';
+        '+ 1.5% fee (₱${pricing.feeAmount.toStringAsFixed(2)})';
 
     try {
       final invoiceData = await getIt<WalletRemoteDataSource>()
