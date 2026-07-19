@@ -189,11 +189,6 @@ class _RiderBookingDetailScreenState
     
     try {
       final lang = ref.read(appLanguageProvider);
-      
-      // Helper to return early while clearing the flag
-      Future<void> returnEarly() async {
-        _isHandlingStatusChange = false;
-      }
     
       // Get service ID from booking
       final orderId = int.tryParse(widget.booking.id);
@@ -204,7 +199,6 @@ class _RiderBookingDetailScreenState
             backgroundColor: Colors.red,
           ),
         );
-        await returnEarly();
         return;
       }
       

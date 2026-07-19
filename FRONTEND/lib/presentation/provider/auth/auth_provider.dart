@@ -152,8 +152,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         clearError: true,
       );
 
-      // ✅ Role validation for customer app
-      if (profile.role != 'customer') {
+      // ✅ Role validation for customer app (allow null-role users same as regular login)
+      if (profile.role != null && profile.role != 'customer') {
         state = AuthState(); // Clear state
         return false;
       }
