@@ -9,7 +9,7 @@ class ApiConstants {
   // API Base URL - Force Production for testing
   static String get baseUrl {
     // Force production API for testing
-    return 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
+    return 'https://lesgo-api-feature-auth-fhirsy.laravel.cloud/api';
     
     // Original logic (commented out)
     // if (kDebugMode) {
@@ -17,7 +17,7 @@ class ApiConstants {
     //   return 'http://10.0.2.2:8000/api'; // Android emulator localhost
     // } else {
     //   // Production - Laravel Cloud server
-    //   return 'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
+    //   return 'https://lesgo-api-feature-auth-fhirsy.laravel.cloud/api';
     // }
   }
 
