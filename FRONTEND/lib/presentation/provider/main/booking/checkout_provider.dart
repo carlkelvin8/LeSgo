@@ -11,6 +11,8 @@ import '../../../../data/data_source/order_remote_datasource.dart';
 
 import '../../../../data/data_source/wallet_remote_datasource.dart';
 
+import '../../../../data/data_source/partner_remote_datasource.dart';
+
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
 
 import '../../../../data/data_source/dto/voucher/validate_voucher_request_dto.dart';
@@ -271,7 +273,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
 
-    _resolvePickupCoordinates(restaurantState.activeRestaurantId);
+    await _resolvePickupCoordinates(restaurantState.activeRestaurantId);
 
     refreshDeliveryFee();
 
@@ -279,18 +281,32 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
 
-  void _resolvePickupCoordinates(String? partnerIdStr) {
+  Future<void> _resolvePickupCoordinates(String? partnerIdStr) async {
+    if (partnerIdStr == null || partnerIdStr.isEmpty) {
+      state = state.copyWith(
+        pickupLat: BookingGeoUtils.defaultLat,
+        pickupLng: BookingGeoUtils.defaultLng,
+      );
+      return;
+    }
 
-    // Restaurant pickup hub — use service default until partner branches expose coords.
+    try {
+      final partnerId = int.parse(partnerIdStr);
+      final partner = await getIt<PartnerRemoteDataSource>().getPartner(partnerId);
+      if (partner.latitude != null && partner.longitude != null) {
+        state = state.copyWith(
+          pickupLat: partner.latitude!,
+          pickupLng: partner.longitude!,
+        );
+        return;
+      }
+    } catch (_) {}
 
+    // Fallback to default coordinates if partner fetch fails or has no coords
     state = state.copyWith(
-
       pickupLat: BookingGeoUtils.defaultLat,
-
       pickupLng: BookingGeoUtils.defaultLng,
-
     );
-
   }
 
 

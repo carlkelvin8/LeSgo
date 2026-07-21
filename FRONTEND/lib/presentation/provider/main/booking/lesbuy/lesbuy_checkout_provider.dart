@@ -90,8 +90,14 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
 
   Future<void> _loadPartnerPickup(int partnerId) async {
     try {
-      await _partners.getPartner(partnerId);
-      // Partner profile has no coords in DTO; keep default pickup hub near CDO.
+      final partner = await _partners.getPartner(partnerId);
+      // Use partner's actual coordinates (from primary branch) as pickup point
+      if (partner.latitude != null && partner.longitude != null) {
+        state = state.copyWith(
+          pickupLat: partner.latitude!,
+          pickupLng: partner.longitude!,
+        );
+      }
     } catch (_) {}
   }
 
@@ -130,12 +136,15 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
       }
     }
 
-    final distanceM = BookingGeoUtils.distanceMeters(
+    final rawDistanceM = BookingGeoUtils.distanceMeters(
       lat1: state.pickupLat,
       lng1: state.pickupLng,
       lat2: lat,
       lng2: lng,
     );
+
+    // Clamp distance to a reasonable delivery radius (500m – 25km)
+    final distanceM = rawDistanceM.clamp(500, 25000);
 
     state = state.copyWith(isLoadingFare: true, estimatedDistanceM: distanceM);
 
@@ -148,8 +157,9 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
         dropoffLat: lat,
         dropoffLng: lng,
       );
+      final normalizedFee = _normalizeDeliveryFee(fee);
       state = state.copyWith(
-        deliveryFee: fee ?? 50,
+        deliveryFee: normalizedFee ?? 50,
         isLoadingFare: false,
         deliveryFeeUncertain: false,
       );
@@ -215,6 +225,15 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
       discount: 0,
       clearVoucherError: true,
     );
+  }
+
+  /// Cap unreasonable fees (e.g. due to wrong coordinates or extreme distance).
+  double? _normalizeDeliveryFee(double? fee) {
+    if (fee == null) return null;
+    if (fee.isNaN || fee.isInfinite || fee < 0 || fee > 500) {
+      return 49.0;
+    }
+    return fee;
   }
 }
 

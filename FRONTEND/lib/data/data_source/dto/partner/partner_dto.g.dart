@@ -25,6 +25,8 @@ PartnerDto _$PartnerDtoFromJson(Map<String, dynamic> json) => PartnerDto(
   isFeatured: json['is_featured'] as bool?,
   status: json['status'] as String?,
   openingHours: json['opening_hours'] as Map<String, dynamic>?,
+  latitude: (json['latitude'] as num?)?.toDouble(),
+  longitude: (json['longitude'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$PartnerDtoToJson(PartnerDto instance) =>
@@ -46,6 +48,8 @@ Map<String, dynamic> _$PartnerDtoToJson(PartnerDto instance) =>
       'is_featured': instance.isFeatured,
       'status': instance.status,
       'opening_hours': instance.openingHours,
+      'latitude': instance.latitude,
+      'longitude': instance.longitude,
     };
 
 PartnersResponseDto _$PartnersResponseDtoFromJson(Map<String, dynamic> json) =>

@@ -50,6 +50,8 @@ import 'package:lesgo/data/data_source/partner_remote_datasource.dart'
 import 'package:lesgo/data/data_source/payment_gateway_remote_datasource.dart'
     as _i802;
 import 'package:lesgo/data/data_source/payment_remote_datasource.dart' as _i208;
+import 'package:lesgo/data/data_source/paymongo_remote_datasource.dart'
+    as _i823;
 import 'package:lesgo/data/data_source/realtime_remote_datasource.dart'
     as _i884;
 import 'package:lesgo/data/data_source/referral_remote_datasource.dart'
@@ -166,6 +168,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i208.PaymentRemoteDataSource>(
       () => _i208.PaymentRemoteDataSource(gh<_i214.DioClient>()),
+    );
+    gh.lazySingleton<_i823.PayMongoRemoteDataSource>(
+      () => _i823.PayMongoRemoteDataSource(gh<_i214.DioClient>()),
     );
     gh.lazySingleton<_i884.RealtimeRemoteDataSource>(
       () => _i884.RealtimeRemoteDataSource(gh<_i214.DioClient>()),

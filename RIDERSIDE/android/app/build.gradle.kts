@@ -66,7 +66,7 @@ fun validateAndroidSdk() {
 }
 
 android {
-    namespace = "com.lesgo.rider"
+    namespace = "com.lesgo.merchant"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "28.2.13676358"
     
@@ -104,7 +104,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.lesgo.rider"
+        applicationId = "com.lesgo.merchant"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -71,6 +71,8 @@ class PartnerDto {
   final String? status;
   @JsonKey(name: 'opening_hours')
   final Map<String, dynamic>? openingHours;
+  final double? latitude;
+  final double? longitude;
 
   PartnerDto({
     required this.id,
@@ -90,6 +92,8 @@ class PartnerDto {
     this.isFeatured,
     this.status,
     this.openingHours,
+    this.latitude,
+    this.longitude,
   });
 
   factory PartnerDto.fromJson(Map<String, dynamic> json) =>

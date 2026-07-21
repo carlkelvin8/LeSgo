@@ -1,7 +1,7 @@
 class ApiConstants {
   /// Same staging server as the customer app — hardcoded for release builds.
   static String get baseUrl =>
-      'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
+      'https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api';
 
   static const String loginEndpoint = '/v1/auth/login';
   static const String logoutEndpoint = '/v1/auth/logout';

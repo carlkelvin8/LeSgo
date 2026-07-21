@@ -15,6 +15,7 @@ import '../../../../widgets/orders/cancel_order_dialog.dart';
 import '../../../../../core/utils/cart_cleanup.dart';
 import '../../../../widgets/chat/order_chat_widget.dart';
 import '../../../../widgets/chat/chat_button_widget.dart';
+import '../../../../widgets/tracking/live_rider_map.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LeseatOrderTrackingScreen extends ConsumerStatefulWidget {
@@ -686,6 +687,20 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
                                           ),
                                         ),
                                 ),
+                              ),
+                            ],
+
+                            // Live Rider Map (when driver is assigned)
+                            if (['accepted', 'driver_arrived_at_pickup', 'in_progress', 'picked_up']
+                                .contains(trackingState.orderStatus.toLowerCase()) &&
+                                trackingState.dropoffLocation != null) ...[
+                              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+                              LiveRiderMap(
+                                orderId: int.parse(widget.orderId),
+                                dropoffLat: trackingState.dropoffLocation!.latitude,
+                                dropoffLng: trackingState.dropoffLocation!.longitude,
+                                pickupLat: trackingState.pickupLocation?.latitude,
+                                pickupLng: trackingState.pickupLocation?.longitude,
                               ),
                             ],
 
