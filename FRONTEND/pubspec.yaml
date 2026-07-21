@@ -58,6 +58,10 @@ dependencies:
   google_sign_in: ^6.2.1
   get_it: ^7.7.0
   injectable: ^2.5.0
+
+  # Shared package (DTOs, constants shared with Rider app)
+  lesgo_shared:
+    path: ../packages/lesgo_shared
   json_annotation: ^4.11.0
   intl: ^0.19.0
   url_launcher: ^6.3.1
@@ -73,6 +77,7 @@ dependencies:
   local_auth: ^2.3.0
   firebase_core: ^4.10.0
   firebase_messaging: ^16.3.0
+  firebase_crashlytics: ^5.2.3
   google_generative_ai: ^0.4.7
 
 dev_dependencies:

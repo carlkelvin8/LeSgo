@@ -19,10 +19,17 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
       final response = await authDataSource.sendOtp(phoneNumber);
       
       if (response.success) {
+        // If fallback mode returned OTP directly, store it for auto-fill
+        String? fallbackMessage;
+        if (response.fallback == true && response.otp != null) {
+          fallbackMessage = 'Dev mode: Your OTP is ${response.otp}';
+        }
+        
         state = state.copyWith(
           data: state.data.copyWith(phoneNumber: phoneNumber),
           isLoading: false,
           otpSent: true,
+          error: fallbackMessage, // Show OTP as info message in fallback mode
         );
         return true;
       } else {
@@ -67,7 +74,7 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
         state = state.copyWith(isLoading: false);
         return true;
       } else {
-        throw Exception('Invalid OTP code');
+        throw Exception(response.message.isNotEmpty ? response.message : 'Invalid OTP code');
       }
     } catch (e) {
       String errorMessage = 'OTP verification failed';

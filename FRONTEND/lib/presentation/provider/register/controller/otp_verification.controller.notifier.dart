@@ -29,7 +29,13 @@ class OtpVerificationControllers {
     if (!context.mounted) return;
 
     if (success) {
-      SnackBarUtils.showSuccess(context, 'OTP sent to $phoneNumber');
+      // Check if there's a fallback OTP message in the error field
+      final stateError = ref.read(registerProvider).error;
+      if (stateError != null && stateError.contains('Your OTP is')) {
+        SnackBarUtils.showSuccess(context, stateError);
+      } else {
+        SnackBarUtils.showSuccess(context, 'OTP sent to $phoneNumber');
+      }
     } else {
       final stateError = ref.read(registerProvider).error;
       if (stateError != null) {

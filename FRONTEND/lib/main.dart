@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/google_maps_platform_config.dart';
@@ -7,6 +10,7 @@ import 'core/constants/routers/auth/auth_routes.dart';
 import 'core/di/injection.dart';
 import 'core/services/analytics_service.dart';
 import 'core/services/app_preferences_service.dart';
+import 'core/services/crash_reporter_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/promo_notification_service.dart';
 import 'core/services/websocket_service.dart';
@@ -20,6 +24,10 @@ Future<void> main() async {
   await MobileConfigService.instance.loadFromApi();
   await configureGoogleMapsForPlatform();
   await configureDependencies();
+
+  // Initialize crash reporting (only in release builds)
+  await CrashReporterService.initialize();
+
   _analyticsRouteObserver = AnalyticsRouteObserver(getIt<AnalyticsService>());
   await getIt<WebSocketService>().initialize();
   await getIt<NotificationService>().initialize();

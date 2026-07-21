@@ -29,6 +29,23 @@ import '../services/analytics_service.dart';
 import '../services/file_upload_service.dart';
 import '../services/gemini_customer_service.dart';
 
+// Repository interfaces
+import '../../domain/repository/auth_repository.dart';
+import '../../domain/repository/order_repository.dart';
+import '../../domain/repository/partner_repository.dart';
+import '../../domain/repository/tracking_repository.dart';
+
+// Repository implementations
+import '../../data/repositoryImpl/auth_repository_impl.dart';
+import '../../data/repositoryImpl/order_repository_impl.dart';
+import '../../data/repositoryImpl/partner_repository_impl.dart';
+import '../../data/repositoryImpl/tracking_repository_impl.dart';
+
+// Datasources needed by repositories
+import '../../data/data_source/auth_remote_datasource.dart';
+import '../../data/data_source/partner_remote_datasource.dart';
+import '../../data/data_source/tracking_remote_datasource.dart';
+
 import 'injection.config.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -181,6 +198,43 @@ Future<void> configureDependencies() async {
     );
   }
 
+  // =========================================================================
+  // REPOSITORY LAYER
+  // Repositories provide a clean interface between providers and datasources.
+  // New providers should inject these instead of datasources directly.
+  // =========================================================================
+  _registerRepositories();
+}
+
+void _registerRepositories() {
+  // Import these at runtime — they're thin wrappers around existing datasources
+  // AuthRepository
+  if (!getIt.isRegistered<AuthRepository>()) {
+    getIt.registerLazySingleton<AuthRepository>(
+      () => AuthRepositoryImpl(getIt<AuthRemoteDataSource>()),
+    );
+  }
+
+  // OrderRepository
+  if (!getIt.isRegistered<OrderRepository>()) {
+    getIt.registerLazySingleton<OrderRepository>(
+      () => OrderRepositoryImpl(getIt<OrderRemoteDataSource>()),
+    );
+  }
+
+  // PartnerRepository
+  if (!getIt.isRegistered<PartnerRepository>()) {
+    getIt.registerLazySingleton<PartnerRepository>(
+      () => PartnerRepositoryImpl(getIt<PartnerRemoteDataSource>()),
+    );
+  }
+
+  // TrackingRepository
+  if (!getIt.isRegistered<TrackingRepository>()) {
+    getIt.registerLazySingleton<TrackingRepository>(
+      () => TrackingRepositoryImpl(getIt<TrackingRemoteDataSource>()),
+    );
+  }
 }
 
 @module

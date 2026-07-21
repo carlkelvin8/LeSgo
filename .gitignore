@@ -1,10 +1,67 @@
-# Claude AI context files
+# ========================
+# LeSGo Workspace .gitignore
+# ========================
+
+# --- Secrets & Environment ---
+.env
+.env.local
+.env.production
+*.env
+!.env.example
+
+# --- Flutter / Dart ---
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/*.iml
+**/pubspec.lock
+**/secrets.json
+!**/secrets.example.json
+
+# --- Android ---
+**/android/.gradle/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/*.apk
+**/*.aab
+# Keep intentional APKs in apk/ folder
+!apk/
+
+# --- iOS ---
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+
+# --- IDE ---
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- AI context files ---
 CLAUDE/
 CONTEXT/
+
+# --- Local test/debug files ---
+nul
+**/nul
+**/test_selfie.jpg
 token_storage_flow.md
 
-# Windows artifact / local test files
-nul
-FRONTEND/nul
-**/test_selfie.jpg
+# --- Generated docs (keep source, ignore output) ---
+*.log
 
+# --- Node (backend) ---
+**/node_modules/
+**/vendor/
+
+# --- OS files ---
+.DS_Store
+*.swp
+Desktop.ini

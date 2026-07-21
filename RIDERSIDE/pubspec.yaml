@@ -66,6 +66,10 @@ dependencies:
   # Audio
   just_audio: ^0.9.36
 
+  # Shared package (DTOs, constants shared with Customer app)
+  lesgo_shared:
+    path: ../packages/lesgo_shared
+
   # PDF & Export
   pdf: ^3.11.3
   printing: ^5.14.2
