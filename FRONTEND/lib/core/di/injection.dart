@@ -66,9 +66,11 @@ Future<void> configureDependencies() async {
   }
 
   // Register ChatRemoteDataSource manually (not picked up by code generation)
-  getIt.registerLazySingleton<ChatRemoteDataSource>(
-    () => ChatRemoteDataSource(getIt<DioClient>()),
-  );
+  if (!getIt.isRegistered<ChatRemoteDataSource>()) {
+    getIt.registerLazySingleton<ChatRemoteDataSource>(
+      () => ChatRemoteDataSource(getIt<DioClient>()),
+    );
+  }
 
   if (!getIt.isRegistered<VoucherRemoteDataSource>()) {
     getIt.registerLazySingleton<VoucherRemoteDataSource>(
@@ -154,6 +156,15 @@ Future<void> configureDependencies() async {
     );
   }
 
+  if (!getIt.isRegistered<ChatWebSocketService>()) {
+    getIt.registerLazySingleton<ChatWebSocketService>(
+      () => ChatWebSocketService(
+        getIt<RealtimeRemoteDataSource>(),
+        getIt<LocalStorageService>(),
+      ),
+    );
+  }
+
   if (!getIt.isRegistered<ChatRealtimeService>()) {
     getIt.registerLazySingleton<ChatRealtimeService>(
       () => ChatRealtimeService(
@@ -161,15 +172,6 @@ Future<void> configureDependencies() async {
         getIt<ChatWebSocketService>(),
         getIt<LocalStorageService>(),
         getIt<DioClient>(),
-      ),
-    );
-  }
-
-  if (!getIt.isRegistered<ChatWebSocketService>()) {
-    getIt.registerLazySingleton<ChatWebSocketService>(
-      () => ChatWebSocketService(
-        getIt<RealtimeRemoteDataSource>(),
-        getIt<LocalStorageService>(),
       ),
     );
   }
