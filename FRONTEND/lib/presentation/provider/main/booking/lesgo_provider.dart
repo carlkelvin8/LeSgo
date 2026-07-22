@@ -34,6 +34,7 @@ class LesgoState {
   final String? voucherError;
   final AddressDto? selectedPickupAddress;
   final AddressDto? selectedDropoffAddress;
+  final bool isBooking;
 
   LesgoState({
     this.isFullscreen = false,
@@ -49,6 +50,7 @@ class LesgoState {
     this.voucherError,
     this.selectedPickupAddress,
     this.selectedDropoffAddress,
+    this.isBooking = false,
   });
 
   LesgoState copyWith({
@@ -69,6 +71,7 @@ class LesgoState {
     AddressDto? selectedDropoffAddress,
     bool clearPickupAddress = false,
     bool clearDropoffAddress = false,
+    bool? isBooking,
   }) {
     return LesgoState(
       isFullscreen: isFullscreen ?? this.isFullscreen,
@@ -90,6 +93,7 @@ class LesgoState {
       selectedDropoffAddress: clearDropoffAddress
           ? null
           : (selectedDropoffAddress ?? this.selectedDropoffAddress),
+      isBooking: isBooking ?? this.isBooking,
     );
   }
 }
@@ -582,8 +586,13 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
 
   // Handle booking action with validation and API integration
   Future<void> handleBook(BuildContext context) async {
+    // Double-tap guard
+    if (state.isBooking) return;
+    
     if (!await NetworkGuard.ensureOnline(context)) return;
     if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
+
+    state = state.copyWith(isBooking: true);
 
     print('🚀 LesGo: handleBook called!');
     final locationState = _ref.read(lesgoLocationProvider);
@@ -788,6 +797,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
             fallbackTl: 'Hindi makagawa ng LesGo booking.',
           );
         }
+      } finally {
+        state = state.copyWith(isBooking: false);
       }
     }
   }

@@ -22,6 +22,7 @@ class LesrideState {
   final bool selectingDestination;
   final bool pendingFit;
   final bool shouldCollapseAfterFullscreen;
+  final bool isBooking;
 
   LesrideState({
     this.isFullscreen = false,
@@ -29,6 +30,7 @@ class LesrideState {
     this.selectingDestination = false,
     this.pendingFit = false,
     this.shouldCollapseAfterFullscreen = false,
+    this.isBooking = false,
   });
 
   LesrideState copyWith({
@@ -37,6 +39,7 @@ class LesrideState {
     bool? selectingDestination,
     bool? pendingFit,
     bool? shouldCollapseAfterFullscreen,
+    bool? isBooking,
   }) {
     return LesrideState(
       isFullscreen: isFullscreen ?? this.isFullscreen,
@@ -45,6 +48,7 @@ class LesrideState {
       pendingFit: pendingFit ?? this.pendingFit,
       shouldCollapseAfterFullscreen:
           shouldCollapseAfterFullscreen ?? this.shouldCollapseAfterFullscreen,
+      isBooking: isBooking ?? this.isBooking,
     );
   }
 }
@@ -383,8 +387,18 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
 
     if (confirmed == true) {
       if (context.mounted) {
-        if (!await NetworkGuard.ensureOnline(context)) return;
-        if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
+        // Double-tap guard
+        if (state.isBooking) return;
+        state = state.copyWith(isBooking: true);
+        
+        if (!await NetworkGuard.ensureOnline(context)) {
+          state = state.copyWith(isBooking: false);
+          return;
+        }
+        if (!await ActiveOrderLimitGuard.ensureCanBook(context)) {
+          state = state.copyWith(isBooking: false);
+          return;
+        }
         try {
           final orderDataSource = getIt<OrderRemoteDataSource>();
           final locationState = _ref.read(lesrideLocationProvider);
@@ -505,6 +519,8 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
               fallbackTl: 'Hindi makagawa ng LesRide booking.',
             );
           }
+        } finally {
+          state = state.copyWith(isBooking: false);
         }
       }
     }

@@ -618,6 +618,9 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
 
   Future<bool> placeOrder(BuildContext context) async {
+    // Double-tap guard: prevent duplicate order creation
+    if (state.isLoading) return false;
+    
     if (!await NetworkGuard.ensureOnline(context)) return false;
     if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return false;
 
