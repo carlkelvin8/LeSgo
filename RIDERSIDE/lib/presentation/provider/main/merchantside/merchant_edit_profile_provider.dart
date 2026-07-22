@@ -169,16 +169,25 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
 final merchantEditProfileProvider = StateNotifierProvider.autoDispose<
     MerchantEditProfileNotifier, MerchantEditProfileState>((ref) {
   final profile = ref.watch(merchantProfileProvider).value;
+  final authState = ref.watch(riderAuthProvider);
   final referralFromApi = ref.watch(merchantReferralCodeProvider).value;
   final referralCode = (referralFromApi != null && referralFromApi.isNotEmpty)
       ? referralFromApi
       : (profile?.referralCode ?? '');
 
+  // Fall back to user's registration data if partner profile fields are empty
+  final contactNumber = (profile?.supportPhone != null && profile!.supportPhone!.isNotEmpty)
+      ? profile.supportPhone!
+      : (authState.user?.phone ?? '');
+  final email = (profile?.supportEmail != null && profile!.supportEmail!.isNotEmpty)
+      ? profile.supportEmail!
+      : (authState.user?.email ?? '');
+
   final notifier = MerchantEditProfileNotifier(
     ref,
     restaurantName: profile?.name ?? '',
-    contactNumber: profile?.supportPhone ?? '',
-    email: profile?.supportEmail ?? '',
+    contactNumber: contactNumber,
+    email: email,
     referralCode: referralCode,
     logoUrl: profile?.logoUrl,
   );
