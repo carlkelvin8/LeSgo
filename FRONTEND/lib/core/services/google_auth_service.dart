@@ -64,10 +64,27 @@ class GoogleAuthService {
       try {
         googleUser = await _googleSignIn.signIn();
       } catch (e) {
-        // Google Sign-In plugin can throw type errors on certain emulator versions
+        // Google Sign-In plugin can throw errors when:
+        // - SHA-1 fingerprint mismatch (most common)
+        // - Google Play Services outdated
+        // - Network issue during auth
+        debugPrint('GoogleSignIn.signIn() error: $e');
+        
+        final errorStr = e.toString().toLowerCase();
+        String userMessage;
+        if (errorStr.contains('apiexception: 10') || errorStr.contains('developer_error')) {
+          userMessage = 'Google Sign-In configuration error. Please contact support (SHA-1 mismatch).';
+        } else if (errorStr.contains('apiexception: 12500')) {
+          userMessage = 'Google Sign-In failed. Please update Google Play Services.';
+        } else if (errorStr.contains('network')) {
+          userMessage = 'Network error during Google Sign-In. Please check your connection.';
+        } else {
+          userMessage = 'Google Sign-In unavailable on this device. Please use email/password login.';
+        }
+        
         return GoogleAuthResult(
           success: false,
-          error: 'Google Sign-In unavailable on this device. Please use email/password login.',
+          error: userMessage,
         );
       }
 

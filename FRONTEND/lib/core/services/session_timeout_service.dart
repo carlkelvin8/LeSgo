@@ -26,13 +26,8 @@ class SessionTimeoutService {
     
     debugPrint('⏱️ Starting session timeout monitoring ($_timeoutMinutes minutes)');
     
-    // Don't check immediately on startup - give the app time to initialize
-    // Check after 1 second to allow Navigator to be ready
-    Future.delayed(const Duration(seconds: 1), () {
-      _checkSession();
-    });
-    
-    // Check every minute
+    // Don't check immediately on startup - the activity timestamp was just refreshed
+    // Start periodic check after a full minute to give app time to initialize
     _timeoutTimer?.cancel();
     _timeoutTimer = Timer.periodic(
       const Duration(minutes: 1),

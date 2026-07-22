@@ -95,6 +95,13 @@ class SecureStorageService {
     await _updateLastActivity();
   }
 
+  /// Update session activity synchronously (best-effort, for use in initState)
+  /// SharedPreferences caches in memory, so setInt is effectively instant.
+  void updateSessionActivitySync() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    _prefs.setInt(_keyLastActivity, timestamp);
+  }
+
   /// Enable biometric authentication
   Future<bool> enableBiometric() async {
     return await _prefs.setBool(_keyBiometricEnabled, true);

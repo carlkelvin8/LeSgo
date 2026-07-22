@@ -32,10 +32,11 @@ class _AppLifecycleObserverState extends State<AppLifecycleObserver>
     
     // Only start monitoring if user is logged in - don't check expiration on startup
     if (_secureStorageService.isLoggedIn()) {
-      // Update activity timestamp to prevent immediate expiration
-      _secureStorageService.updateSessionActivity();
+      // Update activity timestamp SYNCHRONOUSLY before monitoring starts
+      // This prevents immediate expiration when app is reopened after being killed
+      _secureStorageService.updateSessionActivitySync();
       
-      // Start monitoring
+      // Start monitoring after activity is updated
       _sessionTimeoutService.startMonitoring(
         onExpired: _handleSessionExpired,
       );
@@ -58,8 +59,9 @@ class _AppLifecycleObserverState extends State<AppLifecycleObserver>
         // App came to foreground
         debugPrint('📱 App resumed');
         
-        // Just update activity, don't check expiration
+        // Update activity synchronously BEFORE any check can fire
         if (_secureStorageService.isLoggedIn()) {
+          _secureStorageService.updateSessionActivitySync();
           _sessionTimeoutService.updateActivity();
         }
         break;
