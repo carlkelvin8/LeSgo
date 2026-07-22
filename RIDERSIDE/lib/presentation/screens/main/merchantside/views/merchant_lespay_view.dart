@@ -315,6 +315,7 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
   final _amountController = TextEditingController();
   static const _quickAmounts = [100.0, 200.0, 500.0, 1000.0];
   bool _isProcessing = false;
+  String? _error;
 
   double get _parsedAmount =>
       double.tryParse(_amountController.text.trim()) ?? 0;
@@ -331,18 +332,21 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
   Future<void> _topUp() async {
     final amount = _parsedAmount;
     if (amount < 50) {
-      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-        const SnackBar(content: Text('Minimum top-up is ₱50'), backgroundColor: Colors.orange),
-      );
+      setState(() => _error = 'Minimum top-up is ₱50');
       return;
     }
 
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _error = null;
+    });
     try {
       final result = await MerchantWalletApi.createTopUpInvoice(amount: amount);
       if (!mounted) return;
 
-      final invoiceUrl = result['invoice_url']?.toString();
+      final invoiceUrl = result['invoice_url']?.toString() ??
+          result['checkout_url']?.toString() ??
+          result['payment_url']?.toString();
       if (invoiceUrl != null && invoiceUrl.isNotEmpty) {
         Navigator.of(context).pop();
         final uri = Uri.tryParse(invoiceUrl);
@@ -353,18 +357,19 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
         Future.delayed(const Duration(seconds: 5), () {
           ref.read(merchantWalletProvider.notifier).loadWallet();
         });
+      } else {
+        setState(() {
+          _isProcessing = false;
+          _error = 'No payment link received. Please try again.';
+        });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-          SnackBar(
-            content: Text('Top-up failed: ${MerchantWalletApi.extractError(e)}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _isProcessing = false;
+          _error = 'Top-up failed: ${MerchantWalletApi.extractError(e)}';
+        });
       }
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
@@ -424,6 +429,26 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
               );
             }).toList(),
           ),
+
+          // Error message
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _error!,
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 12,
+                  color: Colors.red.shade700,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
       actions: [
