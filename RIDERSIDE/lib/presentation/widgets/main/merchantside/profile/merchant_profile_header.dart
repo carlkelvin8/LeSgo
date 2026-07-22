@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
+import '../../../../screens/main/merchantside/merchant_edit_information_screen.dart';
 
 class MerchantProfileHeader extends ConsumerWidget {
   const MerchantProfileHeader({super.key});
@@ -33,30 +34,63 @@ class MerchantProfileHeader extends ConsumerWidget {
               ),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-            Container(
-              width: ResponsiveUtils.spacing(context, 126),
-              height: ResponsiveUtils.spacing(context, 126),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(
-                  ResponsiveUtils.spacing(context, 16),
-                ),
-                border: Border.all(color: Colors.black12),
-              ),
-              child: MediaUrlUtils.resolve(profile.logoUrl) != null
-                  ? ClipRRect(
+            GestureDetector(
+              onTap: () {
+                // Navigate to edit screen where they can change the logo
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const MerchantEditInformationScreen(),
+                  ),
+                );
+              },
+              child: Stack(
+                children: [
+                  Container(
+                    width: ResponsiveUtils.spacing(context, 126),
+                    height: ResponsiveUtils.spacing(context, 126),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(
                         ResponsiveUtils.spacing(context, 16),
                       ),
-                      child: Image.network(
-                        MediaUrlUtils.resolve(profile.logoUrl)!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildDefaultLogo(context, profile.name);
-                        },
+                      border: Border.all(color: Colors.black12),
+                    ),
+                    child: MediaUrlUtils.resolve(profile.logoUrl) != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              ResponsiveUtils.spacing(context, 16),
+                            ),
+                            child: Image.network(
+                              MediaUrlUtils.resolve(profile.logoUrl)!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildDefaultLogo(context, profile.name);
+                              },
+                            ),
+                          )
+                        : _buildDefaultLogo(context, profile.name),
+                  ),
+                  // Camera edit overlay
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF5F2D82),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
                       ),
-                    )
-                  : _buildDefaultLogo(context, profile.name),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         );
