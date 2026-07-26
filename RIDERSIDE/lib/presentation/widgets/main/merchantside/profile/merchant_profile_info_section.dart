@@ -11,6 +11,7 @@ class MerchantProfileInfoSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(merchantProfileProvider);
+    final authState = ref.watch(riderAuthProvider);
     final referralAsync = ref.watch(merchantReferralCodeProvider);
 
     return profileAsync.when(
@@ -25,6 +26,14 @@ class MerchantProfileInfoSection extends ConsumerWidget {
           data: (code) => code.isNotEmpty ? code : 'Not set',
         );
 
+        // Fall back to user's registration data if partner profile fields are empty
+        final contact = (profile.supportPhone != null && profile.supportPhone!.isNotEmpty)
+            ? profile.supportPhone!
+            : (authState.user?.phone ?? 'Not set');
+        final email = (profile.supportEmail != null && profile.supportEmail!.isNotEmpty)
+            ? profile.supportEmail!
+            : (authState.user?.email ?? 'Not set');
+
         final prepTime = profile.estimatedDeliveryMinutes;
         final hours = profile.openingHours;
 
@@ -32,8 +41,8 @@ class MerchantProfileInfoSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _info(context, 'Restaurant:', profile.name),
-            _info(context, 'Contact:', profile.supportPhone ?? 'Not set'),
-            _info(context, 'Email:', profile.supportEmail ?? 'Not set'),
+            _info(context, 'Contact:', contact),
+            _info(context, 'Email:', email),
             if (prepTime != null && prepTime > 0)
               _info(
                 context,
