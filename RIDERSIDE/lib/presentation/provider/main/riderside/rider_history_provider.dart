@@ -152,7 +152,7 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
       AppLogger.debug('Fetching rider history from API');
       
       // Fetch completed, cancelled, and active assigned orders for history
-      final ordersRaw = await ApiService.getOrders(perPage: 100);
+      final ordersRaw = await ApiService.getOrders(perPage: 300);
       AppLogger.debug('Received ${ordersRaw.length} orders from API');
 
       final rider = _ref.read(riderAuthProvider).user;

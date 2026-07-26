@@ -7,11 +7,37 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_wallet_provider.dart';
 import '../../../../widgets/widgets.dart';
 
-class MerchantLespayView extends ConsumerWidget {
+class MerchantLespayView extends ConsumerStatefulWidget {
   const MerchantLespayView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MerchantLespayView> createState() => _MerchantLespayViewState();
+}
+
+class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Auto-refresh wallet when user returns from external payment browser
+    if (state == AppLifecycleState.resumed) {
+      ref.read(merchantWalletProvider.notifier).loadWallet(silent: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final wallet = ref.watch(merchantWalletProvider);
     final notifier = ref.read(merchantWalletProvider.notifier);
 
@@ -352,6 +378,9 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
         final uri = Uri.tryParse(invoiceUrl);
         if (uri != null && await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else if (uri != null) {
+          // Fallback: try in-app browser if external browser not available
+          await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
         }
         // Refresh wallet after delay
         Future.delayed(const Duration(seconds: 5), () {

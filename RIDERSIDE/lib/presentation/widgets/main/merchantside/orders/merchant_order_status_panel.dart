@@ -25,6 +25,34 @@ class MerchantOrderStatusPanel extends StatelessWidget {
         ),
       );
     }
+    if (statusType == 'waiting') {
+      return _tag(
+        context,
+        statusLabel,
+        const LinearGradient(
+          colors: [Color(0xFFFFF8E1), Color(0xFFFFE0B2), Color(0xFFFFCC80)],
+          stops: [0.0, 0.52, 1.0],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        fontSize: 9.5,
+        minWidth: 84,
+      );
+    }
+    if (statusType == 'pickup') {
+      return _tag(
+        context,
+        statusLabel,
+        const LinearGradient(
+          colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB), Color(0xFF90CAF9)],
+          stops: [0.0, 0.52, 1.0],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        fontSize: 9.5,
+        minWidth: 84,
+      );
+    }
     if (statusType == 'delivery') {
       return _tag(
         context,

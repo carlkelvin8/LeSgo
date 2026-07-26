@@ -9,6 +9,29 @@ import 'dto/order/orders_response_dto.dart';
 import 'dto/order/estimate_request_dto.dart';
 import 'dto/order/estimate_response_dto.dart';
 
+/// Holds the full fare breakdown returned by the estimate endpoint.
+class FareBreakdownResult {
+  final double estimatedFare;
+  final double distanceKm;
+  final double estimatedDurationMinutes;
+  final double baseFare;
+  final double distanceFare;
+  final double serviceFee;
+  final double weightSurcharge;
+  final double total;
+
+  const FareBreakdownResult({
+    required this.estimatedFare,
+    required this.distanceKm,
+    required this.estimatedDurationMinutes,
+    required this.baseFare,
+    required this.distanceFare,
+    required this.serviceFee,
+    required this.weightSurcharge,
+    required this.total,
+  });
+}
+
 @lazySingleton
 class OrderRemoteDataSource {
   final DioClient _dioClient;
@@ -61,6 +84,57 @@ class OrderRemoteDataSource {
     } catch (e) {
       throw Exception('Failed to get fare estimate: $e');
     }
+  }
+
+  /// Get full fare breakdown including base fare, distance fee, service fee, etc.
+  Future<FareBreakdownResult?> getFareBreakdownFull({
+    required int serviceId,
+    required int estimatedDistanceM,
+    required double pickupLat,
+    required double pickupLng,
+    required double dropoffLat,
+    required double dropoffLng,
+    double? orderValue,
+    double? estimatedWeightKg,
+  }) async {
+    final dio = _dioClient.dio;
+    try {
+      final body = <String, dynamic>{
+        'service_id': serviceId,
+        'estimated_distance_m': estimatedDistanceM,
+        'pickup': {'lat': pickupLat, 'lng': pickupLng},
+        'dropoff': {'lat': dropoffLat, 'lng': dropoffLng},
+      };
+      if (orderValue != null) body['order_value'] = orderValue;
+      if (estimatedWeightKg != null) body['estimated_weight_kg'] = estimatedWeightKg;
+
+      final response = await dio.post(
+        ApiConstants.orderEstimate,
+        data: body,
+      );
+      final data = response.data['data'];
+      if (data == null) return null;
+
+      final fb = data['fare_breakdown'];
+      return FareBreakdownResult(
+        estimatedFare: _toDouble(data['estimated_fare']),
+        distanceKm: _toDouble(data['distance_km']),
+        estimatedDurationMinutes: _toDouble(data['estimated_duration_minutes']),
+        baseFare: fb != null ? _toDouble(fb['base_fare']) : 0,
+        distanceFare: fb != null ? _toDouble(fb['distance_fare']) : 0,
+        serviceFee: fb != null ? _toDouble(fb['service_fee']) : 0,
+        weightSurcharge: fb != null ? _toDouble(fb['weight_surcharge']) : 0,
+        total: fb != null ? _toDouble(fb['total']) : _toDouble(data['estimated_fare']),
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static double _toDouble(dynamic v) {
+    if (v == null) return 0.0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0.0;
   }
 
   // NEW: List orders

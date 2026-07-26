@@ -107,6 +107,7 @@ export 'booking/lesgo/lesgo_main_content.dart';
 export 'booking/lesgo/lesgo_payment_option.dart';
 export 'booking/lesgo/lesgo_payment_section.dart';
 export 'booking/lesgo/lesgo_item_details_section.dart';
+export 'booking/lesgo/lesgo_fare_summary.dart';
 
 // LesBuy widgets
 export 'booking/lesbuy/lesbuy_search_field.dart';

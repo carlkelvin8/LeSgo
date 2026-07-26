@@ -137,6 +137,14 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     }
   }
 
+  String _formatLastRefreshed(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inSeconds < 10) return 'just now';
+    if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    return '${diff.inHours}h ago';
+  }
+
   Future<void> _getCurrentLocation() async {
     try {
       final position = await Geolocator.getCurrentPosition(
@@ -230,8 +238,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
       );
     }
 
-    // Add available orders markers (first 5)
-    for (var i = 0; i < ordersState.availableOrders.length && i < 5; i++) {
+    // Add available orders markers
+    for (var i = 0; i < ordersState.availableOrders.length; i++) {
       final order = ordersState.availableOrders[i];
       markers.add(
         Marker(
@@ -530,15 +538,32 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 color: Color(0xFF5F2D82),
               ),
             ),
-            if (ordersState.isRefreshing)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
-                ),
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (ordersState.lastRefreshed != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      _formatLastRefreshed(ordersState.lastRefreshed!),
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 10,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ),
+                if (ordersState.isRefreshing)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -871,7 +896,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           ),
           SizedBox(height: 8.0),
           
-          // Distance and payment
+          // Distance, payment method, and customer name
           Row(
             children: [
               Icon(Icons.straighten, size: 14, color: Colors.grey.shade600),
@@ -885,16 +910,48 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 ),
               ),
               SizedBox(width: 12.0),
-              Icon(Icons.payment, size: 14, color: Colors.grey.shade600),
-              SizedBox(width: 4.0),
-              Text(
-                order.paymentMethod.toUpperCase(),
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 12.0,
-                  color: Colors.grey.shade600,
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: order.paymentMethod.toLowerCase() == 'cash'
+                      ? Colors.green.shade50
+                      : Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: order.paymentMethod.toLowerCase() == 'cash'
+                        ? Colors.green.shade200
+                        : Colors.blue.shade200,
+                  ),
+                ),
+                child: Text(
+                  order.paymentMethod.toUpperCase(),
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 10.0,
+                    fontWeight: FontWeight.w700,
+                    color: order.paymentMethod.toLowerCase() == 'cash'
+                        ? Colors.green.shade700
+                        : Colors.blue.shade700,
+                  ),
                 ),
               ),
+              if (order.dropoffContactName.isNotEmpty) ...[
+                SizedBox(width: 12.0),
+                Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                SizedBox(width: 4.0),
+                Expanded(
+                  child: Text(
+                    order.dropoffContactName,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 12.0,
+                      color: Colors.grey.shade600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ],
           ),
           SizedBox(height: 8.0),

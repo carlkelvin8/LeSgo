@@ -35,6 +35,8 @@ class LesgoState {
   final AddressDto? selectedPickupAddress;
   final AddressDto? selectedDropoffAddress;
   final bool isBooking;
+  final FareBreakdownResult? fareEstimate;
+  final bool isLoadingFare;
 
   LesgoState({
     this.isFullscreen = false,
@@ -51,6 +53,8 @@ class LesgoState {
     this.selectedPickupAddress,
     this.selectedDropoffAddress,
     this.isBooking = false,
+    this.fareEstimate,
+    this.isLoadingFare = false,
   });
 
   LesgoState copyWith({
@@ -72,6 +76,9 @@ class LesgoState {
     bool clearPickupAddress = false,
     bool clearDropoffAddress = false,
     bool? isBooking,
+    FareBreakdownResult? fareEstimate,
+    bool clearFareEstimate = false,
+    bool? isLoadingFare,
   }) {
     return LesgoState(
       isFullscreen: isFullscreen ?? this.isFullscreen,
@@ -94,6 +101,8 @@ class LesgoState {
           ? null
           : (selectedDropoffAddress ?? this.selectedDropoffAddress),
       isBooking: isBooking ?? this.isBooking,
+      fareEstimate: clearFareEstimate ? null : (fareEstimate ?? this.fareEstimate),
+      isLoadingFare: isLoadingFare ?? this.isLoadingFare,
     );
   }
 }
@@ -146,6 +155,7 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       clearDropoffAddress: true,
       clearVoucher: true,
       clearVoucherError: true,
+      clearFareEstimate: true,
     );
 
     await notifier.getCurrentLocation();
@@ -379,10 +389,52 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       await _ref
           .read(lesgoLocationProvider.notifier)
           .fetchRouteIfBothSet(forceAllow: true);
+      // Fetch fare estimate after route is ready
+      await fetchFareEstimate();
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => fitBoundsOrSelected());
     print('🔍 LesGo: confirmSelection completed');
+  }
+
+  /// Fetches the full fare breakdown from the estimate API.
+  Future<void> fetchFareEstimate() async {
+    final locationState = _ref.read(lesgoLocationProvider);
+    final pickup = locationState.pickupLocation;
+    final dropoff = locationState.destinationLocation;
+    if (pickup == null || dropoff == null) return;
+
+    state = state.copyWith(isLoadingFare: true);
+
+    final distanceM = locationState.distanceInKm != null
+        ? (locationState.distanceInKm! * 1000).round()
+        : 5000;
+
+    final result = await _orderDataSource.getFareBreakdownFull(
+      serviceId: BookingServiceIds.lesgo,
+      estimatedDistanceM: distanceM,
+      pickupLat: pickup.latitude,
+      pickupLng: pickup.longitude,
+      dropoffLat: dropoff.latitude,
+      dropoffLng: dropoff.longitude,
+    );
+
+    state = state.copyWith(
+      fareEstimate: result,
+      isLoadingFare: false,
+    );
+  }
+
+  /// Auto-fetch route and fare when both locations are available (from saved addresses).
+  Future<void> _autoFetchRouteAndFare() async {
+    final locationState = _ref.read(lesgoLocationProvider);
+    if (locationState.pickupLocation != null &&
+        locationState.destinationLocation != null) {
+      await _ref
+          .read(lesgoLocationProvider.notifier)
+          .fetchRouteIfBothSet(forceAllow: true);
+      await fetchFareEstimate();
+    }
   }
 
   Future<void> focusOn(LatLng? target) async {
@@ -486,7 +538,7 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print(
       '🔍 LesGo: selectPickupAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
     );
-    state = state.copyWith(selectedPickupAddress: address);
+    state = state.copyWith(selectedPickupAddress: address, clearFareEstimate: true);
     final coords = BookingGeoUtils.resolveCoords(
       lat: address.latitude,
       lng: address.longitude,
@@ -500,13 +552,15 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print(
       '🔍 LesGo: After updatePickupWithAddress, pickupLocation: ${_ref.read(lesgoLocationProvider).pickupLocation}',
     );
+    // Auto-fetch route + fare if both locations are set
+    _autoFetchRouteAndFare();
   }
 
   void selectDropoffAddress(AddressDto address) {
     print(
       '🔍 LesGo: selectDropoffAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
     );
-    state = state.copyWith(selectedDropoffAddress: address);
+    state = state.copyWith(selectedDropoffAddress: address, clearFareEstimate: true);
     final coords = BookingGeoUtils.resolveCoords(
       lat: address.latitude,
       lng: address.longitude,
@@ -520,6 +574,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print(
       '🔍 LesGo: After updateDestinationWithAddress, destinationLocation: ${_ref.read(lesgoLocationProvider).destinationLocation}',
     );
+    // Auto-fetch route + fare if both locations are set
+    _autoFetchRouteAndFare();
   }
 
   void clearPickupAddress() {

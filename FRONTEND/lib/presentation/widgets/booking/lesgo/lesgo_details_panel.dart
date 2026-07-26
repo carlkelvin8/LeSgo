@@ -238,6 +238,8 @@ class LesgoDetailsPanel extends ConsumerWidget {
               onPaymentChanged: onPaymentChanged,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            const LesgoFareSummary(),
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             VoucherSection(
               enabled: voucherEnabled,
               appliedVoucher: appliedVoucher,

@@ -20,6 +20,7 @@ class RiderOrdersState {
   final int? actionOrderId;
   final String? error;
   final String? successMessage;
+  final DateTime? lastRefreshed;
 
   RiderOrdersState({
     this.availableOrders = const [],
@@ -31,6 +32,7 @@ class RiderOrdersState {
     this.actionOrderId,
     this.error,
     this.successMessage,
+    this.lastRefreshed,
   });
 
   bool get hasActiveOrder => activeOrder != null;
@@ -48,6 +50,7 @@ class RiderOrdersState {
     bool clearActiveOrder = false,
     bool clearError = false,
     bool clearSuccess = false,
+    DateTime? lastRefreshed,
   }) {
     return RiderOrdersState(
       availableOrders: availableOrders ?? this.availableOrders,
@@ -61,6 +64,7 @@ class RiderOrdersState {
       error: clearError ? null : (error ?? this.error),
       successMessage:
           clearSuccess ? null : (successMessage ?? this.successMessage),
+      lastRefreshed: lastRefreshed ?? this.lastRefreshed,
     );
   }
 }

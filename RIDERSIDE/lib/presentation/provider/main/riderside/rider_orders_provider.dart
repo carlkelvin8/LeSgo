@@ -137,6 +137,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         isLoading: false,
         isRefreshing: false,
         clearActiveOrder: active.isEmpty,
+        lastRefreshed: DateTime.now(),
       );
 
       if (active.isNotEmpty) {

@@ -26,9 +26,11 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
       case 'pending':
         return 'Accept';
       case 'searching_driver':
+        return 'Waiting Driver';
       case 'accepted':
+        return 'Driver Assigned';
       case 'ready_for_pickup':
-        return 'For Pick Up';
+        return 'Ready';
       case 'picked_up':
       case 'in_progress':
       case 'driver_arrived_at_pickup':
@@ -47,6 +49,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
       case 'pending':
         return 'accept';
       case 'searching_driver':
+        return 'waiting';
       case 'accepted':
       case 'ready_for_pickup':
         return 'pickup';
@@ -412,6 +415,69 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                           ),
                                         ),
                                       ),
+                                  ],
+                                  if (MerchantOrderOpsUtils.canMarkReadyForPickup(status)) ...[
+                                    SizedBox(
+                                      height: ResponsiveUtils.spacing(context, 6),
+                                    ),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          final confirm = await showDialog<bool>(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              title: const Text('Mark Ready?', style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700)),
+                                              content: const Text('Let the rider know this order is ready for pickup.', style: TextStyle(fontFamily: 'TT Fors')),
+                                              actions: [
+                                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                                ElevatedButton(
+                                                  onPressed: () => Navigator.pop(ctx, true),
+                                                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5F2D82)),
+                                                  child: const Text('Mark Ready', style: TextStyle(color: Colors.white)),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                          if (confirm == true && context.mounted) {
+                                            try {
+                                              await ref.read(merchantOrderActionProvider).markReadyForPickup(order.id);
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text('Order marked ready!')),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('Failed: $e')),
+                                                );
+                                              }
+                                            }
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF4CAF50),
+                                          foregroundColor: Colors.white,
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: ResponsiveUtils.spacing(context, 4),
+                                          ),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '✓ Ready',
+                                          style: TextStyle(
+                                            fontFamily: 'TT Fors',
+                                            fontSize: ResponsiveUtils.fontSize(context, 9),
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                   if (MerchantOrderOpsUtils.showsPrepTimer(status) &&
                                       prepTimers[order.id] != null) ...[

@@ -49,9 +49,11 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
       case 'pending':
         return 'Pending';
       case 'searching_driver':
+        return 'Waiting for Driver';
       case 'accepted':
+        return 'Driver Assigned';
       case 'ready_for_pickup':
-        return 'For Pick Up';
+        return 'Ready for Pickup';
       case 'picked_up':
       case 'in_progress':
       case 'driver_arrived_at_pickup':
@@ -70,8 +72,11 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
       case 'pending':
         return const Color(0xFFFF9800); // Orange
       case 'searching_driver':
+        return const Color(0xFFFF9800); // Orange (waiting)
       case 'accepted':
-        return const Color(0xFF2196F3); // Blue
+        return const Color(0xFF2196F3); // Blue (driver assigned)
+      case 'ready_for_pickup':
+        return const Color(0xFF4CAF50); // Green (ready)
       case 'picked_up':
       case 'in_progress':
       case 'driver_arrived_at_pickup':
