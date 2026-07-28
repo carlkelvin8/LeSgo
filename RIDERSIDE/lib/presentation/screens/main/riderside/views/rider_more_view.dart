@@ -134,46 +134,6 @@ class RiderMoreView extends ConsumerWidget {
           onTap: () => AppRouter.push(context, MainRoutes.riderSchedule),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-        _SectionTitle(title: AppLocalization.translate('benefits_section', lang)),
-        _MoreTile(
-          icon: Icons.local_offer_outlined,
-          label: AppLocalization.translate('offers_vouchers', lang),
-          onTap: () => AppRouter.push(context, MainRoutes.riderOffers),
-        ),
-        _MoreTile(
-          icon: Icons.loyalty_outlined,
-          label: AppLocalization.translate('loyalty_rewards_short', lang),
-          onTap: () => AppRouter.push(context, MainRoutes.riderLoyalty),
-        ),
-        _MoreTile(
-          icon: Icons.group_add_outlined,
-          label: AppLocalization.translate('referral_program', lang),
-          onTap: () => AppRouter.push(context, MainRoutes.riderReferral),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-        _SectionTitle(title: AppLocalization.translate('help_section', lang)),
-        _MoreTile(
-          icon: Icons.notifications_outlined,
-          label: AppLocalization.translate('notifications', lang),
-          subtitle: 'Order alerts, missions, and promos',
-          onTap: () => AppRouter.push(context, MainRoutes.riderNotifications),
-        ),
-        _MoreTile(
-          icon: Icons.help_outline,
-          label: AppLocalization.translate('faqs', lang),
-          onTap: () => AppRouter.push(context, MainRoutes.riderFaqs),
-        ),
-        _MoreTile(
-          icon: Icons.emergency_outlined,
-          label: AppLocalization.translate('safety_sos', lang),
-          onTap: () => AppRouter.push(context, MainRoutes.riderSafety),
-        ),
-        _MoreTile(
-          icon: Icons.security,
-          label: AppLocalization.translate('security', lang),
-          onTap: () => AppRouter.push(context, MainRoutes.riderSecurity),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
         _SectionTitle(title: AppLocalization.translate('settings', lang)),
         Consumer(
           builder: (context, ref, _) {

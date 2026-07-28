@@ -5,7 +5,6 @@ import '../../../../screens/main/riderside/rider_wallet_history_screen.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import 'rider_top_up_dialog.dart';
 import 'rider_wallet_action_item.dart';
-import 'rider_wallet_link_account_dialog.dart';
 import 'rider_wallet_withdraw_dialog.dart';
 import '../../../../../core/utils/app_localization.dart';
 
@@ -38,17 +37,6 @@ class RiderWalletActionsSection extends ConsumerWidget {
     );
   }
 
-  void _showLinkAccount(BuildContext context, String provider, String title) {
-    showDialog<bool>(
-      context: context,
-      builder: (_) => RiderWalletLinkAccountDialog(
-        parentContext: context,
-        provider: provider,
-        title: title,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = ref.watch(riderWalletProvider);
@@ -74,18 +62,7 @@ class RiderWalletActionsSection extends ConsumerWidget {
                 : AppLocalization.translate('link_gcash_maya_first', lang),
             onTap: () => _showWithdraw(context, ref),
           ),
-          RiderWalletActionItem(
-            iconAsset: 'assets/images/wallet/Maya.svg',
-            title: AppLocalization.translate('link_paymaya_account', lang),
-            subtitle: wallet.linkedAccountSubtitle('maya'),
-            onTap: () => _showLinkAccount(context, 'maya', 'PayMaya'),
-          ),
-          RiderWalletActionItem(
-            iconAsset: 'assets/images/wallet/Gcash.svg',
-            title: 'Link Gcash Account',
-            subtitle: wallet.linkedAccountSubtitle('gcash'),
-            onTap: () => _showLinkAccount(context, 'gcash', 'GCash'),
-          ),
+
           RiderWalletActionItem(
             iconAsset: 'assets/images/wallet/Bank.svg',
             title: 'History',

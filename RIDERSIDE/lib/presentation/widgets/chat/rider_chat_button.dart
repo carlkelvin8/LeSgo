@@ -33,7 +33,7 @@ class RiderChatButton extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -103,6 +103,10 @@ class _FloatingRiderChatButtonState
   @override
   void dispose() {
     _mounted = false;
+    // Clear any lingering snackbars from this widget
+    try {
+      ScaffoldMessenger.maybeOf(context)?.clearSnackBars();
+    } catch (_) {}
     super.dispose();
   }
 
@@ -128,30 +132,38 @@ class _FloatingRiderChatButtonState
       if (newCount > _lastKnownCount && _lastKnownCount >= 0) {
         // New message arrived — show in-app notification
         if (newCount > 0 && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.chat_bubble, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '💬 New message from ${widget.customerName ?? "customer"}',
-                      style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
+          final messenger = ScaffoldMessenger.maybeOf(context);
+          if (messenger != null) {
+            messenger.clearSnackBars();
+            messenger.showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.chat_bubble, color: Colors.white, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '💬 New message from ${widget.customerName ?? "customer"}',
+                        style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                backgroundColor: const Color(0xFF5F2D82),
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 4),
+                dismissDirection: DismissDirection.horizontal,
+                action: SnackBarAction(
+                  label: 'Open',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    messenger.hideCurrentSnackBar();
+                    if (mounted) _openChat(context);
+                  },
+                ),
               ),
-              backgroundColor: const Color(0xFF5F2D82),
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 3),
-              action: SnackBarAction(
-                label: 'Open',
-                textColor: Colors.white,
-                onPressed: () => _openChat(context),
-              ),
-            ),
-          );
+            );
+          }
         }
       }
       _lastKnownCount = newCount;

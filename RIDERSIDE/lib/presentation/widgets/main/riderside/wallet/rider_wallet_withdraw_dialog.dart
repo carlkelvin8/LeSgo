@@ -26,34 +26,25 @@ class _RiderWalletWithdrawDialogState
   final _amountController = TextEditingController();
   String _method = 'gcash';
   bool _submitting = false;
-  bool _loadingAccounts = true;
   List<Map<String, dynamic>> _linkedAccounts = [];
 
   @override
   void initState() {
     super.initState();
-    _loadLinkedAccounts();
+    // Read whatever is already in state — no blocking load
+    final accounts = ref.read(riderWalletProvider).linkedAccounts;
+    _linkedAccounts = accounts;
+    if (_methodForProvider('gcash') != null) {
+      _method = 'gcash';
+    } else if (_methodForProvider('maya') != null) {
+      _method = 'maya';
+    }
   }
 
   @override
   void dispose() {
     _amountController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadLinkedAccounts() async {
-    await ref.read(riderWalletProvider.notifier).loadWallet();
-    final accounts = ref.read(riderWalletProvider).linkedAccounts;
-    if (!mounted) return;
-    setState(() {
-      _linkedAccounts = accounts;
-      _loadingAccounts = false;
-      if (_methodForProvider('gcash') != null) {
-        _method = 'gcash';
-      } else if (_methodForProvider('maya') != null) {
-        _method = 'maya';
-      }
-    });
   }
 
   Map<String, dynamic>? _methodForProvider(String provider) {
@@ -83,8 +74,11 @@ class _RiderWalletWithdrawDialogState
         title: title,
       ),
     );
-    if (linked == true) {
-      await _loadLinkedAccounts();
+    if (linked == true && mounted) {
+      final accounts = ref.read(riderWalletProvider).linkedAccounts;
+      setState(() {
+        _linkedAccounts = accounts;
+      });
     }
   }
 
@@ -200,67 +194,62 @@ class _RiderWalletWithdrawDialogState
           ),
         ],
       ),
-      content: _loadingAccounts
-          ? const SizedBox(
-              height: 120,
-              child: Center(child: CircularProgressIndicator()),
-            )
-          : Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Available: PHP ${liveBalance.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Funds are sent to your linked GCash or Maya via PayMongo.',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 12,
-                        color: Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _linkedSummary('gcash', AppLocalization.translate('gcash', lang)),
-                    _linkedSummary('maya', AppLocalization.translate('maya', lang)),
-                    const SizedBox(height: 8),
-                    SegmentedButton<String>(
-                      segments: [
-                        ButtonSegment(value: 'gcash', label: Text(AppLocalization.translate('gcash', lang))),
-                        ButtonSegment(value: 'maya', label: Text(AppLocalization.translate('maya', lang))),
-                      ],
-                      selected: {_method},
-                      onSelectionChanged: _submitting
-                          ? null
-                          : (selection) {
-                              setState(() => _method = selection.first);
-                            },
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _amountController,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: AppLocalization.translate('amount', lang),
-                        prefixText: 'PHP ',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: _validateAmount,
-                      enabled: !_submitting && _hasLinkedPayoutAccount,
-                    ),
-                  ],
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Available: PHP ${liveBalance.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  color: Colors.grey.shade700,
                 ),
               ),
-            ),
+              const SizedBox(height: 8),
+              const Text(
+                'Funds are sent to your linked GCash or Maya via PayMongo.',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 12,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _linkedSummary('gcash', AppLocalization.translate('gcash', lang)),
+              _linkedSummary('maya', AppLocalization.translate('maya', lang)),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(value: 'gcash', label: Text(AppLocalization.translate('gcash', lang))),
+                  ButtonSegment(value: 'maya', label: Text(AppLocalization.translate('maya', lang))),
+                ],
+                selected: {_method},
+                onSelectionChanged: _submitting
+                    ? null
+                    : (selection) {
+                        setState(() => _method = selection.first);
+                      },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _amountController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: AppLocalization.translate('amount', lang),
+                  prefixText: 'PHP ',
+                  border: const OutlineInputBorder(),
+                ),
+                validator: _validateAmount,
+                enabled: !_submitting && _hasLinkedPayoutAccount,
+              ),
+            ],
+          ),
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: _submitting ? null : () => Navigator.pop(context),

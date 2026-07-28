@@ -41,11 +41,6 @@ class RiderProfileSettingsSection extends ConsumerWidget {
             route: MainRoutes.riderSecurity,
           ),
           _SettingsTile(
-            icon: Icons.description_outlined,
-            label: AppLocalization.translate('document_verification', lang),
-            route: MainRoutes.riderDocuments,
-          ),
-          _SettingsTile(
             icon: Icons.tune,
             label: AppLocalization.translate('notification_settings', lang),
             route: MainRoutes.riderNotificationSettings,
