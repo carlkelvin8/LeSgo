@@ -37,26 +37,45 @@ class ManualOrderState {
   final List<ManualOrderItem> confirmedItems; // Items confirmed for checkout
   final bool isLoading;
   final String? error;
+  final String? pickupLocationName; // Where rider should buy the items
+  final double? pickupLat;
+  final double? pickupLng;
 
   ManualOrderState({
     List<ManualOrderItem>? items,
     List<ManualOrderItem>? confirmedItems,
     this.isLoading = false,
     this.error,
+    this.pickupLocationName,
+    this.pickupLat,
+    this.pickupLng,
   }) : items = items ?? [],
        confirmedItems = confirmedItems ?? [];
+
+  bool get hasPickupLocation =>
+      pickupLocationName != null &&
+      pickupLocationName!.isNotEmpty &&
+      pickupLat != null &&
+      pickupLng != null;
 
   ManualOrderState copyWith({
     List<ManualOrderItem>? items,
     List<ManualOrderItem>? confirmedItems,
     bool? isLoading,
     String? error,
+    String? pickupLocationName,
+    double? pickupLat,
+    double? pickupLng,
+    bool clearPickupLocation = false,
   }) {
     return ManualOrderState(
       items: items ?? this.items,
       confirmedItems: confirmedItems ?? this.confirmedItems,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      pickupLocationName: clearPickupLocation ? null : (pickupLocationName ?? this.pickupLocationName),
+      pickupLat: clearPickupLocation ? null : (pickupLat ?? this.pickupLat),
+      pickupLng: clearPickupLocation ? null : (pickupLng ?? this.pickupLng),
     );
   }
 
@@ -68,6 +87,19 @@ class ManualOrderState {
 // Manual Order Notifier
 class ManualOrderNotifier extends StateNotifier<ManualOrderState> {
   ManualOrderNotifier() : super(ManualOrderState());
+
+  /// Set the pickup location where rider should buy the items
+  void setPickupLocation(String name, double lat, double lng) {
+    state = state.copyWith(
+      pickupLocationName: name,
+      pickupLat: lat,
+      pickupLng: lng,
+    );
+  }
+
+  void clearPickupLocation() {
+    state = state.copyWith(clearPickupLocation: true);
+  }
 
   final _uuid = const Uuid();
 

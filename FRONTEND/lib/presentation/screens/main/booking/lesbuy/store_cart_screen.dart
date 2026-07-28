@@ -149,6 +149,156 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
     );
   }
 
+  void _showPickupLocationSelector(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Expanded(
+              child: AddressSelectorWidget(
+                title: 'Where should rider buy?',
+                onAddressSelected: (address) {
+                  ref.read(manualOrderProvider.notifier).setPickupLocation(
+                    address.addressLine1,
+                    address.latitude,
+                    address.longitude,
+                  );
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Pickup location set!'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPickupLocationSection(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic manualOrderState,
+  ) {
+    final hasLocation = manualOrderState.hasPickupLocation;
+    final locationName = manualOrderState.pickupLocationName ?? '';
+
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.spacing(context, 16),
+      ),
+      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasLocation ? Colors.green.shade200 : Colors.orange.shade200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.store_mall_directory_outlined,
+                color: hasLocation ? Colors.green.shade700 : Colors.orange.shade700,
+                size: 20,
+              ),
+              SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+              Expanded(
+                child: Text(
+                  'Where should rider buy?',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 14),
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => _showPickupLocationSelector(context, ref),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: ResponsiveUtils.spacing(context, 12),
+                    vertical: ResponsiveUtils.spacing(context, 6),
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    hasLocation ? 'Change' : 'Set Location',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF5F2D82),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (hasLocation) ...[
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            Row(
+              children: [
+                Icon(Icons.location_on, size: 16, color: Colors.green.shade600),
+                SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+                Expanded(
+                  child: Text(
+                    locationName,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 13),
+                      color: Colors.grey.shade700,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+            Text(
+              'Pin the store/location where the rider should go buy your items',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 12),
+                color: Colors.orange.shade700,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen(manualOrderProvider, (previous, next) {
@@ -344,6 +494,13 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                     // Manual Order Section (below store items)
                     if (!isManualOrderEmpty) ...[
                       SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+                      // Pickup Location for manual orders
+                      if (isStoreCartEmpty) ...[
+                        _buildPickupLocationSection(context, ref, manualOrderState),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                      ],
+
                       ManualOrderSection(
                         items: manualOrderState.confirmedItems,
                         onIncrement: (itemId) {
@@ -439,6 +596,21 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       return;
                     }
 
+                    // Validate pickup location for manual-only orders
+                    final isManualOnly = isStoreCartEmpty && !isManualOrderEmpty;
+                    if (isManualOnly && !manualOrderState.hasPickupLocation) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Please set where the rider should buy your items (tap "Set Location" above)',
+                          ),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                      return;
+                    }
+
                     // Pre-check wallet balance before API call
                     if (_paymentMethod == 'wallet') {
                       final lespayBalance = ref.read(lespayProvider).balance;
@@ -500,10 +672,14 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                             : checkoutQuote.estimatedDistanceM,
                         pickup: OrderAddressDto(
                           address: isManualOnlyCheckout
-                              ? 'Store location — set when rider uploads item photo'
+                              ? (manualOrderState.pickupLocationName ?? 'Store location — rider will confirm')
                               : (storeState.storeName ?? 'Store'),
-                          lat: isManualOnlyCheckout ? 0 : checkoutQuote.pickupLat,
-                          lng: isManualOnlyCheckout ? 0 : checkoutQuote.pickupLng,
+                          lat: isManualOnlyCheckout
+                              ? (manualOrderState.pickupLat ?? 0)
+                              : checkoutQuote.pickupLat,
+                          lng: isManualOnlyCheckout
+                              ? (manualOrderState.pickupLng ?? 0)
+                              : checkoutQuote.pickupLng,
                           contactName: isManualOnlyCheckout
                               ? 'LesBuy Rider'
                               : (storeState.storeName ?? 'Store'),

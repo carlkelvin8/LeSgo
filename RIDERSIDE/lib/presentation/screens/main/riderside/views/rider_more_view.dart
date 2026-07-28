@@ -164,12 +164,6 @@ class RiderMoreView extends ConsumerWidget {
           onTap: () => AppRouter.push(context, MainRoutes.riderFaqs),
         ),
         _MoreTile(
-          icon: Icons.support_agent_outlined,
-          label: AppLocalization.translate('support_tickets', lang),
-          subtitle: 'Chat with LeSgo admin support',
-          onTap: () => AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
-        ),
-        _MoreTile(
           icon: Icons.emergency_outlined,
           label: AppLocalization.translate('safety_sos', lang),
           onTap: () => AppRouter.push(context, MainRoutes.riderSafety),

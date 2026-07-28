@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/constants/routers/app_router.dart';
+import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../provider/main/riderside/rider_inbox_provider.dart';
 import '../../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
 import '../../../../screens/chat/rider_chat_screen.dart';
@@ -90,9 +92,13 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
 
     if (state.conversations.isEmpty) {
       return ListView(
-        children: const [
-          SizedBox(height: 120),
-          Center(
+        children: [
+          _AdminSupportTile(
+            onTap: () => AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
+          ),
+          const Divider(height: 1, indent: 72),
+          const SizedBox(height: 80),
+          const Center(
             child: Column(
               children: [
                 Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
@@ -120,10 +126,16 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
 
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: state.conversations.length,
+      itemCount: state.conversations.length + 1, // +1 for admin support
       separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
       itemBuilder: (context, index) {
-        final conv = state.conversations[index];
+        // First item: Admin Support Chat (pinned)
+        if (index == 0) {
+          return _AdminSupportTile(
+            onTap: () => AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
+          );
+        }
+        final conv = state.conversations[index - 1];
         return _ConversationTile(
           conversation: conv,
           onTap: () => _openChat(conv),
@@ -238,6 +250,46 @@ class _ConversationTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+class _AdminSupportTile extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AdminSupportTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: CircleAvatar(
+        radius: 24,
+        backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.15),
+        child: const Icon(
+          Icons.support_agent,
+          color: Color(0xFF5F2D82),
+          size: 24,
+        ),
+      ),
+      title: const Text(
+        'Admin Support',
+        style: TextStyle(
+          fontFamily: 'TT Fors',
+          fontWeight: FontWeight.w700,
+          fontSize: 15,
+          color: Color(0xFF5F2D82),
+        ),
+      ),
+      subtitle: const Text(
+        'Chat with LeSGo admin support',
+        style: TextStyle(fontSize: 13, color: Colors.grey),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right,
+        color: Color(0xFF5F2D82),
       ),
     );
   }

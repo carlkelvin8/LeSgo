@@ -46,44 +46,9 @@ class RiderProfileSettingsSection extends ConsumerWidget {
             route: MainRoutes.riderDocuments,
           ),
           _SettingsTile(
-            icon: Icons.card_giftcard_outlined,
-            label: AppLocalization.translate('offers_vouchers', lang),
-            route: MainRoutes.riderOffers,
-          ),
-          _SettingsTile(
-            icon: Icons.stars_outlined,
-            label: AppLocalization.translate('loyalty_rewards_short', lang),
-            route: MainRoutes.riderLoyalty,
-          ),
-          _SettingsTile(
-            icon: Icons.group_add_outlined,
-            label: AppLocalization.translate('referral_program', lang),
-            route: MainRoutes.riderReferral,
-          ),
-          _SettingsTile(
-            icon: Icons.help_outline,
-            label: AppLocalization.translate('faqs', lang),
-            route: MainRoutes.riderFaqs,
-          ),
-          _SettingsTile(
-            icon: Icons.emergency_outlined,
-            label: AppLocalization.translate('safety_sos', lang),
-            route: MainRoutes.riderSafety,
-          ),
-          _SettingsTile(
-            icon: Icons.notifications_outlined,
-            label: AppLocalization.translate('notifications', lang),
-            route: MainRoutes.riderNotifications,
-          ),
-          _SettingsTile(
             icon: Icons.tune,
             label: AppLocalization.translate('notification_settings', lang),
             route: MainRoutes.riderNotificationSettings,
-          ),
-          _SettingsTile(
-            icon: Icons.support_agent_outlined,
-            label: AppLocalization.translate('support_tickets', lang),
-            route: MainRoutes.riderCustomerServiceChat,
           ),
           _SettingsTile(
             icon: Icons.person_off_outlined,

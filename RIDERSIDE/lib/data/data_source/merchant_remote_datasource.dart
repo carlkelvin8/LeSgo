@@ -135,7 +135,7 @@ class MerchantRemoteDataSource {
     try {
       final queryParams = <String, dynamic>{
         'partner_id': partnerId,
-        'per_page': 500,
+        'per_page': 100,
       };
       
       if (status != null && status.isNotEmpty) {

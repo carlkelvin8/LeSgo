@@ -30,8 +30,9 @@ class TrackingApi {
         },
       );
     } catch (e) {
-      AppLogger.error('Error updating driver location', e);
-      rethrow;
+      // Don't rethrow — location update failures should not block the rider UI.
+      // The next location update will retry automatically.
+      AppLogger.error('Error updating driver location (non-fatal)', e);
     }
   }
 
@@ -44,8 +45,9 @@ class TrackingApi {
         'is_available': isAvailable,
       });
     } catch (e) {
-      AppLogger.error('Error updating driver availability', e);
-      rethrow;
+      // Don't rethrow — availability sync failure should not block the rider
+      // from using the app (e.g., new riders with pending_approval status)
+      AppLogger.error('Error updating driver availability (non-fatal)', e);
     }
   }
 
