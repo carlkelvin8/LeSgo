@@ -222,7 +222,7 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
         return true;
       }
 
-      await ApiService.clearToken();
+      // Don't clear refresh token on failure — preserve it for future attempts
       state = state.copyWith(isLoading: false);
       return false;
     } catch (e) {

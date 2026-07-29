@@ -39,7 +39,8 @@ class _AuthStartupScreenState extends ConsumerState<AuthStartupScreen> {
         return;
       }
 
-      await ApiService.clearToken();
+      // Don't clear refresh token — only clear the expired access token
+      // so next launch can still try the refresh token
       _openLoginForRememberedAccount();
     } else {
       await ApiService.clearToken();

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/responsive_utils.dart';
-import 'merchant_sound_settings_card.dart';
 
 class MerchantSettingsSection extends StatelessWidget {
   const MerchantSettingsSection({super.key});
@@ -21,8 +20,6 @@ class MerchantSettingsSection extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-        const MerchantSoundSettingsCard(),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
         _SettingsTile(
           icon: Icons.support_agent_outlined,
