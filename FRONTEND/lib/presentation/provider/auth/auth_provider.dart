@@ -8,6 +8,7 @@ import '../../../core/services/notification_service.dart';
 import '../../../data/data_source/user_remote_datasource.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/entities/auth/login/login_request.dart';
+import '../../../domain/exceptions/two_factor_auth_required_exception.dart';
 import '../../../data/data_source/auth_remote_datasource.dart';
 import '../../../domain/repository/user_repository.dart';
 import '../../../domain/use_cases/login_usecase.dart';
@@ -20,6 +21,7 @@ class AuthState {
   final String? error;
   final String? successMessage;
   final bool rememberMe;
+  final bool requiresTwoFactor;
 
   AuthState({
     this.user,
@@ -27,6 +29,7 @@ class AuthState {
     this.error,
     this.successMessage,
     this.rememberMe = false,
+    this.requiresTwoFactor = false,
   });
 
   AuthState copyWith({
@@ -35,6 +38,7 @@ class AuthState {
     String? error,
     String? successMessage,
     bool? rememberMe,
+    bool? requiresTwoFactor,
     bool clearError = false,
     bool clearSuccessMessage = false,
   }) {
@@ -46,6 +50,7 @@ class AuthState {
           ? null
           : (successMessage ?? this.successMessage),
       rememberMe: rememberMe ?? this.rememberMe,
+      requiresTwoFactor: requiresTwoFactor ?? this.requiresTwoFactor,
     );
   }
 
@@ -58,11 +63,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final LogoutUseCase _logoutUseCase;
   final LocalStorageService _localStorageService;
 
-  AuthNotifier(this._loginUseCase, this._logoutUseCase, this._localStorageService)
-    : super(AuthState());
+  AuthNotifier(
+    this._loginUseCase,
+    this._logoutUseCase,
+    this._localStorageService,
+  ) : super(AuthState());
 
   Future<void> login(LoginRequest request) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      requiresTwoFactor: false,
+      clearError: true,
+    );
 
     if (request.email.isEmpty || request.password.isEmpty) {
       state = state.copyWith(
@@ -79,7 +91,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (user.role != null && user.role != 'customer') {
         state = state.copyWith(
           isLoading: false,
-          error: 'This account is for ${user.role}s. Please use the ${user.role} app to login.',
+          error:
+              'This account is for ${user.role}s. Please use the ${user.role} app to login.',
           clearSuccessMessage: true,
         );
         return;
@@ -91,13 +104,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
         error: null,
         clearError: true,
         successMessage: 'Login successful!',
+        requiresTwoFactor: false,
       );
 
       await getIt<PromoNotificationService>().registerDeviceToken();
       await getIt<NotificationService>().refreshFromBackend();
+    } on TwoFactorAuthRequiredException catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        requiresTwoFactor: true,
+        error: request.twoFactorCode == null ? null : e.message,
+        clearError: request.twoFactorCode == null,
+        clearSuccessMessage: true,
+      );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
+        requiresTwoFactor: false,
         error: ApiErrorMapper.message(
           e,
           fallbackEn: 'Login failed. Check email and password.',

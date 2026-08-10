@@ -6,8 +6,14 @@ part 'login_request_dto.g.dart';
 class LoginRequestDto {
   final String email;
   final String password;
+  @JsonKey(name: 'two_factor_code')
+  final String? twoFactorCode;
 
-  LoginRequestDto({required this.email, required this.password});
+  LoginRequestDto({
+    required this.email,
+    required this.password,
+    this.twoFactorCode,
+  });
 
   factory LoginRequestDto.fromJson(Map<String, dynamic> json) =>
       _$LoginRequestDtoFromJson(json);

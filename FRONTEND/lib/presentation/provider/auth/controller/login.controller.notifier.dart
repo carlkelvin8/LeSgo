@@ -6,6 +6,7 @@ import 'package:lesgo/core/utils/google_auth_helper.dart';
 import 'package:lesgo/core/di/injection.dart';
 import 'package:lesgo/core/di/local_storage_service.dart';
 import '../auth_provider.dart';
+import '../../../widgets/auth/two_factor_code_dialog.dart';
 
 class LoginControllers {
   final GlobalKey<FormState> formKey;
@@ -42,14 +43,27 @@ class LoginControllers {
       return false;
     }
 
-    final loginRequest = LoginRequest(
+    var loginRequest = LoginRequest(
       email: emailController.text.trim(),
       password: passwordController.text,
     );
 
     await ref.read(authProvider.notifier).login(loginRequest);
 
-    final authState = ref.read(authProvider);
+    var authState = ref.read(authProvider);
+
+    if (authState.requiresTwoFactor && context.mounted) {
+      final code = await showTwoFactorCodeDialog(context);
+      if (code == null || !context.mounted) return false;
+
+      loginRequest = LoginRequest(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+        twoFactorCode: code,
+      );
+      await ref.read(authProvider.notifier).login(loginRequest);
+      authState = ref.read(authProvider);
+    }
 
     if (!context.mounted) return false;
 
@@ -59,6 +73,8 @@ class LoginControllers {
         email: loginRequest.email,
         password: loginRequest.password,
       );
+
+      if (!context.mounted) return false;
 
       SnackBarUtils.showSuccess(
         context,

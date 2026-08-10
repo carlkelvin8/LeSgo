@@ -8,6 +8,7 @@ import '../network/dio_client.dart';
 import '../services/google_auth_service.dart';
 import '../utils/snackbar_utils.dart';
 import '../../presentation/provider/auth/auth_provider.dart';
+import '../../presentation/widgets/auth/two_factor_code_dialog.dart';
 
 /// Shared Google sign-in / sign-up handler for login and registration flows.
 class GoogleAuthHelper {
@@ -17,12 +18,27 @@ class GoogleAuthHelper {
     try {
       SnackBarUtils.showInfo(context, 'Signing in with Google...');
 
-      final result = await GoogleAuthService.signIn(getIt<DioClient>());
+      var result = await GoogleAuthService.signIn(getIt<DioClient>());
 
       if (!context.mounted) return;
 
+      if (result.twoFactorRequired && result.idToken != null) {
+        final code = await showTwoFactorCodeDialog(context);
+        if (code == null || !context.mounted) return;
+
+        result = await GoogleAuthService.completeTwoFactor(
+          getIt<DioClient>(),
+          idToken: result.idToken!,
+          code: code,
+        );
+
+        if (!context.mounted) return;
+      }
+
       if (result.success && result.token != null) {
-        final ok = await ref.read(authProvider.notifier).completeGoogleSignIn(
+        final ok = await ref
+            .read(authProvider.notifier)
+            .completeGoogleSignIn(
               token: result.token!,
               refreshToken: result.refreshToken,
             );

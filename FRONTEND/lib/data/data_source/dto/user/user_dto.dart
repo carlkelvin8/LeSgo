@@ -10,6 +10,8 @@ class UserDto {
   final String? refreshToken;
   final String? message;
   final bool? success;
+  @JsonKey(name: 'two_factor_required')
+  final bool twoFactorRequired;
 
   UserDto({
     this.user,
@@ -17,9 +19,11 @@ class UserDto {
     this.refreshToken,
     this.message,
     this.success,
+    this.twoFactorRequired = false,
   });
 
-  factory UserDto.fromJson(Map<String, dynamic> json) => _$UserDtoFromJson(json);
+  factory UserDto.fromJson(Map<String, dynamic> json) =>
+      _$UserDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserDtoToJson(this);
 
@@ -38,6 +42,7 @@ class UserDto {
       refreshToken: null,
       message: errorMessage,
       success: false,
+      twoFactorRequired: false,
     );
   }
 }

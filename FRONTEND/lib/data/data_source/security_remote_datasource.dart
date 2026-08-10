@@ -13,7 +13,9 @@ class SecurityRemoteDataSource {
   Future<SecurityDashboardDto> getSecurityDashboard() async {
     final response = await _dioClient.dio.get(ApiConstants.securityDashboard);
     final data = response.data['data'] ?? response.data;
-    return SecurityDashboardDto.fromJson(Map<String, dynamic>.from(data as Map));
+    return SecurityDashboardDto.fromJson(
+      Map<String, dynamic>.from(data as Map),
+    );
   }
 
   Future<TwoFactorSetupDto> setup2FA() async {
@@ -34,13 +36,18 @@ class SecurityRemoteDataSource {
     );
   }
 
-  Future<void> disable2FA() async {
-    await _dioClient.dio.post(ApiConstants.security2faDisable);
+  Future<void> disable2FA(String code) async {
+    await _dioClient.dio.post(
+      ApiConstants.security2faDisable,
+      data: {'code': code},
+    );
   }
 
-  Future<List<String>> regenerateBackupCodes() async {
-    final response =
-        await _dioClient.dio.post(ApiConstants.security2faRegenerateCodes);
+  Future<List<String>> regenerateBackupCodes(String code) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.security2faRegenerateCodes,
+      data: {'code': code},
+    );
     final data = response.data['data'] as Map<String, dynamic>? ?? {};
     return List<String>.from(data['backup_codes'] ?? []);
   }
@@ -48,9 +55,18 @@ class SecurityRemoteDataSource {
   Future<List<BiometricDto>> listBiometrics() async {
     final response = await _dioClient.dio.get(ApiConstants.securityBiometrics);
     final list = response.data['data'] as List? ?? [];
-    return list
-        .map((item) => BiometricDto.fromJson(item as Map<String, dynamic>))
-        .toList();
+    return list.map((item) {
+      final data = Map<String, dynamic>.from(item as Map);
+      final deviceInfo = data['device_info'] is Map
+          ? Map<String, dynamic>.from(data['device_info'] as Map)
+          : const <String, dynamic>{};
+      data['type'] ??= data['biometric_type'] ?? 'biometric';
+      data['device_name'] ??=
+          deviceInfo['device_name'] ?? data['device_id'] ?? 'Device';
+      data['created_at'] ??=
+          data['enrolled_at'] ?? DateTime.now().toIso8601String();
+      return BiometricDto.fromJson(data);
+    }).toList();
   }
 
   Future<void> enrollBiometric({
@@ -81,10 +97,19 @@ class SecurityRemoteDataSource {
       ApiConstants.securityAuditLogs,
       queryParameters: {'per_page': perPage},
     );
-    final list = response.data['data'] as List? ?? [];
-    return list
-        .map((item) => AuditLogDto.fromJson(item as Map<String, dynamic>))
-        .toList();
+    final container = response.data['data'];
+    final list = container is List
+        ? container
+        : container is Map
+        ? container['data'] as List? ?? []
+        : const [];
+    return list.map((item) {
+      final data = Map<String, dynamic>.from(item as Map);
+      data['created_at'] ??=
+          data['occurred_at'] ?? DateTime.now().toIso8601String();
+      data['action'] ??= data['event_type'] ?? 'Security activity';
+      return AuditLogDto.fromJson(data);
+    }).toList();
   }
 }
 

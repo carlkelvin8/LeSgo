@@ -50,8 +50,9 @@ class SecuritySettingsState {
       dashboard: dashboard ?? this.dashboard,
       registeredBiometrics: registeredBiometrics ?? this.registeredBiometrics,
       auditLogs: auditLogs ?? this.auditLogs,
-      twoFactorSetup:
-          clearSetup ? null : (twoFactorSetup ?? this.twoFactorSetup),
+      twoFactorSetup: clearSetup
+          ? null
+          : (twoFactorSetup ?? this.twoFactorSetup),
       isLoading: isLoading ?? this.isLoading,
       isProcessing: isProcessing ?? this.isProcessing,
       error: clearError ? null : (error ?? this.error),
@@ -65,7 +66,7 @@ class SecuritySettingsState {
 
 class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
   SecuritySettingsNotifier()
-      : super(const SecuritySettingsState(isLoading: true)) {
+    : super(const SecuritySettingsState(isLoading: true)) {
     loadSecurity();
   }
 
@@ -145,10 +146,10 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
     }
   }
 
-  Future<bool> disableTwoFactor() async {
+  Future<bool> disableTwoFactor(String code) async {
     state = state.copyWith(isProcessing: true, clearError: true);
     try {
-      await _securityDs.disable2FA();
+      await _securityDs.disable2FA(code);
       await loadSecurity();
       state = state.copyWith(isProcessing: false);
       return true;
@@ -211,5 +212,5 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
 
 final securitySettingsProvider =
     StateNotifierProvider<SecuritySettingsNotifier, SecuritySettingsState>(
-  (ref) => SecuritySettingsNotifier(),
-);
+      (ref) => SecuritySettingsNotifier(),
+    );

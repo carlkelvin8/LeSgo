@@ -13,6 +13,8 @@ class GoogleAuthResult {
   final Map<String, dynamic>? user;
   final String? error;
   final bool isNewUser;
+  final bool twoFactorRequired;
+  final String? idToken;
 
   GoogleAuthResult({
     required this.success,
@@ -21,6 +23,8 @@ class GoogleAuthResult {
     this.user,
     this.error,
     this.isNewUser = false,
+    this.twoFactorRequired = false,
+    this.idToken,
   });
 }
 
@@ -29,7 +33,8 @@ class GoogleAuthService {
   // as the primary source, falling back to MobileConfigService (remote config)
   static String get _webClientId {
     final fromSecrets = SecretsConfig.googleWebClientId;
-    if (fromSecrets.isNotEmpty && fromSecrets.contains('.apps.googleusercontent.com')) {
+    if (fromSecrets.isNotEmpty &&
+        fromSecrets.contains('.apps.googleusercontent.com')) {
       return fromSecrets;
     }
     return MobileConfigService.instance.googleWebClientId;
@@ -44,9 +49,9 @@ class GoogleAuthService {
   }
 
   static GoogleSignIn get _googleSignIn => GoogleSignIn(
-        serverClientId: kIsWeb ? null : _webClientId,
-        scopes: const ['email', 'profile'],
-      );
+    serverClientId: kIsWeb ? null : _webClientId,
+    scopes: const ['email', 'profile'],
+  );
 
   /// Sign in with Google and authenticate with your backend.
   static Future<GoogleAuthResult> signIn(DioClient dioClient) async {
@@ -69,23 +74,25 @@ class GoogleAuthService {
         // - Google Play Services outdated
         // - Network issue during auth
         debugPrint('GoogleSignIn.signIn() error: $e');
-        
+
         final errorStr = e.toString().toLowerCase();
         String userMessage;
-        if (errorStr.contains('apiexception: 10') || errorStr.contains('developer_error')) {
-          userMessage = 'Google Sign-In configuration error. Please contact support (SHA-1 mismatch).';
+        if (errorStr.contains('apiexception: 10') ||
+            errorStr.contains('developer_error')) {
+          userMessage =
+              'Google Sign-In configuration error. Please contact support (SHA-1 mismatch).';
         } else if (errorStr.contains('apiexception: 12500')) {
-          userMessage = 'Google Sign-In failed. Please update Google Play Services.';
+          userMessage =
+              'Google Sign-In failed. Please update Google Play Services.';
         } else if (errorStr.contains('network')) {
-          userMessage = 'Network error during Google Sign-In. Please check your connection.';
+          userMessage =
+              'Network error during Google Sign-In. Please check your connection.';
         } else {
-          userMessage = 'Google Sign-In unavailable on this device. Please use email/password login.';
+          userMessage =
+              'Google Sign-In unavailable on this device. Please use email/password login.';
         }
-        
-        return GoogleAuthResult(
-          success: false,
-          error: userMessage,
-        );
+
+        return GoogleAuthResult(success: false, error: userMessage);
       }
 
       if (googleUser == null) {
@@ -106,54 +113,102 @@ class GoogleAuthService {
         );
       }
 
-      // Send the ID token to your backend
+      return _authenticateWithBackend(dioClient, idToken);
+    } catch (e) {
+      return GoogleAuthResult(
+        success: false,
+        error: 'Google sign-in error: ${e.runtimeType}: $e',
+      );
+    }
+  }
+
+  /// Complete a Google sign-in after the account requests a TOTP challenge.
+  static Future<GoogleAuthResult> completeTwoFactor(
+    DioClient dioClient, {
+    required String idToken,
+    required String code,
+  }) {
+    return _authenticateWithBackend(dioClient, idToken, twoFactorCode: code);
+  }
+
+  static Future<GoogleAuthResult> _authenticateWithBackend(
+    DioClient dioClient,
+    String idToken, {
+    String? twoFactorCode,
+  }) async {
+    try {
       final response = await dioClient.dio.post(
         ApiConstants.googleSignIn,
         data: {
           'id_token': idToken,
           'device_name': 'mobile-app',
+          if (twoFactorCode != null) 'two_factor_code': twoFactorCode,
         },
       );
 
-      final data = response.data;
-      
-      // Safely extract payload - handle both {data: {...}} and direct {...} responses
-      Map<String, dynamic> payload;
+      return _resultFromResponse(response.data, idToken: idToken);
+    } on DioException catch (e) {
+      final data = e.response?.data;
       if (data is Map) {
-        final dataMap = Map<String, dynamic>.from(data);
-        if (dataMap['data'] is Map) {
-          payload = Map<String, dynamic>.from(dataMap['data'] as Map);
-        } else {
-          payload = dataMap;
-        }
-      } else {
-        return GoogleAuthResult(
-          success: false,
-          error: 'Unexpected response format from server',
-        );
-      }
-
-      final success = data['success'] == true || payload['token'] != null;
-      if (success) {
-        return GoogleAuthResult(
-          success: true,
-          token: (payload['token'] ?? data['token'])?.toString(),
-          refreshToken: (payload['refresh_token'] ?? data['refresh_token'])?.toString(),
-          user: payload['user'] is Map ? Map<String, dynamic>.from(payload['user'] as Map) : null,
-          isNewUser: data['is_new_user'] == true || payload['is_new_user'] == true,
-        );
+        return _resultFromResponse(data, idToken: idToken);
       }
 
       return GoogleAuthResult(
         success: false,
-        error: data['message'] ?? 'Google sign-in failed',
+        error: e.message ?? 'Network error',
       );
-    } on DioException catch (e) {
-      final message = e.response?.data?['message'] ?? e.message ?? 'Network error';
-      return GoogleAuthResult(success: false, error: message);
-    } catch (e) {
-      return GoogleAuthResult(success: false, error: 'Google sign-in error: ${e.runtimeType}: $e');
     }
+  }
+
+  static GoogleAuthResult _resultFromResponse(
+    dynamic data, {
+    required String idToken,
+  }) {
+    if (data is! Map) {
+      return GoogleAuthResult(
+        success: false,
+        error: 'Unexpected response format from server',
+      );
+    }
+
+    final dataMap = Map<String, dynamic>.from(data);
+    final payload = dataMap['data'] is Map
+        ? Map<String, dynamic>.from(dataMap['data'] as Map)
+        : dataMap;
+    final twoFactorRequired =
+        dataMap['two_factor_required'] == true ||
+        payload['two_factor_required'] == true;
+
+    if (twoFactorRequired) {
+      return GoogleAuthResult(
+        success: false,
+        error: (dataMap['message'] ?? payload['message'])?.toString(),
+        twoFactorRequired: true,
+        idToken: idToken,
+      );
+    }
+
+    final success = dataMap['success'] == true || payload['token'] != null;
+    if (success) {
+      return GoogleAuthResult(
+        success: true,
+        token: (payload['token'] ?? dataMap['token'])?.toString(),
+        refreshToken: (payload['refresh_token'] ?? dataMap['refresh_token'])
+            ?.toString(),
+        user: payload['user'] is Map
+            ? Map<String, dynamic>.from(payload['user'] as Map)
+            : null,
+        isNewUser:
+            dataMap['is_new_user'] == true || payload['is_new_user'] == true,
+      );
+    }
+
+    return GoogleAuthResult(
+      success: false,
+      error:
+          (dataMap['message'] ?? payload['message'] ?? 'Google sign-in failed')
+              .toString(),
+    );
   }
 
   /// Sign out from Google (clears the Google session).
