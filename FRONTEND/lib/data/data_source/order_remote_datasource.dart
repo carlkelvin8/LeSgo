@@ -62,6 +62,7 @@ class OrderRemoteDataSource {
     required double pickupLng,
     required double dropoffLat,
     required double dropoffLng,
+    String? vehicleType,
   }) async {
     final dio = _dioClient.dio;
     try {
@@ -72,6 +73,7 @@ class OrderRemoteDataSource {
           'estimated_distance_m': estimatedDistanceM,
           'pickup': {'lat': pickupLat, 'lng': pickupLng},
           'dropoff': {'lat': dropoffLat, 'lng': dropoffLng},
+          if (vehicleType != null) 'vehicle_type': vehicleType,
         },
       );
       final data = response.data['data'];
@@ -96,6 +98,7 @@ class OrderRemoteDataSource {
     required double dropoffLng,
     double? orderValue,
     double? estimatedWeightKg,
+    String? vehicleType,
   }) async {
     final dio = _dioClient.dio;
     try {
@@ -106,12 +109,12 @@ class OrderRemoteDataSource {
         'dropoff': {'lat': dropoffLat, 'lng': dropoffLng},
       };
       if (orderValue != null) body['order_value'] = orderValue;
-      if (estimatedWeightKg != null) body['estimated_weight_kg'] = estimatedWeightKg;
+      if (estimatedWeightKg != null) {
+        body['estimated_weight_kg'] = estimatedWeightKg;
+      }
+      if (vehicleType != null) body['vehicle_type'] = vehicleType;
 
-      final response = await dio.post(
-        ApiConstants.orderEstimate,
-        data: body,
-      );
+      final response = await dio.post(ApiConstants.orderEstimate, data: body);
       final data = response.data['data'];
       if (data == null) return null;
 
@@ -124,7 +127,9 @@ class OrderRemoteDataSource {
         distanceFare: fb != null ? _toDouble(fb['distance_fare']) : 0,
         serviceFee: fb != null ? _toDouble(fb['service_fee']) : 0,
         weightSurcharge: fb != null ? _toDouble(fb['weight_surcharge']) : 0,
-        total: fb != null ? _toDouble(fb['total']) : _toDouble(data['estimated_fare']),
+        total: fb != null
+            ? _toDouble(fb['total'])
+            : _toDouble(data['estimated_fare']),
       );
     } catch (e) {
       return null;
@@ -147,10 +152,7 @@ class OrderRemoteDataSource {
   }) async {
     final dio = _dioClient.dio;
     try {
-      final queryParams = <String, dynamic>{
-        'per_page': perPage,
-        'page': page,
-      };
+      final queryParams = <String, dynamic>{'per_page': perPage, 'page': page};
       if (status != null) queryParams['status'] = status;
       if (paymentStatus != null) queryParams['payment_status'] = paymentStatus;
       if (serviceId != null) queryParams['service_id'] = serviceId;
@@ -220,10 +222,7 @@ class OrderRemoteDataSource {
     final dio = _dioClient.dio;
     try {
       final requestData = request.toJson();
-      final response = await dio.post(
-        ApiConstants.orders,
-        data: requestData,
-      );
+      final response = await dio.post(ApiConstants.orders, data: requestData);
       // API returns {"success": true, "message": "...", "data": {...}}
       // Map "data" to the expected structure
       final responseData = Map<String, dynamic>.from(response.data);
@@ -260,15 +259,15 @@ class OrderRemoteDataSource {
               .expand((v) => v is List ? v : [v])
               .map((e) => e.toString())
               .toList();
-          errorMsg = errorMessages.isNotEmpty 
+          errorMsg = errorMessages.isNotEmpty
               ? errorMessages.join('\n')
               : 'Validation failed';
         } else {
           errorMsg = (responseData['message'] as String?)?.isNotEmpty == true
               ? responseData['message'] as String
               : (responseData['error'] as String?)?.isNotEmpty == true
-                  ? responseData['error'] as String
-                  : e.message ?? 'Failed to create order';
+              ? responseData['error'] as String
+              : e.message ?? 'Failed to create order';
         }
       } else {
         errorMsg = e.message ?? 'Failed to create order';
@@ -344,7 +343,8 @@ class OrderRemoteDataSource {
     if (json['data'] is Map<String, dynamic>) {
       final data = Map<String, dynamic>.from(json['data'] as Map);
       data['id'] ??= orderId;
-      if (fallbackStatus != null && (data['status'] == null || data['status'] == '')) {
+      if (fallbackStatus != null &&
+          (data['status'] == null || data['status'] == '')) {
         data['status'] = fallbackStatus;
       }
       json['data'] = data;
@@ -394,8 +394,8 @@ class OrderRemoteDataSource {
         errorMsg = (responseData['message'] as String?)?.isNotEmpty == true
             ? responseData['message'] as String
             : (responseData['error'] as String?)?.isNotEmpty == true
-                ? responseData['error'] as String
-                : e.message ?? 'Failed to update order status';
+            ? responseData['error'] as String
+            : e.message ?? 'Failed to update order status';
       } else {
         errorMsg = e.message ?? 'Failed to update order status';
       }
@@ -418,9 +418,7 @@ class OrderRemoteDataSource {
   Future<OrderResponseDto> reorderOrder(int orderId) async {
     final dio = _dioClient.dio;
     try {
-      final response = await dio.post(
-        ApiConstants.orderReorder(orderId),
-      );
+      final response = await dio.post(ApiConstants.orderReorder(orderId));
       return OrderResponseDto.fromJson(response.data);
     } catch (e) {
       throw Exception('Failed to reorder: $e');

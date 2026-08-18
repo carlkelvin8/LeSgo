@@ -30,18 +30,6 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
     return parts.isNotEmpty ? parts.join(', ') : 'Address not available';
   }
 
-  // Calculate fare based on distance
-  // Base fare: PHP 40.00
-  // Per km: PHP 15.00
-  static double calculateFare(double? distanceInKm) {
-    if (distanceInKm == null || distanceInKm <= 0) {
-      return 40.00; // Base fare
-    }
-    const double baseFare = 40.00;
-    const double perKmRate = 15.00;
-    return baseFare + (distanceInKm * perKmRate);
-  }
-
   // Format duration from seconds to readable format
   static String formatDuration(int? durationInSeconds) {
     if (durationInSeconds == null) return 'N/A';
@@ -54,6 +42,26 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
     return remainingMinutes > 0 ? '$hours h $remainingMinutes min' : '$hours h';
   }
 
+  static String formatPaymentMethod(String method) {
+    switch (method.toLowerCase()) {
+      case 'cash':
+      case 'cod':
+        return 'Cash';
+      case 'gcash':
+        return 'GCash';
+      case 'maya':
+        return 'Maya';
+      case 'wallet':
+        return 'LesPay Wallet';
+      case 'card':
+        return 'Card';
+      case 'xendit':
+        return 'Online Payment';
+      default:
+        return method;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locationState = ref.watch(lesrideLocationProvider);
@@ -62,9 +70,9 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
 
     final distance = locationState.distanceInKm ?? 0.0;
     final duration = locationState.durationInSeconds;
-    final fare = calculateFare(locationState.distanceInKm);
-    final discount = 0.0;
-    final totalFare = fare - discount;
+    final fare = lesrideState.fareEstimate;
+    const discount = 0.0;
+    final totalFare = fare?.total ?? 0.0;
 
     final pickupAddress = locationState.pickupAddress;
     final destinationAddress = locationState.destinationAddress;
@@ -78,7 +86,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
         : 'Destination not set';
 
     final passengerName = authState.user?.name ?? 'Guest';
-    final paymentMethod = lesrideState.paymentMethod == 'cod' ? 'Cash' : 'Card';
+    final paymentMethod = formatPaymentMethod(lesrideState.paymentMethod);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -146,7 +154,11 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
                         // Service Details
-                        _buildDetailRow(context, 'Vehicle Type', 'Motor'),
+                        _buildDetailRow(
+                          context,
+                          'Vehicle Type',
+                          lesrideState.selectedVehicle.label,
+                        ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                         _buildDetailRow(
                           context,
@@ -179,6 +191,26 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                           'Discount',
                           'PHP ${discount.toStringAsFixed(2)}',
                         ),
+                        if (fare != null) ...[
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 12),
+                          ),
+                          _buildDetailRow(
+                            context,
+                            'Base fare (first 3 km)',
+                            'PHP ${fare.baseFare.toStringAsFixed(2)}',
+                          ),
+                          if (fare.distanceFare > 0) ...[
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 12),
+                            ),
+                            _buildDetailRow(
+                              context,
+                              'Additional distance',
+                              'PHP ${fare.distanceFare.toStringAsFixed(2)}',
+                            ),
+                          ],
+                        ],
                         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -317,7 +349,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
   Widget _buildDottedDivider(BuildContext context) {
     return CustomPaint(
       painter: _DottedLinePainter(),
-      child: SizedBox(height: 1, width: double.infinity),
+      child: const SizedBox(height: 1, width: double.infinity),
     );
   }
 }

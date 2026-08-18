@@ -67,13 +67,22 @@ class LesrideMainContent extends ConsumerWidget {
                 locationState: locationState,
                 onChangeCurrent: () => notifier.openPickupSelection(),
                 onChangeDestination: () => notifier.openDestinationSelection(),
+                selectedVehicle: lesrideState.selectedVehicle,
+                onVehicleSelected: notifier.selectVehicle,
                 paymentMethod: lesrideState.paymentMethod,
                 onPaymentChanged: (val) {
                   if (val != null) {
                     notifier.updatePaymentMethod(val);
                   }
                 },
-                onBook: () => notifier.handleBook(context),
+                onBook:
+                    locationState.distanceInKm != null &&
+                        locationState.distanceInKm! > 0 &&
+                        !lesrideState.isLoadingFare &&
+                        !lesrideState.isBooking
+                    ? () => notifier.handleBook(context)
+                    : null,
+                isBooking: lesrideState.isBooking,
                 scrollController: scrollController,
               );
             },

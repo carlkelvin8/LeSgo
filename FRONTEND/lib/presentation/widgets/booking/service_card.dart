@@ -7,17 +7,11 @@ class ServiceCard extends StatelessWidget {
   final BookingService service;
   final VoidCallback onTap;
 
-  const ServiceCard({
-    super.key,
-    required this.service,
-    required this.onTap,
-  });
+  const ServiceCard({super.key, required this.service, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final isComingSoon =
-        service.type == ServiceType.lesride ||
-        service.type == ServiceType.lesport;
+    final isComingSoon = service.type.isComingSoon;
 
     return Container(
       decoration: BoxDecoration(
@@ -54,8 +48,9 @@ class ServiceCard extends StatelessWidget {
                       Container(
                         width: ResponsiveUtils.spacing(context, 110),
                         height: ResponsiveUtils.spacing(context, 110),
-                        padding:
-                            EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
+                        padding: EdgeInsets.all(
+                          ResponsiveUtils.spacing(context, 12),
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.grey[50],
                           borderRadius: BorderRadius.circular(16),
@@ -74,20 +69,19 @@ class ServiceCard extends StatelessWidget {
                               service.name,
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
-                                fontSize:
-                                    ResponsiveUtils.fontSize(context, 18),
+                                fontSize: ResponsiveUtils.fontSize(context, 18),
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
                             ),
                             SizedBox(
-                                height: ResponsiveUtils.spacing(context, 4)),
+                              height: ResponsiveUtils.spacing(context, 4),
+                            ),
                             Text(
                               service.description,
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
-                                fontSize:
-                                    ResponsiveUtils.fontSize(context, 13),
+                                fontSize: ResponsiveUtils.fontSize(context, 13),
                                 color: Colors.grey[600],
                                 height: 1.4,
                               ),

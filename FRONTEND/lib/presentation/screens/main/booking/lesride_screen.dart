@@ -21,6 +21,7 @@ class _LesrideScreenState extends ConsumerState<LesrideScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
+      if (!mounted) return;
       _notifier = ref.read(lesrideProvider.notifier);
       _notifier?.initialize();
     });

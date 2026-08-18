@@ -15,6 +15,10 @@ class CreateOrderRequestDto {
   final String? notes;
   @JsonKey(name: 'payment_method')
   final String paymentMethod;
+  @JsonKey(name: 'vehicle_type')
+  final String? vehicleType;
+  @JsonKey(name: 'passenger_name')
+  final String? passengerName;
   @JsonKey(name: 'items')
   final List<OrderItemDto>? items;
   @JsonKey(name: 'meta')
@@ -34,6 +38,8 @@ class CreateOrderRequestDto {
     required this.dropoff,
     this.notes,
     this.paymentMethod = 'cash',
+    this.vehicleType,
+    this.passengerName,
     this.items,
     this.meta,
     this.voucherCode,

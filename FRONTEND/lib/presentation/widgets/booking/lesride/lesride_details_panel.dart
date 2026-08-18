@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../domain/models/location/location_address.dart';
+import '../../../../domain/entities/booking/lesride_vehicle_option.dart';
 import '../../../provider/main/booking/lesride_location_provider.dart';
 import '../../widgets.dart';
 
@@ -14,6 +15,9 @@ class LesrideDetailsPanel extends StatelessWidget {
     required this.paymentMethod,
     required this.onPaymentChanged,
     required this.onBook,
+    required this.selectedVehicle,
+    required this.onVehicleSelected,
+    required this.isBooking,
     this.scrollController,
   });
 
@@ -22,7 +26,10 @@ class LesrideDetailsPanel extends StatelessWidget {
   final VoidCallback onChangeDestination;
   final String paymentMethod;
   final ValueChanged<String?> onPaymentChanged;
-  final VoidCallback onBook;
+  final VoidCallback? onBook;
+  final LesrideVehicleOption selectedVehicle;
+  final ValueChanged<LesrideVehicleOption> onVehicleSelected;
+  final bool isBooking;
   final ScrollController? scrollController;
 
   String _formatAddress(LocationAddress address) {
@@ -89,12 +96,23 @@ class LesrideDetailsPanel extends StatelessWidget {
               trailing: LesrideChangeButton(onPressed: onChangeDestination),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            LesrideVehicleSelector(
+              selectedVehicle: selectedVehicle,
+              onSelected: onVehicleSelected,
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+            const LesrideFareSummary(),
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             LesridePaymentSection(
               paymentMethod: paymentMethod,
               onPaymentChanged: onPaymentChanged,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            PrimaryButton(text: 'Book', onPressed: onBook),
+            PrimaryButton(
+              text: 'Book',
+              onPressed: onBook,
+              isLoading: isBooking,
+            ),
           ],
         ),
       ),

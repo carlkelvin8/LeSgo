@@ -38,18 +38,18 @@ class BookingState {
       type: ServiceType.lesgo,
     ),
     BookingService(
-      id: '4',
-      name: 'LesTransport',
-      description: 'Deliver your goods with our quick service!',
-      iconPath: 'assets/images/book/Lesport.svg',
-      type: ServiceType.lesport,
-    ),
-    BookingService(
       id: '5',
       name: 'LesRide',
       description: 'Ride with us to your destination',
       iconPath: 'assets/images/book/Lesride.svg',
       type: ServiceType.lesride,
+    ),
+    BookingService(
+      id: '4',
+      name: 'LesTransport',
+      description: 'Deliver your goods with our quick service!',
+      iconPath: 'assets/images/book/Lesport.svg',
+      type: ServiceType.lesport,
     ),
   ];
 

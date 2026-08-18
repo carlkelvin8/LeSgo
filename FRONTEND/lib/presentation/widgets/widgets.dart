@@ -98,6 +98,8 @@ export 'booking/lesride/lesride_booking_summary_dialog.dart';
 export 'booking/lesride/lesride_booking_dialog_wrapper.dart';
 export 'booking/lesride/lesride_main_content.dart';
 export 'booking/lesride/lesride_payment_section.dart';
+export 'booking/lesride/lesride_vehicle_selector.dart';
+export 'booking/lesride/lesride_fare_summary.dart';
 
 // LesGo widgets
 export 'booking/lesgo/lesgo_map_widget.dart';

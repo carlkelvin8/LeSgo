@@ -33,6 +33,8 @@ class BookingService {
 enum ServiceType { leseat, lesbuy, lesgo, lesport, lesride }
 
 extension ServiceTypeExtension on ServiceType {
+  bool get isComingSoon => this == ServiceType.lesport;
+
   String get displayName {
     switch (this) {
       case ServiceType.leseat:
