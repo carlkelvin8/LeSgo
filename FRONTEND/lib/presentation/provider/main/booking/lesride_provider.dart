@@ -8,12 +8,13 @@ import '../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
+import '../../../../domain/entities/booking/lesride_vehicle_option.dart';
 import '../profile/profile_provider.dart';
 import '../../../../core/services/service_area_checker.dart';
-import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/booking_checkout_payment.dart';
 import '../../../../core/utils/network_guard.dart';
 import '../../../../core/utils/active_order_limit_guard.dart';
+import '../../../../core/utils/voucher_service_utils.dart';
 import '../../../widgets/widgets.dart';
 
 class LesrideState {
@@ -23,6 +24,10 @@ class LesrideState {
   final bool pendingFit;
   final bool shouldCollapseAfterFullscreen;
   final bool isBooking;
+  final LesrideVehicleOption selectedVehicle;
+  final FareBreakdownResult? fareEstimate;
+  final bool isLoadingFare;
+  final String? fareError;
 
   LesrideState({
     this.isFullscreen = false,
@@ -31,6 +36,10 @@ class LesrideState {
     this.pendingFit = false,
     this.shouldCollapseAfterFullscreen = false,
     this.isBooking = false,
+    this.selectedVehicle = LesrideVehicleOption.tricycle,
+    this.fareEstimate,
+    this.isLoadingFare = false,
+    this.fareError,
   });
 
   LesrideState copyWith({
@@ -40,6 +49,12 @@ class LesrideState {
     bool? pendingFit,
     bool? shouldCollapseAfterFullscreen,
     bool? isBooking,
+    LesrideVehicleOption? selectedVehicle,
+    FareBreakdownResult? fareEstimate,
+    bool clearFareEstimate = false,
+    bool? isLoadingFare,
+    String? fareError,
+    bool clearFareError = false,
   }) {
     return LesrideState(
       isFullscreen: isFullscreen ?? this.isFullscreen,
@@ -49,12 +64,19 @@ class LesrideState {
       shouldCollapseAfterFullscreen:
           shouldCollapseAfterFullscreen ?? this.shouldCollapseAfterFullscreen,
       isBooking: isBooking ?? this.isBooking,
+      selectedVehicle: selectedVehicle ?? this.selectedVehicle,
+      fareEstimate: clearFareEstimate
+          ? null
+          : (fareEstimate ?? this.fareEstimate),
+      isLoadingFare: isLoadingFare ?? this.isLoadingFare,
+      fareError: clearFareError ? null : (fareError ?? this.fareError),
     );
   }
 }
 
 class LesrideNotifier extends StateNotifier<LesrideState> {
   final Ref _ref;
+  int _fareRequestId = 0;
   GoogleMapController? _mainMapController;
   GoogleMapController? _overlayMapController;
   static const double _sheetMin = 0.04;
@@ -85,14 +107,19 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
   double get sheetDefault => _sheetDefault;
 
   Future<void> initialize() async {
+    _fareRequestId++;
+    state = LesrideState();
     final notifier = _ref.read(lesrideLocationProvider.notifier);
     notifier.reset();
     await notifier.getCurrentLocation();
   }
 
   void cleanup() {
+    _fareRequestId++;
     _mainMapController?.dispose();
     _mainMapController = null;
+    _overlayMapController?.dispose();
+    _overlayMapController = null;
     // Note: We don't reset the location provider here to avoid lifecycle conflicts.
     // The provider state can persist, and initialize() will reset it when the screen is opened again.
   }
@@ -178,8 +205,9 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
   }
 
   Future<void> onMapTap(LatLng latLng) async {
-    if (!state.isFullscreen)
+    if (!state.isFullscreen) {
       return; // Block marker moves when not in fullscreen selection.
+    }
 
     if (state.selectingDestination) {
       await _ref
@@ -262,6 +290,7 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
   }
 
   void openDestinationSelection() {
+    _invalidateFareEstimate();
     state = state.copyWith(selectingDestination: true);
     final dest = _ref.read(lesrideLocationProvider).destinationLocation;
     if (dest != null) {
@@ -272,6 +301,7 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
   }
 
   void openPickupSelection() {
+    _invalidateFareEstimate();
     state = state.copyWith(selectingDestination: false);
     final pickup = _ref.read(lesrideLocationProvider).pickupLocation;
     if (pickup != null) {
@@ -282,7 +312,9 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
   }
 
   Future<void> confirmSelection() async {
-    print('🔵 LesRide: confirmSelection() called - this is the ONLY place routes should be calculated');
+    print(
+      '🔵 LesRide: confirmSelection() called - this is the ONLY place routes should be calculated',
+    );
 
     final locationNotifier = _ref.read(lesrideLocationProvider.notifier);
     var locationState = _ref.read(lesrideLocationProvider);
@@ -302,16 +334,23 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
       pendingFit: true,
     );
 
-    print('🔵 LesRide: confirmSelection - pickup: ${locationState.pickupLocation}, destination: ${locationState.destinationLocation}');
-    
+    print(
+      '🔵 LesRide: confirmSelection - pickup: ${locationState.pickupLocation}, destination: ${locationState.destinationLocation}',
+    );
+
     if (locationState.pickupLocation != null &&
         locationState.destinationLocation != null) {
       print('🔵 LesRide: Calling fetchRouteIfBothSet - MANUAL CONFIRMATION');
-      await _ref.read(lesrideLocationProvider.notifier).fetchRouteIfBothSet(forceAllow: true);
-      
+      await _ref
+          .read(lesrideLocationProvider.notifier)
+          .fetchRouteIfBothSet(forceAllow: true);
+      await fetchFareEstimate();
+
       // Debug: Check if route was created
       final updatedState = _ref.read(lesrideLocationProvider);
-      print('🔵 LesRide: After route fetch - polylines: ${updatedState.routePolylines.length}');
+      print(
+        '🔵 LesRide: After route fetch - polylines: ${updatedState.routePolylines.length}',
+      );
     } else {
       print('🔵 LesRide: Missing locations for route calculation');
     }
@@ -332,6 +371,116 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
     state = state.copyWith(paymentMethod: method);
   }
 
+  Future<void> selectVehicle(LesrideVehicleOption vehicle) async {
+    if (!vehicle.isAvailable || vehicle == state.selectedVehicle) return;
+
+    _fareRequestId++;
+    state = state.copyWith(
+      selectedVehicle: vehicle,
+      clearFareEstimate: true,
+      clearFareError: true,
+    );
+    await fetchFareEstimate();
+  }
+
+  Future<bool> fetchFareEstimate() async {
+    final requestId = ++_fareRequestId;
+    final locationState = _ref.read(lesrideLocationProvider);
+    final pickup = locationState.pickupLocation;
+    final dropoff = locationState.destinationLocation;
+    final distanceKm = locationState.distanceInKm;
+    final selectedVehicle = state.selectedVehicle;
+
+    if (pickup == null || dropoff == null || distanceKm == null) {
+      state = state.copyWith(
+        clearFareEstimate: true,
+        isLoadingFare: false,
+        fareError: 'Confirm your pickup and destination to calculate the fare.',
+      );
+      return false;
+    }
+
+    if (distanceKm <= 0) {
+      state = state.copyWith(
+        clearFareEstimate: true,
+        isLoadingFare: false,
+        fareError: 'Pickup and destination must be different.',
+      );
+      return false;
+    }
+
+    state = state.copyWith(
+      isLoadingFare: true,
+      clearFareEstimate: true,
+      clearFareError: true,
+    );
+
+    final result = await getIt<OrderRemoteDataSource>().getFareBreakdownFull(
+      serviceId: BookingServiceIds.lesride,
+      estimatedDistanceM: (distanceKm * 1000).round(),
+      pickupLat: pickup.latitude,
+      pickupLng: pickup.longitude,
+      dropoffLat: dropoff.latitude,
+      dropoffLng: dropoff.longitude,
+      vehicleType: selectedVehicle.code,
+    );
+
+    if (!_isCurrentFareRequest(
+      requestId,
+      pickup,
+      dropoff,
+      distanceKm,
+      selectedVehicle,
+    )) {
+      return false;
+    }
+
+    if (result == null ||
+        !result.baseFare.isFinite ||
+        !result.total.isFinite ||
+        !result.distanceKm.isFinite ||
+        result.baseFare <= 0 ||
+        result.total < result.baseFare ||
+        result.distanceKm <= 0) {
+      state = state.copyWith(
+        isLoadingFare: false,
+        fareError: 'Unable to calculate the fare. Please try again.',
+      );
+      return false;
+    }
+
+    state = state.copyWith(
+      fareEstimate: result,
+      isLoadingFare: false,
+      clearFareError: true,
+    );
+    return true;
+  }
+
+  void _invalidateFareEstimate() {
+    _fareRequestId++;
+    state = state.copyWith(
+      clearFareEstimate: true,
+      isLoadingFare: false,
+      clearFareError: true,
+    );
+  }
+
+  bool _isCurrentFareRequest(
+    int requestId,
+    LatLng pickup,
+    LatLng dropoff,
+    double distanceKm,
+    LesrideVehicleOption vehicle,
+  ) {
+    final currentLocation = _ref.read(lesrideLocationProvider);
+    return requestId == _fareRequestId &&
+        currentLocation.pickupLocation == pickup &&
+        currentLocation.destinationLocation == dropoff &&
+        currentLocation.distanceInKm == distanceKm &&
+        state.selectedVehicle == vehicle;
+  }
+
   void setPendingFit(bool value) {
     state = state.copyWith(pendingFit: value);
   }
@@ -346,6 +495,13 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
     LesrideLocationState next,
   ) {
     updateCamera(next);
+
+    if (previous != null &&
+        (previous.pickupLocation != next.pickupLocation ||
+            previous.destinationLocation != next.destinationLocation ||
+            previous.distanceInKm != next.distanceInKm)) {
+      _invalidateFareEstimate();
+    }
 
     // DON'T auto-fetch route on location change
     // Route will be fetched only when user confirms location via confirmSelection()
@@ -364,6 +520,7 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
   // Handle booking action with validation and dialog
   Future<void> handleBook(BuildContext context) async {
     if (!await NetworkGuard.ensureOnline(context)) return;
+    if (!context.mounted) return;
 
     final locationState = _ref.read(lesrideLocationProvider);
 
@@ -378,6 +535,29 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
       return;
     }
 
+    if (locationState.pickupLocation == null ||
+        locationState.distanceInKm == null ||
+        locationState.distanceInKm! <= 0) {
+      SnackBarUtils.showWarning(
+        context,
+        'Please confirm your pickup and destination first',
+      );
+      return;
+    }
+
+    // Refresh immediately before confirmation so a rate/location change cannot
+    // leave an old quote in the booking dialog.
+    if (!await fetchFareEstimate()) {
+      if (context.mounted) {
+        SnackBarUtils.showWarning(
+          context,
+          state.fareError ?? 'Unable to calculate the fare. Please try again.',
+        );
+      }
+      return;
+    }
+    if (!context.mounted) return;
+
     // Show booking summary dialog with blurred background
     final confirmed = await showDialog<bool>(
       context: context,
@@ -390,12 +570,20 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
         // Double-tap guard
         if (state.isBooking) return;
         state = state.copyWith(isBooking: true);
-        
+
         if (!await NetworkGuard.ensureOnline(context)) {
           state = state.copyWith(isBooking: false);
           return;
         }
+        if (!context.mounted) {
+          state = state.copyWith(isBooking: false);
+          return;
+        }
         if (!await ActiveOrderLimitGuard.ensureCanBook(context)) {
+          state = state.copyWith(isBooking: false);
+          return;
+        }
+        if (!context.mounted) {
           state = state.copyWith(isBooking: false);
           return;
         }
@@ -404,11 +592,19 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
           final locationState = _ref.read(lesrideLocationProvider);
           final profileState = _ref.read(profileProvider);
           final user = profileState.user;
+          final selectedVehicle = state.selectedVehicle;
+          final quotedFare = state.fareEstimate;
 
-          final pickup = locationState.pickupLocation ??
-              BookingGeoUtils.defaultLatLng;
-          final dropoff = locationState.destinationLocation ??
-              BookingGeoUtils.defaultLatLng;
+          if (!selectedVehicle.isAvailable || quotedFare == null) {
+            SnackBarUtils.showWarning(
+              context,
+              'Please select an available vehicle and calculate the fare again.',
+            );
+            return;
+          }
+
+          final pickup = locationState.pickupLocation!;
+          final dropoff = locationState.destinationLocation!;
 
           final serviceArea = await ServiceAreaChecker.checkBookingPoints(
             pickupLat: pickup.latitude,
@@ -416,6 +612,7 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
             dropoffLat: dropoff.latitude,
             dropoffLng: dropoff.longitude,
           );
+          if (!context.mounted) return;
           if (!serviceArea.isAvailable) {
             SnackBarUtils.showWarning(
               context,
@@ -425,19 +622,19 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
           }
 
           final createOrderRequest = CreateOrderRequestDto(
-            serviceId: 2, // LesRide service ID
-            estimatedDistanceM: (locationState.distanceInKm != null) 
-                ? (locationState.distanceInKm! * 1000).round() 
-                : 5000,
+            serviceId: BookingServiceIds.lesride,
+            estimatedDistanceM: (locationState.distanceInKm! * 1000).round(),
             pickup: OrderAddressDto(
-              address: locationState.pickupAddress?.toString() ?? 'Pickup Location',
+              address:
+                  locationState.pickupAddress?.toString() ?? 'Pickup Location',
               lat: pickup.latitude,
               lng: pickup.longitude,
               contactName: user?.name ?? 'Customer',
               contactPhone: user?.phone ?? '+639123456789',
             ),
             dropoff: OrderAddressDto(
-              address: locationState.destinationAddress?.toString() ?? 'Destination',
+              address:
+                  locationState.destinationAddress?.toString() ?? 'Destination',
               lat: dropoff.latitude,
               lng: dropoff.longitude,
               contactName: user?.name ?? 'Customer',
@@ -445,8 +642,10 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
             ),
             notes: 'LesRide booking',
             paymentMethod: state.paymentMethod,
+            vehicleType: selectedVehicle.code,
+            passengerName: user?.name ?? 'Customer',
             meta: {
-              'vehicle_type': 'motorcycle',
+              'vehicle_type': selectedVehicle.code,
               'passenger_name': user?.name ?? 'Customer',
               'distance_km': locationState.distanceInKm,
               'duration_seconds': locationState.durationInSeconds,
@@ -454,28 +653,33 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
             },
           );
 
-          print('🔵 LesRide: Creating order with API...');
-
-          final estimatedFare = await orderDataSource.getFareEstimateRaw(
-                serviceId: 2,
-                estimatedDistanceM: createOrderRequest.estimatedDistanceM,
-                pickupLat: pickup.latitude,
-                pickupLng: pickup.longitude,
-                dropoffLat: dropoff.latitude,
-                dropoffLng: dropoff.longitude,
-              ) ??
-              0.0;
+          // ── Debug: full booking payload before API call ──────────
+          debugPrint('── LesRide Booking Debug ──');
+          debugPrint('  vehicle display name : ${selectedVehicle.label}');
+          debugPrint('  vehicle code (ID)    : ${selectedVehicle.code}');
+          debugPrint('  vehicle_type value   : ${createOrderRequest.vehicleType}');
+          debugPrint('  payment_method       : ${createOrderRequest.paymentMethod}');
+          debugPrint('  service_id           : ${createOrderRequest.serviceId}');
+          debugPrint('  estimated_distance_m : ${createOrderRequest.estimatedDistanceM}');
+          debugPrint('  meta vehicle_type    : ${createOrderRequest.meta?['vehicle_type']}');
+          debugPrint('  full payload         : ${createOrderRequest.toJson()}');
+          // ─────────────────────────────────────────────────────────
 
           final walletOk = await validateWalletBalanceForOrder(
             _ref,
-            amount: estimatedFare > 0 ? estimatedFare : 50.0,
+            amount: quotedFare.total,
             paymentMethod: state.paymentMethod,
             context: context,
           );
           if (!walletOk) return;
+          if (!context.mounted) return;
 
-          final response = await orderDataSource.createOrder(createOrderRequest);
-          print('🟢 LesRide: Order created successfully - ID: ${response.data.id}');
+          final response = await orderDataSource.createOrder(
+            createOrderRequest,
+          );
+          print(
+            '🟢 LesRide: Order created successfully - ID: ${response.data.id}',
+          );
 
           final payAmount = response.data.effectiveTotalAmount > 0
               ? response.data.effectiveTotalAmount
@@ -492,6 +696,7 @@ class LesrideNotifier extends StateNotifier<LesrideState> {
             serviceLabel: 'LesRide',
           );
           if (!paid) return;
+          if (!context.mounted) return;
 
           final orderId = response.data.id.toString();
 
