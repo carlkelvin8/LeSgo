@@ -28,18 +28,22 @@ class _RestaurantDetailScreenState
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      ref
-          .read(restaurantDetailProvider.notifier)
-          .loadRestaurantDetails(
-            widget.restaurant.id,
-            widget.restaurant.categories,
-            restaurantName: widget.restaurant.name,
-          );
-      final isFav = await ref
-          .read(favoritesProvider.notifier)
-          .isFavoriteRestaurant(widget.restaurant.id);
-      if (mounted) setState(() => _isFavorite = isFav);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(restaurantDetailProvider.notifier)
+            .loadRestaurantDetails(
+              widget.restaurant.id,
+              widget.restaurant.categories,
+              restaurantName: widget.restaurant.name,
+            );
+        ref
+            .read(favoritesProvider.notifier)
+            .isFavoriteRestaurant(widget.restaurant.id)
+            .then((isFav) {
+          if (mounted) setState(() => _isFavorite = isFav);
+        });
+      }
     });
   }
 

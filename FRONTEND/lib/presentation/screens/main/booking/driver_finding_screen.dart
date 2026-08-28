@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/order_contact_actions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/cart_cleanup.dart';
+import '../../../../core/utils/notification_helper.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../widgets/widgets.dart';
@@ -32,9 +33,6 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     super.initState();
     // Start finding driver
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Set context for notifications
-      ref.read(driverFindingProvider.notifier).setContext(context);
-      
       ref.read(driverFindingProvider.notifier).startFindingDriver(
         widget.orderId,
         widget.orderType,
@@ -49,7 +47,16 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     // Listen for driver found state and auto-navigate
     ref.listen<DriverFindingState>(driverFindingProvider, (previous, next) {
       if (next.driverFound && !next.isSearching && previous?.driverFound != true) {
-        print('🎯 Driver found! Auto-navigating to tracking screen...');
+        print('ðŸŽ¯ Driver found! Auto-navigating to tracking screen...');
+        // Show driver assigned notification
+        if (next.driverName != null) {
+          NotificationHelper.showDriverAssigned(
+            context,
+            orderId: widget.orderId,
+            driverName: next.driverName!,
+            vehicleNumber: next.driverPlateNumber ?? '',
+          );
+        }
         // Wait a moment to show the success message, then navigate
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
@@ -111,7 +118,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -168,7 +175,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           height: ResponsiveUtils.spacing(context, 120),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.green.withOpacity(0.1),
+            color: Colors.green.withValues(alpha: 0.1),
           ),
           child: Icon(
             Icons.check_circle,
@@ -426,14 +433,17 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
         },
       );
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SimpleOrderTrackingScreen(
-            orderId: int.parse(widget.orderId),
+      final orderId = int.tryParse(widget.orderId);
+      if (orderId != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SimpleOrderTrackingScreen(
+              orderId: orderId,
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 }

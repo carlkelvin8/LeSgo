@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/main/transactions/transactions_provider.dart';
@@ -15,7 +15,7 @@ import 'booking/lesbuy/lesbuy_order_tracking_screen.dart';
 import 'booking/lesgo/lesgo_order_tracking_screen.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
-  /// `order` | `wallet` — pre-filter when opened from LesPay, etc.
+  /// `order` | `wallet` â€” pre-filter when opened from LesPay, etc.
   final String? initialKindFilter;
 
   const TransactionsScreen({super.key, this.initialKindFilter});
@@ -146,7 +146,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           );
       }
     } else {
-      // Completed/cancelled — show a simple detail bottom sheet
+      // Completed/cancelled â€” show a simple detail bottom sheet
       _showOrderDetailSheet(context, transaction);
     }
   }
@@ -306,7 +306,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         IconButton(
                           icon: const Icon(Icons.refresh, color: Colors.blue),
                           onPressed: () {
-                            print('🔵 Manual refresh button pressed');
+                            print('ðŸ”µ Manual refresh button pressed');
                             ref.read(transactionsProvider.notifier).refreshTransactions();
                           },
                         ),
@@ -707,7 +707,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         vertical: ResponsiveUtils.spacing(context, 6),
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF5F2D82).withOpacity(0.1),
+        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF5F2D82)),
       ),
@@ -787,3 +787,4 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 }
+

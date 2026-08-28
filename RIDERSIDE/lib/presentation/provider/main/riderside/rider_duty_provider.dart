@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../auth/rider_auth_provider.dart';
 import 'rider_location_provider.dart';
 
@@ -55,7 +56,7 @@ class RiderDutyNotifier extends StateNotifier<bool> {
       final authState = _ref.read(riderAuthProvider);
       final driverProfileId = authState.user?.driverProfileId;
       if (driverProfileId == null) {
-        return 'Hindi mahanap ang driver profile.';
+        return AppLocalization.translate('driver_profile_not_found', 'en');
       }
 
       final location = _ref.read(riderLocationProvider);

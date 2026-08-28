@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/driver_display_utils.dart';
-import '../../../../core/utils/notification_helper.dart';
 
 class DriverFindingState {
   final bool isSearching;
@@ -73,13 +71,8 @@ class DriverFindingState {
 
 class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
   final OrderRemoteDataSource _orderDataSource = getIt<OrderRemoteDataSource>();
-  BuildContext? _context;
 
   DriverFindingNotifier() : super(DriverFindingState());
-
-  void setContext(BuildContext context) {
-    _context = context;
-  }
 
   Future<void> startFindingDriver(String orderId, String orderType) async {
     state = state.copyWith(
@@ -135,15 +128,6 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
       driverPhone: driver.phone,
       driverRating: driver.rating,
     );
-
-    if (_context != null && _context!.mounted) {
-      NotificationHelper.showDriverAssigned(
-        _context!,
-        orderId: orderId,
-        driverName: driver.name,
-        vehicleNumber: driver.vehicleNumber,
-      );
-    }
   }
 
   Future<void> _pollForDriverAssignment(String orderId) async {

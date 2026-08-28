@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../data/data_source/dto/tracking/tracking_dto.dart';
 import 'package:intl/intl.dart';
 
@@ -129,7 +129,7 @@ class OrderStatusTimeline extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: event.isCompleted
-                    ? color.withOpacity(0.1)
+                    ? color.withValues(alpha: 0.1)
                     : Colors.grey[100],
                 shape: BoxShape.circle,
                 border: Border.all(
@@ -233,3 +233,4 @@ class TimelineEvent {
     this.isError = false,
   });
 }
+

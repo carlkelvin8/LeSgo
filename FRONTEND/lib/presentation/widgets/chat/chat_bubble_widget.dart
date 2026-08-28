@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../data/data_source/dto/chat/message_dto.dart';
@@ -81,7 +81,7 @@ class ChatBubbleWidget extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -120,7 +120,7 @@ class ChatBubbleWidget extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -150,7 +150,7 @@ class ChatBubbleWidget extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: _getTextColor().withOpacity(0.8),
+                      color: _getTextColor().withValues(alpha: 0.8),
                     ),
                   ),
                 ],

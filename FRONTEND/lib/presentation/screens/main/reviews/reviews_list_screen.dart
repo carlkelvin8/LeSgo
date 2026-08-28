@@ -26,13 +26,15 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
   void initState() {
     super.initState();
     // Load reviews on init
-    Future.microtask(() {
-      ref
-          .read(reviewProvider.notifier)
-          .loadReviews(
-            reviewableType: widget.reviewableType,
-            reviewableId: widget.reviewableId,
-          );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(reviewProvider.notifier)
+            .loadReviews(
+              reviewableType: widget.reviewableType,
+              reviewableId: widget.reviewableId,
+            );
+      }
     });
   }
 

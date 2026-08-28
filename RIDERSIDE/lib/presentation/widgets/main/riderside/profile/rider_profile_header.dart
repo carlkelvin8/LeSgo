@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../../core/utils/app_logger.dart';
@@ -38,7 +38,7 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Profile picture updated successfully!'),
+            content: Text('âœ… Profile picture updated successfully!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -138,7 +138,7 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader> {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(
                           ResponsiveUtils.spacing(context, 12),
                         ),
@@ -196,3 +196,4 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader> {
     );
   }
 }
+

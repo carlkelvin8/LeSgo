@@ -490,10 +490,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           _buildInfoRow('Service', _getServiceName(order.serviceId)),
           _buildInfoRow('Order ID', '#${order.id}'),
           _buildInfoRow('Date', formattedDate),
-          _buildInfoRow('Payment Method', order.paymentMethod.toUpperCase()),
+          _buildInfoRow('Payment Method', order.paymentMethod?.toUpperCase() ?? 'N/A'),
           _buildInfoRow(
             'Payment Status',
-            order.paymentStatus.toUpperCase(),
+            order.paymentStatus?.toUpperCase() ?? 'N/A',
             valueColor: order.paymentStatus == 'paid'
                 ? Colors.green
                 : Colors.orange,

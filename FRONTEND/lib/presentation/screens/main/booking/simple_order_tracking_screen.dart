@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -523,9 +523,9 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
+        color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withOpacity(0.3)),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -724,7 +724,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                 ),
               ),
               Text(
-                '₱${(order!.actualFare ?? order!.estimatedFare).toStringAsFixed(2)}',
+                'â‚±${(order!.actualFare ?? order!.estimatedFare).toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
@@ -784,7 +784,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
             ),
           ),
           Text(
-            '₱${amount.toStringAsFixed(2)}',
+            'â‚±${amount.toStringAsFixed(2)}',
             style: const TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,

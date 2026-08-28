@@ -18,7 +18,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(bookingProvider.notifier).loadServices());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(bookingProvider.notifier).loadServices();
+      }
+    });
   }
 
   @override

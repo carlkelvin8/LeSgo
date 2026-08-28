@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesride_location_provider.dart';
@@ -343,7 +343,7 @@ class PulsingMarkerPainter extends CustomPainter {
 
       // Draw inner ring
       final ringPaint = Paint()
-        ..color = color.withOpacity(0.6)
+        ..color = color.withValues(alpha: 0.6)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0;
 
@@ -363,3 +363,4 @@ class PulsingMarkerPainter extends CustomPainter {
            oldDelegate.location != location;
   }
 }
+

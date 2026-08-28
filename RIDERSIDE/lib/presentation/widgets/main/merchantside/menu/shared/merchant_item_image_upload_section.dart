@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../common/menu_image_widget.dart';
 
@@ -44,7 +44,7 @@ class MerchantItemImageUploadSection extends StatelessWidget {
                       placeholder: _placeholder(context),
                     ),
                     Container(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       child: Center(
                         child: Icon(
                           Icons.edit,
@@ -93,3 +93,4 @@ class MerchantItemImageUploadSection extends StatelessWidget {
     );
   }
 }
+

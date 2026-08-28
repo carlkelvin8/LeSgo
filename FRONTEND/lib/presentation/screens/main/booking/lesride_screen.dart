@@ -20,10 +20,11 @@ class _LesrideScreenState extends ConsumerState<LesrideScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      if (!mounted) return;
-      _notifier = ref.read(lesrideProvider.notifier);
-      _notifier?.initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _notifier = ref.read(lesrideProvider.notifier);
+        _notifier?.initialize();
+      }
     });
   }
 

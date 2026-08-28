@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -248,7 +248,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
           infoWindow: InfoWindow(
             title: 'Order #${order.id}',
-            snippet: '₱${order.displayEarnings.toStringAsFixed(0)} • ${order.distanceKm.toStringAsFixed(1)}km',
+            snippet: 'â‚±${order.displayEarnings.toStringAsFixed(0)} â€¢ ${order.distanceKm.toStringAsFixed(1)}km',
           ),
         ),
       );
@@ -395,8 +395,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   }
 
   Widget _buildMapView() {
-    AppLogger.debug('🗺️ Building map view with position: $_currentPosition');
-    AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+    AppLogger.debug('ðŸ—ºï¸ Building map view with position: $_currentPosition');
+    AppLogger.debug('ðŸ”‘ Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
     
     return Container(
       child: GoogleMap(
@@ -438,18 +438,18 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 _fitBounds();
               }
             });
-            AppLogger.debug('🗺️ Bookings Map created and ready');
-            AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
-            AppLogger.debug('📍 Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+            AppLogger.debug('ðŸ—ºï¸ Bookings Map created and ready');
+            AppLogger.debug('ðŸ”‘ Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+            AppLogger.debug('ðŸ“ Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
           }
         },
         
         onTap: (LatLng position) {
-          AppLogger.debug('🗺️ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
+          AppLogger.debug('ðŸ—ºï¸ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
         },
         
         onCameraMove: (CameraPosition position) {
-          AppLogger.debug('📷 Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
+          AppLogger.debug('ðŸ“· Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
         },
       ),
     );
@@ -688,7 +688,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 ),
                 const Spacer(),
                 Text(
-                  '₱${order.displayEarnings.toStringAsFixed(2)}',
+                  'â‚±${order.displayEarnings.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 16.0,
@@ -842,7 +842,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -859,7 +859,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   vertical: 2.0,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5F2D82).withOpacity(0.1),
+                  color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -884,7 +884,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               ),
               const Spacer(),
               Text(
-                '₱${order.displayEarnings.toStringAsFixed(0)}',
+                'â‚±${order.displayEarnings.toStringAsFixed(0)}',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 16.0,
@@ -1209,4 +1209,5 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     );
   }
 }
+
 

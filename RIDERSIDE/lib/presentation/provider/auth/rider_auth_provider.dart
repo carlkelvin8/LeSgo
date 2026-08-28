@@ -92,12 +92,12 @@ class RiderUser {
     }
 
     return RiderUser(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      phone: json['phone_number'] as String?,
-      role: json['role'] as String? ?? 'driver',
-      driverProfileId: dp is Map ? dp['id'] as int? : null,
+      id: json['id'] is int ? json['id'] as int : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      phone: json['phone_number']?.toString(),
+      role: json['role']?.toString() ?? 'driver',
+      driverProfileId: dp is Map ? (dp['id'] is int ? dp['id'] as int : int.tryParse(dp['id']?.toString() ?? '')) : null,
       partnerId: parsePartnerId(json),
       profilePhotoUrl: resolveProfilePhotoUrl(json),
       packageTier: packageTier,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -82,21 +82,21 @@ class _RiderBookingDetailScreenState
     
     // Resume order auto-refresh when entering detail screen
     ref.read(riderOrdersProvider.notifier).resumeAutoRefresh();
-    AppLogger.debug('🔄 Resumed order auto-refresh in booking detail screen');
+    AppLogger.debug('ðŸ”„ Resumed order auto-refresh in booking detail screen');
     
     // Ensure location tracking is active for delivery tracking
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         // Refresh location to ensure we have current position
         ref.read(riderLocationProvider.notifier).refreshLocation();
-        AppLogger.debug('📍 Refreshed location for booking detail tracking');
+        AppLogger.debug('ðŸ“ Refreshed location for booking detail tracking');
       }
     });
   }
 
   @override
   void dispose() {
-    AppLogger.debug('🗑️ RiderBookingDetailScreen dispose called');
+    AppLogger.debug('ðŸ—‘ï¸ RiderBookingDetailScreen dispose called');
     
     // Clean up map controller carefully
     try {
@@ -104,7 +104,7 @@ class _RiderBookingDetailScreenState
       if (_mapController != null) {
         // Cancel any pending marker/polyline operations
         _mapController!.dispose();
-        AppLogger.debug('✅ Map controller disposed successfully');
+        AppLogger.debug('âœ… Map controller disposed successfully');
       }
     } catch (e) {
       AppLogger.error('Error disposing map controller', e);
@@ -116,7 +116,7 @@ class _RiderBookingDetailScreenState
     // for other screens. The providers will manage their own lifecycle.
     
     super.dispose();
-    AppLogger.debug('✅ RiderBookingDetailScreen disposed successfully');
+    AppLogger.debug('âœ… RiderBookingDetailScreen disposed successfully');
   }
 
   // Fetch the latest status from API
@@ -129,7 +129,7 @@ class _RiderBookingDetailScreenState
       final orderId = int.tryParse(widget.booking.id);
       if (orderId == null) return;
       
-      AppLogger.debug('🔄 Fetching latest status for order #$orderId');
+      AppLogger.debug('ðŸ”„ Fetching latest status for order #$orderId');
       final orderData = await ApiService.getOrderById(orderId);
       
       // Check if widget is still mounted and no status change is in progress
@@ -141,9 +141,9 @@ class _RiderBookingDetailScreenState
       final order = RiderOrder.fromJson(orderData);
       final proofUrls = MediaUrlUtils.parseProofImageUrls(orderData);
 
-      AppLogger.debug('✅ Latest status from API: $apiStatus');
+      AppLogger.debug('âœ… Latest status from API: $apiStatus');
       if (proofUrls.isNotEmpty) {
-        AppLogger.debug('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
+        AppLogger.debug('ðŸ“¸ Fetched ${proofUrls.length} proof image(s): $proofUrls');
       }
 
       if (apiStatus != null && mounted && !_isHandlingStatusChange) {
@@ -161,7 +161,7 @@ class _RiderBookingDetailScreenState
           );
           _updatedBooking = refreshedBooking;
         });
-        AppLogger.debug('📊 Updated UI status to: ${_currentStatus.label}');
+        AppLogger.debug('ðŸ“Š Updated UI status to: ${_currentStatus.label}');
       }
     } catch (e) {
       AppLogger.error('Error fetching status', e);
@@ -176,12 +176,12 @@ class _RiderBookingDetailScreenState
     return BookingWorkflow.mapApiStatus(apiStatus, serviceId);
   }
 
-  Future<void> _handleStatusChange(BookingStatus newStatus) async {
-    AppLogger.debug('🎯 _handleStatusChange called with: ${newStatus.label}');
+Future<void> _handleStatusChange(BookingStatus newStatus) async {
+    AppLogger.debug('ðŸŽ¯ _handleStatusChange called with: ${newStatus.label}');
     
     // Prevent concurrent status changes with a double guard
     if (_isUpdating || _isHandlingStatusChange) {
-      AppLogger.debug('⏳ Already updating, ignoring tap');
+      AppLogger.debug('â³ Already updating, ignoring tap');
       return;
     }
     
@@ -189,7 +189,7 @@ class _RiderBookingDetailScreenState
     
     try {
       final lang = ref.read(appLanguageProvider);
-    
+     
       // Get service ID from booking
       final orderId = int.tryParse(widget.booking.id);
       if (orderId == null) {
@@ -199,6 +199,7 @@ class _RiderBookingDetailScreenState
             backgroundColor: Colors.red,
           ),
         );
+        if (mounted) setState(() => _isHandlingStatusChange = false);
         return;
       }
       
@@ -211,7 +212,7 @@ class _RiderBookingDetailScreenState
 
       switch (newStatus) {
       case BookingStatus.onTheWayGoing:
-        // LesRide: Can transition from accepted, driver_arrived_at_pickup, or in_progress → picked_up
+        // LesRide: Can transition from accepted, driver_arrived_at_pickup, or in_progress â†’ picked_up
         if (_currentApiStatus == 'accepted' || 
             _currentApiStatus == 'driver_arrived_at_pickup' || 
             _currentApiStatus == 'in_progress') {
@@ -223,7 +224,7 @@ class _RiderBookingDetailScreenState
             });
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('📸 Take a photo of the pickup, then tap "Picked Up" again.'),
+                content: Text('ðŸ“¸ Take a photo of the pickup, then tap "Picked Up" again.'),
                 backgroundColor: Color(0xFF5F2D82),
               ),
             );
@@ -243,7 +244,7 @@ class _RiderBookingDetailScreenState
           statusLabel = 'Picked Up';
         } else if (_currentApiStatus == 'picked_up') {
           // Already at this status
-          AppLogger.debug('ℹ️ Order is already picked up');
+          AppLogger.debug('â„¹ï¸ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalization.translate('order_already_picked_up_tap', lang)),
@@ -266,7 +267,7 @@ class _RiderBookingDetailScreenState
         break;
         
       case BookingStatus.complete:
-        // LesRide: picked_up → completed (proof required at drop-off)
+        // LesRide: picked_up â†’ completed (proof required at drop-off)
         if (_currentApiStatus == 'picked_up') {
           if (!_showProofUpload) {
             setState(() => _showProofUpload = true);
@@ -310,7 +311,7 @@ class _RiderBookingDetailScreenState
       // LesEat/LesBuy statuses
       case BookingStatus.forPickUp:
       case BookingStatus.forDelivery:
-        // Can transition from accepted, ready_for_pickup, driver_arrived_at_pickup, or in_progress → picked_up
+        // Can transition from accepted, ready_for_pickup, driver_arrived_at_pickup, or in_progress â†’ picked_up
         if (_currentApiStatus == 'accepted' ||
             _currentApiStatus == 'ready_for_pickup' ||
             _currentApiStatus == 'driver_arrived_at_pickup' ||
@@ -323,7 +324,7 @@ class _RiderBookingDetailScreenState
             });
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('📸 Take a photo of the pickup, then tap "Picked Up" again.'),
+                content: Text('ðŸ“¸ Take a photo of the pickup, then tap "Picked Up" again.'),
                 backgroundColor: Color(0xFF5F2D82),
               ),
             );
@@ -343,7 +344,7 @@ class _RiderBookingDetailScreenState
           statusLabel = 'Picked Up';
         } else if (_currentApiStatus == 'picked_up') {
           // Already at this status
-          AppLogger.debug('ℹ️ Order is already picked up');
+          AppLogger.debug('â„¹ï¸ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalization.translate('order_already_picked_up_tap_delivered', lang)),
@@ -366,7 +367,7 @@ class _RiderBookingDetailScreenState
         break;
         
       case BookingStatus.delivered:
-        // picked_up → completed (proof required at drop-off)
+        // picked_up â†’ completed (proof required at drop-off)
         if (_currentApiStatus == 'picked_up') {
           if (!_showProofUpload) {
             setState(() => _showProofUpload = true);
@@ -409,14 +410,14 @@ class _RiderBookingDetailScreenState
         
       // New statuses for driver workflow
       case BookingStatus.driverHasArrived:
-        // accepted → driver_arrived_at_pickup
+        // accepted â†’ driver_arrived_at_pickup
         if (_currentApiStatus == 'accepted' ||
             _currentApiStatus == 'ready_for_pickup') {
           apiStatus = 'driver_arrived_at_pickup';
           statusLabel = 'Driver Has Arrived';
         } else if (_currentApiStatus == 'picked_up') {
           // Already past this status
-          AppLogger.debug('ℹ️ Order is already picked up');
+          AppLogger.debug('â„¹ï¸ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalization.translate('order_already_picked_up_skip', lang)),
@@ -442,7 +443,7 @@ class _RiderBookingDetailScreenState
         // Can transition from: accepted, driver_arrived_at_pickup
         // Cannot transition from: picked_up (already past this status)
         if (_currentApiStatus == 'picked_up') {
-          AppLogger.debug('ℹ️ Order is already picked up');
+          AppLogger.debug('â„¹ï¸ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalization.translate('order_already_picked_up', lang)),
@@ -475,7 +476,7 @@ class _RiderBookingDetailScreenState
       case BookingStatus.toBuy:
       case BookingStatus.pending:
       case BookingStatus.cancelled:
-        AppLogger.debug('ℹ️ Status ${newStatus.label} is informational only');
+        AppLogger.debug('â„¹ï¸ Status ${newStatus.label} is informational only');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalization.translate('status_set_automatically', lang).replaceAll('{{status}}', newStatus.label)),
@@ -489,7 +490,7 @@ class _RiderBookingDetailScreenState
     final targetStatus = apiStatus;
     final targetLabel = statusLabel;
 
-    AppLogger.debug('📡 Will update to API status: $targetStatus');
+    AppLogger.debug('ðŸ“¡ Will update to API status: $targetStatus');
     
     // Check if we're trying to update to the same status
     if (_currentApiStatus != null && _currentApiStatus == targetStatus) {
@@ -529,11 +530,11 @@ class _RiderBookingDetailScreenState
     );
     
     if (!confirmed) {
-      AppLogger.error('❌ User cancelled status update');
+      AppLogger.error('âŒ User cancelled status update');
       return;
     }
 
-    AppLogger.debug('✅ Status is different ($_currentApiStatus → $targetStatus), proceeding with update');
+    AppLogger.debug('âœ… Status is different ($_currentApiStatus â†’ $targetStatus), proceeding with update');
     setState(() => _isUpdating = true);
 
     try {
@@ -565,14 +566,14 @@ class _RiderBookingDetailScreenState
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ ${AppLocalization.translate('status_updated_to', lang).replaceAll('{{status}}', targetLabel)}'),
+            content: Text('âœ… ${AppLocalization.translate('status_updated_to', lang).replaceAll('{{status}}', targetLabel)}'),
             backgroundColor: Colors.green,
           ),
         );
         
         // If completed, go back to main screen and refresh history
         if (targetStatus == 'completed') {
-          AppLogger.debug('🎯 Order completed! Starting refresh sequence...');
+          AppLogger.debug('ðŸŽ¯ Order completed! Starting refresh sequence...');
           
           await Future.delayed(const Duration(milliseconds: 300));
           await ref.read(riderHistoryProvider.notifier).refresh();
@@ -918,7 +919,7 @@ class _RiderBookingDetailScreenState
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ ${AppLocalization.translate('proof_images_uploaded', lang)}'),
+            content: Text('âœ… ${AppLocalization.translate('proof_images_uploaded', lang)}'),
             backgroundColor: Colors.green,
           ),
         );
@@ -926,18 +927,18 @@ class _RiderBookingDetailScreenState
         setState(() => _showProofUpload = true);
 
         // Refresh order data
-        AppLogger.debug('🔄 Refreshing order data after proof upload...');
+        AppLogger.debug('ðŸ”„ Refreshing order data after proof upload...');
         await _fetchLatestStatus();
         
         // Refresh the orders list in the provider
-        AppLogger.debug('🔄 Refreshing orders list...');
+        AppLogger.debug('ðŸ”„ Refreshing orders list...');
         await ref.read(riderOrdersProvider.notifier).loadOrders(silent: true);
         
         // If order is completed, also refresh history
         if (_currentApiStatus == 'completed') {
-          AppLogger.debug('🔄 Order is completed, refreshing history...');
+          AppLogger.debug('ðŸ”„ Order is completed, refreshing history...');
           await ref.read(riderHistoryProvider.notifier).refresh();
-          AppLogger.debug('✅ History refreshed');
+          AppLogger.debug('âœ… History refreshed');
         }
       }
     } catch (e) {
@@ -971,7 +972,7 @@ class _RiderBookingDetailScreenState
 
   // Build dynamic content based on current status
   Widget _buildStatusContent(BuildContext context, RiderLocationState locationState) {
-    AppLogger.debug('🎨 Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
+    AppLogger.debug('ðŸŽ¨ Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
     
     if (_shouldShowProofUpload()) {
       return RiderBookingProofUploadSection(
@@ -1048,9 +1049,9 @@ class _RiderBookingDetailScreenState
     
     // Log location tracking status
     if (locationState.hasLocation) {
-      AppLogger.debug('📍 Location tracking active: ${locationState.latitude}, ${locationState.longitude}');
+      AppLogger.debug('ðŸ“ Location tracking active: ${locationState.latitude}, ${locationState.longitude}');
     } else if (locationState.error != null) {
-      AppLogger.error('❌ Location tracking error: ${locationState.error}');
+      AppLogger.error('âŒ Location tracking error: ${locationState.error}');
     }
     
     return Scaffold(
@@ -1131,7 +1132,7 @@ class _RiderBookingDetailScreenState
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF5F2D82).withOpacity(0.1),
+                                        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
@@ -1270,3 +1271,4 @@ class _RiderBookingDetailScreenState
   }
 
 }
+

@@ -67,6 +67,7 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
 
   @override
   void dispose() {
+    NotificationNavigationService.riderTabNavigator = null;
     super.dispose();
   }
 

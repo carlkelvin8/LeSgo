@@ -164,6 +164,8 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   void cleanup() {
     _mainMapController?.dispose();
     _mainMapController = null;
+    _overlayMapController?.dispose();
+    _overlayMapController = null;
     // Note: We don't reset the location provider here to avoid lifecycle conflicts.
     // The provider state can persist, and initialize() will reset it when the screen is opened again.
   }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_trip_analytics_provider.dart';
@@ -126,7 +126,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -298,7 +298,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -313,7 +313,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 18),
@@ -376,7 +376,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -405,13 +405,13 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 Container(
                   height: barHeight,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2196F3).withOpacity(0.7),
+                    color: const Color(0xFF2196F3).withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'PHP ${hourly.earnings.toStringAsFixed(0)} • ${hourly.trips} trips',
+                  'PHP ${hourly.earnings.toStringAsFixed(0)} â€¢ ${hourly.trips} trips',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -441,7 +441,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -500,3 +500,4 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
     );
   }
 }
+

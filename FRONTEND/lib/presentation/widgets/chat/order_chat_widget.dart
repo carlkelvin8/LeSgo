@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/responsive_utils.dart';
@@ -122,7 +122,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
           child: _buildMessagesList(chatState),
         ),
         
-        // Input — always allow typing; send is blocked internally if no conversation
+        // Input â€” always allow typing; send is blocked internally if no conversation
         ChatInputWidget(
           onSendMessage: _sendMessage,
           isLoading: chatState.isSending,
@@ -132,7 +132,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
     );
 
     if (isFullScreen) {
-      // Full screen mode (inside a Scaffold) — just fill parent
+      // Full screen mode (inside a Scaffold) â€” just fill parent
       return Container(
         color: Colors.white,
         child: content,
@@ -156,7 +156,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
             : null,
         boxShadow: widget.showHeader ? [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

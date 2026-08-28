@@ -28,14 +28,16 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      ref.read(storeDetailProvider.notifier).loadStoreDetails(
-        widget.store.id,
-        widget.store.categories,
-      );
-      final isFav =
-          await ref.read(favoritesProvider.notifier).isFavoriteStore(widget.store.id);
-      if (mounted) setState(() => _isFavorite = isFav);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(storeDetailProvider.notifier).loadStoreDetails(
+          widget.store.id,
+          widget.store.categories,
+        );
+        ref.read(favoritesProvider.notifier).isFavoriteStore(widget.store.id).then((isFav) {
+          if (mounted) setState(() => _isFavorite = isFav);
+        });
+      }
     });
   }
 

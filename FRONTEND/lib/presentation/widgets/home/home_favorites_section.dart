@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/navigation/favorite_navigation.dart';
@@ -95,7 +95,7 @@ class HomeFavoritesSection extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -114,7 +114,7 @@ class HomeFavoritesSection extends ConsumerWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _getTypeColor(favorite.type).withOpacity(0.1),
+                  color: _getTypeColor(favorite.type).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -180,3 +180,4 @@ class HomeFavoritesSection extends ConsumerWidget {
     }
   }
 }
+

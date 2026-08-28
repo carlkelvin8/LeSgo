@@ -28,7 +28,7 @@ class LoginControllers {
     if (credentials != null) {
       emailController.text = credentials['email']!;
       passwordController.text = credentials['password']!;
-      Future.microtask(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(authProvider.notifier).toggleRememberMe(true);
       });
     }

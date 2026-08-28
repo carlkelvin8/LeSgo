@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -200,7 +200,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                                       .sendQuickReply(reply.text);
                                   setState(() => _showQuickReplies = false);
                                 },
-                                backgroundColor: const Color(0xFF5F2D82).withOpacity(0.1),
+                                backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
                                 label: Text(
                                   reply.text,
                                   style: TextStyle(
@@ -228,7 +228,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, -2),
                 ),
@@ -319,7 +319,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
           if (!isRider)
             CircleAvatar(
               radius: 16,
-              backgroundColor: const Color(0xFF5F2D82).withOpacity(0.2),
+              backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.2),
               child: const Icon(
                 Icons.person,
                 size: 16,
@@ -389,11 +389,11 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
             decoration: BoxDecoration(
               color: isRider
                   ? const Color(0xFF4CAF50)
-                  : const Color(0xFF4CAF50).withOpacity(0.1),
+                  : const Color(0xFF4CAF50).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              '📸 Delivery Proof',
+              'ðŸ“¸ Delivery Proof',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 10,
@@ -493,7 +493,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, size: 18, color: color),
@@ -515,3 +515,4 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
     );
   }
 }
+

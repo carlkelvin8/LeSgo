@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -72,7 +72,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -86,7 +86,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                           height: 80,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: performanceState.ratingColor.withOpacity(0.1),
+                            color: performanceState.ratingColor.withValues(alpha: 0.1),
                             border: Border.all(
                               color: performanceState.ratingColor,
                               width: 3,
@@ -256,7 +256,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                   Container(
                     padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5F2D82).withOpacity(0.1),
+                      color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: const Color(0xFF5F2D82),
@@ -322,7 +322,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -337,7 +337,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -409,7 +409,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -422,7 +422,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: color, size: 18),
@@ -461,7 +461,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -523,7 +523,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          '•',
+          'â€¢',
           style: TextStyle(
             color: Color(0xFF5F2D82),
             fontWeight: FontWeight.bold,
@@ -545,3 +545,4 @@ class RiderPerformanceScreen extends ConsumerWidget {
     );
   }
 }
+

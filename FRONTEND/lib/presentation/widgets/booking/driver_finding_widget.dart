@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -45,7 +45,7 @@ class DriverFindingWidget extends ConsumerWidget {
       height: ResponsiveUtils.spacing(context, 120),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFF5F2D82).withOpacity(0.1),
+        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -58,7 +58,7 @@ class DriverFindingWidget extends ConsumerWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF5F2D82).withOpacity(0.3),
+                color: const Color(0xFF5F2D82).withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -114,7 +114,7 @@ class DriverFindingWidget extends ConsumerWidget {
         vertical: ResponsiveUtils.spacing(context, 12),
       ),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

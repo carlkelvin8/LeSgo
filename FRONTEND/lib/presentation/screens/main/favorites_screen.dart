@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/main/favorites/favorites_provider.dart';
 import '../../widgets/widgets.dart';
@@ -132,7 +132,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -144,7 +144,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: _getTypeColor(item.type).withOpacity(0.1),
+            color: _getTypeColor(item.type).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: item.imageUrl != null
@@ -271,3 +271,4 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
     FavoriteNavigation.open(context, item);
   }
 }
+

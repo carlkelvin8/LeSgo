@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -174,7 +174,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                   ),
                   borderRadius: BorderRadius.circular(8),
                   color: _selectedSchedule == ScheduleType.now
-                      ? const Color(0xFF5F2D82).withOpacity(0.05)
+                      ? const Color(0xFF5F2D82).withValues(alpha: 0.05)
                       : Colors.transparent,
                 ),
                 child: Row(
@@ -242,7 +242,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                   ),
                   borderRadius: BorderRadius.circular(8),
                   color: _selectedSchedule == ScheduleType.scheduled
-                      ? const Color(0xFF5F2D82).withOpacity(0.05)
+                      ? const Color(0xFF5F2D82).withValues(alpha: 0.05)
                       : Colors.transparent,
                 ),
                 child: Row(
@@ -292,7 +292,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
               Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5F2D82).withOpacity(0.1),
+                  color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -343,3 +343,4 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
     );
   }
 }
+

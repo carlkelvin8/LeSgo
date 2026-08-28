@@ -23,8 +23,10 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
   void initState() {
     super.initState();
     // Initialize the provider with the menu item
-    Future.microtask(() {
-      ref.read(menuItemDetailProvider(widget.menuItem));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(menuItemDetailProvider(widget.menuItem));
+      }
     });
   }
 

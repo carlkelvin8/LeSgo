@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../../domain/entities/transactions/transaction.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../common/payment_status_badge.dart';
@@ -29,7 +29,7 @@ class TransactionListItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -47,7 +47,7 @@ class TransactionListItem extends StatelessWidget {
                     color: (transaction.isWallet
                             ? const Color(0xFF5F2D82)
                             : _getServiceColor(transaction.serviceName))
-                        .withOpacity(0.1),
+                        .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -246,12 +246,12 @@ class TransactionListItem extends StatelessWidget {
 
     switch (status) {
       case TransactionStatus.completed:
-        backgroundColor = Colors.green.withOpacity(0.1);
+        backgroundColor = Colors.green.withValues(alpha: 0.1);
         textColor = Colors.green;
         text = 'Completed';
         break;
       case TransactionStatus.cancelled:
-        backgroundColor = Colors.red.withOpacity(0.1);
+        backgroundColor = Colors.red.withValues(alpha: 0.1);
         textColor = Colors.red;
         text = 'Cancelled';
         break;
@@ -259,32 +259,32 @@ class TransactionListItem extends StatelessWidget {
         // Show more specific label for active orders
         switch (rawStatus.toLowerCase()) {
           case 'accepted':
-            backgroundColor = Colors.blue.withOpacity(0.1);
+            backgroundColor = Colors.blue.withValues(alpha: 0.1);
             textColor = Colors.blue;
             text = 'Accepted';
             break;
           case 'picked_up':
-            backgroundColor = Colors.indigo.withOpacity(0.1);
+            backgroundColor = Colors.indigo.withValues(alpha: 0.1);
             textColor = Colors.indigo;
             text = 'Picked Up';
             break;
           case 'in_transit':
-            backgroundColor = Colors.teal.withOpacity(0.1);
+            backgroundColor = Colors.teal.withValues(alpha: 0.1);
             textColor = Colors.teal;
             text = 'In Transit';
             break;
           case 'driver_arrived_at_pickup':
-            backgroundColor = Colors.purple.withOpacity(0.1);
+            backgroundColor = Colors.purple.withValues(alpha: 0.1);
             textColor = Colors.purple;
             text = 'Driver Arrived';
             break;
           case 'in_progress':
-            backgroundColor = Colors.cyan.withOpacity(0.1);
+            backgroundColor = Colors.cyan.withValues(alpha: 0.1);
             textColor = Colors.cyan;
             text = 'In Progress';
             break;
           default:
-            backgroundColor = Colors.orange.withOpacity(0.1);
+            backgroundColor = Colors.orange.withValues(alpha: 0.1);
             textColor = Colors.orange;
             text = 'Pending';
         }
@@ -365,3 +365,4 @@ class TransactionListItem extends StatelessWidget {
     }
   }
 }
+

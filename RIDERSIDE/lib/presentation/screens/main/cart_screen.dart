@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/snackbar_utils.dart';
@@ -82,7 +82,7 @@ class CartScreen extends ConsumerWidget {
                       ),
                       borderRadius: BorderRadius.circular(12),
                       color: pinLocation != null
-                          ? const Color(0xFF5F2D82).withOpacity(0.05)
+                          ? const Color(0xFF5F2D82).withValues(alpha: 0.05)
                           : null,
                     ),
                     child: Row(
@@ -102,7 +102,7 @@ class CartScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 pinLocation != null
-                                    ? '📍 Pin location set'
+                                    ? 'ðŸ“ Pin location set'
                                     : 'Pin exact location on map',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
@@ -379,7 +379,7 @@ class CartScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                         ),
                       ],
@@ -413,7 +413,7 @@ class CartScreen extends ConsumerWidget {
                           ),
                         ] else
                           Text(
-                            '📍 Tap on the map or drag the pin to set delivery location',
+                            'ðŸ“ Tap on the map or drag the pin to set delivery location',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'TT Fors',
@@ -514,3 +514,4 @@ class CartScreen extends ConsumerWidget {
     );
   }
 }
+

@@ -430,9 +430,10 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
             right: 0,
             child: GestureDetector(
               onVerticalDragUpdate: (details) {
-                if (details.primaryDelta! < -5) {
+                final delta = details.primaryDelta ?? 0;
+                if (delta < -5) {
                   setState(() => _isBottomSheetExpanded = true);
-                } else if (details.primaryDelta! > 5) {
+                } else if (delta > 5) {
                   setState(() => _isBottomSheetExpanded = false);
                 }
               },

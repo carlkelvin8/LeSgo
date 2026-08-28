@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -199,7 +199,7 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
   }
 }
 
-// ─── Wallet Card ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Wallet Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _MerchantWalletCard extends StatelessWidget {
   const _MerchantWalletCard({required this.wallet, required this.onRefresh});
@@ -225,7 +225,7 @@ class _MerchantWalletCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF5F2D82).withOpacity(0.3),
+              color: const Color(0xFF5F2D82).withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -247,7 +247,7 @@ class _MerchantWalletCard extends StatelessWidget {
               'Merchant Wallet',
               style: TextStyle(
                 fontFamily: 'TT Fors',
-                color: Colors.white.withOpacity(0.85),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontSize: ResponsiveUtils.fontSize(context, 13),
                 fontWeight: FontWeight.w600,
               ),
@@ -259,7 +259,7 @@ class _MerchantWalletCard extends StatelessWidget {
   }
 }
 
-// ─── Action Item ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Action Item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ActionItem extends StatelessWidget {
   const _ActionItem({
@@ -289,7 +289,7 @@ class _ActionItem extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF5F2D82).withOpacity(0.1),
+                color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: const Color(0xFF5F2D82), size: 22),
@@ -327,7 +327,7 @@ class _ActionItem extends StatelessWidget {
   }
 }
 
-// ─── Top Up Dialog (matches customer style) ────────────────────────────────────
+// â”€â”€â”€ Top Up Dialog (matches customer style) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _TopUpDialog extends ConsumerStatefulWidget {
   final BuildContext parentContext;
@@ -358,7 +358,7 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
   Future<void> _topUp() async {
     final amount = _parsedAmount;
     if (amount < 50) {
-      setState(() => _error = 'Minimum top-up is ₱50');
+      setState(() => _error = 'Minimum top-up is â‚±50');
       return;
     }
 
@@ -424,7 +424,7 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Amount to add to wallet',
-              prefixText: '₱ ',
+              prefixText: 'â‚± ',
               border: OutlineInputBorder(),
             ),
             enabled: !_isProcessing,
@@ -433,10 +433,10 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
 
           // Fee summary
           if (_parsedAmount > 0) ...[
-            _summaryRow('Amount to wallet', '₱${_parsedAmount.toStringAsFixed(2)}'),
-            _summaryRow('Top-up fee (1.5%)', '₱${_fee.toStringAsFixed(2)}'),
+            _summaryRow('Amount to wallet', 'â‚±${_parsedAmount.toStringAsFixed(2)}'),
+            _summaryRow('Top-up fee (1.5%)', 'â‚±${_fee.toStringAsFixed(2)}'),
             const Divider(),
-            _summaryRow('Total to pay', '₱${_total.toStringAsFixed(2)}', bold: true),
+            _summaryRow('Total to pay', 'â‚±${_total.toStringAsFixed(2)}', bold: true),
             const SizedBox(height: 8),
           ],
 
@@ -446,7 +446,7 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
             runSpacing: 8,
             children: _quickAmounts.map((value) {
               return ChoiceChip(
-                label: Text('₱${value.toStringAsFixed(0)}'),
+                label: Text('â‚±${value.toStringAsFixed(0)}'),
                 selected: _amountController.text == value.toStringAsFixed(0),
                 onSelected: _isProcessing
                     ? null
@@ -523,7 +523,7 @@ class _TopUpDialogState extends ConsumerState<_TopUpDialog> {
   }
 }
 
-// ─── Pay Rider Dialog ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Pay Rider Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _PayRiderDialog extends ConsumerStatefulWidget {
   final BuildContext parentContext;
@@ -561,7 +561,7 @@ class _PayRiderDialogState extends ConsumerState<_PayRiderDialog> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: Text('₱${amount.toStringAsFixed(2)} sent to rider!'),
+          content: Text('â‚±${amount.toStringAsFixed(2)} sent to rider!'),
           backgroundColor: Colors.green.shade700,
         ),
       );
@@ -595,7 +595,7 @@ class _PayRiderDialogState extends ConsumerState<_PayRiderDialog> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'Amount (PHP)',
-              prefixText: '₱ ',
+              prefixText: 'â‚± ',
               border: OutlineInputBorder(),
             ),
           ),
@@ -632,7 +632,7 @@ class _PayRiderDialogState extends ConsumerState<_PayRiderDialog> {
   }
 }
 
-// ─── Transaction Tile ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Transaction Tile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _TransactionTile extends StatelessWidget {
   const _TransactionTile({required this.transaction});
@@ -695,7 +695,7 @@ class _TransactionTile extends StatelessWidget {
             ),
           ),
           Text(
-            '${isCredit ? '+' : '-'}₱${amount.toStringAsFixed(2)}',
+            '${isCredit ? '+' : '-'}â‚±${amount.toStringAsFixed(2)}',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -708,3 +708,4 @@ class _TransactionTile extends StatelessWidget {
     );
   }
 }
+

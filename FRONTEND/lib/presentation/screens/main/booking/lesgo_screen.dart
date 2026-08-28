@@ -30,9 +30,11 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
     _itemWeightController = TextEditingController();
     _pickupNotesController = TextEditingController();
     _dropoffNotesController = TextEditingController();
-    Future.microtask(() {
-      _notifier = ref.read(lesgoProvider.notifier);
-      _notifier?.initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _notifier = ref.read(lesgoProvider.notifier);
+        _notifier?.initialize();
+      }
     });
   }
 
