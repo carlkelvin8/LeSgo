@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/google_auth_service.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/auth_remote_datasource.dart';
@@ -17,7 +18,8 @@ class DeactivateAccountScreen extends ConsumerStatefulWidget {
       _DeactivateAccountScreenState();
 }
 
-class _DeactivateAccountScreenState extends ConsumerState<DeactivateAccountScreen> {
+class _DeactivateAccountScreenState
+    extends ConsumerState<DeactivateAccountScreen> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _reasonController = TextEditingController();
@@ -68,12 +70,21 @@ class _DeactivateAccountScreenState extends ConsumerState<DeactivateAccountScree
     setState(() => _isSubmitting = true);
 
     try {
+      final password = _passwordController.text;
+      final googleIdToken = password.isEmpty
+          ? await GoogleAuthService.getIdTokenForSensitiveAction()
+          : null;
+      if (password.isEmpty && googleIdToken == null) {
+        throw StateError('Google account verification was cancelled.');
+      }
+
       await getIt<AuthRemoteDataSource>().deactivateAccount(
-        password: _passwordController.text,
+        password: password,
+        googleIdToken: googleIdToken,
         reason: _reasonController.text,
       );
 
-      await ref.read(authProvider.notifier).logout();
+      await ref.read(authProvider.notifier).clearLocalSession();
 
       if (!mounted) return;
       SnackBarUtils.showSuccess(context, 'Your account has been deactivated.');
@@ -84,8 +95,7 @@ class _DeactivateAccountScreenState extends ConsumerState<DeactivateAccountScree
         context,
         e,
         fallbackEn: 'Could not deactivate account. Check your password.',
-        fallbackTl:
-            'Hindi ma-deactivate ang account. Suriin ang password.',
+        fallbackTl: 'Hindi ma-deactivate ang account. Suriin ang password.',
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -130,14 +140,10 @@ class _DeactivateAccountScreenState extends ConsumerState<DeactivateAccountScree
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password is required';
-                  }
-                  return null;
-                },
                 decoration: InputDecoration(
-                  labelText: 'Confirm password',
+                  labelText: 'Confirm password (optional for Google accounts)',
+                  helperText:
+                      'Leave blank to verify with your linked Google account.',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -145,7 +151,9 @@ class _DeactivateAccountScreenState extends ConsumerState<DeactivateAccountScree
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
                     onPressed: () =>
                         setState(() => _obscurePassword = !_obscurePassword),

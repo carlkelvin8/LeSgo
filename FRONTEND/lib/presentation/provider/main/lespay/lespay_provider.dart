@@ -10,7 +10,6 @@ import '../../../../data/data_source/payment_gateway_remote_datasource.dart';
 import '../../../../data/data_source/dto/payment/invoice_request_dto.dart';
 import '../../../../data/data_source/dto/wallet/wallet_dto.dart';
 import '../../../../data/data_source/wallet_remote_datasource.dart';
-import '../../../../data/data_source/xendit_remote_datasource.dart';
 
 enum TopUpInvoiceSource { walletApi, backendGateway, xenditDirect }
 
@@ -220,7 +219,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
             error: serverMsg.isNotEmpty
                 ? serverMsg
                 : 'Payment was received but could not be saved. '
-                    'Please contact support with reference: ${checkout.invoiceId}',
+                      'Please contact support with reference: ${checkout.invoiceId}',
           );
           return false;
         }
@@ -245,31 +244,9 @@ class LespayNotifier extends StateNotifier<LespayState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isProcessingTopUp: false,
-        error: _extractError(e),
-      );
+      state = state.copyWith(isProcessingTopUp: false, error: _extractError(e));
       return false;
     }
-  }
-
-  Future<bool> _isInvoicePaid(TopUpCheckout checkout) async {
-    try {
-      final response = await getIt<PaymentGatewayRemoteDataSource>()
-          .getInvoiceStatus(checkout.invoiceId);
-      final status = response.data.status.toLowerCase();
-      return status == 'paid' || status == 'completed';
-    } catch (_) {}
-
-    if (checkout.source == TopUpInvoiceSource.xenditDirect) {
-      try {
-        final invoice =
-            await getIt<XenditRemoteDataSource>().getInvoice(checkout.invoiceId);
-        return invoice.isPaid;
-      } catch (_) {}
-    }
-
-    return false;
   }
 
   Future<void> withdraw(double amount, {String method = 'bank'}) async {
@@ -277,10 +254,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
 
     try {
       if (state.balance < amount) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Insufficient balance',
-        );
+        state = state.copyWith(isLoading: false, error: 'Insufficient balance');
         return;
       }
 
@@ -290,10 +264,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
       );
       await loadWallet();
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: _extractError(e),
-      );
+      state = state.copyWith(isLoading: false, error: _extractError(e));
     }
   }
 
@@ -306,10 +277,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
     );
     try {
       final list = await getIt<WalletRemoteDataSource>().getMyTransactions();
-      state = state.copyWith(
-        transactions: list,
-        isLoadingTransactions: false,
-      );
+      state = state.copyWith(transactions: list, isLoadingTransactions: false);
     } on DioException catch (e) {
       state = state.copyWith(
         isLoadingTransactions: false,
@@ -375,20 +343,21 @@ class LespayNotifier extends StateNotifier<LespayState> {
     }
 
     try {
-      final gateway = await getIt<PaymentGatewayRemoteDataSource>().createInvoice(
-        InvoiceRequestDto(
-          amount: pricing.walletAmount,
-          description: description,
-          paymentMethod: 'paymongo',
-          metadata: {
-            'wallet_amount': pricing.walletAmount,
-            'fee_amount': pricing.feeAmount,
-            'purpose': 'lespay_topup',
-            'type': 'wallet_topup',
-            'provider': 'paymongo',
-          },
-        ),
-      );
+      final gateway = await getIt<PaymentGatewayRemoteDataSource>()
+          .createInvoice(
+            InvoiceRequestDto(
+              amount: pricing.walletAmount,
+              description: description,
+              paymentMethod: 'paymongo',
+              metadata: {
+                'wallet_amount': pricing.walletAmount,
+                'fee_amount': pricing.feeAmount,
+                'purpose': 'lespay_topup',
+                'type': 'wallet_topup',
+                'provider': 'paymongo',
+              },
+            ),
+          );
 
       final invoiceUrl = gateway.data.invoiceUrl;
       if (invoiceUrl != null && invoiceUrl.isNotEmpty) {
@@ -432,10 +401,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
       state = state.copyWith(isProcessingTopUp: false);
       return true;
     } catch (e) {
-      state = state.copyWith(
-        isProcessingTopUp: false,
-        error: _extractError(e),
-      );
+      state = state.copyWith(isProcessingTopUp: false, error: _extractError(e));
       return false;
     }
   }
@@ -451,7 +417,9 @@ class LespayNotifier extends StateNotifier<LespayState> {
   }
 }
 
-final lespayProvider = StateNotifierProvider<LespayNotifier, LespayState>((ref) {
+final lespayProvider = StateNotifierProvider<LespayNotifier, LespayState>((
+  ref,
+) {
   final notifier = LespayNotifier();
   notifier.loadWallet();
   notifier.loadTransactions();

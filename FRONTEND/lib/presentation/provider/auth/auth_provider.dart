@@ -88,7 +88,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = await _loginUseCase(request);
 
       // ✅ Role validation for customer app
-      if (user.role != null && user.role != 'customer') {
+      if (user.role != 'customer') {
+        await _localStorageService.clearToken();
         state = state.copyWith(
           isLoading: false,
           error:
@@ -139,11 +140,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String message = 'Logged out successfully';
     try {
       message = await _logoutUseCase();
+    } catch (_) {
+      message = 'Logged out locally';
     } finally {
-      await _localStorageService.clearRememberMeSession();
-      state = AuthState();
+      await clearLocalSession();
     }
     return message;
+  }
+
+  Future<void> clearLocalSession() async {
+    await _localStorageService.clearRememberMeSession();
+    state = AuthState();
   }
 
   /// After Google OAuth, persist tokens and load the user profile into state.
@@ -161,6 +168,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final profile = response.data;
 
       if (response.success != true || profile == null) {
+        await _localStorageService.clearToken();
         return false;
       }
 
@@ -175,8 +183,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         clearError: true,
       );
 
-      // ✅ Role validation for customer app (allow null-role users same as regular login)
-      if (profile.role != null && profile.role != 'customer') {
+      // Role validation for the customer app.
+      if (profile.role != 'customer') {
+        await _localStorageService.clearToken();
         state = AuthState(); // Clear state
         return false;
       }
@@ -185,6 +194,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await getIt<NotificationService>().refreshFromBackend();
       return true;
     } catch (_) {
+      await _localStorageService.clearToken();
+      state = AuthState();
       return false;
     }
   }
@@ -204,6 +215,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final profile = response.data;
 
       if (response.success != true || profile == null) {
+        await clearLocalSession();
         return false;
       }
 
@@ -221,7 +233,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       // ✅ Role validation for customer app
       if (profile.role != 'customer') {
-        state = AuthState(); // Clear state
+        await clearLocalSession();
         return false;
       }
 
@@ -230,6 +242,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await getIt<NotificationService>().refreshFromBackend();
       return true;
     } catch (_) {
+      await clearLocalSession();
       return false;
     }
   }

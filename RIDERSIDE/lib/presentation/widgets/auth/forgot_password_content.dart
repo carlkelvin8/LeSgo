@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/utils.dart';
-import '../../../../core/utils/snackbar_utils.dart';
-import '../../../../core/utils/validators/validators.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/auth/forgot_password_provider.dart';
 import '../widgets.dart';
@@ -51,8 +49,8 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
             state.step == ForgotPasswordStep.enterEmail
                 ? 'Forgot Password?'
                 : state.step == ForgotPasswordStep.verifyOtp
-                    ? 'Verify OTP'
-                    : 'Reset Password',
+                ? 'Verify OTP'
+                : 'Reset Password',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 22),
@@ -66,8 +64,8 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
             state.step == ForgotPasswordStep.enterEmail
                 ? 'Enter your email to receive an OTP code'
                 : state.step == ForgotPasswordStep.verifyOtp
-                    ? 'Enter the 6-digit code sent to ${_emailController.text}'
-                    : 'Create a new password for your account',
+                ? 'Enter the 6-digit code sent to ${_emailController.text}'
+                : 'Create a new password for your account',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -139,8 +137,10 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
               hintText: 'Confirm Password',
               controller: _confirmPasswordController,
               isPassword: true,
-              validator: (value) =>
-                  LoginValidator.confirmPassword(value, _passwordController.text),
+              validator: (value) => LoginValidator.confirmPassword(
+                value,
+                _passwordController.text,
+              ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),
             PrimaryButton(
@@ -187,28 +187,26 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
 
   Future<void> _verifyOtp() async {
     if (!_formKey.currentState!.validate()) return;
-    final success = await ref.read(forgotPasswordProvider.notifier).verifyOtp(
-          _emailController.text.trim(),
-          _otpController.text.trim(),
-        );
+    final success = await ref
+        .read(forgotPasswordProvider.notifier)
+        .verifyOtp(_emailController.text.trim(), _otpController.text.trim());
     if (!mounted) return;
     if (success) {
       SnackBarUtils.showSuccess(context, 'OTP verified successfully');
     } else {
       SnackBarUtils.showError(
         context,
-        ref.read(forgotPasswordProvider).errorMessage ?? 'Invalid or expired OTP',
+        ref.read(forgotPasswordProvider).errorMessage ??
+            'Invalid or expired OTP',
       );
     }
   }
 
   Future<void> _resetPassword() async {
     if (!_formKey.currentState!.validate()) return;
-    final success = await ref.read(forgotPasswordProvider.notifier).resetPassword(
-          _emailController.text.trim(),
-          _otpController.text.trim(),
-          _passwordController.text,
-        );
+    final success = await ref
+        .read(forgotPasswordProvider.notifier)
+        .resetPassword(_emailController.text.trim(), _passwordController.text);
     if (!mounted) return;
     if (success) {
       SnackBarUtils.showSuccess(context, 'Password reset successfully');
@@ -216,7 +214,8 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
     } else {
       SnackBarUtils.showError(
         context,
-        ref.read(forgotPasswordProvider).errorMessage ?? 'Failed to reset password',
+        ref.read(forgotPasswordProvider).errorMessage ??
+            'Failed to reset password',
       );
     }
   }

@@ -27,8 +27,12 @@ abstract class AuthRepository {
   /// Verify password reset OTP.
   Future<Map<String, dynamic>> verifyPasswordResetOtp(String email, String otp);
 
-  /// Reset password with OTP.
-  Future<Map<String, dynamic>> resetPassword(String email, String otp, String password);
+  /// Reset password with the token returned after OTP verification.
+  Future<Map<String, dynamic>> resetPassword(
+    String email,
+    String resetToken,
+    String password,
+  );
 
   /// Get current user profile.
   Future<Map<String, dynamic>> getProfile();
@@ -44,7 +48,8 @@ abstract class AuthRepository {
 
   /// Deactivate account.
   Future<Map<String, dynamic>> deactivateAccount({
-    required String password,
+    String? password,
+    String? googleIdToken,
     String? reason,
   });
 }

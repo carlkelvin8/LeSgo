@@ -44,13 +44,20 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> verifyPasswordResetOtp(String email, String otp) {
+  Future<Map<String, dynamic>> verifyPasswordResetOtp(
+    String email,
+    String otp,
+  ) {
     return _remoteDataSource.verifyPasswordResetOtp(email, otp);
   }
 
   @override
-  Future<Map<String, dynamic>> resetPassword(String email, String otp, String password) {
-    return _remoteDataSource.resetPassword(email, otp, password);
+  Future<Map<String, dynamic>> resetPassword(
+    String email,
+    String resetToken,
+    String password,
+  ) {
+    return _remoteDataSource.resetPassword(email, resetToken, password);
   }
 
   @override
@@ -76,9 +83,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Map<String, dynamic>> deactivateAccount({
-    required String password,
+    String? password,
+    String? googleIdToken,
     String? reason,
   }) {
-    return _remoteDataSource.deactivateAccount(password: password, reason: reason);
+    return _remoteDataSource.deactivateAccount(
+      password: password,
+      googleIdToken: googleIdToken,
+      reason: reason,
+    );
   }
 }

@@ -18,14 +18,14 @@ class AuthRemoteDataSource {
   // ============================================================================
 
   /// Send OTP verification code to phone number
-  Future<OtpResponseDto> sendOtp(String phoneNumber, {String channel = 'sms'}) async {
+  Future<OtpResponseDto> sendOtp(
+    String phoneNumber, {
+    String channel = 'sms',
+  }) async {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/otp/send',
-        data: {
-          'phone_number': phoneNumber,
-          'channel': channel,
-        },
+        data: {'phone_number': phoneNumber, 'channel': channel},
       );
 
       return OtpResponseDto.fromJson(response.data);
@@ -39,10 +39,7 @@ class AuthRemoteDataSource {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/otp/verify',
-        data: {
-          'phone_number': phoneNumber,
-          'otp': otp,
-        },
+        data: {'phone_number': phoneNumber, 'otp': otp},
       );
 
       return OtpResponseDto.fromJson(response.data);
@@ -56,9 +53,7 @@ class AuthRemoteDataSource {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/otp/cancel',
-        data: {
-          'phone_number': phoneNumber,
-        },
+        data: {'phone_number': phoneNumber},
       );
 
       return OtpResponseDto.fromJson(response.data);
@@ -72,9 +67,7 @@ class AuthRemoteDataSource {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/otp/check',
-        data: {
-          'phone_number': phoneNumber,
-        },
+        data: {'phone_number': phoneNumber},
       );
 
       return OtpResponseDto.fromJson(response.data);
@@ -137,7 +130,10 @@ class AuthRemoteDataSource {
   /// Update user profile
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
     try {
-      final response = await _dioClient.dio.put(ApiConstants.authMe, data: data);
+      final response = await _dioClient.dio.put(
+        ApiConstants.authMe,
+        data: data,
+      );
       return response.data;
     } catch (e) {
       rethrow;
@@ -175,14 +171,14 @@ class AuthRemoteDataSource {
   }
 
   /// Verify password reset OTP
-  Future<Map<String, dynamic>> verifyPasswordResetOtp(String email, String otp) async {
+  Future<Map<String, dynamic>> verifyPasswordResetOtp(
+    String email,
+    String otp,
+  ) async {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/forgot-password/verify-otp',
-        data: {
-          'email': email,
-          'otp': otp,
-        },
+        data: {'email': email, 'otp': otp},
       );
       return response.data;
     } catch (e) {
@@ -190,14 +186,18 @@ class AuthRemoteDataSource {
     }
   }
 
-  /// Reset password with OTP
-  Future<Map<String, dynamic>> resetPassword(String email, String otp, String password) async {
+  /// Reset password with the short-lived token returned after OTP verification.
+  Future<Map<String, dynamic>> resetPassword(
+    String email,
+    String resetToken,
+    String password,
+  ) async {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/forgot-password/reset',
         data: {
           'email': email,
-          'otp': otp,
+          'reset_token': resetToken,
           'password': password,
           'password_confirmation': password,
         },
@@ -224,15 +224,18 @@ class AuthRemoteDataSource {
     return response.data as Map<String, dynamic>;
   }
 
-  /// Deactivate the signed-in account (requires password confirmation).
+  /// Deactivate the signed-in account after password or Google verification.
   Future<Map<String, dynamic>> deactivateAccount({
-    required String password,
+    String? password,
+    String? googleIdToken,
     String? reason,
   }) async {
     final response = await _dioClient.dio.post(
       ApiConstants.authDeactivateAccount,
       data: {
-        'password': password,
+        if (password != null && password.isNotEmpty) 'password': password,
+        if (googleIdToken != null && googleIdToken.isNotEmpty)
+          'google_id_token': googleIdToken,
         if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
       },
     );
@@ -241,14 +244,17 @@ class AuthRemoteDataSource {
 
   /// Permanently delete the signed-in customer account.
   Future<Map<String, dynamic>> deleteAccountPermanently({
-    required String password,
+    String? password,
+    String? googleIdToken,
     required String confirmation,
     String? reason,
   }) async {
     final response = await _dioClient.dio.post(
       ApiConstants.authDeleteAccount,
       data: {
-        'password': password,
+        if (password != null && password.isNotEmpty) 'password': password,
+        if (googleIdToken != null && googleIdToken.isNotEmpty)
+          'google_id_token': googleIdToken,
         'confirmation': confirmation.trim().toUpperCase(),
         if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
       },

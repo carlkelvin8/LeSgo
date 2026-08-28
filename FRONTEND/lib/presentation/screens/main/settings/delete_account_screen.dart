@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/google_auth_service.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/auth_remote_datasource.dart';
@@ -71,13 +72,22 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      final password = _passwordController.text;
+      final googleIdToken = password.isEmpty
+          ? await GoogleAuthService.getIdTokenForSensitiveAction()
+          : null;
+      if (password.isEmpty && googleIdToken == null) {
+        throw StateError('Google account verification was cancelled.');
+      }
+
       await getIt<AuthRemoteDataSource>().deleteAccountPermanently(
-        password: _passwordController.text,
+        password: password,
+        googleIdToken: googleIdToken,
         confirmation: _confirmationController.text.trim(),
         reason: _reasonController.text,
       );
 
-      await ref.read(authProvider.notifier).logout();
+      await ref.read(authProvider.notifier).clearLocalSession();
 
       if (!mounted) return;
       SnackBarUtils.showSuccess(
@@ -90,7 +100,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       SnackBarUtils.showErrorFrom(
         context,
         e,
-        fallbackEn: 'Could not delete account. Check your password and try again.',
+        fallbackEn:
+            'Could not delete account. Check your password and try again.',
         fallbackTl:
             'Hindi ma-delete ang account. Suriin ang password at subukan muli.',
       );
@@ -138,14 +149,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password is required';
-                  }
-                  return null;
-                },
                 decoration: InputDecoration(
-                  labelText: 'Confirm password',
+                  labelText: 'Confirm password (optional for Google accounts)',
+                  helperText:
+                      'Leave blank to verify with your linked Google account.',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(

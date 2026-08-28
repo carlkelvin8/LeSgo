@@ -69,7 +69,6 @@ import 'package:lesgo/data/data_source/tracking_remote_datasource.dart'
 import 'package:lesgo/data/data_source/user_remote_datasource.dart' as _i761;
 import 'package:lesgo/data/data_source/voucher_remote_datasource.dart' as _i767;
 import 'package:lesgo/data/data_source/wallet_remote_datasource.dart' as _i339;
-import 'package:lesgo/data/data_source/xendit_remote_datasource.dart' as _i78;
 import 'package:lesgo/data/repositoryImpl/user_repository_impl.dart' as _i937;
 import 'package:lesgo/domain/repository/user_repository.dart' as _i962;
 import 'package:lesgo/domain/use_cases/login_usecase.dart' as _i720;
@@ -102,9 +101,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i758.RateLimiterService(),
     );
     gh.lazySingleton<_i373.SslPinningService>(() => _i373.SslPinningService());
-    gh.lazySingleton<_i78.XenditRemoteDataSource>(
-      () => _i78.XenditRemoteDataSource(),
-    );
     gh.lazySingleton<_i584.LocalStorageService>(
       () => _i584.LocalStorageService(gh<_i460.SharedPreferences>()),
     );

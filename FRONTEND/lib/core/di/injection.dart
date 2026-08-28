@@ -15,7 +15,6 @@ import '../../data/data_source/realtime_remote_datasource.dart';
 import '../../data/data_source/order_remote_datasource.dart';
 import '../../data/data_source/wallet_remote_datasource.dart';
 import '../services/app_preferences_service.dart';
-import '../../data/data_source/xendit_remote_datasource.dart';
 import '../network/dio_client.dart';
 import '../services/ssl_pinning_service.dart';
 import '../services/map_recent_search_service.dart';
@@ -81,12 +80,6 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<WalletRemoteDataSource>()) {
     getIt.registerLazySingleton<WalletRemoteDataSource>(
       () => WalletRemoteDataSource(getIt<DioClient>()),
-    );
-  }
-
-  if (!getIt.isRegistered<XenditRemoteDataSource>()) {
-    getIt.registerLazySingleton<XenditRemoteDataSource>(
-      () => XenditRemoteDataSource(),
     );
   }
 

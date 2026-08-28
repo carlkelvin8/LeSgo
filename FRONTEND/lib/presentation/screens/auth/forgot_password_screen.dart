@@ -10,7 +10,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -19,7 +20,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _otpController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -60,7 +61,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-                    
+
                     // Logo
                     Center(
                       child: SvgPicture.asset(
@@ -70,14 +71,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-                    
+
                     // Title
                     Text(
                       state.step == ForgotPasswordStep.enterEmail
                           ? 'Forgot Password?'
                           : state.step == ForgotPasswordStep.verifyOtp
-                              ? 'Verify OTP'
-                              : 'Reset Password',
+                          ? 'Verify OTP'
+                          : 'Reset Password',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 24),
@@ -87,14 +88,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                    
+
                     // Subtitle
                     Text(
                       state.step == ForgotPasswordStep.enterEmail
                           ? 'Enter your email to receive an OTP code'
                           : state.step == ForgotPasswordStep.verifyOtp
-                              ? 'Enter the 6-digit code sent to ${_emailController.text}'
-                              : 'Create a new password for your account',
+                          ? 'Enter the 6-digit code sent to ${_emailController.text}'
+                          : 'Create a new password for your account',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -103,7 +104,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 40)),
-                    
+
                     // Step 1: Enter Email
                     if (state.step == ForgotPasswordStep.enterEmail) ...[
                       CustomTextField(
@@ -114,7 +115,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         enabled: !state.isLoading,
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                      
+
                       PrimaryButton(
                         text: 'Send OTP',
                         isLoading: state.isLoading,
@@ -122,7 +123,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         backgroundColor: const Color(0xFF5F2D82),
                       ),
                     ],
-                    
+
                     // Step 2: Verify OTP
                     if (state.step == ForgotPasswordStep.verifyOtp) ...[
                       CustomTextField(
@@ -142,7 +143,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         enabled: !state.isLoading,
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                      
+
                       // Resend OTP
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -156,7 +157,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: state.isLoading ? null : () => _resendOtp(),
+                            onPressed: state.isLoading
+                                ? null
+                                : () => _resendOtp(),
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: Size.zero,
@@ -175,7 +178,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         ],
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                      
+
                       PrimaryButton(
                         text: 'Verify OTP',
                         isLoading: state.isLoading,
@@ -183,7 +186,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         backgroundColor: const Color(0xFF5F2D82),
                       ),
                     ],
-                    
+
                     // Step 3: Reset Password
                     if (state.step == ForgotPasswordStep.resetPassword) ...[
                       CustomTextField(
@@ -207,7 +210,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         enabled: !state.isLoading,
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-                      
+
                       CustomTextField(
                         controller: _confirmPasswordController,
                         labelText: 'Confirm Password',
@@ -221,7 +224,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           ),
                           onPressed: () {
                             setState(() {
-                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
                             });
                           },
                         ),
@@ -237,7 +241,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         enabled: !state.isLoading,
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                      
+
                       PrimaryButton(
                         text: 'Reset Password',
                         isLoading: state.isLoading,
@@ -245,7 +249,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         backgroundColor: const Color(0xFF5F2D82),
                       ),
                     ],
-                    
+
                     SizedBox(height: ResponsiveUtils.spacing(context, 40)),
                   ],
                 ),
@@ -260,9 +264,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _sendOtp() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(forgotPasswordProvider.notifier).sendOtp(
-          _emailController.text.trim(),
-        );
+    final success = await ref
+        .read(forgotPasswordProvider.notifier)
+        .sendOtp(_emailController.text.trim());
 
     if (success && mounted) {
       SnackBarUtils.showSuccess(context, 'OTP sent to your email');
@@ -273,9 +277,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   Future<void> _resendOtp() async {
-    final success = await ref.read(forgotPasswordProvider.notifier).resendOtp(
-          _emailController.text.trim(),
-        );
+    final success = await ref
+        .read(forgotPasswordProvider.notifier)
+        .resendOtp(_emailController.text.trim());
 
     if (success && mounted) {
       SnackBarUtils.showSuccess(context, 'OTP resent to your email');
@@ -288,10 +292,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _verifyOtp() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(forgotPasswordProvider.notifier).verifyOtp(
-          _emailController.text.trim(),
-          _otpController.text.trim(),
-        );
+    final success = await ref
+        .read(forgotPasswordProvider.notifier)
+        .verifyOtp(_emailController.text.trim(), _otpController.text.trim());
 
     if (success && mounted) {
       SnackBarUtils.showSuccess(context, 'OTP verified successfully');
@@ -304,11 +307,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _resetPassword() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(forgotPasswordProvider.notifier).resetPassword(
-          _emailController.text.trim(),
-          _otpController.text.trim(),
-          _passwordController.text,
-        );
+    final success = await ref
+        .read(forgotPasswordProvider.notifier)
+        .resetPassword(_emailController.text.trim(), _passwordController.text);
 
     if (success && mounted) {
       SnackBarUtils.showSuccess(context, 'Password reset successfully');

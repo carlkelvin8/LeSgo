@@ -20,14 +20,14 @@ class AuthRemoteDataSource {
   // ============================================================================
 
   /// Send OTP verification code to phone number
-  Future<OtpResponseDto> sendOtp(String phoneNumber, {String channel = 'sms'}) async {
+  Future<OtpResponseDto> sendOtp(
+    String phoneNumber, {
+    String channel = 'sms',
+  }) async {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/otp/send',
-        data: {
-          'phone_number': phoneNumber,
-          'channel': channel,
-        },
+        data: {'phone_number': phoneNumber, 'channel': channel},
       );
 
       return OtpResponseDto.fromJson(response.data);
@@ -41,10 +41,7 @@ class AuthRemoteDataSource {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/otp/verify',
-        data: {
-          'phone_number': phoneNumber,
-          'otp': otp,
-        },
+        data: {'phone_number': phoneNumber, 'otp': otp},
       );
 
       return OtpResponseDto.fromJson(response.data);
@@ -58,9 +55,7 @@ class AuthRemoteDataSource {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/otp/cancel',
-        data: {
-          'phone_number': phoneNumber,
-        },
+        data: {'phone_number': phoneNumber},
       );
 
       return OtpResponseDto.fromJson(response.data);
@@ -74,9 +69,7 @@ class AuthRemoteDataSource {
     try {
       final response = await _dioClient.dio.post(
         '/v1/auth/otp/check',
-        data: {
-          'phone_number': phoneNumber,
-        },
+        data: {'phone_number': phoneNumber},
       );
 
       return OtpResponseDto.fromJson(response.data);
@@ -229,14 +222,14 @@ class AuthRemoteDataSource {
 
   Future<Map<String, dynamic>> resetPassword(
     String email,
-    String otp,
+    String resetToken,
     String password,
   ) async {
     final response = await _dioClient.dio.post(
       '/v1/auth/forgot-password/reset',
       data: {
         'email': email,
-        'otp': otp,
+        'reset_token': resetToken,
         'password': password,
         'password_confirmation': password,
       },

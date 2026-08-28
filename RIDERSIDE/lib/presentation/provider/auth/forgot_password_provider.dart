@@ -5,18 +5,21 @@ import 'auth_provider.dart';
 
 enum ForgotPasswordStep { enterEmail, verifyOtp, resetPassword }
 
-final forgotPasswordReturnViewProvider =
-    StateProvider<AuthView>((ref) => AuthView.riderLogin);
+final forgotPasswordReturnViewProvider = StateProvider<AuthView>(
+  (ref) => AuthView.riderLogin,
+);
 
 class ForgotPasswordState {
   final ForgotPasswordStep step;
   final bool isLoading;
   final String? errorMessage;
+  final String? resetToken;
 
   ForgotPasswordState({
     this.step = ForgotPasswordStep.enterEmail,
     this.isLoading = false,
     this.errorMessage,
+    this.resetToken,
   });
 
   ForgotPasswordState copyWith({
@@ -24,11 +27,14 @@ class ForgotPasswordState {
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
+    String? resetToken,
+    bool clearResetToken = false,
   }) {
     return ForgotPasswordState(
       step: step ?? this.step,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      resetToken: clearResetToken ? null : (resetToken ?? this.resetToken),
     );
   }
 }
@@ -46,6 +52,7 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
         state = state.copyWith(
           isLoading: false,
           step: ForgotPasswordStep.verifyOtp,
+          clearResetToken: true,
         );
         return true;
       }
@@ -83,16 +90,21 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final response = await _authDataSource.verifyPasswordResetOtp(email, otp);
-      if (response['success'] == true) {
+      final resetToken = response['reset_token']?.toString();
+      if (response['success'] == true &&
+          resetToken != null &&
+          resetToken.isNotEmpty) {
         state = state.copyWith(
           isLoading: false,
           step: ForgotPasswordStep.resetPassword,
+          resetToken: resetToken,
         );
         return true;
       }
       state = state.copyWith(
         isLoading: false,
-        errorMessage: response['message']?.toString() ?? 'Invalid or expired OTP',
+        errorMessage:
+            response['message']?.toString() ?? 'Invalid or expired OTP',
       );
       return false;
     } catch (e) {
@@ -101,17 +113,33 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
     }
   }
 
-  Future<bool> resetPassword(String email, String otp, String password) async {
+  Future<bool> resetPassword(String email, String password) async {
     state = state.copyWith(isLoading: true, clearError: true);
+
+    final resetToken = state.resetToken;
+    if (resetToken == null || resetToken.isEmpty) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage:
+            'Password reset verification has expired. Please start again.',
+      );
+      return false;
+    }
+
     try {
-      final response = await _authDataSource.resetPassword(email, otp, password);
+      final response = await _authDataSource.resetPassword(
+        email,
+        resetToken,
+        password,
+      );
       if (response['success'] == true) {
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(isLoading: false, clearResetToken: true);
         return true;
       }
       state = state.copyWith(
         isLoading: false,
-        errorMessage: response['message']?.toString() ?? 'Failed to reset password',
+        errorMessage:
+            response['message']?.toString() ?? 'Failed to reset password',
       );
       return false;
     } catch (e) {
@@ -127,5 +155,5 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
 
 final forgotPasswordProvider =
     StateNotifierProvider<ForgotPasswordNotifier, ForgotPasswordState>((ref) {
-  return ForgotPasswordNotifier(getIt<AuthRemoteDataSource>());
-});
+      return ForgotPasswordNotifier(getIt<AuthRemoteDataSource>());
+    });

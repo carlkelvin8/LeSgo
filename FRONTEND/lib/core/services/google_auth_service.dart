@@ -32,7 +32,7 @@ class GoogleAuthService {
   // Use SecretsConfig directly (baked in at build time via --dart-define-from-file)
   // as the primary source, falling back to MobileConfigService (remote config)
   static String get _webClientId {
-    final fromSecrets = SecretsConfig.googleWebClientId;
+    const fromSecrets = SecretsConfig.googleWebClientId;
     if (fromSecrets.isNotEmpty &&
         fromSecrets.contains('.apps.googleusercontent.com')) {
       return fromSecrets;
@@ -129,6 +129,22 @@ class GoogleAuthService {
     required String code,
   }) {
     return _authenticateWithBackend(dioClient, idToken, twoFactorCode: code);
+  }
+
+  /// Gets a fresh Google credential for a destructive account action.
+  /// The explicit sign-out prevents a stale in-memory account from silently
+  /// authorizing the action without user interaction.
+  static Future<String?> getIdTokenForSensitiveAction() async {
+    if (!_isConfigured) {
+      throw StateError('Google Sign-In is not configured.');
+    }
+
+    await _googleSignIn.signOut();
+    final account = await _googleSignIn.signIn();
+    if (account == null) return null;
+
+    final authentication = await account.authentication;
+    return authentication.idToken;
   }
 
   static Future<GoogleAuthResult> _authenticateWithBackend(

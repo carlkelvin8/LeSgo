@@ -2,11 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/data_source/auth_remote_datasource.dart';
 import 'auth_provider.dart';
 
-enum ForgotPasswordStep {
-  enterEmail,
-  verifyOtp,
-  resetPassword,
-}
+enum ForgotPasswordStep { enterEmail, verifyOtp, resetPassword }
 
 class ForgotPasswordState {
   final ForgotPasswordStep step;
@@ -26,12 +22,13 @@ class ForgotPasswordState {
     bool? isLoading,
     String? errorMessage,
     String? resetToken,
+    bool clearResetToken = false,
   }) {
     return ForgotPasswordState(
       step: step ?? this.step,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
-      resetToken: resetToken ?? this.resetToken,
+      resetToken: clearResetToken ? null : (resetToken ?? this.resetToken),
     );
   }
 }
@@ -51,6 +48,7 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
         state = state.copyWith(
           isLoading: false,
           step: ForgotPasswordStep.verifyOtp,
+          clearResetToken: true,
         );
         return true;
       } else {
@@ -61,10 +59,7 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
@@ -86,10 +81,7 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
@@ -100,11 +92,14 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
     try {
       final response = await _authDataSource.verifyPasswordResetOtp(email, otp);
 
-      if (response['success'] == true) {
+      final resetToken = response['reset_token']?.toString();
+      if (response['success'] == true &&
+          resetToken != null &&
+          resetToken.isNotEmpty) {
         state = state.copyWith(
           isLoading: false,
           step: ForgotPasswordStep.resetPassword,
-          resetToken: response['reset_token'],
+          resetToken: resetToken,
         );
         return true;
       } else {
@@ -115,22 +110,33 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
 
-  Future<bool> resetPassword(String email, String otp, String password) async {
+  Future<bool> resetPassword(String email, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
+    final resetToken = state.resetToken;
+    if (resetToken == null || resetToken.isEmpty) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage:
+            'Password reset verification has expired. Please start again.',
+      );
+      return false;
+    }
+
     try {
-      final response = await _authDataSource.resetPassword(email, otp, password);
+      final response = await _authDataSource.resetPassword(
+        email,
+        resetToken,
+        password,
+      );
 
       if (response['success'] == true) {
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(isLoading: false, clearResetToken: true);
         return true;
       } else {
         state = state.copyWith(
@@ -140,10 +146,7 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
     }
   }
@@ -155,6 +158,6 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
 
 final forgotPasswordProvider =
     StateNotifierProvider<ForgotPasswordNotifier, ForgotPasswordState>((ref) {
-  final authDataSource = ref.read(authRemoteDataSourceProvider);
-  return ForgotPasswordNotifier(authDataSource);
-});
+      final authDataSource = ref.read(authRemoteDataSourceProvider);
+      return ForgotPasswordNotifier(authDataSource);
+    });

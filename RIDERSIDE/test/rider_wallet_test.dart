@@ -41,7 +41,11 @@ void main() {
 
     test('computeTotalDeposits sums top-up credits first', () {
       final total = WalletResponseParser.computeTotalDeposits([
-        {'type': 'credit', 'amount': 500, 'description': 'LesPay top-up via Xendit'},
+        {
+          'type': 'credit',
+          'amount': 500,
+          'description': 'LesPay top-up via Xendit',
+        },
         {'type': 'credit', 'amount': 50, 'description': 'Refund'},
         {'type': 'debit', 'amount': 10, 'description': 'Booking'},
       ]);
@@ -74,11 +78,11 @@ void main() {
   });
 
   group('LespayTopupFee', () {
-    test('calculate applies 3% fee', () {
+    test('calculate applies 1.5% fee', () {
       final pricing = LespayTopupFee.calculate(500);
       expect(pricing.walletAmount, 500);
-      expect(pricing.feeAmount, 15);
-      expect(pricing.totalCharge, 515);
+      expect(pricing.feeAmount, 7.5);
+      expect(pricing.totalCharge, 507.5);
     });
   });
 
