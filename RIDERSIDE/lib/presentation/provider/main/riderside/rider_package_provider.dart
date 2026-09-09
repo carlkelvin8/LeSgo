@@ -84,7 +84,7 @@ class RiderPackageNotifier extends StateNotifier<RiderPackageState> {
         ),
         RiderPackageOption(
           tier: 'advance',
-          label: 'Advanced',
+          label: 'Advance',
           commissionRate: RiderCommissionUtils.advanceRate,
           commissionPercent: 80,
           profitShareLabel: RiderCommissionUtils.profitShareLabel('advance'),
@@ -94,7 +94,7 @@ class RiderPackageNotifier extends StateNotifier<RiderPackageState> {
         ),
         RiderPackageOption(
           tier: 'pro',
-          label: 'Pro',
+          label: 'Elite',
           commissionRate: RiderCommissionUtils.proRate,
           commissionPercent: 90,
           profitShareLabel: RiderCommissionUtils.profitShareLabel('pro'),

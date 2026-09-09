@@ -63,6 +63,12 @@ void main() {
       expect(RiderCommissionUtils.normalizePackageTier(' Pro '), 'pro');
       expect(RiderCommissionUtils.normalizePackageTier('professional'), 'pro');
       expect(RiderCommissionUtils.normalizePackageTier('employee'), 'employee');
+      expect(RiderCommissionUtils.normalizePackageTier('elite'), 'pro');
+      expect(RiderCommissionUtils.labelForPackage('advance'), 'Advance');
+      expect(RiderCommissionUtils.labelForPackage('pro'), 'Elite');
+      expect(RiderCommissionUtils.basicOneTimePrice, 999.0);
+      expect(RiderCommissionUtils.advanceOneTimePrice, 1999.0);
+      expect(RiderCommissionUtils.proOneTimePrice, 2999.0);
     });
   });
 

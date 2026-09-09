@@ -6,8 +6,8 @@ class RiderCommissionUtils {
   static const advanceRate = 0.80;
   static const proRate = 0.90;
   static const basicOneTimePrice = 999.0;
-  static const advanceOneTimePrice = 2499.0;
-  static const proOneTimePrice = 3499.0;
+  static const advanceOneTimePrice = 1999.0;
+  static const proOneTimePrice = 2999.0;
 
   static double rateForPackage(String? packageTier) {
     switch (normalizePackageTier(packageTier)) {
@@ -24,7 +24,10 @@ class RiderCommissionUtils {
   static String normalizePackageTier(String? raw) {
     final tier = (raw ?? 'basic').trim().toLowerCase();
     if (tier == 'advance' || tier == 'advanced') return 'advance';
-    if (tier == 'pro' || tier == 'pro_rider' || tier == 'professional') {
+    if (tier == 'pro' ||
+        tier == 'pro_rider' ||
+        tier == 'professional' ||
+        tier == 'elite') {
       return 'pro';
     }
     if (tier == 'employee') return 'employee';
@@ -34,9 +37,9 @@ class RiderCommissionUtils {
   static String labelForPackage(String? packageTier) {
     switch (normalizePackageTier(packageTier)) {
       case 'advance':
-        return 'Advanced';
+        return 'Advance';
       case 'pro':
-        return 'Pro';
+        return 'Elite';
       case 'employee':
         return 'Employee';
       case 'basic':

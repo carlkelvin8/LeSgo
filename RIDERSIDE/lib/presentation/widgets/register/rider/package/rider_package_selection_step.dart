@@ -7,7 +7,7 @@ import '../../../../../core/utils/rider_commission_utils.dart';
 final selectedRegistrationPackageProvider = StateProvider<String?>((ref) => null);
 
 /// Package selection step shown during rider registration.
-/// Rider must choose Basic, Advanced, or Pro before proceeding.
+/// Rider must choose Basic, Advance, or Elite before proceeding.
 class RiderPackageSelectionStep extends ConsumerWidget {
   final VoidCallback onPackageSelected;
 
@@ -56,7 +56,7 @@ class RiderPackageSelectionStep extends ConsumerWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 14)),
           _PackageCard(
             tier: 'advance',
-            label: 'Advanced',
+            label: 'Advance',
             price: RiderCommissionUtils.advanceOneTimePrice,
             profitShare: '80/20 profit share with free uniform and bag',
             features: const ['Booking access', 'Admin support', 'Free uniform', 'Free bag'],
@@ -67,7 +67,7 @@ class RiderPackageSelectionStep extends ConsumerWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 14)),
           _PackageCard(
             tier: 'pro',
-            label: 'Pro',
+            label: 'Elite',
             price: RiderCommissionUtils.proOneTimePrice,
             profitShare: '90/10 profit share with free uniform and bag',
             features: const ['Booking access', 'Admin support', 'Free uniform', 'Free bag', 'Exclusive promotions'],
