@@ -416,9 +416,6 @@ class ApiService {
   static Future<Map<String, dynamic>> claimVoucher(String voucherCode) =>
       BenefitsApi.claimVoucher(voucherCode);
 
-  static Future<Map<String, dynamic>> redeemLoyaltyReward(int rewardId) =>
-      BenefitsApi.redeemLoyaltyReward(rewardId);
-
   static Future<Map<String, dynamic>> setup2fa() => BenefitsApi.setup2fa();
 
   static Future<void> verify2fa(String code) => BenefitsApi.verify2fa(code);

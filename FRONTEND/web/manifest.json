@@ -1,6 +1,6 @@
 {
-    "name": "lesgo",
-    "short_name": "lesgo",
+    "name": "LeSgo",
+    "short_name": "LeSgo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

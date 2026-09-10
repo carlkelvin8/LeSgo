@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/widgets.dart';
 import '../../../provider/register/register_provider.dart';
 import '../../../../core/utils/responsive_utils.dart';
-import '../../../../core/constants/routers/auth/auth_routes.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/constants/routers/app_router.dart';
 
 class CongratulationsScreen extends ConsumerWidget {
@@ -20,7 +20,9 @@ class CongratulationsScreen extends ConsumerWidget {
       body: SafeArea(
         child: Builder(
           builder: (context) {
-            final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
+            final horizontalPadding = ResponsiveUtils.horizontalPadding(
+              context,
+            );
             return Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               child: Column(
@@ -28,14 +30,14 @@ class CongratulationsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Spacer(),
-                  
+
                   const SuccessHeader(
                     title: 'CONGRATULATIONS!',
-                    subtitle: 'You have successfully created your account.',
+                    subtitle:
+                        'Your account is created. Complete ID verification to finish registration.',
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 40)),
-                  
-            
+
                   Center(
                     child: SvgPicture.asset(
                       'assets/images/register/9.svg',
@@ -44,7 +46,6 @@ class CongratulationsScreen extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 40)),
-                  
 
                   UserInfoCard(
                     name: '${userData.firstName} ${userData.lastName}',
@@ -55,14 +56,17 @@ class CongratulationsScreen extends ConsumerWidget {
                       svgAsset: 'assets/images/register/10.svg',
                     ),
                   ),
-                  
+
                   const Spacer(),
-                  
+
                   PrimaryButton(
-                    text: 'Get Started',
+                    text: 'Continue to ID Verification',
                     onPressed: () {
                       ref.read(registerProvider.notifier).reset();
-                      AppRouter.pushAndRemoveUntil(context, LoginRoutes.login);
+                      AppRouter.pushAndRemoveUntil(
+                        context,
+                        MainRoutes.documentVerification,
+                      );
                     },
                     backgroundColor: const Color(0xFF5F2D82),
                   ),

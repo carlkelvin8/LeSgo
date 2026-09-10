@@ -39,7 +39,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     final success = await _controllers.validateAndVerifyOtp(context, ref);
 
     if (success && mounted) {
-      AppRouter.push(context, RegisterRoutes.address);
+      AppRouter.push(context, RegisterRoutes.verification);
     }
   }
 
@@ -58,9 +58,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
             return SingleChildScrollView(
               padding: EdgeInsets.all(horizontalPadding),
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

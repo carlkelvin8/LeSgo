@@ -1,11 +1,11 @@
 {
-    "name": "frontend2",
-    "short_name": "frontend2",
+    "name": "LeSgo Affiliates",
+    "short_name": "LeSgo Affiliates",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "LeSgo Affiliates rider and partner app.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

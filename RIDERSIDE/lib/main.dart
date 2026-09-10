@@ -31,10 +31,10 @@ void main() async {
   await configureDependencies();
   await AppCrashReporter.initialize();
   await FcmService.instance.initialize();
-  ApiService.trackAnalyticsEvent('app_opened', properties: {
-    'app': 'rider',
-    'timestamp': DateTime.now().toIso8601String(),
-  });
+  ApiService.trackAnalyticsEvent(
+    'app_opened',
+    properties: {'app': 'rider', 'timestamp': DateTime.now().toIso8601String()},
+  );
 
   runApp(const ProviderScope(child: LesgoApp()));
 }
@@ -66,7 +66,7 @@ class _LesgoAppState extends State<LesgoApp> {
         final themeMode = ref.watch(themeModeProvider);
         return MaterialApp(
           navigatorKey: NotificationNavigationService.navigatorKey,
-          title: 'LezGo Rider',
+          title: 'LeSgo Affiliates',
           debugShowCheckedModeBanner: false,
           theme: _lightTheme(),
           darkTheme: _darkTheme(),

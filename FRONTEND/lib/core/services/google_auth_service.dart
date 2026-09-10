@@ -49,6 +49,7 @@ class GoogleAuthService {
   }
 
   static GoogleSignIn get _googleSignIn => GoogleSignIn(
+    clientId: kIsWeb ? _webClientId : null,
     serverClientId: kIsWeb ? null : _webClientId,
     scopes: const ['email', 'profile'],
   );

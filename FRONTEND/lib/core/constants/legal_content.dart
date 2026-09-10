@@ -8,8 +8,7 @@ class LegalContent {
       'LeSgo Philippines is your all-in-one super app for rides, food delivery, '
       'shopping, parcel delivery, and digital payments. We connect customers, '
       'riders, and partner merchants so everyday errands are faster, safer, and '
-      'more convenient — proudly serving communities across the Philippines from '
-      'our home base in Kilkiling, Claveria, Cagayan.';
+      'more convenient — proudly serving communities across the Philippines.';
 
   static const String termsIntro =
       'These User Terms and Conditions ("Terms") govern the relationship between LeSgo Courier Services '

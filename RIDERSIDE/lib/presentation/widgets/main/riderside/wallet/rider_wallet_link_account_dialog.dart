@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
@@ -142,14 +143,29 @@ class _RiderWalletLinkAccountDialogState
     final busy = _submitting || _unlinking;
 
     return AlertDialog(
-      title: Text(
-        isLinked
-            ? AppLocalization.translate('manage_account', lang).replaceAll('{{provider}}', widget.title)
-            : '${AppLocalization.translate('link_account', lang)} ${widget.title}',
-        style: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontWeight: FontWeight.bold,
-        ),
+      title: Row(
+        children: [
+          SvgPicture.asset(
+            widget.provider == 'gcash'
+                ? 'assets/images/wallet/Gcash.svg'
+                : 'assets/images/wallet/Maya.svg',
+            width: 36,
+            height: 36,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              isLinked
+                  ? AppLocalization.translate('manage_account', lang)
+                      .replaceAll('{{provider}}', widget.title)
+                  : '${AppLocalization.translate('link_account', lang)} ${widget.title}',
+              style: const TextStyle(
+                fontFamily: 'TT Fors',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
       content: Form(
         key: _formKey,

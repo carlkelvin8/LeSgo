@@ -85,7 +85,7 @@ class AboutScreen extends StatelessWidget {
                 'Email: ${AppInfo.supportEmail}\n'
                 'Privacy: ${AppInfo.privacyEmail}\n'
                 'Website: ${AppInfo.website}\n'
-                '${AppInfo.companyAddress}',
+                'Address: ${AppInfo.companyAddress}',
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           _LinkTile(

@@ -36,7 +36,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
           style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.bold),
         ),
         content: const Text(
-          'Card payments are processed securely through Xendit when you top up '
+          'Card payments are processed securely through PayMongo when you top up '
           'LesPay or pay at checkout. No card details are stored on our servers.',
           style: TextStyle(fontFamily: 'TT Fors', height: 1.5),
         ),
@@ -96,34 +96,41 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                     _PaymentMethodCard(
                       provider: 'gcash',
-                      icon: 'assets/images/wallet/Gcash.svg',
+                      icon: 'assets/images/lespay/Gcash.svg',
                       title: 'GCash',
                       subtitle: 'Mobile wallet',
                       isLinked: false,
-                      onTap: () => _showAddWalletDialog(context, initialProvider: 'gcash'),
+                      onTap: () => _showAddWalletDialog(
+                        context,
+                        initialProvider: 'gcash',
+                      ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                     _PaymentMethodCard(
                       provider: 'maya',
-                      icon: 'assets/images/wallet/Maya.svg',
+                      icon: 'assets/images/lespay/Maya.svg',
                       title: 'PayMaya',
                       subtitle: 'Digital wallet',
                       isLinked: false,
-                      onTap: () => _showAddWalletDialog(context, initialProvider: 'maya'),
+                      onTap: () => _showAddWalletDialog(
+                        context,
+                        initialProvider: 'maya',
+                      ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                     _PaymentMethodCard(
                       provider: 'card',
                       icon: Icons.credit_card,
                       title: 'Credit/Debit Card',
-                      subtitle: 'Visa, Mastercard via Xendit',
+                      subtitle: 'Visa, Mastercard via PayMongo',
                       isLinked: false,
                       onTap: () => _handleCardTap(context),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 24)),
                     Container(
-                      padding:
-                          EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.spacing(context, 12),
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(8),
@@ -144,7 +151,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                           Text(
                             'GCash and PayMaya can be linked to your LesPay wallet. '
-                            'Credit and debit cards are charged securely through Xendit '
+                            'Credit and debit cards are charged securely through PayMongo '
                             'at checkout or top-up — your card details are never stored '
                             'on our servers.',
                             style: TextStyle(
@@ -217,16 +224,8 @@ class _PaymentMethodCard extends StatelessWidget {
           vertical: ResponsiveUtils.spacing(context, 8),
         ),
         leading: icon is String
-            ? SvgPicture.asset(
-                icon,
-                width: 32,
-                height: 32,
-              )
-            : Icon(
-                icon as IconData,
-                size: 32,
-                color: const Color(0xFF5F2D82),
-              ),
+            ? SvgPicture.asset(icon, width: 32, height: 32)
+            : Icon(icon as IconData, size: 32, color: const Color(0xFF5F2D82)),
         title: Text(
           title,
           style: TextStyle(
@@ -264,10 +263,7 @@ class _AddWalletDialog extends ConsumerStatefulWidget {
   final BuildContext parentContext;
   final String? initialProvider;
 
-  const _AddWalletDialog({
-    required this.parentContext,
-    this.initialProvider,
-  });
+  const _AddWalletDialog({required this.parentContext, this.initialProvider});
 
   @override
   ConsumerState<_AddWalletDialog> createState() => _AddWalletDialogState();
@@ -342,7 +338,7 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
           _buildMethodOption('maya', 'PayMaya'),
           const SizedBox(height: 12),
           Text(
-            'You will verify your account through our secure Xendit payment partner.',
+            'You will verify your account through our secure PayMongo payment partner.',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 12,
@@ -361,6 +357,11 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
           onPressed: _submitting ? null : _submit,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF5F2D82),
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: const Color(
+              0xFF5F2D82,
+            ).withValues(alpha: 0.55),
+            disabledForegroundColor: Colors.white70,
           ),
           child: _submitting
               ? const SizedBox(
@@ -371,7 +372,10 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : const Text('Link Account'),
+              : const Text(
+                  'Link Account',
+                  style: TextStyle(color: Colors.white),
+                ),
         ),
       ],
     );
@@ -381,7 +385,19 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
-      title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
+      title: Row(
+        children: [
+          SvgPicture.asset(
+            value == 'gcash'
+                ? 'assets/images/lespay/Gcash.svg'
+                : 'assets/images/lespay/Maya.svg',
+            width: 32,
+            height: 32,
+          ),
+          const SizedBox(width: 10),
+          Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
+        ],
+      ),
       leading: Radio<String>(
         value: value,
         groupValue: _selectedMethod,

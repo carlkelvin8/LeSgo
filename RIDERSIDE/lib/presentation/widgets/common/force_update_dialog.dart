@@ -18,7 +18,7 @@ Future<void> showForceUpdateDialog(
         title: const Text('Update required'),
         content: Text(
           check.message ??
-              'A newer version of LezGo Rider is required to continue.',
+              'A newer version of LeSgo Affiliates is required to continue.',
         ),
         actions: [
           if (check.storeUrl != null)

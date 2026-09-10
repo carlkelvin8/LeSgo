@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
@@ -51,7 +52,9 @@ class _RiderWalletWithdrawDialogState
     for (final account in _linkedAccounts) {
       if (account['provider']?.toString() != provider) continue;
       final meta = account['meta'];
-      final metaMap = meta is Map ? Map<String, dynamic>.from(meta) : <String, dynamic>{};
+      final metaMap = meta is Map
+          ? Map<String, dynamic>.from(meta)
+          : <String, dynamic>{};
       final hasNumber =
           metaMap['account_number']?.toString().isNotEmpty == true;
       final hasLast4 = account['account_last4']?.toString().isNotEmpty == true;
@@ -88,8 +91,10 @@ class _RiderWalletWithdrawDialogState
       return AppLocalization.translate('please_enter_amount', lang);
     }
     final amount = double.tryParse(value.trim());
-    if (amount == null) return AppLocalization.translate('please_enter_valid_number', lang);
-    if (amount < 10) return AppLocalization.translate('minimum_withdrawal_10', lang);
+    if (amount == null)
+      return AppLocalization.translate('please_enter_valid_number', lang);
+    if (amount < 10)
+      return AppLocalization.translate('minimum_withdrawal_10', lang);
     final balance = ref.read(riderWalletProvider).balance;
     if (amount > balance) {
       return AppLocalization.translate('insufficient_balance', lang);
@@ -122,18 +127,28 @@ class _RiderWalletWithdrawDialogState
       Navigator.of(context).pop();
       if (widget.parentContext.mounted) {
         final lang = ref.read(appLanguageProvider);
-      SnackBarUtils.showSuccess(
+        SnackBarUtils.showSuccess(
           widget.parentContext,
           AppLocalization.translate('amount_sent', lang)
               .replaceAll('{{amount}}', amount.toStringAsFixed(2))
-              .replaceAll('{{provider}}', AppLocalization.translate(_method == 'gcash' ? 'gcash' : 'maya', lang)),
+              .replaceAll(
+                '{{provider}}',
+                AppLocalization.translate(
+                  _method == 'gcash' ? 'gcash' : 'maya',
+                  lang,
+                ),
+              ),
         );
       }
     } else {
       final error = ref.read(riderWalletProvider).error;
       SnackBarUtils.showError(
         context,
-        error ?? AppLocalization.translate('withdrawal_failed', ref.read(appLanguageProvider)),
+        error ??
+            AppLocalization.translate(
+              'withdrawal_failed',
+              ref.read(appLanguageProvider),
+            ),
       );
     }
   }
@@ -143,14 +158,30 @@ class _RiderWalletWithdrawDialogState
     if (account == null) {
       return ListTile(
         contentPadding: EdgeInsets.zero,
+        leading: _providerLogo(provider),
         title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
         subtitle: Text(
-          AppLocalization.translate('not_linked', ref.read(appLanguageProvider)),
+          AppLocalization.translate(
+            'not_linked',
+            ref.read(appLanguageProvider),
+          ),
           style: TextStyle(fontFamily: 'TT Fors', color: Colors.orange),
         ),
         trailing: TextButton(
           onPressed: _submitting ? null : () => _linkAccount(provider, label),
-          child: Text(AppLocalization.translate('link_account', ref.read(appLanguageProvider))),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFF5F2D82),
+            disabledForegroundColor: const Color(
+              0xFF5F2D82,
+            ).withValues(alpha: 0.45),
+          ),
+          child: Text(
+            AppLocalization.translate(
+              'link_account',
+              ref.read(appLanguageProvider),
+            ),
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
       );
     }
@@ -164,6 +195,7 @@ class _RiderWalletWithdrawDialogState
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
+      leading: _providerLogo(provider),
       title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
       subtitle: Text(
         display,
@@ -185,7 +217,10 @@ class _RiderWalletWithdrawDialogState
         children: [
           Text(
             AppLocalization.translate('withdraw_via_xendit', lang),
-            style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
@@ -223,8 +258,16 @@ class _RiderWalletWithdrawDialogState
               const SizedBox(height: 8),
               SegmentedButton<String>(
                 segments: [
-                  ButtonSegment(value: 'gcash', label: Text(AppLocalization.translate('gcash', lang))),
-                  ButtonSegment(value: 'maya', label: Text(AppLocalization.translate('maya', lang))),
+                  ButtonSegment(
+                    value: 'gcash',
+                    icon: _providerLogo('gcash', size: 22),
+                    label: Text(AppLocalization.translate('gcash', lang)),
+                  ),
+                  ButtonSegment(
+                    value: 'maya',
+                    icon: _providerLogo('maya', size: 22),
+                    label: Text(AppLocalization.translate('maya', lang)),
+                  ),
                 ],
                 selected: {_method},
                 onSelectionChanged: _submitting
@@ -236,8 +279,9 @@ class _RiderWalletWithdrawDialogState
               const SizedBox(height: 12),
               TextFormField(
                 controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
                   labelText: AppLocalization.translate('amount', lang),
                   prefixText: 'PHP ',
@@ -273,6 +317,16 @@ class _RiderWalletWithdrawDialogState
               : Text(AppLocalization.translate('withdraw', lang)),
         ),
       ],
+    );
+  }
+
+  Widget _providerLogo(String provider, {double size = 34}) {
+    return SvgPicture.asset(
+      provider == 'gcash'
+          ? 'assets/images/wallet/Gcash.svg'
+          : 'assets/images/wallet/Maya.svg',
+      width: size,
+      height: size,
     );
   }
 }

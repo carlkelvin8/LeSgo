@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/routers/app_router.dart';
-import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/utils/responsive_utils.dart';
 import 'profile_referral_card.dart';
 import 'profile_points_card.dart';
@@ -37,7 +35,6 @@ class ProfileRewardsSection extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           child: ProfilePointsCard(
             points: points,
-            onTap: () => AppRouter.push(context, MainRoutes.loyaltyRedeem),
           ),
         ),
       ],

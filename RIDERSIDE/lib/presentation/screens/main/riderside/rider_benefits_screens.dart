@@ -126,7 +126,6 @@ class _RiderLoyaltyScreenState extends ConsumerState<RiderLoyaltyScreen> {
   List<dynamic> _rewards = [];
   bool _loading = true;
   String? _error;
-  int? _redeemingId;
 
   @override
   void initState() {
@@ -155,32 +154,6 @@ class _RiderLoyaltyScreenState extends ConsumerState<RiderLoyaltyScreen> {
     }
   }
 
-  Future<void> _redeem(Map<String, dynamic> reward) async {
-    final rewardId = (reward['id'] as num?)?.toInt();
-    if (rewardId == null) return;
-    setState(() => _redeemingId = rewardId);
-    try {
-      final result = await ApiService.redeemLoyaltyReward(rewardId);
-      if (!mounted) return;
-      final lang = ref.read(appLanguageProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result['reward_title']?.toString() ?? AppLocalization.translate('reward_redeemed', lang),
-          ),
-        ),
-      );
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ApiService.extractError(e))),
-      );
-    } finally {
-      if (mounted) setState(() => _redeemingId = null);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
@@ -194,9 +167,6 @@ class _RiderLoyaltyScreenState extends ConsumerState<RiderLoyaltyScreen> {
         itemCount: _rewards.length,
         itemBuilder: (context, index) {
           final reward = _rewards[index] as Map<String, dynamic>;
-          final rewardId = (reward['id'] as num?)?.toInt();
-          final available = reward['available'] == true;
-          final redeeming = rewardId != null && _redeemingId == rewardId;
           return ListTile(
             tileColor: Colors.grey.shade50,
             title: Text(
@@ -207,20 +177,7 @@ class _RiderLoyaltyScreenState extends ConsumerState<RiderLoyaltyScreen> {
               '${reward['points_cost'] ?? reward['points_required'] ?? 0} points',
               style: const TextStyle(fontFamily: 'TT Fors'),
             ),
-            trailing: available
-                ? TextButton(
-                    onPressed: redeeming || rewardId == null
-                        ? null
-                        : () => _redeem(reward),
-                    child: redeeming
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(AppLocalization.translate('redeem', lang)),
-                  )
-                : Text(AppLocalization.translate('locked', lang), style: TextStyle(color: Colors.grey)),
+            trailing: const Icon(Icons.local_offer_outlined),
           );
         },
       ),

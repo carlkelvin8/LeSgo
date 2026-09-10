@@ -43,8 +43,6 @@ class ApiConstants {
   static const String vouchersAvailable = '/v1/vouchers/available';
   static const String vouchersClaim = '/v1/vouchers/claim';
   static const String loyaltyRewards = '/v1/loyalty/rewards';
-  static String loyaltyRedeem(int rewardId) =>
-      '/v1/loyalty/rewards/$rewardId/redeem';
   static const String referralDashboard = '/v1/referrals/dashboard';
   static const String securityDashboard = '/v1/security/dashboard';
   static const String security2faSetup = '/v1/security/2fa/setup';

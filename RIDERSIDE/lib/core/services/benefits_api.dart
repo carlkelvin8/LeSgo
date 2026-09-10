@@ -141,11 +141,6 @@ class BenefitsApi {
     return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
   }
 
-  static Future<Map<String, dynamic>> redeemLoyaltyReward(int rewardId) async {
-    final res = await _dio.post(ApiConstants.loyaltyRedeem(rewardId));
-    return Map<String, dynamic>.from(res.data['data'] as Map? ?? {});
-  }
-
   static Future<Map<String, dynamic>> setup2fa() => SecurityApi.setup2fa();
 
   static Future<void> verify2fa(String code) => SecurityApi.verify2fa(code);

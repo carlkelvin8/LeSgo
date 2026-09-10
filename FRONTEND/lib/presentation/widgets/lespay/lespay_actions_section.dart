@@ -26,15 +26,6 @@ class LespayActionsSection extends ConsumerWidget {
           },
         ),
         LespayMenuItem(
-          iconPath: 'assets/images/lespay/Gift.svg',
-          title: 'Redeem Points',
-          subtitle: 'Exchange points for rewards',
-          backgroundColor: const Color(0xFF5F2D82),
-          onTap: () {
-            AppRouter.push(context, MainRoutes.loyaltyRedeem);
-          },
-        ),
-        LespayMenuItem(
           iconPath: 'assets/images/lespay/Card.svg',
           title: 'Payment Methods',
           subtitle: 'Manage cards and wallets',

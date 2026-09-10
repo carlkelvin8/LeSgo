@@ -56,7 +56,9 @@ class FcmService {
 
     try {
       if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
       }
 
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -66,7 +68,9 @@ class FcmService {
 
       _token = await messaging.getToken();
       _fcmReady = _token != null;
-      AppLogger.debug('FCM initialized: token ${_token != null ? "received" : "missing"}');
+      AppLogger.debug(
+        'FCM initialized: token ${_token != null ? "received" : "missing"}',
+      );
 
       if (_token == null || _token!.isEmpty) {
         AppLogger.warn(
@@ -97,22 +101,34 @@ class FcmService {
   /// Validates that Firebase configuration is complete and not using placeholder values.
   bool _validateFirebaseConfiguration() {
     if (SecretsConfig.firebaseProjectId.isEmpty) {
-      AppLogger.error('Firebase validation failed: FIREBASE_PROJECT_ID is missing', null);
+      AppLogger.error(
+        'Firebase validation failed: FIREBASE_PROJECT_ID is missing',
+        null,
+      );
       return false;
     }
 
     if (SecretsConfig.firebaseMessagingSenderId.isEmpty) {
-      AppLogger.error('Firebase validation failed: FIREBASE_MESSAGING_SENDER_ID is missing', null);
+      AppLogger.error(
+        'Firebase validation failed: FIREBASE_MESSAGING_SENDER_ID is missing',
+        null,
+      );
       return false;
     }
 
     if (SecretsConfig.firebaseAndroidApiKey.isEmpty) {
-      AppLogger.error('Firebase validation failed: FIREBASE_API_KEY_ANDROID is missing', null);
+      AppLogger.error(
+        'Firebase validation failed: FIREBASE_API_KEY_ANDROID is missing',
+        null,
+      );
       return false;
     }
 
     if (SecretsConfig.firebaseAndroidAppId.isEmpty) {
-      AppLogger.error('Firebase validation failed: FIREBASE_APP_ID_ANDROID is missing', null);
+      AppLogger.error(
+        'Firebase validation failed: FIREBASE_APP_ID_ANDROID is missing',
+        null,
+      );
       return false;
     }
 
@@ -135,7 +151,9 @@ class FcmService {
   Future<void> registerWithBackend() async {
     final token = _token;
     if (!_fcmReady || token == null || token.isEmpty) {
-      AppLogger.debug('FCM backend registration skipped: no FCM token available');
+      AppLogger.debug(
+        'FCM backend registration skipped: no FCM token available',
+      );
       return;
     }
 
@@ -185,7 +203,9 @@ class FcmService {
   Future<void> _initLocalNotifications() async {
     if (_localNotificationsReady) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -200,12 +220,14 @@ class FcmService {
     if (!kIsWeb) {
       await _localNotifications
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.requestNotificationsPermission();
 
       await _localNotifications
           .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
+            IOSFlutterLocalNotificationsPlugin
+          >()
           ?.requestPermissions(alert: true, badge: true, sound: true);
     }
 
@@ -275,7 +297,7 @@ class FcmService {
     }
 
     await showLocalNotification(
-      title: notification.title ?? 'LezGo Rider',
+      title: notification.title ?? 'LeSgo Affiliates',
       body: notification.body ?? '',
       payload: _extractPayload(message),
     );
@@ -286,7 +308,7 @@ class FcmService {
     final data = message.data;
     final notificationType = data['type'] ?? data['notification_type'] ?? '';
     final hasOrderId = data['order_id'] != null || data['orderId'] != null;
-    
+
     return notificationType.toLowerCase().contains('order') || hasOrderId;
   }
 }
