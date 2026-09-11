@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/constants/routers/app_router.dart';
+import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/support/support_provider.dart';
 import '../../../widgets/common/retry_widget.dart';
@@ -28,54 +30,66 @@ class SupportTicketsScreen extends ConsumerWidget {
             Expanded(
               child: state.isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF5F2D82),
+                      ),
                     )
                   : state.error != null && state.tickets.isEmpty
-                      ? RetryWidget(
-                          message: state.error!,
-                          onRetry: () =>
-                              ref.read(supportProvider.notifier).loadTickets(),
-                        )
-                      : RefreshIndicator(
-                          color: const Color(0xFF5F2D82),
-                          onRefresh: () =>
-                              ref.read(supportProvider.notifier).loadTickets(),
-                          child: state.tickets.isEmpty
-                              ? ListView(
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  children: [
-                                    SizedBox(
-                                      height: ResponsiveUtils.spacing(context, 80),
-                                    ),
-                                    Center(
-                                      child: Text(
-                                        'No support tickets yet.',
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          fontSize: ResponsiveUtils.fontSize(
-                                            context,
-                                            14,
-                                          ),
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : ListView.separated(
-                                  padding: EdgeInsets.all(
-                                    ResponsiveUtils.spacing(context, 16),
-                                  ),
-                                  itemCount: state.tickets.length,
-                                  separatorBuilder: (_, __) => SizedBox(
-                                    height: ResponsiveUtils.spacing(context, 8),
-                                  ),
-                                  itemBuilder: (context, index) {
-                                    final ticket = state.tickets[index];
-                                    return _TicketTile(ticket: ticket);
-                                  },
+                  ? RetryWidget(
+                      message: state.error!,
+                      actionLabel: state.requiresLogin ? 'Log In' : 'Try Again',
+                      actionIcon: state.requiresLogin
+                          ? Icons.login
+                          : Icons.refresh,
+                      onRetry: state.requiresLogin
+                          ? () => AppRouter.pushAndRemoveUntil(
+                              context,
+                              LoginRoutes.login,
+                            )
+                          : () => ref
+                                .read(supportProvider.notifier)
+                                .loadTickets(),
+                    )
+                  : RefreshIndicator(
+                      color: const Color(0xFF5F2D82),
+                      onRefresh: () =>
+                          ref.read(supportProvider.notifier).loadTickets(),
+                      child: state.tickets.isEmpty
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                SizedBox(
+                                  height: ResponsiveUtils.spacing(context, 80),
                                 ),
-                        ),
+                                Center(
+                                  child: Text(
+                                    'No support tickets yet.',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontSize: ResponsiveUtils.fontSize(
+                                        context,
+                                        14,
+                                      ),
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : ListView.separated(
+                              padding: EdgeInsets.all(
+                                ResponsiveUtils.spacing(context, 16),
+                              ),
+                              itemCount: state.tickets.length,
+                              separatorBuilder: (_, _) => SizedBox(
+                                height: ResponsiveUtils.spacing(context, 8),
+                              ),
+                              itemBuilder: (context, index) {
+                                final ticket = state.tickets[index];
+                                return _TicketTile(ticket: ticket);
+                              },
+                            ),
+                    ),
             ),
           ],
         ),
@@ -91,7 +105,7 @@ class SupportTicketsScreen extends ConsumerWidget {
   Future<void> _showCreateDialog(BuildContext context, WidgetRef ref) async {
     final subjectController = TextEditingController();
     final descriptionController = TextEditingController();
-    final categoryController = TextEditingController(text: 'general');
+    final categoryController = TextEditingController(text: 'general_inquiry');
     final picker = ImagePicker();
     final attachments = <XFile>[];
 
@@ -122,7 +136,9 @@ class SupportTicketsScreen extends ConsumerWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
                     onPressed: () async {
-                      final files = await picker.pickMultiImage(imageQuality: 85);
+                      final files = await picker.pickMultiImage(
+                        imageQuality: 85,
+                      );
                       if (files.isNotEmpty) {
                         setDialogState(() {
                           attachments
@@ -158,7 +174,9 @@ class SupportTicketsScreen extends ConsumerWidget {
 
     if (created != true || !context.mounted) return;
 
-    final ok = await ref.read(supportProvider.notifier).createTicket(
+    final ok = await ref
+        .read(supportProvider.notifier)
+        .createTicket(
           CreateTicketDto(
             subject: subjectController.text.trim(),
             description: descriptionController.text.trim(),
@@ -168,9 +186,9 @@ class SupportTicketsScreen extends ConsumerWidget {
         );
 
     if (context.mounted && ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Support ticket created')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Support ticket created')));
     }
   }
 }

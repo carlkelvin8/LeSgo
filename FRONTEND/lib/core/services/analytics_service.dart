@@ -40,7 +40,14 @@ class AnalyticsService {
           if (eventValue != null) 'event_value': eventValue,
           if (properties != null) 'properties': properties,
         },
-        options: Options(extra: const {'skipOfflineQueue': true}),
+        options: Options(
+          extra: const {
+            'skipOfflineQueue': true,
+            // Analytics is optional. A tracking-specific 401 must never
+            // refresh, revoke, or clear the customer's valid app session.
+            'skipAuthRefresh': true,
+          },
+        ),
       );
     } catch (e) {
       debugPrint('Analytics track skipped: $e');

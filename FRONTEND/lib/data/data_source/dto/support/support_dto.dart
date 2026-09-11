@@ -7,18 +7,23 @@ class SupportTicketDto {
   final int id;
   @JsonKey(name: 'user_id')
   final int userId;
+  @JsonKey(defaultValue: 'Support request')
   final String subject;
+  @JsonKey(defaultValue: '')
   final String description;
+  @JsonKey(defaultValue: 'general_inquiry')
   final String category;
+  @JsonKey(defaultValue: 'medium')
   final String priority;
+  @JsonKey(defaultValue: 'open')
   final String status;
   @JsonKey(name: 'assigned_to')
   final int? assignedTo;
   @JsonKey(name: 'closed_at')
   final String? closedAt;
-  @JsonKey(name: 'created_at')
+  @JsonKey(name: 'created_at', defaultValue: '')
   final String createdAt;
-  @JsonKey(name: 'updated_at')
+  @JsonKey(name: 'updated_at', defaultValue: '')
   final String updatedAt;
 
   SupportTicketDto({

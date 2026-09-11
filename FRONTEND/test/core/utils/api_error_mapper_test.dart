@@ -47,6 +47,24 @@ void main() {
       expect(msg, 'Insufficient wallet balance');
     });
 
+    test('maps a 401 API response to an expired-session message', () {
+      final msg = ApiErrorMapper.message(
+        DioException(
+          requestOptions: RequestOptions(path: '/v1/support/tickets'),
+          response: Response(
+            requestOptions: RequestOptions(path: '/v1/support/tickets'),
+            statusCode: 401,
+            data: {'message': 'Unauthenticated.'},
+          ),
+          type: DioExceptionType.badResponse,
+        ),
+        fallbackEn: 'Could not load support tickets.',
+      );
+
+      expect(msg, contains('session has expired'));
+      expect(msg, isNot(contains('Unauthenticated')));
+    });
+
     test('maps 429 with retry-after header', () {
       final msg = ApiErrorMapper.message(
         DioException(
@@ -81,8 +99,10 @@ void main() {
     test('maps client rate limit exception', () {
       final msg = ApiErrorMapper.message(const ClientRateLimitException(8));
       expect(msg, contains('8 second'));
-      expect(ApiErrorMapper.isRateLimited(const ClientRateLimitException(1)),
-          isTrue);
+      expect(
+        ApiErrorMapper.isRateLimited(const ClientRateLimitException(1)),
+        isTrue,
+      );
     });
 
     test('sanitizes raw technical strings', () {

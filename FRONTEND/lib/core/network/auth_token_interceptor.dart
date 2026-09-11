@@ -45,34 +45,68 @@ class AuthTokenInterceptor extends QueuedInterceptor {
       return;
     }
 
+    final failedToken = _requestToken(err.requestOptions);
+    final currentToken = _localStorageService.token;
+    if (currentToken != null &&
+        currentToken.isNotEmpty &&
+        (failedToken == null || currentToken != failedToken)) {
+      await _retryWithToken(err, handler, currentToken);
+      return;
+    }
+
     if (err.requestOptions.extra['retriedAfterRefresh'] == true) {
-      await _localStorageService.clearToken();
+      await _clearTokenOnlyIfCurrent(failedToken);
       handler.next(err);
       return;
     }
 
     final newToken = await _tokenRefreshService.refreshAccessToken();
     if (newToken == null || newToken.isEmpty) {
-      await _localStorageService.clearToken();
+      await _clearTokenOnlyIfCurrent(failedToken);
       handler.next(err);
       return;
     }
 
+    await _retryWithToken(err, handler, newToken);
+  }
+
+  Future<void> _retryWithToken(
+    DioException originalError,
+    ErrorInterceptorHandler handler,
+    String token,
+  ) async {
     try {
-      final requestOptions = err.requestOptions;
-      requestOptions.headers['Authorization'] = 'Bearer $newToken';
+      final requestOptions = originalError.requestOptions;
+      requestOptions.headers['Authorization'] = 'Bearer $token';
       requestOptions.extra['retriedAfterRefresh'] = true;
 
       final response = await _dio.fetch<dynamic>(requestOptions);
       handler.resolve(response);
     } on DioException catch (retryError) {
       if (retryError.response?.statusCode == 401) {
-        await _localStorageService.clearToken();
+        await _clearTokenOnlyIfCurrent(token);
       }
       handler.next(retryError);
     } catch (_) {
-      handler.next(err);
+      handler.next(originalError);
     }
+  }
+
+  String? _requestToken(RequestOptions options) {
+    final authorization = options.headers['Authorization']?.toString();
+    if (authorization == null || !authorization.startsWith('Bearer ')) {
+      return null;
+    }
+    return authorization.substring('Bearer '.length);
+  }
+
+  Future<void> _clearTokenOnlyIfCurrent(String? failedToken) async {
+    // A delayed anonymous request must never invalidate a session that was
+    // established after that request was sent.
+    if (failedToken == null || _localStorageService.token != failedToken) {
+      return;
+    }
+    await _localStorageService.clearToken();
   }
 
   bool _shouldSkipRefresh(RequestOptions options) {

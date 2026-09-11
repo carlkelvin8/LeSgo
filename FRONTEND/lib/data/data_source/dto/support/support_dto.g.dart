@@ -10,15 +10,15 @@ SupportTicketDto _$SupportTicketDtoFromJson(Map<String, dynamic> json) =>
     SupportTicketDto(
       id: (json['id'] as num).toInt(),
       userId: (json['user_id'] as num).toInt(),
-      subject: json['subject'] as String,
-      description: json['description'] as String,
-      category: json['category'] as String,
-      priority: json['priority'] as String,
-      status: json['status'] as String,
+      subject: json['subject'] as String? ?? 'Support request',
+      description: json['description'] as String? ?? '',
+      category: json['category'] as String? ?? 'general_inquiry',
+      priority: json['priority'] as String? ?? 'medium',
+      status: json['status'] as String? ?? 'open',
       assignedTo: (json['assigned_to'] as num?)?.toInt(),
       closedAt: json['closed_at'] as String?,
-      createdAt: json['created_at'] as String,
-      updatedAt: json['updated_at'] as String,
+      createdAt: json['created_at'] as String? ?? '',
+      updatedAt: json['updated_at'] as String? ?? '',
     );
 
 Map<String, dynamic> _$SupportTicketDtoToJson(SupportTicketDto instance) =>

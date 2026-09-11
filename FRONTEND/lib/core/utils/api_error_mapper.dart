@@ -70,6 +70,16 @@ class ApiErrorMapper {
     String? fallbackEn,
     String? fallbackTl,
   }) {
+    final code = error.response?.statusCode;
+    if (code == 401) {
+      return _pick(
+        null,
+        null,
+        'Your session has expired. Please log in again.',
+        'Nag-expire ang session. Mag-log in muli.',
+      );
+    }
+
     final apiMsg = _extractApiMessage(error.response?.data);
     if (apiMsg != null && !_looksLikeRateLimit(apiMsg)) return apiMsg;
 
@@ -112,15 +122,6 @@ class ApiErrorMapper {
         break;
     }
 
-    final code = error.response?.statusCode;
-    if (code == 401) {
-      return _pick(
-        fallbackEn,
-        fallbackTl,
-        'Please log in again.',
-        'Mag-log in muli.',
-      );
-    }
     if (code == 403) {
       return _pick(
         fallbackEn,
@@ -146,7 +147,9 @@ class ApiErrorMapper {
       );
     }
     if (code == 429) {
-      final retryAfter = _parseRetryAfter(error.response?.headers.value('retry-after'));
+      final retryAfter = _parseRetryAfter(
+        error.response?.headers.value('retry-after'),
+      );
       if (retryAfter != null) {
         return _rateLimitMessage(retryAfter);
       }

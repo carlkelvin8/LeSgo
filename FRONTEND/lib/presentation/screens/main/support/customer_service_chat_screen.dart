@@ -49,7 +49,10 @@ class _CustomerServiceChatScreenState
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(customerServiceChatProvider);
-    ref.listen(customerServiceChatProvider, (previous, next) => _scrollToBottom());
+    ref.listen(
+      customerServiceChatProvider,
+      (previous, next) => _scrollToBottom(),
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -77,7 +80,9 @@ class _CustomerServiceChatScreenState
                   ),
                 ),
                 Text(
-                  chatState.isConfigured ? 'Customer Service' : 'Setup required',
+                  chatState.isConfigured
+                      ? 'AI Customer Service'
+                      : 'Live support available',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -106,10 +111,7 @@ class _CustomerServiceChatScreenState
                 value: 'human',
                 child: Text('Talk to human support'),
               ),
-              PopupMenuItem(
-                value: 'clear',
-                child: Text('Clear chat'),
-              ),
+              PopupMenuItem(value: 'clear', child: Text('Clear chat')),
             ],
           ),
         ],
@@ -121,15 +123,29 @@ class _CustomerServiceChatScreenState
               width: double.infinity,
               color: const Color(0xFFFFF8E1),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-              child: Text(
-                'Add GEMINI_API_KEY to secrets.json and restart the app to enable AI replies.',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.orange.shade900,
-                ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: ResponsiveUtils.fontSize(context, 18),
+                    color: Colors.orange.shade900,
+                  ),
+                  SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                  Expanded(
+                    child: Text(
+                      'AI support is currently unavailable. A live agent can still assist you.',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                        color: Colors.orange.shade900,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+          if (!chatState.isConfigured || chatState.error != null)
+            _liveAgentCard(context),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -163,7 +179,69 @@ class _CustomerServiceChatScreenState
                 ),
               ),
             ),
-          _inputBar(context, chatState.isSending),
+          if (chatState.isConfigured) _inputBar(context, chatState.isSending),
+        ],
+      ),
+    );
+  }
+
+  Widget _liveAgentCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.fromLTRB(
+        ResponsiveUtils.spacing(context, 16),
+        ResponsiveUtils.spacing(context, 16),
+        ResponsiveUtils.spacing(context, 16),
+        0,
+      ),
+      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5EEFA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFD8C3E7)),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: Color(0xFF5F2D82),
+            foregroundColor: Colors.white,
+            child: Icon(Icons.headset_mic_outlined),
+          ),
+          SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Need help now?',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 14),
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3E1D55),
+                  ),
+                ),
+                Text(
+                  'Send a message to our customer support team.',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+          FilledButton.icon(
+            onPressed: () => AppRouter.push(context, MainRoutes.supportTickets),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF5F2D82),
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.support_agent, size: 18),
+            label: const Text('Live agent'),
+          ),
         ],
       ),
     );
@@ -177,10 +255,10 @@ class _CustomerServiceChatScreenState
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             radius: 16,
-            backgroundColor: const Color(0xFFE8D9F5),
-            child: const Icon(
+            backgroundColor: Color(0xFFE8D9F5),
+            child: Icon(
               Icons.support_agent,
               size: 16,
               color: Color(0xFF5F2D82),

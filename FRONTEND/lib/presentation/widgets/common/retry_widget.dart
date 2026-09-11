@@ -5,13 +5,17 @@ class RetryWidget extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
   final bool isLoading;
+  final String actionLabel;
+  final IconData actionIcon;
 
   const RetryWidget({
-    Key? key,
+    super.key,
     required this.message,
     required this.onRetry,
     this.isLoading = false,
-  }) : super(key: key);
+    this.actionLabel = 'Try Again',
+    this.actionIcon = Icons.refresh,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +25,7 @@ class RetryWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             Text(
               'Oops!',
@@ -58,9 +58,9 @@ class RetryWidget extends StatelessWidget {
                         color: Colors.white,
                       ),
                     )
-                  : const Icon(Icons.refresh),
+                  : Icon(actionIcon),
               label: Text(
-                isLoading ? 'Retrying...' : 'Try Again',
+                isLoading ? 'Please wait...' : actionLabel,
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),

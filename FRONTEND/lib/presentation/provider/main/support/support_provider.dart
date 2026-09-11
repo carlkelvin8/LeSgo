@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -12,11 +13,13 @@ class SupportState {
   final List<SupportTicketDto> tickets;
   final bool isLoading;
   final String? error;
+  final bool requiresLogin;
 
   const SupportState({
     this.tickets = const [],
     this.isLoading = false,
     this.error,
+    this.requiresLogin = false,
   });
 
   SupportState copyWith({
@@ -24,11 +27,13 @@ class SupportState {
     bool? isLoading,
     String? error,
     bool clearError = false,
+    bool? requiresLogin,
   }) {
     return SupportState(
       tickets: tickets ?? this.tickets,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
+      requiresLogin: requiresLogin ?? this.requiresLogin,
     );
   }
 }
@@ -42,13 +47,18 @@ class SupportNotifier extends StateNotifier<SupportState> {
   final FileUploadService _uploadService = getIt<FileUploadService>();
 
   Future<void> loadTickets() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      requiresLogin: false,
+    );
     try {
       final tickets = await _dataSource.getTickets();
       state = state.copyWith(tickets: tickets, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
+        requiresLogin: e is DioException && e.response?.statusCode == 401,
         error: ApiErrorMapper.message(
           e,
           fallbackEn: 'Could not load support tickets.',
@@ -75,10 +85,7 @@ class SupportNotifier extends StateNotifier<SupportState> {
       if (attachments != null && attachments.isNotEmpty) {
         attachmentUrls = await uploadAttachments(attachments);
       }
-      await _dataSource.createTicket(
-        request,
-        attachments: attachmentUrls,
-      );
+      await _dataSource.createTicket(request, attachments: attachmentUrls);
       await loadTickets();
       return true;
     } catch (e) {
@@ -94,7 +101,8 @@ class SupportNotifier extends StateNotifier<SupportState> {
   }
 }
 
-final supportProvider =
-    StateNotifierProvider<SupportNotifier, SupportState>((ref) {
+final supportProvider = StateNotifierProvider<SupportNotifier, SupportState>((
+  ref,
+) {
   return SupportNotifier();
 });

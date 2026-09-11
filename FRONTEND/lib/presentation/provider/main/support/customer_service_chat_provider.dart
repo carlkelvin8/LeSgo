@@ -50,9 +50,10 @@ class CustomerServiceChatState {
 const _welcomeMessage =
     'Hi! I\'m LeSGo Assistant. I only handle LeSGo app customer service — orders, deliveries, LesPay, vouchers, missions, and account help. What can I help you with?';
 
-class CustomerServiceChatNotifier extends StateNotifier<CustomerServiceChatState> {
+class CustomerServiceChatNotifier
+    extends StateNotifier<CustomerServiceChatState> {
   CustomerServiceChatNotifier(this._service)
-      : super(const CustomerServiceChatState()) {
+    : super(const CustomerServiceChatState()) {
     _bootstrap();
   }
 
@@ -72,7 +73,7 @@ class CustomerServiceChatNotifier extends StateNotifier<CustomerServiceChatState
           id: _uuid.v4(),
           text: configured
               ? _welcomeMessage
-              : 'AI assistant is not configured yet. You can still contact our team through Support Tickets in Settings.',
+              : 'Our AI assistant is unavailable right now. You can still get help from a live support agent.',
           isUser: false,
           timestamp: DateTime.now(),
         ),
@@ -87,7 +88,7 @@ class CustomerServiceChatNotifier extends StateNotifier<CustomerServiceChatState
 
     if (!state.isConfigured) {
       state = state.copyWith(
-        error: 'Add GEMINI_API_KEY to secrets.json to enable the AI assistant.',
+        error: 'The AI assistant is unavailable. Please contact a live agent.',
       );
       return;
     }
@@ -117,17 +118,14 @@ class CustomerServiceChatNotifier extends StateNotifier<CustomerServiceChatState
         messages: [...state.messages, botMessage],
         isSending: false,
       );
-    } on GeminiNotConfiguredException catch (e) {
+    } on GeminiNotConfiguredException {
       state = state.copyWith(
         isSending: false,
         isConfigured: false,
-        error: e.toString(),
+        error: 'The AI assistant is unavailable. Please contact a live agent.',
       );
     } on GeminiServiceException catch (e) {
-      state = state.copyWith(
-        isSending: false,
-        error: e.message,
-      );
+      state = state.copyWith(isSending: false, error: e.message);
     } catch (e) {
       state = state.copyWith(
         isSending: false,
@@ -141,7 +139,10 @@ class CustomerServiceChatNotifier extends StateNotifier<CustomerServiceChatState
   }
 }
 
-final customerServiceChatProvider = StateNotifierProvider.autoDispose<
-    CustomerServiceChatNotifier, CustomerServiceChatState>((ref) {
-  return CustomerServiceChatNotifier(getIt<GeminiCustomerService>());
-});
+final customerServiceChatProvider =
+    StateNotifierProvider.autoDispose<
+      CustomerServiceChatNotifier,
+      CustomerServiceChatState
+    >((ref) {
+      return CustomerServiceChatNotifier(getIt<GeminiCustomerService>());
+    });
