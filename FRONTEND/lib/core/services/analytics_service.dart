@@ -1,0 +1,84 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:injectable/injectable.dart';
+
+import '../constants/api_constants.dart';
+import '../di/local_storage_service.dart';
+import '../network/dio_client.dart';
+
+/// Fire-and-forget analytics event tracking for the customer app.
+@lazySingleton
+class AnalyticsService {
+  final DioClient _dioClient;
+  final LocalStorageService _localStorageService;
+
+  AnalyticsService(this._dioClient, this._localStorageService);
+
+  Future<void> trackEvent(
+    String eventType, {
+    Map<String, dynamic>? properties,
+    String? eventCategory,
+    String? eventAction,
+    String? eventLabel,
+    double? eventValue,
+  }) async {
+    // Analytics endpoint requires authentication. Skip tracking when the user
+    // is not logged in to avoid noisy 401 errors on pre-auth screens.
+    final token = _localStorageService.token;
+    if (token == null || token.isEmpty) {
+      return;
+    }
+
+    try {
+      await _dioClient.dio.post(
+        ApiConstants.analyticsTrackEvent,
+        data: {
+          'event_type': eventType,
+          if (eventCategory != null) 'event_category': eventCategory,
+          if (eventAction != null) 'event_action': eventAction,
+          if (eventLabel != null) 'event_label': eventLabel,
+          if (eventValue != null) 'event_value': eventValue,
+          if (properties != null) 'properties': properties,
+        },
+        options: Options(extra: const {'skipOfflineQueue': true}),
+      );
+    } catch (e) {
+      debugPrint('Analytics track skipped: $e');
+    }
+  }
+
+  Future<void> trackScreenView(String screenName) {
+    return trackEvent(
+      'screen_view',
+      eventCategory: 'navigation',
+      eventAction: 'view',
+      eventLabel: screenName,
+      properties: {'screen': screenName},
+    );
+  }
+}
+
+/// Tracks named routes for analytics.
+class AnalyticsRouteObserver extends RouteObserver<PageRoute<dynamic>> {
+  AnalyticsRouteObserver(this._analytics);
+
+  final AnalyticsService _analytics;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    _track(route);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    if (newRoute != null) _track(newRoute);
+  }
+
+  void _track(Route<dynamic> route) {
+    final name = route.settings.name;
+    if (name == null || name.isEmpty) return;
+    _analytics.trackScreenView(name);
+  }
+}

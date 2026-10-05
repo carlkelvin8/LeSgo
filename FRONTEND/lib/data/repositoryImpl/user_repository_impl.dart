@@ -1,0 +1,98 @@
+import 'package:injectable/injectable.dart';
+
+import '../../core/di/local_storage_service.dart';
+import '../../domain/repository/user_repository.dart';
+import '../../domain/entities/user.dart';
+import '../../domain/entities/auth/login/login_request.dart';
+import '../../domain/exceptions/two_factor_auth_required_exception.dart';
+import '../data_source/user_remote_datasource.dart';
+import '../data_source/dto/login/login_request_dto.dart';
+
+@LazySingleton(as: UserRepository)
+class UserRepositoryImpl implements UserRepository {
+  final UserRemoteDataSource remoteDataSource;
+  final LocalStorageService localStorageService;
+
+  UserRepositoryImpl(this.remoteDataSource, this.localStorageService);
+
+  @override
+  Future<User> login(LoginRequest entity) async {
+    // Map Domain Entity to Request DTO
+    final requestDto = LoginRequestDto(
+      email: entity.email,
+      password: entity.password,
+      twoFactorCode: entity.twoFactorCode,
+    );
+
+    final dto = await remoteDataSource.login(requestDto);
+
+    // Map DTO to Domain Entity
+    // Using the User entity from domain/entities/user.dart
+    // Note: Since we need to pass back success and messages to auth_provider, we throw an Exception on failure
+    if (dto.twoFactorRequired) {
+      throw TwoFactorAuthRequiredException(
+        dto.message ?? 'Enter your authenticator code to continue.',
+      );
+    }
+
+    if (dto.success != true) {
+      throw Exception(dto.message ?? 'Login failed');
+    }
+
+    final token = dto.token;
+    if (token == null || token.isEmpty) {
+      throw Exception('No authentication token received');
+    }
+
+    await localStorageService.saveToken(token);
+
+    final refreshToken = dto.refreshToken;
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await localStorageService.saveRefreshToken(refreshToken);
+    }
+
+    var role = dto.role?.trim().toLowerCase();
+    if (role == null || role.isEmpty) {
+      // Some legacy login responses omit role. Resolve it from the
+      // authenticated profile instead of treating "unknown" as another app's
+      // account type and deleting a valid token.
+      try {
+        final profileResponse = await remoteDataSource.getMe();
+        role = profileResponse.success == true
+            ? profileResponse.data?.role.trim().toLowerCase()
+            : null;
+      } catch (_) {
+        role = null;
+      }
+    }
+
+    if (role == null || role.isEmpty) {
+      throw Exception(
+        'Unable to verify your account type. Check your connection and try again.',
+      );
+    }
+
+    return User(
+      id: dto.id,
+      email: dto.email,
+      name: dto.name,
+      token: token,
+      role: role,
+    );
+  }
+
+  @override
+  Future<String> logout() async {
+    final token = localStorageService.token;
+    if (token == null || token.isEmpty) {
+      return 'Logged out successfully';
+    }
+
+    final dto = await remoteDataSource.logout(token);
+    if (dto.success != true) {
+      throw Exception(dto.message);
+    }
+
+    return dto.message;
+  }
+}

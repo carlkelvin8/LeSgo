@@ -1,0 +1,80 @@
+# ========================
+# LeSGo Workspace .gitignore
+# ========================
+
+# --- Secrets & Environment ---
+.env
+.env.local
+.env.production
+*.env
+!.env.example
+
+# --- Flutter / Dart ---
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/*.iml
+**/pubspec.lock
+**/secrets.json
+!**/secrets.example.json
+
+# --- Signing material (never commit) ---
+**/key.properties
+**/*.jks
+**/*.keystore
+**/production_credentials.txt
+production_credentials.txt
+
+# --- Android ---
+**/android/.gradle/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/*.apk
+**/*.aab
+# Keep intentional APKs in apk/ folder
+!apk/
+
+# --- iOS ---
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+
+# --- IDE ---
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- AI context files ---
+CLAUDE/
+CONTEXT/
+/.kilo/
+/.kiro/
+
+# --- Local deployment / verification workspaces ---
+/.deploy-google-auth/
+/.verification/
+
+# --- Local test/debug files ---
+nul
+**/nul
+**/test_selfie.jpg
+token_storage_flow.md
+
+# --- Generated docs (keep source, ignore output) ---
+*.log
+
+# --- Node (backend) ---
+**/node_modules/
+**/vendor/
+
+# --- OS files ---
+.DS_Store
+*.swp
+Desktop.ini

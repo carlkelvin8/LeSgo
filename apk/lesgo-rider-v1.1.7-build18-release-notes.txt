@@ -1,0 +1,22 @@
+LeSgo Affiliates release: 1.1.7 (build 18)
+Package: com.lesgo.rider
+AAB: LeSgo-Affiliates-v1.1.7+18.aab / lesgo-rider-v1.1.7-build18.aab
+APK: LeSgo-Affiliates-v1.1.7+18.apk
+SHA256 (AAB): B5CD095BE2639A9427DFFAA29097C0A495984ABDD5A73723FD85A60472E5E4A9
+SHA256 (APK): 455F38222F3B075D0E09CCD6476E9309D8E719E9E68A8F06A175F084C3B163C0
+Built: September 25, 2026 09:01
+Branch: tech-debt-cleanup (latest working-tree code)
+
+Contents:
+- Supersedes build 17 (1.1.6+17). Higher versionName (1.1.7) and versionCode (18),
+  so it installs as an upgrade over all previous LeSgo Affiliates builds.
+- Includes all pending RIDERSIDE changes in the working tree: merchant withdrawal,
+  registration fee/terms gates, scheduled payouts, persistent order notification
+  sound, printer service, analytics/sales reports, and partner/affiliate terms.
+- Signed with the existing production release key (same keystore as build 15-17).
+
+Build commands:
+  flutter build appbundle --release --dart-define-from-file=secrets.json
+  flutter build apk      --release --dart-define-from-file=secrets.json
+
+Not performed: Google Play upload, bundletool/device install verification.

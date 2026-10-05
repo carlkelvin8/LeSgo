@@ -1,0 +1,819 @@
+PHPUnit 11.5.44 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.13
+Configuration: C:\Users\PC\LEZGO\BACKEND\lesgo-api\phpunit.xml
+
+...........EFF.................................................  63 / 339 ( 18%)
+....................FF.F..F.........FF......................... 126 / 339 ( 37%)
+...................................................F..F........ 189 / 339 ( 55%)
+.................................F............................. 252 / 339 ( 74%)
+....................F......E................................... 315 / 339 ( 92%)
+.F......................                                        339 / 339 (100%)
+
+Time: 00:37.885, Memory: 106.00 MB
+
+Account Deletion And Google Auth (Tests\Feature\AccountDeletionAndGoogleAuth)
+ ✔ Google customer can deactivate without a password
+ ✔ Wrong google identity cannot deactivate or delete an account
+ ✔ Google token with wrong audience cannot login or delete
+ ✔ Inactive google account returns forbidden without type error
+ ✔ Google login rejects a different subject for a linked email
+ ✔ New google customer is sent to identity onboarding
+ ✔ Google customer with submitted id does not repeat onboarding
+ ✔ Google only customer can verify and delete account
+ ✔ Google credential for another account cannot delete user
+ ✔ Customer deletion redacts historical orders and chat atomically
+ ✔ Driver deletion keeps financial history but erases profile data
+
+Auth (Tests\Feature\Auth)
+ ✔ Customer can register
+ ✔ Register fails with duplicate email
+ ✔ Register fails with invalid role
+ ✔ Register requires password confirmation
+ ✔ User can login
+ ✔ Login fails with wrong password
+ ✔ Login fails with unknown email
+ ✔ Me returns authenticated user
+ ✔ Me requires authentication
+ ✔ User can logout
+ ✔ User can logout all devices
+ ✔ User can register fcm token
+ ✔ Fcm token requires authentication
+ ✔ User can update name
+ ✔ Refresh with refresh token issues new pair
+ ✔ Refresh rejects invalid refresh token
+ ✔ User can change password
+ ✔ Change password rejects wrong current password
+ ✔ Account deletion url is publicly accessible
+ ✔ Account deletion page identifies app and allows web request
+ ✔ User can deactivate account
+ ✔ Customer can permanently delete account
+ ✔ Permanent delete requires delete confirmation
+ ✔ Driver can permanently delete account
+ ✔ Driver can submit customer feedback on completed order
+
+Authentication (Tests\Feature\Authentication)
+ ✔ User can register with valid data
+ ✔ Registration requires strong password
+ ✔ Registration prevents duplicate email
+ ✔ User can login with valid credentials
+ ✘ Login fails with invalid credentials
+   │
+   │ Expected response status code [422] but received 401.
+   │ Failed asserting that 401 is identical to 422.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:174
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\AuthenticationTest.php:104
+   │
+ ✘ Login prevents user enumeration
+   │
+   │ Expected response status code [422] but received 401.
+   │ Failed asserting that 401 is identical to 422.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:174
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\AuthenticationTest.php:117
+   │
+ ✔ Authenticated user can access profile
+ ✘ Unauthenticated user cannot access profile
+   │
+   │ Unable to find JSON: 
+   │
+   │ [{
+   │     "success": false,
+   │     "message": "Unauthenticated. Please log in."
+   │ }]
+   │
+   │ within response JSON:
+   │
+   │ [{
+   │     "success": false,
+   │     "message": "Unauthenticated.",
+   │     "request_id": "76ff9d36-f6f2-4345-b051-3b3c56a72d20"
+   │ }].
+   │
+   │
+   │ Failed asserting that an array has the subset Array &0 [
+   │     'success' => false,
+   │     'message' => 'Unauthenticated. Please log in.',
+   │ ].
+   │ --- Expected
+   │ +++ Actual
+   │ @@ @@
+   │  array (
+   │    'success' => false,
+   │ -  'message' => 'Unauthenticated. Please log in.',
+   │ +  'message' => 'Unauthenticated.',
+   │    'request_id' => '76ff9d36-f6f2-4345-b051-3b3c56a72d20',
+   │  )
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\Constraints\ArraySubset.php:80
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\Assert.php:36
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\AssertableJsonString.php:319
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:833
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\AuthenticationTest.php:146
+   │
+ ✔ User can logout
+ ✔ User can logout from all devices
+ ✘ Password change revokes all tokens
+   │
+   │ Failed asserting that 1 matches expected 0.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\AuthenticationTest.php:211
+   │
+ ✔ Login rate limiting works
+
+Authorization (Tests\Feature\Authorization)
+ ✔ User can only view own profile
+ ✔ Admin can view all profiles
+ ✔ User can only update own profile
+ ✔ Only admin can delete users
+ ✔ User can view own orders
+ ✔ User cannot view others orders
+ ✔ Driver can view assigned orders
+ ✔ Only customer can create orders
+
+Critical Flows (Tests\Feature\CriticalFlows)
+ ✘ Full auth flow register login refresh logout
+   │
+   │ Expected response status code [401] but received 200.
+   │ Failed asserting that 200 is identical to 401.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:174
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\CriticalFlowsTest.php:61
+   │
+ ✘ Order lifecycle create to cancel
+   │
+   │ Expected response status code [201] but received 500.
+   │ Failed asserting that 500 is identical to 201.
+   │
+   │ The following exception occurred during the last request:
+   │
+   │ PDOException: SQLSTATE[HY000]: General error: 1 no such function: acos in C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:406
+   │ Stack trace:
+   │ #0 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php(406): PDO->prepare()
+   │ #1 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php(811): Illuminate\Database\Connection->{closure:Illuminate\Database\Connection::select():397}()
+   │ #2 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php(778): Illuminate\Database\Connection->runQueryCallback()
+   │ #3 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php(397): Illuminate\Database\Connection->run()
+   │ #4 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php(3188): Illuminate\Database\Connection->select()
+   │ #5 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php(3173): Illuminate\Database\Query\Builder->runSelect()
+   │ #6 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php(3763): Illuminate\Database\Query\Builder->{closure:Illuminate\Database\Query\Builder::get():3172}()
+   │ #7 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php(3172): Illuminate\Database\Query\Builder->onceWithColumns()
+   │ #8 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php(902): Illuminate\Database\Query\Builder->get()
+   │ #9 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php(884): Illuminate\Database\Eloquent\Builder->getModels()
+   │ #10 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Jobs\NotifyNearbyDriversNewOrderJob.php(74): Illuminate\Database\Eloquent\Builder->get()
+   │ #11 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php(36): App\Jobs\NotifyNearbyDriversNewOrderJob->handle()
+   │ #12 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\Util.php(43): Illuminate\Container\BoundMethod::{closure:Illuminate\Container\BoundMethod::call():35}()
+   │ #13 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php(96): Illuminate\Container\Util::unwrapIfClosure()
+   │ #14 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod()
+   │ #15 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\Container.php(836): Illuminate\Container\BoundMethod::call()
+   │ #16 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(129): Illuminate\Container\Container->call()
+   │ #17 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Bus\Dispatcher->{closure:Illuminate\Bus\Dispatcher::dispatchNow():126}()
+   │ #18 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+   │ #19 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(133): Illuminate\Pipeline\Pipeline->then()
+   │ #20 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\CallQueuedHandler.php(134): Illuminate\Bus\Dispatcher->dispatchNow()
+   │ #21 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Queue\CallQueuedHandler->{closure:Illuminate\Queue\CallQueuedHandler::dispatchThroughMiddleware():127}()
+   │ #22 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+   │ #23 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\CallQueuedHandler.php(127): Illuminate\Pipeline\Pipeline->then()
+   │ #24 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\CallQueuedHandler.php(68): Illuminate\Queue\CallQueuedHandler->dispatchThroughMiddleware()
+   │ #25 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\Jobs\Job.php(102): Illuminate\Queue\CallQueuedHandler->call()
+   │ #26 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\SyncQueue.php(130): Illuminate\Queue\Jobs\Job->fire()
+   │ #27 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\SyncQueue.php(110): Illuminate\Queue\SyncQueue->executeJob()
+   │ #28 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(246): Illuminate\Queue\SyncQueue->push()
+   │ #29 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(230): Illuminate\Bus\Dispatcher->pushCommandToQueue()
+   │ #30 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(80): Illuminate\Bus\Dispatcher->dispatchToQueue()
+   │ #31 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Bus\PendingDispatch.php(251): Illuminate\Bus\Dispatcher->dispatch()
+   │ #32 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Controllers\Api\OrderController.php(363): Illuminate\Foundation\Bus\PendingDispatch->__destruct()
+   │ #33 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\ControllerDispatcher.php(46): App\Http\Controllers\Api\OrderController->store()
+   │ #34 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Route.php(265): Illuminate\Routing\ControllerDispatcher->dispatch()
+   │ #35 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Route.php(211): Illuminate\Routing\Route->runController()
+   │ #36 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(822): Illuminate\Routing\Route->run()
+   │ #37 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::runRouteWithinStack():821}()
+   │ #38 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\EnsureRegistrationActive.php(22): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+   │ #39 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\EnsureRegistrationActive->handle()
+   │ #40 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\ValidateRequestOrigin.php(65): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #41 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\ValidateRequestOrigin->handle()
+   │ #42 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Middleware\SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #43 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+   │ #44 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Middleware\ThrottleRequests.php(166): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #45 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Middleware\ThrottleRequests.php(129): Illuminate\Routing\Middleware\ThrottleRequests->handleRequest()
+   │ #46 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Middleware\ThrottleRequests.php(90): Illuminate\Routing\Middleware\ThrottleRequests->handleRequestUsingNamedLimiter()
+   │ #47 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Routing\Middleware\ThrottleRequests->handle()
+   │ #48 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Auth\Middleware\Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #49 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+   │ #50 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #51 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(821): Illuminate\Pipeline\Pipeline->then()
+   │ #52 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+   │ #53 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(764): Illuminate\Routing\Router->runRoute()
+   │ #54 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+   │ #55 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(200): Illuminate\Routing\Router->dispatch()
+   │ #56 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+   │ #57 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\LogSecurityEvents.php(17): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+   │ #58 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\LogSecurityEvents->handle()
+   │ #59 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\SanitizeInput.php(57): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #60 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\SanitizeInput->handle()
+   │ #61 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\SecurityHeaders.php(16): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #62 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\SecurityHeaders->handle()
+   │ #63 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\AddCorsHeaders.php(18): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #64 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\AddCorsHeaders->handle()
+   │ #65 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #66 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+   │ #67 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+   │ #68 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #69 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+   │ #70 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+   │ #71 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Middleware\ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #72 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+   │ #73 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #74 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+   │ #75 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Middleware\HandleCors.php(61): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #76 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+   │ #77 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Middleware\TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #78 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+   │ #79 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #80 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+   │ #81 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Middleware\ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #82 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+   │ #83 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\RequestId.php(20): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #84 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\RequestId->handle()
+   │ #85 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #86 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+   │ #87 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+   │ #88 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+   │ #89 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+   │ #90 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(411): Illuminate\Foundation\Testing\TestCase->json()
+   │ #91 C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\CriticalFlowsTest.php(72): Illuminate\Foundation\Testing\TestCase->postJson()
+   │ #92 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestCase.php(1657): Tests\Feature\CriticalFlowsTest->test_order_lifecycle_create_to_cancel()
+   │ #93 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+   │ #94 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestRunner\TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+   │ #95 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+   │ #96 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+   │ #97 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+   │ #98 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+   │ #99 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\TextUI\TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+   │ #100 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\TextUI\Application.php(211): PHPUnit\TextUI\TestRunner->run()
+   │ #101 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\phpunit(104): PHPUnit\TextUI\Application->run()
+   │ #102 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\bin\phpunit(122): include('...')
+   │ #103 {main}
+   │
+   │ Next Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such function: acos (Connection: sqlite, SQL: select * from "users" where "role" = driver and exists (select * from "driver_profiles" where "users"."id" = "driver_profiles"."user_id" and "status" = active) and exists (select * from "wallets" where "users"."id" = "wallets"."user_id" and "balance" >= 11) and exists (select * from "driver_locations" inner join (select max("driver_locations"."id") as "id_aggregate", min("driver_locations"."recorded_at") as "recorded_at_aggregate", "driver_locations"."driver_id" from "driver_locations" inner join (select max("driver_locations"."recorded_at") as "recorded_at_aggregate", "driver_locations"."driver_id" from "driver_locations" group by "driver_locations"."driver_id") as "latestDriverLocation" on "latestDriverLocation"."recorded_at_aggregate" = "driver_locations"."recorded_at" and "latestDriverLocation"."driver_id" = "driver_locations"."driver_id" group by "driver_locations"."driver_id") as "latestDriverLocation" on "latestDriverLocation"."id_aggregate" = "driver_locations"."id" and "latestDriverLocation"."recorded_at_aggregate" = "driver_locations"."recorded_at" and "latestDriverLocation"."driver_id" = "driver_locations"."driver_id" where "users"."id" = "driver_locations"."driver_id" and "status" = online and "recorded_at" >= 2026-09-27 15:30:31 and "latitude" between 18.428868882501 and 18.608531117499 and "longitude" between 120.9042634269 and 121.0937365731 and (6371 * acos(min(1, max(-1, cos(radians(18.5187)) * cos(radians(latitude)) * cos(radians(longitude) - radians(120.999)) + sin(radians(18.5187)) * sin(radians(latitude)))))) <= 10) and not exists (select * from "driver_profiles" where "users"."id" = "driver_profiles"."user_id" and exists (select * from "orders" where "driver_profiles"."id" = "orders"."driver_id" and "status" not in (completed, cancelled))) and "users"."deleted_at" is null) in C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php:824
+   │ Stack trace:
+   │ #0 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php(778): Illuminate\Database\Connection->runQueryCallback()
+   │ #1 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Connection.php(397): Illuminate\Database\Connection->run()
+   │ #2 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php(3188): Illuminate\Database\Connection->select()
+   │ #3 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php(3173): Illuminate\Database\Query\Builder->runSelect()
+   │ #4 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php(3763): Illuminate\Database\Query\Builder->{closure:Illuminate\Database\Query\Builder::get():3172}()
+   │ #5 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php(3172): Illuminate\Database\Query\Builder->onceWithColumns()
+   │ #6 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php(902): Illuminate\Database\Query\Builder->get()
+   │ #7 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php(884): Illuminate\Database\Eloquent\Builder->getModels()
+   │ #8 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Jobs\NotifyNearbyDriversNewOrderJob.php(74): Illuminate\Database\Eloquent\Builder->get()
+   │ #9 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php(36): App\Jobs\NotifyNearbyDriversNewOrderJob->handle()
+   │ #10 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\Util.php(43): Illuminate\Container\BoundMethod::{closure:Illuminate\Container\BoundMethod::call():35}()
+   │ #11 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php(96): Illuminate\Container\Util::unwrapIfClosure()
+   │ #12 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\BoundMethod.php(35): Illuminate\Container\BoundMethod::callBoundMethod()
+   │ #13 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Container\Container.php(836): Illuminate\Container\BoundMethod::call()
+   │ #14 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(129): Illuminate\Container\Container->call()
+   │ #15 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Bus\Dispatcher->{closure:Illuminate\Bus\Dispatcher::dispatchNow():126}()
+   │ #16 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+   │ #17 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(133): Illuminate\Pipeline\Pipeline->then()
+   │ #18 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\CallQueuedHandler.php(134): Illuminate\Bus\Dispatcher->dispatchNow()
+   │ #19 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Queue\CallQueuedHandler->{closure:Illuminate\Queue\CallQueuedHandler::dispatchThroughMiddleware():127}()
+   │ #20 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+   │ #21 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\CallQueuedHandler.php(127): Illuminate\Pipeline\Pipeline->then()
+   │ #22 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\CallQueuedHandler.php(68): Illuminate\Queue\CallQueuedHandler->dispatchThroughMiddleware()
+   │ #23 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\Jobs\Job.php(102): Illuminate\Queue\CallQueuedHandler->call()
+   │ #24 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\SyncQueue.php(130): Illuminate\Queue\Jobs\Job->fire()
+   │ #25 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Queue\SyncQueue.php(110): Illuminate\Queue\SyncQueue->executeJob()
+   │ #26 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(246): Illuminate\Queue\SyncQueue->push()
+   │ #27 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(230): Illuminate\Bus\Dispatcher->pushCommandToQueue()
+   │ #28 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Bus\Dispatcher.php(80): Illuminate\Bus\Dispatcher->dispatchToQueue()
+   │ #29 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Bus\PendingDispatch.php(251): Illuminate\Bus\Dispatcher->dispatch()
+   │ #30 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Controllers\Api\OrderController.php(363): Illuminate\Foundation\Bus\PendingDispatch->__destruct()
+   │ #31 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\ControllerDispatcher.php(46): App\Http\Controllers\Api\OrderController->store()
+   │ #32 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Route.php(265): Illuminate\Routing\ControllerDispatcher->dispatch()
+   │ #33 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Route.php(211): Illuminate\Routing\Route->runController()
+   │ #34 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(822): Illuminate\Routing\Route->run()
+   │ #35 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Routing\Router->{closure:Illuminate\Routing\Router::runRouteWithinStack():821}()
+   │ #36 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\EnsureRegistrationActive.php(22): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+   │ #37 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\EnsureRegistrationActive->handle()
+   │ #38 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\ValidateRequestOrigin.php(65): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #39 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\ValidateRequestOrigin->handle()
+   │ #40 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Middleware\SubstituteBindings.php(50): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #41 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Routing\Middleware\SubstituteBindings->handle()
+   │ #42 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Middleware\ThrottleRequests.php(166): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #43 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Middleware\ThrottleRequests.php(129): Illuminate\Routing\Middleware\ThrottleRequests->handleRequest()
+   │ #44 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Middleware\ThrottleRequests.php(90): Illuminate\Routing\Middleware\ThrottleRequests->handleRequestUsingNamedLimiter()
+   │ #45 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Routing\Middleware\ThrottleRequests->handle()
+   │ #46 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Auth\Middleware\Authenticate.php(63): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #47 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Auth\Middleware\Authenticate->handle()
+   │ #48 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #49 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(821): Illuminate\Pipeline\Pipeline->then()
+   │ #50 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(800): Illuminate\Routing\Router->runRouteWithinStack()
+   │ #51 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(764): Illuminate\Routing\Router->runRoute()
+   │ #52 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Routing\Router.php(753): Illuminate\Routing\Router->dispatchToRoute()
+   │ #53 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(200): Illuminate\Routing\Router->dispatch()
+   │ #54 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(180): Illuminate\Foundation\Http\Kernel->{closure:Illuminate\Foundation\Http\Kernel::dispatchToRouter():197}()
+   │ #55 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\LogSecurityEvents.php(17): Illuminate\Pipeline\Pipeline->{closure:Illuminate\Pipeline\Pipeline::prepareDestination():178}()
+   │ #56 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\LogSecurityEvents->handle()
+   │ #57 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\SanitizeInput.php(57): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #58 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\SanitizeInput->handle()
+   │ #59 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\SecurityHeaders.php(16): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #60 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\SecurityHeaders->handle()
+   │ #61 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\AddCorsHeaders.php(18): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #62 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\AddCorsHeaders->handle()
+   │ #63 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #64 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull.php(31): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+   │ #65 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull->handle()
+   │ #66 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TransformsRequest.php(21): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #67 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\TrimStrings.php(51): Illuminate\Foundation\Http\Middleware\TransformsRequest->handle()
+   │ #68 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\TrimStrings->handle()
+   │ #69 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Middleware\ValidatePostSize.php(27): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #70 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\ValidatePostSize->handle()
+   │ #71 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance.php(109): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #72 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance->handle()
+   │ #73 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Middleware\HandleCors.php(61): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #74 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\HandleCors->handle()
+   │ #75 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Middleware\TrustProxies.php(58): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #76 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\TrustProxies->handle()
+   │ #77 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks.php(22): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #78 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Foundation\Http\Middleware\InvokeDeferredCallbacks->handle()
+   │ #79 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Middleware\ValidatePathEncoding.php(26): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #80 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): Illuminate\Http\Middleware\ValidatePathEncoding->handle()
+   │ #81 C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Http\Middleware\RequestId.php(20): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #82 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(219): App\Http\Middleware\RequestId->handle()
+   │ #83 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Pipeline\Pipeline.php(137): Illuminate\Pipeline\Pipeline->{closure:{closure:Illuminate\Pipeline\Pipeline::carry():194}:195}()
+   │ #84 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(175): Illuminate\Pipeline\Pipeline->then()
+   │ #85 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Http\Kernel.php(144): Illuminate\Foundation\Http\Kernel->sendRequestThroughRouter()
+   │ #86 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(607): Illuminate\Foundation\Http\Kernel->handle()
+   │ #87 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(573): Illuminate\Foundation\Testing\TestCase->call()
+   │ #88 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php(411): Illuminate\Foundation\Testing\TestCase->json()
+   │ #89 C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\CriticalFlowsTest.php(72): Illuminate\Foundation\Testing\TestCase->postJson()
+   │ #90 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestCase.php(1657): Tests\Feature\CriticalFlowsTest->test_order_lifecycle_create_to_cancel()
+   │ #91 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestCase.php(515): PHPUnit\Framework\TestCase->runTest()
+   │ #92 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestRunner\TestRunner.php(87): PHPUnit\Framework\TestCase->runBare()
+   │ #93 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestCase.php(361): PHPUnit\Framework\TestRunner->run()
+   │ #94 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestSuite.php(369): PHPUnit\Framework\TestCase->run()
+   │ #95 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+   │ #96 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\Framework\TestSuite.php(369): PHPUnit\Framework\TestSuite->run()
+   │ #97 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\TextUI\TestRunner.php(64): PHPUnit\Framework\TestSuite->run()
+   │ #98 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\src\TextUI\Application.php(211): PHPUnit\TextUI\TestRunner->run()
+   │ #99 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\phpunit\phpunit\phpunit(104): PHPUnit\TextUI\Application->run()
+   │ #100 C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\bin\phpunit(122): include('...')
+   │ #101 {main}
+   │
+   │ ----------------------------------------------------------------------------------
+   │
+   │ SQLSTATE[HY000]: General error: 1 no such function: acos (Connection: sqlite, SQL: select * from "users" where "role" = driver and exists (select * from "driver_profiles" where "users"."id" = "driver_profiles"."user_id" and "status" = active) and exists (select * from "wallets" where "users"."id" = "wallets"."user_id" and "balance" >= 11) and exists (select * from "driver_locations" inner join (select max("driver_locations"."id") as "id_aggregate", min("driver_locations"."recorded_at") as "recorded_at_aggregate", "driver_locations"."driver_id" from "driver_locations" inner join (select max("driver_locations"."recorded_at") as "recorded_at_aggregate", "driver_locations"."driver_id" from "driver_locations" group by "driver_locations"."driver_id") as "latestDriverLocation" on "latestDriverLocation"."recorded_at_aggregate" = "driver_locations"."recorded_at" and "latestDriverLocation"."driver_id" = "driver_locations"."driver_id" group by "driver_locations"."driver_id") as "latestDriverLocation" on "latestDriverLocation"."id_aggregate" = "driver_locations"."id" and "latestDriverLocation"."recorded_at_aggregate" = "driver_locations"."recorded_at" and "latestDriverLocation"."driver_id" = "driver_locations"."driver_id" where "users"."id" = "driver_locations"."driver_id" and "status" = online and "recorded_at" >= 2026-09-27 15:30:31 and "latitude" between 18.428868882501 and 18.608531117499 and "longitude" between 120.9042634269 and 121.0937365731 and (6371 * acos(min(1, max(-1, cos(radians(18.5187)) * cos(radians(latitude)) * cos(radians(longitude) - radians(120.999)) + sin(radians(18.5187)) * sin(radians(latitude)))))) <= 10) and not exists (select * from "driver_profiles" where "users"."id" = "driver_profiles"."user_id" and exists (select * from "orders" where "driver_profiles"."id" = "orders"."driver_id" and "status" not in (completed, cancelled))) and "users"."deleted_at" is null)
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:174
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\CriticalFlowsTest.php:79
+   │
+ ✔ Wallet access control
+ ✔ Partners are publicly accessible
+ ✔ Health endpoints respond
+ ✔ My wallet auto creates wallet
+ ✔ Notifications require auth
+ ✔ Authenticated user can list notifications
+
+Customer Identity Registration (Tests\Feature\CustomerIdentityRegistration)
+ ✔ Customer registration requires selfie and government id
+ ✔ Customer registration stores selfie and pending id verification
+ ✔ New google customer is created and must complete identity onboarding
+ ✔ Google sign in recovers a soft deleted account instead of creating a duplicate
+ ✔ Google login for an existing customer skips registration onboarding
+ ✔ Google login does not create a missing account
+
+Customer Registration Address (Tests\Feature\CustomerRegistrationAddress)
+ ✔ Registration persists complete address and referral
+ ✔ Blank referral and unchecked default are preserved
+ ✔ Unknown referral is rejected before account creation
+ ✔ Deleted referrer is rejected
+ ✔ Address without coordinates returns validation not server error
+ ✔ Address failure rolls back the account and referral
+ ✔ Customer phone proof marks account verified and cannot be reused
+ ✔ Customer rejects expired or wrong phone proof
+
+Customer Social Follow Mission (Tests\Feature\CustomerSocialFollowMission)
+ ✔ Client confirmation cannot create follow proof
+ ✔ Forged follow completion never changes progress or credits rewards
+ ✔ Facebook shares and legacy follow records cannot complete a mission
+ ✔ Legacy completed mission cannot pay out before refresh
+ ✔ Refresh preserves previously paid history
+ ✔ Other completed missions can still claim once
+
+Delivery Proof Required (Tests\Feature\DeliveryProofRequired)
+ ✔ Completion without uploaded proof does not change order or payment
+ ✔ Blank proof entries do not allow completion
+ ✔ Uploaded photo allows completion
+
+Distance (Tests\Feature\Distance)
+ ✔ Can calculate distance
+ ✔ Overall distance
+
+Driver Dispatch Safety (Tests\Feature\DriverDispatchSafety)
+ ✔ Order driver relation resolves driver profile to user
+ ✔ Dispatch scope matches domain rules
+ ✔ Latest driver location controls proximity
+ ✔ Auto assignment skips busy driver and charges selected driver once
+ ✔ Notification job rechecks dispatch eligibility
+ ✔ Incompatible driver cannot discover or accept order
+ ✔ Busy driver cannot accept a second order directly
+ ✔ Due scheduled order uses shared dispatch pipeline
+ ✔ Stale cleanup only cancels orders that are still dispatchable
+
+Example (Tests\Feature\Example)
+ ✔ The application returns a successful response
+
+Example (Tests\Unit\Example)
+ ✔ That true is true
+
+Fare Calculator Service (Tests\Unit\FareCalculatorService)
+ ✔ Lesride base fare covers the first three kilometers
+ ✔ Lesride charges fifteen pesos per kilometer after three kilometers
+ ✔ Lesride ignores delivery weight surcharges
+ ✔ Lesride thirty kilometer boundary is four hundred sixty five pesos
+ ✔ Lesgo rates are unchanged
+
+Lesbuy (Tests\Feature\Lesbuy)
+ ✔ Can list checklist templates
+ ✔ Can create checklist template
+ ✔ Can create order with lesbuy items
+ ✔ Can get receipt
+
+Lesbuy Pickup Integrity (Tests\Feature\LesbuyPickupIntegrity)
+ ✔ Mixed cart is rejected before creating order or addresses
+ ✔ Single pickup orders preserve buying point and distinct dropoff
+ ✔ Assigned rider receives the saved purchase and delivery locations
+ ✔ Manual order requires both addresses and both pins
+
+Lesride Feature (Tests\Feature\LesrideFeature)
+ ✔ Tricycle estimate uses the lesride fare matrix
+ ✔ Created lesride order persists tricycle and server calculated fare
+ ✔ Locked lesride vehicle options are rejected
+ ✔ Lesride requires the available tricycle option
+ ✔ Tricycle option is scoped to lesride
+ ✔ Lesride rejects routes above thirty kilometers
+ ✔ Lesride rejects a distance that is shorter than the selected locations
+ ✔ Lesride rejects identical pickup and destination
+ ✔ Reorder uses the current tricycle option and fare
+ ✔ Reorder is blocked when lesride is inactive
+ ✔ Legacy lesride route above thirty kilometers cannot be reordered
+ ✔ Online lesride order is dispatchable only after payment
+ ✔ Actual distance recalculation uses the same lesride matrix
+ ✔ Lesride rollout does not change existing service actual fares
+
+Merchant Operations Regression (Tests\Feature\MerchantOperationsRegression)
+ ✔ Owner can retrieve sold out items and hidden categories
+ ✔ Customer cannot read private inventory but public menu still hides sold out items
+ ✔ Empty category deletion succeeds instead of throwing a missing relationship error
+ ✔ Category with hidden items cannot be deleted
+ ✔ Staff details are private to store owner and admin
+
+Merchant Terms Acceptance (Tests\Feature\MerchantTermsAcceptance)
+ ✔ Merchant registration rejects missing or declined terms
+
+Merchant Withdrawal (Tests\Feature\MerchantWithdrawal)
+ ✔ Owner withdrawal debits wallet and creates pending request
+ ✔ Withdrawal beyond balance is rejected without debit
+ ✔ Cancelling pending withdrawal credits funds back
+ ✔ Cook staff cannot request withdrawal
+ ✔ Cashier staff can request withdrawal
+ ✔ Bank transfer requires bank name
+ ✔ Customer cannot access merchant withdrawals
+
+Mission Reward Pay Mongo (Tests\Feature\MissionRewardPayMongo)
+ ✘ End to end mission reward flow
+   │
+   │ Expected response status code [200] but received 401.
+   │ Failed asserting that 401 is identical to 200.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:174
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:16
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\MissionRewardPayMongoTest.php:162
+   │
+ ✔ Duplicate protection under retry
+ ✔ Reward amount must match template
+ ✘ Failure handling and retry
+   │
+   │ Failed asserting that two strings are equal.
+   │ --- Expected
+   │ +++ Actual
+   │ @@ @@
+   │ -'failed'
+   │ +'pending'
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\MissionRewardPayMongoTest.php:221
+   │
+ ✔ Webhook idempotency
+
+Notification (Tests\Feature\Notification)
+ ✔ User can list own notifications
+ ✔ User cannot see other users notifications
+ ✔ Unread count returns correct number
+ ✔ User can mark notification as read
+ ✔ User can mark all notifications as read
+ ✔ Notifications require authentication
+
+Order (Tests\Feature\Order)
+ ✔ Customer can create order
+ ✔ Scheduled delivery time is persisted and not dispatched early
+ ✔ Order requires authentication
+ ✔ Order requires valid service
+ ✔ Order requires pickup and dropoff
+ ✔ Customer sees only own orders
+ ✔ Admin sees all orders
+ ✔ Orders can be filtered by status
+ ✔ Customer can view own order
+ ✔ Customer cannot view other customers order
+ ✔ Admin can view any order
+ ✔ Customer can cancel pending order
+ ✔ Customer cannot cancel completed order
+ ✔ Order show returns 404 for nonexistent
+
+Otp Fallback Security (Tests\Feature\OtpFallbackSecurity)
+ ✔ Provider failure does not silently create a fallback code
+ ✔ Explicit local fallback remains available for development
+
+Partner Annual Fee (Tests\Feature\PartnerAnnualFee)
+ ✔ Merchant fee is fixed even with a setting or amount override
+ ✔ Paid year expires and a new checkout charges exactly one thousand
+ ✔ Old verification checkout is rejected after renewal
+ ✔ Duplicate paid webhook cannot extend expired year
+ ✔ Waived year renews once and preserves audit
+ ✔ Leap day expires on february 28 and rider fees stay one time
+
+Password Reset Security (Tests\Feature\PasswordResetSecurity)
+ ✔ Password reset uses hashed single use credentials
+ ✔ Password reset response does not disclose unknown email
+ ✔ Password reset challenge locks after repeated invalid codes
+
+Payment (Tests\Feature\Payment)
+ ✔ Customer sees only own payments
+ ✔ Admin sees all payments
+ ✔ Customer can record payment for own order
+ ✔ Customer cannot record payment for another customers order
+ ✔ Duplicate paid payment returns 409
+ ✔ Customer can view own payment
+ ✔ Customer cannot view other customers payment
+ ✔ Payment requires authentication
+
+Payment Gateway Service (Tests\Unit\PaymentGatewayService)
+ ✔ Webhook token fails closed when not configured
+ ✔ Webhook token passes with correct token
+ ✔ Webhook token fails with wrong token
+
+Payment Hardening (Tests\Feature\PaymentHardening)
+ ✔ Topup confirmation fails closed when gateway cannot be verified
+ ✔ Mobile invoice lookup cannot access another users topup
+ ✔ Order invoice rejects a client supplied underpayment
+ ✔ Wallet topup ignores untrusted wallet amount metadata
+ ✔ Driver package is not upgraded when verification fails
+ ✔ Unknown gateway reference cannot be refunded
+ ✔ Refund reservation prevents duplicate gateway refunds
+ ✔ Linked payout account details are encrypted at rest
+ ✔ Ambiguous payout failure keeps funds reserved for reconciliation
+ ✘ Failed payout webhook reverses wallet exactly once
+   │
+   │ Failed asserting that 900.0 is identical to 1000.0.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\PaymentHardeningTest.php:293
+   │
+
+Payment Provider Safety (Tests\Unit\PaymentProviderSafety)
+ ✔ Gateway resolution uses only configured providers
+ ✔ Gateway resolution fails when nothing is configured
+ ✘ Paymongo is not selected for payouts without a source account
+   │
+   │ Error: Call to undefined method App\Services\PayMongoService::payoutConfigured()
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\app\Services\PaymentGatewayManager.php:299
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Unit\PaymentProviderSafetyTest.php:53
+   │
+ ✘ Paymongo transfer uses stable idempotency and parses data envelope
+   │
+   │ Failed asserting that null is identical to 'transfer-1'.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Unit\PaymentProviderSafetyTest.php:84
+   │
+ ✘ Paymongo checkout uses requested method and stable reference
+   │
+   │ An expected request was not recorded.
+   │ Failed asserting that false is true.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Http\Client\Factory.php:395
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Unit\PaymentProviderSafetyTest.php:116
+   │
+ ✔ Paymongo checkout reads paid status from payment attributes
+ ✔ Paymongo webhook rejects a valid but stale signature
+
+Registration Fee Activation Rule (Tests\Unit\RegistrationFeeActivationRule)
+ ✔ Activation requires approval and paid or waived fee with data set "rider:pending:unpaid"
+ ✔ Activation requires approval and paid or waived fee with data set "rider:pending:paid"
+ ✔ Activation requires approval and paid or waived fee with data set "rider:pending:waived"
+ ✔ Activation requires approval and paid or waived fee with data set "rider:approved:unpaid"
+ ✔ Activation requires approval and paid or waived fee with data set "rider:approved:paid"
+ ✔ Activation requires approval and paid or waived fee with data set "rider:approved:waived"
+ ✔ Activation requires approval and paid or waived fee with data set "rider:rejected:paid"
+ ✔ Activation requires approval and paid or waived fee with data set "rider:rejected:waived"
+ ✔ Activation requires approval and paid or waived fee with data set "merchant:pending:unpaid"
+ ✔ Activation requires approval and paid or waived fee with data set "merchant:pending:paid"
+ ✔ Activation requires approval and paid or waived fee with data set "merchant:pending:waived"
+ ✔ Activation requires approval and paid or waived fee with data set "merchant:approved:unpaid"
+ ✔ Activation requires approval and paid or waived fee with data set "merchant:approved:paid"
+ ✔ Activation requires approval and paid or waived fee with data set "merchant:approved:waived"
+ ✔ Activation requires approval and paid or waived fee with data set "merchant:rejected:paid"
+ ✔ Activation requires approval and paid or waived fee with data set "merchant:rejected:waived"
+ ✔ Paid and waived remain distinct audit states
+
+Registration Fee Pay Mongo (Tests\Feature\RegistrationFeePayMongo)
+ ✔ Rider full flow paid plus approved active
+ ✔ Rider registration fee uses the selected package price
+ ✔ Restricted combinations
+ ✔ Admin approval does not bypass unpaid
+ ✔ Merchant flow
+ ✔ Webhook idempotent
+ ✔ Existing active profile does not bypass unpaid fee
+
+Registration Payment Recovery (Tests\Feature\RegistrationPaymentRecovery)
+ ✔ Pending checkout is reused without another gateway request
+ ✔ Gateway timeout preserves reference and does not activate
+ ✔ Expired checkout can retry and foreign checkout cannot be verified
+ ✔ Failed attempt in active checkout cannot create a duplicate session
+ ✔ Retry during gateway outage keeps the original checkout
+ ✔ Gateway parser prioritizes later paid attempt and resolves expiry
+ ✔ Successful referral api uses approved brand
+
+Registration Security (Tests\Feature\RegistrationSecurity)
+ ✔ Rider cannot use generic registration to bypass documents and otp
+ ✔ Both registration endpoints require proof and terms
+ ✔ New merchant and rider are verified but restricted until paid and approved
+ ✔ Mismatched expired and replayed proofs cannot create accounts
+ ✔ Operational access requires both payment and approval
+ ✔ Staff cannot bypass the merchant fee
+
+Rider Flow (Tests\Feature\RiderFlow)
+ ✔ Driver can register
+ ✔ Driver can login
+ ✔ Driver sees available orders
+ ✔ Driver does not see other drivers orders
+ ✔ Driver can accept order
+ ✔ Driver cannot accept already accepted order
+ ✔ Inactive driver cannot accept
+ ✔ Full status flow accepted to completed
+ ✔ Cannot skip to completed from accepted
+ ✔ Cannot update status after completed
+ ✔ Customer can cancel before pickup
+ ✔ Customer cannot cancel after pickup
+ ✔ Driver can update availability
+ ✔ Driver can update location
+ ✔ Fare estimate returns breakdown
+ ✔ Non assigned driver cannot upload proof
+ ✔ Merchant can accept order
+ ✔ Merchant can mark ready for pickup
+ ✔ Merchant cannot cancel after pickup
+
+Rider Wallet Top Up (Tests\Feature\RiderWalletTopUp)
+ ✔ Paid rider topup reflects in lespay exactly once
+
+Security (Tests\Feature\Security)
+ ✔ Sql injection is prevented
+ ✘ Xss input is sanitized
+   │
+   │ Expected response status code [201] but received 422.
+   │ Failed asserting that 422 is identical to 201.
+   │
+   │ The following errors occurred during the last request:
+   │
+   │ {
+   │     "success": false,
+   │     "message": "The given data was invalid.",
+   │     "request_id": "bb46b223-864f-4aa8-b851-4053c3a60cc3",
+   │     "errors": {
+   │         "name": [
+   │             "The name field format is invalid."
+   │         ]
+   │     }
+   │ }
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:174
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\SecurityTest.php:38
+   │
+ ✔ Mass assignment is prevented
+ ✔ Security headers are present
+ ✔ Sensitive data not exposed in errors
+ ✔ Password not returned in responses
+ ✔ Tokens not logged or exposed
+ ✔ Path traversal is prevented
+ ✘ Invalid json handled gracefully
+   │
+   │ TypeError: Illuminate\Foundation\Testing\TestCase::postJson(): Argument #2 ($data) must be of type array, string given, called in C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\SecurityTest.php on line 130
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\MakesHttpRequests.php:409
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\SecurityTest.php:130
+   │
+ ✔ Oversized request rejected
+ ✔ Csrf token not required for api
+
+Service (Tests\Feature\Service)
+ ✔ Public can list services
+ ✔ Public can view single service
+ ✔ Service returns 404 for nonexistent
+
+Sms Service (Tests\Unit\SmsService)
+ ✔ Normalizes ph local number
+ ✔ Normalizes number without plus
+ ✔ Leaves e164 number unchanged
+ ✔ Detects philippine number
+
+Support Ticket Reply (Tests\Feature\SupportTicketReply)
+ ✔ Customer can reply without sending is internal field
+
+Two Factor Authentication (Tests\Feature\TwoFactorAuthentication)
+ ✔ Login does not issue tokens until totp is supplied
+ ✔ Customer can enroll google authenticator
+ ✔ Login rejects an invalid totp without issuing tokens
+ ✔ Login accepts a google authenticator code
+ ✔ Backup codes are hashed and can only be used once
+ ✔ Disabling two factor requires a valid code
+ ✔ Regenerating backup codes requires a valid code
+ ✔ Customer security dashboard returns account security state
+
+User Model (Tests\Unit\UserModel)
+ ✔ Is customer
+ ✔ Is driver
+ ✔ Is admin
+ ✔ Is partner admin
+ ✔ Has role
+ ✔ Has any role
+
+Wallet (Tests\Feature\Wallet)
+ ✔ User can view own wallet
+ ✔ User cannot view another users wallet
+ ✔ Admin can view any wallet
+ ✔ Wallet is created with zero balance on first access
+ ✔ Wallet requires authentication
+ ✔ User can view own transactions
+ ✔ Transactions filter rejects invalid type
+
+Wallet Top Up Security (Tests\Feature\WalletTopUpSecurity)
+ ✔ User cannot claim another users topup
+ ✔ Topup with same idempotency key returns cached response
+ ✔ Topup rate limited after 5 requests
+ ✔ Withdraw rate limited after 3 requests
+ ✔ Complete topup is idempotent
+ ✔ Topup blocked when money laundering pattern detected
+ ✔ Topup rejects amount below minimum
+ ✔ Topup rejects amount above maximum
+ ✔ Topup rejects invalid payment method
+ ✔ Withdraw rejects invalid method
+ ✔ Topup requires authentication
+ ✔ Withdraw requires authentication
+
+Wallet Validation (Tests\Feature\WalletValidation)
+ ✔ Driver with sufficient balance can accept booking
+ ✔ Driver with insufficient balance cannot accept booking
+ ✔ Driver without wallet cannot accept booking
+ ✘ Wallet validation endpoint returns correct data
+   │
+   │ Expected response status code [200] but received 403.
+   │ Failed asserting that 403 is identical to 200.
+   │
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:174
+   │ C:\Users\PC\LEZGO\BACKEND\lesgo-api\tests\Feature\WalletValidationTest.php:136
+   │
+ ✔ Customer is not affected by wallet validation
+ ✔ Admin can update wallet threshold
+ ✔ Non admin cannot update wallet threshold
+
+Webhook (Tests\Feature\Webhook)
+ ✔ Xendit webhook dispatches job
+ ✔ Xendit webhook rejected with wrong token
+ ✔ Xendit webhook accepted with correct token
+ ✔ Webhook job marks payment as paid
+ ✔ Paid webhook releases online order to driver dispatch
+ ✔ Webhook job marks payment as failed
+ ✔ Webhook job is idempotent
+ ✔ Stale failed event cannot regress a paid payment
+ ✔ Replayed paid event cannot regress a refunded payment
+ ✔ Invalid provider route returns 404
+ ✔ Duplicate paid callbacks dispatch only once
+ ✔ Paid callback does not dispatch future or cancelled orders
+ ✔ Provider reference cannot modify another providers payment
+ ✔ Refund updates both payment and order
+
+Webhook Security (Tests\Feature\WebhookSecurity)
+ ✔ Webhook rejects request without xendit callback token
+ ✔ Webhook rejects request without paymongo signature
+ ✔ Webhook rejects unconfigured provider
+ ✔ Webhook rejects invalid provider name
+ ✔ Webhook does not double credit wallet
+
+ERRORS!
+Tests: 339, Assertions: 1175, Errors: 2, Failures: 13.

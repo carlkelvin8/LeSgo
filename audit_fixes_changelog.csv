@@ -1,0 +1,632 @@
+﻿target_repo,status,path,audit_area
+lesgo-api,M,app/Http/Controllers/Api/Auth/AuthController.php,cumulative_working_tree
+lesgo-api,M,app/Http/Controllers/Api/Auth/OtpController.php,OTP flow hardening
+lesgo-api,M,app/Http/Controllers/Api/CustomerMissionController.php,facebook follow mission paused
+lesgo-api,M,app/Http/Controllers/Api/DriverProfileController.php,cumulative_working_tree
+lesgo-api,M,app/Http/Controllers/Api/PaymentController.php,cumulative_working_tree
+lesgo-api,M,app/Http/Controllers/Api/SocialMediaController.php,mission pause + referral branding
+lesgo-api,M,app/Http/Middleware/LogSecurityEvents.php,cumulative_working_tree
+lesgo-api,M,app/Http/Requests/RegisterDriverRequest.php,rider OTP/terms enforcement
+lesgo-api,M,app/Http/Requests/RegisterRequest.php,merchant terms/privacy enforcement
+lesgo-api,M,app/Http/Requests/StoreOrderRequest.php,cumulative_working_tree
+lesgo-api,M,app/Models/DriverLocation.php,cumulative_working_tree
+lesgo-api,M,app/Services/DriverAssignmentService.php,cumulative_working_tree
+lesgo-api,M,app/Services/GeofencingService.php,cumulative_working_tree
+lesgo-api,M,app/Services/PayMongoService.php,PayMongo webhook/idempotency
+lesgo-api,M,app/Services/RegistrationFeeService.php,registration fee record/payment
+lesgo-api,M,tests/Feature/AuthTest.php,cumulative_working_tree
+lesgo-api,M,tests/Feature/AuthorizationTest.php,authorization regression
+lesgo-api,M,tests/Feature/DeliveryProofRequiredTest.php,cumulative_working_tree
+lesgo-api,M,tests/Feature/DriverDispatchSafetyTest.php,cumulative_working_tree
+lesgo-api,M,tests/Feature/LesrideFeatureTest.php,cumulative_working_tree
+lesgo-api,M,tests/Feature/OtpFallbackSecurityTest.php,otp fallback regression
+lesgo-api,M,tests/Feature/PaymentHardeningTest.php,cumulative_working_tree
+lesgo-api,M,tests/Feature/RegistrationFeePayMongoTest.php,registration fee access
+lesgo-api,M,tests/Feature/RiderFlowTest.php,rider flow regression
+lesgo-api,M,tests/Feature/WalletValidationTest.php,wallet validation regression
+lesgo-api,M,tests/TestCase.php,cumulative_working_tree
+lesgo-api,??,app/Services/RegistrationPhoneProof.php,single-use phone verification proof
+lesgo-api,??,config/branding.php,branding config
+lesgo-api,??,database/migrations/2026_09_22_000001_create_registration_phone_proofs.php,phone proof migration
+lesgo-api,??,tests/Feature/CustomerSocialFollowMissionTest.php,new facebook mission test
+lesgo-api,??,tests/Feature/LesbuyPickupIntegrityTest.php,LesBuy pickup integrity
+lesgo-api,??,tests/Feature/MerchantTermsAcceptanceTest.php,new merchant terms test
+lesgo-api,??,tests/Feature/RegistrationPaymentRecoveryTest.php,new payment recovery test
+lesgo-api,??,tests/Feature/RegistrationSecurityTest.php,new registration security test
+lesgo-api-partner-fee,M,app/Http/Controllers/Api/Auth/AuthController.php,cumulative_working_tree
+lesgo-api-partner-fee,M,app/Http/Controllers/Api/Auth/OtpController.php,OTP flow hardening
+lesgo-api-partner-fee,M,app/Http/Controllers/Api/CustomerMissionController.php,facebook follow mission paused
+lesgo-api-partner-fee,M,app/Http/Controllers/Api/DriverProfileController.php,cumulative_working_tree
+lesgo-api-partner-fee,M,app/Http/Controllers/Api/PaymentController.php,cumulative_working_tree
+lesgo-api-partner-fee,M,app/Http/Controllers/Api/SocialMediaController.php,mission pause + referral branding
+lesgo-api-partner-fee,M,app/Http/Middleware/EnsureRegistrationActive.php,registration-active middleware
+lesgo-api-partner-fee,M,app/Http/Middleware/LogSecurityEvents.php,cumulative_working_tree
+lesgo-api-partner-fee,M,app/Http/Requests/RegisterDriverRequest.php,rider OTP/terms enforcement
+lesgo-api-partner-fee,M,app/Http/Requests/RegisterRequest.php,merchant terms/privacy enforcement
+lesgo-api-partner-fee,M,app/Http/Requests/StoreOrderRequest.php,cumulative_working_tree
+lesgo-api-partner-fee,M,app/Services/DriverAssignmentService.php,cumulative_working_tree
+lesgo-api-partner-fee,M,app/Services/NotificationService.php,cumulative_working_tree
+lesgo-api-partner-fee,M,app/Services/PayMongoService.php,PayMongo webhook/idempotency
+lesgo-api-partner-fee,M,app/Services/RegistrationFeeService.php,registration fee record/payment
+lesgo-api-partner-fee,M,phpunit.xml,cumulative_working_tree
+lesgo-api-partner-fee,M,routes/api.php,admin route hardening
+lesgo-api-partner-fee,M,tests/Feature/AuthTest.php,cumulative_working_tree
+lesgo-api-partner-fee,M,tests/Feature/AuthorizationTest.php,authorization regression
+lesgo-api-partner-fee,M,tests/Feature/LesbuyTest.php,cumulative_working_tree
+lesgo-api-partner-fee,M,tests/Feature/LesrideFeatureTest.php,cumulative_working_tree
+lesgo-api-partner-fee,M,tests/Feature/RegistrationFeePayMongoTest.php,registration fee access
+lesgo-api-partner-fee,M,tests/Feature/RiderFlowTest.php,rider flow regression
+lesgo-api-partner-fee,M,tests/TestCase.php,cumulative_working_tree
+lesgo-api-partner-fee,??,app/Services/RegistrationPhoneProof.php,single-use phone verification proof
+lesgo-api-partner-fee,??,config/branding.php,branding config
+lesgo-api-partner-fee,??,database/migrations/2026_09_22_000001_create_registration_phone_proofs.php,phone proof migration
+lesgo-api-partner-fee,??,tests/Feature/CustomerSocialFollowMissionTest.php,new facebook mission test
+lesgo-api-partner-fee,??,tests/Feature/LesbuyPickupIntegrityTest.php,LesBuy pickup integrity
+lesgo-api-partner-fee,??,tests/Feature/OtpFallbackSecurityTest.php,otp fallback regression
+lesgo-api-partner-fee,??,tests/Feature/RegistrationPaymentRecoveryTest.php,new payment recovery test
+lesgo-api-partner-fee,??,tests/Feature/RegistrationSecurityTest.php,new registration security test
+lezgo-monorepo,M,BACKEND/lesgo-api,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/android/app/google-services.json,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/android/app/src/main/AndroidManifest.xml,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/android/app/src/main/kotlin/com/lesgo/app/MainActivity.kt,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/android/app/src/main/res/values-night/styles.xml,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/android/app/src/main/res/values/styles.xml,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/build.ps1,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/firebase.json,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/ios/Runner/Info.plist,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/config/secrets_config.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/constants/api_constants.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/constants/app_info.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/constants/legal_content.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/constants/routers/app_router.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/constants/routers/main/main_router.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/constants/routers/main/main_routes.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/constants/routers/register/register_router.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/di/injection.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/di/local_storage_service.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/services/app_preferences_service.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/services/connectivity_service.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/services/fcm_service.dart,branding LeSgo notifications
+lezgo-monorepo,M,FRONTEND/lib/core/services/gemini_customer_service.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/services/google_auth_service.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/services/order_receipt_service.dart,branding LeSgo receipts
+lezgo-monorepo,M,FRONTEND/lib/core/services/secure_storage_service.dart,biometric/token secure storage
+lezgo-monorepo,M,FRONTEND/lib/core/utils/api_error_mapper.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/utils/google_auth_helper.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/core/utils/referral_utils.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/data/data_source/auth_remote_datasource.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/data/data_source/document_remote_datasource.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/data/data_source/dto/auth/register_request_dto.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/data/data_source/dto/auth/register_request_dto.g.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/data/data_source/dto/order/create_order_request_dto.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/data/data_source/dto/order/create_order_request_dto.g.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/data/data_source/dto/support/support_dto.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/data/data_source/dto/support/support_dto.g.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/domain/entities/auth/register/register_request.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/firebase_options.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/main.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/auth/auth_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/auth/controller/login.controller.notifier.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/main/booking/lesbuy/manual_order_provider.dart,dark mode manual order
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/main/booking/restaurant_detail_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/main/security/security_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/main/support/customer_service_chat_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/missions/missions_provider.dart,mission UI paused state
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/register/notifier/submit_notifier.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/register/notifier/verification_notifier.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/provider/theme_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/auth_startup_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/forgot_password_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/login_screen.dart,cumulative_working_tree
+lezgo-monorepo,D,FRONTEND/lib/presentation/screens/auth/register_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/steps/address_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/steps/otp_verification_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/steps/personal_info_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/steps/success_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/steps/terms_of_service_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/steps/verification_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/auth/welcome_screen.dart,branding LeSgo
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/legal/privacy_policy_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/legal/terms_of_service_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/about_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/address_management_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/booking_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/driver_finding_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesbuy/lesbuy_order_complete_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesbuy/lesbuy_order_tracking_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesbuy/lesbuy_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesbuy/manual_order_screen.dart,dark mode manual order
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesbuy/store_cart_screen.dart,dark mode cart button
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesbuy/store_detail_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesbuy/store_product_detail_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/leseat/leseat_checkout_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/leseat/leseat_order_complete_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/leseat/leseat_order_status_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/leseat/leseat_order_tracking_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/leseat/leseat_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/leseat/leseat_waiting_confirmation_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/leseat/menu_item_detail_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/leseat/restaurant_detail_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesgo/lesgo_order_tracking_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesgo_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesport_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/lesride_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/order_digital_payment_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/booking/simple_order_tracking_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/documents/document_verification_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/faqs_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/favorites_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/home_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/inbox_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/lespay/xendit_payment_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/lespay_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/loyalty_redeem_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/missions_screen.dart,mission UI paused state
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/offers_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/orders/order_detail_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/orders/order_history_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/payment_methods_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/profile_screen.dart,dark mode profile
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/referral/referral_dashboard_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/reviews/reviews_list_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/security/security_settings_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/set_location_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/settings/change_password_screen.dart,dark mode settings
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/settings/deactivate_account_screen.dart,dark mode settings
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/settings/delete_account_screen.dart,dark mode settings
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/settings/language_settings_screen.dart,dark mode settings
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/settings/notification_settings_screen.dart,dark mode settings
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/settings_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/support/customer_service_chat_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/support/support_ticket_detail_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/support/support_tickets_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/main/transactions_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/rider/rider_dashboard_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/screens/tracking/live_tracking_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/address/address_selector_widget.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/login/remember_me_checkbox.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/login/social_login_button.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/address/address_continue_bar.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/address/address_map_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/address/current_location_button.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/address/default_address_checkbox.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/birthday_field.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/dual_action_buttons.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/number/otp_code_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/number/otp_contact_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/number/otp_input_fields.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/number/phone_number_field.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/success/success_header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/success/user_info_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/terms_content.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/auth/register/verification_content.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/booking_error_panel.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/booking_service_header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/driver_finding_widget.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/cart/manual_order_section.dart,dark mode manual order
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/cart/store_cart_item_card.dart,dark mode cart button
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/cart/store_order_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/lesbuy_search_field.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/manual_order/manual_order_form_section.dart,dark mode manual order
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/manual_order/manual_order_item_card.dart,dark mode manual order
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store/store_cart_bar.dart,dark mode cart button
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store/store_category_filters.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store/store_checkout_bottom_bar.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store/store_detail_header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store/store_info_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store/store_product_list.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store_list_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store_product_detail/store_product_add_to_order_button.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store_product_detail/store_product_detail_image_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesbuy/store_product_detail/store_product_quantity_selector.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/category_chip.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/checkout/address_bottom_sheet.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/checkout/delivery_address_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/checkout/order_item_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/checkout/order_summary_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/checkout/restaurant_order_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/checkout/voucher_bottom_sheet.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/checkout/voucher_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/checkout_bottom_bar.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/leseat_banner.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/leseat_search_field.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/location_header_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_category_filters.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_item_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_item_detail/menu_item_add_to_order_button.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_item_detail/menu_item_detail_image_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_item_detail/menu_item_detail_info_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_item_detail/menu_item_options_selector.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_item_detail/menu_item_quantity_selector.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_item_detail/menu_item_size_selector.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/menu_items_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/popular_items_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/restaurant_cart_bar.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/restaurant_detail_header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/restaurant_info_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant/restaurant_list_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/leseat/restaurant_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesgo/lesgo_details_panel.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesgo/lesgo_fare_summary.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesgo/lesgo_item_details_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesgo/lesgo_main_content.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesgo/lesgo_map_panel.dart,cumulative_working_tree
+lezgo-monorepo,D,FRONTEND/lib/presentation/widgets/booking/lesgo/lesgo_payment_option.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_booking_dialog_wrapper.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_booking_summary_dialog.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_details_panel.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_drag_handle.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_fare_summary.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_location_tile.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_main_content.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_map_panel.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_map_widget.dart,cumulative_working_tree
+lezgo-monorepo,D,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_payment_option.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lesride/lesride_vehicle_selector.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lestransport/lestransport_coverage_map.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lestransport/lestransport_delivery_method.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lestransport/lestransport_sender_form.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lestransport/lestransport_summary.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/lestransport/lestransport_user_info.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/booking/service_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/chat/chat_bubble_widget.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/chat/chat_button_widget.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/chat/chat_input_widget.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/chat/order_chat_widget.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/checkout/order_schedule_selector.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/common/password_field.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/common/password_strength_indicator.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/common/payment_status_badge.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/common/retry_widget.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/common/validated_text_field.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/drawer/drawer_logout_button.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/faq/faq_item.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/custom_divider.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/custom_text_field.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/disclaimer_dialog.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/googlemaps/fullscreen_map_overlay.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/googlemaps/map_expand_hint.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/googlemaps/map_place_preview_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/googlemaps/map_route_info_banner.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/googlemaps/map_search_bar.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/googlemaps/map_toggle_button.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/googlemaps/map_widget.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/googlemaps/map_zoom_controls.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/map_loading_indicator.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/primary_button.dart,dark mode global button
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/refresh_indicator.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/global/section_header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/app_drawer.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/hero_banner.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/home_active_orders_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/home_favorites_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/home_hero_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/home_promos_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/home_quick_access_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/location_header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/promo_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/quick_access_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/home/section_container.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/lespay/lespay_actions_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/lespay/lespay_menu_item.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/lespay/top_up_dialog.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/lespay/top_up_fee_summary.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/lespay/wallet_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/lespay/wallet_transactions_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/lespay/withdraw_dialog.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/location/location_bottom_button.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/location/location_fullscreen_map_overlay.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/location/location_map_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/missions/mission_card.dart,mission UI paused state
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/notifications/in_app_notification_banner.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/offers/offer_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/offers/offers_empty_state.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/offers/offers_filter_bar.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/offers/offers_header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/orders/cancel_order_dialog.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/orders/order_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/orders/proof_of_delivery_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/payment/payment_method_selector.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/change_phone_sheet.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/invite_friends_sheet.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/profile_account_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/profile_edit_section.dart,dark mode profile fields
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/profile_header.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/profile_points_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/profile_quick_actions_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/profile_referral_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/profile/profile_rewards_section.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/review/rating_dialog.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/review/rating_stars.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/review/review_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/support/customer_service_message_bubble.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/survey/customer_satisfaction_dialog.dart,branding LeSgo
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/tracking/driver_info_card.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/tracking/live_rider_map.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/tracking/order_status_timeline.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/transactions/order_receipt_button.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/transactions/order_transaction_detail_sheet.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/transactions/transaction_list_item.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/lib/presentation/widgets/widgets.dart,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/linux/flutter/generated_plugin_registrant.cc,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/linux/flutter/generated_plugins.cmake,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/macos/Flutter/GeneratedPluginRegistrant.swift,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/pubspec.lock,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/pubspec.yaml,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/test/lesbuy_manual_order_test.dart,dark mode manual order
+lezgo-monorepo,M,FRONTEND/tool/sync_secrets.ps1,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/tool/validate_secrets.ps1,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/windows/flutter/generated_plugin_registrant.cc,cumulative_working_tree
+lezgo-monorepo,M,FRONTEND/windows/flutter/generated_plugins.cmake,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/assets/images/navbar/merchant/menu.svg,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/constants/affiliate_terms.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/constants/api_constants.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/constants/app_config.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/constants/routers/main/main_router.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/constants/routers/main/main_routes.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/services/api_service.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/services/merchant_order_alert_service.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/services/order_sound_alert_service.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/services/orders_api.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/services/printer_service.dart,branding LeSgo
+lezgo-monorepo,M,RIDERSIDE/lib/core/services/sales_report_service.dart,branding LeSgo
+lezgo-monorepo,M,RIDERSIDE/lib/core/services/tracking_api.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/utils/api_error_mapper.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/utils/app_localization.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/utils/merchant_csv_export_utils.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/core/utils/merchant_order_amount_utils.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/dto/auth/register_driver_request_dto.dart,rider registration request
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/dto/auth/register_driver_request_dto.g.dart,rider registration request
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/dto/auth/register_driver_response_dto.dart,rider registration request
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/dto/auth/register_driver_response_dto.g.dart,rider registration request
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/dto/auth/register_merchant_request_dto.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/dto/auth/register_merchant_request_dto.g.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/dto/auth/register_merchant_response_dto.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/dto/auth/register_merchant_response_dto.g.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/helpers/register_driver_form_builder.dart,rider registration request
+lezgo-monorepo,M,RIDERSIDE/lib/data/data_source/merchant_remote_datasource.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/auth/rider_auth_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/merchantside/merchant_analytics_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/merchantside/merchant_menu_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/merchantside/merchant_staff_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/merchantside/merchant_wallet_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/riderside/rider_customer_service_chat_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/riderside/rider_duty_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/riderside/rider_location_provider.dart,branding LeSgo location
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/riderside/rider_profile_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/riderside/rider_vehicle_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/main/riderside/rider_wallet_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/register/merchant/merchant_register_info_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/provider/register/riderside/rider_register_info_provider.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/chat/rider_chat_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/merchant_main_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/merchant_menu_add_category_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/merchant_order_detail_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/merchant_sales_report_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/merchant_staff_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/printer_settings_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/views/merchant_book_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/views/merchant_lespay_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/views/merchant_menu_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/merchantside/views/merchant_orders_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/map/rider_map_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_booking_detail_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_change_password_screen.dart,dark mode settings
+lezgo-monorepo,D,RIDERSIDE/lib/presentation/screens/main/riderside/rider_chat_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_earnings_insights_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_earnings_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_edit_profile_screen.dart,dark mode profile
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_main_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_notification_settings_screen.dart,dark mode settings
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_package_tier_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_payout_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_performance_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_quick_stats_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_rating_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_schedule_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_scheduled_payout_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_security_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_trip_analytics_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_wallet_history_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/rider_wallet_payment_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/views/rider_bookings_map_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/views/rider_bookings_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/views/rider_history_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/views/rider_mission_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/views/rider_more_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/views/rider_profile_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/main/riderside/views/rider_wallet_view.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/register/merchant/merchant_register_complete_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/register/merchant/merchant_register_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/register/rider/register_complete_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/register/rider/register_info_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/screens/register/rider/register_screen.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/analytics/merchant_analytics_preview_card.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/analytics/merchant_popular_items_section.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/analytics/merchant_revenue_chart.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/menu/add_category/merchant_category_image_upload_section.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/menu/add_category/merchant_category_live_preview_section.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/menu/merchant_food_category_chip.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/merchant_bottom_nav_bar.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/orders/merchant_order_card.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/orders/merchant_order_filter_chip.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/profile/merchant_menu_item_card.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/profile/merchant_settings_section.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/merchantside/reviews/merchant_reviews_preview_card.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/bookings/rider_booking_card.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/bookings/rider_bookings_header.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/bookings/rider_bookings_list.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/bookings/rider_duty_toggle.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/history/rider_history_booking_card.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/history/rider_history_bookings_list.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/history/rider_history_dashboard_card.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/history/rider_history_filter_tabs.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/mission/rider_mission_card.dart,mission UI paused state
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/profile/rider_profile_header.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/profile/rider_profile_info_section.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/profile/rider_profile_settings_section.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/profile/rider_profile_summary_section.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/rider_shift_summary_sheet.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/wallet/rider_top_up_dialog.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/wallet/rider_wallet_actions_section.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/wallet/rider_wallet_card.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/main/riderside/wallet/rider_wallet_low_balance_banner.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/lib/presentation/widgets/register/merchant/info/merchant_info_form_fields.dart,cumulative_working_tree
+lezgo-monorepo,M,RIDERSIDE/pubspec.yaml,cumulative_working_tree
+lezgo-monorepo,M,apk/lesgo-customer-release.aab,cumulative_working_tree
+lezgo-monorepo,M,apk/lesgo-customer-release.apk,cumulative_working_tree
+lezgo-monorepo,M,apk/lesgo-rider-release.apk,cumulative_working_tree
+lezgo-monorepo,??,.deploy-google-auth/,cumulative_working_tree
+lezgo-monorepo,??,.verification/,cumulative_working_tree
+lezgo-monorepo,??,ADMIN_CHAT_ANALYSIS.md,cumulative_working_tree
+lezgo-monorepo,??,APK_INSTALLATION_GUIDE.md,cumulative_working_tree
+lezgo-monorepo,??,BACKEND/lesgo-api-partner-fee/,cumulative_working_tree
+lezgo-monorepo,??,BACKEND_PUSH_SUCCESS.md,cumulative_working_tree
+lezgo-monorepo,??,CAROUSEL_HERO_BANNER.md,cumulative_working_tree
+lezgo-monorepo,??,COMPLETE_NOTIFICATION_SOUND_IMPLEMENTATION.md,cumulative_working_tree
+lezgo-monorepo,??,DEPLOYMENT_CHECKLIST_v1.1.6.md,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/assets/images/homepage/customer_welcome_hero.png,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/assets/images/homepage/food_delivery_hero.png,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/assets/images/homepage/tricycle_hero.png,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/lib/core/services/affiliate_launcher.dart,affiliate launch package check
+lezgo-monorepo,??,FRONTEND/lib/core/services/biometric_unlock_service.dart,biometric secure storage
+lezgo-monorepo,??,FRONTEND/lib/core/theme/,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/lib/core/utils/app_localization.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/lib/core/utils/lesbuy_pickup_selection.dart,LesBuy pickup guard
+lezgo-monorepo,??,FRONTEND/lib/presentation/screens/legal/_legal_screen_base.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/lib/presentation/screens/main/documents/identity_onboarding_screen.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/lib/presentation/widgets/auth/biometric_unlock_gate.dart,biometric secure storage
+lezgo-monorepo,??,FRONTEND/lib/presentation/widgets/booking/lesbuy/manual_order/manual_pickup_section.dart,LesBuy manual pickup
+lezgo-monorepo,??,FRONTEND/lib/presentation/widgets/common/camera_capture_screen.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/lib/presentation/widgets/common/refreshable_empty_state.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/lib/presentation/widgets/home/home_services_section.dart,branding LeSgo + affiliate
+lezgo-monorepo,??,FRONTEND/lib/presentation/widgets/home/service_card.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/affiliate_launcher_test.dart,affiliate launch package check
+lezgo-monorepo,??,FRONTEND/test/biometric_unlock_test.dart,biometric secure storage
+lezgo-monorepo,??,FRONTEND/test/gemini_customer_service_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/home_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/lesbuy_pickup_selection_test.dart,LesBuy pickup guard
+lezgo-monorepo,??,FRONTEND/test/lespay_layout_overflow_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/lespay_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/lespay_summary_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/manual_pickup_section_test.dart,LesBuy manual pickup
+lezgo-monorepo,??,FRONTEND/test/profile_flow_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/qa_navigation_regression_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/registration_identity_verification_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/secure_session_storage_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/settings_theme_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND/test/social_follow_mission_test.dart,facebook follow mission handling
+lezgo-monorepo,??,FRONTEND/test/support_chat_test.dart,cumulative_working_tree
+lezgo-monorepo,??,FRONTEND_SERVICES_SHOWCASE_ADDED.md,cumulative_working_tree
+lezgo-monorepo,??,HERO_BANNER_IMAGE_SETUP.md,cumulative_working_tree
+lezgo-monorepo,??,HOME_SCREEN_ANIMATIONS.md,cumulative_working_tree
+lezgo-monorepo,??,LESGO_MERCHANT_MENU_REDESIGN_SUMMARY.md,cumulative_working_tree
+lezgo-monorepo,??,Lesgo-Admin-Panel/,cumulative_working_tree
+lezgo-monorepo,??,MERCHANT_AUDIT_2026_09_15.md,cumulative_working_tree
+lezgo-monorepo,??,MERCHANT_PERSISTENT_NOTIFICATION_COMPLETE.md,cumulative_working_tree
+lezgo-monorepo,??,MERCHANT_WITHDRAWAL_COMPLETE.md,cumulative_working_tree
+lezgo-monorepo,??,MERCHANT_WITHDRAWAL_IMPLEMENTATION_PLAN.md,cumulative_working_tree
+lezgo-monorepo,??,MERCHANT_WITHDRAWAL_IMPLEMENTATION_SUMMARY.md,cumulative_working_tree
+lezgo-monorepo,??,PERSISTENT_NOTIFICATION_COMPLETE.md,cumulative_working_tree
+lezgo-monorepo,??,RELEASE_NOTES_v1.1.6.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/LESGO_SUPPORT_TEXT_FIX.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/MERCHANT_SECURITY_2FA_FIX.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/PERSISTENT_NOTIFICATION_SOUND.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/STAFF_INVITE_MODAL_FIX.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/apk/,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/devtools_options.yaml,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/core/constants/merchant_terms.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/core/services/registration_fee_api.dart,registration fee client/state
+lezgo-monorepo,??,RIDERSIDE/lib/core/services/scheduled_payout_service.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/data/data_source/dto/merchant/withdrawal_request_dto.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/data/data_source/merchant_withdrawal_datasource.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/domain/entities/auth/registration_fee_status.dart,registration fee client/state
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/provider/auth/registration_fee_provider.dart,registration fee client/state
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/screens/main/merchantside/merchant_withdrawal_history_screen.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/screens/register/merchant/merchant_terms_screen.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/screens/registration_fee_screen.dart,registration fee client/state
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/widgets/main/merchantside/menu/merchant_menu_setup_card.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/widgets/main/merchantside/orders/merchant_order_queue_card.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/widgets/main/riderside/bookings/rider_bookings_state_panel.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/widgets/main/riderside/more/,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/lib/presentation/widgets/main/riderside/profile/profile_panel.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/delivery_proof_required_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/goldens/,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/merchant_api_regression_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/merchant_menu_setup_card_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/merchant_orders_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/merchant_registration_flow_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/registration_payment_recovery_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_bookings_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_edit_profile_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_history_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_more_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_profile_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_registration_security_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_top_up_dialog_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_user_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE/test/rider_wallet_layout_test.dart,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE_IMPROVEMENTS_DONE.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE_MERCHANT_MENU_REDESIGN_SUMMARY.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE_NOTIFICATION_CODE_CHANGES.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE_NOTIFICATION_FLOW_DIAGRAM.md,cumulative_working_tree
+lezgo-monorepo,??,RIDERSIDE_NOTIFICATION_IMPLEMENTATION_SUMMARY.md,cumulative_working_tree
+lezgo-monorepo,??,RIDER_TOPUP_FIX_SUMMARY.md,cumulative_working_tree
+lezgo-monorepo,??,about-check.png,cumulative_working_tree
+lezgo-monorepo,??,about-contact-check.png,cumulative_working_tree
+lezgo-monorepo,??,account-picker.png,cumulative_working_tree
+lezgo-monorepo,??,apk/BUILD_INFO_2026-09-17.md,cumulative_working_tree
+lezgo-monorepo,??,apk/LATEST_RIDER_BUILD.txt,cumulative_working_tree
+lezgo-monorepo,??,audit_fixes_changelog.csv,cumulative_working_tree
+lezgo-monorepo,??,bookings-check.png,cumulative_working_tree
+lezgo-monorepo,??,bookings-final.png,cumulative_working_tree
+lezgo-monorepo,??,current-emulator-2.png,cumulative_working_tree
+lezgo-monorepo,??,current-emulator-booted.png,cumulative_working_tree
+lezgo-monorepo,??,current-emulator-cold.png,cumulative_working_tree
+lezgo-monorepo,??,current-emulator.png,cumulative_working_tree
+lezgo-monorepo,??,customer-after-boot.png,cumulative_working_tree
+lezgo-monorepo,??,customer-permission.png,cumulative_working_tree
+lezgo-monorepo,??,google-after-clear-250ms.png,cumulative_working_tree
+lezgo-monorepo,??,google-login-result.png,cumulative_working_tree
+lezgo-monorepo,??,google-picker-immediate.png,cumulative_working_tree
+lezgo-monorepo,??,google-picker-live.png,cumulative_working_tree
+lezgo-monorepo,??,google-result-2600ms.png,cumulative_working_tree
+lezgo-monorepo,??,google-result-5600ms.png,cumulative_working_tree
+lezgo-monorepo,??,google-result-600ms.png,cumulative_working_tree
+lezgo-monorepo,??,history-check.png,cumulative_working_tree
+lezgo-monorepo,??,home-check.png,cumulative_working_tree
+lezgo-monorepo,??,home-redesign.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-emulator-fixed.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-google-e2e-login.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-google-e2e-result.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-google-e2e-start.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v16-login-result.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v16-start.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v17-after-login.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v17-inbox.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v17-menu-open.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v17-menu.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v17-profile.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v17-support-hi-success.png,cumulative_working_tree
+lezgo-monorepo,??,lesgo-v17-support-open.png,cumulative_working_tree
+lezgo-monorepo,??,lespay-check.png,cumulative_working_tree
+lezgo-monorepo,??,lespay-layout-fixed.png,cumulative_working_tree
+lezgo-monorepo,??,lespay-rebuilt.png,cumulative_working_tree
+lezgo-monorepo,??,more-before.png,cumulative_working_tree
+lezgo-monorepo,??,more-check.png,cumulative_working_tree
+lezgo-monorepo,??,more-redesign.png,cumulative_working_tree
+lezgo-monorepo,??,more-settings.png,cumulative_working_tree
+lezgo-monorepo,??,picker-clean.png,cumulative_working_tree
+lezgo-monorepo,??,profile-check.png,cumulative_working_tree
+lezgo-monorepo,??,profile-minimal.png,cumulative_working_tree
+lezgo-monorepo,??,profile-perks.png,cumulative_working_tree
+lezgo-monorepo,??,profile-redesign.png,cumulative_working_tree
+lezgo-monorepo,??,profile-sheet.png,cumulative_working_tree
+lezgo-monorepo,??,support-before.png,cumulative_working_tree
+lezgo-monorepo,??,support-current.png,cumulative_working_tree
+lezgo-monorepo,??,wallet-nav.png,cumulative_working_tree
+lezgo-monorepo,??,wallet-premium.png,cumulative_working_tree
+lezgo-monorepo,??,wallet-private.png,cumulative_working_tree
+lezgo-monorepo,??,wallet-redesign.png,cumulative_working_tree

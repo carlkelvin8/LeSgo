@@ -1,0 +1,184 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/merchant_order_ops_utils.dart';
+import '../../../../data/data_source/dto/merchant/order_dto.dart';
+import '../../auth/rider_auth_provider.dart';
+import 'merchant_prep_timer_provider.dart';
+import 'merchant_profile_provider.dart';
+
+enum MerchantOrderFilter { all, pending, pickUp, ready, forDelivery, completed, cancelled }
+
+extension MerchantOrderFilterX on MerchantOrderFilter {
+  String get label {
+    switch (this) {
+      case MerchantOrderFilter.all:
+        return 'All';
+      case MerchantOrderFilter.pending:
+        return 'Pending';
+      case MerchantOrderFilter.pickUp:
+        return 'For Pick Up';
+      case MerchantOrderFilter.ready:
+        return 'Ready';
+      case MerchantOrderFilter.forDelivery:
+        return 'For Delivery';
+      case MerchantOrderFilter.completed:
+        return 'Completed';
+      case MerchantOrderFilter.cancelled:
+        return 'Cancelled';
+    }
+  }
+
+  String? get apiStatus {
+    switch (this) {
+      case MerchantOrderFilter.all:
+        return null;
+      case MerchantOrderFilter.pending:
+        return 'pending';
+      case MerchantOrderFilter.pickUp:
+        return 'accepted';
+      case MerchantOrderFilter.ready:
+        return 'ready_for_pickup';
+      case MerchantOrderFilter.forDelivery:
+        return 'picked_up';
+      case MerchantOrderFilter.completed:
+        return 'completed';
+      case MerchantOrderFilter.cancelled:
+        return 'cancelled';
+    }
+  }
+}
+
+final merchantOrderFiltersProvider = Provider<List<MerchantOrderFilter>>((ref) {
+  return MerchantOrderFilter.values;
+});
+
+final selectedMerchantOrderFilterProvider =
+    StateProvider<MerchantOrderFilter>((ref) {
+  return MerchantOrderFilter.all;
+});
+
+final merchantOrdersProvider =
+    FutureProvider.autoDispose<List<OrderDto>>((ref) async {
+  final authState = ref.watch(riderAuthProvider);
+  final partnerId = authState.user?.partnerId;
+
+  if (partnerId == null) {
+    return [];
+  }
+
+  final dataSource = ref.read(merchantDataSourceProvider);
+  return dataSource.getPartnerOrders(partnerId);
+});
+
+final merchantOrderDetailProvider =
+    FutureProvider.autoDispose.family<OrderDto, int>((ref, orderId) async {
+  final dataSource = ref.read(merchantDataSourceProvider);
+  return dataSource.getOrderById(orderId);
+});
+
+final merchantPendingOrderCountProvider = Provider<int>((ref) {
+  final ordersAsync = ref.watch(merchantOrdersProvider);
+  return ordersAsync.maybeWhen(
+    data: (orders) =>
+        orders.where((order) => MerchantOrderOpsUtils.isPending(order.status)).length,
+    orElse: () => 0,
+  );
+});
+
+final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
+  final ordersAsync = ref.watch(merchantOrdersProvider);
+  final filter = ref.watch(selectedMerchantOrderFilterProvider);
+
+  return ordersAsync.when(
+    data: (orders) => filterMerchantOrders(orders, filter),
+    loading: () => [],
+    error: (_, __) => [],
+  );
+});
+
+List<OrderDto> filterMerchantOrders(List<OrderDto> orders, MerchantOrderFilter filter) {
+  if (filter == MerchantOrderFilter.all) return orders;
+
+  return orders.where((order) {
+    final status = order.status.toLowerCase();
+    switch (filter) {
+      case MerchantOrderFilter.pending:
+        return status == 'pending';
+      
+      case MerchantOrderFilter.pickUp:
+        // Orders waiting for pickup (after driver accepted, before ready)
+        return status == 'searching_driver' || 
+               status == 'accepted';
+      
+      case MerchantOrderFilter.ready:
+        // Ready and waiting for driver to pick up
+        return status == 'ready_for_pickup';
+      
+      case MerchantOrderFilter.forDelivery:
+        // Orders picked up by driver and in transit
+        return status == 'picked_up' || 
+               status == 'in_progress' ||
+               status == 'driver_arrived_at_pickup';
+      
+      case MerchantOrderFilter.completed:
+        return status == 'completed';
+      
+      case MerchantOrderFilter.cancelled:
+        return status == 'cancelled';
+      
+      case MerchantOrderFilter.all:
+        return true;
+    }
+  }).toList();
+}
+
+final merchantOrderActionProvider = Provider((ref) {
+  return MerchantOrderActionNotifier(ref);
+});
+
+class MerchantOrderActionNotifier {
+  final Ref ref;
+  MerchantOrderActionNotifier(this.ref);
+
+  Future<void> _refresh(int orderId) async {
+    // Invalidate both the list and the specific order detail
+    // to ensure complete cache invalidation
+    ref.invalidate(merchantOrderDetailProvider(orderId));
+    ref.invalidate(merchantOrdersProvider);
+  }
+
+  Future<void> acceptOrder(int orderId) async {
+    final dataSource = ref.read(merchantDataSourceProvider);
+    await dataSource.updateOrderStatus(orderId, 'searching_driver');
+    await ref.read(merchantPrepTimerProvider.notifier).start(orderId);
+    await _refresh(orderId);
+  }
+
+  Future<void> rejectOrder(int orderId, String reason) async {
+    final dataSource = ref.read(merchantDataSourceProvider);
+    await dataSource.updateOrderStatus(
+      orderId,
+      'cancelled',
+      cancelReason: reason,
+    );
+    await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
+    await _refresh(orderId);
+  }
+
+  Future<void> cancelOrder(int orderId, String reason) async {
+    final dataSource = ref.read(merchantDataSourceProvider);
+    await dataSource.updateOrderStatus(
+      orderId,
+      'cancelled',
+      cancelReason: reason,
+    );
+    await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
+    await _refresh(orderId);
+  }
+
+  Future<void> markReadyForPickup(int orderId) async {
+    final dataSource = ref.read(merchantDataSourceProvider);
+    await dataSource.updateOrderStatus(orderId, 'ready_for_pickup');
+    await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
+    await _refresh(orderId);
+  }
+}

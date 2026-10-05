@@ -1,0 +1,364 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Xendit\Configuration;
+use Xendit\Invoice\CreateInvoiceRequest;
+use Xendit\Invoice\Invoice;
+use Xendit\Invoice\InvoiceApi;
+use Xendit\Payout\CreatePayoutRequest;
+use Xendit\Payout\PayoutApi;
+use Xendit\Refund\CreateRefund;
+use Xendit\Refund\RefundApi;
+
+class PaymentGatewayService
+{
+    public static function secretKey(): string
+    {
+        return (string) config('services.xendit.secret_key', '');
+    }
+
+    public static function configured(): bool
+    {
+        return self::secretKey() !== '';
+    }
+
+    public function __construct()
+    {
+        if (self::secretKey() !== '') {
+            Configuration::setXenditKey(self::secretKey());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Invoice (hosted checkout — supports GCash, Maya, cards, OTC, VA, etc.)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create a Xendit Invoice (hosted payment page).
+     *
+     * @param  float  $amount  Amount in PHP (e.g. 150.00)
+     * @param  string  $externalId  Your unique reference (e.g. "order-42")
+     * @param  string  $description  Shown on the payment page
+     * @param  array  $meta  Optional: payer_email, payer_name, success_redirect_url, failure_redirect_url, items
+     */
+    public function createInvoice(float $amount, string $externalId, string $description, array $meta = []): array
+    {
+        $this->ensureConfigured();
+
+        try {
+            return $this->createInvoiceViaHttp($amount, $externalId, $description, $meta);
+        } catch (\Throwable $httpErr) {
+            Log::warning('Xendit HTTP createInvoice failed, trying SDK', [
+                'external_id' => $externalId,
+                'error' => $httpErr->getMessage(),
+            ]);
+        }
+
+        return $this->createInvoiceViaSdk($amount, $externalId, $description, $meta);
+    }
+
+    /**
+     * Prefer direct HTTP (bounded timeout) — avoids serverless 502s from a hung SDK call.
+     */
+    private function createInvoiceViaHttp(
+        float $amount,
+        string $externalId,
+        string $description,
+        array $meta = [],
+    ): array {
+        $payload = [
+            'external_id' => $externalId,
+            'amount' => $amount,
+            'description' => $description,
+            'currency' => $meta['currency'] ?? 'PHP',
+            'invoice_duration' => $meta['invoice_duration'] ?? 86400,
+            'success_redirect_url' => $meta['success_redirect_url']
+                ?? config('services.xendit.success_url'),
+            'failure_redirect_url' => $meta['failure_redirect_url']
+                ?? config('services.xendit.failure_url'),
+        ];
+
+        if (! empty($meta['payer_email'])) {
+            $payload['payer_email'] = $meta['payer_email'];
+        }
+        if (! empty($meta['payment_methods'])) {
+            $payload['payment_methods'] = $meta['payment_methods'];
+        }
+        if (! empty($meta['payer_name'])) {
+            $payload['customer'] = array_filter([
+                'given_names' => $meta['payer_name'],
+                'email' => $meta['payer_email'] ?? null,
+                'mobile_number' => $meta['payer_phone'] ?? null,
+            ]);
+        }
+
+        $response = Http::timeout(15)
+            ->withBasicAuth(self::secretKey(), '')
+            ->acceptJson()
+            ->post('https://api.xendit.co/v2/invoices', $payload);
+
+        if (! $response->successful()) {
+            $body = $response->json();
+            $message = is_array($body)
+                ? ($body['message'] ?? $response->body())
+                : $response->body();
+            throw new \RuntimeException(
+                'Xendit invoice request failed ('.$response->status().'): '.$message
+            );
+        }
+
+        $invoice = $response->json();
+        if (! is_array($invoice) || empty($invoice['id'])) {
+            throw new \RuntimeException('Xendit returned an invalid invoice response.');
+        }
+
+        return [
+            'id' => $invoice['id'],
+            'external_id' => $invoice['external_id'] ?? $externalId,
+            'invoice_url' => $invoice['invoice_url'] ?? null,
+            'status' => $invoice['status'] ?? 'PENDING',
+            'amount' => $invoice['amount'] ?? $amount,
+            'currency' => $invoice['currency'] ?? 'PHP',
+            'expiry_date' => $invoice['expiry_date'] ?? null,
+        ];
+    }
+
+    private function createInvoiceViaSdk(
+        float $amount,
+        string $externalId,
+        string $description,
+        array $meta = [],
+    ): array {
+        $api = new InvoiceApi;
+        $currency = $meta['currency'] ?? 'PHP';
+        $invoiceDuration = $meta['invoice_duration'] ?? 86400;
+        $successUrl = $meta['success_redirect_url'] ?? config('services.xendit.success_url');
+        $failureUrl = $meta['failure_redirect_url'] ?? config('services.xendit.failure_url');
+        $payerEmail = $meta['payer_email'] ?? null;
+        $items = $meta['items'] ?? null;
+        $paymentMethods = $meta['payment_methods'] ?? null;
+
+        $request = new CreateInvoiceRequest([
+            'external_id' => $externalId,
+            'amount' => $amount,
+            'description' => $description,
+            'currency' => $currency,
+            'invoice_duration' => $invoiceDuration,
+            'success_redirect_url' => $successUrl,
+            'failure_redirect_url' => $failureUrl,
+            'payer_email' => $payerEmail,
+            'customer' => isset($meta['payer_name']) ? [
+                'given_names' => $meta['payer_name'],
+                'email' => $meta['payer_email'] ?? null,
+                'mobile_number' => $meta['payer_phone'] ?? null,
+            ] : null,
+            'items' => $items,
+            'payment_methods' => $paymentMethods,
+        ]);
+
+        try {
+            /** @var Invoice $invoice */
+            $invoice = $api->createInvoice($request);
+
+            return [
+                'id' => $invoice->getId(),
+                'external_id' => $invoice->getExternalId(),
+                'invoice_url' => $invoice->getInvoiceUrl(),
+                'status' => $invoice->getStatus(),
+                'amount' => $invoice->getAmount(),
+                'currency' => $invoice->getCurrency(),
+                'expiry_date' => $invoice->getExpiryDate()?->format('c'),
+            ];
+        } catch (\Xendit\XenditSdkException $e) {
+            Log::error('Xendit createInvoice failed', [
+                'error' => $e->getMessage(),
+                'full_error' => $e->getFullError(),
+                'external_id' => $externalId,
+            ]);
+            throw new \RuntimeException('Failed to create Xendit invoice: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Retrieve a Xendit Invoice by ID.
+     */
+    public function getInvoice(string $invoiceId): array
+    {
+        $this->ensureConfigured();
+        $api = new InvoiceApi;
+
+        try {
+            $invoice = $api->getInvoiceById($invoiceId);
+
+            return [
+                'id' => $invoice->getId(),
+                'external_id' => $invoice->getExternalId(),
+                'invoice_url' => $invoice->getInvoiceUrl(),
+                'status' => $invoice->getStatus(),
+                'amount' => $invoice->getAmount(),
+                'currency' => $invoice->getCurrency(),
+                'paid_amount' => $invoice->getPaidAmount(),
+                'paid_at' => $invoice->getPaidAt()?->format('c'),
+                'payment_method' => $invoice->getPaymentMethod(),
+            ];
+        } catch (\Xendit\XenditSdkException $e) {
+            Log::error('Xendit getInvoice failed', ['invoice_id' => $invoiceId, 'error' => $e->getMessage()]);
+            throw new \RuntimeException('Failed to retrieve invoice: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Expire (cancel) a pending Xendit Invoice.
+     */
+    public function expireInvoice(string $invoiceId): array
+    {
+        $this->ensureConfigured();
+        $api = new InvoiceApi;
+
+        try {
+            $invoice = $api->expireInvoice($invoiceId);
+
+            return ['id' => $invoice->getId(), 'status' => $invoice->getStatus()];
+        } catch (\Xendit\XenditSdkException $e) {
+            Log::error('Xendit expireInvoice failed', ['invoice_id' => $invoiceId, 'error' => $e->getMessage()]);
+            throw new \RuntimeException('Failed to expire invoice: '.$e->getMessage());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Payouts (withdraw to GCash / Maya)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Send funds to a GCash or Maya account via Xendit Payouts API.
+     */
+    public function createPayout(
+        float $amount,
+        string $referenceId,
+        string $channelCode,
+        string $accountHolderName,
+        string $accountNumber,
+        ?string $description = null,
+    ): array {
+        $this->ensureConfigured();
+        $api = new PayoutApi;
+        $idempotencyKey = $referenceId;
+
+        $request = new CreatePayoutRequest([
+            'reference_id' => $referenceId,
+            'currency' => 'PHP',
+            'channel_code' => $channelCode,
+            'channel_properties' => [
+                'account_holder_name' => $accountHolderName,
+                'account_number' => $accountNumber,
+            ],
+            'amount' => $amount,
+            'description' => $description ?? 'LesGo wallet withdrawal',
+        ]);
+
+        try {
+            $payout = $api->createPayout($idempotencyKey, null, $request);
+
+            return [
+                'id' => $payout->getId(),
+                'reference_id' => $payout->getReferenceId(),
+                'status' => $payout->getStatus(),
+                'amount' => $payout->getAmount(),
+                'currency' => $payout->getCurrency(),
+                'channel_code' => $payout->getChannelCode(),
+            ];
+        } catch (\Xendit\XenditSdkException $e) {
+            Log::error('Xendit createPayout failed', [
+                'reference_id' => $referenceId,
+                'channel_code' => $channelCode,
+                'error' => $e->getMessage(),
+                'full_error' => $e->getFullError(),
+            ]);
+            throw new \RuntimeException('Failed to send payout: '.$e->getMessage());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Refunds
+    // -------------------------------------------------------------------------
+
+    /**
+     * Create a refund for a Xendit payment.
+     *
+     * @param  string  $paymentRequestId  The Xendit payment_request_id or payment_id
+     * @param  float  $amount  Amount to refund in PHP
+     * @param  string  $reason  DUPLICATE | FRAUDULENT | REQUESTED_BY_CUSTOMER
+     */
+    public function createRefund(
+        string $paymentRequestId,
+        float $amount,
+        string $reason = 'REQUESTED_BY_CUSTOMER',
+        ?string $idempotencyKey = null,
+    ): array {
+        $this->ensureConfigured();
+        $api = new RefundApi;
+
+        $idempotencyKey ??= (string) Str::uuid();
+
+        $refundRequest = new CreateRefund([
+            'payment_request_id' => $paymentRequestId,
+            'amount' => $amount,
+            'reason' => strtoupper($reason),
+            'currency' => 'PHP',
+        ]);
+
+        try {
+            $refund = $api->createRefund($idempotencyKey, null, $refundRequest);
+
+            return [
+                'id' => $refund->getId(),
+                'payment_request_id' => $refund->getPaymentRequestId(),
+                'amount' => $refund->getRefundFeeAmount() !== null
+                    ? $amount - $refund->getRefundFeeAmount()
+                    : $amount,
+                'status' => $refund->getStatus(),
+                'reason' => $refund->getReason(),
+                'created' => $refund->getCreated()?->format('c'),
+            ];
+        } catch (\Xendit\XenditSdkException $e) {
+            Log::error('Xendit createRefund failed', [
+                'payment_request_id' => $paymentRequestId,
+                'error' => $e->getMessage(),
+                'full_error' => $e->getFullError(),
+            ]);
+            throw new \RuntimeException('Refund failed: '.$e->getMessage());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Webhook verification
+    // -------------------------------------------------------------------------
+
+    /**
+     * Verify Xendit webhook callback token.
+     * Xendit sends X-CALLBACK-TOKEN header — compare against your dashboard token.
+     */
+    public function verifyWebhookToken(string $token): bool
+    {
+        $expected = config('services.xendit.webhook_token', '');
+
+        if (empty($expected)) {
+            Log::error('Xendit webhook rejected because its callback token is not configured');
+
+            return false;
+        }
+
+        return hash_equals($expected, $token);
+    }
+
+    private function ensureConfigured(): void
+    {
+        if (! self::configured()) {
+            throw new \RuntimeException('Xendit is not configured on the server.');
+        }
+    }
+}

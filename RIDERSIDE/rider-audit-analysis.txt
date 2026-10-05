@@ -1,0 +1,327 @@
+Analyzing RIDERSIDE...                                          
+
+   info - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead - lib\core\config\web_maps_loader_web.dart:1:1 - deprecated_member_use
+   info - Don't use web-only libraries outside Flutter web plugins - lib\core\config\web_maps_loader_web.dart:1:1 - avoid_web_libraries_in_flutter
+   info - The imported package 'http_parser' isn't a dependency of the importing package - lib\core\network\offline_form_data_codec.dart:4:8 - depend_on_referenced_packages
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\benefits_api.dart:126:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\benefits_api.dart:127:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\benefits_api.dart:128:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\benefits_api.dart:129:11 - use_null_aware_elements
+   info - Use a function declaration rather than a variable assignment to bind a function to a name - lib\core\services\chat_realtime_service.dart:27:40 - prefer_function_declarations_over_variables
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\realtime_remote_datasource.dart:51:9 - use_null_aware_elements
+   info - Use 'const' with the constructor to improve performance - lib\core\services\sales_report_service.dart:152:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\sales_report_service.dart:156:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\sales_report_service.dart:176:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\sales_report_service.dart:229:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\sales_report_service.dart:267:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\core\services\sales_report_service.dart:270:18 - prefer_const_constructors
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\support_api.dart:121:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\support_api.dart:142:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\tracking_api.dart:29:11 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\tracking_api.dart:83:7 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\core\services\tracking_api.dart:84:7 - use_null_aware_elements
+   info - Use 'const' with the constructor to improve performance - lib\core\utils\location_permission_utils.dart:20:13 - prefer_const_constructors
+   info - Use 'const' for final variables initialized to a constant value - lib\core\utils\media_url_utils.dart:195:9 - prefer_const_declarations
+   info - Local variables should be final - lib\core\utils\responsive_utils.dart:89:5 - prefer_final_locals
+   info - Local variables should be final - lib\core\utils\responsive_utils.dart:97:5 - prefer_final_locals
+   info - Local variables should be final - lib\core\utils\responsive_utils.dart:109:5 - prefer_final_locals
+   info - Local variables should be final - lib\core\utils\responsive_utils.dart:121:5 - prefer_final_locals
+   info - Local variables should be final - lib\core\utils\responsive_utils.dart:129:5 - prefer_final_locals
+   info - Local variables should be final - lib\core\utils\responsive_utils.dart:137:5 - prefer_final_locals
+   info - Don't use 'BuildContext's across async gaps - lib\core\utils\share_utils.dart:19:21 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\core\utils\share_utils.dart:47:33 - use_build_context_synchronously
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\main.dart:79:17 - use_null_aware_elements
+   info - Unnecessary use of multiple underscores - lib\presentation\provider\main\merchantside\merchant_analytics_provider.dart:156:16 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\provider\main\merchantside\merchant_low_stock_provider.dart:17:16 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\provider\main\merchantside\merchant_menu_provider.dart:103:16 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\provider\main\merchantside\merchant_orders_provider.dart:94:16 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\provider\main\riderside\rider_heatmap_provider.dart:65:34 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\provider\main\riderside\rider_shift_provider.dart:25:10 - prefer_const_constructors
+   info - Local variables should be final - lib\presentation\provider\main\riderside\rider_shift_provider.dart:66:7 - prefer_final_locals
+   info - Local variables should be final - lib\presentation\provider\register\riderside\rider_register_info_provider.dart:248:7 - prefer_final_locals
+   info - Local variables should be final - lib\presentation\provider\register\riderside\rider_register_info_provider.dart:275:7 - prefer_final_locals
+   info - Local variables should be final - lib\presentation\provider\register\riderside\rider_register_info_provider.dart:302:7 - prefer_final_locals
+   info - Local variables should be final - lib\presentation\provider\register\riderside\rider_register_info_provider.dart:329:7 - prefer_final_locals
+   info - Local variables should be final - lib\presentation\provider\register\riderside\rider_register_info_provider.dart:356:7 - prefer_final_locals
+   info - Local variables should be final - lib\presentation\provider\register\riderside\rider_register_info_provider.dart:383:7 - prefer_final_locals
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\presentation\screens\main\cart_screen.dart:179:19 - deprecated_member_use
+   info - Use 'const' for final variables initialized to a constant value - lib\presentation\screens\main\cart_screen.dart:287:9 - prefer_const_declarations
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\merchantside\merchant_edit_information_screen.dart:495:31 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_edit_information_screen.dart:525:38 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_edit_information_screen.dart:579:30 - prefer_const_constructors
+   info - The import of '../../../widgets/main/merchantside/menu/add_category/merchant_category_image_upload_section.dart' is unnecessary because all of the used elements are also provided by the import of '../../../widgets/widgets.dart' - lib\presentation\screens\main\merchantside\merchant_menu_add_category_screen.dart:10:8 - unnecessary_import
+warning - The value of the local variable 'dishCount' isn't used - lib\presentation\screens\main\merchantside\merchant_menu_add_category_screen.dart:107:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_add_item_screen.dart:94:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_add_item_screen.dart:100:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_add_item_screen.dart:106:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_add_item_screen.dart:116:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_add_item_screen.dart:122:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_add_item_screen.dart:127:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_add_item_screen.dart:132:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_add_item_screen.dart:143:9 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:129:41 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:159:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:165:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:171:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:181:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:187:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:192:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:197:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_menu_edit_item_screen.dart:208:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_reviews_screen.dart:258:24 - prefer_const_constructors
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\presentation\screens\main\merchantside\merchant_staff_screen.dart:105:13 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_staff_screen.dart:216:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_staff_screen.dart:218:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_staff_screen.dart:330:30 - prefer_const_constructors
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\presentation\screens\main\merchantside\merchant_staff_screen.dart:492:17 - deprecated_member_use
+warning - The value of the local variable 'timeFormat' isn't used - lib\presentation\screens\main\merchantside\merchant_withdrawal_history_screen.dart:292:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\merchant_withdrawal_history_screen.dart:558:26 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\merchantside\views\merchant_lespay_view.dart:352:20 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\merchantside\views\merchant_lespay_view.dart:439:40 - unnecessary_underscores
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\screens\main\merchantside\views\merchant_lespay_view.dart:1486:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\screens\main\merchantside\views\merchant_lespay_view.dart:1496:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\screens\main\merchantside\views\merchant_lespay_view.dart:1835:28 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_lespay_view.dart:1836:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:35:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:36:32 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:37:39 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:45:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:47:42 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:52:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:55:42 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:61:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:66:42 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:76:40 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:106:37 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:107:46 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:108:50 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:109:48 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_mission_view.dart:111:50 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\merchantside\views\merchant_profile_view.dart:32:18 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\merchantside\views\merchant_profile_view.dart:329:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\map\rider_map_screen.dart:590:37 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\map\rider_map_screen.dart:593:46 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\map\rider_map_screen.dart:595:53 - prefer_const_constructors
+   info - 'setMapStyle' is deprecated and shouldn't be used. Use GoogleMap.style instead - lib\presentation\screens\main\riderside\map\rider_map_screen.dart:968:36 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:225:34 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:235:34 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:248:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:258:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:274:34 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:275:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:276:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:279:34 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:288:34 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:300:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:325:34 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:335:34 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:348:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:358:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:374:34 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:375:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:376:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:379:34 - prefer_const_constructors
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:388:34 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:400:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:421:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:431:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:447:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:462:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:480:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:517:11 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:525:7 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1070:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1073:36 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1075:43 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1080:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1130:48 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_customer_service_chat_screen.dart:67:54 - unnecessary_underscores
+   info - The import of 'package:cross_file/cross_file.dart' is unnecessary because all of the used elements are also provided by the import of 'package:image_picker/image_picker.dart' - lib\presentation\screens\main\riderside\rider_document_verification_screen.dart:1:8 - unnecessary_import
+   info - The import of 'package:flutter/services.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\presentation\screens\main\riderside\rider_document_verification_screen.dart:3:8 - unnecessary_import
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\presentation\screens\main\riderside\rider_document_verification_screen.dart:83:17 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_document_verification_screen.dart:220:39 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_document_verification_screen.dart:220:43 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_notification_center_screen.dart:148:49 - unnecessary_underscores
+   info - Don't use 'BuildContext's across async gaps - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:143:50 - use_build_context_synchronously
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:171:14 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:266:30 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:381:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:407:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:462:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:463:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:465:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:467:11 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:567:20 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_package_tier_screen.dart:905:28 - unnecessary_underscores
+   info - The import of '../../../provider/main/riderside/rider_payout_provider.dart' is unnecessary because all of the used elements are also provided by the import of '../../../provider/main/riderside/rider_payout_provider.dart' - lib\presentation\screens\main\riderside\rider_payout_screen.dart:7:8 - unnecessary_import
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_payout_screen.dart:158:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_payout_screen.dart:159:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_payout_screen.dart:478:14 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_payout_screen.dart:480:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_payout_screen.dart:518:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_payout_screen.dart:520:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_performance_screen.dart:305:29 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_rating_screen.dart:156:15 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_rating_screen.dart:287:20 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_rating_screen.dart:315:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_rating_screen.dart:331:32 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_rating_screen.dart:533:42 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_rating_screen.dart:533:46 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_rating_screen.dart:533:51 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_rating_screen.dart:685:36 - unnecessary_underscores
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\screens\main\riderside\rider_safety_screen.dart:179:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\screens\main\riderside\rider_safety_screen.dart:203:26 - use_build_context_synchronously
+warning - The declaration '_dayLabel' isn't referenced - lib\presentation\screens\main\riderside\rider_schedule_screen.dart:23:17 - unused_element
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_schedule_screen.dart:55:63 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_schedule_screen.dart:130:28 - unnecessary_underscores
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\presentation\screens\main\riderside\rider_schedule_screen.dart:465:23 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_schedule_screen.dart:614:39 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\rider_schedule_screen.dart:997:22 - unnecessary_underscores
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\presentation\screens\main\riderside\rider_scheduled_payout_screen.dart:195:17 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\presentation\screens\main\riderside\rider_scheduled_payout_screen.dart:197:17 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\presentation\screens\main\riderside\rider_scheduled_payout_screen.dart:373:19 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\presentation\screens\main\riderside\rider_scheduled_payout_screen.dart:375:19 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_trip_analytics_screen.dart:472:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_trip_analytics_screen.dart:473:17 - prefer_const_constructors
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\presentation\screens\main\riderside\rider_vehicle_management_screen.dart:468:17 - deprecated_member_use
+   info - Unnecessary instance of 'Container' - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:401:12 - avoid_unnecessary_containers
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:465:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:645:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:648:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:649:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:661:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:669:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:671:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:679:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:682:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:692:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:701:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:706:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:711:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:740:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:753:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:758:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:787:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:797:13 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:814:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:819:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:838:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:857:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:867:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:875:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:888:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:897:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:903:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:912:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:914:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:939:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:941:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:957:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:962:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:963:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:992:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:997:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:998:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1027:11 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1065:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1070:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1073:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1075:37 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1078:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1080:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1142:31 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1145:40 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\views\rider_bookings_map_view.dart:1147:47 - prefer_const_constructors
+   info - The import of '../../../../widgets/main/riderside/mission/rider_mission_card.dart' is unnecessary because all of the used elements are also provided by the import of '../../../../widgets/widgets.dart' - lib\presentation\screens\main\riderside\views\rider_mission_view.dart:9:8 - unnecessary_import
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\views\rider_mission_view.dart:85:28 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\views\rider_mission_view.dart:106:30 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\main\riderside\views\rider_mission_view.dart:131:32 - unnecessary_underscores
+   info - Local variables should be final - lib\presentation\widgets\auth\auth_top_bar.dart:18:5 - prefer_final_locals
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\menu_image_widget.dart:41:27 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\menu_image_widget.dart:41:31 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\menu_image_widget.dart:49:27 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\menu_image_widget.dart:49:31 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\menu_image_widget.dart:98:25 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\menu_image_widget.dart:98:29 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\menu_image_widget.dart:154:31 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\menu_image_widget.dart:154:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\common\offline_banner.dart:59:18 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\global\cart_icon.dart:37:29 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\analytics\merchant_analytics_preview_card.dart:20:18 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\analytics\merchant_popular_items_section.dart:16:18 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\analytics\merchant_revenue_chart.dart:20:18 - unnecessary_underscores
+warning - A value for optional parameter 'compact' isn't ever given - lib\presentation\widgets\main\merchantside\menu\add_category\merchant_category_image_upload_section.dart:153:49 - unused_element_parameter
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\menu\add_category\merchant_category_live_preview_section.dart:119:44 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\merchantside\menu\shared\merchant_form_layout.dart:31:13 - prefer_const_constructors
+   info - Use 'const' for final variables initialized to a constant value - lib\presentation\widgets\main\merchantside\merchant_bottom_nav_bar.dart:15:5 - prefer_const_declarations
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\profile\edit_information\merchant_edit_information_header_section.dart:141:27 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\profile\edit_information\merchant_edit_information_header_section.dart:141:31 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\profile\merchant_menu_item_card.dart:162:25 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\profile\merchant_menu_item_card.dart:162:29 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\profile\merchant_profile_header.dart:17:18 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\profile\merchant_profile_info_section.dart:19:18 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\merchantside\profile\merchant_profile_info_section.dart:25:22 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\merchantside\profile\merchant_settings_section.dart:24:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\merchantside\profile\merchant_settings_section.dart:29:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\merchantside\profile\merchant_settings_section.dart:34:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\merchantside\profile\merchant_settings_section.dart:39:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\merchantside\profile\merchant_settings_section.dart:44:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\merchantside\profile\merchant_settings_section.dart:49:9 - prefer_const_constructors
+warning - A value for optional parameter 'isDestructive' isn't ever given - lib\presentation\widgets\main\merchantside\profile\merchant_settings_section.dart:70:10 - unused_element_parameter
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\presentation\widgets\main\merchantside\profile\merchant_sound_settings_card.dart:48:17 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\presentation\widgets\main\merchantside\profile\merchant_store_toggle_card.dart:93:15 - deprecated_member_use
+   info - Unnecessary use of string interpolation - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_info.dart:49:82 - unnecessary_string_interpolations
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_info.dart:136:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_info.dart:255:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_info.dart:262:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_info.dart:296:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_info.dart:455:18 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_info.dart:478:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_info.dart:478:39 - unnecessary_underscores
+   info - 'zIndex' is deprecated and shouldn't be used. Use zIndexInt instead. On some platforms zIndex is truncated to an int, which can lead to incorrect/unstable ordering - lib\presentation\widgets\main\riderside\bookings\rider_booking_detail_map_section.dart:164:9 - deprecated_member_use
+warning - The value of the local variable 'wallet' isn't used - lib\presentation\widgets\main\riderside\bookings\rider_bookings_list.dart:24:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\bookings\rider_cancel_order_dialog.dart:78:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\bookings\rider_cod_confirm_dialog.dart:20:18 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\history\rider_history_dashboard_card.dart:90:20 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\history\rider_history_dashboard_card.dart:116:32 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\history\rider_history_dashboard_card.dart:162:40 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\history\rider_history_detail_proof.dart:64:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\history\rider_history_detail_proof.dart:64:41 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\history\rider_history_filter_tabs.dart:106:22 - unnecessary_underscores
+warning - Unused import: '../../../../../../core/utils/responsive_utils.dart' - lib\presentation\widgets\main\riderside\mission\rider_mission_card.dart:3:8 - unused_import
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\mission\rider_mission_card.dart:64:22 - unnecessary_underscores
+warning - The declaration '_bg' isn't referenced - lib\presentation\widgets\main\riderside\more\rider_more_components.dart:17:7 - unused_element
+warning - A value for optional parameter 'color' isn't ever given - lib\presentation\widgets\main\riderside\more\rider_more_components.dart:27:10 - unused_element_parameter
+warning - A value for optional parameter 'border' isn't ever given - lib\presentation\widgets\main\riderside\more\rider_more_components.dart:28:10 - unused_element_parameter
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\more\rider_more_components.dart:187:28 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\profile\rider_profile_header.dart:126:20 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\profile\rider_profile_header.dart:336:20 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\profile\rider_profile_header.dart:383:45 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\profile\rider_profile_header.dart:383:49 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\profile\rider_profile_header.dart:490:20 - prefer_const_constructors
+   info - The 'children' argument should be last in widget constructor invocations - lib\presentation\widgets\main\riderside\profile\rider_profile_settings_section.dart:26:11 - sort_child_properties_last
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\profile\rider_profile_summary_section.dart:152:20 - unnecessary_underscores
+   info - Use 'const' for final variables initialized to a constant value - lib\presentation\widgets\main\riderside\rider_bottom_nav_bar.dart:17:5 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - lib\presentation\widgets\main\riderside\rider_shift_summary_sheet.dart:61:5 - prefer_const_declarations
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\wallet\rider_wallet_link_account_dialog.dart:188:25 - prefer_const_constructors
+   info - Unnecessary use of multiple underscores - lib\presentation\widgets\main\riderside\wallet\rider_wallet_low_balance_banner.dart:43:20 - unnecessary_underscores
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\wallet\rider_wallet_low_balance_banner.dart:174:24 - prefer_const_constructors
+   info - Statements in an if should be enclosed in a block - lib\presentation\widgets\main\riderside\wallet\rider_wallet_withdraw_dialog.dart:95:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\presentation\widgets\main\riderside\wallet\rider_wallet_withdraw_dialog.dart:97:7 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\wallet\rider_wallet_withdraw_dialog.dart:168:18 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\main\riderside\wallet\rider_wallet_withdraw_dialog.dart:220:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\merchant\info\file_upload_box.dart:49:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\merchant\info\file_upload_box.dart:50:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\merchant\info\file_upload_box.dart:53:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\merchant\info\file_upload_box.dart:55:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\merchant\info\merchant_info_form_fields.dart:189:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\merchant\register_complete\merchant_complete_info_card.dart:69:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\rider\complete\info_card_section.dart:69:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\rider\info\file_upload_box.dart:45:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\rider\info\file_upload_box.dart:48:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\rider\info\file_upload_box.dart:50:31 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\widgets\register\rider\info\info_message.dart:19:11 - prefer_const_constructors
+   info - The imported package 'path_provider_platform_interface' isn't a dependency of the importing package - test\offline_form_data_codec_test.dart:5:8 - depend_on_referenced_packages
+   info - The imported package 'plugin_platform_interface' isn't a dependency of the importing package - test\offline_form_data_codec_test.dart:6:8 - depend_on_referenced_packages
+
+323 issues found. (ran in 3.9s)

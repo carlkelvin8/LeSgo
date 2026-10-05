@@ -1,0 +1,250 @@
+00:00 +0: loading C:/Users/PC/LEZGO/FRONTEND/test/affiliate_launcher_test.dart
+00:00 +0: C:/Users/PC/LEZGO/FRONTEND/test/affiliate_launcher_test.dart: installed app opens without a store redirect
+00:00 +1: C:/Users/PC/LEZGO/FRONTEND/test/affiliate_launcher_test.dart: missing app opens the verified package in Play Store
+00:00 +2: C:/Users/PC/LEZGO/FRONTEND/test/affiliate_launcher_test.dart: native and Play exceptions fall back to browser
+00:00 +3: C:/Users/PC/LEZGO/FRONTEND/test/affiliate_launcher_test.dart: all failures return false and a later attempt can retry
+00:00 +4: C:/Users/PC/LEZGO/FRONTEND/test/affiliate_launcher_test.dart: concurrent taps share the actual launch result
+00:00 +5: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: biometric session restores without Remember me and clears on logout
+00:00 +6: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: ordinary sessions still require a valid Remember me expiry
+00:00 +7: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: enables BiometricType.face only after device authentication succeeds
+00:01 +8: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: enables BiometricType.fingerprint only after device authentication succeeds
+00:01 +9: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +10: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +11: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +12: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +13: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +14: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +15: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +16: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +17: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +18: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: real startup preserves biometric-only session behind unlock gate
+00:01 +19: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: enrollment requires an enrolled biometric
+00:01 +20: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: offline API does not block local enrollment; cancellation preserves setting
+00:01 +21: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: disabling requires successful device authentication
+00:01 +22: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: enrollment is biometric-only and concurrent prompts are rejected
+00:01 +23: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: cold start hides account; cancellation stays locked; retry unlocks
+00:01 +24: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: background and resume lock again, with no duplicate native prompt
+00:01 +25: C:/Users/PC/LEZGO/FRONTEND/test/core/utils/booking_geo_service_area_test.dart: Claveria center is inside service area
+00:01 +26: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: native error stays locked and sign-in recovery clears session
+00:01 +27: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: native error stays locked and sign-in recovery clears session
+00:01 +28: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: native error stays locked and sign-in recovery clears session
+00:01 +29: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: native error stays locked and sign-in recovery clears session
+00:01 +30: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: disabled preference never prompts
+00:01 +31: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: disabling during native prompt does not leave a privacy cover
+00:01 +32: C:/Users/PC/LEZGO/FRONTEND/test/biometric_unlock_test.dart: authentication completing in background does not unlock on resume
+00:02 +33: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: BookingServiceIds service IDs are correctly mapped
+00:02 +34: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: CreateOrderRequestDto serializes to JSON correctly
+00:02 +35: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: CreateOrderRequestDto serializes with items for LesEat/LesBuy
+00:02 +36: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: CreateOrderRequestDto serializes voucher code and discount
+00:02 +37: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: CreateOrderRequestDto serializes scheduled delivery time
+00:02 +38: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: FareBreakdownResult stores fare details correctly
+00:02 +39: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: FareBreakdownResult weight surcharge included when applicable
+00:02 +40: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: FareBreakdownResult service fee for LesEat/LesBuy orders
+00:02 +41: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: OrderAddressDto serializes all fields
+00:02 +42: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: OrderAddressDto contact fields are optional
+00:02 +43: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: OrderItemDto serializes with all fields
+00:02 +44: C:/Users/PC/LEZGO/FRONTEND/test/customer_complete_test.dart: OrderItemDto optional fields can be null
+00:02 +45: C:/Users/PC/LEZGO/FRONTEND/test/gemini_customer_service_test.dart: LeSGo customer service fallback answers greetings without requiring the remote model
+00:02 +46: C:/Users/PC/LEZGO/FRONTEND/test/gemini_customer_service_test.dart: LeSGo customer service fallback answers common account questions locally
+00:02 +47: C:/Users/PC/LEZGO/FRONTEND/test/gemini_customer_service_test.dart: LeSGo customer service fallback returns a useful fallback instead of an error
+00:02 +48: C:/Users/PC/LEZGO/FRONTEND/test/google_maps_marker_deprecation_test.dart: Google Maps Marker Deprecation Fix Validation Tests Web platform with markers should use advanced markers (no deprecation warnings)
+00:02 +49: C:/Users/PC/LEZGO/FRONTEND/test/google_maps_preservation_test.dart: Google Maps Preservation Property Tests GoogleMap without markers should work correctly
+00:02 +50: C:/Users/PC/LEZGO/FRONTEND/test/google_maps_preservation_test.dart: Google Maps Preservation Property Tests GoogleMap without markers should work correctly
+00:02 +51: C:/Users/PC/LEZGO/FRONTEND/test/google_maps_preservation_test.dart: Google Maps Preservation Property Tests GoogleMap without markers should work correctly
+00:03 +52: C:/Users/PC/LEZGO/FRONTEND/test/google_maps_preservation_test.dart: Google Maps Preservation Property Tests GoogleMap without markers should work correctly
+00:03 +53: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +54: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +55: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +56: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +57: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +58: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +59: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +60: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +61: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +62: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +63: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +64: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +65: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +66: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +67: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +68: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +69: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +70: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +71: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +72: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +73: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +74: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +75: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +76: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +77: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +78: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +79: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+00:03 +80: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 320.0 at enlarged text size
+unhandled element <filter/>; Picture key: Svg loader
+00:03 +81: C:/Users/PC/LEZGO/FRONTEND/test/integration/customer_journey_test.dart: Customer journey messages SnackBarUtils never shows raw DioException text
+00:03 +82: C:/Users/PC/LEZGO/FRONTEND/test/integration/customer_journey_test.dart: Customer journey messages SnackBarUtils never shows raw DioException text
+00:03 +83: C:/Users/PC/LEZGO/FRONTEND/test/home_layout_test.dart: home cards fit 390.0 at enlarged text size
+00:04 +84: C:/Users/PC/LEZGO/FRONTEND/test/integration/customer_journey_test.dart: Customer journey messages LesPay provider error displays friendly bilingual text
+00:04 +85: C:/Users/PC/LEZGO/FRONTEND/test/integration/customer_journey_test.dart: Customer journey messages login connection error maps to bilingual message
+00:04 +86: C:/Users/PC/LEZGO/FRONTEND/test/integration/customer_journey_test.dart: Customer journey messages wallet booking 422 uses API message
+00:04 +87: C:/Users/PC/LEZGO/FRONTEND/test/integration/customer_journey_test.dart: Customer journey messages top-up 502 maps to server busy message
+00:04 +88: C:/Users/PC/LEZGO/FRONTEND/test/lespay_layout_overflow_test.dart: WalletCard never overflows across widths and text scales
+00:05 +89: C:/Users/PC/LEZGO/FRONTEND/test/lespay_layout_overflow_test.dart: WalletCard never overflows across widths and text scales
+00:05 +90: C:/Users/PC/LEZGO/FRONTEND/test/lespay_layout_overflow_test.dart: WalletCard never overflows across widths and text scales
+00:05 +91: C:/Users/PC/LEZGO/FRONTEND/test/lespay_layout_overflow_test.dart: WalletCard never overflows across widths and text scales
+00:05 +92: C:/Users/PC/LEZGO/FRONTEND/test/lespay_layout_overflow_test.dart: WalletCard never overflows across widths and text scales
+00:05 +93: C:/Users/PC/LEZGO/FRONTEND/test/lespay_layout_overflow_test.dart: WalletCard never overflows across widths and text scales
+unhandled element <filter/>; Picture key: Svg loader
+00:05 +94: C:/Users/PC/LEZGO/FRONTEND/test/lespay_layout_test.dart: wallet and actions fit width 320.0 with large text
+unhandled element <filter/>; Picture key: Svg loader
+00:05 +95: C:/Users/PC/LEZGO/FRONTEND/test/lespay_summary_layout_test.dart: wallet omits summary cards at 320.0
+00:05 +96: C:/Users/PC/LEZGO/FRONTEND/test/lespay_summary_layout_test.dart: wallet omits summary cards at 320.0
+00:05 +97: C:/Users/PC/LEZGO/FRONTEND/test/lespay_summary_layout_test.dart: wallet omits summary cards at 320.0
+00:05 +98: C:/Users/PC/LEZGO/FRONTEND/test/lespay_summary_layout_test.dart: wallet omits summary cards at 320.0
+unhandled element <filter/>; Picture key: Svg loader
+00:05 +99: C:/Users/PC/LEZGO/FRONTEND/test/lesride_feature_test.dart: locked vehicle cards cannot be selected
+00:05 +100: C:/Users/PC/LEZGO/FRONTEND/test/manual_order_location_checkout_test.dart: manual checkout requires delivery and sends store as pickup (cart=false)
+00:05 +101: C:/Users/PC/LEZGO/FRONTEND/test/manual_order_location_checkout_test.dart: manual checkout requires delivery and sends store as pickup (cart=false)
+00:05 +102: C:/Users/PC/LEZGO/FRONTEND/test/manual_order_location_checkout_test.dart: manual checkout requires delivery and sends store as pickup (cart=false)
+00:05 +103: C:/Users/PC/LEZGO/FRONTEND/test/manual_order_location_checkout_test.dart: manual checkout requires delivery and sends store as pickup (cart=false)
+00:06 +104: C:/Users/PC/LEZGO/FRONTEND/test/manual_order_location_checkout_test.dart: manual checkout requires delivery and sends store as pickup (cart=false)
+00:06 +105: C:/Users/PC/LEZGO/FRONTEND/test/manual_pickup_map_test.dart: store search and dragged pin save pickup only; address alone cannot save
+00:07 +105: C:/Users/PC/LEZGO/FRONTEND/test/manual_order_location_checkout_test.dart: manual checkout requires delivery and sends store as pickup (cart=true)
+🔵 LesBuy: Creating order with API...
+🔴 LesBuy: Error creating order - Bad state: Offline test stops at the API boundary
+00:07 +106: C:/Users/PC/LEZGO/FRONTEND/test/manual_pickup_map_test.dart: store search and dragged pin save pickup only; address alone cannot save
+00:07 +107: C:/Users/PC/LEZGO/FRONTEND/test/manual_pickup_section_test.dart: buying address is editable inline and requires a pickup pin
+00:07 +108: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +109: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +110: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +111: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +111: C:/Users/PC/LEZGO/FRONTEND/test/registration_address_flow_test.dart: registration sends barangay, landmark, default choice and referral
+🔍 DEBUG updateAddressFromForm INPUTS:
+  - houseNumberStreet: "73 Purok Surngot"
+  - subdivBarangay: "Buenavista"
+  - cityProvince: "Claveria, Cagayan"
+  - zipCode: "3519"
+🔍 DEBUG updateAddressFromForm PARSED:
+  - houseNumber: "73"
+  - streetName: "Purok Surngot"
+  - subdivision: ""
+  - barangay: "Buenavista"
+  - city: "Claveria"
+  - province: "Cagayan"
+  - zipCode: "3519"
+🚀 DEBUG submitRegistration - START
+🔍 DEBUG - Checking required fields...
+  firstName: "Maria"
+  lastName: "Santos"
+  birthday: "01/01/2000"
+  email: "maria@example.test"
+  password: ***
+  phoneNumber: "+639171234570"
+  termsAccepted: true
+✅ All required fields present
+🔍 DEBUG - Building RegisterRequestDto...
+  Address data:
+    houseNumber: "73"
+    streetName: "Purok Surngot"
+    subdivision: ""
+    barangay: "Buenavista"
+    city: "Claveria"
+    province: "Cagayan"
+    zipCode: "3519"
+    latitude: null
+    longitude: null
+✅ RegisterRequestDto built successfully
+🌐 DEBUG - Calling authDataSource.register()...
+✅ API call completed
+🔍 DEBUG - Response:
+  success: false
+  message: "Captured"
+  token: null
+  user: null
+❌ ERROR - Registration failed
+  Message: "Captured"
+❌ EXCEPTION in submitRegistration: Exception: Captured
+  Exception type: _Exception
+🚫 submitRegistration - FAILED, returning false
+📝 Error message shown to user: "Registration failed. Please try again."
+00:07 +112: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +112: C:/Users/PC/LEZGO/FRONTEND/test/registration_address_flow_test.dart: empty or failed geocoding releases loading and retains pin and address
+🔍 DEBUG saveAddress - address: Instance of 'Address'
+🔍 DEBUG saveAddress - address.isComplete: true
+🔍 DEBUG saveAddress - houseNumber: 
+🔍 DEBUG saveAddress - streetName: Purok Surngot
+🔍 DEBUG saveAddress - barangay: Buenavista
+🔍 DEBUG saveAddress - city: Claveria
+🔍 DEBUG saveAddress - zipCode: 
+🔍 DEBUG saveAddress - address: Instance of 'Address'
+🔍 DEBUG saveAddress - address.isComplete: true
+🔍 DEBUG saveAddress - houseNumber: 
+🔍 DEBUG saveAddress - streetName: Purok Surngot
+🔍 DEBUG saveAddress - barangay: Buenavista
+🔍 DEBUG saveAddress - city: Claveria
+🔍 DEBUG saveAddress - zipCode: 
+🔍 DEBUG saveAddress - address: Instance of 'Address'
+🔍 DEBUG saveAddress - address.isComplete: true
+🔍 DEBUG saveAddress - houseNumber: 
+🔍 DEBUG saveAddress - streetName: Purok Surngot
+🔍 DEBUG saveAddress - barangay: Buenavista
+🔍 DEBUG saveAddress - city: Claveria
+🔍 DEBUG saveAddress - zipCode: 
+00:07 +113: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +113: C:/Users/PC/LEZGO/FRONTEND/test/registration_address_flow_test.dart: manual address without pin cannot proceed to registration
+🔍 DEBUG saveAddress - address: Instance of 'Address'
+🔍 DEBUG saveAddress - address.isComplete: true
+🔍 DEBUG saveAddress - houseNumber: 
+🔍 DEBUG saveAddress - streetName: Purok Surngot
+🔍 DEBUG saveAddress - barangay: Buenavista
+🔍 DEBUG saveAddress - city: Claveria
+🔍 DEBUG saveAddress - zipCode: 
+❌ ERROR saveAddress: Exception: Please select your address on the map
+00:07 +114: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+unhandled element <filter/>; Picture key: Svg loader
+00:07 +115: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +116: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +117: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +118: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +119: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +120: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +121: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:07 +122: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +123: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +124: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +125: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +125: C:/Users/PC/LEZGO/FRONTEND/test/qa_navigation_regression_test.dart: mission back button receives taps and restores previous route
+unhandled element <filter/>; Picture key: Svg loader
+00:08 +126: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +127: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +128: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +129: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +130: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +131: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +132: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +133: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +134: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: drawer entry returns home repeatedly with UI and system Back
+00:08 +135: C:/Users/PC/LEZGO/FRONTEND/test/registration_identity_verification_test.dart: identity step exposes camera actions for all required photos
+00:08 +136: C:/Users/PC/LEZGO/FRONTEND/test/registration_identity_verification_test.dart: identity step exposes camera actions for all required photos
+00:08 +137: C:/Users/PC/LEZGO/FRONTEND/test/registration_identity_verification_test.dart: identity step exposes camera actions for all required photos
+00:09 +138: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=false)
+00:09 +139: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=false)
+00:09 +140: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=false)
+00:09 +141: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=false)
+00:09 +142: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=false)
+00:09 +143: C:/Users/PC/LEZGO/FRONTEND/test/settings_theme_test.dart: settings cards and labels follow persisted theme with readable contrast
+00:10 +143: C:/Users/PC/LEZGO/FRONTEND/test/social_follow_mission_test.dart: mission card no longer renders the retired paused follow state
+unhandled element <filter/>; Picture key: Svg loader
+00:10 +144: C:/Users/PC/LEZGO/FRONTEND/test/settings_theme_test.dart: settings cards and labels follow persisted theme with readable contrast
+00:10 +145: C:/Users/PC/LEZGO/FRONTEND/test/support_chat_test.dart: first message creates a conversation; next message replies to it
+00:10 +146: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=true)
+00:10 +147: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=true)
+00:10 +148: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=true)
+00:10 +149: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=true)
+00:10 +150: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 320.0 (system=true)
+00:11 +151: C:/Users/PC/LEZGO/FRONTEND/test/support_chat_test.dart: order topic sends the supported order category
+00:11 +152: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 390.0 (system=false)
+00:12 +153: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 390.0 (system=true)
+00:13 +154: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 600.0 (system=false)
+00:14 +155: C:/Users/PC/LEZGO/FRONTEND/test/missions_back_navigation_test.dart: Missions back restores caller repeatedly at 600.0 (system=true)
+00:15 +156: All tests passed!

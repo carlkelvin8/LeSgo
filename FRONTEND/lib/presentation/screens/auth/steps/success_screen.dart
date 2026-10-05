@@ -1,0 +1,103 @@
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../widgets/widgets.dart';
+import '../../../provider/register/register_provider.dart';
+import '../../../provider/auth/auth_provider.dart';
+import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../core/constants/routers/app_router.dart';
+
+class CongratulationsScreen extends ConsumerWidget {
+  const CongratulationsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final registerState = ref.watch(registerProvider);
+    final userData = registerState.data;
+
+    return Scaffold(
+      backgroundColor: AppColors.surface(context, Colors.white),
+      body: SafeArea(
+        child: Builder(
+          builder: (context) {
+            final horizontalPadding = ResponsiveUtils.horizontalPadding(
+              context,
+            );
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Spacer(),
+
+                  const SuccessHeader(
+                    title: 'CONGRATULATIONS!',
+                    subtitle:
+                        'Your account and identity documents were submitted successfully. Verification is now pending review.',
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 40)),
+
+                  Center(
+                    child: SvgPicture.asset(
+                      'assets/images/register/9.svg',
+                      height: ResponsiveUtils.imageHeight(context, 280),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 40)),
+
+                  UserInfoCard(
+                    name: '${userData.firstName} ${userData.lastName}',
+                    birthday: userData.birthday,
+                    email: userData.email,
+                    phoneNumber: userData.phoneNumber,
+                    avatarWidget: const AvatarIconContainer(
+                      svgAsset: 'assets/images/register/10.svg',
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  PrimaryButton(
+                    text: 'Continue to LeSGo',
+                    onPressed: () async {
+                      final token = registerState.registeredUser?.token ?? '';
+                      if (token.isEmpty) {
+                        SnackBarUtils.showError(
+                          context,
+                          'Your session could not be started. Please log in.',
+                        );
+                        return;
+                      }
+
+                      final authenticated = await ref
+                          .read(authProvider.notifier)
+                          .completeGoogleSignIn(token: token);
+                      if (!context.mounted) return;
+                      if (!authenticated) {
+                        SnackBarUtils.showError(
+                          context,
+                          'Registration succeeded, but your profile could not be loaded. Please log in.',
+                        );
+                        return;
+                      }
+
+                      ref.read(registerProvider.notifier).reset();
+                      AppRouter.pushAndRemoveUntil(context, MainRoutes.home);
+                    },
+                    backgroundColor: const Color(0xFF5F2D82),
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 40)),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}

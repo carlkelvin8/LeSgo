@@ -1,0 +1,292 @@
+import 'package:injectable/injectable.dart';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../core/network/dio_client.dart';
+import '../../core/constants/api_constants.dart';
+import 'dto/auth/otp_response_dto.dart';
+import 'dto/auth/login_request_dto.dart';
+import 'dto/auth/login_response_dto.dart';
+import 'dto/auth/register_request_dto.dart';
+import 'dto/auth/register_response_dto.dart';
+
+@injectable
+class AuthRemoteDataSource {
+  final DioClient _dioClient;
+
+  AuthRemoteDataSource(this._dioClient);
+
+  // ============================================================================
+  // OTP METHODS
+  // ============================================================================
+
+  /// Send OTP verification code to phone number
+  Future<OtpResponseDto> sendOtp(
+    String phoneNumber, {
+    String channel = 'sms',
+  }) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/otp/send',
+        data: {'phone_number': phoneNumber, 'channel': channel},
+      );
+
+      return OtpResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Verify OTP code for phone number
+  Future<OtpResponseDto> verifyOtp(String phoneNumber, String otp) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/otp/verify',
+        data: {'phone_number': phoneNumber, 'otp': otp},
+      );
+
+      return OtpResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Cancel pending OTP verification
+  Future<OtpResponseDto> cancelOtp(String phoneNumber) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/otp/cancel',
+        data: {'phone_number': phoneNumber},
+      );
+
+      return OtpResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Check if phone number is verified
+  Future<OtpResponseDto> checkOtpVerification(String phoneNumber) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/otp/check',
+        data: {'phone_number': phoneNumber},
+      );
+
+      return OtpResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ============================================================================
+  // AUTH METHODS
+  // ============================================================================
+
+  /// Login user
+  Future<LoginResponseDto> login(LoginRequestDto request) async {
+    try {
+      final response = await _dioClient.dio.post(
+        ApiConstants.loginEndpoint,
+        data: request.toJson(),
+      );
+
+      return LoginResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Register user
+  Future<RegisterResponseDto> register(
+    RegisterRequestDto request, {
+    XFile? selfie,
+    XFile? validIdFront,
+    XFile? validIdBack,
+  }) async {
+    try {
+      final hasIdentityFiles =
+          selfie != null && validIdFront != null && validIdBack != null;
+      final data = hasIdentityFiles
+          ? FormData.fromMap({
+              ...request.toJson(),
+              // Multipart fields are strings; Laravel boolean validation
+              // accepts '1'/'0', but rejects Dio's 'true'/'false' strings.
+              'terms_accepted': request.termsAccepted ? '1' : '0',
+              'privacy_accepted': request.privacyAccepted ? '1' : '0',
+              'is_default': request.isDefault ? '1' : '0',
+              'selfie': await _multipartFile(selfie),
+              'valid_id_front': await _multipartFile(validIdFront),
+              'valid_id_back': await _multipartFile(validIdBack),
+            })
+          : request.toJson();
+      final response = await _dioClient.dio.post(
+        '/v1/auth/register',
+        data: data,
+      );
+
+      return RegisterResponseDto.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<MultipartFile> _multipartFile(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final filename = file.name.trim().isNotEmpty ? file.name : 'capture.jpg';
+    return MultipartFile.fromBytes(bytes, filename: filename);
+  }
+
+  /// Logout user
+  Future<void> logout() async {
+    try {
+      await _dioClient.dio.post(ApiConstants.logoutEndpoint);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Get current user profile
+  Future<Map<String, dynamic>> getProfile() async {
+    try {
+      final response = await _dioClient.dio.get(ApiConstants.authMe);
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Update user profile
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await _dioClient.dio.put(
+        ApiConstants.authMe,
+        data: data,
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ============================================================================
+  // FORGOT PASSWORD METHODS
+  // ============================================================================
+
+  /// Send password reset OTP to email
+  Future<Map<String, dynamic>> sendPasswordResetOtp(String email) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/forgot-password/send-otp',
+        data: {'email': email},
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Resend password reset OTP
+  Future<Map<String, dynamic>> resendPasswordResetOtp(String email) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/forgot-password/resend-otp',
+        data: {'email': email},
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Verify password reset OTP
+  Future<Map<String, dynamic>> verifyPasswordResetOtp(
+    String email,
+    String otp,
+  ) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/forgot-password/verify-otp',
+        data: {'email': email, 'otp': otp},
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Reset password with the short-lived token returned after OTP verification.
+  Future<Map<String, dynamic>> resetPassword(
+    String email,
+    String resetToken,
+    String password,
+  ) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/v1/auth/forgot-password/reset',
+        data: {
+          'email': email,
+          'reset_token': resetToken,
+          'password': password,
+          'password_confirmation': password,
+        },
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Change password for signed-in user.
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String password,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.authChangePassword,
+      data: {
+        'current_password': currentPassword,
+        'password': password,
+        'password_confirmation': password,
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Deactivate the signed-in account after password or Google verification.
+  Future<Map<String, dynamic>> deactivateAccount({
+    String? password,
+    String? googleIdToken,
+    String? reason,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.authDeactivateAccount,
+      data: {
+        if (password != null && password.isNotEmpty) 'password': password,
+        if (googleIdToken != null && googleIdToken.isNotEmpty)
+          'google_id_token': googleIdToken,
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Permanently delete the signed-in customer account.
+  Future<Map<String, dynamic>> deleteAccountPermanently({
+    String? password,
+    String? googleIdToken,
+    required String confirmation,
+    String? reason,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.authDeleteAccount,
+      data: {
+        if (password != null && password.isNotEmpty) 'password': password,
+        if (googleIdToken != null && googleIdToken.isNotEmpty)
+          'google_id_token': googleIdToken,
+        'confirmation': confirmation.trim().toUpperCase(),
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+      },
+    );
+    return response.data as Map<String, dynamic>;
+  }
+}

@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FRONTEND",
+            "cwd": "FRONTEND",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "FRONTEND (profile mode)",
+            "cwd": "FRONTEND",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "FRONTEND (release mode)",
+            "cwd": "FRONTEND",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "RIDERSIDE",
+            "cwd": "RIDERSIDE",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "RIDERSIDE (profile mode)",
+            "cwd": "RIDERSIDE",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "RIDERSIDE (release mode)",
+            "cwd": "RIDERSIDE",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }   
+    ]
+}

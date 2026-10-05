@@ -1,0 +1,26 @@
+====================================
+  LeSgo Affiliates (Rider/Merchant) Latest Build
+====================================
+
+Date: September 25, 2026 - 09:01 AM
+Version: 1.1.7+18  (versionName 1.1.7, versionCode 18)
+Package: com.lesgo.rider
+
+Files:
+------
+- LeSgo-Affiliates-v1.1.7+18.aab (64.14 MB) - Google Play upload
+- LeSgo-Affiliates-v1.1.7+18.apk (84.29 MB) - direct install/testing
+- lesgo-rider-v1.1.7-build18.aab (same bundle, rider naming)
+- lezgo-rider-v1.1.7-build18-2026-09-25_0901.apk (timestamped copy)
+- lesgo-rider-release.apk (same build, generic name)
+
+SHA256:
+-------
+AAB: B5CD095BE2639A9427DFFAA29097C0A495984ABDD5A73723FD85A60472E5E4A9
+APK: 455F38222F3B075D0E09CCD6476E9309D8E719E9E68A8F06A175F084C3B163C0
+
+Built from current working tree (branch: tech-debt-cleanup) with:
+  flutter build appbundle --release --dart-define-from-file=secrets.json
+  flutter build apk      --release --dart-define-from-file=secrets.json
+
+Status: BUILT - ready for install testing / Play upload.

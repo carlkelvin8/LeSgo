@@ -1,0 +1,15 @@
+Rider release: 1.1.6 (17)
+Package: com.lesgo.rider
+AAB: lesgo-rider-v1.1.6-build17.aab
+SHA256: 04A94E56DC0117EF6B7467952D6F4E0DBFCDCA97581408D63CA8B69D6BF897E9
+Signing certificate SHA256 matches the saved production build 15 artifact.
+Bundletool validation passed. JAR signature verified.
+Backend: https://github.com/carlkelvin8/Lesgo-API/commit/37d31fba1d7323a2428e2f21db4c9f3b34109913
+Branch: feature/auth (pushed)
+API: https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api
+Flutter local tests: 206 passed during rider audit.
+Backend release validation: 128 passed, 11 failed. See BACKEND/lesgo-api/release-validation.log.
+Failures include Google account flows, delivery-proof enforcement, driver dispatch, SQLite math support, and wallet validation.
+Known rider duty-sync issue remains as reported in this task.
+Backend deployment requires migration 2026_09_22_000001_create_registration_phone_proofs.
+Cloud deployment and migration execution were not verified. Google Play upload was not performed.

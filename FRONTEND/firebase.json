@@ -1,0 +1,30 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "lesgo-a957c",
+          "appId": "1:937689509907:android:9250c04b5d30a87ca18fe6",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "lesgo-a957c",
+          "configurations": {
+            "android": "1:937689509907:android:9250c04b5d30a87ca18fe6",
+            "ios": "1:937689509907:ios:aeeb640407f03bcba18fe6"
+          }
+        }
+      }
+    }
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "LeSGo",
+        "supportEmail": "gghsoftware2024@gmail.com"
+      }
+    }
+  }
+}

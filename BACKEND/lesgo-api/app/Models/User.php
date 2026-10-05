@@ -1,0 +1,287 @@
+<?php
+
+namespace App\Models;
+
+use App\Services\MediaStorageService;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'email_verified_at',
+        'google_id',
+        'phone_number',
+        'date_of_birth',
+        'address_line1',
+        'address_line2',
+        'profile_photo_url',
+        'profile_picture',
+        'referral_code',
+        'referred_by',
+        'points',
+        'password',
+        'role',
+        'is_active',
+        'deactivated_at',
+        'deactivation_reason',
+        'deleted_at',
+        'fcm_token',
+        'phone_verified_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
+        'date_of_birth' => 'date',
+        'points' => 'integer',
+        'is_active' => 'boolean',
+        'deactivated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+        'password' => 'hashed',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    // Roles helpers
+    public function isCustomer(): bool
+    {
+        return $this->role === 'customer';
+    }
+
+    public function isDriver(): bool
+    {
+        return $this->role === 'driver';
+    }
+
+    public function isPartnerAdmin(): bool
+    {
+        return $this->role === 'partner_admin';
+    }
+
+    public function isPartnerStaff(): bool
+    {
+        return $this->role === 'partner_staff';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    // Relationships
+
+    public function partner()
+    {
+        return $this->hasOne(Partner::class, 'user_id');
+    }
+
+    public function partnerStaff()
+    {
+        return $this->hasOne(PartnerStaff::class, 'user_id');
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(Address::class, 'user_id');
+    }
+
+    public function customerProfile()
+    {
+        return $this->hasOne(CustomerProfile::class, 'user_id');
+    }
+
+    public function driverProfile()
+    {
+        return $this->hasOne(DriverProfile::class, 'user_id');
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class, 'user_id');
+    }
+
+    public function customerOrders()
+    {
+        return $this->hasMany(Order::class, 'customer_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'customer_id');
+    }
+
+    public function createdWalletTransactions()
+    {
+        return $this->hasMany(WalletTransaction::class, 'created_by');
+    }
+
+    // Customer Experience relationships
+
+    public function reviews()
+    {
+        return $this->hasMany(RatingReview::class, 'user_id');
+    }
+
+    public function receivedReviews()
+    {
+        return $this->hasMany(RatingReview::class, 'driver_id');
+    }
+
+    public function supportTickets()
+    {
+        return $this->hasMany(SupportTicket::class, 'user_id');
+    }
+
+    public function assignedTickets()
+    {
+        return $this->hasMany(SupportTicket::class, 'assigned_agent_id');
+    }
+
+    public function userSessions()
+    {
+        return $this->hasMany(UserSession::class, 'user_id');
+    }
+
+    public function documentVerifications()
+    {
+        return $this->hasMany(DocumentVerification::class, 'user_id');
+    }
+
+    /**
+     * Backward-compatible relation name used by document review and onboarding.
+     */
+    public function documents()
+    {
+        return $this->documentVerifications();
+    }
+
+    public function verifiedDocuments()
+    {
+        return $this->hasMany(DocumentVerification::class, 'verified_by');
+    }
+
+    public function socialShares()
+    {
+        return $this->hasMany(SocialShare::class, 'user_id');
+    }
+
+    // Geofencing relationships
+
+    public function geofences()
+    {
+        return $this->hasMany(Geofence::class, 'created_by');
+    }
+
+    public function geofenceEvents()
+    {
+        return $this->hasMany(GeofenceEvent::class, 'user_id');
+    }
+
+    // Real-time system relationships
+
+    public function chatConversationsAsCustomer()
+    {
+        return $this->hasMany(ChatConversation::class, 'customer_id');
+    }
+
+    public function chatConversationsAsDriver()
+    {
+        return $this->hasMany(ChatConversation::class, 'driver_id');
+    }
+
+    public function chatMessages()
+    {
+        return $this->hasMany(ChatMessage::class, 'sender_id');
+    }
+
+    public function driverLocations()
+    {
+        return $this->hasMany(DriverLocation::class, 'driver_id');
+    }
+
+    public function latestDriverLocation()
+    {
+        return $this->hasOne(DriverLocation::class, 'driver_id')
+            ->ofMany('recorded_at', 'max');
+    }
+
+    public function realtimeNotifications()
+    {
+        return $this->hasMany(RealtimeNotification::class, 'user_id');
+    }
+
+    public function websocketConnections()
+    {
+        return $this->hasMany(WebSocketConnection::class, 'user_id');
+    }
+
+    public function refreshTokens()
+    {
+        return $this->hasMany(RefreshToken::class);
+    }
+
+    // Security helper methods
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        return in_array($this->role, $roles);
+    }
+
+    protected function profilePhotoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                $path = $value ?: ($this->attributes['profile_picture'] ?? null);
+
+                return self::resolvePublicStorageUrl($path);
+            },
+        );
+    }
+
+    protected function profilePicture(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => self::resolvePublicStorageUrl($value),
+        );
+    }
+
+    public static function resolvePublicStorageUrl(mixed $path): ?string
+    {
+        if ($path === null) {
+            return null;
+        }
+
+        $value = trim((string) $path);
+        if ($value === '') {
+            return null;
+        }
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+
+        return MediaStorageService::publicUrl($path);
+    }
+}

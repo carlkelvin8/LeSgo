@@ -1,0 +1,342 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Events\DriverLocationUpdated;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\RegisterDriverRequest;
+use App\Http\Requests\UpdateDriverLocationRequest;
+use App\Http\Requests\UpdateDriverStatusRequest;
+use App\Models\DriverProfile;
+use App\Models\DriverLocation;
+use App\Models\User;
+use App\Services\AuthenticationService;
+use App\Services\RegistrationDocumentService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+
+class DriverProfileController extends Controller
+{
+    public function __construct(
+        private AuthenticationService $authService
+    ) {}
+    /**
+     * @OA\Get(
+     *     path="/api/v1/drivers",
+     *     summary="List driver profiles (scoped by role)",
+     *     tags={"Drivers"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="status", in="query", required=false, @OA\Schema(type="string", enum={"pending","active","offline","suspended"})),
+     *     @OA\Parameter(name="partner_id", in="query", required=false, description="Admin only", @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Paginated driver profiles",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/DriverProfile")),
+     *             @OA\Property(property="meta", ref="#/components/schemas/PaginationMeta"),
+     *             @OA\Property(property="links", ref="#/components/schemas/PaginationLinks")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, ref="#/components/schemas/ErrorResponse")
+     * )
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $user  = $request->user();
+        $query = DriverProfile::with('user', 'partner');
+
+        // Admins see all; partner_admins see only their drivers; drivers see only themselves
+        if ($user->isPartnerAdmin()) {
+            $partner = $user->partner;
+            $query->where('partner_id', $partner?->id ?? 0);
+        } elseif ($user->isDriver()) {
+            $query->where('user_id', $user->id);
+        } elseif (!$user->isAdmin()) {
+            // customers and other roles have no business listing drivers
+            return $this->error('Forbidden', 403);
+        }
+
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($partnerId = $request->query('partner_id')) {
+            // Non-admins cannot override the scope with a partner_id filter
+            if ($user->isAdmin()) {
+                $query->where('partner_id', $partnerId);
+            }
+        }
+
+        return $this->success($query->orderBy('id', 'desc')->paginate(20));
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/drivers/{id}",
+     *     summary="Get driver profile by ID",
+     *     tags={"Drivers"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Driver profile",
+     *         @OA\JsonContent(@OA\Property(property="data", ref="#/components/schemas/DriverProfile"))
+     *     ),
+     *     @OA\Response(response=403, ref="#/components/schemas/ErrorResponse")
+     * )
+     */
+    public function show(Request $request, DriverProfile $driverProfile): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user->isAdmin()) {
+            if ($user->isPartnerAdmin()) {
+                $partner = $user->partner;
+                if (!$partner || (int) $driverProfile->partner_id !== (int) $partner->id) {
+                    return $this->error('Forbidden', 403);
+                }
+            } elseif ($user->isDriver()) {
+                if ((int) $driverProfile->user_id !== (int) $user->id) {
+                    return $this->error('Forbidden', 403);
+                }
+            } else {
+                return $this->error('Forbidden', 403);
+            }
+        }
+
+        $driverProfile->load('user', 'partner', 'vehicles');
+
+        return $this->success($driverProfile);
+    }
+
+    /**
+     * @OA\Patch(
+     *     path="/api/v1/drivers/{id}/status",
+     *     summary="Update driver status (admin/partner_admin only)",
+     *     tags={"Drivers"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(required=true,
+     *         @OA\JsonContent(required={"status"},
+     *             @OA\Property(property="status", type="string", enum={"pending","active","offline","suspended"}, example="suspended")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Status updated",
+     *         @OA\JsonContent(@OA\Property(property="data", ref="#/components/schemas/DriverProfile"))
+     *     ),
+     *     @OA\Response(response=403, ref="#/components/schemas/ErrorResponse")
+     * )
+     */
+    public function updateStatus(UpdateDriverStatusRequest $request, DriverProfile $driverProfile): JsonResponse
+    {
+        $driverProfile->update($request->validated());
+
+        return $this->success($driverProfile, 'Driver status updated successfully');
+    }
+
+    /**
+     * @OA\Patch(
+     *     path="/api/v1/drivers/{id}/location",
+     *     summary="Update driver GPS location (driver updates own location)",
+     *     tags={"Drivers"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(required=true,
+     *         @OA\JsonContent(required={"last_latitude","last_longitude"},
+     *             @OA\Property(property="last_latitude", type="number", format="float", example=14.5995),
+     *             @OA\Property(property="last_longitude", type="number", format="float", example=120.9842)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Location updated",
+     *         @OA\JsonContent(@OA\Property(property="data", ref="#/components/schemas/DriverProfile"))
+     *     ),
+     *     @OA\Response(response=403, ref="#/components/schemas/ErrorResponse")
+     * )
+     */
+    public function updateLocation(UpdateDriverLocationRequest $request, DriverProfile $driverProfile): JsonResponse
+    {
+        $validated = $request->validated();
+        
+        // Update driver profile with latest location
+        $driverProfile->update($validated);
+
+        // Find the driver's active order to push location to the customer too
+        $activeOrder = $driverProfile->orders()
+            ->whereIn('status', ['accepted', 'picked_up', 'in_transit'])
+            ->latest()
+            ->first();
+
+        // Also create a DriverLocation record for tracking
+        $driverLocation = DriverLocation::create([
+            'driver_id' => $driverProfile->user_id,
+            'order_id' => $activeOrder?->id,
+            'latitude' => $validated['last_latitude'],
+            'longitude' => $validated['last_longitude'],
+            'accuracy' => 10.0, // Default accuracy
+            'speed' => 0.0,
+            'heading' => 0.0,
+            'altitude' => 0.0,
+            'status' => 'online',
+            'recorded_at' => now(),
+            'metadata' => [
+                'source' => 'mobile_app',
+                'updated_via' => 'driver_profile_controller'
+            ],
+        ]);
+
+        // Broadcast the location update with the correct DriverLocation model
+        broadcast(new DriverLocationUpdated($driverLocation, $driverProfile->user, $activeOrder?->id))->toOthers();
+
+        return $this->success($driverProfile, 'Driver location updated successfully');
+    }
+
+    /**
+     * PATCH /api/v1/drivers/{driverProfile} - Update driver profile (vehicle, plate, etc.)
+     */
+    public function update(Request $request, DriverProfile $driverProfile): JsonResponse
+    {
+        $user = $request->user();
+
+        $isAdmin = $user && $user->isAdmin();
+        $isOwner = $user && optional($user->driverProfile)->id === $driverProfile->id;
+
+        if (!$isAdmin && !$isOwner) {
+            return $this->error('Forbidden', 403);
+        }
+
+        $rules = [
+            'vehicle_type'   => ['nullable', 'string', 'max:100'],
+            'plate_number'   => ['nullable', 'string', 'max:20'],
+            'license_number' => ['nullable', 'string', 'max:50'],
+            'is_available'   => ['nullable', 'boolean'],
+        ];
+
+        if ($isAdmin) {
+            $rules['package_tier'] = ['nullable', 'string', 'in:basic,advance,pro'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $driverProfile->update($validated);
+
+        return $this->success($driverProfile->fresh(), 'Driver profile updated successfully');
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/drivers/register",
+     *     summary="Register a new driver (public)",
+     *     tags={"Drivers"},
+     *     @OA\RequestBody(required=true,
+     *         @OA\JsonContent(required={"name","email","password","phone_number","license_number"},
+     *             @OA\Property(property="name", type="string", example="Pedro Santos"),
+     *             @OA\Property(property="email", type="string", format="email", example="pedro@example.com"),
+     *             @OA\Property(property="password", type="string", format="password"),
+     *             @OA\Property(property="password_confirmation", type="string"),
+     *             @OA\Property(property="phone_number", type="string", example="+639181234567"),
+     *             @OA\Property(property="license_number", type="string", example="N01-23-456789"),
+     *             @OA\Property(property="license_expiry_date", type="string", format="date", nullable=true),
+     *             @OA\Property(property="partner_id", type="integer", nullable=true)
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Driver registered",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="user", ref="#/components/schemas/User"),
+     *                 @OA\Property(property="driver_profile", ref="#/components/schemas/DriverProfile")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=422, ref="#/components/schemas/ErrorResponse")
+     * )
+     */
+    public function register(RegisterDriverRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+
+        try {
+            $documentPaths = RegistrationDocumentService::storeDriverDocuments($request);
+        } catch (\Throwable $e) {
+            \Log::error('Driver registration document upload failed', [
+                'email' => $data['email'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->error(
+                'Failed to upload registration documents: ' . $e->getMessage(),
+                500
+            );
+        }
+
+        try {
+        $result = DB::transaction(function () use ($data, $documentPaths) {
+            \App\Services\RegistrationPhoneProof::consume($data['phone_number'], $data['phone_verification_token']);
+            $user = User::create([
+                'name'              => $data['name'],
+                'email'             => $data['email'],
+                'phone_number'      => $data['phone_number'],
+                'phone_verified_at' => now(),
+                'role'              => 'driver',
+                'password'          => Hash::make($data['password']),
+            ]);
+
+            // New flow: all new riders start as restricted until fee paid + admin approved
+            $packageTier = $data['package_tier'] ?? null;
+            $status = 'pending';
+
+            $driverProfile = DriverProfile::create([
+                'user_id'             => $user->id,
+                'partner_id'          => $data['partner_id'] ?? null,
+                'status'              => $status,
+                'rating'              => 0.0,
+                'total_trips'         => 0,
+                'license_number'      => $data['license_number'],
+                'license_expiry_date' => $data['license_expiry_date'] ?? null,
+                'last_latitude'       => $data['last_latitude'] ?? null,
+                'last_longitude'      => $data['last_longitude'] ?? null,
+                'package_tier'        => $packageTier ?? 'basic',
+                'documents'           => $documentPaths,
+                'id_document_path'    => $documentPaths['drivers_license_path'] ?? null,
+            ]);
+
+            // Create registration fee payment record (unpaid + pending approval).
+            // Fee amount must reflect the selected package tier, not just the basic price.
+            $packageTier = $data['package_tier'] ?? null;
+            $tierPrice = \App\Services\RiderCommissionService::getPackagePrice(
+                $packageTier ?? \App\Services\RiderCommissionService::PACKAGE_BASIC
+            );
+            \App\Services\RegistrationFeeService::ensurePaymentRecord(
+                $user,
+                \App\Models\RegistrationFeePayment::TYPE_RIDER,
+                $tierPrice > 0 ? $tierPrice : null
+            );
+
+            $driverProfile->load('user', 'partner');
+
+            return ['user' => $user, 'driver_profile' => $driverProfile];
+        });
+
+        } catch (\Throwable $e) {
+            RegistrationDocumentService::discardDocuments($documentPaths);
+            throw $e;
+        }
+
+        $user = $result['user'];
+        $user->load('driverProfile');
+
+        $deviceName = $request->input('device_name', 'api-token');
+        $tokens = $this->authService->issueTokenPair($user, $deviceName);
+
+        return response()->json([
+            'success'       => true,
+            'message'       => 'Driver registered successfully',
+            'token'         => $tokens['token'],
+            'refresh_token' => $tokens['refresh_token'],
+            'expires_in'    => $tokens['expires_in'],
+            'data'          => [
+                'user'            => array_merge($user->toArray(), [
+                    'registration_fee' => \App\Services\RegistrationFeeService::getStatusForUser($user),
+                ]),
+                'driver_profile'  => $result['driver_profile'],
+            ],
+        ], 201);
+    }
+}

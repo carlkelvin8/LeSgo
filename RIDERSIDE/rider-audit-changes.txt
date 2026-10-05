@@ -1,0 +1,15 @@
+Analyzing 3 items...                                            
+
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:276:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:277:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:280:34 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:376:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:377:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:380:34 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1072:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1075:36 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1077:43 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1082:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\presentation\screens\main\riderside\rider_booking_detail_screen.dart:1132:48 - prefer_const_constructors
+
+11 issues found. (ran in 2.4s)

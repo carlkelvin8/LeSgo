@@ -1,0 +1,78 @@
+name: lesgo-api
+type: laravel
+
+# Build configuration
+build:
+  commands:
+    - composer install --no-dev --optimize-autoloader --no-interaction
+    - php artisan migrate --force --seed
+    - php artisan route:cache
+    - php artisan view:cache
+    - php artisan l5-swagger:generate || echo "Swagger generation skipped"
+
+# Environment configuration
+environments:
+  production:
+    url: https://lesgo-api.laravel.app
+    branch: railway-fix
+
+    # Database
+    database:
+      type: postgresql
+      version: "15"
+
+    # Cache
+    cache:
+      type: redis
+
+    # Queue
+    queue:
+      type: redis
+      workers: 2
+
+    # Storage
+    storage:
+      type: s3
+
+    # Environment variables
+    variables:
+      APP_NAME: "LeSGo"
+      APP_ENV: production
+      APP_DEBUG: false
+
+      # Logging
+      LOG_CHANNEL: stderr
+      LOG_LEVEL: error
+
+      # Session & Cache
+      SESSION_DRIVER: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+
+      # Broadcasting
+      BROADCAST_CONNECTION: log
+
+      # Mail
+      MAIL_MAILER: log
+      MAIL_FROM_ADDRESS: "noreply@lesgo.ph"
+      MAIL_FROM_NAME: "LeSGo"
+
+      # Services
+      FIREBASE_CREDENTIALS: storage/app/firebase-credentials.json
+
+      # APP_KEY and all provider credentials must be configured as encrypted
+      # environment secrets in the deployment platform, never in this manifest.
+
+# Health checks
+health:
+  path: /api/v1/ping
+
+# Scaling
+scaling:
+  min_instances: 1
+  max_instances: 5
+
+# Cron jobs
+schedule:
+  - command: "php artisan queue:work --stop-when-empty"
+    schedule: "* * * * *"
