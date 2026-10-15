@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/registration_fee_api.dart';
 import '../../../core/utils/app_logger.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../domain/entities/auth/registration_fee_status.dart';
 
 class RegistrationFeeState {
@@ -56,11 +57,19 @@ class RegistrationFeeNotifier extends StateNotifier<RegistrationFeeState> {
     if (_fetching || state.isLoading || state.isProcessing) return;
     _fetching = true;
     if (!silent) {
-      state = state.copyWith(isLoading: true, clearError: true, clearStatus: true);
+      state = state.copyWith(
+        isLoading: true,
+        clearError: true,
+        clearStatus: true,
+      );
     }
     try {
       final status = await _fetchStatus();
-      state = state.copyWith(status: status, isLoading: false, clearError: true);
+      state = state.copyWith(
+        status: status,
+        isLoading: false,
+        clearError: true,
+      );
     } catch (e) {
       AppLogger.error('Failed to load registration fee status', e);
       state = state.copyWith(
@@ -76,23 +85,58 @@ class RegistrationFeeNotifier extends StateNotifier<RegistrationFeeState> {
   /// or `null` if it could not be created.
   Future<String?> payNow() async {
     if (_fetching || state.isProcessing) return null;
+    final saved = state.status;
+    if (saved?.isPendingPayment == true &&
+        saved?.checkoutUrl?.isNotEmpty == true) {
+      state = state.copyWith(checkoutOpened: true, clearError: true);
+      return saved!.checkoutUrl;
+    }
     state = state.copyWith(isProcessing: true, clearError: true);
     try {
       final checkout = await _createCheckout();
       if (checkout.checkoutUrl == null || checkout.checkoutUrl!.isEmpty) {
         throw Exception('No payment link was returned.');
       }
-      final status = await _fetchStatus();
+      // Persist the successful checkout in state before the optional refresh.
+      // A status outage must not discard its URL or create a second checkout.
+      final previous = state.status;
+      final pending = RegistrationFeeStatus(
+        requiresFee: previous?.requiresFee ?? true,
+        paymentWaived: false,
+        canAccessApp: false,
+        isActive: false,
+        canAccessOperationalFeatures: false,
+        paymentStatus: 'pending',
+        applicationStatus: previous?.applicationStatus ?? 'pending',
+        amount: checkout.amount > 0 ? checkout.amount : previous?.amount,
+        billingPeriod: previous?.billingPeriod ?? 'one_time',
+        currency: previous?.currency ?? 'PHP',
+        checkoutUrl: checkout.checkoutUrl,
+        paymongoCheckoutId: checkout.checkoutId,
+        paymongoReference: checkout.paymongoReference,
+      );
+      state = state.copyWith(status: pending);
+      var refreshed = pending;
+      try {
+        final status = await _fetchStatus();
+        // A stale read immediately after creation can still report unpaid.
+        if (!status.isUnpaid || status.checkoutUrl?.isNotEmpty == true) {
+          refreshed = status;
+        }
+      } catch (e) {
+        AppLogger.error('Checkout created; status refresh will be retried', e);
+      }
       state = state.copyWith(
-        status: status,
+        status: refreshed,
         isProcessing: false,
         checkoutOpened: true,
       );
       return checkout.checkoutUrl;
     } catch (e) {
+      AppLogger.error('Failed to create registration checkout', e);
       state = state.copyWith(
         isProcessing: false,
-        error: 'Could not create the payment link.',
+        error: ApiErrorMapper.message(e),
       );
       return null;
     }
@@ -102,7 +146,9 @@ class RegistrationFeeNotifier extends StateNotifier<RegistrationFeeState> {
     if (_fetching || state.isProcessing) return false;
     state = state.copyWith(isProcessing: true, clearError: true);
     try {
-      final status = await _verify(checkoutId: state.status?.paymongoCheckoutId);
+      final status = await _verify(
+        checkoutId: state.status?.paymongoCheckoutId,
+      );
       state = state.copyWith(
         status: status,
         isProcessing: false,
