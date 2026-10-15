@@ -184,6 +184,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> completeGoogleSignIn({
     required String token,
     String? refreshToken,
+    Map<String, dynamic>? profilePayload,
   }) async {
     await _localStorageService.saveToken(token);
     if (refreshToken != null && refreshToken.isNotEmpty) {
@@ -191,39 +192,73 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
 
     try {
-      final response = await getIt<UserRemoteDataSource>().getMe();
-      final profile = response.data;
+      User? authenticatedUser;
+      try {
+        final response = await getIt<UserRemoteDataSource>().getMe();
+        final profile = response.data;
+        if (response.success == true && profile != null) {
+          authenticatedUser = User(
+            id: profile.id.toString(),
+            email: profile.email,
+            name: profile.name,
+            token: token,
+            role: profile.role,
+          );
+        }
+      } catch (_) {
+        // Google auth already returned a verified token and user payload. A
+        // transient/profile endpoint failure should not discard that valid
+        // login; use the trusted payload returned by the auth endpoint.
+      }
 
-      if (response.success != true || profile == null) {
+      if (authenticatedUser == null && profilePayload != null) {
+        final id = profilePayload['id'];
+        final email = profilePayload['email']?.toString();
+        final name = profilePayload['name']?.toString();
+        final role = profilePayload['role']?.toString();
+        if (id != null &&
+            email != null &&
+            email.isNotEmpty &&
+            name != null &&
+            name.isNotEmpty &&
+            role != null &&
+            role.isNotEmpty) {
+          authenticatedUser = User(
+            id: id.toString(),
+            email: email,
+            name: name,
+            token: token,
+            role: role,
+          );
+        }
+      }
+
+      if (authenticatedUser == null) {
         await _localStorageService.clearToken();
         return false;
       }
 
-      getIt<FavoritesService>().setUserScope(profile.id.toString());
+      getIt<FavoritesService>().setUserScope(authenticatedUser.id);
       await getIt<NotificationService>().clearAll();
       _resetUserScopedState?.call();
 
-      state = state.copyWith(
-        user: User(
-          id: profile.id.toString(),
-          email: profile.email,
-          name: profile.name,
-          token: token,
-          role: profile.role,
-        ),
-        clearError: true,
-      );
+      state = state.copyWith(user: authenticatedUser, clearError: true);
 
       // Role validation for the customer app.
-      if (profile.role != 'customer') {
+      if (authenticatedUser.role != 'customer') {
         await _localStorageService.clearToken();
         getIt<FavoritesService>().setUserScope(null);
         state = AuthState(); // Clear state
         return false;
       }
 
-      await getIt<PromoNotificationService>().registerDeviceToken();
-      await getIt<NotificationService>().refreshFromBackend();
+      // Notification registration is post-login housekeeping. It must not
+      // turn a successful authenticated session into a failed login when
+      // FCM permissions, network, or the notification endpoint is unavailable.
+      try {
+        await getIt<PromoNotificationService>().registerDeviceToken();
+        await getIt<NotificationService>().refreshFromBackend();
+      } catch (_) {}
       return true;
     } catch (_) {
       await _localStorageService.clearToken();
