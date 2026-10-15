@@ -950,7 +950,7 @@ class AuthController extends Controller
         }
 
         // Include registration fee status for rider/merchant (critical for frontend status display)
-        if ($user->isDriver() || $user->isPartnerAdmin()) {
+        if (\App\Services\RegistrationFeeService::accountTypeForUser($user) !== null) {
             try {
                 $userData['registration_fee'] = \App\Services\RegistrationFeeService::getStatusForUser($user);
             } catch (\Throwable $e) {

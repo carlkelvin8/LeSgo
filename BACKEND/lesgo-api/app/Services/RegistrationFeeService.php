@@ -58,7 +58,10 @@ class RegistrationFeeService
         if ($user->isDriver()) {
             return RegistrationFeePayment::TYPE_RIDER;
         }
-        if ($user->isPartnerAdmin()) {
+        // Older owner accounts use partner/merchant instead of partner_admin.
+        // Only a linked merchant owner may start its registration checkout.
+        if ($user->isPartnerAdmin()
+            || (in_array($user->role, ['partner', 'merchant'], true) && $user->partner()->exists())) {
             return RegistrationFeePayment::TYPE_MERCHANT;
         }
         return null;
