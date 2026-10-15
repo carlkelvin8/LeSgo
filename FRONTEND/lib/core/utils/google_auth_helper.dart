@@ -81,9 +81,17 @@ class GoogleAuthHelper {
             AppRouter.pushReplacement(context, MainRoutes.home);
           }
         } else {
+          final accountError = ref.read(authProvider).error;
+          if (accountError != null) {
+            // Let the next attempt choose a customer account instead of
+            // silently reusing the rejected Affiliates Google account.
+            await GoogleAuthService.signOut();
+            if (!context.mounted) return;
+          }
           SnackBarUtils.showError(
             context,
-            'Signed in with Google but could not load your profile. Please try again.',
+            accountError ??
+                'Signed in with Google but could not load your profile. Please try again.',
           );
         }
       } else {

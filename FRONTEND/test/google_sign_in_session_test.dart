@@ -35,9 +35,12 @@ class _ProfileSource implements UserRemoteDataSource {
 
 class _Notifications implements NotificationService {
   bool failRefresh = false;
+  int clearCount = 0;
 
   @override
-  Future<void> clearAll() async {}
+  Future<void> clearAll() async {
+    clearCount++;
+  }
 
   @override
   Future<void> refreshFromBackend() async {
@@ -160,6 +163,30 @@ void main() {
     expect(storage.token, isNull);
   });
 
+  for (final role in ['partner_admin', 'driver']) {
+    test(
+      '$role Google login explains the account mismatch and clears tokens',
+      () async {
+        var resetCount = 0;
+        auth.setUserScopedStateReset(() => resetCount++);
+        expect(
+          await auth.completeGoogleSignIn(
+            token: 'verified-token',
+            refreshToken: 'refresh-token',
+            profilePayload: {...payload, 'role': role},
+          ),
+          isFalse,
+        );
+        expect(auth.state.error, contains('LeSgo Affiliates'));
+        expect(auth.state.isAuthenticated, isFalse);
+        expect(storage.token, isNull);
+        expect(storage.refreshToken, isNull);
+        expect(notifications.clearCount, 0);
+        expect(resetCount, 0);
+      },
+    );
+  }
+
   test('FCM registration failure keeps the authenticated session', () async {
     promos.failRegistration = true;
     expect(
@@ -172,6 +199,26 @@ void main() {
     expect(auth.state.isAuthenticated, isTrue);
     expect(storage.token, 'verified-token');
   });
+
+  test(
+    'a later profile failure does not reuse an earlier account mismatch',
+    () async {
+      await auth.completeGoogleSignIn(
+        token: 'affiliate-token',
+        profilePayload: {...payload, 'role': 'partner_admin'},
+      );
+      expect(auth.state.error, isNotNull);
+      expect(
+        await auth.completeGoogleSignIn(
+          token: 'customer-token',
+          profilePayload: {'id': 42, 'role': 'customer'},
+        ),
+        isFalse,
+      );
+      expect(auth.state.error, isNull);
+      expect(storage.token, isNull);
+    },
+  );
 
   test('notification sync failure keeps the authenticated session', () async {
     notifications.failRefresh = true;

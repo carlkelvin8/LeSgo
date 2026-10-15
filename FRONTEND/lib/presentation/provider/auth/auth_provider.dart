@@ -186,6 +186,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String? refreshToken,
     Map<String, dynamic>? profilePayload,
   }) async {
+    state = state.copyWith(clearError: true);
     await _localStorageService.saveToken(token);
     if (refreshToken != null && refreshToken.isNotEmpty) {
       await _localStorageService.saveRefreshToken(refreshToken);
@@ -238,19 +239,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return false;
       }
 
+      // Role validation for the customer app.
+      if (authenticatedUser.role != 'customer') {
+        await _localStorageService.clearToken();
+        getIt<FavoritesService>().setUserScope(null);
+        const affiliateRoles = {
+          'partner_admin',
+          'partner',
+          'merchant',
+          'partner_staff',
+          'merchant_staff',
+          'driver',
+          'rider',
+        };
+        state = AuthState(
+          error: affiliateRoles.contains(authenticatedUser.role)
+              ? 'This Google account is for LeSgo Affiliates. Open the Affiliates app or choose a customer Google account.'
+              : 'This Google account is not a customer account. Choose a customer Google account to continue.',
+        );
+        return false;
+      }
+
       getIt<FavoritesService>().setUserScope(authenticatedUser.id);
       await getIt<NotificationService>().clearAll();
       _resetUserScopedState?.call();
 
       state = state.copyWith(user: authenticatedUser, clearError: true);
-
-      // Role validation for the customer app.
-      if (authenticatedUser.role != 'customer') {
-        await _localStorageService.clearToken();
-        getIt<FavoritesService>().setUserScope(null);
-        state = AuthState(); // Clear state
-        return false;
-      }
 
       // Notification registration is post-login housekeeping. It must not
       // turn a successful authenticated session into a failed login when
