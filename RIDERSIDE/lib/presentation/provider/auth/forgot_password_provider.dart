@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../data/data_source/auth_remote_datasource.dart';
 import 'auth_provider.dart';
 
@@ -62,7 +63,10 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
       );
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: ApiErrorMapper.message(e),
+      );
       return false;
     }
   }
@@ -81,7 +85,10 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
       );
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: ApiErrorMapper.message(e),
+      );
       return false;
     }
   }
@@ -108,7 +115,10 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
       );
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: ApiErrorMapper.message(e),
+      );
       return false;
     }
   }
@@ -143,7 +153,10 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
       );
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: ApiErrorMapper.message(e),
+      );
       return false;
     }
   }

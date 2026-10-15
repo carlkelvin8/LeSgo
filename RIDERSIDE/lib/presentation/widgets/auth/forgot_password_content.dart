@@ -130,7 +130,7 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
               hintText: 'New Password',
               controller: _passwordController,
               isPassword: true,
-              validator: LoginValidator.password,
+              validator: LoginValidator.strongPassword,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             CustomTextField(
