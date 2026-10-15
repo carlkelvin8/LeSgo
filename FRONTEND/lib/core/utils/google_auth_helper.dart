@@ -56,6 +56,7 @@ class GoogleAuthHelper {
             .completeGoogleSignIn(
               token: result.token!,
               refreshToken: result.refreshToken,
+              profilePayload: result.user,
             );
 
         if (!context.mounted) return;
