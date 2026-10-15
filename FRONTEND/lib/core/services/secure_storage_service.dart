@@ -1,182 +1,152 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
-/// Service for secure storage of sensitive data
-/// In production, use flutter_secure_storage for encryption
+/// Platform-backed persistence with an in-memory cache for synchronous routing.
+/// Initialization completes before the app exposes authenticated routes.
 @lazySingleton
 class SecureStorageService {
-  final SharedPreferences _prefs;
+  static final _instances = Expando<SecureStorageService>();
+  factory SecureStorageService(SharedPreferences prefs) =>
+      _instances[prefs] ??= SecureStorageService._(prefs);
+  SecureStorageService._(this._legacy);
 
-  SecureStorageService(this._prefs);
+  final SharedPreferences _legacy;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+  );
+  final Map<String, String> _cache = {};
+  bool _ready = false;
+  static const _prefix = 'lesgo_secure_';
+  static const _authKeys = [
+    'auth_token', 'refresh_token', 'saved_email', 'remember_me_enabled',
+    'remember_me_expires_at', 'pref_biometric_unlock', 'biometric_enabled',
+    'user_id', 'user_email', 'last_activity',
+  ];
+  // Device biometric unlock is a setting, not a session credential.
+  // Clearing a token (401, failed restore, timeout) must not turn it off.
+  static const _sessionKeys = [
+    'auth_token', 'refresh_token', 'saved_email', 'remember_me_enabled',
+    'remember_me_expires_at', 'user_id', 'user_email', 'last_activity',
+  ];
 
-  // Keys
-  static const String _keyAuthToken = 'auth_token';
-  static const String _keyRefreshToken = 'refresh_token';
-  static const String _keyUserId = 'user_id';
-  static const String _keyUserEmail = 'user_email';
-  static const String _keyLastActivity = 'last_activity';
-
-  static const String _keyBiometricEnabled = 'biometric_enabled';
-
-  /// Save auth token
-  Future<bool> saveAuthToken(String token) async {
-    debugPrint('🔐 Saving auth token...');
-    final result = await _prefs.setString(_keyAuthToken, token);
-    if (result) {
-      await _updateLastActivity();
-    }
-    return result;
+  Future<void>? _initializing;
+  Future<void> initialize() {
+    if (_ready) return Future.value();
+    return _initializing ??= _initialize().whenComplete(() => _initializing = null);
   }
 
-  /// Get auth token
-  String? getAuthToken() {
-    return _prefs.getString(_keyAuthToken);
-  }
-
-  /// Save refresh token
-  Future<bool> saveRefreshToken(String token) async {
-    debugPrint('🔐 Saving refresh token...');
-    return await _prefs.setString(_keyRefreshToken, token);
-  }
-
-  /// Get refresh token
-  String? getRefreshToken() {
-    return _prefs.getString(_keyRefreshToken);
-  }
-
-  /// Save user ID
-  Future<bool> saveUserId(int userId) async {
-    return await _prefs.setInt(_keyUserId, userId);
-  }
-
-  /// Get user ID
-  int? getUserId() {
-    return _prefs.getInt(_keyUserId);
-  }
-
-  /// Save user email
-  Future<bool> saveUserEmail(String email) async {
-    return await _prefs.setString(_keyUserEmail, email);
-  }
-
-  /// Get user email
-  String? getUserEmail() {
-    return _prefs.getString(_keyUserEmail);
-  }
-
-  /// Update last activity timestamp
-  Future<bool> _updateLastActivity() async {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    return await _prefs.setInt(_keyLastActivity, timestamp);
-  }
-
-  /// Get last activity timestamp
-  DateTime? getLastActivity() {
-    final timestamp = _prefs.getInt(_keyLastActivity);
-    if (timestamp == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(timestamp);
-  }
-
-  /// Check if session is expired
-  bool isSessionExpired({int timeoutMinutes = 30}) {
-    final lastActivity = getLastActivity();
-    if (lastActivity == null) return true;
-
-    final now = DateTime.now();
-    final difference = now.difference(lastActivity);
-    
-    return difference.inMinutes > timeoutMinutes;
-  }
-
-  /// Update session activity
-  Future<void> updateSessionActivity() async {
-    await _updateLastActivity();
-  }
-
-  /// Update session activity synchronously (best-effort, for use in initState)
-  /// SharedPreferences caches in memory, so setInt is effectively instant.
-  void updateSessionActivitySync() {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    _prefs.setInt(_keyLastActivity, timestamp);
-  }
-
-  /// Enable biometric authentication
-  Future<bool> enableBiometric() async {
-    return await _prefs.setBool(_keyBiometricEnabled, true);
-  }
-
-  /// Disable biometric authentication
-  Future<bool> disableBiometric() async {
-    return await _prefs.setBool(_keyBiometricEnabled, false);
-  }
-
-  /// Check if biometric is enabled
-  bool isBiometricEnabled() {
-    return _prefs.getBool(_keyBiometricEnabled) ?? false;
-  }
-
-  /// Clear all auth data (logout)
-  Future<bool> clearAuthData() async {
-    debugPrint('🗑️ Clearing auth data...');
-    
-    final results = await Future.wait([
-      _prefs.remove(_keyAuthToken),
-      _prefs.remove(_keyRefreshToken),
-      _prefs.remove(_keyUserId),
-      _prefs.remove(_keyUserEmail),
-      _prefs.remove(_keyLastActivity),
-    ]);
-    
-    return results.every((result) => result);
-  }
-
-  /// Check if user is logged in
-  bool isLoggedIn() {
-    final token = getAuthToken();
-    return token != null && token.isNotEmpty;
-  }
-
-  /// Save custom secure data
-  Future<bool> saveSecureData(String key, String value) async {
-    // In production, encrypt the value before saving
-    return await _prefs.setString('secure_$key', value);
-  }
-
-  /// Get custom secure data
-  String? getSecureData(String key) {
-    // In production, decrypt the value after retrieving
-    return _prefs.getString('secure_$key');
-  }
-
-  /// Remove custom secure data
-  Future<bool> removeSecureData(String key) async {
-    return await _prefs.remove('secure_$key');
-  }
-
-  /// Save object as JSON
-  Future<bool> saveObject(String key, Map<String, dynamic> object) async {
-    final jsonString = jsonEncode(object);
-    return await _prefs.setString(key, jsonString);
-  }
-
-  /// Get object from JSON
-  Map<String, dynamic>? getObject(String key) {
-    final jsonString = _prefs.getString(key);
-    if (jsonString == null) return null;
-    
+  Future<void> _initialize() async {
     try {
-      return jsonDecode(jsonString) as Map<String, dynamic>;
-    } catch (e) {
-      debugPrint('❌ Error decoding JSON: $e');
-      return null;
+      final values = await _storage.readAll();
+      // An interrupted migration must never restore a token without its lock preference.
+      if (values['${_prefix}migration'] == 'pending') {
+        for (final key in _authKeys) {
+          await _storage.delete(key: '$_prefix$key');
+          await _legacy.remove(key);
+        }
+        values.removeWhere((key, _) => _authKeys.any((auth) => key == '$_prefix$auth'));
+      }
+      await _storage.write(key: '${_prefix}migration', value: 'pending');
+      for (final entry in values.entries) {
+        if (entry.key.startsWith(_prefix)) {
+          _cache[entry.key.substring(_prefix.length)] = entry.value;
+        }
+      }
+      for (final key in _authKeys) {
+        final value = _legacy.get(key);
+        if (!_cache.containsKey(key) && value != null) {
+          await _storage.write(key: '$_prefix$key', value: value.toString());
+          _cache[key] = value.toString();
+        }
+      }
+      await _storage.write(key: '${_prefix}migration', value: 'complete');
+      _ready = true;
+    } catch (_) {
+      // Keystore/Keychain unavailable: no plaintext fallback or restored session.
+      _cache.clear();
+    } finally {
+      // Passwords are deliberately discarded, never migrated or remembered.
+      for (final key in [..._authKeys, 'saved_password']) {
+        await _legacy.remove(key);
+      }
     }
   }
 
-  /// Clear all data
+  String? getString(String key) => _ready ? _cache[key] : null;
+  bool? getBool(String key) => getString(key) == null ? null : getString(key) == 'true';
+  int? getInt(String key) => int.tryParse(getString(key) ?? '');
+
+  Future<bool> setString(String key, String value) async {
+    if (!_ready) await initialize();
+    if (!_ready) throw StateError('Secure storage unavailable. Unlock your device and try again.');
+    await _storage.write(key: '$_prefix$key', value: value);
+    _cache[key] = value;
+    return true;
+  }
+  Future<bool> setBool(String key, bool value) => setString(key, value.toString());
+  Future<bool> setInt(String key, int value) => setString(key, value.toString());
+  Future<bool> remove(String key) async {
+    _cache.remove(key);
+    await _legacy.remove(key);
+    await _storage.delete(key: '$_prefix$key');
+    return true;
+  }
+
+  Future<bool> saveAuthToken(String token) => setString('auth_token', token);
+  String? getAuthToken() => getString('auth_token');
+  Future<bool> saveRefreshToken(String token) => setString('refresh_token', token);
+  String? getRefreshToken() => getString('refresh_token');
+  Future<bool> saveUserId(int id) => setInt('user_id', id);
+  int? getUserId() => getInt('user_id');
+  Future<bool> saveUserEmail(String email) => setString('user_email', email);
+  String? getUserEmail() => getString('user_email');
+  DateTime? getLastActivity() {
+    final value = getInt('last_activity');
+    return value == null ? null : DateTime.fromMillisecondsSinceEpoch(value);
+  }
+  bool isSessionExpired({int timeoutMinutes = 30}) => getLastActivity() == null ||
+      DateTime.now().difference(getLastActivity()!).inMinutes > timeoutMinutes;
+  Future<void> updateSessionActivity() async {
+    await setInt('last_activity', DateTime.now().millisecondsSinceEpoch);
+  }
+  void updateSessionActivitySync() {
+    updateSessionActivity().catchError((Object _) {});
+  }
+  Future<bool> enableBiometric() => setBool('pref_biometric_unlock', true);
+  Future<bool> disableBiometric() => setBool('pref_biometric_unlock', false);
+  bool isBiometricEnabled() => getBool('pref_biometric_unlock') ?? false;
+  bool isLoggedIn() => (getAuthToken() ?? '').isNotEmpty;
+
+  /// Clears the session only; keeps biometric unlock enabled.
+  Future<bool> clearAuthData() async {
+    for (final key in _sessionKeys) {
+      await remove(key);
+    }
+    return true;
+  }
+
+  /// Explicit logout / “Sign in again”: session plus biometric unlock.
+  Future<bool> clearAuthDataAndBiometric() async {
+    for (final key in [..._authKeys, 'saved_password']) {
+      await remove(key);
+    }
+    return true;
+  }
+  Future<bool> saveSecureData(String key, String value) => setString('secure_$key', value);
+  String? getSecureData(String key) => getString('secure_$key');
+  Future<bool> removeSecureData(String key) => remove('secure_$key');
+  Future<bool> saveObject(String key, Map<String, dynamic> value) => setString(key, jsonEncode(value));
+  Map<String, dynamic>? getObject(String key) {
+    final value = getString(key);
+    if (value == null) return null;
+    try { return jsonDecode(value) as Map<String, dynamic>; } catch (_) { return null; }
+  }
   Future<bool> clearAll() async {
-    debugPrint('🗑️ Clearing all storage...');
-    return await _prefs.clear();
+    final keys = _cache.keys.toList();
+    for (final key in keys) { await remove(key); }
+    return clearAuthData();
   }
 }

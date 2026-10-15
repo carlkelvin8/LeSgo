@@ -1,3 +1,4 @@
+import 'secure_storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// User-facing app preferences (notifications, language).
@@ -24,7 +25,7 @@ class AppPreferencesService {
       _prefs.getBool(pushMissionRemindersKey) ?? true;
 
   bool get biometricUnlockEnabled =>
-      _prefs.getBool(biometricUnlockKey) ?? false;
+      SecureStorageService(_prefs).getBool(biometricUnlockKey) ?? false;
 
   bool get lespayBalanceVisible =>
       _prefs.getBool(lespayBalanceVisibleKey) ?? true;
@@ -43,7 +44,7 @@ class AppPreferencesService {
       _prefs.setBool(pushMissionRemindersKey, value);
 
   Future<void> setBiometricUnlockEnabled(bool value) =>
-      _prefs.setBool(biometricUnlockKey, value);
+      SecureStorageService(_prefs).setBool(biometricUnlockKey, value);
 
   Future<void> setLespayBalanceVisible(bool value) =>
       _prefs.setBool(lespayBalanceVisibleKey, value);

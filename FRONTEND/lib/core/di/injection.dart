@@ -1,3 +1,4 @@
+import '../services/secure_storage_service.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,6 +53,7 @@ final GetIt getIt = GetIt.instance;
 @injectableInit
 Future<void> configureDependencies() async {
   await getIt.init();
+  await getIt<SecureStorageService>().initialize();
 
   getIt<SslPinningService>().configureSslPinning(getIt<DioClient>().dio);
 

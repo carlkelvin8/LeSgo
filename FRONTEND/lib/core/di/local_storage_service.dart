@@ -1,3 +1,4 @@
+import '../services/secure_storage_service.dart';
 import 'dart:async';
 
 import 'package:injectable/injectable.dart';
@@ -18,35 +19,42 @@ class LocalStorageService {
       StreamController<String?>.broadcast();
 
   LocalStorageService(this.prefs);
+  SecureStorageService get secure => SecureStorageService(prefs);
 
   Future<void> saveCredentials(String email, String password) async {
-    await prefs.setString(savedEmailKey, email);
-    await prefs.setString(savedPasswordKey, password);
+    await secure.setString(savedEmailKey, email);
+    await secure.remove(savedPasswordKey);
   }
 
   Map<String, String>? getSavedCredentials() {
-    final email = prefs.getString(savedEmailKey);
-    final password = prefs.getString(savedPasswordKey);
-    if (email != null && password != null) {
-      return {'email': email, 'password': password};
+    final email = secure.getString(savedEmailKey);
+    if (email != null) {
+      return {'email': email, 'password': ''};
     }
     return null;
   }
 
   Future<void> clearCredentials() async {
-    await prefs.remove(savedEmailKey);
-    await prefs.remove(savedPasswordKey);
+    await secure.remove(savedEmailKey);
+    await secure.remove(savedPasswordKey);
   }
 
-  bool isRememberMeEnabled() => prefs.getBool(rememberMeKey) ?? false;
+  bool isRememberMeEnabled() => secure.getBool(rememberMeKey) ?? false;
+
+  /// A saved auth token is enough to attempt session restoration.
+  /// Remember-me controls credential convenience/session preference, while
+  /// biometric unlock is enforced independently by the app's lock overlay.
+  bool canRestoreSession() {
+    return (token ?? '').isNotEmpty;
+  }
 
   bool isRememberMeSessionValid() {
     if (!isRememberMeEnabled()) return false;
 
-    final token = prefs.getString(authTokenKey);
+    final token = secure.getString(authTokenKey);
     if (token == null || token.isEmpty) return false;
 
-    final expiresAt = prefs.getInt(rememberMeExpiresKey);
+    final expiresAt = secure.getInt(rememberMeExpiresKey);
     if (expiresAt == null) return false;
 
     return DateTime.now().millisecondsSinceEpoch < expiresAt;
@@ -62,9 +70,9 @@ class LocalStorageService {
       return;
     }
 
-    await prefs.setBool(rememberMeKey, true);
+    await secure.setBool(rememberMeKey, true);
     await saveCredentials(email, password);
-    await prefs.setInt(
+    await secure.setInt(
       rememberMeExpiresKey,
       DateTime.now().add(rememberMeDuration).millisecondsSinceEpoch,
     );
@@ -73,36 +81,52 @@ class LocalStorageService {
   Future<void> refreshRememberMeExpiry() async {
     if (!isRememberMeEnabled()) return;
 
-    await prefs.setInt(
+    await secure.setInt(
       rememberMeExpiresKey,
       DateTime.now().add(rememberMeDuration).millisecondsSinceEpoch,
     );
   }
 
   Future<void> clearRememberMePreference() async {
-    await prefs.remove(rememberMeKey);
-    await prefs.remove(rememberMeExpiresKey);
+    await secure.remove(rememberMeKey);
+    await secure.remove(rememberMeExpiresKey);
     await clearCredentials();
   }
 
   Future<void> clearRememberMeSession() async {
     await clearRememberMePreference();
-    await clearToken();
+    // Logout / sign-in-again: full reset including biometric unlock.
+    await secure.clearAuthDataAndBiometric();
+    _tokenController.add(null);
+  }
+
+  /// Drops the session but keeps biometric unlock for the next sign-in.
+  Future<void> clearSessionKeepBiometric() async {
+    await clearRememberMePreference();
+    await secure.clearAuthData();
+    _tokenController.add(null);
+  }
+
+  /// Logout / “Sign in again”: session plus biometric unlock.
+  Future<void> clearSessionAndBiometric() async {
+    await clearRememberMePreference();
+    await secure.clearAuthDataAndBiometric();
+    _tokenController.add(null);
   }
 
   Future<void> saveToken(String token) async {
-    await prefs.setString(authTokenKey, token);
+    await secure.setString(authTokenKey, token);
     _tokenController.add(token);
   }
 
   Future<void> saveRefreshToken(String token) async {
-    await prefs.setString(refreshTokenKey, token);
+    await secure.setString(refreshTokenKey, token);
   }
 
-  String? get refreshToken => prefs.getString(refreshTokenKey);
+  String? get refreshToken => secure.getString(refreshTokenKey);
 
   String? get token {
-    final token = prefs.getString(authTokenKey);
+    final token = secure.getString(authTokenKey);
     return token;
   }
 
@@ -112,9 +136,13 @@ class LocalStorageService {
   }
 
   Future<void> clearToken() async {
-    await prefs.remove(authTokenKey);
-    await prefs.remove(refreshTokenKey);
+    await secure.clearAuthData();
 
+    _tokenController.add(null);
+  }
+
+  Future<void> clearTokenAndBiometric() async {
+    await secure.clearAuthDataAndBiometric();
     _tokenController.add(null);
   }
 
