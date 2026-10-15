@@ -8,17 +8,31 @@ import '../network/dio_client.dart';
 import '../services/google_auth_service.dart';
 import '../utils/snackbar_utils.dart';
 import '../../presentation/provider/auth/auth_provider.dart';
+import '../../presentation/screens/main/documents/identity_onboarding_screen.dart';
 import '../../presentation/widgets/auth/two_factor_code_dialog.dart';
+
+enum GoogleAuthMode { login, signup }
 
 /// Shared Google sign-in / sign-up handler for login and registration flows.
 class GoogleAuthHelper {
   GoogleAuthHelper._();
 
-  static Future<void> signIn(BuildContext context, WidgetRef ref) async {
+  static Future<void> signIn(
+    BuildContext context,
+    WidgetRef ref, {
+    required GoogleAuthMode mode,
+  }) async {
     try {
-      SnackBarUtils.showInfo(context, 'Signing in with Google...');
+      final isSignup = mode == GoogleAuthMode.signup;
+      SnackBarUtils.showInfo(
+        context,
+        isSignup ? 'Signing up with Google...' : 'Signing in with Google...',
+      );
 
-      var result = await GoogleAuthService.signIn(getIt<DioClient>());
+      var result = await GoogleAuthService.signIn(
+        getIt<DioClient>(),
+        authMode: mode.name,
+      );
 
       if (!context.mounted) return;
 
@@ -30,6 +44,7 @@ class GoogleAuthHelper {
           getIt<DioClient>(),
           idToken: result.idToken!,
           code: code,
+          authMode: mode.name,
         );
 
         if (!context.mounted) return;
@@ -41,6 +56,7 @@ class GoogleAuthHelper {
             .completeGoogleSignIn(
               token: result.token!,
               refreshToken: result.refreshToken,
+              profilePayload: result.user,
             );
 
         if (!context.mounted) return;
@@ -48,9 +64,22 @@ class GoogleAuthHelper {
         if (ok) {
           SnackBarUtils.showSuccess(
             context,
-            result.isNewUser ? 'Welcome! Account created.' : 'Welcome back!',
+            isSignup && result.requiresIdentityVerification
+                ? 'Google account connected. Complete identity verification.'
+                : (result.isNewUser
+                      ? 'Welcome! Account created.'
+                      : 'Welcome back!'),
           );
-          AppRouter.pushReplacement(context, MainRoutes.home);
+          if (isSignup && result.requiresIdentityVerification) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const IdentityOnboardingScreen(),
+              ),
+              (_) => false,
+            );
+          } else {
+            AppRouter.pushReplacement(context, MainRoutes.home);
+          }
         } else {
           SnackBarUtils.showError(
             context,

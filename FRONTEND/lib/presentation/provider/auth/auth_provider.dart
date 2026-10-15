@@ -5,6 +5,8 @@ import '../../../core/di/local_storage_service.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/services/promo_notification_service.dart';
 import '../../../core/services/notification_service.dart';
+import '../../../core/services/favorites_service.dart';
+import '../../../core/state/user_session_epoch.dart';
 import '../../../data/data_source/user_remote_datasource.dart';
 import '../../../domain/entities/user.dart';
 import '../../../domain/entities/auth/login/login_request.dart';
@@ -62,12 +64,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final LoginUseCase _loginUseCase;
   final LogoutUseCase _logoutUseCase;
   final LocalStorageService _localStorageService;
+  void Function()? _resetUserScopedState;
 
   AuthNotifier(
     this._loginUseCase,
     this._logoutUseCase,
     this._localStorageService,
   ) : super(AuthState());
+
+  void setUserScopedStateReset(void Function() reset) {
+    _resetUserScopedState = reset;
+  }
 
   Future<void> login(LoginRequest request) async {
     state = state.copyWith(
@@ -98,6 +105,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
         return;
       }
+
+      getIt<FavoritesService>().setUserScope(user.id);
+      await getIt<NotificationService>().clearAll();
+      _resetUserScopedState?.call();
 
       state = state.copyWith(
         user: user,
@@ -143,13 +154,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (_) {
       message = 'Logged out locally';
     } finally {
-      await clearLocalSession();
+      await _clearSession(disableBiometric: true);
     }
     return message;
   }
 
   Future<void> clearLocalSession() async {
-    await _localStorageService.clearRememberMeSession();
+    await _clearSession(disableBiometric: true);
+  }
+
+  /// Failed restore / invalid session: drop the token but keep biometric unlock.
+  Future<void> clearSessionKeepBiometric() async {
+    await _clearSession(disableBiometric: false);
+  }
+
+  Future<void> _clearSession({required bool disableBiometric}) async {
+    if (disableBiometric) {
+      await _localStorageService.clearSessionAndBiometric();
+    } else {
+      await _localStorageService.clearSessionKeepBiometric();
+    }
+    getIt<FavoritesService>().setUserScope(null);
+    await getIt<NotificationService>().clearAll();
+    _resetUserScopedState?.call();
     state = AuthState();
   }
 
@@ -157,6 +184,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> completeGoogleSignIn({
     required String token,
     String? refreshToken,
+    Map<String, dynamic>? profilePayload,
   }) async {
     await _localStorageService.saveToken(token);
     if (refreshToken != null && refreshToken.isNotEmpty) {
@@ -164,34 +192,73 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
 
     try {
-      final response = await getIt<UserRemoteDataSource>().getMe();
-      final profile = response.data;
+      User? authenticatedUser;
+      try {
+        final response = await getIt<UserRemoteDataSource>().getMe();
+        final profile = response.data;
+        if (response.success == true && profile != null) {
+          authenticatedUser = User(
+            id: profile.id.toString(),
+            email: profile.email,
+            name: profile.name,
+            token: token,
+            role: profile.role,
+          );
+        }
+      } catch (_) {
+        // Google auth already returned a verified token and user payload. A
+        // transient/profile endpoint failure should not discard that valid
+        // login; use the trusted payload returned by the auth endpoint.
+      }
 
-      if (response.success != true || profile == null) {
+      if (authenticatedUser == null && profilePayload != null) {
+        final id = profilePayload['id'];
+        final email = profilePayload['email']?.toString();
+        final name = profilePayload['name']?.toString();
+        final role = profilePayload['role']?.toString();
+        if (id != null &&
+            email != null &&
+            email.isNotEmpty &&
+            name != null &&
+            name.isNotEmpty &&
+            role != null &&
+            role.isNotEmpty) {
+          authenticatedUser = User(
+            id: id.toString(),
+            email: email,
+            name: name,
+            token: token,
+            role: role,
+          );
+        }
+      }
+
+      if (authenticatedUser == null) {
         await _localStorageService.clearToken();
         return false;
       }
 
-      state = state.copyWith(
-        user: User(
-          id: profile.id.toString(),
-          email: profile.email,
-          name: profile.name,
-          token: token,
-          role: profile.role,
-        ),
-        clearError: true,
-      );
+      getIt<FavoritesService>().setUserScope(authenticatedUser.id);
+      await getIt<NotificationService>().clearAll();
+      _resetUserScopedState?.call();
+
+      state = state.copyWith(user: authenticatedUser, clearError: true);
 
       // Role validation for the customer app.
-      if (profile.role != 'customer') {
+      if (authenticatedUser.role != 'customer') {
         await _localStorageService.clearToken();
+        getIt<FavoritesService>().setUserScope(null);
         state = AuthState(); // Clear state
         return false;
       }
 
-      await getIt<PromoNotificationService>().registerDeviceToken();
-      await getIt<NotificationService>().refreshFromBackend();
+      // Notification registration is post-login housekeeping. It must not
+      // turn a successful authenticated session into a failed login when
+      // FCM permissions, network, or the notification endpoint is unavailable.
+      try {
+        await getIt<PromoNotificationService>().registerDeviceToken();
+        await getIt<NotificationService>().refreshFromBackend();
+      } catch (_) {}
       return true;
     } catch (_) {
       await _localStorageService.clearToken();
@@ -201,7 +268,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> restoreSession() async {
-    if (!_localStorageService.isRememberMeSessionValid()) {
+    if (!_localStorageService.canRestoreSession()) {
       return false;
     }
 
@@ -215,9 +282,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final profile = response.data;
 
       if (response.success != true || profile == null) {
-        await clearLocalSession();
+        await clearSessionKeepBiometric();
         return false;
       }
+
+      getIt<FavoritesService>().setUserScope(profile.id.toString());
+      await getIt<NotificationService>().clearAll();
+      _resetUserScopedState?.call();
 
       state = state.copyWith(
         user: User(
@@ -227,13 +298,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
           token: token,
           role: profile.role,
         ),
-        rememberMe: true,
+        rememberMe: _localStorageService.isRememberMeEnabled(),
         clearError: true,
       );
 
       // ✅ Role validation for customer app
       if (profile.role != 'customer') {
-        await clearLocalSession();
+        getIt<FavoritesService>().setUserScope(null);
+        await clearSessionKeepBiometric();
         return false;
       }
 
@@ -242,7 +314,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await getIt<NotificationService>().refreshFromBackend();
       return true;
     } catch (_) {
-      await clearLocalSession();
+      // Network / transient errors must not wipe the biometric preference.
+      // Leave the stored session for the next attempt or an explicit logout.
       return false;
     }
   }
@@ -281,5 +354,9 @@ final logoutUseCaseProvider = Provider<LogoutUseCase>((ref) {
 
 // Final Auth Provider
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return getIt<AuthNotifier>();
+  final notifier = getIt<AuthNotifier>();
+  notifier.setUserScopedStateReset(() {
+    ref.read(userSessionEpochProvider.notifier).state++;
+  });
+  return notifier;
 });
