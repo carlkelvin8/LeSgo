@@ -17,7 +17,6 @@ import '../../data/data_source/order_remote_datasource.dart';
 import '../../data/data_source/wallet_remote_datasource.dart';
 import '../services/app_preferences_service.dart';
 import '../network/dio_client.dart';
-import '../services/ssl_pinning_service.dart';
 import '../services/map_recent_search_service.dart';
 import '../services/customer_satisfaction_service.dart';
 import '../services/chat_realtime_service.dart';
@@ -54,8 +53,6 @@ final GetIt getIt = GetIt.instance;
 Future<void> configureDependencies() async {
   await getIt.init();
   await getIt<SecureStorageService>().initialize();
-
-  getIt<SslPinningService>().configureSslPinning(getIt<DioClient>().dio);
 
   // Register WebSocketService manually
   getIt.registerLazySingleton<WebSocketService>(() => WebSocketService());
