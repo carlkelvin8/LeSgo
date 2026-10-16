@@ -327,6 +327,8 @@ class _BalanceCard extends StatefulWidget {
 
 class _BalanceCardState extends State<_BalanceCard>
     with TickerProviderStateMixin {
+  bool _hideBalance = false;
+
   late final AnimationController _bg = AnimationController(
     vsync: this, duration: const Duration(seconds: 5),
   )..repeat(reverse: true);
@@ -414,6 +416,25 @@ class _BalanceCardState extends State<_BalanceCard>
                         ),
                       ),
                       const Spacer(),
+                      IconButton(
+                        tooltip: _hideBalance ? 'Show balance' : 'Hide balance',
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _hideBalance = !_hideBalance);
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 30,
+                          minHeight: 30,
+                        ),
+                        icon: Icon(
+                          _hideBalance
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: Colors.white.withValues(alpha: .75),
+                          size: 18,
+                        ),
+                      ),
                       Icon(
                         Icons.refresh_rounded,
                         color: Colors.white.withValues(alpha: .45),
@@ -457,7 +478,9 @@ class _BalanceCardState extends State<_BalanceCard>
                                         ),
                                       ),
                                       TextSpan(
-                                        text: bal.toStringAsFixed(2),
+                                        text: _hideBalance
+                                            ? '••••••'
+                                            : bal.toStringAsFixed(2),
                                         style: const TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: 42,
