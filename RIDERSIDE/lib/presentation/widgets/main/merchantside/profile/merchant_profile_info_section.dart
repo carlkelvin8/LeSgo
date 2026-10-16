@@ -37,9 +37,16 @@ class MerchantProfileInfoSection extends ConsumerWidget {
         final prepTime = profile.estimatedDeliveryMinutes;
         final hours = profile.openingHours;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        return Container(
+          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFEDE7F2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             _info(context, 'Restaurant:', profile.name),
             _info(context, 'Contact:', contact),
             _info(context, 'Email:', email),
@@ -59,7 +66,8 @@ class MerchantProfileInfoSection extends ConsumerWidget {
               referralLabel,
               valueColor: const Color(0xFFC320D6),
             ),
-          ],
+            ],
+          ),
         );
       },
     );

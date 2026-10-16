@@ -18,21 +18,33 @@ class MerchantProfileHeader extends ConsumerWidget {
       data: (profile) {
         if (profile == null) return const SizedBox(height: 126);
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                'LeSgo,\nPartner!',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 40),
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF5F2D82),
-                  height: 0.95,
+        return Container(
+          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFFFFF), Color(0xFFF4ECFA)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE9DDF1)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  'LeSgo,\nPartner!',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 36),
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF5F2D82),
+                    height: 0.96,
+                    letterSpacing: -1.1,
+                  ),
                 ),
               ),
-            ),
             SizedBox(width: ResponsiveUtils.spacing(context, 12)),
             GestureDetector(
               onTap: () {
@@ -91,8 +103,9 @@ class MerchantProfileHeader extends ConsumerWidget {
                   ),
                 ],
               ),
-            ),
-          ],
+              ),
+            ],
+          ),
         );
       },
     );
