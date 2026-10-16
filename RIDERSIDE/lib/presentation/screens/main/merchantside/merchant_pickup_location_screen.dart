@@ -96,6 +96,7 @@ class _PickupState extends ConsumerState<MerchantPickupLocationScreen> {
             hintText: 'Building, street and barangay', border: OutlineInputBorder())),
         const SizedBox(height: 16),
         MerchantLocationPinPicker(latitude: _lat, longitude: _lng,
+          onAddressSelected: (address) => setState(() => _address.text = address),
           onLocationChanged: (lat, lng) => setState(() { _lat = lat; _lng = lng; })),
         if (_error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12),
           child: Text(_error!, style: const TextStyle(color: Colors.red))),
