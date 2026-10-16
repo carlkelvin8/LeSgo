@@ -3,11 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/app_localization.dart';
-import '../../../../../core/utils/rider_wallet_policy.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_card.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_actions_section.dart';
-import '../../../../widgets/main/riderside/wallet/rider_top_up_dialog.dart';
 import '../../../../widgets/main/riderside/more/rider_more_components.dart';
 
 class RiderWalletScreen extends ConsumerWidget {
@@ -112,48 +110,6 @@ class _RiderWalletViewState extends ConsumerState<RiderWalletView>
                           setState(() => _balanceVisible = !_balanceVisible),
                     ),
                   ),
-                  if (wallet.showLowBalanceWarning &&
-                      !wallet.isLoading &&
-                      wallet.error == null) ...[
-                    const SizedBox(height: 18),
-                    _reveal(
-                      1,
-                      _WalletNotice(
-                        title: t('wallet_topup_notice'),
-                        message: t('wallet_minimum_notice').replaceAll(
-                          '{amount}',
-                          RiderWalletPolicy.minimumBalanceToAccept
-                              .toStringAsFixed(0),
-                        ),
-                        action: TextButton.icon(
-                          onPressed: () => showDialog(
-                            context: context,
-                            builder: (_) =>
-                                RiderTopUpDialog(parentContext: context),
-                          ),
-                          style: TextButton.styleFrom(
-                            foregroundColor: dark
-                                ? const Color(0xFFE0C5FA)
-                                : const Color(0xFF60318B),
-                            padding: const EdgeInsets.symmetric(horizontal: 0),
-                            minimumSize: const Size(48, 44),
-                            alignment: Alignment.centerLeft,
-                          ),
-                          icon: const Icon(
-                            Icons.add_circle_outline_rounded,
-                            size: 18,
-                          ),
-                          label: Text(
-                            t('top_up'),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                   if (wallet.error != null) ...[
                     const SizedBox(height: 18),
                     _WalletNotice(
