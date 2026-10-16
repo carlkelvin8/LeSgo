@@ -89,13 +89,6 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => AppRouter.push(context, MainRoutes.notifications),
               ),
               _SettingsItem(
-                icon: Icons.notifications_active_outlined,
-                title: tr(context, 'notification_settings'),
-                subtitle: 'Promotions and order alert preferences',
-                onTap: () =>
-                    AppRouter.push(context, MainRoutes.notificationSettings),
-              ),
-              _SettingsItem(
                 icon: Icons.language_outlined,
                 title: tr(context, 'language'),
                 subtitle: 'English or Filipino',
