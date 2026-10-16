@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/constants/routers/main/main_routes.dart';
-import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_card.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_actions_section.dart';
-import '../../../../widgets/main/riderside/more/rider_more_components.dart';
 
 class RiderWalletScreen extends ConsumerWidget {
   const RiderWalletScreen({super.key});
@@ -128,29 +125,6 @@ class _RiderWalletViewState extends ConsumerState<RiderWalletView>
                   ],
                   const SizedBox(height: 26),
                   _reveal(2, const RiderWalletActionsSection()),
-                  const SizedBox(height: 26),
-                  _reveal(
-                    3,
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        MoreSectionHeading(title: t('wallet_payouts')),
-                        MoreMenuGroup(
-                          children: [
-                            MoreMenuRow(
-                              icon: Icons.event_repeat_rounded,
-                              title: t('scheduled_payout'),
-                              subtitle: t('wallet_payout_subtitle'),
-                              onTap: () => AppRouter.push(
-                                context,
-                                MainRoutes.riderScheduledPayout,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 22),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
