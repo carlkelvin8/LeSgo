@@ -406,17 +406,30 @@ class MerchantRemoteDataSource {
       final payload = request.toJson();
       payload.remove('logo_url');
 
-      final uploadedLogoUrl = await _resolvePartnerLogoUrl(
-        logoUrl: request.logoUrl,
-        logoPath: request.logoPath,
-      );
-      if (uploadedLogoUrl != null && uploadedLogoUrl.isNotEmpty) {
-        payload['logo_url'] = uploadedLogoUrl;
+      // Send a newly selected logo directly to the partner endpoint so the
+      // backend stores it and persists the resulting logo_url in one request.
+      dynamic requestData = payload;
+      if (request.logoPath != null &&
+          MediaUrlUtils.isLocalFilePath(request.logoPath)) {
+        final formData = FormData.fromMap(payload);
+        formData.files.add(MapEntry(
+          'logo',
+          await multipartFileFromPath(request.logoPath!),
+        ));
+        requestData = formData;
+      } else {
+        final existingLogoUrl = await _resolvePartnerLogoUrl(
+          logoUrl: request.logoUrl,
+          logoPath: request.logoPath,
+        );
+        if (existingLogoUrl != null && existingLogoUrl.isNotEmpty) {
+          payload['logo_url'] = existingLogoUrl;
+        }
       }
 
       final response = await _dio.patch(
         '/v1/partners/$partnerId',
-        data: payload,
+        data: requestData,
       );
       final responseData = response.data['data'] ?? response.data;
       return PartnerDto.fromJson(responseData as Map<String, dynamic>);
