@@ -33,14 +33,6 @@ class RiderProfileSettingsSection extends ConsumerWidget {
               onTap: () =>
                   AppRouter.push(context, MainRoutes.riderChangePassword),
             ),
-            _SpringTile(
-              icon: Icons.shield_outlined,
-              title: t('security'),
-              subtitle: t('rp_security_hint'),
-              accent: const Color(0xFF187C69),
-              isDark: isDark,
-              onTap: () => AppRouter.push(context, MainRoutes.riderSecurity),
-            ),
           ],
           isDark: isDark,
         ),
