@@ -115,6 +115,12 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
     final searchQuery = ref.watch(merchantMenuSearchQueryProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final safePad = MediaQuery.of(context).padding;
+    final menuSnapshot = menuAsync.valueOrNull;
+    final categoryCount = menuSnapshot?.categories.length ?? 0;
+    final itemCount = menuSnapshot?.categories
+            .expand((category) => category.availableItems ?? const [])
+            .length ??
+        0;
 
     return RefreshIndicator(
       color: const Color(0xFF5F2D82),
@@ -223,6 +229,75 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                           border: InputBorder.none,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 13,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF241638)
+                            : const Color(0xFFF8F3FC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark
+                              ? const Color(0xFF3A2850)
+                              : const Color(0xFFECE0F4),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 17,
+                            color: isDark
+                                ? const Color(0xFFC9A8E4)
+                                : const Color(0xFF7B3FAA),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$categoryCount categor${categoryCount == 1 ? 'y' : 'ies'}',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF4A3060),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '•',
+                            style: TextStyle(
+                              color: isDark
+                                  ? const Color(0xFF9A85B8)
+                                  : const Color(0xFFB59AC8),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '$itemCount item${itemCount == 1 ? '' : 's'}',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 11.5,
+                              color: isDark
+                                  ? const Color(0xFFBFA9CF)
+                                  : const Color(0xFF8B7798),
+                            ),
+                          ),
+                          const Spacer(),
+                          Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 16,
+                            color: isDark
+                                ? const Color(0xFFC9A8E4)
+                                : const Color(0xFFB07BD3),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -461,7 +536,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.58,
+                      childAspectRatio: 0.68,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
@@ -636,7 +711,7 @@ class _GridMenuItemCard extends StatelessWidget {
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: AspectRatio(
-                aspectRatio: 1,
+                aspectRatio: 1.12,
                 child: item.imageUrl != null && item.imageUrl!.isNotEmpty
                     ? MenuImageWidget(
                         source: item.imageUrl,
