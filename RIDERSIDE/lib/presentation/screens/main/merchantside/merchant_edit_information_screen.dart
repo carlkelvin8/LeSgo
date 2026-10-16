@@ -18,6 +18,7 @@ class MerchantEditInformationScreen extends ConsumerStatefulWidget {
 class _MerchantEditInformationScreenState
     extends ConsumerState<MerchantEditInformationScreen> {
   final ImagePicker _picker = ImagePicker();
+  bool _isPickingLogo = false;
   late final TextEditingController _restaurantController;
   late final TextEditingController _contactController;
   late final TextEditingController _emailController;
@@ -63,6 +64,8 @@ class _MerchantEditInformationScreenState
   }
 
   Future<void> _pickLogo() async {
+    if (_isPickingLogo) return;
+    _isPickingLogo = true;
     try {
       final image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -70,12 +73,14 @@ class _MerchantEditInformationScreenState
         maxHeight: 1024,
         imageQuality: 85,
       );
-      if (image != null) {
+      if (image != null && mounted) {
         ref.read(merchantEditProfileProvider.notifier).updateLogoPath(image.path);
       }
     } catch (e) {
       if (!mounted) return;
       SnackBarUtils.showError(context, 'Failed to pick image');
+    } finally {
+      _isPickingLogo = false;
     }
   }
 

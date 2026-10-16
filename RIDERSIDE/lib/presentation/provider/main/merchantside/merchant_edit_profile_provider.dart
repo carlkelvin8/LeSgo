@@ -177,9 +177,12 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
 
 final merchantEditProfileProvider = StateNotifierProvider.autoDispose<
     MerchantEditProfileNotifier, MerchantEditProfileState>((ref) {
-  final profile = ref.watch(merchantProfileProvider).value;
-  final authState = ref.watch(riderAuthProvider);
-  final referralFromApi = ref.watch(merchantReferralCodeProvider).value;
+  // Only a different account/store should recreate this draft. Profile and
+  // referral polling must not erase a selected photo or unsaved field edits.
+  ref.watch(riderAuthProvider.select((auth) => (auth.user?.id, auth.user?.partnerId)));
+  final profile = ref.read(merchantProfileProvider).value;
+  final authState = ref.read(riderAuthProvider);
+  final referralFromApi = ref.read(merchantReferralCodeProvider).value;
   final referralCode = (referralFromApi != null && referralFromApi.isNotEmpty)
       ? referralFromApi
       : (profile?.referralCode ?? '');
