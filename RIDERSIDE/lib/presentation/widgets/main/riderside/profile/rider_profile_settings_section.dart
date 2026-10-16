@@ -41,15 +41,6 @@ class RiderProfileSettingsSection extends ConsumerWidget {
               isDark: isDark,
               onTap: () => AppRouter.push(context, MainRoutes.riderSecurity),
             ),
-            _SpringTile(
-              icon: Icons.notifications_none_rounded,
-              title: t('notification_settings'),
-              subtitle: t('rp_notifications_hint'),
-              accent: const Color(0xFF6D3EA0),
-              isDark: isDark,
-              onTap: () =>
-                  AppRouter.push(context, MainRoutes.riderNotificationSettings),
-            ),
           ],
           isDark: isDark,
         ),
