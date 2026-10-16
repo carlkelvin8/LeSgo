@@ -235,15 +235,6 @@ class _RiderMoreViewState extends ConsumerState<RiderMoreView>
                                 MainRoutes.riderVehicleManagement,
                               ),
                             ),
-                            MoreMenuRow(
-                              icon: Icons.schedule_rounded,
-                              title: t('scheduled_availability'),
-                              subtitle: t('more_schedule_subtitle'),
-                              onTap: () => AppRouter.push(
-                                context,
-                                MainRoutes.riderSchedule,
-                              ),
-                            ),
                           ],
                         ),
                       ],
