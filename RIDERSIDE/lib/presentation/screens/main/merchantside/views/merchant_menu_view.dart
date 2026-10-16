@@ -368,6 +368,12 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                         if (menu == null || menu.categories.isEmpty) {
                           return const SizedBox.shrink();
                         }
+                        // A category chip is only useful when it groups more
+                        // than one item. Keep the All filter and hide
+                        // one-item categories so the menu stays compact.
+                        final visibleCategories = menu.categories
+                            .where((cat) => (cat.availableItems?.length ?? 0) > 1)
+                            .toList();
                         return ListView(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -387,7 +393,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                                 },
                               ),
                             ),
-                            ...menu.categories.map(
+                            ...visibleCategories.map(
                               (cat) => Padding(
                                 padding: const EdgeInsets.only(right: 8),
                                 child: _CompactCategoryChip(
@@ -536,7 +542,10 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.68,
+                      // Leave a little extra vertical room for the action row
+                      // so fractional device pixels never trigger an
+                      // overflow warning at the bottom of the card.
+                      childAspectRatio: 0.64,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
