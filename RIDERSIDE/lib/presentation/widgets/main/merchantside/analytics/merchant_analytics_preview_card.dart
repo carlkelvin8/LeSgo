@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
-import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/merchant_format_utils.dart';
 import '../../../../provider/main/merchantside/merchant_analytics_provider.dart';
 
@@ -34,69 +33,74 @@ class MerchantAnalyticsPreviewCard extends ConsumerWidget {
     );
 
     return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(16),
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: Color(0xFFEDE7F2)),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => AppRouter.push(context, MainRoutes.merchantAnalytics),
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6D318F), Color(0xFF4A1D68)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(
-                        ResponsiveUtils.spacing(context, 7),
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .16),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.insights,
-                        color: Colors.white,
-                        size: ResponsiveUtils.fontSize(context, 17),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Business performance',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF332A3B),
                       ),
                     ),
-                    const Spacer(),
-                    Icon(
-                      Icons.north_east_rounded,
-                      size: 14,
-                      color: Colors.white.withValues(alpha: .75),
-                    ),
-                  ],
-                ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                Text(
-                  'Business Overview',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 13),
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
                   ),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: Color(0xFF8B739D),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Revenue this week',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 11,
+                  color: Color(0xFF8A8292),
                 ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                Row(
-                  children: [
-                    _Metric(label: 'Today', value: todayOrders),
-                    _Metric(label: 'This week', value: weekRevenue),
-                    _Metric(label: 'Cancelled', value: cancelRate),
-                  ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                weekRevenue,
+                style: const TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 29,
+                  height: 1.1,
+                  letterSpacing: -.8,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF5F2D82),
                 ),
-              ],
-            ),
+              ),
+              const Divider(height: 30, color: Color(0xFFF0ECF3)),
+              Row(
+                children: [
+                  _Metric(label: 'Orders today', value: todayOrders),
+                  Container(
+                    width: 1,
+                    height: 32,
+                    color: const Color(0xFFEDE7F2),
+                  ),
+                  const SizedBox(width: 20),
+                  _Metric(label: 'Cancellation rate', value: cancelRate),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -124,7 +128,7 @@ class _Metric extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: 14,
               fontWeight: FontWeight.w800,
-              color: Colors.white,
+              color: Color(0xFF332A3B),
             ),
           ),
           const SizedBox(height: 2),
@@ -133,7 +137,7 @@ class _Metric extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 10,
-              color: Colors.white.withValues(alpha: .72),
+              color: const Color(0xFF8A8292),
             ),
           ),
         ],
