@@ -120,40 +120,41 @@ class MerchantProfileView extends ConsumerWidget {
                 SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                 Row(
                   children: [
-                    Icon(
-                      Icons.menu,
-                      size: ResponsiveUtils.spacing(context, 18),
-                      color: Colors.black87,
-                    ),
-                    SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                    Text(
-                      'Food Menu',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 18),
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () {
-                        ref.read(merchantNavProvider.notifier).state =
-                            MerchantNavType.menu;
-                      },
+                    Expanded(
                       child: Text(
-                        'See all',
+                        'Food menu',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 12),
-                          color: const Color(0xFF9B59F0),
-                          fontWeight: FontWeight.w600,
+                          fontSize: ResponsiveUtils.fontSize(context, 20),
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF292330),
                         ),
                       ),
                     ),
+                    TextButton.icon(
+                      onPressed: () {
+                        ref.read(merchantNavProvider.notifier).state =
+                            MerchantNavType.menu;
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF60318B),
+                        minimumSize: const Size(48, 48),
+                      ),
+                      label: const Text(
+                        'Manage menu',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                      iconAlignment: IconAlignment.end,
+                    ),
                   ],
                 ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 14)),
+                const SizedBox(height: 2),
+                const Divider(height: 1, color: Color(0xFFEEEAF2)),
                 menuItemsAsync.when(
                   loading: () => const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),

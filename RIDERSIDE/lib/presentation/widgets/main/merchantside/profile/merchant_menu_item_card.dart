@@ -31,117 +31,97 @@ class MerchantMenuItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onEditTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: ResponsiveUtils.spacing(context, 60),
-                  height: ResponsiveUtils.spacing(context, 60),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: _buildImage(context),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onEditTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7F5F9),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              name,
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 13),
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF302B36),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                          Text(
-                            '₱$price',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 12.5),
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF8054A2),
-                            ),
-                          ),
-                        ],
+                clipBehavior: Clip.antiAlias,
+                child: _buildImage(context),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                        color: Color(0xFF292330),
                       ),
-                      if (description.isNotEmpty) ...[
-                        SizedBox(height: ResponsiveUtils.spacing(context, 3)),
-                        Text(
-                          description,
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 10.5),
-                            height: 1.4,
-                            color: const Color(0xFF918A98),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (description.trim().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 13,
+                          height: 1.4,
+                          color: Color(0xFF706878),
                         ),
-                      ],
-                      if (category != null && category!.isNotEmpty) ...[
-                        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: ResponsiveUtils.spacing(context, 8),
-                            vertical: ResponsiveUtils.spacing(context, 3),
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            category!,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 9.5),
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF8054A2),
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (inventoryBadge != null) ...[
-                        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                        inventoryBadge!,
-                      ],
-                      if (stockControls != null) ...[
-                        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                        stockControls!,
-                      ],
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
-                  ),
+                    if (category != null && category!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        category!,
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 12,
+                          color: Color(0xFF706878),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 8),
+                    Text(
+                      '₱$price',
+                      style: const TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF60318B),
+                      ),
+                    ),
+                    if (inventoryBadge != null) ...[
+                      const SizedBox(height: 8),
+                      inventoryBadge!,
+                    ],
+                    if (stockControls != null) ...[
+                      const SizedBox(height: 8),
+                      stockControls!,
+                    ],
+                  ],
                 ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: ResponsiveUtils.fontSize(context, 18),
-                  color: const Color(0xFF8F8798),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 22,
+                color: Color(0xFF82778D),
+              ),
+            ],
           ),
         ),
       ),
@@ -177,7 +157,7 @@ class MerchantMenuItemCard extends StatelessWidget {
               color: const Color(0xFF8054A2),
               value: progress.expectedTotalBytes != null
                   ? progress.cumulativeBytesLoaded /
-                      progress.expectedTotalBytes!
+                        progress.expectedTotalBytes!
                   : null,
             ),
           ),
