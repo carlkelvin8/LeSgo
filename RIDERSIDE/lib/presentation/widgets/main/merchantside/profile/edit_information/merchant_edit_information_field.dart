@@ -25,19 +25,20 @@ class MerchantEditInformationField extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            label.toLowerCase().replaceFirstMapped(RegExp(r'^.'), (m) => m[0]!.toUpperCase()),
             style: TextStyle(
               fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 11),
+              fontSize: ResponsiveUtils.fontSize(context, 12),
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF5A2E79),
-              letterSpacing: 1,
+              color: const Color(0xFF645B6D),
+              letterSpacing: 0,
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: const Color(0xFFE9E4EC),
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFFE3DEE8)),
               borderRadius: BorderRadius.circular(
                 ResponsiveUtils.spacing(context, 14),
               ),

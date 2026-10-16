@@ -133,7 +133,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
           SliverToBoxAdapter(
             child: Container(
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1A0A2E) : const Color(0xFFF7F4FA),
+                color: isDark ? const Color(0xFF1A0A2E) : Colors.white,
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(28),
                 ),

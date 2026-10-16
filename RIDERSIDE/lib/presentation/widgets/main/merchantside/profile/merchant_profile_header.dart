@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../screens/main/merchantside/merchant_pickup_location_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../common/menu_image_widget.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
@@ -122,6 +123,13 @@ class MerchantProfileHeader extends ConsumerWidget {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: () => Navigator.push(context, MaterialPageRoute(
+            builder: (_) => const MerchantPickupLocationScreen())),
+          icon: const Icon(Icons.location_on_outlined, size: 17),
+          label: const Text('Store pickup location'),
         ),
         const SizedBox(height: 18),
         SizedBox(

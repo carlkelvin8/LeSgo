@@ -322,7 +322,13 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (checkoutState.fareError != null)
+              if (checkoutState.fareError != null) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(checkoutState.fareError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF7A3545))),
+                ),
                 TextButton.icon(
                   onPressed: checkoutState.isLoadingFare
                       ? null
@@ -330,6 +336,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                   icon: const Icon(Icons.refresh),
                   label: const Text('Retry delivery fee'),
                 ),
+              ],
               PrimaryButton(
             text: 'Checkout',
             isLoading: checkoutState.isLoading,

@@ -13,7 +13,6 @@ import '../../../../provider/main/merchantside/merchant_daily_summary_provider.d
 import '../../../../../core/services/daily_sales_summary_service.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../widgets/main/merchantside/profile/merchant_settings_section.dart';
-import '../../../../widgets/main/merchantside/analytics/merchant_revenue_chart.dart';
 import '../../../../widgets/main/merchantside/analytics/merchant_popular_items_section.dart';
 import '../merchant_menu_edit_item_screen.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
@@ -77,7 +76,7 @@ class MerchantProfileView extends ConsumerWidget {
         }
 
         return Container(
-          color: const Color(0xFFF7F6F9),
+          color: Colors.white,
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               horizontalPadding,
@@ -107,8 +106,6 @@ class MerchantProfileView extends ConsumerWidget {
                 ),
                 const MerchantAnalyticsPreviewCard(),
                 const Divider(height: 24, color: Color(0xFFE7E1EB)),
-                SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                const MerchantRevenueChart(),
                 SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                 const MerchantPopularItemsSection(),
                 SizedBox(height: ResponsiveUtils.spacing(context, 12)),

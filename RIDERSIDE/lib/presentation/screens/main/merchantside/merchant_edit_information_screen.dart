@@ -146,7 +146,7 @@ class _MerchantEditInformationScreenState
                         onCameraTap: _pickLogo,
                       ),
                     ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 26)),
+                    const Divider(height: 36, color: Color(0xFFEDE7F2)),
                     MerchantEditInformationField(
                       label: 'RESTAURANT NAME',
                       controller: _restaurantController,
@@ -171,7 +171,7 @@ class _MerchantEditInformationScreenState
                           .updateEmail(value),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    _buildSectionLabel(context, 'OPERATION SETTINGS'),
+                    _buildSectionLabel(context, 'Store operations'),
                     SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                     _buildPrepTimeField(context, state),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),

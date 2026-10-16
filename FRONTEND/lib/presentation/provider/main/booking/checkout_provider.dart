@@ -240,6 +240,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       dropoffLng: dropoffLng,
       isValidatingVoucher: false,
       hasValidDeliveryFee: false,
+      hasValidPickupLocation: false,
       hasValidDropoffLocation: BookingGeoUtils.hasValidCoords(
         deliveryAddr?.latitude,
         deliveryAddr?.longitude,
@@ -298,6 +299,26 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
   Future<void> refreshDeliveryFee() async {
     final current = state.order;
     if (current == null) return;
+    final requestId = ++_fareRequestId;
+    // A retry must re-fetch the store pin, including after the merchant has
+    // completed pickup setup. Reusing the invalid snapshot never recovers.
+    if (!state.hasValidPickupLocation) {
+      state = state.copyWith(isLoadingFare: true, clearFareError: true);
+      await _resolvePickupCoordinates(
+        ref.read(restaurantDetailProvider).activeRestaurantId,
+        _initializeRequestId,
+      );
+      if (!mounted || requestId != _fareRequestId) return;
+    }
+    if (!state.hasValidPickupLocation) {
+      state = state.copyWith(
+        hasValidDeliveryFee: false,
+        isLoadingFare: false,
+        fareError: 'This restaurant has not set its pickup location yet. '
+            'Please contact the restaurant or choose another store.',
+      );
+      return;
+    }
     if (!state.hasValidPickupLocation ||
         !state.hasValidDropoffLocation ||
         !BookingGeoUtils.hasValidCoords(state.pickupLat, state.pickupLng) ||
@@ -310,7 +331,6 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       );
       return;
     }
-    final requestId = ++_fareRequestId;
     ++_voucherRequestId;
     final distanceM = BookingGeoUtils.distanceMeters(
       lat1: state.pickupLat,
@@ -324,7 +344,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       isValidatingVoucher: false,
       estimatedDistanceM: distanceM,
       clearFareError: true,
-      order: current.copyWith(discount: 0),
+      order: state.order?.copyWith(discount: 0),
     );
     try {
       final fee = await _orderDataSource.getFareEstimateRaw(
@@ -425,6 +445,8 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
   }
 
   void resetCheckout() {
+    ++_initializeRequestId;
+    ++_fareRequestId;
     state = CheckoutState();
   }
 
