@@ -11,9 +11,10 @@ import '../../../../core/utils/share_utils.dart';
 import '../../../provider/main/riderside/rider_earnings_provider.dart';
 
 class RiderEarningsScreen extends ConsumerWidget {
-  const RiderEarningsScreen({super.key});
+  const RiderEarningsScreen({super.key, this.embedded = false});
+  final bool embedded;
 
-  void _shareEarnings(BuildContext context, RiderEarningsState state) {
+  static void shareEarnings(BuildContext context, RiderEarningsState state) {
     final periodLabel = RiderEarningsUtils.periodLabel(state.period);
     final entries = state.entries
         .map(
@@ -50,30 +51,35 @@ class RiderEarningsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
-        title: Text(
-          AppLocalization.translate('earnings', lang),
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 18),
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            onPressed: earningsAsync is AsyncData
-                ? () => _shareEarnings(context, earningsAsync.value!)
-                : null,
-            tooltip: AppLocalization.translate('share_earnings_report', lang),
-          ),
-        ],
-      ),
+      appBar: embedded
+          ? null
+          : AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+              title: Text(
+                AppLocalization.translate('earnings', lang),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 18),
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF5F2D82),
+                ),
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  onPressed: earningsAsync is AsyncData
+                      ? () => shareEarnings(context, earningsAsync.value!)
+                      : null,
+                  tooltip: AppLocalization.translate(
+                    'share_earnings_report',
+                    lang,
+                  ),
+                ),
+              ],
+            ),
       body: RefreshIndicator(
         color: const Color(0xFF5F2D82),
         onRefresh: () async {

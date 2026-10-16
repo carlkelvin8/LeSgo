@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../presentation/screens/registration_fee_screen.dart';
-import '../../../../presentation/screens/main/riderside/rider_earnings_screen.dart';
-import '../../../../presentation/screens/main/riderside/rider_earnings_insights_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_earnings_hub_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_safety_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_schedule_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_scheduled_payout_screen.dart';
@@ -56,13 +55,13 @@ class MainRouter {
     MainRoutes.riderReferral: (_) => const RiderReferralScreen(),
     MainRoutes.riderSecurity: (_) => const RiderSecurityScreen(),
     MainRoutes.riderDocuments: (_) => const RiderDocumentVerificationScreen(),
-    MainRoutes.riderEarnings: (_) => const RiderEarningsScreen(),
+    MainRoutes.riderEarnings: (_) => const RiderEarningsHubScreen(),
     MainRoutes.riderSafety: (_) => const RiderSafetyScreen(),
     MainRoutes.riderSchedule: (_) => const RiderScheduleScreen(),
     MainRoutes.riderScheduledPayout: (_) =>
         const RiderScheduledPayoutScreen(),
     MainRoutes.riderEarningsInsights: (_) =>
-        const RiderEarningsInsightsScreen(),
+        const RiderEarningsHubScreen(initialIndex: 1),
     MainRoutes.riderRating: (_) => const RiderRatingScreen(),
     MainRoutes.riderVehicleManagement: (_) =>
         const RiderVehicleManagementScreen(),

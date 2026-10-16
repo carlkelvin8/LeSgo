@@ -144,53 +144,17 @@ class _RiderMoreViewState extends ConsumerState<RiderMoreView>
                   const SizedBox(height: 12),
                   _reveal(
                     2,
-                    LayoutBuilder(
-                      builder: (context, size) {
-                        final cards = [
-                          MoreShortcutCard(
-                            icon: Icons.payments_outlined,
-                            title: t('earnings'),
-                            subtitle: t('more_earnings_subtitle'),
-                            accent: const Color(0xFF187C69),
-                            onTap: () => AppRouter.push(
-                              context,
-                              MainRoutes.riderEarnings,
-                            ),
-                          ),
-                          MoreShortcutCard(
-                            icon: Icons.insights_rounded,
-                            title: t('more_insights'),
-                            subtitle: t('more_insights_subtitle'),
-                            accent: const Color(0xFF6D3EA0),
-                            onTap: () => AppRouter.push(
-                              context,
-                              MainRoutes.riderEarningsInsights,
-                            ),
-                          ),
-                        ];
-                        // Stack at large text sizes so translated labels can wrap.
-                        if (size.maxWidth < 290 ||
-                            MediaQuery.textScalerOf(context).scale(14) > 20) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              cards[0],
-                              const SizedBox(height: 12),
-                              cards[1],
-                            ],
-                          );
-                        }
-                        return IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(child: cards[0]),
-                              const SizedBox(width: 12),
-                              Expanded(child: cards[1]),
-                            ],
-                          ),
-                        );
-                      },
+                    MoreMenuGroup(
+                      children: [
+                        MoreMenuRow(
+                          icon: Icons.payments_outlined,
+                          title: t('earnings'),
+                          subtitle: t('more_earnings_subtitle'),
+                          accent: const Color(0xFF6D3EA0),
+                          onTap: () =>
+                              AppRouter.push(context, MainRoutes.riderEarnings),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 26),

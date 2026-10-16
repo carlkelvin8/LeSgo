@@ -7,8 +7,61 @@ import 'package:lezgo_rider/presentation/provider/main/riderside/rider_earnings_
 import 'package:lezgo_rider/presentation/provider/main/riderside/rider_earnings_insights_provider.dart';
 import 'package:lezgo_rider/presentation/screens/main/riderside/rider_earnings_screen.dart';
 import 'package:lezgo_rider/presentation/screens/main/riderside/rider_earnings_insights_screen.dart';
+import 'package:lezgo_rider/presentation/screens/main/riderside/rider_earnings_hub_screen.dart';
 
 void main() {
+  testWidgets(
+    'Unified earnings switches tabs with one header and report action',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({'app_language': 'en'});
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            riderEarningsProvider.overrideWith(
+              (ref) async => const RiderEarningsState(
+                period: RiderEarningsPeriod.today,
+                entries: [],
+                summary: RiderEarningsSummary(
+                  totalEarnings: 0,
+                  completedTrips: 0,
+                  averagePerTrip: 0,
+                ),
+              ),
+            ),
+            riderEarningsInsightsProvider.overrideWith(
+              (ref) async => const RiderEarningsInsightsState(),
+            ),
+          ],
+          child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: child!,
+            ),
+            home: const RiderEarningsHubScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(AppBar), findsOneWidget);
+      expect(find.text('Completed Trips'), findsOneWidget);
+      expect(
+        tester
+            .widget<IconButton>(
+              find.widgetWithIcon(IconButton, Icons.ios_share_rounded),
+            )
+            .onPressed,
+        isNotNull,
+      );
+      await tester.tap(find.text('Insights'));
+      await tester.pumpAndSettle();
+      expect(find.text('Earnings · Last 30 days'), findsOneWidget);
+      expect(find.byType(AppBar), findsOneWidget);
+      await tester.tap(find.text('Trips'));
+      await tester.pumpAndSettle();
+      expect(find.text('Completed Trips'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
   for (final insights in [false, true]) {
     testWidgets(
       'Earnings page fits narrow screen and large text: insights=$insights',

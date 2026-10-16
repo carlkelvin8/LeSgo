@@ -11,9 +11,13 @@ import '../../../../core/utils/app_localization.dart';
 import '../../../provider/main/riderside/rider_earnings_insights_provider.dart';
 
 class RiderEarningsInsightsScreen extends ConsumerWidget {
-  const RiderEarningsInsightsScreen({super.key});
+  const RiderEarningsInsightsScreen({super.key, this.embedded = false});
+  final bool embedded;
 
-  void _shareReport(BuildContext context, RiderEarningsInsightsState state) {
+  static void shareReport(
+    BuildContext context,
+    RiderEarningsInsightsState state,
+  ) {
     final entries = state.dailyEarnings
         .map(
           (d) => {
@@ -48,32 +52,34 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
-        title: Text(
-          AppLocalization.translate('earnings_insights', lang),
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 18),
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download_outlined),
-            onPressed: insightsAsync.maybeWhen(
-              data: (state) =>
-                  () => _shareReport(context, state),
-              orElse: () => null,
+      appBar: embedded
+          ? null
+          : AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+              title: Text(
+                AppLocalization.translate('earnings_insights', lang),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 18),
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF5F2D82),
+                ),
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.download_outlined),
+                  onPressed: insightsAsync.maybeWhen(
+                    data: (state) =>
+                        () => shareReport(context, state),
+                    orElse: () => null,
+                  ),
+                  tooltip: 'Download/Share Report',
+                ),
+              ],
             ),
-            tooltip: 'Download/Share Report',
-          ),
-        ],
-      ),
       body: RefreshIndicator(
         color: const Color(0xFF5F2D82),
         onRefresh: () async {
