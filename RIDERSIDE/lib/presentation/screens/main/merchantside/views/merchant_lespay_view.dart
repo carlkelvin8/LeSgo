@@ -1462,7 +1462,19 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
   }
 
   Future<void> _submit() async {
+    final email = _emailCtrl.text.trim();
     final amount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
+    final emailIsValid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+    if (!emailIsValid) {
+      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+        SnackBar(
+          content: const Text('Enter the rider\'s registered email address.'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     if (amount <= 0) {
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
@@ -1473,9 +1485,48 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
       );
       return;
     }
+    final wallet = ref.read(merchantWalletProvider);
+    if (amount > wallet.availableBalance) {
+      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Amount exceeds your available balance of PHP ${wallet.availableBalance.toStringAsFixed(2)}.',
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Confirm rider payment'),
+        content: Text(
+          'Send PHP ${amount.toStringAsFixed(2)} to\n$email?\n\n'
+          'This will be deducted from your LesPay wallet. Check the email carefully before confirming.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Review again'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF5F2D82),
+            ),
+            child: const Text('Confirm payment'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
     final notifier = ref.read(merchantWalletProvider.notifier);
     final success = await notifier.transferToRider(
-      recipientEmail: _emailCtrl.text.trim(),
+      recipientEmail: email,
       amount: amount,
       note: _noteCtrl.text.trim(),
     );
@@ -1584,6 +1635,42 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
             ],
           ),
           const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF2A1D3D)
+                  : const Color(0xFFF7F0FC),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark
+                    ? const Color(0xFF493260)
+                    : const Color(0xFFE7D7F1),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.verified_user_outlined,
+                    size: 18, color: const Color(0xFF7B3FAA)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Use the rider\'s registered email. Available balance: PHP ${wallet.availableBalance.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 11.5,
+                      height: 1.3,
+                      color: isDark
+                          ? const Color(0xFFC5B1D8)
+                          : const Color(0xFF765986),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
           _SheetField(
             ctrl: _emailCtrl,
             label: 'Rider email',

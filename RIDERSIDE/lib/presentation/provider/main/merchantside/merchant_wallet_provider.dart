@@ -142,7 +142,7 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
       state = state.copyWith(error: 'Enter a valid amount.');
       return false;
     }
-    if (amount > state.balance) {
+    if (amount > state.availableBalance) {
       state = state.copyWith(error: 'Insufficient LesPay balance.');
       return false;
     }
