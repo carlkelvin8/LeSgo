@@ -189,7 +189,7 @@ class _RiderHistoryDashboardCardState
                                         '${(count * v).round()}',
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
-                                          color: s.color,
+                                          color: Colors.white,
                                           fontSize: 20,
                                           fontWeight: FontWeight.w800,
                                           height: 1.0,
