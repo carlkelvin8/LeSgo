@@ -66,7 +66,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
         _reveal(
           0,
           Padding(
-            padding: EdgeInsets.fromLTRB(hp, 18, hp, 0),
+            padding: EdgeInsets.fromLTRB(hp, 22, hp, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -122,7 +122,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
           _reveal(
             1,
             SizedBox(
-              height: 92,
+              height: 108,
               child: menuAsync.when(
                 loading: () => const Center(
                   child: SizedBox(
@@ -165,7 +165,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                     scrollDirection: Axis.horizontal,
                     padding: EdgeInsets.symmetric(horizontal: hp),
                     itemCount: menu.categories.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    separatorBuilder: (_, _) => const SizedBox(width: 12),
                     itemBuilder: (context, i) {
                       final cat = menu.categories[i];
                       final sel = selectedCategory == cat.id;
@@ -202,6 +202,35 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   ],
                 ),
               ),
+            ),
+          ),
+
+          Padding(
+            padding: EdgeInsets.fromLTRB(hp, 0, hp, 10),
+            child: Row(
+              children: [
+                Text(
+                  'Menu items',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : const Color(0xFF1A0A2E),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${filteredItems.length} item${filteredItems.length == 1 ? '' : 's'}',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? const Color(0xFF9A85B8)
+                        : const Color(0xFFAA90C0),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -309,7 +338,7 @@ class _AnimatedCategoryChipState extends State<_AnimatedCategoryChip>
               onTap: widget.onTap,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
-                width: 72,
+                width: 92,
                 padding: const EdgeInsets.symmetric(
                   vertical: 10,
                   horizontal: 6,
@@ -342,8 +371,8 @@ class _AnimatedCategoryChipState extends State<_AnimatedCategoryChip>
                   children: [
                     // Avatar
                     Container(
-                      width: 42,
-                      height: 42,
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: sel
@@ -369,14 +398,14 @@ class _AnimatedCategoryChipState extends State<_AnimatedCategoryChip>
                               placeholder: Center(
                                 child: Text(
                                   widget.icon,
-                                  style: const TextStyle(fontSize: 20),
+                                  style: const TextStyle(fontSize: 24),
                                 ),
                               ),
                             )
                           : Center(
                               child: Text(
                                 widget.icon,
-                                style: const TextStyle(fontSize: 20),
+                                style: const TextStyle(fontSize: 24),
                               ),
                             ),
                     ),
@@ -388,7 +417,7 @@ class _AnimatedCategoryChipState extends State<_AnimatedCategoryChip>
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'TT Fors',
-                        fontSize: 9.5,
+                        fontSize: 10.5,
                         fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                         color: sel ? Colors.white : const Color(0xFF4A3060),
                         height: 1.1,
@@ -423,9 +452,9 @@ class _AnimatedItemGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cols = constraints.maxWidth >= 600
+        final cols = constraints.maxWidth >= 720
             ? 4
-            : constraints.maxWidth >= 360
+            : constraints.maxWidth >= 520
             ? 3
             : 2;
         return GridView.builder(
@@ -435,7 +464,7 @@ class _AnimatedItemGrid extends StatelessWidget {
             crossAxisCount: cols,
             mainAxisSpacing: 12,
             crossAxisSpacing: 10,
-            childAspectRatio: .68,
+            childAspectRatio: .82,
           ),
           itemBuilder: (context, i) {
             final item = items[i];
