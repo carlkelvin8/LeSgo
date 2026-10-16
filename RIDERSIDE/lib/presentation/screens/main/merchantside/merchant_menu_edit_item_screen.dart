@@ -9,7 +9,6 @@ import '../../../widgets/main/merchantside/menu/shared/merchant_item_options_sec
 import '../../../widgets/main/merchantside/menu/shared/merchant_item_inventory_section.dart';
 import '../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 
 class MerchantMenuEditItemScreen extends ConsumerStatefulWidget {
   final Map<String, String>? initialItem;
@@ -73,22 +72,11 @@ class _MerchantMenuEditItemScreenState
       );
 
       if (image != null) {
-        final cropped = await ImageCropper().cropImage(
-          sourcePath: image.path,
-          compressQuality: 85,
-          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-          uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: 'Crop item photo',
-              toolbarColor: const Color(0xFF5F2D82),
-              toolbarWidgetColor: Colors.white,
-              activeControlsWidgetColor: const Color(0xFF5F2D82),
-              lockAspectRatio: false,
-            ),
-            IOSUiSettings(title: 'Crop item photo'),
-          ],
-        );
-        if (cropped != null) notifier.updateLocalImage(cropped.path);
+        // Keep the edit flow on the stable native picker path. The cropper
+        // plugin can terminate the Android activity on some merchant devices
+        // when editing an existing item. The backend accepts the original
+        // image and the item preview handles any aspect ratio safely.
+        notifier.updateLocalImage(image.path);
       }
     } catch (e) {
       if (mounted) {

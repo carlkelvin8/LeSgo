@@ -409,9 +409,13 @@ class MerchantRemoteDataSource {
       // Send a newly selected logo directly to the partner endpoint so the
       // backend stores it and persists the resulting logo_url in one request.
       dynamic requestData = payload;
+      var requestPath = '/v1/partners/$partnerId';
       if (request.logoPath != null &&
           MediaUrlUtils.isLocalFilePath(request.logoPath)) {
         final formData = FormData.fromMap(payload);
+        // PHP does not reliably populate multipart files for PATCH requests.
+        // Use Laravel's POST method spoofing so the logo reaches the validator.
+        formData.fields.add(const MapEntry('_method', 'PATCH'));
         formData.files.add(MapEntry(
           'logo',
           await multipartFileFromPath(request.logoPath!),
@@ -427,10 +431,9 @@ class MerchantRemoteDataSource {
         }
       }
 
-      final response = await _dio.patch(
-        '/v1/partners/$partnerId',
-        data: requestData,
-      );
+      final response = requestData is FormData
+          ? await _dio.post(requestPath, data: requestData)
+          : await _dio.patch(requestPath, data: requestData);
       final responseData = response.data['data'] ?? response.data;
       return PartnerDto.fromJson(responseData as Map<String, dynamic>);
     } catch (e) {

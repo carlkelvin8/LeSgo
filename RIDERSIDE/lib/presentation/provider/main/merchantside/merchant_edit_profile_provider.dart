@@ -144,11 +144,20 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
       );
 
       final updated = await dataSource.updatePartnerProfile(partnerId, request);
+      // Confirm a newly selected logo is present on the persisted partner
+      // record before reporting success to the merchant.
+      final confirmed = state.logoPath != null
+          ? await dataSource.getPartnerProfile(partnerId)
+          : updated;
+      if (state.logoPath != null &&
+          (confirmed.logoUrl == null || confirmed.logoUrl!.isEmpty)) {
+        throw Exception('Profile photo was not saved. Please try again.');
+      }
       _ref.invalidate(merchantProfileProvider);
 
       state = state.copyWith(
         isSubmitting: false,
-        logoUrl: updated.logoUrl ?? state.logoUrl,
+        logoUrl: confirmed.logoUrl ?? updated.logoUrl ?? state.logoUrl,
         clearLogoPath: true,
       );
       return true;
