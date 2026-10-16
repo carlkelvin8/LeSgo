@@ -58,6 +58,10 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final filteredItems = ref.watch(filteredMenuItemsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasVisibleCategory = menuAsync.valueOrNull?.categories.any(
+          (category) => (category.availableItems?.length ?? 0) > 1,
+        ) ??
+        false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +126,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
           _reveal(
             1,
             SizedBox(
-              height: 108,
+              height: hasVisibleCategory ? 108 : 0,
               child: menuAsync.when(
                 loading: () => const Center(
                   child: SizedBox(
@@ -161,13 +165,20 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   if (menu == null || menu.categories.isEmpty) {
                     return const SizedBox.shrink();
                   }
+                  final visibleCategories = menu.categories
+                      .where((category) =>
+                          (category.availableItems?.length ?? 0) > 1)
+                      .toList();
+                  if (visibleCategories.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
                   return ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: EdgeInsets.symmetric(horizontal: hp),
-                    itemCount: menu.categories.length,
+                    itemCount: visibleCategories.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 12),
                     itemBuilder: (context, i) {
-                      final cat = menu.categories[i];
+                      final cat = visibleCategories[i];
                       final sel = selectedCategory == cat.id;
                       return _AnimatedCategoryChip(
                         label: cat.name,
@@ -551,31 +562,20 @@ class _GridItemCardState extends State<_GridItemCard>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Image
-              Expanded(
-                flex: 6,
+              AspectRatio(
+                aspectRatio: 1.35,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(18),
                   ),
-                  child:
-                      widget.item.imageUrl != null &&
+                  child: widget.item.imageUrl != null &&
                           widget.item.imageUrl!.isNotEmpty
-                      ? MerchantFoodGridItem(
-                          name: widget.item.name,
-                          imagePath: widget.item.imageUrl,
-                          onTap: widget.onTap,
+                      ? MenuImageWidget(
+                          source: widget.item.imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: _buildImagePlaceholder(),
                         )
-                      : Container(
-                          width: double.infinity,
-                          color: const Color(0xFFEDD9FF),
-                          child: const Center(
-                            child: Icon(
-                              Icons.restaurant_rounded,
-                              size: 32,
-                              color: Color(0xFF9B70CC),
-                            ),
-                          ),
-                        ),
+                      : _buildImagePlaceholder(),
                 ),
               ),
               // Info
@@ -626,6 +626,20 @@ class _GridItemCardState extends State<_GridItemCard>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFFEDD9FF),
+      child: const Center(
+        child: Icon(
+          Icons.restaurant_rounded,
+          size: 32,
+          color: Color(0xFF9B70CC),
         ),
       ),
     );

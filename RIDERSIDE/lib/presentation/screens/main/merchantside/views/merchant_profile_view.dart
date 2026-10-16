@@ -98,8 +98,10 @@ class MerchantProfileView extends ConsumerWidget {
               _SalesReportCard(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               const MerchantReviewsPreviewCard(),
-              SizedBox(
-                height: ResponsiveUtils.spacing(context, 24),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: ResponsiveUtils.spacing(context, 8),
+                ),
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(
@@ -113,6 +115,8 @@ class MerchantProfileView extends ConsumerWidget {
                     elevation: 0,
                     backgroundColor: const Color(0xFFE5E5E5),
                     foregroundColor: const Color(0xFF9A9A9A),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     padding: EdgeInsets.symmetric(
                       horizontal: ResponsiveUtils.spacing(context, 12),
                     ),
