@@ -237,7 +237,8 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Container(
+                    if (categoryCount > 1)
+                      Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 13,
                         vertical: 10,
