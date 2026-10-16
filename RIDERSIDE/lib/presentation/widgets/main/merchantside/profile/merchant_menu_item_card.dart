@@ -34,13 +34,13 @@ class MerchantMenuItemCard extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       child: Material(
-        color: const Color(0xFFF5F4F7),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onEditTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -40,12 +40,8 @@ class MerchantProfileInfoSection extends ConsumerWidget {
         final hours = profile.openingHours;
 
         return Container(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFEDE7F2)),
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

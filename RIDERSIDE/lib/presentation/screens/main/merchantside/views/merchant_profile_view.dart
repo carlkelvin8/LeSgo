@@ -106,6 +106,7 @@ class MerchantProfileView extends ConsumerWidget {
                   ),
                 ),
                 const MerchantAnalyticsPreviewCard(),
+                const Divider(height: 24, color: Color(0xFFE7E1EB)),
                 SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                 const MerchantRevenueChart(),
                 SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -114,6 +115,7 @@ class MerchantProfileView extends ConsumerWidget {
                 _SalesReportCard(),
                 SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                 const MerchantReviewsPreviewCard(),
+                const Divider(height: 24, color: Color(0xFFE7E1EB)),
                 const SizedBox(height: 28),
                 const MerchantSettingsSection(),
                 SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -269,12 +271,7 @@ class _SalesReportCard extends StatelessWidget {
       onTap: () => AppRouter.push(context, MainRoutes.merchantSalesReport),
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFEDE7F2)),
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Row(
           children: [
             Container(

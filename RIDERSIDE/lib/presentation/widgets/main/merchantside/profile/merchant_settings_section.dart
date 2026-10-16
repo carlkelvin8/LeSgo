@@ -10,17 +10,7 @@ class MerchantSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        ResponsiveUtils.spacing(context, 16),
-        ResponsiveUtils.spacing(context, 14),
-        ResponsiveUtils.spacing(context, 10),
-        ResponsiveUtils.spacing(context, 8),
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEDE7F2)),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

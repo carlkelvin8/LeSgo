@@ -25,11 +25,11 @@ class MerchantRevenueChart extends ConsumerWidget {
 
         final hasRevenue = summary.trend.any((point) => point.revenue > 0);
         return Material(
-          color: Colors.white,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           clipBehavior: Clip.antiAlias,
           child: Padding(
-            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+            padding: const EdgeInsets.symmetric(vertical: 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

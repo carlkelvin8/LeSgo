@@ -19,10 +19,10 @@ class MerchantPopularItemsSection extends ConsumerWidget {
         if (topItems.isEmpty) return const SizedBox.shrink();
 
         return Material(
-          color: const Color(0xFFF5F4F7),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+            padding: const EdgeInsets.symmetric(vertical: 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
