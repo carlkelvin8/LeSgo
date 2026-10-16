@@ -1,9 +1,12 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../widgets/widgets.dart';
 import '../../../provider/register/register_provider.dart';
+import '../../../provider/auth/auth_provider.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/constants/routers/app_router.dart';
 
@@ -16,7 +19,7 @@ class CongratulationsScreen extends ConsumerWidget {
     final userData = registerState.data;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       body: SafeArea(
         child: Builder(
           builder: (context) {
@@ -34,7 +37,7 @@ class CongratulationsScreen extends ConsumerWidget {
                   const SuccessHeader(
                     title: 'CONGRATULATIONS!',
                     subtitle:
-                        'Your account is created. Complete ID verification to finish registration.',
+                        'Your account and identity documents were submitted successfully. Verification is now pending review.',
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 40)),
 
@@ -60,13 +63,31 @@ class CongratulationsScreen extends ConsumerWidget {
                   const Spacer(),
 
                   PrimaryButton(
-                    text: 'Continue to ID Verification',
-                    onPressed: () {
+                    text: 'Continue to LeSGo',
+                    onPressed: () async {
+                      final token = registerState.registeredUser?.token ?? '';
+                      if (token.isEmpty) {
+                        SnackBarUtils.showError(
+                          context,
+                          'Your session could not be started. Please log in.',
+                        );
+                        return;
+                      }
+
+                      final authenticated = await ref
+                          .read(authProvider.notifier)
+                          .completeGoogleSignIn(token: token);
+                      if (!context.mounted) return;
+                      if (!authenticated) {
+                        SnackBarUtils.showError(
+                          context,
+                          'Registration succeeded, but your profile could not be loaded. Please log in.',
+                        );
+                        return;
+                      }
+
                       ref.read(registerProvider.notifier).reset();
-                      AppRouter.pushAndRemoveUntil(
-                        context,
-                        MainRoutes.documentVerification,
-                      );
+                      AppRouter.pushAndRemoveUntil(context, MainRoutes.home);
                     },
                     backgroundColor: const Color(0xFF5F2D82),
                   ),

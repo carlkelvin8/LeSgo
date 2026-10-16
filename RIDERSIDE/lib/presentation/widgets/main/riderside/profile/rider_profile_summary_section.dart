@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/app_localization.dart';
-import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/riderside/rider_main_nav_provider.dart';
 import '../../../../provider/main/riderside/rider_mission_provider.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
-import '../../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../screens/main/riderside/views/rider_mission_view.dart';
+import '../more/rider_more_components.dart';
+import 'profile_panel.dart';
 
 class RiderProfileSummarySection extends ConsumerWidget {
   const RiderProfileSummarySection({super.key});
@@ -16,145 +17,216 @@ class RiderProfileSummarySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(appLanguageProvider);
-    final wallet = ref.watch(riderWalletProvider);
     final missions = ref.watch(riderMissionProvider);
-    final orders = ref.watch(riderOrdersProvider);
-    final hp = ResponsiveUtils.horizontalPadding(context);
-
-    final missionInProgress = missions.missions
+    final order = ref.watch(riderOrdersProvider).activeOrder;
+    String t(String key) => AppLocalization.translate(key, lang);
+    final inProgress = missions.missions
         .where((m) => !m.isCompleted && m.currentProgress > 0)
         .length;
-    final claimable =
-        missions.missions.where((m) => m.isCompleted && !m.rewardClaimed).length;
+    final claimable = missions.missions
+        .where((m) => m.isCompleted && !m.rewardClaimed)
+        .length;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hp),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            AppLocalization.translate('overview', lang),
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 15),
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : const Color(0xFF2D2D2D),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MoreSectionHeading(title: t('rp_on_the_road')),
+
+        // Alert cards
+        if (order != null) ...[
+          _PulsingStatusCard(
+            icon: Icons.delivery_dining_rounded,
+            title: t('active_delivery'),
+            message: '#${order.id} · ${order.status.replaceAll('_', ' ')}',
+            color: const Color(0xFF5F2D82),
+            bg: profileDark(context)
+                ? const Color(0xFF1E1530)
+                : const Color(0xFFF3EEFF),
+            onTap: () => ref
+                .read(riderNavProvider.notifier)
+                .navigateTo(RiderNavType.bookings),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          if (wallet.showLowBalanceWarning)
-            _AlertCard(
-              icon: Icons.account_balance_wallet_outlined,
-              color: Colors.orange,
-              title: AppLocalization.translate('low_lespay_balance', lang),
-              subtitle: wallet.lowBalanceWarningMessage,
-              onTap: () =>
-                  ref.read(riderNavProvider.notifier).navigateTo(RiderNavType.more),
-            ),
-          if (orders.activeOrder != null) ...[
-            if (wallet.showLowBalanceWarning)
-              SizedBox(height: ResponsiveUtils.spacing(context, 10)),
-            _AlertCard(
-              icon: Icons.delivery_dining,
-              color: const Color(0xFF5F2D82),
-              title: AppLocalization.translate('active_delivery', lang),
-              subtitle:
-                  'Order #${orders.activeOrder!.id} • ${orders.activeOrder!.status.replaceAll('_', ' ')}',
-              onTap: null,
-            ),
-          ],
-          if (claimable > 0) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 10)),
-            _AlertCard(
-              icon: Icons.card_giftcard,
-              color: Colors.green,
-              title: AppLocalization.translate('mission_reward_ready', lang),
-              subtitle:
-                  '$claimable reward${claimable == 1 ? '' : 's'} waiting to claim',
-              onTap: null,
-            ),
-          ] else if (missionInProgress > 0) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 10)),
-            _AlertCard(
-              icon: Icons.flag_outlined,
-              color: const Color(0xFF5F2D82),
-              title: AppLocalization.translate('missions_in_progress', lang),
-              subtitle: '$missionInProgress active mission${missionInProgress == 1 ? '' : 's'}',
-              onTap: null,
-            ),
-          ],
-          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-          _QuickLinkRow(
-            icon: Icons.verified_user_outlined,
-            label: AppLocalization.translate('document_verification', lang),
-            onTap: () =>
-                AppRouter.push(context, MainRoutes.riderDocuments),
-          ),
+          const SizedBox(height: 10),
         ],
-      ),
+        if (claimable > 0 || inProgress > 0) ...[
+          _PulsingStatusCard(
+            icon: claimable > 0
+                ? Icons.card_giftcard_rounded
+                : Icons.flag_rounded,
+            title: t(claimable > 0
+                ? 'mission_reward_ready'
+                : 'missions_in_progress'),
+            message: t(claimable > 0
+                ? 'rp_rewards_count'
+                : 'rp_missions_count').replaceAll(
+              '{count}', '${claimable > 0 ? claimable : inProgress}'),
+            color: claimable > 0
+                ? const Color(0xFF16A34A)
+                : const Color(0xFF5F2D82),
+            bg: profileDark(context)
+                ? const Color(0xFF0F2018)
+                : const Color(0xFFECFDF5),
+            pulse: claimable > 0,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                  builder: (_) =>
+                      const RiderMissionView(includeBottomNavPadding: false)),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+
+        // Document verification quick link
+        MoreMenuGroup(
+          children: [
+            MoreMenuRow(
+              icon: Icons.verified_user_outlined,
+              title: t('document_verification'),
+              subtitle: t('rp_documents_hint'),
+              onTap: () =>
+                  AppRouter.push(context, MainRoutes.riderDocuments),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
-class _AlertCard extends StatelessWidget {
+// ─── Pulsing status card ──────────────────────────────────────────────────────
+class _PulsingStatusCard extends StatefulWidget {
   final IconData icon;
-  final Color color;
   final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
+  final String message;
+  final Color color;
+  final Color bg;
+  final VoidCallback onTap;
+  final bool pulse;
 
-  const _AlertCard({
+  const _PulsingStatusCard({
     required this.icon,
-    required this.color,
     required this.title,
-    required this.subtitle,
-    this.onTap,
+    required this.message,
+    required this.color,
+    required this.bg,
+    required this.onTap,
+    this.pulse = false,
   });
 
   @override
+  State<_PulsingStatusCard> createState() => _PulsingStatusCardState();
+}
+
+class _PulsingStatusCardState extends State<_PulsingStatusCard>
+    with TickerProviderStateMixin {
+  late final AnimationController _anim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
+  late final AnimationController _press = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 100),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.pulse) {
+      _anim.repeat(reverse: true);
+    } else {
+      _anim.value = .5;
+    }
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    _press.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: color.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-          child: Row(
-            children: [
-              Icon(icon, color: color),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontWeight: FontWeight.w700,
-                        fontSize: ResponsiveUtils.fontSize(context, 13),
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white60
-                            : Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
+    return AnimatedBuilder(
+      animation: Listenable.merge([_anim, _press]),
+      builder: (_, __) => Transform.scale(
+        scale: 1.0 - .02 * _press.value,
+        child: GestureDetector(
+          onTapDown: (_) {
+            HapticFeedback.selectionClick();
+            _press.forward();
+          },
+          onTapUp: (_) => _press.reverse(),
+          onTapCancel: () => _press.reverse(),
+          onTap: widget.onTap,
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: widget.bg,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: widget.color.withValues(
+                    alpha: .25 + .12 * _anim.value),
+                width: widget.pulse ? 1.5 : 1,
               ),
-            ],
+              boxShadow: [
+                if (widget.pulse)
+                  BoxShadow(
+                    color: widget.color.withValues(
+                        alpha: .12 + .10 * _anim.value),
+                    blurRadius: 16 + 8 * _anim.value,
+                    spreadRadius: -2,
+                  ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Icon with pulsing container
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: widget.color.withValues(
+                        alpha: .12 + .06 * _anim.value),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(widget.icon, color: widget.color, size: 21),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: widget.color,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        widget.message,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 11.5,
+                          color: widget.color.withValues(alpha: .75),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 13,
+                  color: widget.color.withValues(alpha: .60),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -162,34 +234,3 @@ class _AlertCard extends StatelessWidget {
   }
 }
 
-class _QuickLinkRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickLinkRow({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: const Color(0xFF5F2D82)),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: ResponsiveUtils.fontSize(context, 14),
-          fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white : null,
-        ),
-      ),
-      trailing: Icon(Icons.chevron_right, color: isDark ? Colors.white54 : null),
-      onTap: onTap,
-    );
-  }
-}

@@ -28,14 +28,11 @@ class ReviewRemoteDataSource {
   }
 
   /// Create a review for an order
-  Future<ReviewsResponseDto> createReview(CreateReviewRequestDto request) async {
+  Future<bool> createReview(CreateReviewRequestDto request) async {
     final dio = _dioClient.dio;
     try {
-      final response = await dio.post(
-        '/v1/reviews',
-        data: request.toJson(),
-      );
-      return ReviewsResponseDto.fromJson(response.data as Map<String, dynamic>);
+      await dio.post('/v1/reviews', data: request.toJson());
+      return true;
     } catch (e) {
       throw Exception('Failed to create review: $e');
     }
@@ -50,16 +47,12 @@ class ReviewRemoteDataSource {
   }) async {
     final dio = _dioClient.dio;
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'per_page': perPage,
-      };
-      
-      if (reviewableType != null) {
-        queryParams['reviewable_type'] = reviewableType;
-      }
-      if (reviewableId != null) {
-        queryParams['reviewable_id'] = reviewableId;
+      final queryParams = <String, dynamic>{'page': page, 'per_page': perPage};
+
+      if (reviewableId != null && reviewableType == 'driver') {
+        queryParams['driver_id'] = reviewableId;
+      } else if (reviewableId != null && reviewableType == 'service') {
+        queryParams['service_id'] = reviewableId;
       }
 
       final response = await dio.get(
@@ -80,19 +73,20 @@ class ReviewRemoteDataSource {
     final dio = _dioClient.dio;
     try {
       final queryParams = <String, dynamic>{};
-      
-      if (reviewableType != null) {
-        queryParams['reviewable_type'] = reviewableType;
-      }
-      if (reviewableId != null) {
-        queryParams['reviewable_id'] = reviewableId;
+
+      if (reviewableId != null && reviewableType == 'driver') {
+        queryParams['driver_id'] = reviewableId;
+      } else if (reviewableId != null && reviewableType == 'service') {
+        queryParams['service_id'] = reviewableId;
       }
 
       final response = await dio.get(
         '/v1/reviews/statistics',
         queryParameters: queryParams,
       );
-      return ReviewStatisticsResponseDto.fromJson(response.data as Map<String, dynamic>);
+      return ReviewStatisticsResponseDto.fromJson(
+        response.data as Map<String, dynamic>,
+      );
     } catch (e) {
       throw Exception('Failed to get statistics: $e');
     }

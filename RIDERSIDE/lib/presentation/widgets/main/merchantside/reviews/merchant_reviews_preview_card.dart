@@ -28,80 +28,71 @@ class MerchantReviewsPreviewCard extends ConsumerWidget {
       orElse: () => profileTotal,
     );
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
+    return Material(
+      color: const Color(0xFFF5F4F7),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => AppRouter.push(context, MainRoutes.merchantReviews),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFFE082)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: ResponsiveUtils.spacing(context, 44),
-            height: ResponsiveUtils.spacing(context, 44),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFA000),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.star_rounded,
-              color: Colors.white,
-              size: ResponsiveUtils.fontSize(context, 24),
-            ),
-          ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Customer Reviews',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 15),
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+        child: Padding(
+          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 7)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.star,
+                      color: const Color(0xFFFFB300),
+                      size: ResponsiveUtils.fontSize(context, 17),
+                    ),
                   ),
-                ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                Row(
-                  children: [
-                    MerchantRatingStarsDisplay(
-                      rating: rating,
-                      size: ResponsiveUtils.fontSize(context, 14),
-                      showRatingText: true,
-                    ),
-                    SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                    Text(
-                      '($total)',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              AppRouter.push(context, MainRoutes.merchantReviews);
-            },
-            child: Text(
-              'View',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 14),
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF5F2D82),
+                  const Spacer(),
+                  const Icon(
+                    Icons.north_east_rounded,
+                    size: 14,
+                    color: Color(0xFFA49BAE),
+                  ),
+                ],
               ),
-            ),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              Text(
+                'Customer Reviews',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF302B36),
+                ),
+              ),
+              SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+              Row(
+                children: [
+                  MerchantRatingStarsDisplay(
+                    rating: rating,
+                    size: ResponsiveUtils.fontSize(context, 13),
+                    showRatingText: true,
+                  ),
+                  SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+                  Text(
+                    '($total)',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 11),
+                      color: const Color(0xFF918A98),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -44,8 +45,8 @@ class LestransportDeliveryMethod extends ConsumerWidget {
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: state.deliveryMethod == DeliveryMethod.pickupDoorToDoor
-                                ? const Color(0xFF5F2D82)
-                                : Colors.grey,
+                                ? AppColors.accent(context, Color(0xFF5F2D82))
+                                : AppColors.foreground(context, Colors.grey),
                             width: 2,
                           ),
                         ),
@@ -54,9 +55,9 @@ class LestransportDeliveryMethod extends ConsumerWidget {
                                 child: Container(
                                   width: 10,
                                   height: 10,
-                                  decoration: const BoxDecoration(
+                                  decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Color(0xFF5F2D82),
+                                    color: AppColors.accent(context, const Color(0xFF5F2D82)),
                                   ),
                                 ),
                               )
@@ -70,7 +71,7 @@ class LestransportDeliveryMethod extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                     ),
                   ),
@@ -99,8 +100,8 @@ class LestransportDeliveryMethod extends ConsumerWidget {
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: state.deliveryMethod == DeliveryMethod.padalaToBranch
-                                ? const Color(0xFF5F2D82)
-                                : Colors.grey,
+                                ? AppColors.accent(context, Color(0xFF5F2D82))
+                                : AppColors.foreground(context, Colors.grey),
                             width: 2,
                           ),
                         ),
@@ -109,9 +110,9 @@ class LestransportDeliveryMethod extends ConsumerWidget {
                                 child: Container(
                                   width: 10,
                                   height: 10,
-                                  decoration: const BoxDecoration(
+                                  decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Color(0xFF5F2D82),
+                                    color: AppColors.accent(context, const Color(0xFF5F2D82)),
                                   ),
                                 ),
                               )
@@ -125,7 +126,7 @@ class LestransportDeliveryMethod extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                     ),
                   ),

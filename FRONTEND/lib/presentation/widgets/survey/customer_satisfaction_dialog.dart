@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/di/injection.dart';
@@ -72,12 +73,12 @@ class _CustomerSatisfactionDialogState extends State<CustomerSatisfactionDialog>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'You\'ve completed ${CustomerSatisfactionService.surveyThreshold} orders with LEZGO. '
+              'You\'ve completed ${CustomerSatisfactionService.surveyThreshold} orders with LeSgo. '
               'Help us improve your experience.',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.grey[700],
+                color: AppColors.foreground(context, Colors.grey[700]!),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -89,7 +90,7 @@ class _CustomerSatisfactionDialogState extends State<CustomerSatisfactionDialog>
                   onPressed: () => setState(() => _rating = star),
                   icon: Icon(
                     Icons.star,
-                    color: star <= _rating ? Colors.amber[700] : Colors.grey[300],
+                    color: star <= _rating ? Colors.amber[700] : AppColors.foreground(context, Colors.grey[300]!),
                     size: 32,
                   ),
                 );

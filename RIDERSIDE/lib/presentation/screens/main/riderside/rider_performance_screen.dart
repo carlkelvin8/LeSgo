@@ -57,10 +57,44 @@ class RiderPerformanceScreen extends ConsumerWidget {
                 ],
               ),
             )
-          : RefreshIndicator(
-              onRefresh: () async {
-                await ref.read(riderPerformanceProvider.notifier).refreshPerformanceMetrics();
-              },
+          : performanceState.error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          performanceState.error!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 14),
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        onPressed: () => ref
+                            .read(riderPerformanceProvider.notifier)
+                            .loadPerformanceMetrics(),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    await ref.read(riderPerformanceProvider.notifier).refreshPerformanceMetrics();
+                  },
               child: ListView(
                 padding: EdgeInsets.fromLTRB(hp, ResponsiveUtils.spacing(context, 16), hp, 24),
                 children: [
@@ -523,7 +557,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'â€¢',
+          '•',
           style: TextStyle(
             color: Color(0xFF5F2D82),
             fontWeight: FontWeight.bold,

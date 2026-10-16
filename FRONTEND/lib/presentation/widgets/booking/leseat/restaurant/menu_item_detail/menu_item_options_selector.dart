@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/menu_item_options.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
@@ -52,7 +53,7 @@ class MenuItemOptionsSelector extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -99,7 +100,7 @@ class _OptionGroupSection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -117,12 +118,12 @@ class _OptionGroupSection extends StatelessWidget {
                   horizontal: ResponsiveUtils.spacing(context, 16),
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF5F2D82) : Colors.white,
+                  color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Colors.white),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFF5F2D82)
-                        : Colors.grey[300]!,
+                        ? AppColors.accent(context, Color(0xFF5F2D82))
+                        : AppColors.border(context, Colors.grey[300]!),
                     width: isSelected ? 2 : 1,
                   ),
                 ),
@@ -134,7 +135,7 @@ class _OptionGroupSection extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : Colors.black87,
+                    color: isSelected ? AppColors.onAccent(context) : AppColors.foreground(context, Colors.black87),
                   ),
                 ),
               ),
@@ -179,7 +180,7 @@ class _AddonRow extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey[600],
+                    color: AppColors.foreground(context, Colors.grey[600]!),
                   ),
                 ),
             ],
@@ -188,7 +189,7 @@ class _AddonRow extends StatelessWidget {
         IconButton(
           onPressed: quantity > 0 ? () => onChanged(quantity - 1) : null,
           icon: const Icon(Icons.remove_circle_outline),
-          color: const Color(0xFF5F2D82),
+          color: AppColors.accent(context, Color(0xFF5F2D82)),
         ),
         Text(
           '$quantity',
@@ -201,7 +202,7 @@ class _AddonRow extends StatelessWidget {
         IconButton(
           onPressed: () => onChanged(quantity + 1),
           icon: const Icon(Icons.add_circle_outline),
-          color: const Color(0xFF5F2D82),
+          color: AppColors.accent(context, Color(0xFF5F2D82)),
         ),
       ],
     );

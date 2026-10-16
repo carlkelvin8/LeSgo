@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +17,7 @@ class ReferralDashboardScreen extends ConsumerWidget {
     final state = ref.watch(referralDashboardProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       appBar: AppBar(
         title: const Text('Referral rewards'),
         backgroundColor: const Color(0xFF5F2D82),
@@ -35,7 +36,7 @@ class ReferralDashboardScreen extends ConsumerWidget {
                       ref.read(referralDashboardProvider.notifier).loadDashboard(),
                 )
               : RefreshIndicator(
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                   onRefresh: () =>
                       ref.read(referralDashboardProvider.notifier).loadDashboard(),
                   child: ListView(
@@ -84,7 +85,7 @@ class ReferralDashboardScreen extends ConsumerWidget {
                           'No referral rewards yet. Share your code to start earning.',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Colors.grey[600],
+                            color: AppColors.foreground(context, Colors.grey[600]!),
                           ),
                         )
                       else
@@ -103,7 +104,7 @@ class ReferralDashboardScreen extends ConsumerWidget {
                                           context,
                                           11,
                                         ),
-                                        color: Colors.grey[600],
+                                        color: AppColors.foreground(context, Colors.grey[600]!),
                                       ),
                                     )
                                   : null,
@@ -152,7 +153,7 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -171,7 +172,7 @@ class _StatTile extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 24),
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
             ),
           ),
           Text(
@@ -179,7 +180,7 @@ class _StatTile extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
         ],
@@ -198,7 +199,7 @@ class _ReferralCodeCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3E8FF),
+        color: AppColors.surface(context, Color(0xFFF3E8FF)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

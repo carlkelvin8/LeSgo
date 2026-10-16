@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -37,7 +38,7 @@ class MapZoomControls extends StatelessWidget {
             width: buttonSize,
             height: buttonSize,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(

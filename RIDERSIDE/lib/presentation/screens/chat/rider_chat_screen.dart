@@ -281,7 +281,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
             Expanded(
               child: TextField(
                 controller: _messageController,
-                maxLines: null,
+                maxLines: 4,
                 textCapitalization: TextCapitalization.sentences,
                 enabled: !isSending,
                 decoration: InputDecoration(

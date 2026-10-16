@@ -237,6 +237,9 @@ class ApiService {
   ) =>
       TrackingApi.updateDriverAvailability(driverProfileId, isAvailable);
 
+  static Future<Map<String, dynamic>?> getMyDriverProfile(int userId) =>
+      TrackingApi.getMyDriverProfile(userId);
+
   static Future<Map<String, dynamic>> submitDutyAttendance(
     int driverProfileId,
     XFile photo, {

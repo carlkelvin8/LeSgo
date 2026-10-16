@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:local_auth/local_auth.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/app_preferences_service.dart';
+import '../../../../core/services/biometric_unlock_service.dart';
 import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../data/data_source/dto/security/security_dto.dart';
 import '../../../../data/data_source/security_remote_datasource.dart';
@@ -65,36 +64,45 @@ class SecuritySettingsState {
 }
 
 class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
-  SecuritySettingsNotifier()
-    : super(const SecuritySettingsState(isLoading: true)) {
+  SecuritySettingsNotifier(
+    this._biometrics, {
+    SecurityRemoteDataSource? dataSource,
+  }) : _securityDs = dataSource ?? getIt<SecurityRemoteDataSource>(),
+       super(const SecuritySettingsState(isLoading: true)) {
     loadSecurity();
   }
 
-  final SecurityRemoteDataSource _securityDs =
-      getIt<SecurityRemoteDataSource>();
-  final AppPreferencesService _prefs = getIt<AppPreferencesService>();
-  final LocalAuthentication _localAuth = LocalAuthentication();
+  final SecurityRemoteDataSource _securityDs;
+  AppPreferencesService get _prefs => _biometrics.preferences;
+  final BiometricUnlockService _biometrics;
 
   Future<void> loadSecurity() async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final canCheck = await _localAuth.canCheckBiometrics;
-      final supported = await _localAuth.isDeviceSupported();
+      final supported = await _biometrics.isSupported();
+      if (!mounted) return;
+      state = state.copyWith(
+        localBiometricEnabled: _prefs.biometricUnlockEnabled,
+        deviceSupportsBiometrics: supported,
+        isLoading: false,
+      );
 
       final dashboard = await _securityDs.getSecurityDashboard();
       final biometrics = await _securityDs.listBiometrics();
       final logs = await _securityDs.getAuditLogs(perPage: 10);
+      if (!mounted) return;
 
       state = state.copyWith(
         dashboard: dashboard,
         registeredBiometrics: biometrics,
         auditLogs: logs,
         localBiometricEnabled: _prefs.biometricUnlockEnabled,
-        deviceSupportsBiometrics: canCheck && supported,
+        deviceSupportsBiometrics: supported,
         isLoading: false,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         localBiometricEnabled: _prefs.biometricUnlockEnabled,
@@ -167,50 +175,39 @@ class SecuritySettingsNotifier extends StateNotifier<SecuritySettingsState> {
   }
 
   Future<bool> toggleBiometricUnlock(bool enabled) async {
-    if (enabled) {
-      try {
-        final authenticated = await _localAuth.authenticate(
-          localizedReason: 'Enable biometric unlock for LEZGO',
-          options: const AuthenticationOptions(biometricOnly: true),
-        );
-        if (!authenticated) return false;
-
-        final biometrics = await _localAuth.getAvailableBiometrics();
-        final type = biometrics.contains(BiometricType.face)
-            ? 'face_id'
-            : 'fingerprint';
-
-        await _securityDs.enrollBiometric(
-          biometricType: type,
-          deviceId: 'lesgo_${defaultTargetPlatform.name}',
-          deviceName: defaultTargetPlatform.name,
-        );
-      } catch (e) {
+    if (state.isProcessing) return false;
+    state = state.copyWith(isProcessing: true, clearError: true);
+    try {
+      final authenticated = await _biometrics.authenticate(enrolling: enabled);
+      if (!mounted) return false;
+      if (!authenticated) {
         state = state.copyWith(
-          error: ApiErrorMapper.message(
-            e,
-            fallbackEn: 'Biometric enrollment failed.',
-            fallbackTl: 'Hindi ma-enroll ang biometric.',
-          ),
+          error: 'Authentication cancelled. The setting was not changed.',
         );
         return false;
       }
-    } else {
-      for (final bio in state.registeredBiometrics) {
-        try {
-          await _securityDs.deactivateBiometric(biometricId: bio.id);
-        } catch (_) {}
+      await _prefs.setBiometricUnlockEnabled(enabled);
+      if (!mounted) return false;
+      state = state.copyWith(localBiometricEnabled: enabled);
+      return true;
+    } catch (error) {
+      if (mounted) {
+        state = state.copyWith(
+          error: BiometricUnlockService.errorMessage(error),
+        );
       }
+      return false;
+    } finally {
+      if (mounted) state = state.copyWith(isProcessing: false);
     }
-
-    await _prefs.setBiometricUnlockEnabled(enabled);
-    await loadSecurity();
-    state = state.copyWith(localBiometricEnabled: enabled);
-    return true;
   }
 }
 
 final securitySettingsProvider =
-    StateNotifierProvider<SecuritySettingsNotifier, SecuritySettingsState>(
-      (ref) => SecuritySettingsNotifier(),
+    StateNotifierProvider.autoDispose<
+      SecuritySettingsNotifier,
+      SecuritySettingsState
+    >(
+      (ref) =>
+          SecuritySettingsNotifier(ref.read(biometricUnlockServiceProvider)),
     );

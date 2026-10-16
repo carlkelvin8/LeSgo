@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -11,7 +12,7 @@ class CurrentLocationButton extends StatelessWidget {
     return Material(
       elevation: 4,
       borderRadius: BorderRadius.circular(8),
-      color: Colors.white,
+      color: AppColors.surface(context, Colors.white),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -28,7 +29,7 @@ class CurrentLocationButton extends StatelessWidget {
                 Icon(
                   Icons.my_location,
                   size: ResponsiveUtils.fontSize(context, 18),
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 6)),
                 Text(
@@ -37,7 +38,7 @@ class CurrentLocationButton extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+                    color: AppColors.foreground(context, Colors.grey[800]!),
                   ),
                 ),
               ],

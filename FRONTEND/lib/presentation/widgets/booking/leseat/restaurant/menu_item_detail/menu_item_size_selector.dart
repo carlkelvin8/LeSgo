@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 
@@ -24,7 +25,7 @@ class MenuItemSizeSelector extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -76,10 +77,10 @@ class _SizeButton extends StatelessWidget {
           horizontal: ResponsiveUtils.spacing(context, 20),
         ),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF5F2D82) : Colors.white,
+          color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? const Color(0xFF5F2D82) : Colors.grey[300]!,
+            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.border(context, Colors.grey[300]!),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -89,7 +90,7 @@ class _SizeButton extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : Colors.black87,
+            color: isSelected ? AppColors.onAccent(context) : AppColors.foreground(context, Colors.black87),
           ),
         ),
       ),

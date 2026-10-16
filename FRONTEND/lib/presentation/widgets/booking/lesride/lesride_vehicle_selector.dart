@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/responsive_utils.dart';
@@ -24,7 +25,7 @@ class LesrideVehicleSelector extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 15),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 10)),
@@ -80,15 +81,15 @@ class _VehicleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = vehicle.isAvailable;
     final borderColor = isSelected
-        ? const Color(0xFF5F2D82)
-        : Colors.grey.shade300;
+        ? AppColors.accent(context, const Color(0xFF5F2D82))
+        : AppColors.border(context, Colors.grey.shade300);
 
     return Material(
       color: isSelected
-          ? const Color(0xFFF5EEFA)
+          ? AppColors.surface(context, Color(0xFFF5EEFA))
           : enabled
-          ? Colors.white
-          : Colors.grey.shade100,
+          ? AppColors.surface(context, Colors.white)
+          : AppColors.surface(context, Colors.grey.shade100),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -109,7 +110,7 @@ class _VehicleCard extends StatelessWidget {
               Icon(
                 _icon,
                 size: 28,
-                color: enabled ? const Color(0xFF5F2D82) : Colors.grey,
+                color: enabled ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 5)),
               Text(
@@ -120,7 +121,7 @@ class _VehicleCard extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
                   fontWeight: FontWeight.w700,
-                  color: enabled ? Colors.black87 : Colors.grey.shade600,
+                  color: enabled ? AppColors.foreground(context, Colors.black87) : AppColors.foreground(context, Colors.grey.shade600),
                 ),
               ),
               if (!enabled) ...[
@@ -128,7 +129,7 @@ class _VehicleCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.lock, size: 10, color: Colors.grey.shade600),
+                    Icon(Icons.lock, size: 10, color: AppColors.foreground(context, Colors.grey.shade600)),
                     const SizedBox(width: 2),
                     Flexible(
                       child: Text(
@@ -139,7 +140,7 @@ class _VehicleCard extends StatelessWidget {
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 8),
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade600,
+                          color: AppColors.foreground(context, Colors.grey.shade600),
                         ),
                       ),
                     ),

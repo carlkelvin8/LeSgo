@@ -50,7 +50,7 @@ Map<String, dynamic> _$RegisterDriverDataDtoToJson(
     };
 
 UserDto _$UserDtoFromJson(Map<String, dynamic> json) => UserDto(
-      id: (json['id'] as num).toInt(),
+      registrationFee: json['registration_fee'] as Map<String, dynamic>?,      id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       email: json['email'] as String,
       phoneNumber: json['phone_number'] as String?,
@@ -58,6 +58,7 @@ UserDto _$UserDtoFromJson(Map<String, dynamic> json) => UserDto(
     );
 
 Map<String, dynamic> _$UserDtoToJson(UserDto instance) => <String, dynamic>{
+      'registration_fee': instance.registrationFee,
       'id': instance.id,
       'name': instance.name,
       'email': instance.email,

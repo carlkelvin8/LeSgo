@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -31,11 +32,11 @@ class CategoryChip extends StatelessWidget {
             height: ResponsiveUtils.spacing(context, 56),
             padding: EdgeInsets.all(padding),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFE8E0F0) : Colors.grey[100],
+              color: isSelected ? AppColors.surface(context, Color(0xFFE8E0F0)) : AppColors.surface(context, Colors.grey[100]!),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: isSelected
-                    ? const Color(0xFF5F2D82)
+                    ? AppColors.accent(context, Color(0xFF5F2D82))
                     : Colors.transparent,
                 width: 2,
               ),
@@ -54,7 +55,7 @@ class CategoryChip extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: fontSize,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? const Color(0xFF5F2D82) : Colors.black87,
+              color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],

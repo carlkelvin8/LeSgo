@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Password strength levels
@@ -80,7 +81,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
           borderRadius: BorderRadius.circular(2),
           child: LinearProgressIndicator(
             value: strength.value,
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: AppColors.surface(context, Colors.grey.shade200),
             color: strength.color,
             minHeight: 4,
           ),
@@ -116,7 +117,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
             _getPasswordRequirements(),
             style: TextStyle(
               fontSize: 11,
-              color: Colors.grey.shade600,
+              color: AppColors.foreground(context, Colors.grey.shade600),
               fontFamily: 'TT Fors',
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -33,7 +34,7 @@ class DefaultAddressCheckbox extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
       ],

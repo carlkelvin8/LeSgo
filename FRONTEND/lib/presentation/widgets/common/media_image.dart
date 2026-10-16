@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
 
 import '../../../core/utils/menu_image_utils.dart';
 
@@ -32,7 +33,7 @@ class MediaImage extends StatelessWidget {
         fit: fit,
         width: width,
         height: height,
-        placeholderBuilder: (_) => _fallback(),
+        placeholderBuilder: (_) => _fallback(context: context),
       );
     }
 
@@ -42,13 +43,13 @@ class MediaImage extends StatelessWidget {
         fit: fit,
         width: width,
         height: height,
-        errorBuilder: (_, __, ___) => _fallback(),
+        errorBuilder: (_, __, ___) => _fallback(context: context),
       );
     }
 
     final candidates = MenuImageUtils.candidateUrls(imagePath);
     if (candidates.isEmpty) {
-      return _fallback();
+      return _fallback(context: context);
     }
 
     return _NetworkMediaImage(
@@ -56,16 +57,23 @@ class MediaImage extends StatelessWidget {
       fit: fit,
       width: width,
       height: height,
-      fallback: _fallback,
+      fallback: ({bool showProgress = false}) =>
+          _fallback(showProgress: showProgress, context: context),
     );
   }
 
-  Widget _fallback({bool showProgress = false}) {
+  Widget _fallback({bool showProgress = false, BuildContext? context}) {
     if (placeholder != null) return placeholder!;
+    final bgColor = context != null
+        ? AppColors.surface(context, Colors.grey[200]!)
+        : Colors.grey[200]!;
+    final iconColor = context != null
+        ? AppColors.foreground(context, Colors.grey[400]!)
+        : Colors.grey[400]!;
     return Container(
       width: width,
       height: height,
-      color: Colors.grey[200],
+      color: bgColor,
       child: Center(
         child: showProgress
             ? const SizedBox(
@@ -73,7 +81,7 @@ class MediaImage extends StatelessWidget {
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : Icon(Icons.image_not_supported, color: Colors.grey[400], size: 24),
+            : Icon(Icons.image_not_supported, color: iconColor, size: 24),
       ),
     );
   }

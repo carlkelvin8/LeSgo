@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../../../core/utils/responsive_utils.dart';
+
 import '../../../../../../core/utils/app_localization.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
@@ -32,7 +32,9 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text(AppLocalization.translate('go_off_duty_question', lang)),
+            title: Text(
+              AppLocalization.translate('go_off_duty_question', lang),
+            ),
             content: Text(
               '${AppLocalization.translate('may_active_order', lang)} (Order #${activeOrder.id}). '
               '${AppLocalization.translate('confirm_go_off_duty', lang)}',
@@ -55,7 +57,16 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
         if (confirmed != true || !mounted) return;
       }
 
-      await ref.read(riderDutyProvider.notifier).setOnDuty(false);
+      setState(() => _isProcessing = true);
+      final error = await ref.read(riderDutyProvider.notifier).setOnDuty(false);
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
+        );
+        return;
+      }
 
       if (mounted) {
         showModalBottomSheet(
@@ -98,23 +109,25 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
 
     setState(() => _isProcessing = true);
 
-    final error = await ref.read(riderDutyProvider.notifier).goOnDutyWithPhoto(photo);
+    final error = await ref
+        .read(riderDutyProvider.notifier)
+        .goOnDutyWithPhoto(photo);
 
     if (!mounted) return;
     setState(() => _isProcessing = false);
 
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: Colors.red.shade700,
-        ),
+        SnackBar(content: Text(error), backgroundColor: Colors.red.shade700),
       );
     } else {
       await ref.read(riderShiftProvider).recordShiftStart();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalization.translate('attendance_photo_uploaded', lang)),
+          content: Text(
+            AppLocalization.translate('attendance_photo_uploaded', lang),
+          ),
           backgroundColor: const Color(0xFF5F2D82),
         ),
       );
@@ -123,47 +136,86 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
 
   @override
   Widget build(BuildContext context) {
-    final isOnDuty = ref.watch(riderDutyProvider);
-
+    final onDuty = ref.watch(riderDutyProvider);
     final lang = ref.watch(appLanguageProvider);
-
+    final tl = lang == AppLanguage.filipino;
+    final colors = Theme.of(context).colorScheme;
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
+        AnimatedContainer(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 250),
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: onDuty ? const Color(0xFF24956A) : colors.outline,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppLocalization.translate(
+                  _isProcessing
+                      ? 'uploading'
+                      : onDuty
+                      ? 'on_duty_label'
+                      : 'off_duty_label',
+                  lang,
+                ),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.onSurface,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                onDuty
+                    ? (tl
+                          ? 'Bukas para sa mga booking'
+                          : 'Available for bookings')
+                    : (tl
+                          ? 'Naka-pause ang mga bagong booking'
+                          : 'New bookings are paused'),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 11,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
         if (_isProcessing)
-          SizedBox(
-            width: ResponsiveUtils.spacing(context, 24),
-            height: ResponsiveUtils.spacing(context, 24),
-            child: const CircularProgressIndicator(strokeWidth: 2),
+          const Padding(
+            padding: EdgeInsets.all(12),
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
           )
         else
           Semantics(
-            label: isOnDuty
-                ? AppLocalization.translate('on_duty_semantics', lang)
-                : AppLocalization.translate('off_duty_semantics', lang),
-            toggled: isOnDuty,
+            label: AppLocalization.translate(
+              onDuty ? 'on_duty_semantics' : 'off_duty_semantics',
+              lang,
+            ),
+            toggled: onDuty,
             child: Switch(
-              value: isOnDuty,
+              value: onDuty,
               onChanged: _handleToggle,
               activeTrackColor: const Color(0xFF5F2D82),
-              inactiveThumbColor: Colors.white,
-              inactiveTrackColor: Colors.grey.shade400,
+              activeThumbColor: Colors.white,
             ),
           ),
-        SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-        Text(
-          _isProcessing
-              ? AppLocalization.translate('uploading', lang)
-              : (isOnDuty
-                  ? AppLocalization.translate('on_duty_label', lang)
-                  : AppLocalization.translate('off_duty_label', lang)),
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 14),
-            fontWeight: FontWeight.w900,
-            color: Colors.black,
-          ),
-        ),
       ],
     );
   }

@@ -179,6 +179,7 @@ class RiderProfileNotifier extends StateNotifier<RiderProfileState> {
     try {
       await ApiService.uploadProfilePictureFromXFile(imageFile);
       await loadProfile();
+      state = state.copyWith(isUploading: false);
       return true;
     } catch (e) {
       state = state.copyWith(

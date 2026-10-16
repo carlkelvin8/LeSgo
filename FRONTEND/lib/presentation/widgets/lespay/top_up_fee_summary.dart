@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/lespay_topup_fee.dart';
@@ -16,16 +17,16 @@ class TopUpFeeSummary extends StatelessWidget {
     final textStyle = TextStyle(
       fontFamily: 'TT Fors',
       fontSize: ResponsiveUtils.fontSize(context, 13),
-      color: Colors.grey[800],
+      color: AppColors.foreground(context, Colors.grey[800]!),
     );
 
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F0F8),
+        color: AppColors.surface(context, Color(0xFFF5F0F8)),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE8DDF0)),
+        border: Border.all(color: AppColors.border(context, Color(0xFFE8DDF0))),
       ),
       child: Column(
         children: [
@@ -44,7 +45,7 @@ class TopUpFeeSummary extends StatelessWidget {
             pricing.totalCharge,
             textStyle.copyWith(
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
             ),
             isTotal: true,
           ),

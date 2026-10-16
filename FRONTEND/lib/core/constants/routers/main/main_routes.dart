@@ -3,6 +3,8 @@ class MainRoutes {
   static const String bookNow = '/book-now';
   static const String lespay = '/lespay';
   static const String inbox = '/inbox';
+  static const String notifications = '/notifications';
+  static const String orderHistory = '/orders';
   static const String profile = '/profile';
   static const String transactions = '/transactions';
   static const String favorites = '/favorites';
@@ -16,6 +18,7 @@ class MainRoutes {
   static const String referralDashboard = '/referral-dashboard';
   static const String faqs = '/faqs';
   static const String supportTickets = '/support-tickets';
+  static const String supportTicketDetail = '/support-ticket-detail';
   static const String customerServiceChat = '/customer-service-chat';
   static const String documentVerification = '/document-verification';
   static const String about = '/about';

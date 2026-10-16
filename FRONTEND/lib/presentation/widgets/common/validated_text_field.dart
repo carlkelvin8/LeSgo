@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -118,10 +119,10 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
             children: [
               Text(
                 widget.label,
-                style: const TextStyle(
+                style:  TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: AppColors.foreground(context, Colors.black87),
                   fontFamily: 'TT Fors',
                 ),
               ),
@@ -171,7 +172,7 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
           decoration: InputDecoration(
             hintText: widget.hint,
             hintStyle: TextStyle(
-              color: Colors.grey.shade400,
+              color: AppColors.foreground(context, Colors.grey.shade400),
               fontSize: 14,
               fontFamily: 'TT Fors',
             ),
@@ -226,7 +227,7 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(
-                color: Colors.grey.shade200,
+                color: AppColors.foreground(context, Colors.grey.shade200),
                 width: 1,
               ),
             ),
@@ -234,8 +235,8 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
             // Fill color
             filled: true,
             fillColor: widget.enabled
-                ? (_isFocused ? Colors.white : Colors.grey.shade50)
-                : Colors.grey.shade100,
+                ? (_isFocused ? AppColors.surface(context, Colors.white) : AppColors.surface(context, Colors.grey.shade50))
+                : AppColors.surface(context, Colors.grey.shade100),
             
             // Padding
             contentPadding: const EdgeInsets.symmetric(

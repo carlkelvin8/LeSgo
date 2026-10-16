@@ -176,7 +176,7 @@ class CartScreen extends ConsumerWidget {
 
                 // Payment method
                 DropdownButtonFormField<String>(
-                  value: paymentMethod,
+                  initialValue: paymentMethod,
                   decoration: InputDecoration(
                     labelText: 'Payment method',
                     border: OutlineInputBorder(

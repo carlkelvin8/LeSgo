@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -42,18 +43,18 @@ class CustomTextField extends StatelessWidget {
         labelText: labelText,
         labelStyle: TextStyle(
           fontFamily: 'TT Fors',
-          color: Colors.grey[700],
+          color: AppColors.foreground(context, Colors.grey[700]!),
           fontSize: fontSize * 0.9,
         ),
         suffixIcon: suffixIcon,
         counterText: maxLength != null ? null : '',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: AppColors.border(context, Colors.grey[300]!)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: AppColors.border(context, Colors.grey[300]!)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -61,10 +62,10 @@ class CustomTextField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[200]!),
+          borderSide: BorderSide(color: AppColors.border(context, Colors.grey[200]!)),
         ),
         filled: true,
-        fillColor: enabled ? Colors.white : Colors.grey[100],
+        fillColor: enabled ? AppColors.surface(context, Colors.white) : AppColors.surface(context, Colors.grey[100]!),
         contentPadding: EdgeInsets.symmetric(
           horizontal: padding,
           vertical: padding,

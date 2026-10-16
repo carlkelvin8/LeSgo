@@ -51,18 +51,7 @@ class MerchantSettingsSection extends StatelessWidget {
           label: 'Printer Settings',
           route: MainRoutes.merchantPrinterSettings,
         ),
-        _SettingsTile(
-          icon: Icons.person_off_outlined,
-          label: 'Deactivate account',
-          route: MainRoutes.merchantDeactivateAccount,
-          isDestructive: true,
-        ),
-        _SettingsTile(
-          icon: Icons.delete_forever_outlined,
-          label: 'Delete account permanently',
-          route: MainRoutes.merchantDeleteAccount,
-          isDestructive: true,
-        ),
+        // Removed Deactivate and Delete account options - redundant for merchants
       ],
     );
   }
@@ -72,13 +61,12 @@ class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String route;
-  final bool isDestructive;
+  final bool isDestructive = false;
 
   const _SettingsTile({
     required this.icon,
     required this.label,
     required this.route,
-    this.isDestructive = false,
   });
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import '../../../../data/data_source/address_remote_datasource.dart';
 import '../../../../data/data_source/dto/address/address_dto.dart';
 import '../../../../data/data_source/dto/address/create_address_request_dto.dart';
@@ -46,7 +47,8 @@ class AddressState {
     );
   }
 
-  AddressDto? get defaultAddress => AddressState.resolveDefaultAddress(addresses);
+  AddressDto? get defaultAddress =>
+      AddressState.resolveDefaultAddress(addresses);
 
   /// Preferred delivery address: explicit selection, then default.
   AddressDto? get deliveryAddress => selectedAddress ?? defaultAddress;
@@ -80,26 +82,37 @@ class AddressState {
 
 class AddressNotifier extends StateNotifier<AddressState> {
   AddressNotifier() : super(AddressState());
+  int _loadGeneration = 0;
 
   /// Load all addresses for the current user
   Future<void> loadAddresses(int userId) async {
+    final generation = ++_loadGeneration;
+    final selectedAddressId = state.selectedAddress?.id;
     state = state.copyWith(isLoading: true, error: null);
 
     try {
       final addressDataSource = getIt<AddressRemoteDataSource>();
       final response = await addressDataSource.getAddresses();
+      if (generation != _loadGeneration || !mounted) return;
 
       if (response.success) {
         print('🔍 AddressProvider: Loaded ${response.data.length} addresses');
         for (var addr in response.data) {
-          print('  - ${addr.label}: ${addr.addressLine1} (${addr.latitude}, ${addr.longitude})');
+          print(
+            '  - ${addr.label}: ${addr.addressLine1} (${addr.latitude}, ${addr.longitude})',
+          );
         }
-        final defaultAddr =
-            AddressState.resolveDefaultAddress(response.data);
+        final defaultAddr = AddressState.resolveDefaultAddress(response.data);
+        final preservedSelection = selectedAddressId == null
+            ? null
+            : response.data.cast<AddressDto?>().firstWhere(
+                (address) => address?.id == selectedAddressId,
+                orElse: () => null,
+              );
         state = state.copyWith(
           addresses: response.data,
           isLoading: false,
-          selectedAddress: defaultAddr,
+          selectedAddress: preservedSelection ?? defaultAddr,
         );
       } else {
         state = state.copyWith(
@@ -108,10 +121,8 @@ class AddressNotifier extends StateNotifier<AddressState> {
         );
       }
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      if (generation != _loadGeneration || !mounted) return;
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -182,7 +193,8 @@ class AddressNotifier extends StateNotifier<AddressState> {
     final resolvedPhone = contactPhone.trim().isNotEmpty
         ? contactPhone.trim()
         : '09000000000';
-    final resolvedCountry = country ??
+    final resolvedCountry =
+        country ??
         inferCountry(
           latitude: latitude,
           longitude: longitude,
@@ -258,7 +270,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
       print('🔵 AddressProvider: - addressLine2: $addressLine2');
       print('🔵 AddressProvider: - latitude: $latitude');
       print('🔵 AddressProvider: - longitude: $longitude');
-      
+
       final addressDataSource = getIt<AddressRemoteDataSource>();
       final request = CreateAddressRequestDto(
         label: label,
@@ -277,7 +289,9 @@ class AddressNotifier extends StateNotifier<AddressState> {
 
       print('🔵 AddressProvider: Calling API...');
       final response = await addressDataSource.createAddress(request);
-      print('🔵 AddressProvider: Response - success: ${response.success}, error: ${response.error}');
+      print(
+        '🔵 AddressProvider: Response - success: ${response.success}, error: ${response.error}',
+      );
 
       if (response.success && response.data != null) {
         print('🔵 AddressProvider: Address created successfully');
@@ -307,10 +321,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
       }
     } catch (e) {
       print('🔴 AddressProvider: Exception - $e');
-      state = state.copyWith(
-        isCreating: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isCreating: false, error: e.toString());
 
       if (context != null && context.mounted) {
         SnackBarUtils.showError(
@@ -359,7 +370,10 @@ class AddressNotifier extends StateNotifier<AddressState> {
         isDefault: isDefault,
       );
 
-      final response = await addressDataSource.updateAddress(addressId, request);
+      final response = await addressDataSource.updateAddress(
+        addressId,
+        request,
+      );
       print(
         '🔵 AddressProvider: Update response - success: ${response.success}, error: ${response.error}',
       );
@@ -377,10 +391,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
       } else {
         final message = response.error ?? 'Failed to update address';
         print('🔴 AddressProvider: Update failed - $message');
-        state = state.copyWith(
-          isUpdating: false,
-          error: message,
-        );
+        state = state.copyWith(isUpdating: false, error: message);
 
         if (context != null && context.mounted) {
           SnackBarUtils.showError(context, message);
@@ -389,10 +400,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
       }
     } catch (e) {
       print('🔴 AddressProvider: Update exception - $e');
-      state = state.copyWith(
-        isUpdating: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isUpdating: false, error: e.toString());
 
       if (context != null && context.mounted) {
         SnackBarUtils.showError(
@@ -441,10 +449,7 @@ class AddressNotifier extends StateNotifier<AddressState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(
-        isDeleting: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isDeleting: false, error: e.toString());
 
       if (context != null && context.mounted) {
         SnackBarUtils.showError(
@@ -481,7 +486,9 @@ class AddressNotifier extends StateNotifier<AddressState> {
   }
 }
 
-final addressProvider =
-    StateNotifierProvider<AddressNotifier, AddressState>((ref) {
+final addressProvider = StateNotifierProvider<AddressNotifier, AddressState>((
+  ref,
+) {
+  ref.watch(userSessionEpochProvider);
   return AddressNotifier();
 });

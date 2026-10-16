@@ -44,13 +44,25 @@ class OrdersApi {
     String? cancelReason,
   }) async {
     final data = <String, dynamic>{'status': status};
+    if (status == 'completed') {
+      final order = await getOrderById(orderId);
+      if (order == null) {
+        throw Exception('Could not verify delivery proof. Please try again.');
+      }
+      final proofs = order['proof_images'];
+      final hasUploadedProof =
+          proofs is List &&
+          proofs.any((proof) => proof is String && proof.trim().isNotEmpty);
+      if (!hasUploadedProof) {
+        throw Exception(
+          'Upload at least one proof of delivery photo before completing this order.',
+        );
+      }
+    }
     if (cancelReason != null && cancelReason.isNotEmpty) {
       data['cancel_reason'] = cancelReason;
     }
-    final res = await _dio.patch(
-      '/v1/orders/$orderId/status',
-      data: data,
-    );
+    final res = await _dio.patch('/v1/orders/$orderId/status', data: data);
     return res.data as Map<String, dynamic>;
   }
 
@@ -109,10 +121,12 @@ class OrdersApi {
 
     for (var i = 0; i < imageFiles.length; i++) {
       final bytes = await imageFiles[i].readAsBytes();
-      formData.files.add(MapEntry(
-        'images[]',
-        MultipartFile.fromBytes(bytes, filename: imageFiles[i].name),
-      ));
+      formData.files.add(
+        MapEntry(
+          'images[]',
+          MultipartFile.fromBytes(bytes, filename: imageFiles[i].name),
+        ),
+      );
     }
 
     final res = await _dio.post(

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -21,7 +22,7 @@ class StoreCartBar extends StatelessWidget {
         vertical: ResponsiveUtils.spacing(context, 16),
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF5F2D82),
+        color: AppColors.accent(context, Color(0xFF5F2D82)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -39,7 +40,7 @@ class StoreCartBar extends StatelessWidget {
               width: ResponsiveUtils.spacing(context, 40),
               height: ResponsiveUtils.spacing(context, 40),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface(context, Colors.white),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -49,7 +50,7 @@ class StoreCartBar extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF5F2D82),
+                    color: AppColors.accent(context, Color(0xFF5F2D82)),
                   ),
                 ),
               ),
@@ -66,7 +67,7 @@ class StoreCartBar extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppColors.onAccent(context),
                   ),
                 ),
               ),
@@ -79,7 +80,7 @@ class StoreCartBar extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 18),
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: AppColors.onAccent(context),
               ),
             ),
           ],

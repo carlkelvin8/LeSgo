@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../provider/register/controller/address.controller.notifier.dart';
@@ -38,7 +39,7 @@ class _AddressScreenState extends ConsumerState<AddressScreen> {
     final registerState = ref.watch(registerProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Stack(

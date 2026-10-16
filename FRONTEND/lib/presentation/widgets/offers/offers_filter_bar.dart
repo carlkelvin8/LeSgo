@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/responsive_utils.dart';
@@ -38,12 +39,12 @@ class OffersFilterBar extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
               fontWeight: FontWeight.w700,
-              color: isSelected ? Colors.white : Colors.grey[700],
+              color: isSelected ? Colors.white : AppColors.foreground(context, Colors.grey[700]!),
             ),
             selectedColor: const Color(0xFF5F2D82),
-            backgroundColor: Colors.grey[100],
+            backgroundColor: AppColors.surface(context, Colors.grey[100]!),
             side: BorderSide(
-              color: isSelected ? const Color(0xFF5F2D82) : Colors.grey[200]!,
+              color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey[200]!),
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(22),

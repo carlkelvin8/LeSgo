@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,7 +55,7 @@ class LesgoMapPanel extends ConsumerWidget {
                           width: ResponsiveUtils.fontSize(context, 80),
                           height: ResponsiveUtils.fontSize(context, 80),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.surface(context, Colors.white),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -44,7 +45,7 @@ class DrawerLogoutButton extends ConsumerWidget {
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white.withValues(alpha: 0.2),
+          backgroundColor: AppColors.surface(context, Colors.white).withValues(alpha: 0.2),
           foregroundColor: Colors.white,
           padding: EdgeInsets.symmetric(
             vertical: ResponsiveUtils.spacing(context, 14),

@@ -126,6 +126,7 @@ class _MerchantMenuEditItemScreenState
                           itemName: itemName,
                         );
                         if (deleted && mounted) {
+                          if (!context.mounted) return;
                           Navigator.pop(context);
                         }
                       },

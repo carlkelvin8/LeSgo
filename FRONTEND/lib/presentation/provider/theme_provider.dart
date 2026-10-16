@@ -10,17 +10,16 @@ final themeModeProvider =
 });
 
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  ThemeModeNotifier() : super(_loadInitial());
+  ThemeModeNotifier({AppPreferencesService? preferences})
+      : _preferences = preferences ?? getIt<AppPreferencesService>(),
+        super((preferences ?? getIt<AppPreferencesService>()).darkModeEnabled
+            ? ThemeMode.dark : ThemeMode.light);
 
-  static ThemeMode _loadInitial() {
-    final prefs = getIt<AppPreferencesService>();
-    if (prefs.darkModeEnabled) return ThemeMode.dark;
-    return ThemeMode.light;
-  }
+  final AppPreferencesService _preferences;
 
   Future<void> setDarkMode(bool enabled) async {
-    await getIt<AppPreferencesService>().setDarkModeEnabled(enabled);
-    state = enabled ? ThemeMode.dark : ThemeMode.light;
+    await _preferences.setDarkModeEnabled(enabled);
+    if (mounted) state = enabled ? ThemeMode.dark : ThemeMode.light;
   }
 
   Future<void> toggle() => setDarkMode(state != ThemeMode.dark);

@@ -22,17 +22,17 @@ class ServiceAreaResult {
   static ServiceAreaResult unavailable() => const ServiceAreaResult(
         isAvailable: false,
         messageEn:
-            'LesGo is not available in your area yet. We currently serve Cagayan de Oro and nearby towns.',
+            'LesGo is not available in your area yet. We currently serve Claveria, Cagayan and nearby towns.',
         messageTl:
-            'Hindi pa available ang LesGo sa iyong lugar. Kasalukuyang serbisyo: Cagayan de Oro at kalapit na bayan.',
+            'Hindi pa available ang LesGo sa iyong lugar. Kasalukuyang serbisyo: Claveria, Cagayan at kalapit na bayan.',
       );
 }
 
-/// Validates pickup/dropoff against geofence API with CDO-radius fallback.
+/// Validates pickup/dropoff against geofence API with Claveria-radius fallback.
 class ServiceAreaChecker {
   ServiceAreaChecker._();
 
-  /// Set to `true` to restrict bookings to the CDO geofence / service radius.
+  /// Set to `true` to restrict bookings to the Claveria geofence / service radius.
   static const bool enforceServiceArea = false;
 
   static Future<ServiceAreaResult> checkCoordinates({

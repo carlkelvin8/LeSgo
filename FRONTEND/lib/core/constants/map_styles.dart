@@ -1,6 +1,11 @@
+import 'package:flutter/material.dart';
+
 /// Google Maps style JSON strings.
 class MapStyles {
   MapStyles._();
+
+  static String? darkIfDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? dark : null;
 
   static const String dark = '''
 [

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -53,7 +54,9 @@ class _OrderDigitalPaymentScreenState
             return NavigationDecision.navigate;
           },
           onWebResourceError: (error) {
-            if (mounted) setState(() => _webViewFailed = true);
+            if (mounted && error.isForMainFrame == true) {
+              setState(() => _webViewFailed = true);
+            }
           },
         ),
       )
@@ -139,7 +142,7 @@ class _OrderDigitalPaymentScreenState
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: Colors.grey[700],
+                    color: AppColors.foreground(context, Colors.grey[700]!),
                   ),
                 ),
                 Text(
@@ -148,7 +151,7 @@ class _OrderDigitalPaymentScreenState
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 18),
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF5F2D82),
+                    color: AppColors.accent(context, Color(0xFF5F2D82)),
                   ),
                 ),
               ],

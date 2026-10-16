@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../presentation/screens/auth/register_screen.dart';
 import '../../../../presentation/screens/auth/steps/terms_of_service_screen.dart';
 import '../../../../presentation/screens/auth/steps/personal_info_screen.dart';
 import '../../../../presentation/screens/auth/steps/verification_screen.dart';
@@ -11,7 +10,7 @@ import 'register_routes.dart';
 class RegisterRouter {
   static final Map<String, WidgetBuilder> _routes = {
     // Registration flow
-    RegisterRoutes.register: (_) => const RegisterScreen(),
+    RegisterRoutes.register: (_) => const TermsOfServiceScreen(),
     RegisterRoutes.termsOfService: (_) => const TermsOfServiceScreen(),
     RegisterRoutes.personalInfo: (_) => const PersonalInfoScreen(),
     RegisterRoutes.verification: (_) => const VerificationScreen(),

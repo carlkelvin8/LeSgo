@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -50,7 +51,7 @@ class PaymentMethodSelector extends StatelessWidget {
       ),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -60,16 +61,21 @@ class PaymentMethodSelector extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: RadioGroup<String>(
+        groupValue: selectedMethod,
+        onChanged: (v) {
+          if (enabled && v != null) onMethodChanged(v);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Section Title
           Row(
             children: [
               Icon(
                 Icons.payment,
                 size: ResponsiveUtils.fontSize(context, 20),
-                color: const Color(0xFF5F2D82),
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 8)),
               Text(
@@ -78,7 +84,7 @@ class PaymentMethodSelector extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 16),
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: AppColors.foreground(context, Colors.black87),
                 ),
               ),
             ],
@@ -107,7 +113,7 @@ class PaymentMethodSelector extends StatelessWidget {
                   ? _walletBalanceLabel
                   : 'Digital wallet payment',
               icon: Icons.account_balance_wallet,
-              iconColor: const Color(0xFF5F2D82),
+              iconColor: AppColors.accent(context, Color(0xFF5F2D82)),
               enabled: enabled && _walletHasSufficientBalance,
             ),
           ],
@@ -125,6 +131,7 @@ class PaymentMethodSelector extends StatelessWidget {
             ),
           ],
         ],
+      ),
       ),
     );
   }
@@ -146,13 +153,13 @@ class PaymentMethodSelector extends StatelessWidget {
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF5F2D82).withValues(alpha: 0.05)
-              : Colors.grey.shade50,
+              ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.05)
+              : AppColors.surface(context, Colors.grey.shade50),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF5F2D82)
-                : Colors.grey.shade300,
+                ? AppColors.accent(context, Color(0xFF5F2D82))
+                : AppColors.border(context, Colors.grey.shade300),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -164,13 +171,13 @@ class PaymentMethodSelector extends StatelessWidget {
               decoration: BoxDecoration(
                 color: enabled
                     ? iconColor.withValues(alpha: 0.1)
-                    : Colors.grey.shade200,
+                    : AppColors.surface(context, Colors.grey.shade200),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
                 size: ResponsiveUtils.fontSize(context, 24),
-                color: enabled ? iconColor : Colors.grey,
+                color: enabled ? iconColor : AppColors.foreground(context, Colors.grey),
               ),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -186,7 +193,7 @@ class PaymentMethodSelector extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
                       fontWeight: FontWeight.w600,
-                      color: enabled ? Colors.black87 : Colors.grey,
+                      color: enabled ? AppColors.foreground(context, Colors.black87) : AppColors.foreground(context, Colors.grey),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -195,7 +202,7 @@ class PaymentMethodSelector extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: enabled ? Colors.grey.shade600 : Colors.grey,
+                      color: enabled ? AppColors.foreground(context, Colors.grey.shade600) : AppColors.foreground(context, Colors.grey),
                     ),
                   ),
                 ],
@@ -205,13 +212,7 @@ class PaymentMethodSelector extends StatelessWidget {
             // Radio Button
             Radio<String>(
               value: value,
-              groupValue: selectedMethod,
-              onChanged: enabled ? (String? newValue) {
-                if (newValue != null) {
-                  onMethodChanged(newValue);
-                }
-              } : null,
-              activeColor: const Color(0xFF5F2D82),
+              activeColor: AppColors.accent(context, const Color(0xFF5F2D82)),
             ),
           ],
         ),

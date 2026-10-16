@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 
@@ -20,8 +21,8 @@ class StoreProductQuantitySelector extends StatelessWidget {
     return Container(
       height: buttonHeight,
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFF5F2D82), width: 1.5),
+        color: AppColors.surface(context, Colors.white),
+        border: Border.all(color: AppColors.accent(context, Color(0xFF5F2D82)), width: 1.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -44,8 +45,8 @@ class StoreProductQuantitySelector extends StatelessWidget {
                     Icons.remove,
                     size: 20,
                     color: quantity > 1
-                        ? const Color(0xFF5F2D82)
-                        : Colors.grey[400],
+                        ? AppColors.accent(context, Color(0xFF5F2D82))
+                        : AppColors.foreground(context, Colors.grey[400]!),
                   ),
                 ),
               ),
@@ -58,7 +59,7 @@ class StoreProductQuantitySelector extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border.symmetric(
-                vertical: BorderSide(color: Colors.grey[200]!, width: 1),
+                vertical: BorderSide(color: AppColors.foreground(context, Colors.grey[200]!), width: 1),
               ),
             ),
             child: Text(
@@ -67,7 +68,7 @@ class StoreProductQuantitySelector extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.foreground(context, Colors.black87),
               ),
               textAlign: TextAlign.center,
             ),

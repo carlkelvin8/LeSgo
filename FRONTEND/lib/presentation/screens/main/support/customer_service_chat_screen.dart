@@ -1,9 +1,12 @@
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/support/customer_service_chat_provider.dart';
 import '../../../widgets/support/customer_service_message_bubble.dart';
 
@@ -39,8 +42,20 @@ class _CustomerServiceChatScreenState
   }
 
   Future<void> _send() async {
-    final text = _controller.text;
-    if (text.trim().isEmpty) return;
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    final chat = ref.read(customerServiceChatProvider);
+    if (chat.isSending) return;
+
+    if (!chat.isConfigured) {
+      SnackBarUtils.showError(
+        context,
+        'Support chat is currently unavailable. Please use "Talk to human support".',
+      );
+      return;
+    }
+
     _controller.clear();
     await ref.read(customerServiceChatProvider.notifier).sendMessage(text);
     _scrollToBottom();
@@ -55,7 +70,7 @@ class _CustomerServiceChatScreenState
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: AppBar(
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
@@ -64,32 +79,44 @@ class _CustomerServiceChatScreenState
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              backgroundColor: AppColors.surface(
+                context,
+                Colors.white,
+              ).withValues(alpha: 0.2),
               child: const Icon(Icons.support_agent, color: Colors.white),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 10)),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'LeSgo Support',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                    fontWeight: FontWeight.w700,
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'LeSGo Support',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 16),
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                Text(
-                  chatState.isConfigured
-                      ? 'AI Customer Service'
-                      : 'Live support available',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.white.withValues(alpha: 0.85),
+                  Text(
+                    chatState.isConfigured
+                        ? 'Customer Service'
+                        : (kDebugMode ? 'Setup required' : 'Live support'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 11),
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withValues(alpha: 0.95),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -121,7 +148,7 @@ class _CustomerServiceChatScreenState
           if (!chatState.isConfigured)
             Container(
               width: double.infinity,
-              color: const Color(0xFFFFF8E1),
+              color: AppColors.surface(context, Color(0xFFFFF8E1)),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
               child: Row(
                 children: [
@@ -257,8 +284,8 @@ class _CustomerServiceChatScreenState
         children: [
           const CircleAvatar(
             radius: 16,
-            backgroundColor: Color(0xFFE8D9F5),
-            child: Icon(
+            backgroundColor: const Color(0xFFE8D9F5),
+            child: const Icon(
               Icons.support_agent,
               size: 16,
               color: Color(0xFF5F2D82),
@@ -271,7 +298,7 @@ class _CustomerServiceChatScreenState
               vertical: ResponsiveUtils.spacing(context, 10),
             ),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: AppColors.surface(context, Colors.grey.shade100),
               borderRadius: BorderRadius.circular(16),
             ),
             child: SizedBox(
@@ -299,7 +326,7 @@ class _CustomerServiceChatScreenState
           ResponsiveUtils.spacing(context, 12),
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface(context, Colors.white),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -323,10 +350,10 @@ class _CustomerServiceChatScreenState
                   hintStyle: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
-                    color: Colors.grey.shade500,
+                    color: AppColors.foreground(context, Colors.grey.shade500),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade100,
+                  fillColor: AppColors.surface(context, Colors.grey.shade100),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -340,7 +367,7 @@ class _CustomerServiceChatScreenState
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
             Material(
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
               borderRadius: BorderRadius.circular(24),
               child: InkWell(
                 borderRadius: BorderRadius.circular(24),

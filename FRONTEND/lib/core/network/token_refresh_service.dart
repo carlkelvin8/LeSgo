@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:flutter/foundation.dart';
 
 import '../constants/api_constants.dart';
 import '../di/local_storage_service.dart';
@@ -10,6 +11,8 @@ class TokenRefreshService {
   final LocalStorageService _localStorageService;
   late final Dio _refreshDio;
   Future<String?>? _ongoingRefresh;
+  String? _refreshSessionToken;
+  String? _refreshSessionCredential;
 
   TokenRefreshService(this._localStorageService) {
     _refreshDio = Dio(
@@ -25,11 +28,23 @@ class TokenRefreshService {
     );
   }
 
-  Future<String?> refreshAccessToken() {
-    final inFlight = _ongoingRefresh;
-    if (inFlight != null) return inFlight;
+  @visibleForTesting
+  TokenRefreshService.withClient(this._localStorageService, Dio client) {
+    _refreshDio = client;
+  }
 
+  Future<String?> refreshAccessToken() {
+    final accessToken = _localStorageService.token;
     final refresh = _localStorageService.refreshToken;
+    final inFlight = _ongoingRefresh;
+    if (inFlight != null &&
+        accessToken == _refreshSessionToken &&
+        refresh == _refreshSessionCredential) {
+      return inFlight;
+    }
+
+    _refreshSessionToken = accessToken;
+    _refreshSessionCredential = refresh;
     if (refresh != null && refresh.isNotEmpty) {
       final future = _performRefreshWithBody(refresh);
       _ongoingRefresh = future;
@@ -40,7 +55,6 @@ class TokenRefreshService {
       });
     }
 
-    final accessToken = _localStorageService.token;
     if (accessToken != null && accessToken.isNotEmpty) {
       final future = _performRefreshWithBearer(accessToken);
       _ongoingRefresh = future;
@@ -55,14 +69,20 @@ class TokenRefreshService {
   }
 
   Future<String?> _performRefreshWithBody(String refreshToken) async {
+    final sessionToken = _localStorageService.token;
     try {
       final response = await _refreshDio.post(
         ApiConstants.authRefresh,
         data: {'refresh_token': refreshToken},
       );
 
+      if (_localStorageService.token != sessionToken ||
+          _localStorageService.refreshToken != refreshToken) {
+        return null;
+      }
       return _persistTokens(response.data);
-    } catch (_) {
+    } on DioException catch (error) {
+      if (!_isRejectedSession(error)) rethrow;
       return null;
     }
   }
@@ -71,16 +91,19 @@ class TokenRefreshService {
     try {
       final response = await _refreshDio.post(
         ApiConstants.authRefresh,
-        options: Options(
-          headers: {'Authorization': 'Bearer $accessToken'},
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
+      if (_localStorageService.token != accessToken) return null;
       return _persistTokens(response.data);
-    } catch (_) {
+    } on DioException catch (error) {
+      if (!_isRejectedSession(error)) rethrow;
       return null;
     }
   }
+
+  bool _isRejectedSession(DioException error) =>
+      const {401, 403, 422}.contains(error.response?.statusCode);
 
   Future<String?> _persistTokens(dynamic raw) async {
     final tokens = _extractTokens(raw);
@@ -109,10 +132,7 @@ class TokenRefreshService {
       );
     }
 
-    return (
-      map['token'] as String?,
-      map['refresh_token'] as String?,
-    );
+    return (map['token'] as String?, map['refresh_token'] as String?);
   }
 
   /// Persist tokens returned by login/register/change-password responses.

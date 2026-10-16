@@ -32,8 +32,10 @@ class PrimaryButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          backgroundColor: backgroundColor ?? const Color(0xFF5F2D82),
-          foregroundColor: Colors.white,
+          backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.primary,
+          foregroundColor: backgroundColor == null
+              ? Theme.of(context).colorScheme.onPrimary
+              : Colors.white,
           elevation: 0,
         ),
         child: isLoading

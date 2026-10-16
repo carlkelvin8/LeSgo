@@ -23,47 +23,39 @@ class MerchantRevenueChart extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        return Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Revenue Trend',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 15),
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+        return Material(
+          color: const Color(0xFFF5F4F7),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Revenue Trend',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF302B36),
+                  ),
                 ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-              Text(
-                'PHP ${summary.totalRevenue.toStringAsFixed(2)} total',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.grey.shade600,
+                SizedBox(height: ResponsiveUtils.spacing(context, 3)),
+                Text(
+                  'PHP ${summary.totalRevenue.toStringAsFixed(2)} total',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 10.5),
+                    color: const Color(0xFF918A98),
+                  ),
                 ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              SizedBox(
-                height: 140,
-                child: _BarChart(trend: summary.trend),
-              ),
-            ],
+                SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                SizedBox(
+                  height: 130,
+                  child: _BarChart(trend: summary.trend),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -92,7 +84,7 @@ class _BarChart extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: displayTrend.map((point) {
         final barHeight =
-            maxRevenue > 0 ? (point.revenue / maxRevenue) * 110 : 0.0;
+            maxRevenue > 0 ? (point.revenue / maxRevenue) * 100 : 0.0;
         final showLabel = point.label.isNotEmpty;
 
         return Expanded(
@@ -106,8 +98,8 @@ class _BarChart extends StatelessWidget {
                   height: barHeight < 4 && point.revenue > 0 ? 4 : barHeight,
                   decoration: BoxDecoration(
                     color: point.revenue > 0
-                        ? const Color(0xFF5F2D82)
-                        : Colors.grey.shade200,
+                        ? const Color(0xFF8054A2)
+                        : const Color(0xFFE0DDE5),
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(3)),
                   ),
@@ -119,7 +111,7 @@ class _BarChart extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 9),
-                      color: Colors.grey.shade600,
+                      color: const Color(0xFF918A98),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.clip,

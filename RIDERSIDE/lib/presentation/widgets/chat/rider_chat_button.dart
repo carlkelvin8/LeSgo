@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/chat/chat_provider.dart';
@@ -92,6 +94,7 @@ class _FloatingRiderChatButtonState
   int _unreadCount = 0;
   int _lastKnownCount = 0;
   late final _pollTimer = Stream.periodic(const Duration(seconds: 5));
+  StreamSubscription<dynamic>? _pollSubscription;
   bool _mounted = true;
 
   @override
@@ -103,6 +106,8 @@ class _FloatingRiderChatButtonState
   @override
   void dispose() {
     _mounted = false;
+    _pollSubscription?.cancel();
+    _pollSubscription = null;
     // Clear any lingering snackbars from this widget
     try {
       ScaffoldMessenger.maybeOf(context)?.clearSnackBars();
@@ -113,11 +118,11 @@ class _FloatingRiderChatButtonState
   void _startPolling() async {
     // Initial check
     await _checkUnread();
+    if (!_mounted) return;
     // Then poll every 5 seconds
-    await for (final _ in _pollTimer) {
-      if (!_mounted) break;
-      await _checkUnread();
-    }
+    _pollSubscription = _pollTimer.listen((_) {
+      _checkUnread();
+    });
   }
 
   Future<void> _checkUnread() async {
@@ -125,8 +130,8 @@ class _FloatingRiderChatButtonState
     try {
       final chatNotifier = ref.read(chatProviderFamily(widget.orderId).notifier);
       await chatNotifier.loadUnreadCount();
-      final chatState = ref.read(chatProviderFamily(widget.orderId));
       if (!_mounted) return;
+      final chatState = ref.read(chatProviderFamily(widget.orderId));
 
       final newCount = chatState.unreadCount;
       if (newCount > _lastKnownCount && _lastKnownCount >= 0) {

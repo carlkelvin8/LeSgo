@@ -10,20 +10,17 @@ param(
 $ErrorActionPreference = "Stop"
 $SecretsFile = "secrets.json"
 
-# Verify secrets.json exists
-if (-not (Test-Path $SecretsFile)) {
-    Write-Host "ERROR: $SecretsFile not found!" -ForegroundColor Red
-    Write-Host "Copy secrets.example.json to secrets.json and fill in your values." -ForegroundColor Yellow
-    exit 1
+if ($Command -eq "clean") {
+    Write-Host "`n> flutter clean && flutter pub get" -ForegroundColor Green
+    flutter clean
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    flutter pub get
+    exit $LASTEXITCODE
 }
 
-# Verify secrets.json has actual values (not placeholders)
-$secrets = Get-Content $SecretsFile | ConvertFrom-Json
-if ($secrets.GOOGLE_MAPS_API_KEY -like "your-*" -or $secrets.GOOGLE_MAPS_API_KEY -eq "") {
-    Write-Host "ERROR: secrets.json contains placeholder values!" -ForegroundColor Red
-    Write-Host "Fill in real API keys before building." -ForegroundColor Yellow
-    exit 1
-}
+# Validate every build-time value and the Android Firebase/OAuth package mapping.
+& (Join-Path $PSScriptRoot "tool\validate_secrets.ps1") -SecretsFile $SecretsFile
+if (-not $?) { exit 1 }
 
 Write-Host "Building LeSGo Customer App..." -ForegroundColor Cyan
 Write-Host "Secrets: $SecretsFile" -ForegroundColor Gray
@@ -57,10 +54,5 @@ switch ($Command) {
     "run" {
         Write-Host "`n> flutter run --dart-define-from-file" -ForegroundColor Green
         flutter run --dart-define-from-file=$SecretsFile
-    }
-    "clean" {
-        Write-Host "`n> flutter clean && flutter pub get" -ForegroundColor Green
-        flutter clean
-        flutter pub get
     }
 }

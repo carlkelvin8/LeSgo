@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/responsive_utils.dart';
@@ -25,7 +26,10 @@ class PromoCard extends StatelessWidget {
     final width = ResponsiveUtils.screenWidth(context) * 0.7; // Wider card
     final margin = ResponsiveUtils.spacing(context, 16);
     final borderRadius = ResponsiveUtils.spacing(context, 20); // More rounded
-    final color = accentColor ?? const Color(0xFF5F2D82);
+    final color = AppColors.accent(
+      context,
+      accentColor ?? const Color(0xFF5F2D82),
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -43,7 +47,7 @@ class PromoCard extends StatelessWidget {
                   top: 0,
                   child: Icon(
                     Icons.arrow_outward,
-                    color: Colors.grey[400],
+                    color: AppColors.foreground(context, Colors.grey[400]!),
                     size: 18,
                   ),
                 ),
@@ -80,7 +84,7 @@ class PromoCard extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w800,
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -92,7 +96,7 @@ class PromoCard extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 11),
-                          color: Colors.grey[500],
+                          color: AppColors.foreground(context, Colors.grey[500]!),
                           height: 1.2,
                         ),
                         maxLines: 2,
@@ -115,21 +119,15 @@ class PromoCard extends StatelessWidget {
     required Widget child,
     required double radius,
   }) {
-    // Note: DottedBorder package might not be installed, so falling back to standard container if needed.
-    // Given I cannot easily check pubspec, I will stick to standard BoxDecoration with DASHED effect if I could,
-    // but simplifying to a solid light background which is safer and premium looking.
-    // The reference image looks like a solid light container with a dashed border *effect* or just light grey.
-    // Let's go with a solid light bluish-grey container.
-
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F7FA),
+        color: AppColors.surface(context, const Color(0xFFF7F7FA)),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: Colors.grey[300]!,
+          color: AppColors.border(context, Colors.grey[300]!),
           width: 1,
           style: BorderStyle.solid,
-        ), // Dashed difficult without package
+        ),
       ),
       child: child,
     );

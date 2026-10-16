@@ -92,8 +92,9 @@ class LesgoState {
       voucherCode: clearVoucher ? null : (voucherCode ?? this.voucherCode),
       discount: clearVoucher ? 0 : (discount ?? this.discount),
       isValidatingVoucher: isValidatingVoucher ?? this.isValidatingVoucher,
-      voucherError:
-          clearVoucherError ? null : (voucherError ?? this.voucherError),
+      voucherError: clearVoucherError
+          ? null
+          : (voucherError ?? this.voucherError),
       selectedPickupAddress: clearPickupAddress
           ? null
           : (selectedPickupAddress ?? this.selectedPickupAddress),
@@ -101,7 +102,9 @@ class LesgoState {
           ? null
           : (selectedDropoffAddress ?? this.selectedDropoffAddress),
       isBooking: isBooking ?? this.isBooking,
-      fareEstimate: clearFareEstimate ? null : (fareEstimate ?? this.fareEstimate),
+      fareEstimate: clearFareEstimate
+          ? null
+          : (fareEstimate ?? this.fareEstimate),
       isLoadingFare: isLoadingFare ?? this.isLoadingFare,
     );
   }
@@ -113,8 +116,7 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   GoogleMapController? _overlayMapController;
   final VoucherRemoteDataSource _voucherDataSource =
       getIt<VoucherRemoteDataSource>();
-  final OrderRemoteDataSource _orderDataSource =
-      getIt<OrderRemoteDataSource>();
+  final OrderRemoteDataSource _orderDataSource = getIt<OrderRemoteDataSource>();
   static const double _sheetMin = 0.04;
   static const double _sheetMax = 0.55;
   static const double _sheetDefault =
@@ -421,10 +423,7 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       dropoffLng: dropoff.longitude,
     );
 
-    state = state.copyWith(
-      fareEstimate: result,
-      isLoadingFare: false,
-    );
+    state = state.copyWith(fareEstimate: result, isLoadingFare: false);
   }
 
   /// Auto-fetch route and fare when both locations are available (from saved addresses).
@@ -495,10 +494,7 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       final data = response.data;
       if (!data.valid) {
         final msg = data.error ?? response.message;
-        state = state.copyWith(
-          isValidatingVoucher: false,
-          voucherError: msg,
-        );
+        state = state.copyWith(isValidatingVoucher: false, voucherError: msg);
         return msg;
       }
 
@@ -515,19 +511,13 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
         fallbackEn: 'Could not apply voucher. Please try again.',
         fallbackTl: 'Hindi ma-apply ang voucher. Subukan muli.',
       );
-      state = state.copyWith(
-        isValidatingVoucher: false,
-        voucherError: msg,
-      );
+      state = state.copyWith(isValidatingVoucher: false, voucherError: msg);
       return msg;
     }
   }
 
   void removeVoucher() {
-    state = state.copyWith(
-      clearVoucher: true,
-      clearVoucherError: true,
-    );
+    state = state.copyWith(clearVoucher: true, clearVoucherError: true);
   }
 
   bool get canApplyVoucher {
@@ -540,7 +530,10 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print(
       '🔍 LesGo: selectPickupAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
     );
-    state = state.copyWith(selectedPickupAddress: address, clearFareEstimate: true);
+    state = state.copyWith(
+      selectedPickupAddress: address,
+      clearFareEstimate: true,
+    );
     final coords = BookingGeoUtils.resolveCoords(
       lat: address.latitude,
       lng: address.longitude,
@@ -562,7 +555,10 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print(
       '🔍 LesGo: selectDropoffAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
     );
-    state = state.copyWith(selectedDropoffAddress: address, clearFareEstimate: true);
+    state = state.copyWith(
+      selectedDropoffAddress: address,
+      clearFareEstimate: true,
+    );
     final coords = BookingGeoUtils.resolveCoords(
       lat: address.latitude,
       lng: address.longitude,
@@ -620,25 +616,31 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   // Helper method to sync locations from selected addresses
   Future<void> _syncLocationsFromAddresses() async {
     final locationState = _ref.read(lesgoLocationProvider);
-    
+
     // Sync dropoff location from selected address if needed
-    if (locationState.destinationLocation == null && state.selectedDropoffAddress != null) {
+    if (locationState.destinationLocation == null &&
+        state.selectedDropoffAddress != null) {
       final address = state.selectedDropoffAddress!;
-      await _ref.read(lesgoLocationProvider.notifier).updateDestinationWithAddress(
-        LatLng(address.latitude, address.longitude),
-        address.addressLine1,
-        null,
-      );
+      await _ref
+          .read(lesgoLocationProvider.notifier)
+          .updateDestinationWithAddress(
+            LatLng(address.latitude, address.longitude),
+            address.addressLine1,
+            null,
+          );
     }
 
     // Sync pickup location from selected address if needed
-    if (locationState.pickupLocation == null && state.selectedPickupAddress != null) {
+    if (locationState.pickupLocation == null &&
+        state.selectedPickupAddress != null) {
       final address = state.selectedPickupAddress!;
-      await _ref.read(lesgoLocationProvider.notifier).updatePickupWithAddress(
-        LatLng(address.latitude, address.longitude),
-        address.addressLine1,
-        null,
-      );
+      await _ref
+          .read(lesgoLocationProvider.notifier)
+          .updatePickupWithAddress(
+            LatLng(address.latitude, address.longitude),
+            address.addressLine1,
+            null,
+          );
     }
   }
 
@@ -646,218 +648,235 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   Future<void> handleBook(BuildContext context) async {
     // Double-tap guard
     if (state.isBooking) return;
-    
-    if (!await NetworkGuard.ensureOnline(context)) return;
-    if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
-
     state = state.copyWith(isBooking: true);
 
-    print('🚀 LesGo: handleBook called!');
-    final locationState = _ref.read(lesgoLocationProvider);
+    try {
+      if (!await NetworkGuard.ensureOnline(context)) return;
+      if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
 
-    // Debug logging to understand the current state
-    print('🔍 LesGo Booking Debug:');
-    print('  - destinationLocation: ${locationState.destinationLocation}');
-    print('  - destinationAddress: ${locationState.destinationAddress}');
-    print('  - pickupLocation: ${locationState.pickupLocation}');
-    print('  - pickupAddress: ${locationState.pickupAddress}');
-    print('  - selectedDropoffAddress: ${state.selectedDropoffAddress}');
-    print('  - selectedPickupAddress: ${state.selectedPickupAddress}');
+      print('🚀 LesGo: handleBook called!');
+      final locationState = _ref.read(lesgoLocationProvider);
 
-    // Strict validation - destination is required
-    if (locationState.destinationLocation == null) {
-      SnackBarUtils.showWarning(
-        context,
-        'Please select a destination before booking',
-      );
-      
-      // Automatically open destination selection to help user
-      Future.delayed(const Duration(milliseconds: 500), () {
-        openDestinationSelection();
-      });
-      return;
-    }
+      // Debug logging to understand the current state
+      print('🔍 LesGo Booking Debug:');
+      print('  - destinationLocation: ${locationState.destinationLocation}');
+      print('  - destinationAddress: ${locationState.destinationAddress}');
+      print('  - pickupLocation: ${locationState.pickupLocation}');
+      print('  - pickupAddress: ${locationState.pickupAddress}');
+      print('  - selectedDropoffAddress: ${state.selectedDropoffAddress}');
+      print('  - selectedPickupAddress: ${state.selectedPickupAddress}');
 
-    // Sync locations from selected addresses if needed
-    await _syncLocationsFromAddresses();
-
-    // Re-read state after potential sync
-    final updatedLocationState = _ref.read(lesgoLocationProvider);
-
-    // Final validation - ensure both pickup and destination are set
-    if (updatedLocationState.pickupLocation == null) {
-      SnackBarUtils.showWarning(
-        context,
-        'Please select a pickup location before booking',
-      );
-      return;
-    }
-
-    if (updatedLocationState.destinationLocation == null) {
-      SnackBarUtils.showWarning(
-        context,
-        'Please select a destination before booking',
-      );
-      return;
-    }
-
-    final pickup = updatedLocationState.pickupLocation!;
-    final dropoff = updatedLocationState.destinationLocation!;
-
-    final serviceArea = await ServiceAreaChecker.checkBookingPoints(
-      pickupLat: pickup.latitude,
-      pickupLng: pickup.longitude,
-      dropoffLat: dropoff.latitude,
-      dropoffLng: dropoff.longitude,
-    );
-    if (!serviceArea.isAvailable) {
-      SnackBarUtils.showWarning(
-        context,
-        '${serviceArea.messageEn}\n${serviceArea.messageTl}',
-      );
-      return;
-    }
-
-    // Create real order via API
-    if (context.mounted) {
-      try {
-        final orderDataSource = getIt<OrderRemoteDataSource>();
-        final profileState = _ref.read(profileProvider);
-        final user = profileState.user;
-
-        final estimatedDistanceM = (updatedLocationState.distanceInKm != null)
-            ? (updatedLocationState.distanceInKm! * 1000).round()
-            : 5000;
-
-        final createOrderRequest = CreateOrderRequestDto(
-          serviceId: BookingServiceIds.lesgo,
-          estimatedDistanceM: estimatedDistanceM,
-          pickup: OrderAddressDto(
-            address: updatedLocationState.pickupAddress?.toString() ??
-                state.selectedPickupAddress?.addressLine1 ??
-                'Pickup Location',
-            lat: pickup.latitude,
-            lng: pickup.longitude,
-            contactName:
-                state.selectedPickupAddress?.contactName?.isNotEmpty == true
-                ? state.selectedPickupAddress!.contactName!
-                : (user?.name ?? 'Customer'),
-            contactPhone:
-                state.selectedPickupAddress?.contactPhone?.isNotEmpty == true
-                ? state.selectedPickupAddress!.contactPhone!
-                : (user?.phone ?? '+639123456789'),
-          ),
-          dropoff: OrderAddressDto(
-            address: updatedLocationState.destinationAddress?.toString() ??
-                state.selectedDropoffAddress?.addressLine1 ??
-                'Destination',
-            lat: dropoff.latitude,
-            lng: dropoff.longitude,
-            contactName:
-                state.selectedDropoffAddress?.contactName?.isNotEmpty == true
-                ? state.selectedDropoffAddress!.contactName!
-                : (user?.name ?? 'Customer'),
-            contactPhone:
-                state.selectedDropoffAddress?.contactPhone?.isNotEmpty == true
-                ? state.selectedDropoffAddress!.contactPhone!
-                : (user?.phone ?? '+639123456789'),
-          ),
-          notes: 'LesGo delivery booking',
-          paymentMethod: state.paymentMethod,
-          voucherCode: state.voucherCode,
-          discountAmount: state.discount > 0 ? state.discount : null,
-          meta: {
-            'item_description': state.itemDescription,
-            'item_weight': state.itemWeight,
-            'distance_km': updatedLocationState.distanceInKm,
-            'duration_seconds': updatedLocationState.durationInSeconds,
-            'order_type': 'lesgo',
-          },
-        );
-
-        final estimatedFare = await orderDataSource.getFareEstimateRaw(
-              serviceId: BookingServiceIds.lesgo,
-              estimatedDistanceM: createOrderRequest.estimatedDistanceM,
-              pickupLat: pickup.latitude,
-              pickupLng: pickup.longitude,
-              dropoffLat: dropoff.latitude,
-              dropoffLng: dropoff.longitude,
-            ) ??
-            0.0;
-
-        final payableFare = (estimatedFare > 0 ? estimatedFare : 50.0) -
-            state.discount;
-        final walletAmount = payableFare > 0 ? payableFare : 0.0;
-
-        final walletOk = await validateWalletBalanceForOrder(
-          _ref,
-          amount: walletAmount,
-          paymentMethod: state.paymentMethod,
-          context: context,
-        );
-        if (!walletOk) return;
-
-        print('🔵 LesGo: Creating order with API...');
-        final response = await orderDataSource.createOrder(createOrderRequest);
-        print('🟢 LesGo: Order created successfully - ID: ${response.data.id}');
-
-        final payAmount = response.data.effectiveTotalAmount > 0
-            ? response.data.effectiveTotalAmount
-            : response.data.estimatedFare;
-
-        if (!context.mounted) return;
-
-        final paid = await completeBookingPayment(
-          context: context,
-          ref: _ref,
-          orderId: response.data.id,
-          amount: payAmount,
-          paymentMethod: state.paymentMethod,
-          serviceLabel: 'LesGo',
-        );
-        if (!paid) return;
-
-        final orderId = response.data.id.toString();
-        final order = response.data;
-        final fb = order.fareBreakdown;
-
-        AppRouter.pushReplacement(
+      // Strict validation - destination is required
+      if (locationState.destinationLocation == null) {
+        SnackBarUtils.showWarning(
           context,
-          BookingRoutes.driverFinding,
-          arguments: {
-            'orderId': orderId,
-            'orderType': 'LesGo',
-            'orderData': {
-              'pickupAddress': updatedLocationState.pickupAddress?.toString(),
-              'dropoffAddress': updatedLocationState.destinationAddress
-                  ?.toString(),
-              'itemDescription': state.itemDescription,
-              'itemWeight': state.itemWeight,
-              'paymentMethod': state.paymentMethod,
-              'voucherCode': state.voucherCode,
-              'discount': state.discount,
-              'fare': payAmount,
-              'total': payAmount,
-              'estimated_fare': order.estimatedFare,
-              'baseFee': fb?['base_fare'] ?? order.estimatedFare,
-              'distanceFee': fb?['distance_fare'] ?? 0.0,
-              'serviceFee': fb?['service_fee'] ?? 0.0,
-            },
-          },
+          'Please select a destination before booking',
         );
-      } catch (e) {
-        print('🔴 LesGo: Error creating order - $e');
-        if (context.mounted) {
-          SnackBarUtils.showErrorFrom(
-            context,
-            e,
-            fallbackEn: 'Could not create your LesGo booking.',
-            fallbackTl: 'Hindi makagawa ng LesGo booking.',
-          );
-        }
-      } finally {
-        state = state.copyWith(isBooking: false);
+
+        // Automatically open destination selection to help user
+        Future.delayed(const Duration(milliseconds: 500), () {
+          openDestinationSelection();
+        });
+        return;
       }
+
+      // Sync locations from selected addresses if needed
+      await _syncLocationsFromAddresses();
+
+      // Re-read state after potential sync
+      final updatedLocationState = _ref.read(lesgoLocationProvider);
+
+      // Final validation - ensure both pickup and destination are set
+      if (updatedLocationState.pickupLocation == null) {
+        SnackBarUtils.showWarning(
+          context,
+          'Please select a pickup location before booking',
+        );
+        return;
+      }
+
+      if (updatedLocationState.destinationLocation == null) {
+        SnackBarUtils.showWarning(
+          context,
+          'Please select a destination before booking',
+        );
+        return;
+      }
+
+      final pickup = updatedLocationState.pickupLocation!;
+      final dropoff = updatedLocationState.destinationLocation!;
+
+      final serviceArea = await ServiceAreaChecker.checkBookingPoints(
+        pickupLat: pickup.latitude,
+        pickupLng: pickup.longitude,
+        dropoffLat: dropoff.latitude,
+        dropoffLng: dropoff.longitude,
+      );
+      if (!serviceArea.isAvailable) {
+        SnackBarUtils.showWarning(
+          context,
+          '${serviceArea.messageEn}\n${serviceArea.messageTl}',
+        );
+        return;
+      }
+
+      // Create real order via API
+      if (context.mounted) {
+        try {
+          final orderDataSource = getIt<OrderRemoteDataSource>();
+          final profileState = _ref.read(profileProvider);
+          final user = profileState.user;
+
+          final estimatedDistanceM = (updatedLocationState.distanceInKm != null)
+              ? (updatedLocationState.distanceInKm! * 1000).round()
+              : 5000;
+
+          final createOrderRequest = CreateOrderRequestDto(
+            serviceId: BookingServiceIds.lesgo,
+            estimatedDistanceM: estimatedDistanceM,
+            pickup: OrderAddressDto(
+              address:
+                  updatedLocationState.pickupAddress?.toString() ??
+                  state.selectedPickupAddress?.addressLine1 ??
+                  'Pickup Location',
+              lat: pickup.latitude,
+              lng: pickup.longitude,
+              contactName:
+                  state.selectedPickupAddress?.contactName?.isNotEmpty == true
+                  ? state.selectedPickupAddress!.contactName!
+                  : (user?.name ?? 'Customer'),
+              contactPhone:
+                  state.selectedPickupAddress?.contactPhone?.isNotEmpty == true
+                  ? state.selectedPickupAddress!.contactPhone!
+                  : (user?.phone ?? '+639123456789'),
+            ),
+            dropoff: OrderAddressDto(
+              address:
+                  updatedLocationState.destinationAddress?.toString() ??
+                  state.selectedDropoffAddress?.addressLine1 ??
+                  'Destination',
+              lat: dropoff.latitude,
+              lng: dropoff.longitude,
+              contactName:
+                  state.selectedDropoffAddress?.contactName?.isNotEmpty == true
+                  ? state.selectedDropoffAddress!.contactName!
+                  : (user?.name ?? 'Customer'),
+              contactPhone:
+                  state.selectedDropoffAddress?.contactPhone?.isNotEmpty == true
+                  ? state.selectedDropoffAddress!.contactPhone!
+                  : (user?.phone ?? '+639123456789'),
+            ),
+            notes: 'LesGo delivery booking',
+            paymentMethod: state.paymentMethod,
+            voucherCode: state.voucherCode,
+            discountAmount: state.discount > 0 ? state.discount : null,
+            meta: {
+              'item_description': state.itemDescription,
+              'item_weight': state.itemWeight,
+              'distance_km': updatedLocationState.distanceInKm,
+              'duration_seconds': updatedLocationState.durationInSeconds,
+              'order_type': 'lesgo',
+            },
+          );
+
+          final estimatedFare =
+              await orderDataSource.getFareEstimateRaw(
+                serviceId: BookingServiceIds.lesgo,
+                estimatedDistanceM: createOrderRequest.estimatedDistanceM,
+                pickupLat: pickup.latitude,
+                pickupLng: pickup.longitude,
+                dropoffLat: dropoff.latitude,
+                dropoffLng: dropoff.longitude,
+              ) ??
+              0.0;
+
+          final payableFare =
+              (estimatedFare > 0 ? estimatedFare : 50.0) - state.discount;
+          final walletAmount = payableFare > 0 ? payableFare : 0.0;
+
+          final walletOk = await validateWalletBalanceForOrder(
+            _ref,
+            amount: walletAmount,
+            paymentMethod: state.paymentMethod,
+            context: context,
+          );
+          if (!walletOk) return;
+
+          print('🔵 LesGo: Creating order with API...');
+          final response = await orderDataSource.createOrder(
+            createOrderRequest,
+          );
+          print(
+            '🟢 LesGo: Order created successfully - ID: ${response.data.id}',
+          );
+
+          final payAmount = response.data.effectiveTotalAmount > 0
+              ? response.data.effectiveTotalAmount
+              : response.data.estimatedFare;
+
+          if (!context.mounted) return;
+
+          final paid = await completeBookingPayment(
+            context: context,
+            ref: _ref,
+            orderId: response.data.id,
+            amount: payAmount,
+            paymentMethod: state.paymentMethod,
+            serviceLabel: 'LesGo',
+          );
+          if (!paid) return;
+
+          final orderId = response.data.id.toString();
+          final order = response.data;
+          final fb = order.fareBreakdown;
+
+          AppRouter.pushReplacement(
+            context,
+            BookingRoutes.driverFinding,
+            arguments: {
+              'orderId': orderId,
+              'orderType': 'LesGo',
+              'orderData': {
+                'pickupAddress': updatedLocationState.pickupAddress?.toString(),
+                'dropoffAddress': updatedLocationState.destinationAddress
+                    ?.toString(),
+                'itemDescription': state.itemDescription,
+                'itemWeight': state.itemWeight,
+                'paymentMethod': state.paymentMethod,
+                'voucherCode': state.voucherCode,
+                'discount': state.discount,
+                'fare': payAmount,
+                'total': payAmount,
+                'estimated_fare': order.estimatedFare,
+                'baseFee': fb?['base_fare'] ?? order.estimatedFare,
+                'distanceFee': fb?['distance_fare'] ?? 0.0,
+                'serviceFee': fb?['service_fee'] ?? 0.0,
+              },
+            },
+          );
+        } catch (e) {
+          print('🔴 LesGo: Error creating order - $e');
+          if (context.mounted) {
+            SnackBarUtils.showErrorFrom(
+              context,
+              e,
+              fallbackEn: 'Could not create your LesGo booking.',
+              fallbackTl: 'Hindi makagawa ng LesGo booking.',
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showErrorFrom(
+          context,
+          e,
+          fallbackEn: 'Could not create your LesGo booking.',
+          fallbackTl: 'Hindi makagawa ng LesGo booking.',
+        );
+      }
+    } finally {
+      state = state.copyWith(isBooking: false);
     }
   }
 

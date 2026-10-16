@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -29,7 +30,7 @@ class LesgoItemDetailsSection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 15),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -101,16 +102,16 @@ class _LesgoItemTextField extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
+            color: AppColors.foreground(context, Colors.grey[700]!),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 6)),
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: AppColors.surface(context, Colors.grey[50]!),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.grey[300]!,
+              color: AppColors.foreground(context, Colors.grey[300]!),
               width: 1,
             ),
           ),
@@ -123,14 +124,14 @@ class _LesgoItemTextField extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: fontSize,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
             decoration: InputDecoration(
               hintText: hintText,
               hintStyle: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: fontSize,
-                color: Colors.grey[400],
+                color: AppColors.foreground(context, Colors.grey[400]!),
               ),
               prefixIcon: Padding(
                 padding: EdgeInsets.only(
@@ -140,7 +141,7 @@ class _LesgoItemTextField extends StatelessWidget {
                 child: Icon(
                   prefixIcon,
                   size: ResponsiveUtils.spacing(context, 20),
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                 ),
               ),
               prefixIconConstraints: BoxConstraints(
@@ -151,7 +152,7 @@ class _LesgoItemTextField extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
               ),
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(

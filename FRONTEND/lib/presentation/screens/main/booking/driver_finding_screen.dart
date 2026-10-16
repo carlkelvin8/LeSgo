@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/order_contact_actions.dart';
 import '../../../../core/utils/responsive_utils.dart';
-import '../../../../core/utils/cart_cleanup.dart';
 import '../../../../core/utils/notification_helper.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/booking/booking_routes.dart';
@@ -47,7 +48,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     // Listen for driver found state and auto-navigate
     ref.listen<DriverFindingState>(driverFindingProvider, (previous, next) {
       if (next.driverFound && !next.isSearching && previous?.driverFound != true) {
-        print('ðŸŽ¯ Driver found! Auto-navigating to tracking screen...');
+        if (kDebugMode) debugPrint('Driver found! Auto-navigating to tracking screen...');
         // Show driver assigned notification
         if (next.driverName != null) {
           NotificationHelper.showDriverAssigned(
@@ -65,17 +66,10 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
         });
       }
 
-      final wasCancelled =
-          previous?.error?.toLowerCase().contains('cancelled') == true;
-      final isCancelled =
-          next.error?.toLowerCase().contains('cancelled') == true;
-      if (isCancelled && !wasCancelled) {
-        CartCleanup.clearAllCarts(ref);
-      }
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       body: SafeArea(
         child: Column(
           children: [
@@ -115,7 +109,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -129,7 +123,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           IconButton(
             onPressed: () => _handleCancelOrder(),
             icon: const Icon(Icons.arrow_back),
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
           Expanded(
             child: Text(
@@ -138,7 +132,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 18),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.foreground(context, Colors.black87),
               ),
               textAlign: TextAlign.center,
             ),
@@ -156,7 +150,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
                 );
               },
               icon: const Icon(Icons.chat_bubble_outline),
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
               tooltip: 'Message',
             )
           else
@@ -192,7 +186,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 24),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
 
@@ -203,7 +197,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: Colors.grey[600],
+            color: AppColors.foreground(context, Colors.grey[600]!),
           ),
         ),
 
@@ -274,7 +268,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
             ),
           ),
         ),
@@ -299,7 +293,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 20),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         
@@ -310,7 +304,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: Colors.grey[600],
+            color: AppColors.foreground(context, Colors.grey[600]!),
           ),
           textAlign: TextAlign.center,
         ),
@@ -327,7 +321,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                 ),
               ),
             ),
@@ -380,7 +374,6 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     if (!mounted) return;
 
     if (success) {
-      await CartCleanup.clearAllCarts(ref);
       Navigator.pop(context);
       return;
     }

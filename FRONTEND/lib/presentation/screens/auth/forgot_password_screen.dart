@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -24,8 +27,23 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  static const _resendCooldownSeconds = 60;
+  Timer? _resendTimer;
+  int _resendSecondsLeft = 0;
+
+  void _startResendCooldown() {
+    _resendTimer?.cancel();
+    setState(() => _resendSecondsLeft = _resendCooldownSeconds);
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return timer.cancel();
+      setState(() => _resendSecondsLeft--);
+      if (_resendSecondsLeft <= 0) timer.cancel();
+    });
+  }
+
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _emailController.dispose();
     _otpController.dispose();
     _passwordController.dispose();
@@ -40,12 +58,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final maxWidth = ResponsiveUtils.maxContentWidth(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface(context, Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(
+            Icons.arrow_back,
+            color: AppColors.foreground(context, Colors.black87),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -83,7 +104,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 24),
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -99,7 +120,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.grey[600],
+                        color: AppColors.foreground(context, Colors.grey[600]!),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -153,11 +174,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: Colors.grey[700],
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[700]!,
+                              ),
                             ),
                           ),
                           TextButton(
-                            onPressed: state.isLoading
+                            onPressed: state.isLoading || _resendSecondsLeft > 0
                                 ? null
                                 : () => _resendOtp(),
                             style: TextButton.styleFrom(
@@ -166,11 +190,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
                             child: Text(
-                              'Resend',
+                              _resendSecondsLeft > 0
+                                  ? 'Resend in ${_resendSecondsLeft}s'
+                                  : 'Resend',
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: const Color(0xFF5F2D82),
+                                color: AppColors.accent(
+                                  context,
+                                  Color(0xFF5F2D82),
+                                ),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -198,7 +227,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             _obscurePassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: Colors.grey[600],
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[600]!,
+                            ),
                           ),
                           onPressed: () {
                             setState(() {
@@ -220,7 +252,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             _obscureConfirmPassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: Colors.grey[600],
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[600]!,
+                            ),
                           ),
                           onPressed: () {
                             setState(() {
@@ -269,6 +304,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         .sendOtp(_emailController.text.trim());
 
     if (success && mounted) {
+      _startResendCooldown();
       SnackBarUtils.showSuccess(context, 'OTP sent to your email');
     } else if (mounted) {
       final error = ref.read(forgotPasswordProvider).errorMessage;
@@ -282,6 +318,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         .resendOtp(_emailController.text.trim());
 
     if (success && mounted) {
+      _startResendCooldown();
       SnackBarUtils.showSuccess(context, 'OTP resent to your email');
     } else if (mounted) {
       final error = ref.read(forgotPasswordProvider).errorMessage;

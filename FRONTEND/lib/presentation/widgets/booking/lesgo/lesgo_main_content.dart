@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,21 +38,20 @@ class LesgoMainContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isFullscreen = ref.watch(
-      lesgoProvider.select((s) => s.isFullscreen),
-    );
+    final isFullscreen = ref.watch(lesgoProvider.select((s) => s.isFullscreen));
     final shouldCollapse = ref.watch(
       lesgoProvider.select((s) => s.shouldCollapseAfterFullscreen),
     );
     final paymentMethod = ref.watch(
       lesgoProvider.select((s) => s.paymentMethod),
     );
-    final voucherCode = ref.watch(
-      lesgoProvider.select((s) => s.voucherCode),
+    final isBooking = ref.watch(lesgoProvider.select((s) => s.isBooking));
+    final voucherCode = ref.watch(lesgoProvider.select((s) => s.voucherCode));
+    final canApplyVoucher = ref.watch(
+      lesgoLocationProvider.select(
+        (s) => s.pickupLocation != null && s.destinationLocation != null,
+      ),
     );
-    final canApplyVoucher = ref.watch(lesgoLocationProvider.select(
-      (s) => s.pickupLocation != null && s.destinationLocation != null,
-    ));
     final selectingDestination = ref.watch(
       lesgoProvider.select((s) => s.selectingDestination),
     );
@@ -119,6 +119,7 @@ class LesgoMainContent extends ConsumerWidget {
                 onChangeCurrent: () => notifier.openPickupSelection(),
                 onChangeDestination: () => notifier.openDestinationSelection(),
                 paymentMethod: paymentMethod,
+                isBooking: isBooking,
                 onPaymentChanged: (val) {
                   if (val != null) {
                     notifier.updatePaymentMethod(val);
@@ -159,7 +160,7 @@ class LesgoMainContent extends ConsumerWidget {
                 showZoomControls: false,
                 showLocationButton: false,
                 customTopRightControls: Material(
-                  color: Colors.white,
+                  color: AppColors.surface(context, Colors.white),
                   elevation: 4,
                   borderRadius: BorderRadius.circular(8),
                   child: InkWell(
@@ -188,7 +189,7 @@ class LesgoMainContent extends ConsumerWidget {
                               width: ResponsiveUtils.fontSize(context, 80),
                               height: ResponsiveUtils.fontSize(context, 80),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppColors.surface(context, Colors.white),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(

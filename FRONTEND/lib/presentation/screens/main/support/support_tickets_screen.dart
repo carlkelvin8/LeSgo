@@ -1,230 +1,201 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/constants/routers/app_router.dart';
-import '../../../../core/constants/routers/auth/auth_routes.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/utils/responsive_utils.dart';
-import '../../../provider/main/support/support_provider.dart';
-import '../../../widgets/common/retry_widget.dart';
-import '../../../widgets/widgets.dart';
 import '../../../../data/data_source/dto/support/support_dto.dart';
+import '../../../../data/data_source/support_remote_datasource.dart';
 import 'support_ticket_detail_screen.dart';
 
-class SupportTicketsScreen extends ConsumerWidget {
+const _purple = Color(0xFF5F2D82);
+const _canvas = Color(0xFFF8F7FB);
+
+class SupportTicketsScreen extends StatefulWidget {
   const SupportTicketsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(supportProvider);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: const AuthHeader(title: 'Support'),
-            ),
-            Expanded(
-              child: state.isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF5F2D82),
-                      ),
-                    )
-                  : state.error != null && state.tickets.isEmpty
-                  ? RetryWidget(
-                      message: state.error!,
-                      actionLabel: state.requiresLogin ? 'Log In' : 'Try Again',
-                      actionIcon: state.requiresLogin
-                          ? Icons.login
-                          : Icons.refresh,
-                      onRetry: state.requiresLogin
-                          ? () => AppRouter.pushAndRemoveUntil(
-                              context,
-                              LoginRoutes.login,
-                            )
-                          : () => ref
-                                .read(supportProvider.notifier)
-                                .loadTickets(),
-                    )
-                  : RefreshIndicator(
-                      color: const Color(0xFF5F2D82),
-                      onRefresh: () =>
-                          ref.read(supportProvider.notifier).loadTickets(),
-                      child: state.tickets.isEmpty
-                          ? ListView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              children: [
-                                SizedBox(
-                                  height: ResponsiveUtils.spacing(context, 80),
-                                ),
-                                Center(
-                                  child: Text(
-                                    'No support tickets yet.',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize: ResponsiveUtils.fontSize(
-                                        context,
-                                        14,
-                                      ),
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : ListView.separated(
-                              padding: EdgeInsets.all(
-                                ResponsiveUtils.spacing(context, 16),
-                              ),
-                              itemCount: state.tickets.length,
-                              separatorBuilder: (_, _) => SizedBox(
-                                height: ResponsiveUtils.spacing(context, 8),
-                              ),
-                              itemBuilder: (context, index) {
-                                final ticket = state.tickets[index];
-                                return _TicketTile(ticket: ticket);
-                              },
-                            ),
-                    ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF5F2D82),
-        onPressed: () => _showCreateDialog(context, ref),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-
-  Future<void> _showCreateDialog(BuildContext context, WidgetRef ref) async {
-    final subjectController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final categoryController = TextEditingController(text: 'general_inquiry');
-    final picker = ImagePicker();
-    final attachments = <XFile>[];
-
-    final created = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('New Support Ticket'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: subjectController,
-                  decoration: const InputDecoration(labelText: 'Subject'),
-                ),
-                TextField(
-                  controller: categoryController,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                ),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  maxLines: 4,
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () async {
-                      final files = await picker.pickMultiImage(
-                        imageQuality: 85,
-                      );
-                      if (files.isNotEmpty) {
-                        setDialogState(() {
-                          attachments
-                            ..clear()
-                            ..addAll(files.take(3));
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.attach_file),
-                    label: Text(
-                      attachments.isEmpty
-                          ? 'Add attachments'
-                          : '${attachments.length} attachment(s)',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Submit'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (created != true || !context.mounted) return;
-
-    final ok = await ref
-        .read(supportProvider.notifier)
-        .createTicket(
-          CreateTicketDto(
-            subject: subjectController.text.trim(),
-            description: descriptionController.text.trim(),
-            category: categoryController.text.trim(),
-          ),
-          attachments: attachments,
-        );
-
-    if (context.mounted && ok) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Support ticket created')));
-    }
-  }
+  State<SupportTicketsScreen> createState() => _SupportTicketsScreenState();
 }
 
-class _TicketTile extends StatelessWidget {
-  const _TicketTile({required this.ticket});
+class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
+  final _dataSource = getIt<SupportRemoteDataSource>();
+  late Future<List<SupportTicketDto>> _tickets;
 
-  final SupportTicketDto ticket;
+  @override
+  void initState() {
+    super.initState();
+    _tickets = _dataSource.getTickets();
+  }
+
+  void _reload() {
+    setState(() {
+      _tickets = _dataSource.getTickets();
+    });
+  }
+
+  String _date(String raw) {
+    final date = DateTime.tryParse(raw)?.toLocal();
+    return date == null ? '' : DateFormat('MMM d, yyyy').format(date);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      tileColor: Colors.grey.shade50,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text(
-        ticket.subject,
-        style: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      subtitle: Text(
-        '${ticket.status} · ${ticket.priority}',
-        style: TextStyle(
-          fontFamily: 'TT Fors',
-          color: Colors.grey.shade600,
-          fontSize: ResponsiveUtils.fontSize(context, 12),
-        ),
-      ),
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => SupportTicketDetailScreen(ticketId: ticket.id),
+    final hp = ResponsiveUtils.horizontalPadding(context);
+
+    return Scaffold(
+      backgroundColor: AppColors.surface(context, _canvas),
+      appBar: AppBar(
+        backgroundColor: AppColors.surface(context, Colors.white),
+        surfaceTintColor: AppColors.surface(context, Colors.white),
+        iconTheme:  IconThemeData(color: AppColors.foreground(context, Colors.black87)),
+        title:  Text(
+          'Support',
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.foreground(context, Colors.black87),
           ),
-        );
-      },
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'LeSgo help',
+            icon:  Icon(Icons.help_outline, color: AppColors.accent(context, _purple)),
+            onPressed: () =>
+                AppRouter.push(context, MainRoutes.customerServiceChat),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(hp, 16, hp, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Your conversations',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 20),
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.foreground(context, Colors.black87),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<SupportTicketDto>>(
+              future: _tickets,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: TextButton.icon(
+                      onPressed: _reload,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Could not load conversations. Retry'),
+                    ),
+                  );
+                }
+                if (!snapshot.hasData) {
+                  return  Center(
+                    child: CircularProgressIndicator(color: AppColors.accent(context, _purple)),
+                  );
+                }
+                final tickets = snapshot.data!;
+                if (tickets.isEmpty) {
+                  return  Center(
+                    child: Text(
+                      'Your conversations will appear here.',
+                      style: TextStyle(color: AppColors.foreground(context, Colors.black54)),
+                    ),
+                  );
+                }
+                return ListView.separated(
+                  itemCount: tickets.length,
+                  separatorBuilder: (_, index) => const Divider(height: 1),
+                  itemBuilder: (_, index) {
+                    final ticket = tickets[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: hp + 4,
+                        vertical: 6,
+                      ),
+                      leading:  CircleAvatar(
+                        backgroundColor: AppColors.surface(context, Color(0xFFF0E7F6)),
+                        child: Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          color: AppColors.accent(context, _purple),
+                        ),
+                      ),
+                      title: Text(
+                        ticket.subject,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${ticket.status.replaceAll('_', ' ')} · ${_date(ticket.updatedAt)}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        AppRouter.push(
+                          context,
+                          MainRoutes.supportTicketDetail,
+                          arguments: ticket.id,
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(hp, 8, hp, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            const SupportTicketDetailScreen(ticketId: null),
+                      ),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accent(context, _purple),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  icon: const Icon(Icons.support_agent),
+                  label: const Text(
+                    'Start a new chat',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

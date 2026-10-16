@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import '../../../../data/data_source/payment_gateway_remote_datasource.dart';
 import '../../../../data/data_source/dto/payment/invoice_request_dto.dart';
 import '../../../../data/data_source/dto/gateway/invoice_dto.dart';
@@ -42,16 +43,19 @@ class PaymentGatewayState {
     String? error,
     String? invoiceUrl,
     bool? canUseWallet,
+    bool clearInvoice = false,
   }) {
     return PaymentGatewayState(
-      currentInvoice: currentInvoice ?? this.currentInvoice,
+      currentInvoice: clearInvoice
+          ? null
+          : (currentInvoice ?? this.currentInvoice),
       walletValidation: walletValidation ?? this.walletValidation,
       walletThreshold: walletThreshold ?? this.walletThreshold,
       isLoading: isLoading ?? this.isLoading,
       isCreatingInvoice: isCreatingInvoice ?? this.isCreatingInvoice,
       isCheckingStatus: isCheckingStatus ?? this.isCheckingStatus,
       error: error,
-      invoiceUrl: invoiceUrl ?? this.invoiceUrl,
+      invoiceUrl: clearInvoice ? null : (invoiceUrl ?? this.invoiceUrl),
       canUseWallet: canUseWallet ?? this.canUseWallet,
     );
   }
@@ -93,6 +97,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
     try {
       final gatewayDataSource = getIt<PaymentGatewayRemoteDataSource>();
       final validation = await gatewayDataSource.validateWalletBalance();
+      if (!mounted) return false;
 
       state = state.copyWith(
         walletValidation: validation,
@@ -102,6 +107,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
       return validation.isValid;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -132,9 +138,11 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
     try {
       final gatewayDataSource = getIt<PaymentGatewayRemoteDataSource>();
       final threshold = await gatewayDataSource.getWalletThreshold();
+      if (!mounted) return;
 
       state = state.copyWith(walletThreshold: threshold, isLoading: false);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, error: e.toString());
 
       if (context != null && context.mounted) {
@@ -156,6 +164,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
     Map<String, dynamic>? metadata,
     BuildContext? context,
   }) async {
+    if (state.isCreatingInvoice) return null;
     if (!_isAuthenticated) {
       if (context != null && context.mounted) {
         SnackBarUtils.showError(context, 'Please login first');
@@ -163,7 +172,15 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
       return null;
     }
 
-    state = state.copyWith(isCreatingInvoice: true, error: null);
+    if (!amount.isFinite || amount <= 0) {
+      state = state.copyWith(error: 'Enter a valid payment amount.');
+      return null;
+    }
+    state = state.copyWith(
+      isCreatingInvoice: true,
+      clearInvoice: true,
+      error: null,
+    );
 
     try {
       final gatewayDataSource = getIt<PaymentGatewayRemoteDataSource>();
@@ -177,6 +194,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
       );
 
       final response = await gatewayDataSource.createInvoice(request);
+      if (!mounted) return null;
 
       if (response.success) {
         final invoice = response.data;
@@ -205,6 +223,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
         return null;
       }
     } catch (e) {
+      if (!mounted) return null;
       final message = ApiErrorMapper.message(
         e,
         fallbackEn: 'Could not start digital payment. Try again or use Cash.',
@@ -236,6 +255,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
     try {
       final gatewayDataSource = getIt<PaymentGatewayRemoteDataSource>();
       final response = await gatewayDataSource.getInvoiceStatus(invoiceId);
+      if (!mounted) return null;
 
       if (response.success) {
         final invoice = response.data;
@@ -259,13 +279,16 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
         return null;
       }
     } catch (e) {
-      state = state.copyWith(isCheckingStatus: false, error: e.toString());
+      if (!mounted) return null;
+      final message = ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not verify payment. Please try again.',
+        fallbackTl: 'Hindi ma-verify ang bayad. Subukan muli.',
+      );
+      state = state.copyWith(isCheckingStatus: false, error: message);
 
       if (context != null && context.mounted) {
-        SnackBarUtils.showError(
-          context,
-          'Error checking invoice: ${e.toString()}',
-        );
+        SnackBarUtils.showError(context, message);
       }
       return null;
     }
@@ -319,7 +342,7 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
   /// Clear current invoice
   void clearInvoice() {
-    state = state.copyWith(currentInvoice: null, invoiceUrl: null);
+    state = state.copyWith(clearInvoice: true);
   }
 
   /// Reset state
@@ -330,5 +353,6 @@ class PaymentGatewayNotifier extends StateNotifier<PaymentGatewayState> {
 
 final paymentGatewayProvider =
     StateNotifierProvider<PaymentGatewayNotifier, PaymentGatewayState>((ref) {
+      ref.watch(userSessionEpochProvider);
       return PaymentGatewayNotifier(ref);
     });

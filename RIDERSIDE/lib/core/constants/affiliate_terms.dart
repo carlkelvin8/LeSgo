@@ -1,3 +1,5 @@
+import 'merchant_terms.dart';
+
 class AffiliateTerms {
   AffiliateTerms._();
 
@@ -110,72 +112,5 @@ The Rider may be eligible to enjoy the loyalty program benefits once consistent 
 
 By accepting these Terms, the Rider acknowledges that they have read, understood, and agree to abide by all provisions outlined herein.''';
 
-  static const partner =
-      '''These terms and conditions ("Terms") govern the relationship between LeSgo Courier Services ("Company") and the partner establishment (referred to as "Partner") engaged to provide products or services through the Company's platform. By agreeing to partner with the Company, the Partner acknowledges and agrees to adhere to the following terms:
-
-ENGAGEMENT
-
-The Partner agrees to collaborate with the Company to offer their products or services through the designated platform or application.
-
-ELIGIBILITY
-
-The Partner must meet all eligibility criteria set forth by the Company, including but not limited to business registration, compliance with health and safety regulations, and adherence to quality standards.
-
-PRODUCT SERVICE OFFERING
-
-The Partner shall accurately represent their products or services on the platform, including providing up-to-date menus, pricing, and availability information.
-
-QUALITY ASSURANCE
-
-The Partner agrees to maintain high standards of quality, freshness, and presentation for all products or services offered through the platform.
-
-TIMELINESS
-
-The Partner shall strive to fulfill orders in a timely manner, adhering to any designated delivery or pickup times specified by the Company.
-
-PACKAGING
-
-The Partner shall use appropriate packaging materials to ensure the safe and hygienic delivery of products to customers.
-
-PRICING AND COMMISSION
-
-The Partner acknowledges that the Company may charge a commission on orders placed through the platform. The Partner agrees to adhere to the pricing structure agreed upon with the Company.
-
-PAYMENT SETTLEMENT
-
-All payments for the Partner's product or service shall be paid up front by the Rider. Any case of Rider failure to pay for the product or service will be at the expense of the Company and it shall shoulder the amount to be remitted provided that there is enough proof of the transaction and its amount. However, it is the Partner's responsibility to make sure the legitimacy of delivery bookings coming from their end. Fake bookings placed by the Partner shall be reimbursed to the Rider by the Partner.
-
-CUSTOMER FEEDBACK
-
-The Partner acknowledges that customer feedback may be provided through the platform, and agrees to address any concerns or complaints in a prompt and professional manner.
-
-MARKETING AND PROMOTION
-
-The Partner grants the Company the right to market and promote their products or services on the platform and through other marketing channels as deemed appropriate by the Company.
-
-TERMINATION
-
-Either party may terminate this agreement at any time with or without cause but should have proper notice. Upon termination, the Partner shall cease offering products or services through the platform and return any Company property in their possession.
-
-INDEMNIFICATION
-
-The Partner agrees to indemnify and hold harmless the Company from any claims, damages, or liabilities arising from their products, services, or actions.
-
-MODIFICATION
-
-The Company reserves the right to modify these Terms at any time. The Partner will be notified of any changes, and continued partnership with the Company constitutes acceptance of the modified Terms.
-
-GOVERNING LAW
-
-These Terms shall be governed by and construed in accordance with the laws of the Philippines. Any disputes arising out of or relating to these Terms shall be resolved through arbitration in accordance with the rules of the applicable arbitration body.
-
-PARTNER EXCLUSIVITY
-
-The Partner is required to exclusively contract their delivery services with LeSgo as their official delivery service provider. Any breach of this requirement will lead to immediate termination of the agreement.
-
-DELIVERY RATES
-
-The Partner acknowledges that delivery rates may change without prior notice. It is the Partner's responsibility to stay updated on any changes in delivery rates.
-
-By agreeing to these Terms, the Partner acknowledges that they have read, understood, and agree to abide by all provisions outlined herein.''';
+  static const partner = MerchantTerms.content;
 }

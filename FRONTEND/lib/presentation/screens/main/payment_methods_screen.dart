@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -63,12 +64,12 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: AppBar(
         title: const Text('Payment Methods'),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: AppColors.surface(context, Colors.white),
+        foregroundColor: AppColors.foreground(context, Colors.black87),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -173,8 +174,8 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade200,
-                  foregroundColor: Colors.black87,
+                  backgroundColor: AppColors.surface(context, Colors.grey.shade200),
+                  foregroundColor: AppColors.foreground(context, Colors.black87),
                   minimumSize: const Size.fromHeight(48),
                 ),
                 child: Text(
@@ -215,7 +216,7 @@ class _PaymentMethodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: AppColors.border(context, Colors.grey.shade300)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
@@ -225,7 +226,7 @@ class _PaymentMethodCard extends StatelessWidget {
         ),
         leading: icon is String
             ? SvgPicture.asset(icon, width: 32, height: 32)
-            : Icon(icon as IconData, size: 32, color: const Color(0xFF5F2D82)),
+            : Icon(icon as IconData, size: 32, color: AppColors.accent(context, Color(0xFF5F2D82))),
         title: Text(
           title,
           style: TextStyle(
@@ -239,7 +240,7 @@ class _PaymentMethodCard extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
-            color: Colors.grey.shade600,
+            color: AppColors.foreground(context, Colors.grey.shade600),
           ),
         ),
         trailing: TextButton(
@@ -250,7 +251,7 @@ class _PaymentMethodCard extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
               fontWeight: FontWeight.w600,
-              color: isLinked ? Colors.green : const Color(0xFF5F2D82),
+              color: isLinked ? Colors.green : AppColors.accent(context, Color(0xFF5F2D82)),
             ),
           ),
         ),
@@ -334,15 +335,24 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
             style: TextStyle(fontFamily: 'TT Fors'),
           ),
           const SizedBox(height: 12),
-          _buildMethodOption('gcash', 'GCash'),
-          _buildMethodOption('maya', 'PayMaya'),
+          RadioGroup<String>(
+            groupValue: _selectedMethod,
+            onChanged: (v) => setState(() => _selectedMethod = v),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMethodOption('gcash', 'GCash'),
+                _buildMethodOption('maya', 'PayMaya'),
+              ],
+            ),
+          ),
           const SizedBox(height: 12),
           Text(
             'You will verify your account through our secure PayMongo payment partner.',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: AppColors.foreground(context, Colors.grey.shade600),
               height: 1.4,
             ),
           ),
@@ -400,9 +410,7 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
       ),
       leading: Radio<String>(
         value: value,
-        groupValue: _selectedMethod,
         activeColor: const Color(0xFF5F2D82),
-        onChanged: (v) => setState(() => _selectedMethod = v),
       ),
       onTap: () => setState(() => _selectedMethod = value),
     );

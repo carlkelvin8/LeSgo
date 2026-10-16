@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../widgets/widgets.dart';
@@ -60,7 +61,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -68,7 +69,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
         leading: Container(
           margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: AppColors.surface(context, Colors.white).withValues(alpha: 0.9),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -79,7 +80,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black)),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -97,7 +98,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
             flex: 4,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: AppColors.surface(context, Colors.grey[50]!),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(
                     ResponsiveUtils.spacing(context, 24),
@@ -127,7 +128,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 24),
                             fontWeight: FontWeight.w700,
-                            color: Colors.black87,
+                            color: AppColors.foreground(context, Colors.black87),
                             height: 1.2,
                           ),
                         ),
@@ -141,15 +142,15 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 20),
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF5F2D82),
+                                color: AppColors.accent(context, Color(0xFF5F2D82)),
                               ),
                             ),
                             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                             Container(
                               width: 4,
                               height: 4,
-                              decoration: const BoxDecoration(
-                                color: Colors.grey,
+                              decoration:  BoxDecoration(
+                                color: AppColors.surface(context, Colors.grey),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -157,7 +158,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                             Icon(
                               Icons.access_time,
                               size: ResponsiveUtils.fontSize(context, 16),
-                              color: Colors.grey[600],
+                              color: AppColors.foreground(context, Colors.grey[600]!),
                             ),
                             SizedBox(width: ResponsiveUtils.spacing(context, 4)),
                             Text(
@@ -165,7 +166,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                               ),
                             ),
                           ],
@@ -190,7 +191,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: Colors.grey[700],
+                              color: AppColors.foreground(context, Colors.grey[700]!),
                               height: 1.5,
                               letterSpacing: 0.2,
                             ),
@@ -224,7 +225,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                       vertical: ResponsiveUtils.spacing(context, 16),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: AppColors.surface(context, Colors.grey[50]!),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.05),

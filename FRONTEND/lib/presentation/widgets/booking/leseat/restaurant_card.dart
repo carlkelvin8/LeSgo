@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../common/media_image.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -19,7 +20,7 @@ class RestaurantCard extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: [
             BoxShadow(
@@ -42,7 +43,7 @@ class RestaurantCard extends StatelessWidget {
                   child: Container(
                     width: double.infinity,
                     height: imageHeight,
-                    color: Colors.grey[200],
+                    color: AppColors.surface(context, Colors.grey[200]!),
                     child: MediaImage(
                       imagePath: restaurant.imagePath,
                       fit: BoxFit.cover,
@@ -50,7 +51,7 @@ class RestaurantCard extends StatelessWidget {
                         child: Icon(
                           Icons.restaurant,
                           size: ResponsiveUtils.fontSize(context, 48),
-                          color: Colors.grey[400],
+                          color: AppColors.foreground(context, Colors.grey[400]!),
                         ),
                       ),
                     ),
@@ -95,7 +96,7 @@ class RestaurantCard extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.foreground(context, Colors.black87),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -104,7 +105,7 @@ class RestaurantCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey[600],
+                      color: AppColors.foreground(context, Colors.grey[600]!),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -124,7 +125,7 @@ class RestaurantCard extends StatelessWidget {
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 14),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.foreground(context, Colors.black87),
                         ),
                       ),
                       SizedBox(width: ResponsiveUtils.spacing(context, 4)),
@@ -133,7 +134,7 @@ class RestaurantCard extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 12),
-                          color: Colors.grey[600],
+                          color: AppColors.foreground(context, Colors.grey[600]!),
                         ),
                       ),
                     ],

@@ -1,7 +1,10 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/constants/map_styles.dart';
 import '../../../provider/main/orders/order_history_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/orders/cancel_order_dialog.dart';
@@ -9,11 +12,11 @@ import '../../../widgets/orders/proof_of_delivery_section.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../core/utils/order_cancel_utils.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../tracking/live_tracking_screen.dart';
 import '../../../../data/data_source/tracking_remote_datasource.dart';
 import '../../../../core/di/injection.dart';
-import '../../../../core/utils/cart_cleanup.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -70,7 +73,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           return;
         }
       } catch (e) {
-        print('Error loading order details: $e');
+        if (kDebugMode) debugPrint('Error loading order details: $e');
       }
 
       if (!mounted) return;
@@ -78,7 +81,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         setState(() => _proofImages = proofs);
       }
     } catch (e) {
-      print('Error loading order details: $e');
+      if (kDebugMode) debugPrint('Error loading order details: $e');
       if (mounted) {
         final cached = _order;
         if (cached != null && _shouldShowMap(cached.status)) {
@@ -120,7 +123,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         }
       }
     } catch (e) {
-      print('Error loading route: $e');
+      if (kDebugMode) debugPrint('Error loading route: $e');
       // Fallback to straight line if route fails
     } finally {
       if (mounted) {
@@ -166,21 +169,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         setState(() => _isCancelling = false);
 
         if (success) {
-          await CartCleanup.clearAllCarts(ref);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Order cancelled successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          SnackBarUtils.showSuccess(context, 'Order cancelled successfully');
         } else {
           final error = ref.read(orderHistoryProvider).error;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error ?? 'Failed to cancel order'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          SnackBarUtils.showError(context, error ?? 'Failed to cancel order');
         }
       }
     }
@@ -197,20 +189,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       setState(() => _isReordering = false);
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order placed successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        SnackBarUtils.showSuccess(context, 'Order placed successfully!');
         Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to reorder'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackBarUtils.showError(context, 'Failed to reorder');
       }
     }
   }
@@ -234,19 +216,39 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           child: Column(
             children: [
               Container(
-                color: Colors.white,
+                color: AppColors.surface(context, Colors.white),
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                 child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const Expanded(child: AuthHeader(title: 'Order Details')),
-                  ],
+                  children: [const AuthHeader(title: 'Order Details')],
                 ),
               ),
-              const Expanded(child: Center(child: Text('Order not found'))),
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Order not found'),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                      TextButton.icon(
+                        onPressed: _loadOrderDetails,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.accent(
+                            context,
+                            Color(0xFF5F2D82),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResponsiveUtils.spacing(context, 16),
+                            vertical: ResponsiveUtils.spacing(context, 8),
+                          ),
+                          minimumSize: const Size(48, 44),
+                        ),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -254,26 +256,21 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Container(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Expanded(child: AuthHeader(title: 'Order Details')),
-                ],
-              ),
+              child: Row(children: [const AuthHeader(title: 'Order Details')]),
             ),
 
-            Container(height: 1, color: Colors.grey[300]),
+            Container(
+              height: 1,
+              color: AppColors.surface(context, Colors.grey[300]!),
+            ),
 
             // Content
             Expanded(
@@ -312,7 +309,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface(context, Colors.white),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -450,7 +447,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 13,
-                    color: Colors.grey[700],
+                    color: AppColors.foreground(context, Colors.grey[700]!),
                   ),
                 ),
               ],
@@ -472,7 +469,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -490,10 +487,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           _buildInfoRow('Service', _getServiceName(order.serviceId)),
           _buildInfoRow('Order ID', '#${order.id}'),
           _buildInfoRow('Date', formattedDate),
-          _buildInfoRow('Payment Method', order.paymentMethod?.toUpperCase() ?? 'N/A'),
+          _buildInfoRow('Payment Method', order.paymentMethod.toUpperCase()),
           _buildInfoRow(
             'Payment Status',
-            order.paymentStatus?.toUpperCase() ?? 'N/A',
+            order.paymentStatus.toUpperCase(),
             valueColor: order.paymentStatus == 'paid'
                 ? Colors.green
                 : Colors.orange,
@@ -507,7 +504,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -535,7 +532,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  Container(width: 2, height: 40, color: Colors.grey[300]),
+                  Container(
+                    width: 2,
+                    height: 40,
+                    color: AppColors.surface(context, Colors.grey[300]!),
+                  ),
                   Container(
                     width: 10,
                     height: 10,
@@ -551,12 +552,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Pickup',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: AppColors.foreground(context, Colors.grey),
                       ),
                     ),
                     Text(
@@ -567,12 +568,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'Dropoff',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: AppColors.foreground(context, Colors.grey),
                       ),
                     ),
                     Text(
@@ -596,7 +597,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -646,9 +647,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.red[50],
+        color: AppColors.surface(context, Colors.red[50]!),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red[200]!),
+        border: Border.all(color: AppColors.border(context, Colors.red[200]!)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -693,7 +694,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
           Text(
@@ -702,7 +703,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               fontFamily: 'TT Fors',
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: valueColor ?? Colors.grey[800],
+              color:
+                  valueColor ??
+                  AppColors.foreground(context, Colors.grey[800]!),
             ),
           ),
         ],
@@ -721,7 +724,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
           Text(
@@ -828,7 +831,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       child: Container(
         height: 200,
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: AppColors.surface(context, Colors.grey[200]!),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -843,6 +846,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           child: Stack(
             children: [
               GoogleMap(
+                style: MapStyles.darkIfDark(context),
                 initialCameraPosition: CameraPosition(
                   target: LatLng(
                     (order.pickupLat + order.dropoffLat) / 2,
@@ -884,7 +888,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
+                    color: AppColors.surface(
+                      context,
+                      Colors.black,
+                    ).withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -991,7 +998,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       Polyline(
         polylineId: const PolylineId('route'),
         points: points,
-        color: const Color(0xFF5F2D82),
+        color: AppColors.accent(context, Color(0xFF5F2D82)),
         width: 4,
         // Use solid line for actual route, dashed for straight line
         patterns: _routePolyline.isEmpty

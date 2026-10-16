@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/security/security_provider.dart';
-import '../../../widgets/common/retry_widget.dart';
 import '../../../widgets/auth/two_factor_code_dialog.dart';
 
 class SecuritySettingsScreen extends ConsumerWidget {
@@ -25,19 +25,27 @@ class SecuritySettingsScreen extends ConsumerWidget {
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
             )
-          : state.error != null && state.dashboard == null
-          ? RetryWidget(
-              message: state.error!,
-              onRetry: () =>
-                  ref.read(securitySettingsProvider.notifier).loadSecurity(),
-            )
           : RefreshIndicator(
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
               onRefresh: () =>
                   ref.read(securitySettingsProvider.notifier).loadSecurity(),
               child: ListView(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                 children: [
+                  if (state.error != null)
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: Text(state.error!),
+                      trailing: IconButton(
+                        tooltip: 'Reload security settings',
+                        icon: const Icon(Icons.refresh),
+                        onPressed: state.isProcessing
+                            ? null
+                            : () => ref
+                                  .read(securitySettingsProvider.notifier)
+                                  .loadSecurity(),
+                      ),
+                    ),
                   SwitchListTile(
                     title: const Text('Two-factor authentication'),
                     subtitle: Text(
@@ -47,7 +55,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                     ),
                     value: state.twoFactorEnabled,
                     activeThumbColor: const Color(0xFF5F2D82),
-                    onChanged: state.isProcessing
+                    onChanged: state.isProcessing || state.dashboard == null
                         ? null
                         : (enabled) async {
                             if (enabled) {
@@ -248,7 +256,8 @@ class SecuritySettingsScreen extends ConsumerWidget {
                             }
                           },
                   ),
-                  if (state.deviceSupportsBiometrics)
+                  if (state.deviceSupportsBiometrics ||
+                      state.localBiometricEnabled)
                     SwitchListTile(
                       title: const Text('Biometric unlock'),
                       subtitle: const Text(

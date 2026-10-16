@@ -298,6 +298,11 @@ class OrderDto {
   }
 
   double get effectiveTotalAmount {
+    // The payment-invoice endpoint uses this exact value as its expected
+    // amount, so keep checkout charges aligned with the server's contract.
+    final metaGrandTotal = _parseDoubleNullable(meta?['grand_total']);
+    if (metaGrandTotal != null && metaGrandTotal > 0) return metaGrandTotal;
+
     if (totalAmount != null && totalAmount! > 0) return totalAmount!;
     
     // Calculate from items if available
@@ -311,7 +316,11 @@ class OrderDto {
     
     // Add delivery fee
     final delivery = deliveryFee ?? estimatedFare;
-    return itemsTotal + delivery;
+    // The reconstructed amount is the pre-discount total. The API's
+    // discount_amount is authoritative after voucher validation.
+    return (itemsTotal + delivery - discountAmount)
+        .clamp(0.0, double.infinity)
+        .toDouble();
   }
 
   double get effectiveDeliveryFee {

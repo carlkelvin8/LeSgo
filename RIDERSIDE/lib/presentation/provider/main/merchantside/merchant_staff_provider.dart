@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
+import '../../auth/rider_auth_provider.dart';
 import '../../../../data/data_source/dto/merchant/partner_staff_dto.dart';
 
 class MerchantStaffState {
@@ -28,15 +30,21 @@ class MerchantStaffState {
 }
 
 class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
-  MerchantStaffNotifier() : super(const MerchantStaffState());
+  MerchantStaffNotifier({Dio? dio, Future<Map<String, dynamic>> Function()? loadUser})
+      : _client = dio,
+        _loadUser = loadUser ?? ApiService.getMe,
+        super(const MerchantStaffState());
 
-  int? _partnerId;
+  final Dio? _client;
+  final Future<Map<String, dynamic>> Function() _loadUser;
+  Dio get _dio => _client ?? ApiService.dio;
 
   Future<void> loadStaff() async {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
       final partnerId = await _resolvePartnerId();
+      if (!mounted) return;
       if (partnerId == null) {
         state = state.copyWith(
           isLoading: false,
@@ -45,7 +53,7 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
         return;
       }
 
-      final response = await ApiService.dio.get('/v1/partners/$partnerId/staff');
+      final response = await _dio.get('/v1/partners/$partnerId/staff');
       final data = response.data;
       // Handle both paginated {data: [...]} and direct [...] responses
       List rawList;
@@ -61,8 +69,10 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
           .map((e) => PartnerStaffDto.fromJson(e as Map<String, dynamic>))
           .toList();
 
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, staff: staff);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),
@@ -80,12 +90,13 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
 
     try {
       final partnerId = await _resolvePartnerId();
+      if (!mounted) return false;
       if (partnerId == null) {
         state = state.copyWith(isLoading: false, error: 'Could not determine partner ID.');
         return false;
       }
 
-      await ApiService.dio.post(
+      await _dio.post(
         '/v1/partners/$partnerId/staff',
         data: {
           'name': name,
@@ -95,9 +106,11 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
         },
       );
 
+      if (!mounted) return false;
       await loadStaff();
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),
@@ -110,21 +123,27 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final partnerId = await _resolvePartnerId();
-      if (partnerId == null) return false;
+      if (!mounted) return false;
+      if (partnerId == null) {
+        state = state.copyWith(isLoading: false, error: 'Could not determine partner ID.');
+        return false;
+      }
 
       final body = <String, dynamic>{};
       if (role != null) body['role'] = role;
       if (isActive != null) body['is_active'] = isActive;
 
-      await ApiService.dio.patch(
+      await _dio.patch(
         '/v1/partners/$partnerId/staff/$staffId',
         data: body,
       );
 
+      if (!mounted) return false;
       await loadStaff();
       return true;
     } catch (e) {
-      state = state.copyWith(error: ApiService.extractError(e));
+      if (!mounted) return false;
+      state = state.copyWith(isLoading: false, error: ApiService.extractError(e));
       return false;
     }
   }
@@ -133,32 +152,32 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final partnerId = await _resolvePartnerId();
-      if (partnerId == null) return false;
+      if (!mounted) return false;
+      if (partnerId == null) {
+        state = state.copyWith(isLoading: false, error: 'Could not determine partner ID.');
+        return false;
+      }
 
-      await ApiService.dio.delete(
+      await _dio.delete(
         '/v1/partners/$partnerId/staff/$staffId',
       );
 
+      if (!mounted) return false;
       await loadStaff();
       return true;
     } catch (e) {
-      state = state.copyWith(error: ApiService.extractError(e));
+      if (!mounted) return false;
+      state = state.copyWith(isLoading: false, error: ApiService.extractError(e));
       return false;
     }
   }
 
   Future<int?> _resolvePartnerId() async {
-    if (_partnerId != null) return _partnerId;
-
     try {
-      final me = await ApiService.getMe();
+      final me = await _loadUser();
       final data = me['data'] ?? me['user'] ?? me;
       if (data is Map) {
-        final pid = data['partner_id'];
-        if (pid is num) {
-          _partnerId = pid.toInt();
-          return _partnerId;
-        }
+        return RiderUser.parsePartnerId(Map<String, dynamic>.from(data));
       }
     } catch (_) {}
 
@@ -168,5 +187,8 @@ class MerchantStaffNotifier extends StateNotifier<MerchantStaffState> {
 
 final merchantStaffProvider =
     StateNotifierProvider<MerchantStaffNotifier, MerchantStaffState>(
-  (ref) => MerchantStaffNotifier(),
+  (ref) {
+    ref.watch(riderAuthProvider.select((auth) => auth.user?.id));
+    return MerchantStaffNotifier();
+  },
 );

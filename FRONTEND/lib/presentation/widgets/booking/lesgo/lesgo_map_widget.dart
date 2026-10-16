@@ -1,9 +1,11 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesgo_location_provider.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/marker_utils.dart';
+import '../../../../core/constants/map_styles.dart';
 import '../../global/googlemaps/map_route_info_banner.dart';
 
 /// Map for LesGo — stable [GoogleMap] instance; marker/polyline updates only.
@@ -168,6 +170,7 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
             onTap: widget.onMapTap,
             markers: markers,
             polylines: polylines,
+            style: MapStyles.darkIfDark(context),
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: true,
@@ -245,22 +248,22 @@ class _MapControls extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _miniFab(Icons.zoom_in, onZoomIn, 'lesgo_zoom_in'),
+        _miniFab(context, Icons.zoom_in, onZoomIn, 'lesgo_zoom_in'),
         const SizedBox(height: 8),
-        _miniFab(Icons.zoom_out, onZoomOut, 'lesgo_zoom_out'),
+        _miniFab(context, Icons.zoom_out, onZoomOut, 'lesgo_zoom_out'),
         const SizedBox(height: 8),
-        _miniFab(Icons.my_location, onMyLocation, 'lesgo_my_location'),
+        _miniFab(context, Icons.my_location, onMyLocation, 'lesgo_my_location'),
         const SizedBox(height: 8),
-        _miniFab(Icons.center_focus_strong, onFitRoute, 'lesgo_center_map'),
+        _miniFab(context, Icons.center_focus_strong, onFitRoute, 'lesgo_center_map'),
       ],
     );
   }
 
-  Widget _miniFab(IconData icon, VoidCallback onPressed, String heroTag) {
+  Widget _miniFab(BuildContext context, IconData icon, VoidCallback onPressed, String heroTag) {
     return FloatingActionButton(
       mini: true,
       heroTag: heroTag,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       foregroundColor: const Color(0xFF4285F4),
       onPressed: onPressed,
       child: Icon(icon),

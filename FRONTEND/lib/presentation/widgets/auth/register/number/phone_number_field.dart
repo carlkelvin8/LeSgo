@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -54,19 +55,19 @@ class _PhoneNumberFieldState extends State<PhoneNumberField> {
       style: TextStyle(
         fontSize: ResponsiveUtils.fontSize(context, 16),
         fontWeight: FontWeight.w600,
-        color: Colors.black,
+        color: AppColors.foreground(context, Colors.black),
         letterSpacing: 1.2,
       ),
       decoration: InputDecoration(
         hintText: widget.hintText,
         hintStyle: TextStyle(
-          color: Colors.grey[400],
+          color: AppColors.foreground(context, Colors.grey[400]!),
           fontWeight: FontWeight.w500,
           fontSize: ResponsiveUtils.fontSize(context, 16),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          borderSide: BorderSide(color: AppColors.border(context, Colors.grey[300]!), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

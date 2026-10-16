@@ -176,6 +176,7 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalization.translate('could_not_get_location_gps', lang)),
@@ -200,6 +201,7 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
     }
 
     if (!mounted) return;
+    if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalization.translate('sos_sent', lang)

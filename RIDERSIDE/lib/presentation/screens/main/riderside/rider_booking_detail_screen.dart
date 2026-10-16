@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -104,7 +104,7 @@ class _RiderBookingDetailScreenState
       if (_mapController != null) {
         // Cancel any pending marker/polyline operations
         _mapController!.dispose();
-        AppLogger.debug('âœ… Map controller disposed successfully');
+        AppLogger.debug('✅ Map controller disposed successfully');
       }
     } catch (e) {
       AppLogger.error('Error disposing map controller', e);
@@ -116,7 +116,7 @@ class _RiderBookingDetailScreenState
     // for other screens. The providers will manage their own lifecycle.
     
     super.dispose();
-    AppLogger.debug('âœ… RiderBookingDetailScreen disposed successfully');
+    AppLogger.debug('✅ RiderBookingDetailScreen disposed successfully');
   }
 
   // Fetch the latest status from API
@@ -141,9 +141,9 @@ class _RiderBookingDetailScreenState
       final order = RiderOrder.fromJson(orderData);
       final proofUrls = MediaUrlUtils.parseProofImageUrls(orderData);
 
-      AppLogger.debug('âœ… Latest status from API: $apiStatus');
+      AppLogger.debug('✅ Latest status from API: $apiStatus');
       if (proofUrls.isNotEmpty) {
-        AppLogger.debug('ðŸ“¸ Fetched ${proofUrls.length} proof image(s): $proofUrls');
+        AppLogger.debug('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
       }
 
       if (apiStatus != null && mounted && !_isHandlingStatusChange) {
@@ -177,7 +177,7 @@ class _RiderBookingDetailScreenState
   }
 
 Future<void> _handleStatusChange(BookingStatus newStatus) async {
-    AppLogger.debug('ðŸŽ¯ _handleStatusChange called with: ${newStatus.label}');
+    AppLogger.debug('🎯 _handleStatusChange called with: ${newStatus.label}');
     
     // Prevent concurrent status changes with a double guard
     if (_isUpdating || _isHandlingStatusChange) {
@@ -205,6 +205,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       
       // Fetch latest to get service_id
       await _fetchLatestStatus();
+      if (!mounted) return;
       
       // Map BookingStatus to API status string based on service type
       String? apiStatus;
@@ -212,7 +213,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
 
       switch (newStatus) {
       case BookingStatus.onTheWayGoing:
-        // LesRide: Can transition from accepted, driver_arrived_at_pickup, or in_progress â†’ picked_up
+        // LesRide: Can transition from accepted, driver_arrived_at_pickup, or in_progress → picked_up
         if (_currentApiStatus == 'accepted' || 
             _currentApiStatus == 'driver_arrived_at_pickup' || 
             _currentApiStatus == 'in_progress') {
@@ -224,7 +225,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('ðŸ“¸ Take a photo of the pickup, then tap "Picked Up" again.'),
+                content: Text('📸 Take a photo of the pickup, then tap "Picked Up" again.'),
                 backgroundColor: Color(0xFF5F2D82),
               ),
             );
@@ -267,7 +268,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         break;
         
       case BookingStatus.complete:
-        // LesRide: picked_up â†’ completed (proof required at drop-off)
+        // LesRide: picked_up → completed (proof required at drop-off)
         if (_currentApiStatus == 'picked_up') {
           if (!_showProofUpload) {
             setState(() => _showProofUpload = true);
@@ -281,13 +282,13 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
             );
             return;
           }
-          final hasProof = _selectedImages.isNotEmpty ||
-              (widget.booking.proofOfDeliveryUrls?.isNotEmpty ?? false) ||
-              (_updatedBooking?.proofOfDeliveryUrls?.isNotEmpty ?? false);
+          final hasProof = !_isUploadingProof &&
+              ((widget.booking.proofOfDeliveryUrls?.isNotEmpty ?? false) ||
+              (_updatedBooking?.proofOfDeliveryUrls?.isNotEmpty ?? false));
           if (!hasProof) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(AppLocalization.translate('minimum_1_photo_required', lang)),
+                content: Text(lang == AppLanguage.filipino ? 'I-upload muna ang kahit isang delivery photo bago mag-complete.' : 'Upload at least one delivery photo before completing.'),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -311,7 +312,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       // LesEat/LesBuy statuses
       case BookingStatus.forPickUp:
       case BookingStatus.forDelivery:
-        // Can transition from accepted, ready_for_pickup, driver_arrived_at_pickup, or in_progress â†’ picked_up
+        // Can transition from accepted, ready_for_pickup, driver_arrived_at_pickup, or in_progress → picked_up
         if (_currentApiStatus == 'accepted' ||
             _currentApiStatus == 'ready_for_pickup' ||
             _currentApiStatus == 'driver_arrived_at_pickup' ||
@@ -324,7 +325,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('ðŸ“¸ Take a photo of the pickup, then tap "Picked Up" again.'),
+                content: Text('📸 Take a photo of the pickup, then tap "Picked Up" again.'),
                 backgroundColor: Color(0xFF5F2D82),
               ),
             );
@@ -367,7 +368,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         break;
         
       case BookingStatus.delivered:
-        // picked_up â†’ completed (proof required at drop-off)
+        // picked_up → completed (proof required at drop-off)
         if (_currentApiStatus == 'picked_up') {
           if (!_showProofUpload) {
             setState(() => _showProofUpload = true);
@@ -381,13 +382,13 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
             );
             return;
           }
-          final hasProof = _selectedImages.isNotEmpty ||
-              (widget.booking.proofOfDeliveryUrls?.isNotEmpty ?? false) ||
-              (_updatedBooking?.proofOfDeliveryUrls?.isNotEmpty ?? false);
+          final hasProof = !_isUploadingProof &&
+              ((widget.booking.proofOfDeliveryUrls?.isNotEmpty ?? false) ||
+              (_updatedBooking?.proofOfDeliveryUrls?.isNotEmpty ?? false));
           if (!hasProof) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(AppLocalization.translate('minimum_1_photo_required', lang)),
+                content: Text(lang == AppLanguage.filipino ? 'I-upload muna ang kahit isang delivery photo bago mag-complete.' : 'Upload at least one delivery photo before completing.'),
                 backgroundColor: Colors.orange,
               ),
             );
@@ -410,7 +411,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         
       // New statuses for driver workflow
       case BookingStatus.driverHasArrived:
-        // accepted â†’ driver_arrived_at_pickup
+        // accepted → driver_arrived_at_pickup
         if (_currentApiStatus == 'accepted' ||
             _currentApiStatus == 'ready_for_pickup') {
           apiStatus = 'driver_arrived_at_pickup';
@@ -517,7 +518,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
           context,
           amountLabel: booking.billingAmount,
         );
-        if (!codOk) return;
+        if (!mounted || !codOk) return;
       }
     }
 
@@ -529,12 +530,12 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       cancelText: AppLocalization.translate('cancel', lang),
     );
     
-    if (!confirmed) {
+    if (!mounted || !confirmed) {
       AppLogger.error('âŒ User cancelled status update');
       return;
     }
 
-    AppLogger.debug('âœ… Status is different ($_currentApiStatus â†’ $targetStatus), proceeding with update');
+    AppLogger.debug('✅ Status is different ($_currentApiStatus → $targetStatus), proceeding with update');
     setState(() => _isUpdating = true);
 
     try {
@@ -566,16 +567,17 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('âœ… ${AppLocalization.translate('status_updated_to', lang).replaceAll('{{status}}', targetLabel)}'),
+            content: Text('✅ ${AppLocalization.translate('status_updated_to', lang).replaceAll('{{status}}', targetLabel)}'),
             backgroundColor: Colors.green,
           ),
         );
         
         // If completed, go back to main screen and refresh history
         if (targetStatus == 'completed') {
-          AppLogger.debug('ðŸŽ¯ Order completed! Starting refresh sequence...');
+          AppLogger.debug('🎯 Order completed! Starting refresh sequence...');
           
           await Future.delayed(const Duration(milliseconds: 300));
+          if (!mounted) return;
           await ref.read(riderHistoryProvider.notifier).refresh();
           
           if (mounted) {
@@ -862,6 +864,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     );
 
     if (!confirmed) return;
+    if (!mounted) return;
 
     setState(() => _isUploadingProof = true);
 
@@ -919,7 +922,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('âœ… ${AppLocalization.translate('proof_images_uploaded', lang)}'),
+            content: Text('✅ ${AppLocalization.translate('proof_images_uploaded', lang)}'),
             backgroundColor: Colors.green,
           ),
         );
@@ -938,7 +941,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         if (_currentApiStatus == 'completed') {
           AppLogger.debug('ðŸ”„ Order is completed, refreshing history...');
           await ref.read(riderHistoryProvider.notifier).refresh();
-          AppLogger.debug('âœ… History refreshed');
+          AppLogger.debug('✅ History refreshed');
         }
       }
     } catch (e) {
@@ -1136,7 +1139,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        _currentApiStatus!.toUpperCase(),
+                                        _currentStatus.label.toUpperCase(),
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -1271,4 +1274,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
   }
 
 }
+
+
+
 

@@ -87,7 +87,7 @@ class SalesReportService {
       final status = order.status;
       final payment = order.paymentMethod;
       final itemTotal = order.orderItems?.fold<double>(
-              0, (s, i) => s + (i.totalPrice ?? ((i.unitPrice ?? 0) * i.quantity))) ??
+              0, (s, i) => s + MerchantOrderAmountUtils.lineTotal(i)) ??
           0;
       final partnerShare = order.partnerShare ?? 0;
       final orderValue = MerchantOrderAmountUtils.foodEarnings(order);
@@ -125,7 +125,7 @@ class SalesReportService {
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text(
-              'LEZGO',
+              'LeSgo',
               style: pw.TextStyle(
                 fontSize: 24,
                 fontWeight: pw.FontWeight.bold,
@@ -172,7 +172,7 @@ class SalesReportService {
           _orderTable(orders),
           pw.SizedBox(height: 24),
           pw.Text(
-            'Thank you for using LEZGO.',
+            'Thank you for using LeSgo.',
             style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
           ),
         ],

@@ -14,14 +14,49 @@ import '../network/dio_client.dart';
 
 /// Notification types
 enum NotificationType {
-  orderAccepted('order_accepted', 'Order Accepted', Icons.check_circle, Colors.green),
-  orderPickedUp('order_picked_up', 'Order Picked Up', Icons.shopping_bag, Colors.blue),
-  orderInTransit('order_in_transit', 'On The Way', Icons.local_shipping, Colors.orange),
+  orderAccepted(
+    'order_accepted',
+    'Order Accepted',
+    Icons.check_circle,
+    Colors.green,
+  ),
+  orderPickedUp(
+    'order_picked_up',
+    'Order Picked Up',
+    Icons.shopping_bag,
+    Colors.blue,
+  ),
+  orderInTransit(
+    'order_in_transit',
+    'On The Way',
+    Icons.local_shipping,
+    Colors.orange,
+  ),
   orderDelivered('order_delivered', 'Delivered', Icons.done_all, Colors.green),
-  orderCancelled('order_cancelled', 'Order Cancelled', Icons.cancel, Colors.red),
-  orderRatingReminder('order_rating_reminder', 'Rate Your Delivery', Icons.star_half, Color(0xFFFF9800)),
-  driverAssigned('driver_assigned', 'Driver Assigned', Icons.person, Color(0xFF5F2D82)),
-  promotional('promotional', 'Special Offer', Icons.local_offer, Color(0xFFFFC107)),
+  orderCancelled(
+    'order_cancelled',
+    'Order Cancelled',
+    Icons.cancel,
+    Colors.red,
+  ),
+  orderRatingReminder(
+    'order_rating_reminder',
+    'Rate Your Delivery',
+    Icons.star_half,
+    Color(0xFFFF9800),
+  ),
+  driverAssigned(
+    'driver_assigned',
+    'Driver Assigned',
+    Icons.person,
+    Color(0xFF5F2D82),
+  ),
+  promotional(
+    'promotional',
+    'Special Offer',
+    Icons.local_offer,
+    Color(0xFFFFC107),
+  ),
   systemAlert('system_alert', 'System Alert', Icons.info, Colors.blue);
 
   final String value;
@@ -51,12 +86,17 @@ class NotificationService {
   final List<NotificationDto> _notifications = [];
   int _unreadCount = 0;
   int? _userId;
+  int _syncGeneration = 0;
+  bool _messageHandlerRegistered = false;
 
   NotificationService(this._fcmService);
 
   Future<void> initialize() async {
     await _fcmService.initialize();
-    _fcmService.registerMessageHandler(_handlePushMessage);
+    if (!_messageHandlerRegistered) {
+      _fcmService.registerMessageHandler(_handlePushMessage);
+      _messageHandlerRegistered = true;
+    }
     await _syncFromBackend();
     await _subscribeToUserTopics();
     debugPrint('✅ Notification service initialized');
@@ -69,12 +109,16 @@ class NotificationService {
       return;
     }
 
+    final generation = ++_syncGeneration;
     try {
       final response = await _remoteDs.fetchNotifications();
+      if (generation != _syncGeneration) return;
+      final unreadCount = await _remoteDs.fetchUnreadCount();
+      if (generation != _syncGeneration) return;
       _notifications
         ..clear()
         ..addAll(response.data);
-      _unreadCount = await _remoteDs.fetchUnreadCount();
+      _unreadCount = unreadCount;
     } catch (e) {
       debugPrint('⚠️ Notification sync failed: $e');
     }
@@ -145,7 +189,8 @@ class NotificationService {
       userId: _userId ?? 0,
       type: message['type']?.toString() ?? 'system_alert',
       title: message['title']?.toString() ?? 'Notification',
-      message: message['message']?.toString() ?? message['body']?.toString() ?? '',
+      message:
+          message['message']?.toString() ?? message['body']?.toString() ?? '',
       data: message['data'] is Map
           ? Map<String, dynamic>.from(message['data'] as Map)
           : null,
@@ -195,7 +240,10 @@ class NotificationService {
     showNotification(context, notification, onTap: onTap);
   }
 
-  void _handleNotificationTap(BuildContext context, NotificationDto notification) {
+  void _handleNotificationTap(
+    BuildContext context,
+    NotificationDto notification,
+  ) {
     markAsRead(notification.id);
     final type = NotificationType.fromString(notification.type);
 
@@ -207,7 +255,7 @@ class NotificationService {
       case NotificationType.driverAssigned:
         final orderId = notification.data?['order_id'];
         if (orderId != null) {
-          debugPrint('Open order tracking: $orderId');
+          AppRouter.push(context, MainRoutes.orderHistory);
         }
         break;
       case NotificationType.orderRatingReminder:
@@ -275,9 +323,15 @@ class NotificationService {
   List<NotificationDto> get notifications => List.unmodifiable(_notifications);
   int get unreadCount => _unreadCount;
 
-  void clearAll() {
+  Future<void> clearAll() async {
+    _syncGeneration++;
     _notifications.clear();
     _unreadCount = 0;
+    final previousUserId = _userId;
+    _userId = null;
+    if (previousUserId != null) {
+      await _fcmService.unsubscribeFromTopic('user_$previousUserId');
+    }
   }
 
   void dispose() {

@@ -1,7 +1,31 @@
+import '../config/secrets_config.dart';
+
 class ApiConstants {
-  /// Same staging server as the customer app — hardcoded for release builds.
-  static String get baseUrl =>
+  /// Canonical production API (per the backend OpenAPI spec).
+  static const String _prodBaseUrl = 'https://api.lesgo.ph/api';
+
+  /// Default staging / feature-branch server, hardcoded so release builds
+  /// still work when no `--dart-define-from-file=secrets.json` is passed.
+  static const String _defaultBaseUrl =
       'https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api';
+
+  /// Resolution order:
+  /// 1. `API_BASE_URL` from `secrets.json` (always wins)
+  /// 2. `API_ENV=prod|production` -> canonical production host
+  /// 3. hardcoded staging host
+  static String get baseUrl {
+    final override = SecretsConfig.apiBaseUrl.trim();
+    if (override.isNotEmpty) return _trimTrailingSlash(override);
+
+    final env = SecretsConfig.apiEnv.trim().toLowerCase();
+    if (env == 'prod' || env == 'production') return _prodBaseUrl;
+
+    return _defaultBaseUrl;
+  }
+
+  static String _trimTrailingSlash(String url) => url.endsWith('/')
+      ? url.substring(0, url.length - 1)
+      : url;
 
   static const String loginEndpoint = '/v1/auth/login';
   static const String logoutEndpoint = '/v1/auth/logout';
@@ -78,6 +102,12 @@ class ApiConstants {
   static const String driverMyEarnings = '/v1/drivers/me/earnings';
   static const String driverPackageTiers = '/v1/drivers/me/package-tiers';
   static const String driverPackageUpgrade = '/v1/drivers/me/package-upgrade';
+
+  // Registration fee (rider & merchant)
+  static const String registrationFeeStatus = '/v1/registration-fee/status';
+  static const String registrationFeeCheckout = '/v1/registration-fee/checkout';
+  static const String registrationFeeVerify = '/v1/registration-fee/verify';
+  static const String registrationFeeConfig = '/v1/registration-fee/config';
 
   static const String walletTransferToRider = '/v1/wallets/my/transfer';
 

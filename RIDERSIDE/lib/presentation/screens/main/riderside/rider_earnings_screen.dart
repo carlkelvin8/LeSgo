@@ -124,9 +124,20 @@ class RiderEarningsScreen extends ConsumerWidget {
               ),
               error: (e, _) => Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(
-                  'Could not load earnings: $e',
-                  style: TextStyle(color: Colors.red.shade700),
+                child: Column(
+                  children: [
+                    Text(
+                      'Could not load earnings: $e',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.red.shade700),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () => ref.invalidate(riderEarningsProvider),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
                 ),
               ),
               data: (state) {

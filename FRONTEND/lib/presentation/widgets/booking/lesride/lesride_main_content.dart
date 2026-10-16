@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,7 +108,7 @@ class LesrideMainContent extends ConsumerWidget {
                 showZoomControls: false,
                 showLocationButton: false,
                 customTopRightControls: Material(
-                  color: Colors.white,
+                  color: AppColors.surface(context, Colors.white),
                   elevation: 4,
                   borderRadius: BorderRadius.circular(8),
                   child: InkWell(
@@ -136,7 +137,7 @@ class LesrideMainContent extends ConsumerWidget {
                               width: ResponsiveUtils.fontSize(context, 80),
                               height: ResponsiveUtils.fontSize(context, 80),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppColors.surface(context, Colors.white),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(

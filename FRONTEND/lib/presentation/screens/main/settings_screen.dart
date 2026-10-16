@@ -1,5 +1,7 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/app_localization.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/constants/routers/app_router.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
@@ -12,24 +14,24 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface(context, Colors.white),
         elevation: 0,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back_ios,
             size: ResponsiveUtils.fontSize(context, 20),
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Settings',
+          tr(context, 'settings'),
           style: TextStyle(
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
             fontFamily: 'TT Fors',
           ),
         ),
@@ -39,35 +41,37 @@ class SettingsScreen extends ConsumerWidget {
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         children: [
           _SettingsSection(
-            title: 'Account',
+            title: tr(context, 'account'),
             items: [
               _SettingsItem(
                 icon: Icons.location_on_outlined,
-                title: 'Saved Addresses',
+                title: tr(context, 'saved_addresses'),
                 subtitle: 'Manage your delivery addresses',
-                onTap: () => AppRouter.push(context, MainRoutes.addressManagement),
+                onTap: () =>
+                    AppRouter.push(context, MainRoutes.addressManagement),
               ),
               _SettingsItem(
                 icon: Icons.person_outline,
-                title: 'Profile Information',
+                title: tr(context, 'profile_information'),
                 subtitle: 'Update your personal details',
                 onTap: () => AppRouter.push(context, MainRoutes.profile),
               ),
               _SettingsItem(
                 icon: Icons.security,
-                title: 'Security',
+                title: tr(context, 'security'),
                 subtitle: '2FA, biometrics, and login activity',
-                onTap: () => AppRouter.push(context, MainRoutes.securitySettings),
+                onTap: () =>
+                    AppRouter.push(context, MainRoutes.securitySettings),
               ),
               _SettingsItem(
                 icon: Icons.lock_outline,
-                title: 'Change Password',
+                title: tr(context, 'change_password'),
                 subtitle: 'Update your login password',
                 onTap: () => AppRouter.push(context, MainRoutes.changePassword),
               ),
               _SettingsItem(
                 icon: Icons.person_off_outlined,
-                title: 'Deactivate Account',
+                title: tr(context, 'deactivate_account'),
                 subtitle: 'Temporarily disable your account',
                 onTap: () =>
                     AppRouter.push(context, MainRoutes.deactivateAccount),
@@ -76,25 +80,32 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           _SettingsSection(
-            title: 'App',
+            title: tr(context, 'app_section'),
             items: [
               _SettingsItem(
                 icon: Icons.notifications_outlined,
-                title: 'Notifications',
-                subtitle: 'Promotions, orders, and missions',
+                title: 'Notification center',
+                subtitle: 'View order updates and offers',
+                onTap: () => AppRouter.push(context, MainRoutes.notifications),
+              ),
+              _SettingsItem(
+                icon: Icons.notifications_active_outlined,
+                title: tr(context, 'notification_settings'),
+                subtitle: 'Promotions and order alert preferences',
                 onTap: () =>
                     AppRouter.push(context, MainRoutes.notificationSettings),
               ),
               _SettingsItem(
                 icon: Icons.language_outlined,
-                title: 'Language',
+                title: tr(context, 'language'),
                 subtitle: 'English or Filipino',
-                onTap: () => AppRouter.push(context, MainRoutes.languageSettings),
+                onTap: () =>
+                    AppRouter.push(context, MainRoutes.languageSettings),
               ),
               _SettingsItem(
                 icon: Icons.dark_mode_outlined,
-                title: 'Dark Mode',
-                subtitle: isDark ? 'Violet theme enabled' : 'Light theme',
+                title: tr(context, 'dark_mode'),
+                subtitle: isDark ? 'Dark theme enabled' : 'Light theme',
                 trailing: Switch(
                   value: isDark,
                   activeThumbColor: const Color(0xFF5F2D82),
@@ -106,37 +117,31 @@ class SettingsScreen extends ConsumerWidget {
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           _SettingsSection(
-            title: 'Support',
+            title: tr(context, 'support'),
             items: [
               _SettingsItem(
                 icon: Icons.smart_toy_outlined,
-                title: 'LeSgo Support',
+                title: tr(context, 'lesgo_support'),
                 subtitle: 'Chat with our customer service team',
                 onTap: () =>
                     AppRouter.push(context, MainRoutes.customerServiceChat),
               ),
               _SettingsItem(
-                icon: Icons.confirmation_number_outlined,
-                title: 'Support Tickets',
-                subtitle: 'Get help from our support team',
-                onTap: () => AppRouter.push(context, MainRoutes.supportTickets),
-              ),
-              _SettingsItem(
                 icon: Icons.badge_outlined,
-                title: 'Document Verification',
+                title: tr(context, 'document_verification'),
                 subtitle: 'Submit and track your documents',
                 onTap: () =>
                     AppRouter.push(context, MainRoutes.documentVerification),
               ),
               _SettingsItem(
                 icon: Icons.help_outline,
-                title: 'FAQs',
+                title: tr(context, 'faqs'),
                 subtitle: 'Frequently asked questions',
                 onTap: () => AppRouter.push(context, MainRoutes.faqs),
               ),
               _SettingsItem(
                 icon: Icons.info_outline,
-                title: 'About',
+                title: tr(context, 'about'),
                 subtitle: 'App information and version',
                 onTap: () => AppRouter.push(context, MainRoutes.about),
               ),
@@ -152,10 +157,7 @@ class _SettingsSection extends StatelessWidget {
   final String title;
   final List<_SettingsItem> items;
 
-  const _SettingsSection({
-    required this.title,
-    required this.items,
-  });
+  const _SettingsSection({required this.title, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -169,14 +171,14 @@ class _SettingsSection extends StatelessWidget {
             style: TextStyle(
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
               fontFamily: 'TT Fors',
             ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface(context, Colors.white),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -198,7 +200,7 @@ class _SettingsSection extends StatelessWidget {
                   if (!isLast)
                     Divider(
                       height: 1,
-                      color: Colors.grey[200],
+                      color: AppColors.border(context, Colors.grey[200]!),
                       indent: 56,
                     ),
                 ],
@@ -233,12 +235,15 @@ class _SettingsItem extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+          color: AppColors.accent(
+            context,
+            Color(0xFF5F2D82),
+          ).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
-          color: const Color(0xFF5F2D82),
+          color: AppColors.accent(context, Color(0xFF5F2D82)),
           size: 20,
         ),
       ),
@@ -247,7 +252,7 @@ class _SettingsItem extends StatelessWidget {
         style: TextStyle(
           fontSize: ResponsiveUtils.fontSize(context, 15),
           fontWeight: FontWeight.w600,
-          color: Colors.black87,
+          color: AppColors.foreground(context, Colors.black87),
           fontFamily: 'TT Fors',
         ),
       ),
@@ -255,15 +260,16 @@ class _SettingsItem extends StatelessWidget {
         subtitle,
         style: TextStyle(
           fontSize: ResponsiveUtils.fontSize(context, 13),
-          color: Colors.grey[600],
+          color: AppColors.foreground(context, Colors.grey[600]!),
           fontFamily: 'TT Fors',
         ),
       ),
-      trailing: trailing ??
+      trailing:
+          trailing ??
           Icon(
             Icons.arrow_forward_ios,
             size: 16,
-            color: Colors.grey[400],
+            color: AppColors.foreground(context, Colors.grey[400]!),
           ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

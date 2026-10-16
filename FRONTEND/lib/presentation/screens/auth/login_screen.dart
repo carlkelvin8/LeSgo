@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -45,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final screenHeight = ResponsiveUtils.screenHeight(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Center(
@@ -55,8 +56,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
-              child: SizedBox(
-                height: screenHeight,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: screenHeight),
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                   child: Form(
@@ -79,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 22),
-                            color: Colors.black87,
+                            color: AppColors.foreground(context, Colors.black87),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -89,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: Colors.grey[500],
+                            color: AppColors.foreground(context, Colors.grey[500]!),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -102,7 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           controller: _controllers.emailController,
                           validator: Validators.emailOrPhone,
                           keyboardType: TextInputType.emailAddress,
-                          prefixIcon: Icon(Icons.person_outline, color: Colors.grey[600]),
+                          prefixIcon: Icon(Icons.person_outline, color: AppColors.foreground(context, Colors.grey[600]!)),
                           required: true,
                           enabled: !authState.isLoading,
                         ),
@@ -149,16 +150,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   );
                                 },
                                 style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  minimumSize: const Size(48, 44),
                                 ),
                                 child: Text(
                                   'Forgot Password?',
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                                    color: const Color(0xFF6B4EFF),
+                                    color: AppColors.accent(context, Color(0xFF5F2D82)),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -196,7 +198,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: Colors.grey[700],
+                                color: AppColors.foreground(context, Colors.grey[700]!),
                               ),
                             ),
                             TextButton(
@@ -204,16 +206,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 AppRouter.push(context, RegisterRoutes.register);
                               },
                               style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                minimumSize: const Size(48, 44),
                               ),
                               child: Text(
                                 'Sign Up',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                                  color: const Color(0xFF5F2D82),
+                                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

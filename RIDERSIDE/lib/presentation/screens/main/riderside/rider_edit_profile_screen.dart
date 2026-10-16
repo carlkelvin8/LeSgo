@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/app_localization.dart';
-import '../../../../core/utils/responsive_utils.dart';
+
 import '../../../../core/services/api_service.dart';
 import '../../../provider/main/riderside/rider_profile_provider.dart';
 
@@ -72,7 +72,11 @@ class _RiderEditProfileScreenState
     if (mounted) {
       final lang = ref.read(appLanguageProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalization.translate('referral_code_copied', lang))),
+        SnackBar(
+          content: Text(
+            AppLocalization.translate('referral_code_copied', lang),
+          ),
+        ),
       );
     }
   }
@@ -95,14 +99,18 @@ class _RiderEditProfileScreenState
         try {
           final meData = await ApiService.getMe();
           final user = meData['user'] ?? meData['data'] ?? meData;
-          final dp =
-              user is Map ? user['driver_profile'] as Map<String, dynamic>? : null;
+          final dp = user is Map
+              ? user['driver_profile'] as Map<String, dynamic>?
+              : null;
           final driverProfileId = dp?['id'];
           if (driverProfileId != null) {
-            await ApiService.dio.patch('/v1/drivers/$driverProfileId', data: {
-              if (vehicleText.isNotEmpty) 'vehicle_type': vehicleText,
-              if (plateText.isNotEmpty) 'plate_number': plateText,
-            });
+            await ApiService.dio.patch(
+              '/v1/drivers/$driverProfileId',
+              data: {
+                if (vehicleText.isNotEmpty) 'vehicle_type': vehicleText,
+                if (plateText.isNotEmpty) 'plate_number': plateText,
+              },
+            );
           }
         } catch (e) {
           AppLogger.error('Driver profile update error', e);
@@ -127,8 +135,10 @@ class _RiderEditProfileScreenState
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalization.translate('failed_to_update_profile', lang)
-                  .replaceAll('{{error}}', ApiService.extractError(e)),
+              AppLocalization.translate(
+                'failed_to_update_profile',
+                lang,
+              ).replaceAll('{{error}}', ApiService.extractError(e)),
             ),
             backgroundColor: Colors.red,
           ),
@@ -144,159 +154,349 @@ class _RiderEditProfileScreenState
     final lang = ref.watch(appLanguageProvider);
     final profile = ref.watch(riderProfileProvider);
     _hydrateFromProfile(profile);
-    final hp = ResponsiveUtils.horizontalPadding(context);
+    final colors = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final purple = dark ? const Color(0xFFD8B6F4) : const Color(0xFF5F2D82);
+    final busy = _isSaving || profile.isLoading;
+    String tr(String key) => AppLocalization.translate(key, lang);
+    String copy(String en, String tl) => lang == AppLanguage.filipino ? tl : en;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF5F2D82)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          AppLocalization.translate('edit_profile', lang),
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 18),
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+    return PopScope(
+      canPop: !_isSaving,
+      child: Scaffold(
+        backgroundColor: dark ? colors.surface : const Color(0xFFF7F6FA),
+        appBar: AppBar(
+          backgroundColor: dark ? colors.surface : const Color(0xFFF7F6FA),
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: Icon(Icons.arrow_back_rounded, color: purple),
+            onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
           ),
-        ),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: _isSaving || profile.isLoading ? null : _save,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
-                    ),
-                  )
-                : Text(
-                    AppLocalization.translate('save', lang),
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 16),
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF5F2D82),
-                    ),
-                  ),
+          title: Text(
+            tr('edit_profile'),
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: colors.onSurface,
+            ),
           ),
-        ],
-      ),
-      body: profile.isLoading && !_hydrated
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
-              ),
-            )
-          : SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                hp,
-                ResponsiveUtils.spacing(context, 24),
-                hp,
-                ResponsiveUtils.scrollBottomPaddingForKeyboard(context),
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildField(
-                      context,
-                      label: AppLocalization.translate('full_name', lang),
-                      controller: _nameController,
-                      hint: AppLocalization.translate('enter_full_name', lang),
-                      validator: (v) => v == null || v.trim().isEmpty
-                          ? AppLocalization.translate('name_required', lang)
-                          : null,
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    _buildField(
-                      context,
-                      label: AppLocalization.translate('contact_number', lang),
-                      controller: _phoneController,
-                      hint: '+639XXXXXXXXX',
-                      keyboardType: TextInputType.phone,
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    _buildField(
-                      context,
-                      label: AppLocalization.translate('address', lang),
-                      controller: _addressController,
-                      hint: AppLocalization.translate('enter_address', lang),
-                      maxLines: 2,
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    _buildField(
-                      context,
-                      label: AppLocalization.translate('vehicle_type', lang),
-                      controller: _vehicleController,
-                      hint: 'e.g. Motorcycle, Bicycle',
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    _buildField(
-                      context,
-                      label: AppLocalization.translate('plate_number', lang),
-                      controller: _plateController,
-                      hint: AppLocalization.translate('plate_number_hint', lang),
-                      textCapitalization: TextCapitalization.characters,
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    _buildField(
-                      context,
-                      label: AppLocalization.translate('referral_code', lang),
-                      controller: _referralController,
-                      hint: AppLocalization.translate('loading_referral_code', lang),
-                      readOnly: true,
-                      suffix: IconButton(
-                        onPressed: _referralController.text.trim().isEmpty
-                            ? null
-                            : _copyReferralCode,
-                        icon: const Icon(Icons.copy, color: Color(0xFF5F2D82)),
-                        tooltip: AppLocalization.translate('copy_referral_code', lang),
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 40)),
-                    SizedBox(
-                      width: double.infinity,
-                      height: ResponsiveUtils.spacing(context, 52),
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : _save,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5F2D82),
-                          disabledBackgroundColor: Colors.grey.shade300,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _isSaving
-                            ? const CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white),
-                              )
-                            : Text(
-                                AppLocalization.translate('save_changes', lang),
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize:
-                                      ResponsiveUtils.fontSize(context, 16),
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ],
+          centerTitle: true,
+        ),
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Container(
+            decoration: BoxDecoration(
+              color: dark ? colors.surface : Colors.white,
+              border: Border(
+                top: BorderSide(
+                  color: colors.outlineVariant.withValues(alpha: 0.5),
                 ),
               ),
             ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            child: Center(
+              heightFactor: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: busy ? null : _save,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF5F2D82),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 17,
+                        horizontal: 20,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            tr('save_changes'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        body: profile.isLoading && !_hydrated
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF5F2D82), Color(0xFF39204F)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.14),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: const Icon(
+                                    Icons.manage_accounts_outlined,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        copy(
+                                          'Your rider profile',
+                                          'Iyong rider profile',
+                                        ),
+                                        style: const TextStyle(
+                                          fontFamily: 'TT Fors',
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        copy(
+                                          'Keep your contact and vehicle details up to date.',
+                                          'Panatilihing updated ang iyong contact at detalye ng sasakyan.',
+                                        ),
+                                        style: TextStyle(
+                                          fontFamily: 'TT Fors',
+                                          color: Colors.white.withValues(
+                                            alpha: 0.8,
+                                          ),
+                                          fontSize: 13,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          _section(
+                            context,
+                            icon: Icons.person_outline_rounded,
+                            title: copy(
+                              'Personal details',
+                              'Personal na detalye',
+                            ),
+                            children: [
+                              _buildField(
+                                context,
+                                label: tr('full_name'),
+                                controller: _nameController,
+                                hint: tr('enter_full_name'),
+                                icon: Icons.person_outline_rounded,
+                                autofillHints: const [AutofillHints.name],
+                                validator: (v) => v == null || v.trim().isEmpty
+                                    ? tr('name_required')
+                                    : null,
+                              ),
+                              _buildField(
+                                context,
+                                label: tr('contact_number'),
+                                controller: _phoneController,
+                                hint: '+639XXXXXXXXX',
+                                icon: Icons.phone_outlined,
+                                keyboardType: TextInputType.phone,
+                                autofillHints: const [
+                                  AutofillHints.telephoneNumber,
+                                ],
+                              ),
+                              _buildField(
+                                context,
+                                label: tr('address'),
+                                controller: _addressController,
+                                hint: tr('enter_address'),
+                                icon: Icons.location_on_outlined,
+                                autofillHints: const [
+                                  AutofillHints.fullStreetAddress,
+                                ],
+                                maxLines: 2,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _section(
+                            context,
+                            icon: Icons.two_wheeler_outlined,
+                            title: copy(
+                              'Vehicle details',
+                              'Detalye ng sasakyan',
+                            ),
+                            children: [
+                              _buildField(
+                                context,
+                                label: tr('vehicle_type'),
+                                controller: _vehicleController,
+                                hint: copy(
+                                  'e.g. Motorcycle, Bicycle',
+                                  'Hal. Motorsiklo, Bisikleta',
+                                ),
+                                icon: Icons.two_wheeler_outlined,
+                              ),
+                              _buildField(
+                                context,
+                                label: tr('plate_number'),
+                                controller: _plateController,
+                                hint: tr('plate_number_hint'),
+                                icon: Icons.confirmation_number_outlined,
+                                textCapitalization:
+                                    TextCapitalization.characters,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          _section(
+                            context,
+                            icon: Icons.card_giftcard_outlined,
+                            title: tr('referral_code'),
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                                decoration: BoxDecoration(
+                                  color: purple.withValues(alpha: 0.07),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: purple.withValues(alpha: 0.15),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: SelectableText(
+                                        _referralController.text.isEmpty
+                                            ? '—'
+                                            : _referralController.text,
+                                        style: TextStyle(
+                                          fontFamily: 'TT Fors',
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 19,
+                                          letterSpacing: 2,
+                                          color: purple,
+                                        ),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed:
+                                          _referralController.text
+                                              .trim()
+                                              .isEmpty
+                                          ? null
+                                          : _copyReferralCode,
+                                      icon: Icon(
+                                        Icons.copy_rounded,
+                                        color: purple,
+                                      ),
+                                      tooltip: tr('copy_referral_code'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _section(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required List<Widget> children,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final purple = dark ? const Color(0xFFD8B6F4) : const Color(0xFF5F2D82);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: dark ? colors.surfaceContainerLow : Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: colors.outlineVariant.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: purple, size: 21),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colors.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(height: 18),
+            children[i],
+          ],
+        ],
+      ),
     );
   }
 
@@ -305,13 +505,16 @@ class _RiderEditProfileScreenState
     required String label,
     required TextEditingController controller,
     required String hint,
+    required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
     TextCapitalization textCapitalization = TextCapitalization.words,
     String? Function(String?)? validator,
-    bool readOnly = false,
-    Widget? suffix,
+    Iterable<String>? autofillHints,
   }) {
+    final colors = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final purple = dark ? const Color(0xFFD8B6F4) : const Color(0xFF5F2D82);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -319,54 +522,59 @@ class _RiderEditProfileScreenState
           label,
           style: TextStyle(
             fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 13),
+            fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Colors.grey.shade600,
+            color: colors.onSurface,
           ),
         ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          keyboardType: keyboardType,
+          enabled: !_isSaving,
+          keyboardType: maxLines > 1 ? TextInputType.multiline : keyboardType,
           maxLines: maxLines,
+          textInputAction: maxLines > 1
+              ? TextInputAction.newline
+              : TextInputAction.next,
           textCapitalization: textCapitalization,
           validator: validator,
-          readOnly: readOnly,
+          autofillHints: autofillHints,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           style: TextStyle(
             fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 15),
-            color: readOnly ? Colors.grey.shade700 : Colors.black87,
+            fontSize: 15,
+            color: colors.onSurface,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            suffixIcon: suffix,
+            hintMaxLines: 2,
+            errorMaxLines: 3,
+            prefixIcon: Icon(
+              icon,
+              size: 20,
+              color: purple.withValues(alpha: 0.75),
+            ),
             hintStyle: TextStyle(
               fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey.shade400,
+              fontSize: 14,
+              color: colors.onSurfaceVariant.withValues(alpha: 0.65),
             ),
             filled: true,
-            fillColor: readOnly ? Colors.grey.shade100 : const Color(0xFFF5F5F5),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
+            fillColor: dark ? colors.surface : const Color(0xFFFAF9FC),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: colors.outlineVariant.withValues(alpha: 0.6),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  const BorderSide(color: Color(0xFF5F2D82), width: 2),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: purple, width: 1.5),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: ResponsiveUtils.spacing(context, 16),
-              vertical: ResponsiveUtils.spacing(context, 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
             ),
           ),
         ),

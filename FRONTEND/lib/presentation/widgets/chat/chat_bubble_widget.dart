@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../data/data_source/dto/chat/message_dto.dart';
@@ -72,8 +73,8 @@ class ChatBubbleWidget extends StatelessWidget {
         vertical: ResponsiveUtils.spacing(context, 8),
       ),
       decoration: BoxDecoration(
-        color: _getBubbleColor(),
-        borderRadius: BorderRadius.only(
+      color: _getBubbleColor(context),
+      borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(16),
           topRight: const Radius.circular(16),
           bottomLeft: Radius.circular(isCurrentUser ? 16 : 4),
@@ -108,7 +109,7 @@ class ChatBubbleWidget extends StatelessWidget {
       style: TextStyle(
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 14),
-        color: _getTextColor(),
+        color: _getTextColor(context),
         height: 1.4,
       ),
     );
@@ -128,7 +129,7 @@ class ChatBubbleWidget extends StatelessWidget {
           children: [
             Icon(
               Icons.location_on,
-              color: _getTextColor(),
+              color: _getTextColor(context),
               size: 20,
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
@@ -142,7 +143,7 @@ class ChatBubbleWidget extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
                       fontWeight: FontWeight.w600,
-                      color: _getTextColor(),
+                      color: _getTextColor(context),
                     ),
                   ),
                   Text(
@@ -150,7 +151,7 @@ class ChatBubbleWidget extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: _getTextColor().withValues(alpha: 0.8),
+                      color: _getTextColor(context).withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -168,7 +169,7 @@ class ChatBubbleWidget extends StatelessWidget {
       children: [
         Icon(
           Icons.info_outline,
-          color: _getTextColor(),
+          color: _getTextColor(context),
           size: 16,
         ),
         SizedBox(width: ResponsiveUtils.spacing(context, 6)),
@@ -178,8 +179,8 @@ class ChatBubbleWidget extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-              fontStyle: FontStyle.italic,
-              color: _getTextColor(),
+            fontStyle: FontStyle.italic,
+            color: _getTextColor(context),
             ),
           ),
         ),
@@ -196,7 +197,7 @@ class ChatBubbleWidget extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 11),
-          color: Colors.grey[600],
+          color: AppColors.foreground(context, Colors.grey[600]!),
         ),
       );
     } catch (e) {
@@ -206,23 +207,23 @@ class ChatBubbleWidget extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 11),
-          color: Colors.grey[600],
+          color: AppColors.foreground(context, Colors.grey[600]!),
         ),
       );
     }
   }
 
-  Color _getBubbleColor() {
+  Color _getBubbleColor(BuildContext context) {
     if (message.messageType == 'system') {
-      return Colors.grey[200]!;
+      return AppColors.surface(context, Colors.grey[200]!);
     }
-    return isCurrentUser ? const Color(0xFF5F2D82) : Colors.grey[200]!;
+    return isCurrentUser ? const Color(0xFF5F2D82) : AppColors.surface(context, Colors.grey[200]!);
   }
 
-  Color _getTextColor() {
+  Color _getTextColor(BuildContext context) {
     if (message.messageType == 'system') {
-      return Colors.grey[700]!;
+      return AppColors.foreground(context, Colors.grey[700]!);
     }
-    return isCurrentUser ? Colors.white : Colors.black87;
+    return isCurrentUser ? Colors.white : AppColors.foreground(context, Colors.black87);
   }
 }

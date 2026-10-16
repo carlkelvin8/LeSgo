@@ -20,6 +20,7 @@ class MerchantRegisterInfoState {
   final bool isSubmitted;
   final String? errorMessage;
   final bool hasAttemptedSubmit;
+  final bool termsAccepted;
 
   // Loading states for individual uploads
   final bool isSelfieLoading;
@@ -37,6 +38,7 @@ class MerchantRegisterInfoState {
     this.isSubmitted = false,
     this.errorMessage,
     this.hasAttemptedSubmit = false,
+    this.termsAccepted = false,
     this.isSelfieLoading = false,
     this.isValidIdLoading = false,
     this.isSignatureLoading = false,
@@ -66,6 +68,7 @@ class MerchantRegisterInfoState {
     bool? isSubmitted,
     String? errorMessage,
     bool? hasAttemptedSubmit,
+    bool? termsAccepted,
     bool? isSelfieLoading,
     bool? isValidIdLoading,
     bool? isSignatureLoading,
@@ -82,6 +85,7 @@ class MerchantRegisterInfoState {
       isSubmitted: isSubmitted ?? this.isSubmitted,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       hasAttemptedSubmit: hasAttemptedSubmit ?? this.hasAttemptedSubmit,
+      termsAccepted: termsAccepted ?? this.termsAccepted,
       isSelfieLoading: isSelfieLoading ?? this.isSelfieLoading,
       isValidIdLoading: isValidIdLoading ?? this.isValidIdLoading,
       isSignatureLoading: isSignatureLoading ?? this.isSignatureLoading,
@@ -104,9 +108,16 @@ class MerchantRegisterInfoState {
 class MerchantRegisterInfoNotifier
     extends StateNotifier<MerchantRegisterInfoState> {
   final Ref ref;
+  String? _phoneProof;
+  void setPhoneProof(String token) => _phoneProof = token;
 
   MerchantRegisterInfoNotifier(this.ref)
     : super(MerchantRegisterInfoState.initial());
+
+  void setTermsAccepted(bool accepted) {
+    if (state.isSubmitting || state.isSubmitted) return;
+    state = state.copyWith(termsAccepted: accepted, clearError: true);
+  }
 
   void updateRestaurantName(String value) {
     state = state.copyWith(info: state.info.copyWith(restaurantName: value));
@@ -293,6 +304,13 @@ class MerchantRegisterInfoNotifier
     // Guard against multiple submissions
     if (state.isSubmitting || state.isSubmitted) return;
 
+    if (!state.termsAccepted) {
+      state = state.copyWith(
+        errorMessage: 'Please read and accept the Merchant Terms & Conditions first.',
+      );
+      return;
+    }
+
     // Validate using entity logic
     if (!state.info.isValid) {
       state = state.copyWith(
@@ -310,6 +328,10 @@ class MerchantRegisterInfoNotifier
       return;
     }
 
+    if (_phoneProof == null) {
+      state = state.copyWith(errorMessage: 'Verify your phone number before registering.');
+      return;
+    }
     await _submitForm();
   }
 
@@ -325,12 +347,13 @@ class MerchantRegisterInfoNotifier
         password: state.info.password,
         passwordConfirmation: state.info.confirmPassword,
         role: 'partner_admin',
+        phoneVerificationToken: _phoneProof,
         restaurantName: state.info.restaurantName,
         address: state.info.address,
         zipCode: state.info.zipCode,
         latitude: state.info.latitude,
         longitude: state.info.longitude,
-        termsAccepted: true,
+        termsAccepted: state.termsAccepted,
         privacyAccepted: true,
       );
 

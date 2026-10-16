@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/booking/lesbuy/manual_order_provider.dart';
@@ -28,7 +29,7 @@ class ManualOrderSection extends StatelessWidget {
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -41,7 +42,7 @@ class ManualOrderSection extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -63,7 +64,7 @@ class ManualOrderSection extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 10)),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF8E1),
+              color: AppColors.surface(context, Color(0xFFFFF8E1)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -92,7 +93,7 @@ class ManualOrderSection extends StatelessWidget {
             icon: Icon(
               Icons.add_circle_outline,
               size: ResponsiveUtils.fontSize(context, 20),
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
             ),
             label: Text(
               'Add more items',
@@ -100,7 +101,7 @@ class ManualOrderSection extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF5F2D82),
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
               ),
             ),
             style: TextButton.styleFrom(padding: EdgeInsets.zero),
@@ -146,7 +147,7 @@ class _ManualOrderItemRow extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
                 Text(
@@ -154,7 +155,7 @@ class _ManualOrderItemRow extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey[600],
+                    color: AppColors.foreground(context, Colors.grey[600]!),
                   ),
                 ),
               ],
@@ -176,7 +177,7 @@ class _ManualOrderItemRow extends StatelessWidget {
           // Quantity controls
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: AppColors.surface(context, Colors.grey[100]!),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -190,7 +191,7 @@ class _ManualOrderItemRow extends StatelessWidget {
                     minHeight: 32,
                   ),
                   padding: EdgeInsets.zero,
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                 ),
                 Text(
                   '${item.quantity}',
@@ -198,7 +199,7 @@ class _ManualOrderItemRow extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
                 IconButton(
@@ -209,7 +210,7 @@ class _ManualOrderItemRow extends StatelessWidget {
                     minHeight: 32,
                   ),
                   padding: EdgeInsets.zero,
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                 ),
               ],
             ),

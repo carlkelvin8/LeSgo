@@ -1,5 +1,5 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../domain/entities/booking/leseat/food_category.dart';
 
 class MenuCategoryFilters extends StatelessWidget {
@@ -16,49 +16,54 @@ class MenuCategoryFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: categories.map((category) {
+    return Container(
+      height: 50,
+      color: AppColors.surface(context, const Color(0xFFFEFDFE)),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final category = categories[index];
           final isSelected = selectedCategoryId == category.id ||
               (selectedCategoryId == null && category.id == 'popular');
 
-          return Padding(
-            padding: EdgeInsets.only(
-              right: ResponsiveUtils.spacing(context, 8),
-            ),
-            child: FilterChip(
-              label: Text(
-                category.name,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 14),
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected ? Colors.white : Colors.black87,
+          return Material(
+            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Color(0xFFF5F4F7)),
+            borderRadius: BorderRadius.circular(24),
+            child: InkWell(
+              onTap: () => onCategorySelected(category.id),
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (category.id == 'popular')
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Icon(
+                          Icons.local_fire_department,
+                          size: 16,
+                          color: isSelected ? AppColors.onAccent(context) : const Color(0xFFFF6D00),
+                        ),
+                      ),
+                    Text(
+                      category.name,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? AppColors.onAccent(context) : AppColors.foreground(context, Color(0xFF302B36)),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              selected: isSelected,
-              onSelected: (_) => onCategorySelected(category.id),
-              backgroundColor: Colors.grey[100],
-              selectedColor: const Color(0xFF5F2D82),
-              checkmarkColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: isSelected ? const Color(0xFF5F2D82) : Colors.transparent,
-                ),
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveUtils.spacing(context, 4),
-                vertical: ResponsiveUtils.spacing(context, 4),
               ),
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }

@@ -4,6 +4,10 @@ part 'register_driver_request_dto.g.dart';
 
 @JsonSerializable()
 class RegisterDriverRequestDto {
+  @JsonKey(name: 'phone_verification_token')
+  final String? phoneVerificationToken;
+  @JsonKey(name: 'terms_accepted')
+  final bool termsAccepted;
   final String name;
   final String email;
   @JsonKey(name: 'phone_number')
@@ -23,6 +27,8 @@ class RegisterDriverRequestDto {
   final String? packageTier;
 
   RegisterDriverRequestDto({
+    this.phoneVerificationToken,
+    this.termsAccepted = false,
     required this.name,
     required this.email,
     required this.phoneNumber,

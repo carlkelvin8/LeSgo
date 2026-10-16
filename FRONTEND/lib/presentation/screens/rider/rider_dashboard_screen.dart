@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -49,7 +50,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.surface(context, Color(0xFFF5F5F5)),
       appBar: AppBar(
         backgroundColor: const Color(0xFF5F2D82),
         elevation: 0,
@@ -104,7 +105,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
               child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
             )
           : RefreshIndicator(
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
               onRefresh: () => notifier.loadOrders(silent: true),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -135,7 +136,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                     _SectionHeader(
                       icon: Icons.inbox,
                       title: 'Available Orders',
-                      color: const Color(0xFF5F2D82),
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
                       badge: riderState.availableOrders.length,
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -195,7 +196,7 @@ class _SectionHeader extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         if (badge != null && badge! > 0) ...[
@@ -246,7 +247,7 @@ class _ActiveOrderCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.green.shade200, width: 1.5),
         boxShadow: [
@@ -304,7 +305,7 @@ class _ActiveOrderCard extends StatelessWidget {
               children: [
                 _AddressRow(
                   icon: Icons.my_location,
-                  iconColor: const Color(0xFF5F2D82),
+                  iconColor: AppColors.accent(context, Color(0xFF5F2D82)),
                   label: 'Pickup',
                   address: order.pickupAddress,
                   contact: order.pickupContactName,
@@ -420,9 +421,9 @@ class _AvailableOrderCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppColors.border(context, Colors.grey.shade200)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -467,7 +468,7 @@ class _AvailableOrderCard extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
+                    color: AppColors.foreground(context, Colors.grey.shade700),
                   ),
                 ),
                 const Spacer(),
@@ -490,7 +491,7 @@ class _AvailableOrderCard extends StatelessWidget {
               children: [
                 _AddressRow(
                   icon: Icons.my_location,
-                  iconColor: const Color(0xFF5F2D82),
+                  iconColor: AppColors.accent(context, Color(0xFF5F2D82)),
                   label: 'Pickup',
                   address: order.pickupAddress,
                 ),
@@ -610,17 +611,17 @@ class _AddressRow extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade500,
+                  color: AppColors.foreground(context, Colors.grey.shade500),
                   letterSpacing: 0.4,
                 ),
               ),
               Text(
                 address,
-                style: const TextStyle(
+                style:  TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                  color: AppColors.foreground(context, Colors.black87),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -631,7 +632,7 @@ class _AddressRow extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 11,
-                    color: Colors.grey.shade500,
+                    color: AppColors.foreground(context, Colors.grey.shade500),
                   ),
                 ),
             ],
@@ -717,7 +718,7 @@ class _DashedDivider extends StatelessWidget {
           (i) => Expanded(
             child: Container(
               height: 1,
-              color: i.isEven ? Colors.grey.shade300 : Colors.transparent,
+              color: i.isEven ? AppColors.foreground(context, Colors.grey.shade300) : Colors.transparent,
             ),
           ),
         ),
@@ -737,7 +738,7 @@ class _EmptyAvailable extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Column(
         children: [
-          Icon(Icons.inbox_outlined, size: 56, color: Colors.grey.shade300),
+          Icon(Icons.inbox_outlined, size: 56, color: AppColors.foreground(context, Colors.grey.shade300)),
           const SizedBox(height: 12),
           Text(
             hasActive
@@ -746,7 +747,7 @@ class _EmptyAvailable extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 15,
-              color: Colors.grey.shade600,
+              color: AppColors.foreground(context, Colors.grey.shade600),
             ),
           ),
           const SizedBox(height: 6),
@@ -755,7 +756,7 @@ class _EmptyAvailable extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 12,
-              color: Colors.grey.shade400,
+              color: AppColors.foreground(context, Colors.grey.shade400),
             ),
           ),
         ],

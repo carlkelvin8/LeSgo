@@ -4,6 +4,7 @@ import '../di/injection.dart';
 import '../../core/utils/api_error_mapper.dart';
 import '../../core/utils/snackbar_utils.dart';
 import '../../data/data_source/order_remote_datasource.dart';
+import '../../data/data_source/dto/gateway/invoice_dto.dart';
 import '../../presentation/provider/main/lespay/lespay_provider.dart';
 import '../../presentation/provider/main/payment_gateway/payment_gateway_provider.dart';
 import '../../presentation/screens/main/booking/order_digital_payment_screen.dart';
@@ -15,8 +16,7 @@ const digitalPaymentMethods = {'card', 'xendit'};
 bool isDigitalPaymentMethod(String method) =>
     digitalPaymentMethods.contains(method.toLowerCase());
 
-bool isWalletPaymentMethod(String method) =>
-    method.toLowerCase() == 'wallet';
+bool isWalletPaymentMethod(String method) => method.toLowerCase() == 'wallet';
 
 /// Validates LesPay balance before placing a wallet order.
 Future<bool> validateWalletBalanceForOrder(
@@ -66,17 +66,33 @@ Future<bool> completeBookingPayment({
   }
 
   if (amount <= 0) {
-    SnackBarUtils.showError(context, 'Invalid order amount for digital payment.');
+    SnackBarUtils.showError(
+      context,
+      'Invalid order amount for digital payment.',
+    );
+    await _markPaymentFailed(orderId);
     return false;
   }
 
   final gateway = ref.read(paymentGatewayProvider.notifier);
-  final invoice = await gateway.createOrderPaymentInvoice(
-    orderId: orderId,
-    amount: amount,
-    paymentMethod: method,
-    context: context,
-  );
+  InvoiceDto? invoice;
+  try {
+    invoice = await gateway.createOrderPaymentInvoice(
+      orderId: orderId,
+      amount: amount,
+      paymentMethod: method,
+      context: context,
+    );
+  } catch (_) {
+    if (context.mounted) {
+      SnackBarUtils.showError(
+        context,
+        'Could not start digital payment. Try Cash or LesPay wallet.',
+      );
+    }
+    await _markPaymentFailed(orderId);
+    return false;
+  }
 
   if (invoice == null ||
       invoice.invoiceUrl == null ||
@@ -90,15 +106,19 @@ Future<bool> completeBookingPayment({
     await _markPaymentFailed(orderId);
     return false;
   }
+  final validInvoice = invoice;
 
-  if (!context.mounted) return false;
+  if (!context.mounted) {
+    await _markPaymentFailed(orderId);
+    return false;
+  }
 
   final paid = await Navigator.of(context).push<bool>(
     MaterialPageRoute(
       builder: (_) => OrderDigitalPaymentScreen(
         orderId: orderId,
-        invoiceId: invoice.invoiceId,
-        invoiceUrl: invoice.invoiceUrl!,
+        invoiceId: validInvoice.invoiceId,
+        invoiceUrl: validInvoice.invoiceUrl!,
         amount: amount,
         paymentMethod: method,
         serviceLabel: serviceLabel,
@@ -126,16 +146,22 @@ Future<void> _markPaymentPaid(int orderId) async {
 
 Future<void> _markPaymentFailed(int orderId) async {
   try {
+    // Customers cannot update payment_status directly. Cancelling through the
+    // order endpoint runs the server's payment cleanup and removes this order
+    // from the active-order limit.
     await getIt<OrderRemoteDataSource>().updateOrderStatus(
       id: orderId,
-      paymentStatus: 'failed',
+      status: 'cancelled',
+      cancelReason: 'Digital payment was cancelled or could not be started.',
     );
-  } catch (_) {}
+  } catch (_) {
+    // The backend stale-payment sweep is the recovery path when this request
+    // cannot reach the server.
+  }
 }
 
-String bookingPaymentErrorMessage(Object error) =>
-    ApiErrorMapper.message(
-      error,
-      fallbackEn: 'Payment could not be completed.',
-      fallbackTl: 'Hindi natapos ang bayad.',
-    );
+String bookingPaymentErrorMessage(Object error) => ApiErrorMapper.message(
+  error,
+  fallbackEn: 'Payment could not be completed.',
+  fallbackTl: 'Hindi natapos ang bayad.',
+);

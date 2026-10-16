@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
+import '../../../../core/services/merchant_order_alert_service.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/auth/auth_provider.dart';
@@ -12,6 +13,7 @@ import '../../../widgets/main/merchantside/merchant_prep_timer_sync.dart';
 import '../../../widgets/widgets.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/services/notification_navigation_service.dart';
 import 'views/merchant_book_view.dart';
 import 'views/merchant_lespay_view.dart';
@@ -36,6 +38,7 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
 
   @override
   void onAutoRefresh() {
+    if (ref.read(riderAuthProvider).user?.isRegistrationRestricted != false) return;
     final currentTab = ref.read(merchantNavProvider);
     refreshMerchantScreen(ref, currentTab);
   }
@@ -49,6 +52,10 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
         ref.read(merchantNavProvider.notifier).state = tab;
       };
       NotificationNavigationService.onAppReady();
+      
+      // Stop persistent notification sound when merchant opens app
+      MerchantOrderAlertService.acknowledgeOrderAlert();
+      
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           _checkAuthentication();
@@ -71,6 +78,18 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
           ref.read(authViewProvider.notifier).state = AuthView.merchantLogin;
           AppRouter.pushReplacement(context, AuthRoutes.auth);
         }
+      });
+    } else if (authState.user!.isRegistrationRestricted) {
+      AppLogger.auth(
+        'MerchantMainScreen: account restricted (registration fee/approval pending)',
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppRouter.pushAndRemoveUntil(
+          context,
+          MainRoutes.registrationFeeStatus,
+          arguments: {'target': MainRoutes.merchantMain},
+        );
       });
     } else {
       AppLogger.auth(
@@ -105,6 +124,11 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
     });
 
     final currentNav = ref.watch(merchantNavProvider);
+    final authState = ref.watch(riderAuthProvider);
+    if (!authState.isLoggedIn || authState.user == null ||
+        authState.user!.isRegistrationRestricted) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     final isLespay = currentNav == MerchantNavType.lespay;
     final showMenuFab = currentNav == MerchantNavType.menu;
 

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
@@ -35,7 +36,7 @@ class RememberMeCheckbox extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
-            color: Colors.grey[700],
+            color: AppColors.foreground(context, Colors.grey[700]!),
           ),
         ),
       ],

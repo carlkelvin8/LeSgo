@@ -42,7 +42,7 @@ class ConnectivityService {
     _checkConnectivity();
   }
 
-  Future<void> _checkConnectivity() async {
+  Future<void> _checkConnectivity({bool immediate = false}) async {
     try {
       final results = await Connectivity().checkConnectivity();
       if (_hasDeviceNetwork(results)) {
@@ -52,7 +52,7 @@ class ConnectivityService {
       }
 
       _offlineStreak++;
-      if (_offlineStreak >= 5) {
+      if (immediate || _offlineStreak >= 5) {
         _setConnected(false);
       }
     } catch (e) {
@@ -77,9 +77,7 @@ class ConnectivityService {
   }
 
   Future<bool> checkConnection() async {
-    _offlineStreak = 0;
-    _setConnected(true);
-    await _checkConnectivity();
+    await _checkConnectivity(immediate: true);
     return _isConnected;
   }
 

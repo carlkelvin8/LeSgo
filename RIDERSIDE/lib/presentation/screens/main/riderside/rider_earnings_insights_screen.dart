@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/receipt_generator.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/share_utils.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../provider/main/riderside/rider_earnings_insights_provider.dart';
 
 class RiderEarningsInsightsScreen extends ConsumerWidget {
@@ -39,6 +40,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final insightsAsync = ref.watch(riderEarningsInsightsProvider);
+    final lang = ref.watch(appLanguageProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
@@ -48,7 +50,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'Earnings Insights',
+          AppLocalization.translate('earnings_insights', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),

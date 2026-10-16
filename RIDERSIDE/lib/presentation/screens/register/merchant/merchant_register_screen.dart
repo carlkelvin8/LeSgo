@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
-import '../../../../core/constants/routers/register/register_routes.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/services/api_service.dart';
 
 import '../../../provider/register/merchant/merchant_register_info_provider.dart';
@@ -11,6 +12,8 @@ import '../../../widgets/global/primary_button.dart';
 import '../../../widgets/global/register_scaffold.dart';
 import '../../../widgets/register/merchant/info/merchant_document_upload_list.dart';
 import '../../../widgets/register/merchant/info/merchant_info_form_fields.dart';
+import 'merchant_terms_screen.dart';
+import '../registration_terms_gate.dart';
 
 class MerchantRegisterScreen extends ConsumerStatefulWidget {
   const MerchantRegisterScreen({super.key});
@@ -98,6 +101,7 @@ class _MerchantRegisterScreenState
   }
 
   void _handleSubmit() {
+    if (!ref.read(merchantRegisterInfoProvider).termsAccepted) return;
     // Trigger visual validation in UI
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) {
@@ -127,10 +131,10 @@ class _MerchantRegisterScreenState
 
     // Send OTP
     try {
-      final response = await ApiService.dio.post('/v1/auth/otp/send', data: {
-        'phone_number': normalizedPhone,
-        'channel': 'sms',
-      });
+      final response = await ApiService.dio.post(
+        '/v1/auth/otp/send',
+        data: {'phone_number': normalizedPhone, 'channel': 'sms'},
+      );
 
       final data = response.data;
       final fallbackOtp = data['otp']; // For fallback/testing mode
@@ -138,7 +142,7 @@ class _MerchantRegisterScreenState
       if (!mounted) return;
 
       // Show OTP input dialog
-      final verified = await showModalBottomSheet<bool>(
+      final verified = await showModalBottomSheet<String>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.white,
@@ -151,13 +155,17 @@ class _MerchantRegisterScreenState
         ),
       );
 
-      if (verified == true && mounted) {
+      if (verified != null && verified.isNotEmpty && mounted) {
+        ref.read(merchantRegisterInfoProvider.notifier).setPhoneProof(verified);
         // OTP verified — proceed with actual registration
         ref.read(merchantRegisterInfoProvider.notifier).attemptSubmit();
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, 'Failed to send OTP. Please try again.');
+        SnackBarUtils.showError(
+          context,
+          'Failed to send OTP. Please try again.',
+        );
       }
     }
   }
@@ -175,13 +183,31 @@ class _MerchantRegisterScreenState
         SnackBarUtils.showError(context, next.errorMessage!);
         controller.clearError();
       }
-      if (next.isSubmitted) {
-        AppRouter.push(context, RegisterRoutes.merchantComplete);
+      if (next.isSubmitted && previous?.isSubmitted != true) {
+        AppRouter.pushAndRemoveUntil(
+          context,
+          MainRoutes.registrationFeeStatus,
+          arguments: {'target': MainRoutes.merchantMain},
+        );
       }
     });
 
+    return RegistrationTermsGate(
+      isSubmitting: state.isSubmitting,
+      onConsentChanged: controller.setTermsAccepted,
+      termsBuilder: (accept) => MerchantTermsScreen(onAccepted: accept),
+      formBuilder: (reviewTerms) => _buildForm(state, controller, reviewTerms),
+    );
+  }
+
+  Widget _buildForm(
+    MerchantRegisterInfoState state,
+    MerchantRegisterInfoNotifier controller,
+    VoidCallback reviewTerms,
+  ) {
     return RegisterScaffold(
       title: 'Register',
+      onBackPressed: reviewTerms,
       headerBottomSpacing: 24,
       body: Form(
         key: _formKey,
@@ -191,6 +217,11 @@ class _MerchantRegisterScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            TextButton.icon(
+              onPressed: state.isSubmitting ? null : reviewTerms,
+              icon: const Icon(Icons.description_outlined),
+              label: const Text('Review Merchant Terms & Conditions'),
+            ),
             // Store Illustration (Placeholder)
             Center(
               child: Container(
@@ -250,7 +281,7 @@ class _MerchantRegisterScreenState
             SizedBox(height: ResponsiveUtils.spacing(context, 32)),
 
             PrimaryButton(
-              text: 'SUBMIT',
+              text: 'Continue to payment',
               onPressed: state.isSubmitting ? () {} : _handleSubmit,
               isLoading: state.isSubmitting,
             ),
@@ -277,7 +308,6 @@ class _MerchantRegisterScreenState
     );
   }
 }
-
 
 /// OTP verification bottom sheet for merchant registration
 class _OtpBottomSheet extends StatefulWidget {
@@ -314,14 +344,21 @@ class _OtpBottomSheetState extends State<_OtpBottomSheet> {
     });
 
     try {
-      final response = await ApiService.dio.post('/v1/auth/otp/verify', data: {
-        'phone_number': widget.phone,
-        'otp': otp,
-      });
+      final response = await ApiService.dio.post(
+        '/v1/auth/otp/verify',
+        data: {'phone_number': widget.phone, 'otp': otp},
+      );
 
       final data = response.data;
-      if (data['success'] == true && (data['valid'] == true || data['verified'] == true)) {
-        if (mounted) Navigator.pop(context, true);
+      if (data['success'] == true &&
+          (data['valid'] == true || data['verified'] == true)) {
+        final proof = data['phone_verification_token']?.toString();
+        if (proof == null || proof.isEmpty) {
+          throw StateError(
+            'Verification proof missing. Please request another code.',
+          );
+        }
+        if (mounted) Navigator.pop(context, proof);
       } else {
         setState(() {
           _isVerifying = false;
@@ -348,7 +385,8 @@ class _OtpBottomSheetState extends State<_OtpBottomSheet> {
         children: [
           Center(
             child: Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
@@ -373,7 +411,7 @@ class _OtpBottomSheetState extends State<_OtpBottomSheet> {
               color: Colors.grey[600],
             ),
           ),
-          if (widget.fallbackOtp != null) ...[
+          if (widget.fallbackOtp != null && AppConfig.isDevMode) ...[
             const SizedBox(height: 8),
             Text(
               'Test OTP: ${widget.fallbackOtp}',
@@ -406,7 +444,10 @@ class _OtpBottomSheetState extends State<_OtpBottomSheet> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF5F2D82), width: 2),
+                borderSide: const BorderSide(
+                  color: Color(0xFF5F2D82),
+                  width: 2,
+                ),
               ),
             ),
           ),
@@ -423,9 +464,11 @@ class _OtpBottomSheetState extends State<_OtpBottomSheet> {
             ),
             child: _isVerifying
                 ? const SizedBox(
-                    height: 20, width: 20,
+                    height: 20,
+                    width: 20,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white,
+                      strokeWidth: 2,
+                      color: Colors.white,
                     ),
                   )
                 : const Text(

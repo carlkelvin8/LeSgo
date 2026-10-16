@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -52,14 +53,6 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
         ),
       )
       ..loadRequest(Uri.parse(widget.checkout.invoiceUrl));
-
-    // Auto-open in external browser as fallback after 3 seconds if webview seems blank
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted && !_webViewFailed) {
-        // Show a hint to open in browser if webview seems stuck
-        setState(() {}); // trigger rebuild to show browser button
-      }
-    });
   }
 
   void _handleRedirect(Uri uri) {
@@ -180,7 +173,7 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: bold ? FontWeight.bold : FontWeight.w600,
-              color: bold ? const Color(0xFF5F2D82) : Colors.black87,
+              color: bold ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],

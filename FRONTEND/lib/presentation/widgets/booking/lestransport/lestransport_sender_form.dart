@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -29,7 +30,7 @@ class LestransportSenderForm extends ConsumerWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),

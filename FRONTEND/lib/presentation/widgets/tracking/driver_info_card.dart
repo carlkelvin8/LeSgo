@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/driver_display_utils.dart';
 import '../../../core/utils/media_url_utils.dart';
@@ -19,9 +20,9 @@ class DriverInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: AppColors.surface(context, Colors.grey[50]!),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
       ),
       child: Row(
         children: [
@@ -81,7 +82,7 @@ class DriverInfoCard extends StatelessWidget {
                     driverInfo.vehicleType!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: AppColors.foreground(context, Colors.grey[600]!),
                     ),
                   ),
                 if (driverInfo.vehicleNumber != null)
@@ -89,7 +90,7 @@ class DriverInfoCard extends StatelessWidget {
                     'Plate: ${driverInfo.vehicleNumber!}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: AppColors.foreground(context, Colors.grey[600]!),
                       fontWeight: FontWeight.w600,
                     ),
                   ),

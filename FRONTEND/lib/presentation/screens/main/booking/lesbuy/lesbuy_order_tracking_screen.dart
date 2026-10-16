@@ -1,6 +1,8 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../../core/constants/map_styles.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/api_error_mapper.dart';
 import '../../../../../core/utils/order_cancel_utils.dart';
@@ -13,7 +15,7 @@ import '../../../../provider/main/profile/profile_provider.dart';
 import '../../../../widgets/tracking/order_status_timeline.dart';
 import '../../../../widgets/tracking/driver_info_card.dart';
 import '../../../../widgets/orders/cancel_order_dialog.dart';
-import '../../../../../core/utils/cart_cleanup.dart';
+import '../../../../../core/utils/booking_geo_utils.dart';
 import '../../../../widgets/chat/order_chat_widget.dart';
 import '../../../../widgets/chat/chat_button_widget.dart';
 import '../../../../widgets/tracking/live_rider_map.dart';
@@ -151,7 +153,6 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
       try {
         final dataSource = getIt<OrderRemoteDataSource>();
         await dataSource.cancelOrder(int.parse(widget.orderId), result);
-        await CartCleanup.clearAllCarts(ref);
 
         if (mounted) {
           setState(() => _isCancelling = false);
@@ -210,12 +211,6 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
         if (previous?.orderStatus != next.orderStatus && mounted) {
           _fetchCurrentOrderData();
         }
-        final wasCancelled =
-            previous?.orderStatus.toLowerCase() == 'cancelled';
-        final isCancelled = next.orderStatus.toLowerCase() == 'cancelled';
-        if (isCancelled && !wasCancelled) {
-          CartCleanup.clearAllCarts(ref);
-        }
         if (next.markers.isNotEmpty && _mapReady && previous?.markers != next.markers) {
           _fitBounds();
         }
@@ -223,7 +218,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       floatingActionButton: trackingState.driverInfo != null 
           ? FloatingChatButton(
               orderId: int.parse(widget.orderId),
@@ -235,8 +230,9 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
         children: [
           // Google Maps with real-time tracking
           GoogleMap(
+            style: MapStyles.darkIfDark(context),
             initialCameraPosition: CameraPosition(
-              target: trackingState.pickupLocation ?? const LatLng(8.4542, 124.6319),
+              target: trackingState.pickupLocation ?? BookingGeoUtils.defaultLatLng,
               zoom: 14,
             ),
             markers: trackingState.markers,
@@ -265,7 +261,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
           // Loading overlay
           if (trackingState.isLoading)
             Container(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: AppColors.surface(context, Colors.black).withValues(alpha: 0.3),
               child: const Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
@@ -286,7 +282,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                     // Back button
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface(context, Colors.white),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -310,7 +306,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                           vertical: ResponsiveUtils.spacing(context, 12),
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface(context, Colors.white),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
@@ -325,7 +321,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                             fontFamily: 'TT Fors',
                             fontWeight: FontWeight.w700,
                             fontSize: ResponsiveUtils.fontSize(context, 16),
-                            color: Colors.black87,
+                            color: AppColors.foreground(context, Colors.black87),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -340,10 +336,15 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
           // My location button
           Positioned(
             right: ResponsiveUtils.spacing(context, 16),
-            bottom: _isBottomSheetExpanded ? 400 : 280,
+            bottom: (_isBottomSheetExpanded
+                    ? (MediaQuery.sizeOf(context).height * 0.8)
+                        .clamp(440, 640)
+                    : (MediaQuery.sizeOf(context).height * 0.28)
+                        .clamp(160, 280)) +
+                8,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface(context, Colors.white),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -364,45 +365,58 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
             bottom: 0,
             left: 0,
             right: 0,
-            child: GestureDetector(
-              onVerticalDragUpdate: (details) {
-                final delta = details.primaryDelta ?? 0;
-                if (delta < -5) {
-                  setState(() => _isBottomSheetExpanded = true);
-                } else if (delta > 5) {
-                  setState(() => _isBottomSheetExpanded = false);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: _isBottomSheetExpanded ? 600 : 250,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: _isBottomSheetExpanded
+                  ? (MediaQuery.sizeOf(context).height * 0.8)
+                      .clamp(440, 640)
+                  : (MediaQuery.sizeOf(context).height * 0.28)
+                      .clamp(160, 280),
+              decoration: BoxDecoration(
+                color: AppColors.surface(context, Colors.white),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
-                child: Column(
-                  children: [
-                    // Drag handle
-                    Container(
-                      margin: EdgeInsets.only(
-                        top: ResponsiveUtils.spacing(context, 12),
-                      ),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Drag handle
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => setState(
+                      () => _isBottomSheetExpanded = !_isBottomSheetExpanded,
+                    ),
+                    onVerticalDragUpdate: (details) {
+                      final delta = details.primaryDelta ?? 0;
+                      if (delta < -5) {
+                        setState(() => _isBottomSheetExpanded = true);
+                      } else if (delta > 5) {
+                        setState(() => _isBottomSheetExpanded = false);
+                      }
+                    },
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Container(
+                          margin: EdgeInsets.only(top: 4),
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface(context, Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
                       ),
                     ),
+                  ),
 
                     Expanded(
                       child: SingleChildScrollView(
@@ -490,9 +504,11 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                               width: double.infinity,
                               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFF3CD),
+                                color: AppColors.surface(context, const Color(0xFFFFF3CD)),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFFFE69C)),
+                                border: Border.all(
+                                  color: AppColors.border(context, const Color(0xFFFFE69C)),
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -570,7 +586,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                               child: ElevatedButton(
                                 onPressed: _contactDriver,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.grey[600],
+                                  backgroundColor: AppColors.surface(context, Colors.grey[600]!),
                                   padding: EdgeInsets.symmetric(
                                     vertical: ResponsiveUtils.spacing(context, 14),
                                   ),
@@ -659,9 +675,8 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
     );
   }
 
@@ -680,7 +695,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -689,7 +704,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: Colors.grey[600],
+            color: AppColors.foreground(context, Colors.grey[600]!),
           ),
         ),
       ],
@@ -708,7 +723,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -718,7 +733,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           )
         else
@@ -743,9 +758,9 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: AppColors.surface(context, Colors.grey[50]!),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
       ),
       child: Row(
         children: [
@@ -773,7 +788,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
                 if (isManual)
@@ -791,7 +806,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey[600],
+                      color: AppColors.foreground(context, Colors.grey[600]!),
                     ),
                   ),
               ],
@@ -805,7 +820,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],
@@ -837,7 +852,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -858,7 +873,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
                 height: 1.35,
               ),
             ),
@@ -880,7 +895,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
                 height: 1.35,
               ),
             ),
@@ -912,7 +927,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w400,
-              color: isTotal ? Colors.black87 : Colors.grey[600],
+              color: isTotal ? AppColors.foreground(context, Colors.black87) : AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
           Text(
@@ -921,7 +936,7 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],
@@ -991,3 +1006,4 @@ class _LesbuyOrderTrackingScreenState extends ConsumerState<LesbuyOrderTrackingS
     }
   }
 }
+

@@ -40,8 +40,25 @@ class SupportTicketDto {
     required this.updatedAt,
   });
 
-  factory SupportTicketDto.fromJson(Map<String, dynamic> json) =>
-      _$SupportTicketDtoFromJson(json);
+  factory SupportTicketDto.fromJson(Map<String, dynamic> json) {
+    // Older servers return an incomplete, id-zero payload after a failed insert.
+    // Never treat that response as a saved conversation.
+    if (json['id'] is! num ||
+        (json['id'] as num) <= 0 ||
+        json['user_id'] is! num ||
+        [
+          'subject',
+          'description',
+          'category',
+          'priority',
+          'status',
+          'created_at',
+          'updated_at',
+        ].any((key) => json[key] is! String)) {
+      throw const FormatException('Invalid support conversation response');
+    }
+    return _$SupportTicketDtoFromJson(json);
+  }
 
   Map<String, dynamic> toJson() => _$SupportTicketDtoToJson(this);
 }
@@ -63,11 +80,15 @@ class CreateTicketDto {
   factory CreateTicketDto.fromJson(Map<String, dynamic> json) =>
       _$CreateTicketDtoFromJson(json);
 
-  Map<String, dynamic> toJson() => _$CreateTicketDtoToJson(this);
+  Map<String, dynamic> toJson() => {
+    ..._$CreateTicketDtoToJson(this),
+    'category': category == 'general' ? 'general_inquiry' : category,
+  };
 }
 
 @JsonSerializable()
 class TicketMessageDto {
+  final List<String> attachments;
   final int id;
   @JsonKey(name: 'ticket_id')
   final int ticketId;
@@ -80,6 +101,7 @@ class TicketMessageDto {
   final String createdAt;
 
   TicketMessageDto({
+    this.attachments = const [],
     required this.id,
     required this.ticketId,
     required this.userId,
@@ -89,7 +111,19 @@ class TicketMessageDto {
   });
 
   factory TicketMessageDto.fromJson(Map<String, dynamic> json) =>
-      _$TicketMessageDtoFromJson(json);
+      _$TicketMessageDtoFromJson({
+        ...json,
+        'user_id': json['user_id'] ?? 0,
+        'is_staff':
+            json['is_staff'] ??
+            (json['user'] is Map &&
+                [
+                  'admin',
+                  'partner_admin',
+                  'support',
+                  'agent',
+                ].contains(json['user']['role'])),
+      });
 
   Map<String, dynamic> toJson() => _$TicketMessageDtoToJson(this);
 }

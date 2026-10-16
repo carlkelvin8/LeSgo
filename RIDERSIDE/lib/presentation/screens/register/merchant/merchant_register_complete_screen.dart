@@ -14,7 +14,11 @@ class MerchantRegisterCompleteScreen extends ConsumerWidget {
 
   void _goToApp(BuildContext context, WidgetRef ref) {
     if (ref.read(riderAuthProvider).isLoggedIn) {
-      AppRouter.pushAndRemoveUntil(context, MainRoutes.merchantMain);
+      AppRouter.pushAndRemoveUntil(
+        context,
+        MainRoutes.registrationFeeStatus,
+        arguments: {'target': MainRoutes.merchantMain},
+      );
       return;
     }
     ref.read(authViewProvider.notifier).state = AuthView.welcome;

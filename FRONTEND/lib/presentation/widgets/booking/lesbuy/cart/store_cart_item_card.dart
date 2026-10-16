@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
@@ -21,7 +22,7 @@ class StoreCartItemCard extends StatelessWidget {
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -32,7 +33,7 @@ class StoreCartItemCard extends StatelessWidget {
             width: ResponsiveUtils.spacing(context, 64),
             height: ResponsiveUtils.spacing(context, 64),
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: AppColors.surface(context, Colors.grey[200]!),
               borderRadius: BorderRadius.circular(8),
             ),
             child: ClipRRect(
@@ -45,7 +46,7 @@ class StoreCartItemCard extends StatelessWidget {
                         padding: const EdgeInsets.all(16.0),
                         child: Icon(
                           Icons.shopping_bag,
-                          color: Colors.grey[400],
+                          color: AppColors.foreground(context, Colors.grey[400]!),
                           size: ResponsiveUtils.fontSize(context, 32),
                         ),
                       ),
@@ -56,7 +57,7 @@ class StoreCartItemCard extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) {
                         return Icon(
                           Icons.shopping_bag,
-                          color: Colors.grey[400],
+                          color: AppColors.foreground(context, Colors.grey[400]!),
                           size: ResponsiveUtils.fontSize(context, 32),
                         );
                       },
@@ -77,7 +78,7 @@ class StoreCartItemCard extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -86,7 +87,7 @@ class StoreCartItemCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: Colors.grey[600],
+                    color: AppColors.foreground(context, Colors.grey[600]!),
                   ),
                 ),
               ],
@@ -109,7 +110,7 @@ class StoreCartItemCard extends StatelessWidget {
               ),
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
+                  border: Border.all(color: AppColors.border(context, Colors.grey[300]!)),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(

@@ -2,13 +2,13 @@ import 'dart:math' as math;
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-/// Shared geo helpers — Cagayan de Oro (CDO) defaults and distance math.
+/// Shared geo helpers — Claveria, Cagayan defaults and distance math.
 class BookingGeoUtils {
   BookingGeoUtils._();
 
-  /// Cagayan de Oro city center (Divisoria area).
-  static const double defaultLat = 8.4542;
-  static const double defaultLng = 124.6319;
+  /// Claveria, Cagayan town center.
+  static const double defaultLat = 18.6058;
+  static const double defaultLng = 121.0779;
 
   static LatLng get defaultLatLng => const LatLng(defaultLat, defaultLng);
 
@@ -17,7 +17,7 @@ class BookingGeoUtils {
         zoom: 14,
       );
 
-  /// Service coverage radius from CDO center (km) — used when geofence API unavailable.
+  /// Service coverage radius from Claveria center (km) — used when geofence API unavailable.
   static const double serviceRadiusKm = 40;
 
   static bool hasValidCoords(double? lat, double? lng) {

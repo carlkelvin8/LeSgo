@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 import 'primary_button.dart';
@@ -18,7 +19,7 @@ class DisclaimerDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       elevation: 0,
       child: Padding(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
@@ -67,7 +68,7 @@ class DisclaimerDialog extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 20),
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: AppColors.foreground(context, Colors.black),
               ),
             ),
 
@@ -81,7 +82,7 @@ class DisclaimerDialog extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
                 height: 1.5,
               ),
             ),
@@ -100,7 +101,7 @@ class DisclaimerDialog extends StatelessWidget {
             // Cancel Button
             TextButton(
               onPressed: onCancel,
-              style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
+              style: TextButton.styleFrom(foregroundColor: AppColors.foreground(context, Colors.grey[600]!)),
               child: Text(
                 'Cancel',
                 style: TextStyle(

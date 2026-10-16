@@ -23,6 +23,7 @@ class RestaurantDetailState {
   final String? restaurantImagePath;
   final bool isLoading;
   final String? error;
+  final String searchQuery;
 
   RestaurantDetailState({
     List<FoodCategory>? menuCategories,
@@ -35,6 +36,7 @@ class RestaurantDetailState {
     this.restaurantImagePath,
     this.isLoading = false,
     this.error,
+    this.searchQuery = '',
   }) : menuCategories = menuCategories ?? _defaultMenuCategories,
        menuItems = menuItems ?? [],
        filteredMenuItems = filteredMenuItems ?? [],
@@ -73,6 +75,7 @@ class RestaurantDetailState {
     String? restaurantImagePath,
     bool? isLoading,
     String? error,
+    String? searchQuery,
   }) {
     return RestaurantDetailState(
       menuCategories: menuCategories ?? this.menuCategories,
@@ -85,6 +88,7 @@ class RestaurantDetailState {
       restaurantImagePath: restaurantImagePath ?? this.restaurantImagePath,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      searchQuery: searchQuery ?? this.searchQuery,
     );
   }
 }
@@ -231,15 +235,30 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     _filterMenuItems();
   }
 
+  void updateSearchQuery(String query) {
+    state = state.copyWith(searchQuery: query);
+    _filterMenuItems();
+  }
+
   void _filterMenuItems() {
     var filtered = state.menuItems;
 
-    if (state.selectedCategoryId == 'popular') {
-      filtered = filtered.where((item) => item.isPopular).toList();
-    } else if (state.selectedCategoryId != null) {
-      filtered = filtered
-          .where((item) => item.categoryId == state.selectedCategoryId)
-          .toList();
+    // Apply search filter
+    if (state.searchQuery.isNotEmpty) {
+      final query = state.searchQuery.toLowerCase();
+      filtered = filtered.where((item) {
+        return item.name.toLowerCase().contains(query) ||
+            item.description.toLowerCase().contains(query);
+      }).toList();
+    } else {
+      // Apply category filter only if no search
+      if (state.selectedCategoryId == 'popular') {
+        filtered = filtered.where((item) => item.isPopular).toList();
+      } else if (state.selectedCategoryId != null) {
+        filtered = filtered
+            .where((item) => item.categoryId == state.selectedCategoryId)
+            .toList();
+      }
     }
 
     state = state.copyWith(filteredMenuItems: filtered);

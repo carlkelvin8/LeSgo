@@ -147,7 +147,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       // DON'T fetch route here - only fetch when user confirms location
     } catch (e) {
       print('⚠️ LesgoLocation: Error getting location, using default: $e');
-      // Use default location (Cagayan de Oro City)
+      // Use default location (Claveria, Cagayan)
       final defaultLocation = BookingGeoUtils.defaultLatLng;
       final address = await _getAddressFromLocation(defaultLocation);
 

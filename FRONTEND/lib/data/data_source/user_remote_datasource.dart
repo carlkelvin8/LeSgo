@@ -20,8 +20,13 @@ class UserRemoteDataSource {
     final map = Map<String, dynamic>.from(raw);
     if (map['data'] is Map) {
       final data = Map<String, dynamic>.from(map['data'] as Map);
-      data['success'] ??= map['success'];
-      data['message'] ??= map['message'];
+      // Keep challenge and token fields from the outer envelope while letting
+      // explicitly returned data fields take precedence.
+      for (final entry in map.entries) {
+        if (entry.key != 'data') {
+          data.putIfAbsent(entry.key, () => entry.value);
+        }
+      }
       return data;
     }
     return map;
@@ -37,12 +42,9 @@ class UserRemoteDataSource {
 
       return UserDto.fromJson(_normalizeAuthResponse(response.data));
     } on DioException catch (e) {
-      if (e.response != null && e.response?.data != null) {
-        if (e.response?.data is Map<String, dynamic>) {
-          return UserDto.fromJson(
-            _normalizeAuthResponse(e.response?.data),
-          );
-        }
+      final responseData = e.response?.data;
+      if (responseData is Map) {
+        return UserDto.fromJson(_normalizeAuthResponse(responseData));
       }
       return UserDto.withError(
         e.message ?? 'An unexpected network error occurred',

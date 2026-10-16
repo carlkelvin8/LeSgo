@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
@@ -12,7 +13,7 @@ class LesrideDragHandle extends StatelessWidget {
         height: 5,
         margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
         decoration: BoxDecoration(
-          color: Colors.grey.shade300,
+          color: AppColors.border(context, Colors.grey.shade300),
           borderRadius: BorderRadius.circular(99),
         ),
       ),

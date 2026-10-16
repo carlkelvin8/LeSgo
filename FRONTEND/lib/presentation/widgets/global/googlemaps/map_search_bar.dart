@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -23,6 +24,7 @@ class MapSearchBar extends ConsumerStatefulWidget {
   onPlaceSelected;
   final Future<void> Function(LatLng location)? onAnimateToLocation;
   final bool requirePreviewConfirmation;
+  final bool showSavedAddresses;
 
   const MapSearchBar({
     super.key,
@@ -30,6 +32,7 @@ class MapSearchBar extends ConsumerStatefulWidget {
     required this.onPlaceSelected,
     this.onAnimateToLocation,
     this.requirePreviewConfirmation = true,
+    this.showSavedAddresses = true,
   });
 
   @override
@@ -454,7 +457,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
     final items = <Widget>[];
     final addressState = ref.watch(addressProvider);
     final saved = addressState.addresses
-        .where((a) => a.latitude != 0 && a.longitude != 0)
+        .where((a) => widget.showSavedAddresses && a.latitude != 0 && a.longitude != 0)
         .take(5)
         .toList();
 
@@ -495,7 +498,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: Colors.grey.shade600,
+              color: AppColors.foreground(context, Colors.grey.shade600),
             ),
           ),
         ),
@@ -519,7 +522,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 12),
           fontWeight: FontWeight.w700,
-          color: Colors.grey.shade700,
+          color: AppColors.foreground(context, Colors.grey.shade700),
         ),
       ),
     );
@@ -533,7 +536,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
   }) {
     return ListTile(
       dense: true,
-      leading: Icon(icon, color: const Color(0xFF5F2D82)),
+      leading: Icon(icon, color: AppColors.accent(context, Color(0xFF5F2D82))),
       title: Text(
         title,
         maxLines: 1,
@@ -553,7 +556,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.grey.shade600,
+                color: AppColors.foreground(context, Colors.grey.shade600),
               ),
             ),
       onTap: onTap,
@@ -578,7 +581,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
             ),
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -599,12 +602,12 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 hintStyle: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 16),
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                 ),
                 prefixIcon: const Icon(Icons.search, color: Color(0xFF5F2D82)),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        icon:  Icon(Icons.clear, color: AppColors.foreground(context, Colors.grey)),
                         onPressed: () {
                           _debounce?.cancel();
                           _searchController.clear();
@@ -653,7 +656,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 top: ResponsiveUtils.spacing(context, 4),
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface(context, Colors.white),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -680,7 +683,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 top: ResponsiveUtils.spacing(context, 4),
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface(context, Colors.white),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -698,7 +701,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 padding: EdgeInsets.zero,
                 itemCount: _searchResults.length,
                 separatorBuilder: (context, index) =>
-                    Divider(height: 1, color: Colors.grey[200]),
+                    Divider(height: 1, color: AppColors.border(context, Colors.grey[200]!)),
                 itemBuilder: (context, index) {
                   final place = _searchResults[index];
                   return ListTile(
@@ -719,7 +722,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.grey[600],
+                        color: AppColors.foreground(context, Colors.grey[600]!),
                       ),
                     ),
                     onTap: () => _selectPlace(place),
@@ -740,7 +743,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
               ),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface(context, Colors.white),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -755,7 +758,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
-                  color: Colors.grey.shade700,
+                  color: AppColors.foreground(context, Colors.grey.shade700),
                 ),
               ),
             ),

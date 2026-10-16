@@ -69,11 +69,21 @@ class _RiderChangePasswordScreenState
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text(AppLocalization.translate('change_password', lang)),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
+        title: Text(
+          AppLocalization.translate('change_password', lang),
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 18),
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(

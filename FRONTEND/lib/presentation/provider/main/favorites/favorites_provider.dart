@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import '../../../../core/services/favorites_service.dart';
 import '../../../../core/di/injection.dart';
 
@@ -68,10 +69,7 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -198,6 +196,7 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
 }
 
 final favoritesProvider =
-    StateNotifierProvider<FavoritesNotifier, FavoritesState>(
-  (ref) => FavoritesNotifier(),
-);
+    StateNotifierProvider<FavoritesNotifier, FavoritesState>((ref) {
+      ref.watch(userSessionEpochProvider);
+      return FavoritesNotifier();
+    });

@@ -7,6 +7,8 @@ class OtpResponseDto {
   final bool success;
   final String message;
   final bool? verified;
+  @JsonKey(name: 'phone_verification_token')
+  final String? phoneVerificationToken;
   final String? status;
   final String? channel;
   final String? verificationSid;
@@ -18,6 +20,7 @@ class OtpResponseDto {
     required this.success,
     required this.message,
     this.verified,
+    this.phoneVerificationToken,
     this.status,
     this.channel,
     this.verificationSid,

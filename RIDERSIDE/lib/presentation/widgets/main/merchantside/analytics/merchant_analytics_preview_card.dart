@@ -34,78 +34,71 @@ class MerchantAnalyticsPreviewCard extends ConsumerWidget {
       orElse: () => '...',
     );
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
+    return Material(
+      color: const Color(0xFFF5F4F7),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => AppRouter.push(context, MainRoutes.merchantAnalytics),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFC8E6C9)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: ResponsiveUtils.spacing(context, 44),
-            height: ResponsiveUtils.spacing(context, 44),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.insights_outlined,
-              color: Colors.white,
-              size: ResponsiveUtils.fontSize(context, 24),
-            ),
-          ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Restaurant Analytics',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 15),
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+        child: Padding(
+          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 7)),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.insights,
+                      color: const Color(0xFF8054A2),
+                      size: ResponsiveUtils.fontSize(context, 17),
+                    ),
                   ),
-                ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                Text(
-                  'Today: $todayOrders orders',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: Colors.grey.shade700,
+                  const Spacer(),
+                  const Icon(
+                    Icons.north_east_rounded,
+                    size: 14,
+                    color: Color(0xFFA49BAE),
                   ),
-                ),
-                Text(
-                  'This Week: $weekRevenue · Cancel rate: $cancelRate',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              AppRouter.push(context, MainRoutes.merchantAnalytics);
-            },
-            child: Text(
-              'View',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 14),
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF5F2D82),
+                ],
               ),
-            ),
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              Text(
+                'Business Overview',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF302B36),
+                ),
+              ),
+              SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+              Text(
+                'Today: $todayOrders orders',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 11),
+                  height: 1.4,
+                  color: const Color(0xFF918A98),
+                ),
+              ),
+              Text(
+                'Week: $weekRevenue · Cancel: $cancelRate',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 11),
+                  height: 1.4,
+                  color: const Color(0xFF918A98),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

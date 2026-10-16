@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
 import '../../../data/data_source/dto/tracking/tracking_dto.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/utils/booking_geo_utils.dart';
 
 class TrackingState {
   final TrackingDto? tracking;
@@ -86,13 +87,13 @@ class TrackingNotifier extends StateNotifier<TrackingState> {
                         ((data['distanceKm'] as num?) ?? 2.5) * 1000)
                     .round(),
             currentLatitude:
-                ((data['current_latitude'] ?? data['currentLatitude'] ?? 8.4542)
+                ((data['current_latitude'] ?? data['currentLatitude'] ?? BookingGeoUtils.defaultLat)
                         as num)
                     .toDouble(),
             currentLongitude:
                 ((data['current_longitude'] ??
                             data['currentLongitude'] ??
-                            124.6319)
+                            BookingGeoUtils.defaultLng)
                         as num)
                     .toDouble(),
           ),
@@ -154,3 +155,4 @@ final trackingProvider = StateNotifierProvider<TrackingNotifier, TrackingState>(
     return TrackingNotifier();
   },
 );
+

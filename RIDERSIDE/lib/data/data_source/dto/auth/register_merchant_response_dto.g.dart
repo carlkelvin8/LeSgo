@@ -38,6 +38,7 @@ MerchantUserDto _$MerchantUserDtoFromJson(Map<String, dynamic> json) =>
       phoneNumber: json['phone_number'] as String?,
       role: json['role'] as String,
       partnerId: (json['partner_id'] as num?)?.toInt(),
+      registrationFee: json['registration_fee'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$MerchantUserDtoToJson(MerchantUserDto instance) =>
@@ -48,4 +49,5 @@ Map<String, dynamic> _$MerchantUserDtoToJson(MerchantUserDto instance) =>
       'phone_number': instance.phoneNumber,
       'role': instance.role,
       'partner_id': instance.partnerId,
+      'registration_fee': instance.registrationFee,
     };

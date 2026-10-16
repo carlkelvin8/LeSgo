@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/di/injection.dart';
 import '../../../data/data_source/dto/notification/notification_dto.dart';
@@ -69,13 +70,14 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     _loadNotifications();
   }
 
-  void clearAll() {
-    _notificationService.clearAll();
+  Future<void> clearAll() async {
+    await _notificationService.clearAll();
     _loadNotifications();
   }
 }
 
 final notificationProvider =
     StateNotifierProvider<NotificationNotifier, NotificationState>((ref) {
-  return NotificationNotifier(getIt<NotificationService>());
-});
+      ref.watch(userSessionEpochProvider);
+      return NotificationNotifier(getIt<NotificationService>());
+    });

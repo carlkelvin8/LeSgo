@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_payout_provider.dart' hide PayoutRecord;
 import '../../../provider/main/riderside/rider_payout_provider.dart' show PayoutRecord, RiderPayoutState, riderPayoutProvider, riderPayoutHistoryProvider;
@@ -20,6 +21,7 @@ class RiderPayoutScreen extends ConsumerWidget {
 
     final payoutState = ref.watch(riderPayoutProvider);
     final payoutHistoryAsync = ref.watch(riderPayoutHistoryProvider);
+    final lang = ref.watch(appLanguageProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
@@ -29,7 +31,7 @@ class RiderPayoutScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'Wallet & Payouts',
+          AppLocalization.translate('wallet_payouts', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -53,7 +55,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildBalanceCard(
                     context,
-                    label: 'Available Balance',
+                    label: AppLocalization.translate('available_balance', lang),
                     amount: payoutState.availableBalanceFormatted,
                     color: const Color(0xFF4CAF50),
                     icon: Icons.account_balance_wallet,
@@ -63,7 +65,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildBalanceCard(
                     context,
-                    label: 'Pending',
+                    label: AppLocalization.translate('pending', lang),
                     amount: payoutState.pendingBalanceFormatted,
                     color: const Color(0xFFFF9800),
                     icon: Icons.schedule,
@@ -164,13 +166,24 @@ class RiderPayoutScreen extends ConsumerWidget {
               error: (err, stack) => Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    'Failed to load withdrawal history',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: Colors.red.shade600,
-                    ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Failed to load withdrawal history',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 13),
+                          color: Colors.red.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () =>
+                            ref.invalidate(riderPayoutHistoryProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -348,7 +361,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${payout.paymentMethod} â€¢ â€¢â€¢â€¢${payout.accountNumber.substring(max(0, payout.accountNumber.length - 4))}',
+                  '${payout.paymentMethod} • •••${payout.accountNumber.substring(max(0, payout.accountNumber.length - 4))}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -357,7 +370,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  DateFormat('MMM d, yyyy â€¢ h:mm a').format(payout.requestedAt),
+                  DateFormat('MMM d, yyyy • h:mm a').format(payout.requestedAt),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 10),

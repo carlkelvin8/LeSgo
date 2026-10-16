@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -40,7 +41,7 @@ class LespayMenuItem extends StatelessWidget {
               width: ResponsiveUtils.spacing(context, 40),
               height: ResponsiveUtils.spacing(context, 40),
               decoration: BoxDecoration(
-                color: backgroundColor ?? const Color(0xFF5F2D82),
+                color: backgroundColor ?? AppColors.accent(context, Color(0xFF5F2D82)),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
@@ -99,7 +100,7 @@ class LespayMenuItem extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                      color: AppColors.foreground(context, Colors.black87),
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -109,7 +110,7 @@ class LespayMenuItem extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey[600],
+                        color: AppColors.foreground(context, Colors.grey[600]!),
                       ),
                     ),
                   ],
@@ -119,7 +120,7 @@ class LespayMenuItem extends StatelessWidget {
             Icon(
               Icons.arrow_forward_ios,
               size: ResponsiveUtils.fontSize(context, 16),
-              color: Colors.grey[400],
+              color: AppColors.foreground(context, Colors.grey[400]!),
             ),
           ],
         ),

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -11,7 +12,6 @@ import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../core/services/order_polling_service.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../widgets/orders/cancel_order_dialog.dart';
-import '../../../../../core/utils/cart_cleanup.dart';
 
 class LeseatWaitingConfirmationScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -52,7 +52,6 @@ class _LeseatWaitingConfirmationScreenState
   }
 
   Future<void> _clearCartAndExit(String message) async {
-    await CartCleanup.clearAllCarts(ref);
     if (!mounted) return;
     SnackBarUtils.showError(context, message);
     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -98,7 +97,6 @@ class _LeseatWaitingConfirmationScreenState
         widget.orderId,
         result,
       );
-      await CartCleanup.clearAllCarts(ref);
       if (!mounted) return;
       SnackBarUtils.showSuccess(context, 'Order cancelled.');
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -118,9 +116,9 @@ class _LeseatWaitingConfirmationScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface(context, Colors.white),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
@@ -132,7 +130,7 @@ class _LeseatWaitingConfirmationScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 20),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: AppColors.accent(context, Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -152,7 +150,7 @@ class _LeseatWaitingConfirmationScreenState
                     height: ResponsiveUtils.screenWidth(context) * 0.6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.grey.shade100,
+                      color: AppColors.surface(context, Colors.grey.shade100),
                     ),
                     child: Center(
                       child: Image.asset(
@@ -164,7 +162,7 @@ class _LeseatWaitingConfirmationScreenState
                           return Icon(
                             Icons.restaurant,
                             size: ResponsiveUtils.screenWidth(context) * 0.3,
-                            color: const Color(0xFF5F2D82),
+                            color: AppColors.accent(context, Color(0xFF5F2D82)),
                           );
                         },
                       ),
@@ -176,9 +174,9 @@ class _LeseatWaitingConfirmationScreenState
                       ResponsiveUtils.spacing(context, 20),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface(context, Colors.white),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: AppColors.border(context, Colors.grey.shade300)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +193,7 @@ class _LeseatWaitingConfirmationScreenState
                                     18,
                                   ),
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black,
+                                  color: AppColors.foreground(context, Colors.black),
                                 ),
                               ),
                             ),
@@ -218,7 +216,7 @@ class _LeseatWaitingConfirmationScreenState
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
                             fontWeight: FontWeight.w700,
-                            color: Colors.black,
+                            color: AppColors.foreground(context, Colors.black),
                           ),
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -227,11 +225,11 @@ class _LeseatWaitingConfirmationScreenState
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: Colors.grey.shade600,
+                            color: AppColors.foreground(context, Colors.grey.shade600),
                           ),
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                        Divider(color: Colors.grey.shade300),
+                        Divider(color: AppColors.border(context, Colors.grey.shade300)),
                         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                         Text(
                           'Your Order',
@@ -239,7 +237,7 @@ class _LeseatWaitingConfirmationScreenState
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
                             fontWeight: FontWeight.w700,
-                            color: Colors.black,
+                            color: AppColors.foreground(context, Colors.black),
                           ),
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -253,7 +251,7 @@ class _LeseatWaitingConfirmationScreenState
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: Colors.grey.shade600,
+                                color: AppColors.foreground(context, Colors.grey.shade600),
                               ),
                             ),
                           );
@@ -268,7 +266,7 @@ class _LeseatWaitingConfirmationScreenState
           Container(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),

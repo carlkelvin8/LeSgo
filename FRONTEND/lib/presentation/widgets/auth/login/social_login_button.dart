@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
@@ -33,9 +34,9 @@ class SocialLoginButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          side: BorderSide(color: Colors.grey[300]!),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
+          side: BorderSide(color: AppColors.border(context, Colors.grey[300]!)),
+          backgroundColor: AppColors.surface(context, Colors.white),
+          foregroundColor: AppColors.foreground(context, Colors.black87),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

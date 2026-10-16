@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -23,7 +24,7 @@ class AuthHeader extends StatelessWidget {
           icon: Icon(
             Icons.arrow_back_ios,
             size: ResponsiveUtils.fontSize(context, 20),
-            color: iconColor ?? Colors.black,
+            color: iconColor ?? AppColors.foreground(context, Colors.black),
           ),
           onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
           padding: EdgeInsets.zero,
@@ -36,7 +37,7 @@ class AuthHeader extends StatelessWidget {
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
-              color: textColor ?? Colors.black,
+              color: textColor ?? AppColors.foreground(context, Colors.black),
             ),
             textAlign: TextAlign.center,
           ),

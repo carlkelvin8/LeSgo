@@ -70,6 +70,13 @@ class Address {
     return parts.join(', ');
   }
 
+  /// Secondary delivery details use the existing saved-address API field.
+  String get deliveryDetails => [
+    subdivision.trim(),
+    barangay.trim(),
+    if (landmark.trim().isNotEmpty) 'Landmark: ${landmark.trim()}',
+  ].where((part) => part.isNotEmpty).join(', ');
+
   bool get isComplete {
     // Allow empty zipCode if we have coordinates (GPS-based address)
     // zipCode is optional for locations selected via map

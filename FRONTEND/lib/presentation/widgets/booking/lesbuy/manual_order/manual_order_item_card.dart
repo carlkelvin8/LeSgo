@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/booking/lesbuy/manual_order_provider.dart';
@@ -22,9 +23,9 @@ class ManualOrderItemCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: AppColors.border(context, Colors.grey[300]!)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +41,7 @@ class ManualOrderItemCard extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
                 if (item.description.isNotEmpty) ...[
@@ -50,7 +51,7 @@ class ManualOrderItemCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey[600],
+                      color: AppColors.foreground(context, Colors.grey[600]!),
                     ),
                   ),
                 ],
@@ -71,13 +72,13 @@ class ManualOrderItemCard extends StatelessWidget {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: AppColors.surface(context, Colors.grey[200]!),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Icon(
+                  child:  Icon(
                     Icons.remove,
                     size: 16,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
               ),
@@ -92,7 +93,7 @@ class ManualOrderItemCard extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
               ),
@@ -105,10 +106,10 @@ class ManualOrderItemCard extends StatelessWidget {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF5F2D82),
+                    color: AppColors.accent(context, Color(0xFF5F2D82)),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Icon(Icons.add, size: 16, color: Colors.white),
+                  child: Icon(Icons.add, size: 16, color: AppColors.onAccent(context)),
                 ),
               ),
             ],
@@ -125,7 +126,7 @@ class ManualOrderItemCard extends StatelessWidget {
               child: Icon(
                 Icons.delete_outline,
                 size: 20,
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
               ),
             ),
           ),

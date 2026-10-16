@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
@@ -61,7 +62,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
     final headerHeight = ResponsiveUtils.imageHeight(context, 340);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -69,7 +70,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
         leading: Container(
           margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface(context, Colors.white),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -80,7 +81,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black)),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -88,7 +89,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
           Container(
             margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -101,7 +102,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
             child: IconButton(
               icon: Icon(
                 _isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorite ? Colors.red : Colors.black,
+                color: _isFavorite ? Colors.red : AppColors.foreground(context, Colors.black),
               ),
               onPressed: _toggleFavorite,
             ),
@@ -120,7 +121,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 14),
-                          color: Colors.grey[600],
+                          color: AppColors.foreground(context, Colors.grey[600]!),
                         ),
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -185,7 +186,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
                                       fontFamily: 'TT Fors',
                                       fontSize: ResponsiveUtils.fontSize(context, 18),
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black87,
+                                      color: AppColors.foreground(context, Colors.black87),
                                     ),
                                   ),
                                 ],
@@ -196,7 +197,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(context, 18),
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black87,
+                                  color: AppColors.foreground(context, Colors.black87),
                                 ),
                               ),
                       ),

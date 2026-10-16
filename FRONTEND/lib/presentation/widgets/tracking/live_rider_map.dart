@@ -1,6 +1,8 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../core/constants/map_styles.dart';
 import '../../../core/di/injection.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
 
@@ -196,7 +198,7 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
             width: double.infinity,
             child: _isLoading
                 ? Container(
-                    color: Colors.grey[200],
+                    color: AppColors.surface(context, Colors.grey[200]!),
                     child: const Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
@@ -206,6 +208,7 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
                     ),
                   )
                 : GoogleMap(
+                    style: MapStyles.darkIfDark(context),
                     initialCameraPosition: CameraPosition(
                       target: _initialCameraTarget(),
                       zoom: 14,
@@ -273,7 +276,7 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF5F2D82).withValues(alpha: 0.08),
+        color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

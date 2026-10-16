@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import '../../../data/data_source/dto/tracking/tracking_dto.dart';
 import 'package:intl/intl.dart';
 
@@ -130,7 +131,7 @@ class OrderStatusTimeline extends StatelessWidget {
               decoration: BoxDecoration(
                 color: event.isCompleted
                     ? color.withValues(alpha: 0.1)
-                    : Colors.grey[100],
+                    : AppColors.foreground(context, Colors.grey[100]!),
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: color,
@@ -147,7 +148,7 @@ class OrderStatusTimeline extends StatelessWidget {
               Container(
                 width: 2,
                 height: 40,
-                color: event.isCompleted ? color : Colors.grey[300],
+                color: event.isCompleted ? color : AppColors.foreground(context, Colors.grey[300]!),
               ),
           ],
         ),
@@ -165,7 +166,7 @@ class OrderStatusTimeline extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: event.isCompleted ? Colors.black : Colors.grey,
+                    color: event.isCompleted ? AppColors.foreground(context, Colors.black) : AppColors.foreground(context, Colors.grey),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -173,7 +174,7 @@ class OrderStatusTimeline extends StatelessWidget {
                   event.subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppColors.foreground(context, Colors.grey[600]!),
                   ),
                 ),
                 if (event.time != null)
@@ -183,7 +184,7 @@ class OrderStatusTimeline extends StatelessWidget {
                       _formatTime(event.time!),
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey[500],
+                        color: AppColors.foreground(context, Colors.grey[500]!),
                       ),
                     ),
                   ),

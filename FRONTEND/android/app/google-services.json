@@ -5,7 +5,7 @@
                                            "android_client_info":  {
                                                                        "package_name":  "com.lesgo_customer"
                                                                    },
-                                           "mobilesdk_app_id":  "1:937689509907:android:e0993ab947117d82a18fe6"
+                                           "mobilesdk_app_id":  "1:937689509907:android:9250c04b5d30a87ca18fe6"
                                        },
                        "api_key":  [
                                        {
@@ -16,7 +16,7 @@
                                         "appinvite_service":  {
                                                                   "other_platform_oauth_client":  [
                                                                                                       {
-                                                                                                          "client_id":  "410330550746-qibfkvmljkd4ktug5c79h6p73gv2oint.apps.googleusercontent.com",
+                                                                                                          "client_id":  "937689509907-v9sig2gpdnkvera15mv0n2ijc0usalbv.apps.googleusercontent.com",
                                                                                                           "client_type":  3
                                                                                                       }
                                                                                                   ]
@@ -24,7 +24,15 @@
                                     },
                        "oauth_client":  [
                                             {
-                                                "client_id":  "410330550746-finvpf5q8oogdito598q6t3p4kjbakl1.apps.googleusercontent.com",
+                                                "client_id":  "937689509907-b1ngl1mp8ctjqapca40s0e4svhstqini.apps.googleusercontent.com",
+                                                "client_type":  1,
+                                                "android_info":  {
+                                                                     "package_name":  "com.lesgo_customer",
+                                                                     "certificate_hash":  "fe33d34c7bedf535ead2547000d4f843ee4b9f90"
+                                                                 }
+                                            },
+                                            {
+                                                "client_id":  "937689509907-pv0kl4adur4uqd3p5e7js9unfsoot0lo.apps.googleusercontent.com",
                                                 "client_type":  1,
                                                 "android_info":  {
                                                                      "package_name":  "com.lesgo_customer",
@@ -32,7 +40,7 @@
                                                                  }
                                             },
                                             {
-                                                "client_id":  "410330550746-qibfkvmljkd4ktug5c79h6p73gv2oint.apps.googleusercontent.com",
+                                                "client_id":  "937689509907-v9sig2gpdnkvera15mv0n2ijc0usalbv.apps.googleusercontent.com",
                                                 "client_type":  3
                                             }
                                         ]

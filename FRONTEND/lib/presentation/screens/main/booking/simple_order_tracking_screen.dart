@@ -1,8 +1,10 @@
-﻿import 'dart:async';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/constants/map_styles.dart';
 import '../../../../core/utils/order_contact_actions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/order_status_utils.dart';
@@ -16,7 +18,7 @@ import '../../../widgets/chat/chat_button_widget.dart';
 import '../../../provider/tracking/live_tracking_provider.dart';
 import '../../../widgets/tracking/driver_info_card.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../core/utils/cart_cleanup.dart';
+import '../../../../core/utils/booking_geo_utils.dart';
 
 class SimpleOrderTrackingScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -79,9 +81,6 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     });
 
     if (previousStatus != null && previousStatus != newStatus) {
-      if (newStatus.toLowerCase() == 'cancelled') {
-        unawaited(CartCleanup.clearAllCarts(ref));
-      }
       _showStatusChangeNotification(previousStatus, newStatus);
     }
   }
@@ -235,7 +234,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     );
     
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       floatingActionButton: order != null && _isOrderActive(order!.status)
           ? FloatingChatButton(
               orderId: widget.orderId,
@@ -247,7 +246,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
           children: [
             // Header
             Container(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               child: Row(
                 children: [
@@ -262,7 +261,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 18),
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -272,7 +271,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
               ),
             ),
 
-            Container(height: 1, color: Colors.grey[300]),
+            Container(height: 1, color: AppColors.surface(context, Colors.grey[300]!)),
 
             // Content
             Expanded(
@@ -286,7 +285,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                               Icon(
                                 Icons.error_outline,
                                 size: 64,
-                                color: Colors.grey[400],
+                                color: AppColors.foreground(context, Colors.grey[400]!),
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -294,7 +293,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 16,
-                                  color: Colors.grey[600],
+                                  color: AppColors.foreground(context, Colors.grey[600]!),
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -323,8 +322,9 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
       children: [
         // Google Maps
         GoogleMap(
+          style: MapStyles.darkIfDark(context),
           initialCameraPosition: CameraPosition(
-            target: trackingState.pickupLocation ?? const LatLng(8.4542, 124.6319),
+            target: trackingState.pickupLocation ?? BookingGeoUtils.defaultLatLng,
             zoom: 14,
           ),
           markers: trackingState.markers,
@@ -348,7 +348,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
         // Loading overlay
         if (trackingState.isLoading)
           Container(
-            color: Colors.black.withValues(alpha: 0.3),
+            color: AppColors.surface(context, Colors.black).withValues(alpha: 0.3),
             child: const Center(
               child: CircularProgressIndicator(),
             ),
@@ -360,7 +360,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
           bottom: 280,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -383,7 +383,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
           right: 0,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               boxShadow: [
                 BoxShadow(
@@ -404,7 +404,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: AppColors.surface(context, Colors.grey[300]!),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -554,7 +554,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 13,
-                    color: Colors.grey[700],
+                    color: AppColors.foreground(context, Colors.grey[700]!),
                   ),
                 ),
               ],
@@ -569,7 +569,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -598,7 +598,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -629,7 +629,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                   Container(
                     width: 2,
                     height: 40,
-                    color: Colors.grey[300],
+                    color: AppColors.surface(context, Colors.grey[300]!),
                   ),
                   Container(
                     width: 10,
@@ -646,12 +646,12 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                     Text(
                       'Pickup',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: AppColors.foreground(context, Colors.grey),
                       ),
                     ),
                     Text(
@@ -662,12 +662,12 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                     Text(
                       'Dropoff',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: AppColors.foreground(context, Colors.grey),
                       ),
                     ),
                     Text(
@@ -691,7 +691,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -724,7 +724,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                 ),
               ),
               Text(
-                'â‚±${(order!.actualFare ?? order!.estimatedFare).toStringAsFixed(2)}',
+                '₱${(order!.actualFare ?? order!.estimatedFare).toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
@@ -750,7 +750,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
           Flexible(
@@ -780,11 +780,11 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
           Text(
-            'â‚±${amount.toStringAsFixed(2)}',
+            '₱${amount.toStringAsFixed(2)}',
             style: const TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,
@@ -872,3 +872,4 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     }
   }
 }
+

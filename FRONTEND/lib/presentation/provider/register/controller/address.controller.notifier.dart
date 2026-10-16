@@ -18,29 +18,32 @@ class AddressControllers {
   bool _shouldMoveCameraOnExit = false;
 
   AddressControllers()
-      : formKey = GlobalKey<FormState>(),
-        houseNumberController = TextEditingController(),
-        subdivisionController = TextEditingController(),
-        cityController = TextEditingController(),
-        zipCodeController = TextEditingController(),
-        landmarkController = TextEditingController();
-
+    : formKey = GlobalKey<FormState>(),
+      houseNumberController = TextEditingController(),
+      subdivisionController = TextEditingController(),
+      cityController = TextEditingController(),
+      zipCodeController = TextEditingController(),
+      landmarkController = TextEditingController();
 
   Future<void> initialize(WidgetRef ref) async {
     await ref.read(registerProvider.notifier).getCurrentLocation();
     updateFormFromProvider(ref);
   }
 
-
   void updateFormFromProvider(WidgetRef ref) {
-    final fields = ref.read(registerProvider.notifier).getFormattedAddressFields();
+    final fields = ref
+        .read(registerProvider.notifier)
+        .getFormattedAddressFields();
     houseNumberController.text = fields['houseNumberStreet'] ?? '';
     subdivisionController.text = fields['subdivBarangay'] ?? '';
     cityController.text = fields['cityProvince'] ?? '';
     zipCodeController.text = fields['zipCode'] ?? '';
   }
 
-  Future<void> handleUseCurrentLocation(BuildContext context, WidgetRef ref) async {
+  Future<void> handleUseCurrentLocation(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     await ref.read(registerProvider.notifier).getCurrentLocation();
     final registerState = ref.read(registerProvider);
 
@@ -50,10 +53,12 @@ class AddressControllers {
       }
     } else {
       updateFormFromProvider(ref);
-      
+
       // Animate camera to current location
       if (registerState.selectedLocation != null) {
-        final controller = isFullscreen ? fullscreenMapController : mapController;
+        final controller = isFullscreen
+            ? fullscreenMapController
+            : mapController;
         if (controller != null) {
           await controller.animateCamera(
             CameraUpdate.newCameraPosition(
@@ -65,26 +70,35 @@ class AddressControllers {
           );
         }
       }
-      
+
       if (context.mounted) {
         SnackBarUtils.showSuccess(context, 'Location updated');
       }
     }
   }
 
-  Future<void> handleMapTap(LatLng location, WidgetRef ref, BuildContext context) async {
+  Future<void> handleMapTap(
+    LatLng location,
+    WidgetRef ref,
+    BuildContext context,
+  ) async {
     await ref.read(registerProvider.notifier).updateSelectedLocation(location);
     updateFormFromProvider(ref);
-    
+
     if (context.mounted) {
-      SnackBarUtils.showSuccess(context, 'Location updated');
+      final error = ref.read(registerProvider).error;
+      if (error != null) {
+        SnackBarUtils.showError(context, error);
+      } else {
+        SnackBarUtils.showSuccess(context, 'Location updated');
+      }
     }
   }
 
   void toggleFullscreen(WidgetRef ref) {
     final wasFullscreen = isFullscreen;
     isFullscreen = !isFullscreen;
-    
+
     if (wasFullscreen && !isFullscreen) {
       _shouldMoveCameraOnExit = true;
     }
@@ -93,7 +107,7 @@ class AddressControllers {
   void onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
-  
+
   Future<void> moveSmallMapToMarker(WidgetRef ref) async {
     if (_shouldMoveCameraOnExit) {
       _shouldMoveCameraOnExit = false;
@@ -132,18 +146,23 @@ class AddressControllers {
     }
   }
 
-  Future<bool> validateAndSaveAddress(BuildContext context, WidgetRef ref) async {
+  Future<bool> validateAndSaveAddress(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     if (!formKey.currentState!.validate()) {
       return false;
     }
 
-    ref.read(registerProvider.notifier).updateAddressFromForm(
-      houseNumberStreet: houseNumberController.text,
-      subdivBarangay: subdivisionController.text,
-      cityProvince: cityController.text,
-      zipCode: zipCodeController.text,
-      landmark: landmarkController.text,
-    );
+    ref
+        .read(registerProvider.notifier)
+        .updateAddressFromForm(
+          houseNumberStreet: houseNumberController.text,
+          subdivBarangay: subdivisionController.text,
+          cityProvince: cityController.text,
+          zipCode: zipCodeController.text,
+          landmark: landmarkController.text,
+        );
 
     final success = await ref.read(registerProvider.notifier).saveAddress();
 

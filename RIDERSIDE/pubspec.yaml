@@ -2,7 +2,7 @@ name: lezgo_rider
 description: "LezGo Rider — driver and merchant app."
 publish_to: 'none'
 
-version: 1.1.4+12
+version: 1.1.7+18
 
 environment:
   sdk: ^3.10.1

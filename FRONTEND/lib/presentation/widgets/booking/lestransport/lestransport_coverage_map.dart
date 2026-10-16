@@ -1,8 +1,10 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../core/constants/map_styles.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../data/data_source/dto/geofence/geofence_dto.dart';
@@ -85,7 +87,7 @@ class _LestransportCoverageMapState
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -93,7 +95,7 @@ class _LestransportCoverageMapState
             width: double.infinity,
             height: ResponsiveUtils.imageHeight(context, 160),
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: AppColors.surface(context, Colors.grey[200]!),
               borderRadius: BorderRadius.circular(8),
             ),
             child: ClipRRect(
@@ -114,6 +116,7 @@ class _LestransportCoverageMapState
                       : kIsWeb
                           ? _CoverageList(geofences: _geofences)
                           : GoogleMap(
+                              style: MapStyles.darkIfDark(context),
                               initialCameraPosition: CameraPosition(
                                 target: _mapCenter(),
                                 zoom: 10,
@@ -134,7 +137,7 @@ class _LestransportCoverageMapState
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.grey.shade600,
+                  color: AppColors.foreground(context, Colors.grey.shade600),
                 ),
               ),
             ),
@@ -167,7 +170,7 @@ class _CoverageList extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 11,
-              color: Colors.grey.shade600,
+              color: AppColors.foreground(context, Colors.grey.shade600),
             ),
           ),
         );

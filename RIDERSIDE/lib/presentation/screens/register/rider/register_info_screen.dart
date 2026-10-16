@@ -1,8 +1,12 @@
+import '../../../provider/register/register_provider.dart';
+import '../registration_terms_screen.dart';
+import '../registration_terms_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/utils.dart';
 import '../../../../core/constants/routers/app_router.dart';
-import '../../../../core/constants/routers/register/register_routes.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../provider/register/riderside/rider_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
@@ -31,34 +35,50 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
   void initState() {
     super.initState();
     _firstNameController.addListener(() {
-      ref.read(registerInfoProvider.notifier).updateFirstName(_firstNameController.text);
+      ref
+          .read(registerInfoProvider.notifier)
+          .updateFirstName(_firstNameController.text);
     });
     _lastNameController.addListener(() {
-      ref.read(registerInfoProvider.notifier).updateLastName(_lastNameController.text);
+      ref
+          .read(registerInfoProvider.notifier)
+          .updateLastName(_lastNameController.text);
     });
     _birthdayController.addListener(() {
-      ref.read(registerInfoProvider.notifier).updateBirthday(_birthdayController.text);
+      ref
+          .read(registerInfoProvider.notifier)
+          .updateBirthday(_birthdayController.text);
     });
     _emailController.addListener(() {
-      ref.read(registerInfoProvider.notifier).updateEmail(_emailController.text);
+      ref
+          .read(registerInfoProvider.notifier)
+          .updateEmail(_emailController.text);
     });
     _phoneNumberController.addListener(() {
-      ref.read(registerInfoProvider.notifier).updatePhoneNumber(_phoneNumberController.text);
+      ref
+          .read(registerInfoProvider.notifier)
+          .updatePhoneNumber(_phoneNumberController.text);
     });
     _passwordController.addListener(() {
-      ref.read(registerInfoProvider.notifier).updatePassword(_passwordController.text);
+      ref
+          .read(registerInfoProvider.notifier)
+          .updatePassword(_passwordController.text);
     });
     _confirmPasswordController.addListener(() {
-      ref.read(registerInfoProvider.notifier).updateConfirmPassword(_confirmPasswordController.text);
+      ref
+          .read(registerInfoProvider.notifier)
+          .updateConfirmPassword(_confirmPasswordController.text);
     });
     _licenseNumberController.addListener(() {
-      ref.read(registerInfoProvider.notifier).updateLicenseNumber(_licenseNumberController.text);
+      ref
+          .read(registerInfoProvider.notifier)
+          .updateLicenseNumber(_licenseNumberController.text);
     });
     _licenseExpiryController.addListener(() {
       final value = _licenseExpiryController.text.trim();
-      ref.read(registerInfoProvider.notifier).updateLicenseExpiryDate(
-            value.isEmpty ? null : value,
-          );
+      ref
+          .read(registerInfoProvider.notifier)
+          .updateLicenseExpiryDate(value.isEmpty ? null : value);
     });
   }
 
@@ -77,9 +97,13 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
   }
 
   void _handleSubmit() {
+    if (!ref.read(hasAcceptedTermsProvider)) return;
     final isFormFieldsValid = _formKey.currentState?.validate() ?? false;
-    if (!isFormFieldsValid) {
-      ref.read(registerInfoProvider.notifier).attemptSubmit(isFormFieldsValid: false);
+    if (!isFormFieldsValid ||
+        !ref.read(registerInfoProvider).documents.isComplete) {
+      ref
+          .read(registerInfoProvider.notifier)
+          .attemptSubmit(isFormFieldsValid: false);
       return;
     }
 
@@ -129,17 +153,17 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
     }
 
     try {
-      final response = await ApiService.dio.post('/v1/auth/otp/send', data: {
-        'phone_number': normalizedPhone,
-        'channel': 'sms',
-      });
+      final response = await ApiService.dio.post(
+        '/v1/auth/otp/send',
+        data: {'phone_number': normalizedPhone, 'channel': 'sms'},
+      );
 
       final data = response.data;
       final fallbackOtp = data['otp'];
 
       if (!mounted) return;
 
-      final verified = await showModalBottomSheet<bool>(
+      final verified = await showModalBottomSheet<String>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.white,
@@ -152,16 +176,22 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
         ),
       );
 
-      if (verified == true && mounted) {
+      if (verified != null && verified.isNotEmpty && mounted) {
+        ref.read(registerInfoProvider.notifier).setPhoneProof(verified);
         final selectedPkg = ref.read(selectedRegistrationPackageProvider);
-        ref.read(registerInfoProvider.notifier).attemptSubmit(
-          isFormFieldsValid: true,
-          selectedPackage: selectedPkg,
-        );
+        ref
+            .read(registerInfoProvider.notifier)
+            .attemptSubmit(
+              isFormFieldsValid: true,
+              selectedPackage: selectedPkg,
+            );
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, 'Failed to send OTP. Please try again.');
+        SnackBarUtils.showError(
+          context,
+          'Failed to send OTP. Please try again.',
+        );
       }
     }
   }
@@ -176,13 +206,35 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
         SnackBarUtils.showError(context, next.errorMessage!);
         controller.clearError();
       }
-      if (next.isSubmitted) {
-        AppRouter.push(context, RegisterRoutes.riderComplete);
+      if (next.isSubmitted && previous?.isSubmitted != true) {
+        AppRouter.pushAndRemoveUntil(
+          context,
+          MainRoutes.registrationFeeStatus,
+          arguments: {'target': MainRoutes.riderMain},
+        );
+        controller.reset();
       }
     });
 
+    return RegistrationTermsGate(
+      isSubmitting: state.isSubmitting,
+      onConsentChanged: (accepted) {
+        ref.read(hasAcceptedTermsProvider.notifier).state = accepted;
+        ref.read(termsAcceptedProvider.notifier).state = accepted;
+      },
+      termsBuilder: (accept) => RegistrationTermsScreen(onAccepted: accept),
+      formBuilder: (reviewTerms) => _buildForm(state, controller, reviewTerms),
+    );
+  }
+
+  Widget _buildForm(
+    RegisterInfoState state,
+    RegisterInfoNotifier controller,
+    VoidCallback reviewTerms,
+  ) {
     return RegisterScaffold(
       title: 'Register',
+      onBackPressed: reviewTerms,
       headerBottomSpacing: 24,
       body: Form(
         key: _formKey,
@@ -247,7 +299,9 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 4)),
             PrimaryButton(
-              text: state.isSubmitting ? 'SUBMITTING...' : 'SUBMIT',
+              text: state.isSubmitting
+                  ? 'SUBMITTING...'
+                  : 'Continue to payment',
               isLoading: state.isSubmitting,
               onPressed: state.isSubmitting ? null : _handleSubmit,
             ),
@@ -260,7 +314,6 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
     );
   }
 }
-
 
 /// OTP verification bottom sheet for rider registration
 class _RiderOtpBottomSheet extends StatefulWidget {
@@ -291,22 +344,38 @@ class _RiderOtpBottomSheetState extends State<_RiderOtpBottomSheet> {
       return;
     }
 
-    setState(() { _isVerifying = true; _error = null; });
+    setState(() {
+      _isVerifying = true;
+      _error = null;
+    });
 
     try {
-      final response = await ApiService.dio.post('/v1/auth/otp/verify', data: {
-        'phone_number': widget.phone,
-        'otp': otp,
-      });
+      final response = await ApiService.dio.post(
+        '/v1/auth/otp/verify',
+        data: {'phone_number': widget.phone, 'otp': otp},
+      );
 
       final data = response.data;
-      if (data['success'] == true && (data['valid'] == true || data['verified'] == true)) {
-        if (mounted) Navigator.pop(context, true);
+      if (data['success'] == true &&
+          (data['valid'] == true || data['verified'] == true)) {
+        final proof = data['phone_verification_token']?.toString();
+        if (proof == null || proof.isEmpty) {
+          throw StateError(
+            'Verification proof missing. Please request another code.',
+          );
+        }
+        if (mounted) Navigator.pop(context, proof);
       } else {
-        setState(() { _isVerifying = false; _error = data['message'] ?? 'Invalid OTP'; });
+        setState(() {
+          _isVerifying = false;
+          _error = data['message'] ?? 'Invalid OTP';
+        });
       }
     } catch (e) {
-      setState(() { _isVerifying = false; _error = 'Verification failed'; });
+      setState(() {
+        _isVerifying = false;
+        _error = 'Verification failed';
+      });
     }
   }
 
@@ -319,14 +388,45 @@ class _RiderOtpBottomSheetState extends State<_RiderOtpBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
-          const Text('Verify Phone Number', style: TextStyle(fontFamily: 'TT Fors', fontSize: 20, fontWeight: FontWeight.w700)),
+          const Text(
+            'Verify Phone Number',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text('Enter the OTP code sent to ${widget.phone}', style: TextStyle(fontFamily: 'TT Fors', fontSize: 14, color: Colors.grey[600])),
-          if (widget.fallbackOtp != null) ...[
+          Text(
+            'Enter the OTP code sent to ${widget.phone}',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+          ),
+          if (widget.fallbackOtp != null && AppConfig.isDevMode) ...[
             const SizedBox(height: 8),
-            Text('Test OTP: ${widget.fallbackOtp}', style: const TextStyle(fontFamily: 'TT Fors', fontSize: 12, color: Colors.orange, fontWeight: FontWeight.w600)),
+            Text(
+              'Test OTP: ${widget.fallbackOtp}',
+              style: const TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: 12,
+                color: Colors.orange,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
           const SizedBox(height: 24),
           TextField(
@@ -334,20 +434,56 @@ class _RiderOtpBottomSheetState extends State<_RiderOtpBottomSheet> {
             keyboardType: TextInputType.number,
             maxLength: 6,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontFamily: 'TT Fors', fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 8),
+            style: const TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 8,
+            ),
             decoration: InputDecoration(
-              hintText: '000000', counterText: '', errorText: _error,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF5F2D82), width: 2)),
+              hintText: '000000',
+              counterText: '',
+              errorText: _error,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Color(0xFF5F2D82),
+                  width: 2,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: _isVerifying ? null : _verify,
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5F2D82), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF5F2D82),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: _isVerifying
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Verify OTP', style: TextStyle(fontFamily: 'TT Fors', fontSize: 16, fontWeight: FontWeight.w600)),
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text(
+                    'Verify OTP',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
           const SizedBox(height: 16),
         ],

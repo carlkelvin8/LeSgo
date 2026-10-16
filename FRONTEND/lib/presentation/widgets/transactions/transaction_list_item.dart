@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import '../../../domain/entities/transactions/transaction.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../common/payment_status_badge.dart';
@@ -25,7 +26,7 @@ class TransactionListItem extends StatelessWidget {
         margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -45,7 +46,7 @@ class TransactionListItem extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: (transaction.isWallet
-                            ? const Color(0xFF5F2D82)
+                            ? AppColors.accent(context, Color(0xFF5F2D82))
                             : _getServiceColor(transaction.serviceName))
                         .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -55,7 +56,7 @@ class TransactionListItem extends StatelessWidget {
                         ? Icons.account_balance_wallet_outlined
                         : _getServiceIcon(transaction.serviceName),
                     color: transaction.isWallet
-                        ? const Color(0xFF5F2D82)
+                        ? AppColors.accent(context, Color(0xFF5F2D82))
                         : _getServiceColor(transaction.serviceName),
                     size: 20,
                   ),
@@ -76,7 +77,7 @@ class TransactionListItem extends StatelessWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
                                 fontWeight: FontWeight.w700,
-                                color: Colors.black87,
+                                color: AppColors.foreground(context, Colors.black87),
                               ),
                             ),
                           ),
@@ -102,7 +103,7 @@ class TransactionListItem extends StatelessWidget {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 12),
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                               ),
                             ),
                           ),
@@ -114,7 +115,7 @@ class TransactionListItem extends StatelessWidget {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                                color: Colors.grey[500],
+                                color: AppColors.foreground(context, Colors.grey[500]!),
                               ),
                             ),
                         ],
@@ -131,7 +132,7 @@ class TransactionListItem extends StatelessWidget {
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                                  color: Colors.grey[700],
+                                  color: AppColors.foreground(context, Colors.grey[700]!),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -150,7 +151,7 @@ class TransactionListItem extends StatelessWidget {
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                                  color: Colors.grey[700],
+                                  color: AppColors.foreground(context, Colors.grey[700]!),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -165,7 +166,7 @@ class TransactionListItem extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 12),
-                            color: Colors.grey[600],
+                            color: AppColors.foreground(context, Colors.grey[600]!),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -188,7 +189,7 @@ class TransactionListItem extends StatelessWidget {
             // Divider
             Padding(
               padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.spacing(context, 12)),
-              child: Divider(height: 1, color: Colors.grey[200]),
+              child: Divider(height: 1, color: AppColors.border(context, Colors.grey[200]!)),
             ),
             
             // Amount and reorder button
@@ -207,7 +208,7 @@ class TransactionListItem extends StatelessWidget {
                         ? ((transaction.isWalletCredit ?? true)
                             ? Colors.green.shade700
                             : Colors.red.shade700)
-                        : const Color(0xFF5F2D82),
+                        : AppColors.accent(context, Color(0xFF5F2D82)),
                   ),
                 ),
                 
@@ -220,7 +221,7 @@ class TransactionListItem extends StatelessWidget {
                     icon: const Icon(Icons.refresh, size: 16),
                     label: const Text('Reorder'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF5F2D82),
+                      foregroundColor: AppColors.accent(context, Color(0xFF5F2D82)),
                       side: const BorderSide(color: Color(0xFF5F2D82)),
                       padding: EdgeInsets.symmetric(
                         horizontal: ResponsiveUtils.spacing(context, 12),

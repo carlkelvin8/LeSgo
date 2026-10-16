@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -75,7 +76,7 @@ class _RatingDialogState extends ConsumerState<RatingDialog> {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 18),
                 fontWeight: FontWeight.w700,
-                color: Colors.black87,
+                color: AppColors.foreground(context, Colors.black87),
               ),
               textAlign: TextAlign.center,
             ),
@@ -87,7 +88,7 @@ class _RatingDialogState extends ConsumerState<RatingDialog> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey.shade600,
+                color: AppColors.foreground(context, Colors.grey.shade600),
               ),
               textAlign: TextAlign.center,
             ),
@@ -115,11 +116,11 @@ class _RatingDialogState extends ConsumerState<RatingDialog> {
                 hintStyle: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: Colors.grey.shade500,
+                  color: AppColors.foreground(context, Colors.grey.shade500),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderSide: BorderSide(color: AppColors.border(context, Colors.grey.shade300)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -159,7 +160,7 @@ class _RatingDialogState extends ConsumerState<RatingDialog> {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                       ),
                     ),
                   ),

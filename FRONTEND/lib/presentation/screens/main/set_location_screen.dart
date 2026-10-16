@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -75,10 +77,12 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
         return;
       }
 
-      print('🔵 SetLocationScreen: Saving address...');
-      print('🔵 SetLocationScreen: - userId: $userId');
-      print('🔵 SetLocationScreen: - location: $location');
-      print('🔵 SetLocationScreen: - address: $address');
+      if (kDebugMode) {
+        debugPrint('SetLocationScreen: Saving address...');
+        debugPrint('SetLocationScreen: - userId: $userId');
+        debugPrint('SetLocationScreen: - location: $location');
+        debugPrint('SetLocationScreen: - address: $address');
+      }
 
       // Build address lines
       final houseNumberStreet = address['houseNumberStreet']?.toString() ?? '';
@@ -116,8 +120,10 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
         addressLine2 = '';
       }
 
-      print('🔵 SetLocationScreen: - addressLine1: $addressLine1');
-      print('🔵 SetLocationScreen: - addressLine2: $addressLine2');
+      if (kDebugMode) {
+        debugPrint('SetLocationScreen: - addressLine1: $addressLine1');
+        debugPrint('SetLocationScreen: - addressLine2: $addressLine2');
+      }
 
       var city = '';
       var region = '';
@@ -168,7 +174,9 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
       if (!mounted) return;
 
       if (success) {
-        print('🔵 SetLocationScreen: Address saved successfully');
+        if (kDebugMode) {
+          debugPrint('SetLocationScreen: Address saved successfully');
+        }
         await ref.read(profileProvider.notifier).updateProfile(
               address1: addressLine1,
               address2: addressLine2.isNotEmpty ? addressLine2 : null,
@@ -177,14 +185,18 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
         Navigator.of(context).pop(true);
       } else {
         final error = ref.read(addressProvider).error;
-        print('🔴 SetLocationScreen: Failed to save address - $error');
+        if (kDebugMode) {
+          debugPrint('SetLocationScreen: Failed to save address - $error');
+        }
         SnackBarUtils.showError(
           context,
           error ?? 'Failed to save address',
         );
       }
     } catch (e) {
-      print('🔴 SetLocationScreen: Error saving address - $e');
+      if (kDebugMode) {
+        debugPrint('SetLocationScreen: Error saving address - $e');
+      }
       if (mounted) {
         SnackBarUtils.showError(context, 'Error: $e');
       }
@@ -200,7 +212,7 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
     final locationState = ref.watch(locationProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Stack(

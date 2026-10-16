@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -40,29 +41,25 @@ class InviteFriendsSheet extends StatelessWidget {
   }
 
   Future<void> _share(BuildContext context) async {
+    final message =
+        '${ReferralUtils.referralShareMessage(referralCode: referralCode)}\n'
+        '${ReferralUtils.appStoreUrl}';
     try {
       final generated =
           await getIt<SocialRemoteDataSource>().generateReferralShare();
-      await Share.share(
-        generated.content.isNotEmpty
-            ? '${generated.content}\n${generated.shareUrl}'
-            : ReferralUtils.inviteMessage(
-                referralCode: referralCode,
-                userName: userName,
-              ),
-        subject: 'Join me on ${ReferralUtils.appName}',
-      );
       if (generated.shareId > 0) {
         await getIt<SocialRemoteDataSource>().trackShareEngagement(
           generated.shareId,
           action: 'share',
         );
       }
-    } catch (e) {
-      if (context.mounted) {
-        SnackBarUtils.showError(context, 'Could not generate share link.');
-      }
+    } catch (_) {
+      // Tracking is best-effort; the share text is built locally.
     }
+    await Share.share(
+      message,
+      subject: 'Join me on ${ReferralUtils.appName}',
+    );
   }
 
   @override
@@ -74,8 +71,8 @@ class InviteFriendsSheet extends StatelessWidget {
         ResponsiveUtils.spacing(context, 20),
         ResponsiveUtils.spacing(context, 24) + MediaQuery.paddingOf(context).bottom,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration:  BoxDecoration(
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -87,7 +84,7 @@ class InviteFriendsSheet extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.border(context, Colors.grey[300]!),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -107,16 +104,16 @@ class InviteFriendsSheet extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 20)),
           Container(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
             decoration: BoxDecoration(
-              color: const Color(0xFF5F2D82).withValues(alpha: 0.08),
+              color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF5F2D82).withValues(alpha: 0.3)),
+              border: Border.all(color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -128,13 +125,16 @@ class InviteFriendsSheet extends StatelessWidget {
                       fontSize: ResponsiveUtils.fontSize(context, 20),
                       fontWeight: FontWeight.w800,
                       letterSpacing: 2,
-                      color: const Color(0xFF5F2D82),
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
                     ),
                   ),
                 ),
                 IconButton(
                   onPressed: () => _copy(context),
-                  icon: const Icon(Icons.copy, color: Color(0xFF5F2D82)),
+                  icon: Icon(
+                    Icons.copy,
+                    color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                  ),
                 ),
               ],
             ),
@@ -145,7 +145,6 @@ class InviteFriendsSheet extends StatelessWidget {
             icon: const Icon(Icons.share_outlined),
             label: const Text('Share invite link'),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
               padding: EdgeInsets.symmetric(
                 vertical: ResponsiveUtils.spacing(context, 14),
               ),

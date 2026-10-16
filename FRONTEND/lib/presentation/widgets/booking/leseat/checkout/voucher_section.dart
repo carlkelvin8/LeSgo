@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -28,15 +29,15 @@ class VoucherSection extends StatelessWidget {
             vertical: ResponsiveUtils.spacing(context, 8),
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface(context, Colors.white),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: AppColors.border(context, Colors.grey[300]!)),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.local_offer,
-                color: const Color(0xFF5F2D82),
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
                 size: ResponsiveUtils.fontSize(context, 20),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -47,7 +48,7 @@ class VoucherSection extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF5F2D82),
+                    color: AppColors.accent(context, Color(0xFF5F2D82)),
                   ),
                 ),
               ),
@@ -63,7 +64,7 @@ class VoucherSection extends StatelessWidget {
               else
                 Icon(
                   Icons.chevron_right,
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                   size: ResponsiveUtils.fontSize(context, 20),
                 ),
             ],

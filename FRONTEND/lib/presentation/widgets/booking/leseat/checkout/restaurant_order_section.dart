@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../domain/entities/booking/leseat/order_item.dart';
@@ -30,7 +31,7 @@ class RestaurantOrderSection extends StatelessWidget {
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -43,12 +44,12 @@ class RestaurantOrderSection extends StatelessWidget {
                 width: ResponsiveUtils.spacing(context, 34),
                 height: ResponsiveUtils.spacing(context, 34),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEDDFD),
+                  color: AppColors.surface(context, Color(0xFFEEDDFD)),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   Icons.storefront,
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                   size: ResponsiveUtils.fontSize(context, 18),
                 ),
               ),
@@ -63,7 +64,7 @@ class RestaurantOrderSection extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w800,
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -72,7 +73,7 @@ class RestaurantOrderSection extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey[500],
+                        color: AppColors.foreground(context, Colors.grey[500]!),
                       ),
                     ),
                   ],
@@ -84,7 +85,7 @@ class RestaurantOrderSection extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                 ),
               ),
             ],
@@ -93,7 +94,7 @@ class RestaurantOrderSection extends StatelessWidget {
             padding: EdgeInsets.symmetric(
               vertical: ResponsiveUtils.spacing(context, 12),
             ),
-            child: Divider(height: 1, color: Colors.grey[200]),
+            child: Divider(height: 1, color: AppColors.border(context, Colors.grey[200]!)),
           ),
 
           // Order Items
@@ -117,7 +118,7 @@ class RestaurantOrderSection extends StatelessWidget {
             icon: Icon(
               Icons.add_circle_outline,
               size: ResponsiveUtils.fontSize(context, 20),
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
             ),
             label: Text(
               'Add more items',
@@ -125,7 +126,7 @@ class RestaurantOrderSection extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF5F2D82),
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
               ),
             ),
             style: TextButton.styleFrom(padding: EdgeInsets.zero),

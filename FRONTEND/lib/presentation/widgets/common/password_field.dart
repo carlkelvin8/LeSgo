@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'validated_text_field.dart';
 import 'password_strength_indicator.dart';
@@ -51,7 +52,7 @@ class _PasswordFieldState extends State<PasswordField> {
           suffixIcon: IconButton(
             icon: Icon(
               _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-              color: Colors.grey.shade600,
+              color: AppColors.foreground(context, Colors.grey.shade600),
               size: 20,
             ),
             onPressed: () {
@@ -119,7 +120,7 @@ class _PasswordConfirmFieldState extends State<PasswordConfirmField> {
       suffixIcon: IconButton(
         icon: Icon(
           _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-          color: Colors.grey.shade600,
+          color: AppColors.foreground(context, Colors.grey.shade600),
           size: 20,
         ),
         onPressed: () {

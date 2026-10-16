@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
@@ -23,7 +24,7 @@ class MapExpandHint extends StatelessWidget {
                 vertical: ResponsiveUtils.spacing(context, 8),
               ),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.55),
+                color: AppColors.surface(context, Colors.black).withValues(alpha: 0.55),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -43,12 +44,12 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
     final reviewState = ref.watch(reviewProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppColors.surface(context, Colors.grey.shade50),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface(context, Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black87)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -57,7 +58,7 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         centerTitle: true,
@@ -73,7 +74,7 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
                     Icon(
                       Icons.error_outline,
                       size: 64,
-                      color: Colors.grey.shade400,
+                      color: AppColors.foreground(context, Colors.grey.shade400),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                     Text(
@@ -81,7 +82,7 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
-                        color: Colors.grey.shade600,
+                        color: AppColors.foreground(context, Colors.grey.shade600),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -110,7 +111,7 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
                     Icon(
                       Icons.rate_review_outlined,
                       size: 64,
-                      color: Colors.grey.shade400,
+                      color: AppColors.foreground(context, Colors.grey.shade400),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                     Text(
@@ -118,7 +119,7 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
-                        color: Colors.grey.shade600,
+                        color: AppColors.foreground(context, Colors.grey.shade600),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -127,7 +128,7 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.grey.shade500,
+                        color: AppColors.foreground(context, Colors.grey.shade500),
                       ),
                     ),
                   ],

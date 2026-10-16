@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_colors.dart';
+import '../../../widgets/common/refreshable_empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../provider/main/orders/order_history_provider.dart';
@@ -45,28 +47,22 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
     final filteredOrders = orderState.filteredOrders;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       body: SafeArea(
         child: Column(
           children: [
             Container(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Expanded(
-                    child: AuthHeader(title: 'Order History'),
-                  ),
+                  const AuthHeader(title: 'Order History'),
                 ],
               ),
             ),
-            Container(height: 1, color: Colors.grey[300]),
+            Container(height: 1, color: AppColors.surface(context, Colors.grey[300]!)),
             Container(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -90,7 +86,9 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                     const SizedBox(width: 8),
                     _FilterChip(
                       label: 'Completed',
-                      isSelected: orderState.selectedFilter == OrderStatusConstants.completed,
+                      isSelected:
+                          orderState.selectedFilter ==
+                          OrderStatusConstants.completed,
                       onTap: () => ref
                           .read(orderHistoryProvider.notifier)
                           .changeFilter(OrderStatusConstants.completed),
@@ -98,7 +96,9 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                     const SizedBox(width: 8),
                     _FilterChip(
                       label: 'Cancelled',
-                      isSelected: orderState.selectedFilter == OrderStatusConstants.cancelled,
+                      isSelected:
+                          orderState.selectedFilter ==
+                          OrderStatusConstants.cancelled,
                       onTap: () => ref
                           .read(orderHistoryProvider.notifier)
                           .changeFilter(OrderStatusConstants.cancelled),
@@ -107,7 +107,7 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                 ),
               ),
             ),
-            Container(height: 1, color: Colors.grey[200]),
+            Container(height: 1, color: AppColors.surface(context, Colors.grey[200]!)),
             Expanded(
               child: orderState.isLoading && orderState.orders.isEmpty
                   ? const Center(
@@ -116,96 +116,94 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                       ),
                     )
                   : orderState.error != null && orderState.orders.isEmpty
-                      ? RetryWidget(
-                          message: orderState.error!,
-                          isLoading: orderState.isLoading,
-                          onRetry: () => ref
-                              .read(orderHistoryProvider.notifier)
-                              .refreshOrders(),
-                        )
-                      : filteredOrders.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.receipt_long_outlined,
-                                    size: 64,
-                                    color: Colors.grey[400],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'No ${orderState.selectedFilter} orders',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Pull down to refresh',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize: 13,
-                                      color: Colors.grey[400],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : RefreshIndicator(
-                              color: const Color(0xFF5F2D82),
-                              onRefresh: () => ref
-                                  .read(orderHistoryProvider.notifier)
-                                  .refreshOrders(),
-                              child: ListView.builder(
-                                controller: _scrollController,
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding: const EdgeInsets.all(16),
-                                itemCount: filteredOrders.length +
-                                    (orderState.hasMore ? 1 : 0),
-                                itemBuilder: (context, index) {
-                                  if (index >= filteredOrders.length) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                      child: Center(
-                                        child: orderState.isLoadingMore
-                                            ? const CircularProgressIndicator(
-                                                color: Color(0xFF5F2D82),
-                                              )
-                                            : TextButton(
-                                                onPressed: () => ref
-                                                    .read(
-                                                      orderHistoryProvider
-                                                          .notifier,
-                                                    )
-                                                    .loadMoreOrders(),
-                                                child: const Text('Load more'),
-                                              ),
-                                      ),
-                                    );
-                                  }
-
-                                  final order = filteredOrders[index];
-                                  return OrderCard(
-                                    order: order,
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => OrderDetailScreen(
-                                            orderId: order.id,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
+                  ? RetryWidget(
+                      message: orderState.error!,
+                      isLoading: orderState.isLoading,
+                      onRetry: () => ref
+                          .read(orderHistoryProvider.notifier)
+                          .refreshOrders(),
+                    )
+                  : filteredOrders.isEmpty
+                  ? RefreshableEmptyState(
+                      onRefresh: () => ref
+                          .read(orderHistoryProvider.notifier)
+                          .refreshOrders(),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: AppColors.foreground(context, Colors.grey[400]!),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No ${orderState.selectedFilter} orders',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 16,
+                              color: AppColors.foreground(context, Colors.grey[600]!),
                             ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Pull down to refresh',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 13,
+                              color: AppColors.foreground(context, Colors.grey[400]!),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
+                      onRefresh: () => ref
+                          .read(orderHistoryProvider.notifier)
+                          .refreshOrders(),
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        itemCount:
+                            filteredOrders.length +
+                            (orderState.hasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index >= filteredOrders.length) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: orderState.isLoadingMore
+                                    ? const CircularProgressIndicator(
+                                        color: Color(0xFF5F2D82),
+                                      )
+                                    : TextButton(
+                                        onPressed: () => ref
+                                            .read(orderHistoryProvider.notifier)
+                                            .loadMoreOrders(),
+                                        child: const Text('Load more'),
+                                      ),
+                              ),
+                            );
+                          }
+
+                          final order = filteredOrders[index];
+                          return OrderCard(
+                            order: order,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      OrderDetailScreen(orderId: order.id),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -229,14 +227,17 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        constraints: const BoxConstraints(minHeight: 40),
+        alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF5F2D82) : Colors.grey[100],
+          color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Colors.grey[100]!),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF5F2D82) : Colors.grey[300]!,
+            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.border(context, Colors.grey[300]!),
           ),
         ),
         child: Text(
@@ -245,7 +246,7 @@ class _FilterChip extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected ? Colors.white : Colors.grey[700],
+            color: isSelected ? Colors.white : AppColors.foreground(context, Colors.grey[700]!),
           ),
         ),
       ),

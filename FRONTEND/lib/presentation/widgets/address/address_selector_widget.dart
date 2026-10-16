@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -37,7 +38,9 @@ class _AddressSelectorWidgetState extends ConsumerState<AddressSelectorWidget> {
   void _loadAddresses() {
     final authState = ref.read(authProvider);
     if (authState.user != null) {
-      ref.read(addressProvider.notifier).loadAddresses(int.parse(authState.user!.id));
+      ref
+          .read(addressProvider.notifier)
+          .loadAddresses(int.parse(authState.user!.id));
     }
   }
 
@@ -47,9 +50,11 @@ class _AddressSelectorWidgetState extends ConsumerState<AddressSelectorWidget> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: AppColors.border(context, Colors.grey.shade200),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,29 +67,35 @@ class _AddressSelectorWidgetState extends ConsumerState<AddressSelectorWidget> {
                 Icon(
                   Icons.location_on_outlined,
                   size: 20,
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  widget.title ?? 'Delivery Address',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                Expanded(
+                  child: Text(
+                    widget.title ?? 'Delivery Address',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 16),
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.foreground(context, Colors.black87),
+                    ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 const Spacer(),
                 if (widget.showManageButton)
                   TextButton(
-                    onPressed: () => AppRouter.push(context, MainRoutes.addressManagement),
+                    onPressed: () =>
+                        AppRouter.push(context, MainRoutes.addressManagement),
                     child: Text(
                       'Manage',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                       ),
                     ),
                   ),
@@ -97,14 +108,13 @@ class _AddressSelectorWidgetState extends ConsumerState<AddressSelectorWidget> {
             const Padding(
               padding: EdgeInsets.all(24),
               child: Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF5F2D82),
-                ),
+                child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
               ),
             )
           else if (addressState.addresses.isEmpty)
             _EmptyAddressState(
-              onAdd: () => AppRouter.push(context, MainRoutes.addressManagement),
+              onAdd: () =>
+                  AppRouter.push(context, MainRoutes.addressManagement),
             )
           else
             _AddressList(
@@ -140,8 +150,12 @@ class _AddressList extends StatelessWidget {
         if (addresses.any((addr) => addr.isDefault)) ...[
           _AddressItem(
             address: addresses.firstWhere((addr) => addr.isDefault),
-            isSelected: selectedAddress?.id == addresses.firstWhere((addr) => addr.isDefault).id,
-            onTap: () => onAddressSelected(addresses.firstWhere((addr) => addr.isDefault)),
+            isSelected:
+                selectedAddress?.id ==
+                addresses.firstWhere((addr) => addr.isDefault).id,
+            onTap: () => onAddressSelected(
+              addresses.firstWhere((addr) => addr.isDefault),
+            ),
           ),
         ],
 
@@ -149,24 +163,27 @@ class _AddressList extends StatelessWidget {
         ...addresses
             .where((addr) => !addr.isDefault)
             .take(2) // Show max 2 non-default addresses
-            .map((addr) => _AddressItem(
-                  address: addr,
-                  isSelected: selectedAddress?.id == addr.id,
-                  onTap: () => onAddressSelected(addr),
-                )),
+            .map(
+              (addr) => _AddressItem(
+                address: addr,
+                isSelected: selectedAddress?.id == addr.id,
+                onTap: () => onAddressSelected(addr),
+              ),
+            ),
 
         // Show more button if there are more addresses
         if (addresses.length > 3)
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextButton(
-              onPressed: () => Navigator.pushNamed(context, MainRoutes.addressManagement),
+              onPressed: () =>
+                  Navigator.pushNamed(context, MainRoutes.addressManagement),
               child: Text(
                 'View all ${addresses.length} addresses',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                 ),
               ),
             ),
@@ -194,10 +211,17 @@ class _AddressItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF5F2D82).withValues(alpha: 0.05) : null,
+          color: isSelected
+              ? AppColors.accent(
+                  context,
+                  Color(0xFF5F2D82),
+                ).withValues(alpha: 0.05)
+              : null,
           border: Border(
             left: BorderSide(
-              color: isSelected ? const Color(0xFF5F2D82) : Colors.transparent,
+              color: isSelected
+                  ? AppColors.accent(context, Color(0xFF5F2D82))
+                  : Colors.transparent,
               width: 3,
             ),
           ),
@@ -210,17 +234,17 @@ class _AddressItem extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF5F2D82) : Colors.grey.shade400,
+                  color: isSelected
+                      ? AppColors.accent(context, Color(0xFF5F2D82))
+                      : AppColors.foreground(context, Colors.grey.shade400),
                   width: 2,
                 ),
-                color: isSelected ? const Color(0xFF5F2D82) : Colors.transparent,
+                color: isSelected
+                    ? AppColors.accent(context, Color(0xFF5F2D82))
+                    : Colors.transparent,
               ),
               child: isSelected
-                  ? const Icon(
-                      Icons.check,
-                      size: 12,
-                      color: Colors.white,
-                    )
+                  ? const Icon(Icons.check, size: 12, color: Colors.white)
                   : null,
             ),
             const SizedBox(width: 12),
@@ -231,11 +255,17 @@ class _AddressItem extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: address.isDefault
-                              ? const Color(0xFF5F2D82)
-                              : Colors.grey.shade100,
+                              ? AppColors.accent(context, Color(0xFF5F2D82))
+                              : AppColors.foreground(
+                                  context,
+                                  Colors.grey.shade100,
+                                ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -244,18 +274,29 @@ class _AddressItem extends StatelessWidget {
                             fontFamily: 'TT Fors',
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: address.isDefault ? Colors.white : Colors.grey.shade700,
+                            color: address.isDefault
+                                ? Colors.white
+                                : AppColors.foreground(
+                                    context,
+                                    Colors.grey.shade700,
+                                  ),
                           ),
                         ),
                       ),
                       if (address.isDefault) ...[
                         const SizedBox(width: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.green.shade50,
                             borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: Colors.green.shade200, width: 0.5),
+                            border: Border.all(
+                              color: Colors.green.shade200,
+                              width: 0.5,
+                            ),
                           ),
                           child: Text(
                             'Default',
@@ -276,7 +317,7 @@ class _AddressItem extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: Colors.black87,
+                      color: AppColors.foreground(context, Colors.black87),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -287,7 +328,10 @@ class _AddressItem extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 11),
-                        color: Colors.grey.shade600,
+                        color: AppColors.foreground(
+                          context,
+                          Colors.grey.shade600,
+                        ),
                       ),
                     ),
                 ],
@@ -314,7 +358,7 @@ class _EmptyAddressState extends StatelessWidget {
           Icon(
             Icons.location_off_outlined,
             size: 48,
-            color: Colors.grey[300],
+            color: AppColors.foreground(context, Colors.grey[300]!),
           ),
           const SizedBox(height: 12),
           Text(
@@ -322,7 +366,7 @@ class _EmptyAddressState extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
           const SizedBox(height: 8),
@@ -331,7 +375,7 @@ class _EmptyAddressState extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey[400],
+              color: AppColors.foreground(context, Colors.grey[400]!),
             ),
           ),
           const SizedBox(height: 16),

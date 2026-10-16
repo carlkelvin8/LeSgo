@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/constants/order_status_constants.dart';
@@ -56,14 +57,15 @@ class TransactionsState {
   }) {
     return TransactionsState(
       transactions: transactions ?? this.transactions,
-      filteredTransactions:
-          filteredTransactions ?? this.filteredTransactions,
+      filteredTransactions: filteredTransactions ?? this.filteredTransactions,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : error,
-      selectedService:
-          clearService ? null : (selectedService ?? this.selectedService),
-      selectedStatus:
-          clearStatus ? null : (selectedStatus ?? this.selectedStatus),
+      selectedService: clearService
+          ? null
+          : (selectedService ?? this.selectedService),
+      selectedStatus: clearStatus
+          ? null
+          : (selectedStatus ?? this.selectedStatus),
       selectedKind: clearKind ? null : (selectedKind ?? this.selectedKind),
       selectedPaymentStatus: clearPaymentStatus
           ? null
@@ -79,12 +81,14 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       getIt<WalletRemoteDataSource>();
 
   TransactionsNotifier({TransactionKindFilter initialKindFilter})
-      : super(TransactionsState(
+    : super(
+        TransactionsState(
           transactions: [],
           filteredTransactions: [],
           isLoading: true,
           selectedKind: initialKindFilter,
-        )) {
+        ),
+      ) {
     _loadTransactions();
   }
 
@@ -97,8 +101,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
       try {
         final ordersResponse = await _orderDataSource.getOrders(perPage: 50);
-        orderTransactions =
-            ordersResponse.data.map(_mapOrder).toList();
+        orderTransactions = ordersResponse.data.map(_mapOrder).toList();
       } catch (_) {}
 
       try {
@@ -110,10 +113,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
         ..sort((a, b) => _parseDate(b.date).compareTo(_parseDate(a.date)));
 
       state = _withFiltered(
-        state.copyWith(
-          transactions: merged,
-          isLoading: false,
-        ),
+        state.copyWith(transactions: merged, isLoading: false),
       );
     } catch (e) {
       state = state.copyWith(
@@ -153,8 +153,9 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       amount: orderDto.effectiveTotalAmount,
       status: _mapOrderStatus(orderDto.status),
       rawStatus: orderDto.status,
-      paymentStatus:
-          PaymentStatusUtils.fromOrderPaymentStatus(orderDto.paymentStatus),
+      paymentStatus: PaymentStatusUtils.fromOrderPaymentStatus(
+        orderDto.paymentStatus,
+      ),
       paymentMethod: orderDto.paymentMethod,
       items: transactionItems,
       proofImages: orderDto.proofImages,
@@ -173,10 +174,9 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       status: TransactionStatus.completed,
       rawStatus: dto.type,
       paymentStatus: PaymentStatusUtils.fromWalletTransaction(dto),
-      walletDescription:
-          (dto.description?.isNotEmpty ?? false)
-              ? dto.description!
-              : (isCredit ? 'Top-up' : 'Payment'),
+      walletDescription: (dto.description?.isNotEmpty ?? false)
+          ? dto.description!
+          : (isCredit ? 'Top-up' : 'Payment'),
       walletReference: dto.reference,
       isWalletCredit: isCredit,
     );
@@ -248,9 +248,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   }
 
   TransactionsState _withFiltered(TransactionsState current) {
-    return current.copyWith(
-      filteredTransactions: _computeFiltered(current),
-    );
+    return current.copyWith(filteredTransactions: _computeFiltered(current));
   }
 
   List<Transaction> _computeFiltered(TransactionsState current) {
@@ -266,8 +264,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
     final service = current.selectedService?.trim();
     if (service != null && service.isNotEmpty) {
-      filtered =
-          filtered.where((t) => t.serviceName == service).toList();
+      filtered = filtered.where((t) => t.serviceName == service).toList();
     }
 
     final status = current.selectedStatus?.trim().toLowerCase();
@@ -285,8 +282,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
           .toList();
     }
 
-    final paymentStatus =
-        current.selectedPaymentStatus?.trim().toLowerCase();
+    final paymentStatus = current.selectedPaymentStatus?.trim().toLowerCase();
     if (paymentStatus != null && paymentStatus.isNotEmpty) {
       filtered = filtered.where((t) {
         switch (paymentStatus) {
@@ -375,5 +371,6 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
 final transactionsProvider =
     StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
-  return TransactionsNotifier();
-});
+      ref.watch(userSessionEpochProvider);
+      return TransactionsNotifier();
+    });

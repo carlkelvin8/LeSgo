@@ -1,10 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/main/favorites/favorites_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/navigation/favorite_navigation.dart';
 import '../../../core/services/favorites_service.dart';
+import '../../../core/utils/snackbar_utils.dart';
 
 class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
@@ -34,13 +36,13 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
     final favoritesState = ref.watch(favoritesProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Container(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               child: Column(
                 children: [
@@ -50,17 +52,17 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                   // Tabs
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: AppColors.surface(context, Colors.grey[100]!),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: TabBar(
                       controller: _tabController,
                       indicator: BoxDecoration(
-                        color: const Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       labelColor: Colors.white,
-                      unselectedLabelColor: Colors.grey[600],
+                      unselectedLabelColor: AppColors.foreground(context, Colors.grey[600]!),
                       labelStyle: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -79,7 +81,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
             ),
 
             // Divider
-            Container(height: 1, color: Colors.grey[300]),
+            Container(height: 1, color: AppColors.border(context, Colors.grey[300]!)),
 
             // Content
             Expanded(
@@ -112,7 +114,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
 
     return RefreshIndicator(
       onRefresh: () => ref.read(favoritesProvider.notifier).loadFavorites(),
-      color: const Color(0xFF5F2D82),
+      color: AppColors.accent(context, Color(0xFF5F2D82)),
       child: ListView.builder(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         itemCount: items.length,
@@ -128,7 +130,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
     return Container(
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -170,7 +172,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         subtitle: item.subtitle != null
@@ -181,7 +183,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey[600],
+                    color: AppColors.foreground(context, Colors.grey[600]!),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -193,13 +195,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
           onPressed: () async {
             await ref.read(favoritesProvider.notifier).removeFavorite(item);
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Removed from favorites'),
-                  backgroundColor: Colors.grey[700],
-                  duration: const Duration(seconds: 2),
-                ),
-              );
+              SnackBarUtils.showWarning(context, 'Removed from favorites');
             }
           },
         ),
@@ -219,7 +215,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
           Icon(
             Icons.favorite_border,
             size: 64,
-            color: Colors.grey[400],
+            color: AppColors.foreground(context, Colors.grey[400]!),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           Text(
@@ -228,7 +224,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 18),
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -237,7 +233,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
         ],

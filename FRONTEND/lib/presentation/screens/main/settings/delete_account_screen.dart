@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -113,11 +114,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       appBar: AppBar(
         title: const Text('Delete Account'),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
@@ -154,7 +153,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   helperText:
                       'Leave blank to verify with your linked Google account.',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surface(context, Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -182,7 +181,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 decoration: InputDecoration(
                   labelText: 'Type DELETE to confirm',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surface(context, Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -195,7 +194,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 decoration: InputDecoration(
                   labelText: 'Reason (optional)',
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surface(context, Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

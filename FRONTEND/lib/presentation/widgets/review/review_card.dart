@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../data/data_source/dto/review/review_dto.dart';
@@ -22,9 +23,9 @@ class ReviewCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppColors.border(context, Colors.grey.shade200)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,7 +47,7 @@ class ReviewCard extends StatelessWidget {
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 14),
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF5F2D82),
+                          color: AppColors.accent(context, Color(0xFF5F2D82)),
                         ),
                       )
                     : null,
@@ -64,7 +65,7 @@ class ReviewCard extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -73,7 +74,7 @@ class ReviewCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade600,
+                        color: AppColors.foreground(context, Colors.grey.shade600),
                       ),
                     ),
                   ],
@@ -96,7 +97,7 @@ class ReviewCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.black87,
+                color: AppColors.foreground(context, Colors.black87),
                 height: 1.5,
               ),
             ),
@@ -115,7 +116,7 @@ class ReviewCard extends StatelessWidget {
                     vertical: ResponsiveUtils.spacing(context, 6),
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: AppColors.surface(context, Colors.grey.shade100),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -124,7 +125,7 @@ class ReviewCard extends StatelessWidget {
                       Icon(
                         Icons.thumb_up_outlined,
                         size: 14,
-                        color: Colors.grey.shade700,
+                        color: AppColors.foreground(context, Colors.grey.shade700),
                       ),
                       SizedBox(width: ResponsiveUtils.spacing(context, 6)),
                       Text(
@@ -133,7 +134,7 @@ class ReviewCard extends StatelessWidget {
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 12),
                           fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade700,
+                          color: AppColors.foreground(context, Colors.grey.shade700),
                         ),
                       ),
                     ],

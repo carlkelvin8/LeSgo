@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -100,7 +101,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: AppColors.surface(context, Colors.white).withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -115,7 +116,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 18),
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: AppColors.foreground(context, Colors.black),
                     ),
                   ),
                 ),
@@ -221,7 +222,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                color: AppColors.foreground(context, Colors.black),
                               ),
                             ),
                             Text(
@@ -230,7 +231,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                color: AppColors.foreground(context, Colors.black),
                               ),
                             ),
                           ],
@@ -254,7 +255,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                         width: double.infinity,
                         height: ResponsiveUtils.buttonHeight(context),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF5F2D82),
+                          color: AppColors.accent(context, Color(0xFF5F2D82)),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Material(
@@ -274,7 +275,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                                     16,
                                   ),
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: AppColors.onAccent(context),
                                 ),
                               ),
                             ),
@@ -297,7 +298,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: Colors.black87,
+                            color: AppColors.foreground(context, Colors.black87),
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -326,7 +327,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey[700],
+              color: AppColors.foreground(context, Colors.grey[700]!),
             ),
           ),
         ),
@@ -338,7 +339,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.black,
+              color: AppColors.foreground(context, Colors.black),
             ),
           ),
         ),

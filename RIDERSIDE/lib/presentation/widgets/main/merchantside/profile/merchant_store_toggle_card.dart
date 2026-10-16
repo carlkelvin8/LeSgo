@@ -90,7 +90,7 @@ class MerchantStoreToggleCard extends ConsumerWidget {
           else
             Switch(
               value: open,
-              activeColor: const Color(0xFF4CAF50),
+              activeThumbColor: const Color(0xFF4CAF50),
               onChanged: (value) {
                 ref
                     .read(merchantStoreToggleProvider.notifier)

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/constants/api_constants.dart';
@@ -104,5 +105,6 @@ class SupportNotifier extends StateNotifier<SupportState> {
 final supportProvider = StateNotifierProvider<SupportNotifier, SupportState>((
   ref,
 ) {
+  ref.watch(userSessionEpochProvider);
   return SupportNotifier();
 });

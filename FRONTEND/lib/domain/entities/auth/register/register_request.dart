@@ -10,7 +10,12 @@ class RegisterRequest {
   final String referralCode;
   final bool termsAccepted;
   final String selfiePath;
+  final String idType;
+  final String idNumber;
+  final String validIdFrontPath;
+  final String validIdBackPath;
   final String phoneNumber;
+  final String phoneVerificationToken;
   final Address? address;
 
   RegisterRequest({
@@ -23,7 +28,12 @@ class RegisterRequest {
     this.referralCode = '',
     this.termsAccepted = false,
     this.selfiePath = '',
+    this.idType = '',
+    this.idNumber = '',
+    this.validIdFrontPath = '',
+    this.validIdBackPath = '',
     this.phoneNumber = '',
+    this.phoneVerificationToken = '',
     this.address,
   });
 
@@ -37,7 +47,12 @@ class RegisterRequest {
     String? referralCode,
     bool? termsAccepted,
     String? selfiePath,
+    String? idType,
+    String? idNumber,
+    String? validIdFrontPath,
+    String? validIdBackPath,
     String? phoneNumber,
+    String? phoneVerificationToken,
     Address? address,
   }) {
     return RegisterRequest(
@@ -50,8 +65,24 @@ class RegisterRequest {
       referralCode: referralCode ?? this.referralCode,
       termsAccepted: termsAccepted ?? this.termsAccepted,
       selfiePath: selfiePath ?? this.selfiePath,
+      idType: idType ?? this.idType,
+      idNumber: idNumber ?? this.idNumber,
+      validIdFrontPath: validIdFrontPath ?? this.validIdFrontPath,
+      validIdBackPath: validIdBackPath ?? this.validIdBackPath,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      phoneVerificationToken:
+          phoneVerificationToken ??
+          (phoneNumber != null && phoneNumber != this.phoneNumber
+              ? ''
+              : this.phoneVerificationToken),
       address: address ?? this.address,
     );
   }
+
+  bool get hasIdentityVerification =>
+      selfiePath.trim().isNotEmpty &&
+      idType.trim().isNotEmpty &&
+      idNumber.trim().isNotEmpty &&
+      validIdFrontPath.trim().isNotEmpty &&
+      validIdBackPath.trim().isNotEmpty;
 }

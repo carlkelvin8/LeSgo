@@ -1,3 +1,4 @@
+import 'registration_fee_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/token_refresh_service.dart';
 import '../../../core/services/api_service.dart';
@@ -7,6 +8,9 @@ import '../../../core/services/remember_me_service.dart';
 import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/media_url_utils.dart';
+import '../../../domain/entities/auth/registration_fee_status.dart';
+import '../main/riderside/rider_duty_provider.dart';
+import '../main/riderside/rider_location_provider.dart';
 import '../main/riderside/rider_orders_provider.dart';
 
 enum AuthViewTarget { rider, merchant }
@@ -22,6 +26,7 @@ class RiderUser {
   final String? profilePhotoUrl;
   final String? packageTier;
   final double? commissionRate;
+  final RegistrationFeeStatus? registrationFee;
   final PartnerStaffInfo? staffInfo;
 
   RiderUser({
@@ -35,6 +40,7 @@ class RiderUser {
     this.profilePhotoUrl,
     this.packageTier,
     this.commissionRate,
+    this.registrationFee,
     this.staffInfo,
   });
 
@@ -43,11 +49,21 @@ class RiderUser {
       role == 'merchant' || role == 'partner' || role == 'partner_admin';
   bool get isStaff => role == 'partner_staff';
 
+  /// Rider/Merchant accounts are restricted until the registration fee is paid
+  /// (or waived by an admin) AND the application is approved.
+  bool get isRegistrationRestricted =>
+      ((isMerchant || isDriver || isStaff) && registrationFee == null) ||
+      (registrationFee != null &&
+          (!registrationFee!.isActive || !registrationFee!.shouldBeActive));
+
   RiderUser copyWith({
+    int? driverProfileId,
     int? partnerId,
     String? profilePhotoUrl,
     String? packageTier,
     double? commissionRate,
+    RegistrationFeeStatus? registrationFee,
+    bool clearRegistrationFee = false,
     PartnerStaffInfo? staffInfo,
   }) {
     return RiderUser(
@@ -56,11 +72,14 @@ class RiderUser {
       email: email,
       phone: phone,
       role: role,
-      driverProfileId: driverProfileId,
+      driverProfileId: driverProfileId ?? this.driverProfileId,
       partnerId: partnerId ?? this.partnerId,
       profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
       packageTier: packageTier ?? this.packageTier,
       commissionRate: commissionRate ?? this.commissionRate,
+      registrationFee: clearRegistrationFee
+          ? null
+          : (registrationFee ?? this.registrationFee),
       staffInfo: staffInfo ?? this.staffInfo,
     );
   }
@@ -78,7 +97,7 @@ class RiderUser {
   }
 
   factory RiderUser.fromJson(Map<String, dynamic> json) {
-    final dp = json['driver_profile'];
+    final dp = json['driver_profile'] ?? json['driverProfile'];
     String? packageTier;
     double? commissionRate;
     if (dp is Map) {
@@ -91,19 +110,40 @@ class RiderUser {
       }
     }
 
-    return RiderUser(
+return RiderUser(
       id: json['id'] is int ? json['id'] as int : int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       phone: json['phone_number']?.toString(),
       role: json['role']?.toString() ?? 'driver',
-      driverProfileId: dp is Map ? (dp['id'] is int ? dp['id'] as int : int.tryParse(dp['id']?.toString() ?? '')) : null,
+      driverProfileId: parseDriverProfileId(json),
       partnerId: parsePartnerId(json),
       profilePhotoUrl: resolveProfilePhotoUrl(json),
       packageTier: packageTier,
       commissionRate: commissionRate,
+      registrationFee: RegistrationFeeStatus.fromJson(json['registration_fee']),
       staffInfo: PartnerStaffInfo.fromJson(json),
     );
+  }
+
+  static int? parseDriverProfileId(Map<String, dynamic> json) {
+    final profile = json['driver_profile'] ?? json['driverProfile'];
+    if (profile is Map) {
+      final id = _parseInt(profile['id']);
+      if (id != null) return id;
+    }
+
+    return _parseInt(
+      json['driver_profile_id'] ??
+          json['driverProfileId'] ??
+          json['driver_id'],
+    );
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   static int? parsePartnerId(Map<String, dynamic> json) {
@@ -185,6 +225,13 @@ class RiderAuthState {
 class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
   RiderAuthNotifier() : super(RiderAuthState());
 
+  /// Update the session only with status returned by the registration-fee API.
+  void applyRegistrationStatus(RegistrationFeeStatus status) {
+    final user = state.user;
+    if (!state.isLoggedIn || user == null) return;
+    state = state.copyWith(user: user.copyWith(registrationFee: status));
+  }
+
   Future<RiderUser> _ensureMerchantPartnerId(RiderUser user) async {
     if (!user.isMerchant || user.partnerId != null) return user;
 
@@ -201,8 +248,52 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
     return user;
   }
 
+  /// Returns the authenticated driver's profile ID, refreshing stale login
+  /// data and falling back to the driver listing used by older API releases.
+  Future<int?> ensureDriverProfileId() async {
+    final currentUser = state.user;
+    if (currentUser == null || !currentUser.isDriver) return null;
+    if (currentUser.driverProfileId != null) {
+      return currentUser.driverProfileId;
+    }
+
+    try {
+      final data = await ApiService.getMe();
+      final rawUser = data['user'] ?? data['data'] ?? data;
+      if (rawUser is Map) {
+        final refreshed = RiderUser.fromJson(
+          Map<String, dynamic>.from(rawUser),
+        );
+        if (refreshed.id == currentUser.id && refreshed.isDriver) {
+          state = state.copyWith(user: refreshed);
+          if (refreshed.driverProfileId != null) {
+            return refreshed.driverProfileId;
+          }
+        }
+      }
+    } catch (e) {
+      AppLogger.warn('Could not refresh driver profile from auth/me: $e');
+    }
+
+    try {
+      final profile = await ApiService.getMyDriverProfile(currentUser.id);
+      final profileId = RiderUser._parseInt(profile?['id']);
+      if (profileId != null) {
+        final latestUser = state.user ?? currentUser;
+        state = state.copyWith(
+          user: latestUser.copyWith(driverProfileId: profileId),
+        );
+        return profileId;
+      }
+    } catch (e) {
+      AppLogger.warn('Could not resolve driver profile from drivers API: $e');
+    }
+
+    return null;
+  }
+
   Future<String?> _resolveAccessToken() async {
-    var token = await ApiService.getToken();
+    final token = await ApiService.getToken();
     if (token != null && token.isNotEmpty) return token;
 
     if (!RememberMeService.isSessionValid()) return null;
@@ -353,12 +444,17 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
 
   /// Clears local session immediately and returns the login view to show next.
   Future<AuthViewTarget> logout(WidgetRef ref) async {
+    ref.invalidate(registrationFeeProvider);
     final user = state.user;
     final target = (user?.isMerchant == true || user?.isStaff == true)
         ? AuthViewTarget.merchant
         : AuthViewTarget.rider;
 
     state = state.copyWith(isLoading: true);
+
+    // Must run before the token is cleared: syncs is_available=false and stops
+    // the foreground location service so tracking cannot outlive the session.
+    await _endDutyOnLogout(ref);
 
     try {
       ref.read(riderOrdersProvider.notifier).reset();
@@ -375,6 +471,30 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
     }
 
     return target;
+  }
+
+  /// Best-effort teardown of duty side effects so a logged-out device stops
+  /// reporting availability and keeps running the location foreground service.
+  Future<void> _endDutyOnLogout(WidgetRef ref) async {
+    try {
+      if (ref.read(riderDutyProvider)) {
+        final error = await ref
+            .read(riderDutyProvider.notifier)
+            .setOnDuty(false)
+            .timeout(const Duration(seconds: 5));
+        if (error != null) {
+          AppLogger.warn('Logout: off-duty sync failed: $error');
+        }
+      }
+    } catch (e) {
+      AppLogger.warn('Logout: off-duty sync failed: $e');
+    }
+
+    try {
+      await ref.read(riderLocationProvider.notifier).stopTracking();
+    } catch (e) {
+      AppLogger.warn('Logout: stopping location tracking failed: $e');
+    }
   }
 
   void clearError() => state = state.copyWith(clearError: true);

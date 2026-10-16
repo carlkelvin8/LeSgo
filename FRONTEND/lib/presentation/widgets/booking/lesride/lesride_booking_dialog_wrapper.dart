@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'lesride_booking_summary_dialog.dart';
@@ -13,7 +14,7 @@ class LesrideBookingDialogWrapper extends StatelessWidget {
         Positioned.fill(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(color: Colors.black.withValues(alpha: 0.2)),
+            child: Container(color: AppColors.surface(context, Colors.black).withValues(alpha: 0.2)),
           ),
         ),
         // Dialog content

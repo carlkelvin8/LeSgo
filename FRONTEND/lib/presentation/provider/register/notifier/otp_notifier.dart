@@ -10,21 +10,25 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
   }
 
   Future<bool> sendOtp(String phoneNumber) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      data: state.data.copyWith(phoneVerificationToken: ''),
+    );
 
     try {
       final authDataSource = getIt<AuthRemoteDataSource>();
-      
+
       // Call Twilio Verify API through backend
       final response = await authDataSource.sendOtp(phoneNumber);
-      
+
       if (response.success) {
         // If fallback mode returned OTP directly, store it for auto-fill
         String? fallbackMessage;
         if (response.fallback == true && response.otp != null) {
           fallbackMessage = 'Dev mode: Your OTP is ${response.otp}';
         }
-        
+
         state = state.copyWith(
           data: state.data.copyWith(phoneNumber: phoneNumber),
           isLoading: false,
@@ -37,7 +41,7 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
       }
     } catch (e) {
       String errorMessage = 'Failed to send OTP';
-      
+
       if (e is DioException) {
         if (e.response?.data != null && e.response?.data['message'] != null) {
           errorMessage = e.response?.data['message'];
@@ -47,38 +51,54 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
       } else {
         errorMessage = e.toString();
       }
-      
-      state = state.copyWith(
-        isLoading: false,
-        error: errorMessage,
-      );
+
+      state = state.copyWith(isLoading: false, error: errorMessage);
       return false;
     }
   }
 
   Future<bool> verifyOtp(String otp) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      data: state.data.copyWith(phoneVerificationToken: ''),
+    );
 
     try {
       final authDataSource = getIt<AuthRemoteDataSource>();
       final phoneNumber = state.data.phoneNumber;
-      
+
       if (phoneNumber.isEmpty) {
         throw Exception('Phone number is required');
       }
-      
+
       // Call Twilio Verify API through backend
       final response = await authDataSource.verifyOtp(phoneNumber, otp);
-      
+      if (state.data.phoneNumber != phoneNumber) {
+        throw Exception('Phone number changed. Please verify it again.');
+      }
+
       if (response.success && (response.verified ?? false)) {
-        state = state.copyWith(isLoading: false);
+        if (!(response.phoneVerificationToken?.isNotEmpty ?? false)) {
+          throw Exception(
+            'Phone verification could not be confirmed. Please request a new code.',
+          );
+        }
+        state = state.copyWith(
+          isLoading: false,
+          data: state.data.copyWith(
+            phoneVerificationToken: response.phoneVerificationToken,
+          ),
+        );
         return true;
       } else {
-        throw Exception(response.message.isNotEmpty ? response.message : 'Invalid OTP code');
+        throw Exception(
+          response.message.isNotEmpty ? response.message : 'Invalid OTP code',
+        );
       }
     } catch (e) {
       String errorMessage = 'OTP verification failed';
-      
+
       if (e is DioException) {
         if (e.response?.data != null && e.response?.data['message'] != null) {
           errorMessage = e.response?.data['message'];
@@ -88,11 +108,8 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
       } else {
         errorMessage = e.toString();
       }
-      
-      state = state.copyWith(
-        isLoading: false,
-        error: errorMessage,
-      );
+
+      state = state.copyWith(isLoading: false, error: errorMessage);
       return false;
     }
   }
@@ -103,14 +120,18 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
   }
 
   Future<bool> cancelOtp(String phoneNumber) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      data: state.data.copyWith(phoneVerificationToken: ''),
+    );
 
     try {
       final authDataSource = getIt<AuthRemoteDataSource>();
-      
+
       // Call cancel OTP API
       final response = await authDataSource.cancelOtp(phoneNumber);
-      
+
       state = state.copyWith(isLoading: false);
       return response.success;
     } catch (e) {
@@ -125,10 +146,10 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
   Future<bool> checkVerificationStatus(String phoneNumber) async {
     try {
       final authDataSource = getIt<AuthRemoteDataSource>();
-      
+
       // Check if phone number is verified
       final response = await authDataSource.checkOtpVerification(phoneNumber);
-      
+
       return response.verified ?? false;
     } catch (e) {
       return false;

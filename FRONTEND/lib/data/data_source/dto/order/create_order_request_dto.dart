@@ -79,6 +79,7 @@ class OrderAddressDto {
 
 @JsonSerializable()
 class OrderItemDto {
+  final String? source;
   final String name;
   final int quantity;
   @JsonKey(name: 'estimated_price')
@@ -90,6 +91,7 @@ class OrderItemDto {
   final Map<String, dynamic>? selectedOptions;
 
   OrderItemDto({
+    this.source,
     required this.name,
     required this.quantity,
     this.estimatedPrice,

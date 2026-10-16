@@ -1,508 +1,761 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/services/merchant_order_alert_service.dart';
 import '../../../../../core/utils/merchant_csv_export_utils.dart';
-import '../../../../../core/utils/merchant_order_ops_utils.dart';
-import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
-import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
-import '../../../../widgets/main/merchantside/orders/merchant_prep_timer_badge.dart';
-import '../../../../widgets/widgets.dart';
 import '../../../../widgets/main/merchantside/orders/merchant_order_action_handlers.dart';
+import '../../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
+import '../../../../widgets/main/merchantside/orders/merchant_order_queue_card.dart';
 import '../merchant_order_detail_screen.dart';
+
+enum _QueueSort { attention, newest, oldest }
 
 class MerchantOrdersView extends ConsumerStatefulWidget {
   const MerchantOrdersView({super.key});
-
   @override
   ConsumerState<MerchantOrdersView> createState() => _MerchantOrdersViewState();
 }
 
 class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
-  String _getStatusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Accept';
-      case 'searching_driver':
-        return 'Waiting Driver';
-      case 'accepted':
-        return 'Driver Assigned';
-      case 'ready_for_pickup':
-        return 'Ready';
-      case 'picked_up':
-      case 'in_progress':
-      case 'driver_arrived_at_pickup':
-        return 'For Delivery';
-      case 'completed':
-        return 'Delivered';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return status;
+  final _search = TextEditingController();
+  final _busy = <int>{};
+  _QueueSort _sort = _QueueSort.attention;
+
+  @override
+  void initState() {
+    super.initState();
+    // Stop persistent notification sound when merchant views orders
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      MerchantOrderAlertService.acknowledgeOrderAlert();
+    });
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    try {
+      ref.invalidate(merchantOrdersProvider);
+      await ref.read(merchantOrdersProvider.future);
+    } catch (_) {
+      /* The error state below provides retry. */
     }
   }
 
-  String _getStatusType(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'accept';
-      case 'searching_driver':
-        return 'waiting';
-      case 'accepted':
-      case 'ready_for_pickup':
-        return 'pickup';
-      case 'picked_up':
-      case 'in_progress':
-      case 'driver_arrived_at_pickup':
-        return 'delivery';
-      case 'completed':
-        return 'delivered';
-      default:
-        return 'accept';
+  void _select(MerchantOrderFilter filter) {
+    HapticFeedback.selectionClick();
+    ref.read(selectedMerchantOrderFilterProvider.notifier).state = filter;
+  }
+
+  Future<void> _act(OrderDto order, Future<void> Function() action) async {
+    if (_busy.contains(order.id)) return;
+    setState(() => _busy.add(order.id));
+    HapticFeedback.lightImpact();
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _busy.remove(order.id));
     }
   }
 
-  String? _instructionsPreview(OrderDto order) {
-    final orderNote = MerchantOrderOpsUtils.orderSpecialInstructions(order);
-    if (orderNote != null) return orderNote;
+  Future<void> _ready(OrderDto order) async {
+    final confirmed = await showMerchantConfirmDialog(
+      context,
+      title: 'Ready for pickup?',
+      message: 'Let the rider know this order is packed and ready.',
+      confirmLabel: 'Mark ready',
+    );
+    if (!confirmed || !mounted) return;
+    try {
+      await ref.read(merchantOrderActionProvider).markReadyForPickup(order.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Order ready for pickup.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not update the order. Please try again.'),
+          ),
+        );
+      }
+    }
+  }
 
-    final itemNotes = MerchantOrderOpsUtils.itemSpecialInstructions(order);
-    if (itemNotes.isNotEmpty) return itemNotes.first;
-    return null;
+  List<OrderDto> _visible(List<OrderDto> all, MerchantOrderFilter filter) {
+    final query = _search.text.trim().toLowerCase();
+    final result = filterMerchantOrders(all, filter)
+        .where(
+          (o) =>
+              query.isEmpty ||
+              '${o.id} ${o.referenceNumber ?? ''} ${o.user?.name ?? ''} ${o.dropoffAddress} ${o.orderItems?.map((i) => i.itemName).join(' ') ?? ''}'
+                  .toLowerCase()
+                  .contains(query),
+        )
+        .toList();
+    int priority(OrderDto o) => switch (o.status.toLowerCase()) {
+      'pending' => 0,
+      'searching_driver' || 'accepted' => 1,
+      'ready_for_pickup' => 2,
+      'completed' || 'cancelled' => 4,
+      _ => 3,
+    };
+    result.sort((a, b) {
+      if (_sort == _QueueSort.attention) {
+        final rank = priority(a).compareTo(priority(b));
+        if (rank != 0) return rank;
+      }
+      return _sort == _QueueSort.oldest
+          ? a.id.compareTo(b.id)
+          : b.id.compareTo(a.id);
+    });
+    return result;
   }
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
-    final filters = ref.watch(merchantOrderFiltersProvider);
-    final selectedFilter = ref.watch(selectedMerchantOrderFilterProvider);
-    final ordersAsync = ref.watch(merchantOrdersProvider);
-    ref.watch(merchantMenuProvider);
-    final imageLookup = ref.watch(menuItemImageLookupProvider);
-    final prepTimers = ref.watch(merchantPrepTimerProvider);
+    final async = ref.watch(merchantOrdersProvider);
+    final all = async.valueOrNull ?? [];
+    final selected = ref.watch(selectedMerchantOrderFilterProvider);
+    final images = ref.watch(menuItemImageLookupProvider);
+    final timers = ref.watch(merchantPrepTimerProvider);
+    final visible = _visible(all, selected);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    final pending = filterMerchantOrders(
+      all,
+      MerchantOrderFilter.pending,
+    ).length;
+    final preparing = filterMerchantOrders(
+      all,
+      MerchantOrderFilter.pickUp,
+    ).length;
+    final ready = filterMerchantOrders(all, MerchantOrderFilter.ready).length;
+    final duration = Duration(milliseconds: reduced ? 0 : 250);
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: ResponsiveUtils.spacing(context, 12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ...filters.asMap().entries.map(
-                  (entry) => Padding(
-                    padding: EdgeInsets.only(
-                      right: ResponsiveUtils.spacing(context, 10),
-                    ),
-                    child: MerchantOrderFilterChip(
-                      label: entry.value.label,
-                      isSelected: entry.value == selectedFilter,
-                      onTap: () {
-                        ref.read(selectedMerchantOrderFilterProvider.notifier).state =
-                            entry.value;
-                      },
-                    ),
-                  ),
-                ),
-              ],
+    Widget card(OrderDto order, int index) {
+      final image = order.orderItems
+          ?.map(images.resolve)
+          .whereType<String>()
+          .firstOrNull;
+      return TweenAnimationBuilder<double>(
+        key: ValueKey(order.id),
+        tween: Tween(begin: 0, end: 1),
+        duration: Duration(
+          milliseconds: reduced ? 0 : 320 + (index.clamp(0, 5) * 35),
+        ),
+        curve: Curves.easeOutCubic,
+        builder: (_, value, child) => Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 18 * (1 - value)),
+            child: child,
+          ),
+        ),
+        child: MerchantOrderQueueCard(
+          order: order,
+          imageUrl: image,
+          timer: timers[order.id],
+          busy: _busy.contains(order.id),
+          onOpen: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => MerchantOrderDetailScreen(order: order),
             ),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Orders',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 17),
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  final orders = ref.read(merchantOrdersProvider).valueOrNull;
-                  if (orders != null) {
-                    MerchantCsvExportUtils.exportAndShare(context, orders);
-                  }
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.file_download_outlined,
-                      size: ResponsiveUtils.fontSize(context, 16),
-                      color: const Color(0xFF5F2D82),
-                    ),
-                    SizedBox(width: ResponsiveUtils.spacing(context, 4)),
-                    Text(
-                      'Export',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 13),
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF5F2D82),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              Text(
-                'Status',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 16),
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black,
-                ),
-              ),
-            ],
+          onAccept: () => _act(
+            order,
+            () => MerchantOrderActionHandlers.accept(
+              context,
+              ref,
+              orderId: order.id,
+            ),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 14)),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async => ref.invalidate(merchantOrdersProvider),
-              color: const Color(0xFF5F2D82),
-              child: ordersAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    SizedBox(height: ResponsiveUtils.spacing(context, 80)),
-                    Center(
-                      child: Column(
-                        children: [
-                          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                          const SizedBox(height: 16),
-                          Text('Error loading orders: $error'),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () => ref.invalidate(merchantOrdersProvider),
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                data: (allOrders) {
-                  final orders = filterMerchantOrders(allOrders, selectedFilter);
+          onReject: () => _act(
+            order,
+            () => MerchantOrderActionHandlers.reject(
+              context,
+              ref,
+              orderId: order.id,
+            ),
+          ),
+          onCancel: () => _act(
+            order,
+            () => MerchantOrderActionHandlers.cancelAfterAccept(
+              context,
+              ref,
+              orderId: order.id,
+            ),
+          ),
+          onReady: () => _act(order, () => _ready(order)),
+        ),
+      );
+    }
 
-                  if (orders.isEmpty) {
-                    return ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
+    return ColoredBox(
+      color: dark ? const Color(0xFF15111E) : const Color(0xFFF6F4FA),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide =
+              constraints.maxWidth >= 760 &&
+              MediaQuery.textScalerOf(context).scale(1) < 1.6;
+          final side = ((constraints.maxWidth - 1120) / 2).clamp(
+            16.0,
+            double.infinity,
+          );
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            color: OrderQueuePalette.purple,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(side, 24, side, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: ResponsiveUtils.spacing(context, 80)),
-                        Center(
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.shopping_bag_outlined,
-                                size: 64,
-                                color: Colors.grey.shade400,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'YOUR STORE, IN MOTION',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      letterSpacing: 1.7,
+                                      fontWeight: FontWeight.w800,
+                                      color: OrderQueuePalette.muted(context),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    'Orders',
+                                    style: TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -1.2,
+                                      color: OrderQueuePalette.text(context),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No orders yet',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.grey.shade600,
+                            ),
+                            IconButton.filledTonal(
+                              tooltip: 'Refresh orders',
+                              onPressed: async.isLoading ? null : _refresh,
+                              icon: const Icon(Icons.refresh_rounded),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton.filledTonal(
+                              tooltip: 'Export orders',
+                              onPressed: all.isEmpty
+                                  ? null
+                                  : () => MerchantCsvExportUtils.exportAndShare(
+                                      context,
+                                      all,
+                                    ),
+                              icon: const Icon(Icons.file_download_outlined),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 22),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(22),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(26),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF352056), Color(0xFF6D36C8)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: OrderQueuePalette.purple.withValues(
+                                  alpha: .16,
                                 ),
+                                blurRadius: 24,
+                                offset: const Offset(0, 9),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          async.hasError
+                                              ? 'Let’s reconnect'
+                                              : async.isLoading && all.isEmpty
+                                              ? 'Getting your queue…'
+                                              : pending > 0
+                                              ? 'Fresh orders are in.'
+                                              : 'Keep good food moving.',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 22,
+                                            height: 1.2,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: -.5,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          async.hasError
+                                              ? 'Refresh to see the latest orders.'
+                                              : pending > 0
+                                              ? '$pending ${pending == 1 ? 'order needs' : 'orders need'} your attention. Let’s get cooking.'
+                                              : 'Your next great order starts here.',
+                                          style: const TextStyle(
+                                            color: Color(0xFFDDCEEF),
+                                            fontSize: 12,
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: .12,
+                                      ),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                    child: const Icon(
+                                      Icons.room_service_outlined,
+                                      color: Color(0xFFE7D7FF),
+                                      size: 28,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 22),
+                              Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                  _Metric(
+                                    label: 'NEW',
+                                    value:
+                                        async.hasError ||
+                                            (async.isLoading && all.isEmpty)
+                                        ? '—'
+                                        : '$pending',
+                                    onTap: () =>
+                                        _select(MerchantOrderFilter.pending),
+                                    duration: duration,
+                                  ),
+                                  _Metric(
+                                    label: 'PREPARING',
+                                    value:
+                                        async.hasError ||
+                                            (async.isLoading && all.isEmpty)
+                                        ? '—'
+                                        : '$preparing',
+                                    onTap: () =>
+                                        _select(MerchantOrderFilter.pickUp),
+                                    duration: duration,
+                                  ),
+                                  _Metric(
+                                    label: 'READY',
+                                    value:
+                                        async.hasError ||
+                                            (async.isLoading && all.isEmpty)
+                                        ? '—'
+                                        : '$ready',
+                                    onTap: () =>
+                                        _select(MerchantOrderFilter.ready),
+                                    duration: duration,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    );
-                  }
-
-                  return ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.only(
-                      bottom: ResponsiveUtils.spacing(context, 6),
-                    ),
-                    itemCount: orders.length,
-                    itemBuilder: (context, index) {
-                      final order = orders[index];
-                      final itemNames = order.orderItems
-                              ?.map((item) => item.itemName)
-                              .join(', ') ??
-                          'Order Items';
-
-                      double itemSubtotal = 0;
-                      if (order.orderItems != null) {
-                        for (var item in order.orderItems!) {
-                          itemSubtotal += item.totalPrice ?? ((item.unitPrice ?? 0.0) * item.quantity);
-                        }
-                      }
-                      final double deliveryFee =
-                          order.totalFare ?? order.estimatedFare ?? order.distanceFare ?? 0.0;
-                      final double totalAmount = itemSubtotal + deliveryFee;
-                      final status = order.status.toLowerCase();
-                      String? firstItemImage;
-                      if (order.orderItems != null) {
-                        for (final item in order.orderItems!) {
-                          final resolved = imageLookup.resolve(item);
-                          if (resolved != null && resolved.isNotEmpty) {
-                            firstItemImage = resolved;
-                            break;
-                          }
-                        }
-                      }
-
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: ResponsiveUtils.spacing(context, 18),
+                        const SizedBox(height: 22),
+                        TextField(
+                          controller: _search,
+                          onChanged: (_) => setState(() {}),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: OrderQueuePalette.text(context),
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Search order, customer or item',
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              size: 22,
+                            ),
+                            suffixIcon: _search.text.isEmpty
+                                ? null
+                                : IconButton(
+                                    tooltip: 'Clear search',
+                                    icon: const Icon(Icons.close_rounded),
+                                    onPressed: () => setState(_search.clear),
+                                  ),
+                            filled: true,
+                            fillColor: OrderQueuePalette.surface(context),
+                            contentPadding: const EdgeInsets.all(16),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: const BorderSide(
+                                color: OrderQueuePalette.purple,
+                              ),
+                            ),
+                          ),
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => MerchantOrderDetailScreen(
-                                        order: order,
+                        const SizedBox(height: 16),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              for (final filter in MerchantOrderFilter.values)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: Semantics(
+                                    selected: selected == filter,
+                                    button: true,
+                                    child: AnimatedContainer(
+                                      duration: duration,
+                                      curve: Curves.easeOutCubic,
+                                      decoration: BoxDecoration(
+                                        color: selected == filter
+                                            ? OrderQueuePalette.purple
+                                            : OrderQueuePalette.surface(
+                                                context,
+                                              ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          onTap: () => _select(filter),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 14,
+                                            ),
+                                            child: Text(
+                                              '${filter == MerchantOrderFilter.pickUp
+                                                  ? 'Preparing'
+                                                  : filter == MerchantOrderFilter.pending
+                                                  ? 'New'
+                                                  : filter.label}  ${filterMerchantOrders(all, filter).length}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: selected == filter
+                                                    ? Colors.white
+                                                    : OrderQueuePalette.muted(
+                                                        context,
+                                                      ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  );
-                                },
-                                child: MerchantOrderCard(
-                                  orderId: '#${order.referenceNumber ?? order.id}',
-                                  itemName: itemNames,
-                                  price: totalAmount.toStringAsFixed(2),
-                                  customerName: order.user?.name ?? 'Customer',
-                                  address: order.dropoffAddress,
-                                  imageUrl: firstItemImage,
-                                  specialInstructionsPreview:
-                                      _instructionsPreview(order),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AnimatedSwitcher(
+                                duration: duration,
+                                child: Text(
+                                  '${visible.length} ${visible.length == 1 ? 'order' : 'orders'}',
+                                  key: ValueKey(visible.length),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: OrderQueuePalette.text(context),
+                                  ),
                                 ),
                               ),
                             ),
-                            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                            SizedBox(
-                              width: ResponsiveUtils.spacing(context, 96),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  GestureDetector(
-                                    onTap: MerchantOrderOpsUtils.canAccept(status)
-                                        ? () => MerchantOrderActionHandlers.accept(
-                                              context,
-                                              ref,
-                                              orderId: order.id,
-                                            )
-                                        : null,
-                                    onLongPress: MerchantOrderOpsUtils.canReject(status) ||
-                                            MerchantOrderOpsUtils.canCancelAfterAccept(status)
-                                        ? () => MerchantOrderActionHandlers.handleStatusLongPress(
-                                              context,
-                                              ref,
-                                              status: status,
-                                              orderId: order.id,
-                                            )
-                                        : null,
-                                    child: MerchantOrderStatusPanel(
-                                      statusType: _getStatusType(order.status),
-                                      statusLabel: _getStatusLabel(order.status),
+                            PopupMenuButton<_QueueSort>(
+                              tooltip: 'Sort orders',
+                              initialValue: _sort,
+                              onSelected: (v) => setState(() => _sort = v),
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: _QueueSort.attention,
+                                  child: Text('Needs attention first'),
+                                ),
+                                PopupMenuItem(
+                                  value: _QueueSort.newest,
+                                  child: Text('Newest first'),
+                                ),
+                                PopupMenuItem(
+                                  value: _QueueSort.oldest,
+                                  child: Text('Oldest first'),
+                                ),
+                              ],
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.sort_rounded,
+                                      size: 16,
+                                      color: OrderQueuePalette.muted(context),
                                     ),
-                                  ),
-                                  if (MerchantOrderOpsUtils.canReject(status) ||
-                                      MerchantOrderOpsUtils.canCancelAfterAccept(status)) ...[
-                                    SizedBox(
-                                      height: ResponsiveUtils.spacing(context, 6),
-                                    ),
-                                    if (MerchantOrderOpsUtils.canReject(status))
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: OutlinedButton(
-                                          onPressed: () =>
-                                              MerchantOrderActionHandlers.reject(
-                                            context,
-                                            ref,
-                                            orderId: order.id,
-                                          ),
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor:
-                                                const Color(0xFFE53935),
-                                            side: const BorderSide(
-                                              color: Color(0xFFE53935),
-                                            ),
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: ResponsiveUtils.spacing(
-                                                context,
-                                                4,
-                                              ),
-                                            ),
-                                            minimumSize: Size.zero,
-                                            tapTargetSize:
-                                                MaterialTapTargetSize.shrinkWrap,
-                                          ),
-                                          child: Text(
-                                            'Reject',
-                                            style: TextStyle(
-                                              fontFamily: 'TT Fors',
-                                              fontSize: ResponsiveUtils.fontSize(
-                                                context,
-                                                9,
-                                              ),
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    if (MerchantOrderOpsUtils
-                                        .canCancelAfterAccept(status))
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                          top: MerchantOrderOpsUtils.canReject(
-                                                  status)
-                                              ? ResponsiveUtils.spacing(
-                                                  context,
-                                                  4,
-                                                )
-                                              : 0,
-                                        ),
-                                        child: SizedBox(
-                                          width: double.infinity,
-                                          child: OutlinedButton(
-                                            onPressed: () =>
-                                                MerchantOrderActionHandlers
-                                                    .cancelAfterAccept(
-                                              context,
-                                              ref,
-                                              orderId: order.id,
-                                            ),
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor:
-                                                  const Color(0xFFE53935),
-                                              side: const BorderSide(
-                                                color: Color(0xFFE53935),
-                                              ),
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: ResponsiveUtils.spacing(
-                                                  context,
-                                                  4,
-                                                ),
-                                              ),
-                                              minimumSize: Size.zero,
-                                              tapTargetSize: MaterialTapTargetSize
-                                                  .shrinkWrap,
-                                            ),
-                                            child: Text(
-                                              'Cancel',
-                                              style: TextStyle(
-                                                fontFamily: 'TT Fors',
-                                                fontSize:
-                                                    ResponsiveUtils.fontSize(
-                                                  context,
-                                                  9,
-                                                ),
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                  if (MerchantOrderOpsUtils.canMarkReadyForPickup(status)) ...[
-                                    SizedBox(
-                                      height: ResponsiveUtils.spacing(context, 6),
-                                    ),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () async {
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            builder: (ctx) => AlertDialog(
-                                              title: const Text('Mark Ready?', style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700)),
-                                              content: const Text('Let the rider know this order is ready for pickup.', style: TextStyle(fontFamily: 'TT Fors')),
-                                              actions: [
-                                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                                                ElevatedButton(
-                                                  onPressed: () => Navigator.pop(ctx, true),
-                                                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5F2D82)),
-                                                  child: const Text('Mark Ready', style: TextStyle(color: Colors.white)),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          if (confirm == true && context.mounted) {
-                                            try {
-                                              await ref.read(merchantOrderActionProvider).markReadyForPickup(order.id);
-                                              if (context.mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  const SnackBar(content: Text('Order marked ready!')),
-                                                );
-                                              }
-                                            } catch (e) {
-                                              if (context.mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('Failed: $e')),
-                                                );
-                                              }
-                                            }
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF4CAF50),
-                                          foregroundColor: Colors.white,
-                                          padding: EdgeInsets.symmetric(
-                                            vertical: ResponsiveUtils.spacing(context, 4),
-                                          ),
-                                          minimumSize: Size.zero,
-                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '✓ Ready',
-                                          style: TextStyle(
-                                            fontFamily: 'TT Fors',
-                                            fontSize: ResponsiveUtils.fontSize(context, 9),
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      switch (_sort) {
+                                        _QueueSort.attention =>
+                                          'Needs attention',
+                                        _QueueSort.newest => 'Newest first',
+                                        _QueueSort.oldest => 'Oldest first',
+                                      },
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: OrderQueuePalette.muted(context),
                                       ),
                                     ),
                                   ],
-                                  if (MerchantOrderOpsUtils.showsPrepTimer(status) &&
-                                      prepTimers[order.id] != null) ...[
-                                    SizedBox(
-                                      height: ResponsiveUtils.spacing(context, 6),
-                                    ),
-                                    MerchantPrepTimerBadge(
-                                      timer: prepTimers[order.id],
-                                      compact: true,
-                                    ),
-                                  ],
-                                ],
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (async.isLoading && all.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(side, 4, side, 28),
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < 2; i++)
+                            Container(
+                              height: 190,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(22),
+                              decoration: BoxDecoration(
+                                color: OrderQueuePalette.surface(context),
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  semanticsLabel: 'Loading orders',
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (async.hasError)
+                  SliverToBoxAdapter(
+                    child: _QueueEmpty(
+                      title: 'Couldn’t load your orders',
+                      message: 'Check your connection and try again.',
+                      icon: Icons.wifi_off_rounded,
+                      action: 'Try again',
+                      onAction: _refresh,
+                    ),
+                  )
+                else if (visible.isEmpty)
+                  SliverToBoxAdapter(
+                    child: _QueueEmpty(
+                      title: _search.text.isNotEmpty
+                          ? 'No matching orders'
+                          : all.isEmpty
+                          ? 'Ready for your first order'
+                          : 'You’re all caught up',
+                      message: _search.text.isNotEmpty
+                          ? 'Try an order number, customer or menu item.'
+                          : all.isEmpty
+                          ? 'Incoming orders will appear here. Pull down to refresh.'
+                          : 'No orders in this stage. Check another tab.',
+                      icon: _search.text.isNotEmpty
+                          ? Icons.search_off_rounded
+                          : Icons.task_alt_rounded,
+                      action: _search.text.isNotEmpty
+                          ? 'Clear search'
+                          : 'Refresh orders',
+                      onAction: _search.text.isNotEmpty
+                          ? () => setState(_search.clear)
+                          : _refresh,
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(side, 0, side, 24),
+                    sliver: SliverList.builder(
+                      itemCount: wide
+                          ? (visible.length / 2).ceil()
+                          : visible.length,
+                      itemBuilder: (_, index) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: wide
+                            ? Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: card(visible[index * 2], index * 2),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: index * 2 + 1 < visible.length
+                                        ? card(
+                                            visible[index * 2 + 1],
+                                            index * 2 + 1,
+                                          )
+                                        : const SizedBox(),
+                                  ),
+                                ],
+                              )
+                            : card(visible[index], index),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    required this.duration,
+  });
+  final String label, value;
+  final VoidCallback onTap;
+  final Duration duration;
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white.withValues(alpha: .10),
+    borderRadius: BorderRadius.circular(14),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AnimatedSwitcher(
+              duration: duration,
+              child: Text(
+                value,
+                key: ValueKey(value),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFFE6D8F7),
+                fontSize: 9,
+                letterSpacing: .8,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _QueueEmpty extends StatelessWidget {
+  const _QueueEmpty({
+    required this.title,
+    required this.message,
+    required this.icon,
+    required this.action,
+    required this.onAction,
+  });
+  final String title, message, action;
+  final IconData icon;
+  final VoidCallback onAction;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 42),
+    child: Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: OrderQueuePalette.purple.withValues(alpha: .08),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 34, color: OrderQueuePalette.purple),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w800,
+            color: OrderQueuePalette.text(context),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            height: 1.5,
+            color: OrderQueuePalette.muted(context),
+          ),
+        ),
+        const SizedBox(height: 18),
+        OutlinedButton(onPressed: onAction, child: Text(action)),
+      ],
+    ),
+  );
 }

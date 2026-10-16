@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../widgets/widgets.dart';
@@ -41,7 +42,7 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
         : 'Guest';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: BookingServiceHeader(
         title: 'LesBuy',
         action: IconButton(
@@ -85,7 +86,7 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 18),
                   fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                  color: AppColors.foreground(context, Colors.black87),
                 ),
               ),
             ),
@@ -106,7 +107,7 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                                  color: Colors.grey[600],
+                                  color: AppColors.foreground(context, Colors.grey[600]!),
                                 ),
                               ),
                               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -141,7 +142,7 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey[600],
+                      color: AppColors.foreground(context, Colors.grey[600]!),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 12)),

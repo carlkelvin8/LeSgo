@@ -76,10 +76,17 @@ class _RiderNotificationSettingsScreenState
       appBar: AppBar(
         title: Text(
           AppLocalization.translate('notif_settings_title', lang),
-          style: const TextStyle(fontFamily: 'TT Fors'),
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 18),
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
         ),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        centerTitle: true,
       ),
       body: _loading
           ? const Center(

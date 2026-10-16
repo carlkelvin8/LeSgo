@@ -1,4 +1,4 @@
-/// Shared legal copy aligned with lesgo.ph Terms & Conditions and Privacy Policy.
+/// Shared legal copy aligned with lesgocourierservices.com Terms & Conditions and Privacy Policy.
 class LegalContent {
   LegalContent._();
 
@@ -291,9 +291,10 @@ class LegalContent {
         (
           title: 'Contact Us',
           body:
-              'If you have questions, concerns, or requests regarding this Privacy Policy, please contact the LeSgo Support Team via email at lesgoclaveria@gmail.com or visit our website at https://lesgo.ph.\n\n'
+              'If you have questions, concerns, or requests regarding this Privacy Policy, please contact the LeSgo Support Team via email at lesgoclaveria@gmail.com or visit our website at https://lesgocourierservices.com/.\n\n'
               'By downloading, registering, accessing, or using any LeSgo application or service — including the Customer App, Rider App, Merchant App, Motor Taxi Service, and Padala Service — you acknowledge that you have read, understood, and agreed to this Privacy Policy.\n\n'
               '© 2026 LeSgo. All Rights Reserved.',
         ),
       ];
 }
+

@@ -1,15 +1,18 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../../core/constants/map_styles.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/services/order_polling_service.dart';
 import '../../../../../core/utils/driver_display_utils.dart';
 import '../../../../../core/utils/order_contact_actions.dart';
 import '../../../../../core/utils/order_status_mapper.dart';
-import '../../../../widgets/review/rating_dialog.dart';
+import '../../../../provider/review/review_provider.dart';
 import '../../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/booking_geo_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
@@ -30,15 +33,18 @@ class LeseatOrderStatusScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<LeseatOrderStatusScreen> createState() => _LeseatOrderStatusScreenState();
+  ConsumerState<LeseatOrderStatusScreen> createState() =>
+      _LeseatOrderStatusScreenState();
 }
 
-class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScreen> {
+class _LeseatOrderStatusScreenState
+    extends ConsumerState<LeseatOrderStatusScreen> {
   String _currentStatus = 'cooking';
   int _rating = 0;
   final TextEditingController _reviewController = TextEditingController();
   VoidCallback? _cancelPoll;
   Map<String, dynamic>? _liveOrderData;
+  bool _submittingReview = false;
 
   int get _orderIdInt => int.tryParse(widget.orderId) ?? 0;
 
@@ -73,8 +79,9 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
   Future<void> _fetchOrderStatus() async {
     if (_orderIdInt <= 0) return;
     try {
-      final response =
-          await getIt<OrderRemoteDataSource>().getOrder(_orderIdInt);
+      final response = await getIt<OrderRemoteDataSource>().getOrder(
+        _orderIdInt,
+      );
       if (!mounted || !response.success) return;
 
       _applyOrderSnapshot(response.data);
@@ -93,7 +100,8 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
       _liveOrderData = {
         if (_liveOrderData != null) ..._liveOrderData!,
         'status': order.status,
-        'restaurantName': _liveOrderData?['restaurantName'] ??
+        'restaurantName':
+            _liveOrderData?['restaurantName'] ??
             meta?['restaurant_name'] ??
             order.pickupContactName,
         'deliveryAddress': order.dropoffAddress,
@@ -104,7 +112,8 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
         'dropoff_lng': order.dropoffLng,
         'pickup_contact_phone': order.pickupContactPhone,
         'driver_id': order.driverId,
-        'driver_name': driver?.name ??
+        'driver_name':
+            driver?.name ??
             (order.driverId != null ? 'Driver #${order.driverId}' : null),
         'driver_phone': driver?.phone ?? meta?['driver_phone']?.toString(),
         'driver_photo_url': driver?.photoUrl,
@@ -143,26 +152,19 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
   Future<void> _submitOrderReview() async {
     if (_orderIdInt <= 0) return;
 
-    final result = await showRatingDialog(
-      context: context,
-      title: 'Rate Your Order',
-      subtitle: 'How was your order?',
+    setState(() => _submittingReview = true);
+    final reviewNotifier = ref.read(reviewProvider.notifier);
+    await reviewNotifier.submitReview(
       reviewableType: 'order',
       reviewableId: _orderIdInt,
+      rating: _rating,
+      comment: _reviewController.text.trim().isEmpty
+          ? null
+          : _reviewController.text.trim(),
+      context: context,
     );
-
-    if (result != true || !mounted) return;
-
-    final driverId = _orderData['driver_id'] as int?;
-    if (driverId != null && driverId > 0) {
-      await showRatingDialog(
-        context: context,
-        title: 'Rate Your Driver',
-        subtitle: 'How was your delivery experience?',
-        reviewableType: 'driver',
-        reviewableId: driverId,
-      );
-    }
+    if (!mounted) return;
+    setState(() => _submittingReview = false);
 
     if (!mounted) return;
     Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
@@ -171,7 +173,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: _buildAppBar(context),
       body: _buildBody(context),
     );
@@ -179,10 +181,13 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black87),
+        icon: Icon(
+          Icons.arrow_back,
+          color: AppColors.foreground(context, Colors.black87),
+        ),
         onPressed: () => Navigator.pop(context),
       ),
       title: Row(
@@ -208,7 +213,10 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.account_circle, color: Colors.black87),
+          icon: Icon(
+            Icons.account_circle,
+            color: AppColors.foreground(context, Colors.black87),
+          ),
           onPressed: () => AppRouter.push(context, MainRoutes.profile),
         ),
       ],
@@ -230,17 +238,27 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
       case 'delivered':
         return _buildCompletedView(context);
       case 'cancelled':
-        return _buildCookingView(context);
+        return _buildCookingView(context, cancelled: true);
       default:
         return _buildCookingView(context);
     }
   }
 
   // View 1: Cooking Status
-  Widget _buildCookingView(BuildContext context) {
+  Widget _buildCookingView(BuildContext context, {bool cancelled = false}) {
     final orderData = _orderData;
     final address = orderData['deliveryAddress'] ?? 'No address';
     final items = orderData['items'] as List<OrderItem>? ?? [];
+
+    final accent = cancelled ? Colors.grey[600]! : const Color(0xFFF57C00);
+    final cardBg = AppColors.surface(
+      context,
+      cancelled ? const Color(0xFFF5F5F5) : const Color(0xFFFFF8E1),
+    );
+    final cardBorder = AppColors.border(
+      context,
+      cancelled ? const Color(0xFFE0E0E0) : const Color(0xFFFFE082),
+    );
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
@@ -253,13 +271,13 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
             width: ResponsiveUtils.spacing(context, 200),
             height: ResponsiveUtils.spacing(context, 200),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: AppColors.surface(context, Colors.grey[100]!),
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.restaurant,
+              cancelled ? Icons.cancel_outlined : Icons.restaurant,
               size: ResponsiveUtils.fontSize(context, 80),
-              color: Colors.orange[600],
+              color: accent,
             ),
           ),
 
@@ -270,17 +288,17 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
             width: double.infinity,
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF3F3),
+              color: cardBg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFFCDD2)),
+              border: Border.all(color: cardBorder),
             ),
             child: Row(
               children: [
                 Container(
                   width: 12,
                   height: 12,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE53935),
+                  decoration: BoxDecoration(
+                    color: accent,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -290,37 +308,30 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'We are cooking your food!',
+                        cancelled
+                            ? 'Order cancelled'
+                            : 'We are cooking your food!',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 18),
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFFE53935),
+                          color: accent,
                         ),
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                       Text(
-                        'Your order is being prepared',
+                        cancelled
+                            ? 'Your order has been cancelled. Any payment made will be refunded to your original payment method.'
+                            : 'Your order is being prepared',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 14),
-                          color: const Color(0xFFE53935),
+                          color: accent,
                         ),
                       ),
                     ],
                   ),
                 ),
-                if (true) // Loading indicator
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        const Color(0xFFE53935),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -334,15 +345,17 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
             width: double.infinity,
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: AppColors.surface(context, Colors.grey[50]!),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(
+                color: AppColors.border(context, Colors.grey[200]!),
+              ),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.location_on,
-                  color: const Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                   size: ResponsiveUtils.fontSize(context, 24),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -352,7 +365,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.black87,
+                      color: AppColors.foreground(context, Colors.black87),
                     ),
                   ),
                 ),
@@ -410,15 +423,18 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
         // Map Section
         Container(
           height: ResponsiveUtils.spacing(context, 300),
-          color: Colors.grey[200],
+          color: AppColors.surface(context, Colors.grey[200]!),
           child: GoogleMap(
             initialCameraPosition: CameraPosition(
               target: LatLng(
-                (orderData['dropoff_lat'] as num?)?.toDouble() ?? 8.4542,
-                (orderData['dropoff_lng'] as num?)?.toDouble() ?? 124.6319,
+                (orderData['dropoff_lat'] as num?)?.toDouble() ??
+                    BookingGeoUtils.defaultLat,
+                (orderData['dropoff_lng'] as num?)?.toDouble() ??
+                    BookingGeoUtils.defaultLng,
               ),
               zoom: 14,
             ),
+            style: MapStyles.darkIfDark(context),
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
@@ -436,9 +452,11 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                   width: double.infinity,
                   padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF8E1),
+                    color: AppColors.surface(context, const Color(0xFFFFF8E1)),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFFFE082)),
+                    border: Border.all(
+                      color: AppColors.border(context, const Color(0xFFFFE082)),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -464,7 +482,9 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                                 color: const Color(0xFFF57C00),
                               ),
                             ),
-                            SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 4),
+                            ),
                             Text(
                               'Driver is on the way to pick up your order',
                               style: TextStyle(
@@ -490,15 +510,15 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                     driverInfo: DriverInfo(
                       name: _orderData['driver_name']?.toString() ?? 'Driver',
                       phone: _orderData['driver_phone']?.toString(),
-                      vehicleNumber:
-                          _orderData['driver_plate_number']?.toString(),
+                      vehicleNumber: _orderData['driver_plate_number']
+                          ?.toString(),
                       photoUrl: _orderData['driver_photo_url']?.toString(),
                       rating: (_orderData['driver_rating'] as num?)?.toDouble(),
                     ),
                     onCall: _orderData['driver_phone'] != null
                         ? () => OrderContactActions.callPhone(
-                              _orderData['driver_phone']?.toString(),
-                            )
+                            _orderData['driver_phone']?.toString(),
+                          )
                         : null,
                     onChat: _contactDriver,
                   ),
@@ -512,15 +532,17 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                   width: double.infinity,
                   padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: AppColors.surface(context, Colors.grey[50]!),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(
+                      color: AppColors.border(context, Colors.grey[200]!),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.location_on,
-                        color: const Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                         size: ResponsiveUtils.fontSize(context, 24),
                       ),
                       SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -530,7 +552,10 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: Colors.black87,
+                            color: AppColors.foreground(
+                              context,
+                              Colors.black87,
+                            ),
                           ),
                         ),
                       ),
@@ -581,7 +606,10 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                   child: ElevatedButton(
                     onPressed: _contactDriver,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[600],
+                      backgroundColor: AppColors.surface(
+                        context,
+                        Colors.grey[600]!,
+                      ),
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 18),
                       ),
@@ -643,7 +671,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 20),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
             textAlign: TextAlign.center,
           ),
@@ -657,7 +685,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 24),
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
             ),
             textAlign: TextAlign.center,
           ),
@@ -669,9 +697,11 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
             width: double.infinity,
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
             decoration: BoxDecoration(
-              color: Colors.grey[50],
+              color: AppColors.surface(context, Colors.grey[50]!),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(
+                color: AppColors.border(context, Colors.grey[200]!),
+              ),
             ),
             child: Column(
               children: [
@@ -681,7 +711,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
 
@@ -706,7 +736,10 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                           size: 40,
                           color: index < _rating
                               ? Colors.amber[600]
-                              : Colors.grey[300],
+                              : AppColors.foreground(
+                                  context,
+                                  Colors.grey[300]!,
+                                ),
                         ),
                       ),
                     );
@@ -724,11 +757,13 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                     hintStyle: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.grey[400],
+                      color: AppColors.foreground(context, Colors.grey[400]!),
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(
+                        color: AppColors.border(context, Colors.grey[300]!),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -750,9 +785,12 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _submitOrderReview,
+                    onPressed: _submittingReview ? null : _submitOrderReview,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[600],
+                      backgroundColor: AppColors.surface(
+                        context,
+                        Colors.grey[600]!,
+                      ),
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 18),
                       ),
@@ -760,15 +798,24 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      'Submit',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 16),
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: _submittingReview
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 16),
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -818,7 +865,7 @@ class _LeseatOrderStatusScreenState extends ConsumerState<LeseatOrderStatusScree
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 16),
           fontWeight: FontWeight.w700,
-          color: Colors.black87,
+          color: AppColors.foreground(context, Colors.black87),
         ),
       ),
     );

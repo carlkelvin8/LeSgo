@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,7 +27,7 @@ class LesrideFareSummary extends ConsumerWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 15),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 10)),
@@ -34,10 +35,10 @@ class LesrideFareSummary extends ConsumerWidget {
           width: double.infinity,
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: AppColors.surface(context, Colors.grey.shade50),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: error == null ? Colors.grey.shade200 : Colors.red.shade200,
+              color: error == null ? AppColors.foreground(context, Colors.grey.shade200) : Colors.red.shade200,
             ),
           ),
           child: isLoading
@@ -73,7 +74,7 @@ class LesrideFareSummary extends ConsumerWidget {
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 8),
                       ),
-                      child: Divider(color: Colors.grey.shade300, height: 1),
+                      child: Divider(color: AppColors.border(context, Colors.grey.shade300), height: 1),
                     ),
                     _row(context, 'Total', fare.total, isTotal: true),
                     SizedBox(height: ResponsiveUtils.spacing(context, 7)),
@@ -84,7 +85,7 @@ class LesrideFareSummary extends ConsumerWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 11),
-                          color: Colors.grey.shade600,
+                          color: AppColors.foreground(context, Colors.grey.shade600),
                         ),
                       ),
                     ),
@@ -113,7 +114,7 @@ class LesrideFareSummary extends ConsumerWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
-            color: Colors.grey.shade600,
+            color: AppColors.foreground(context, Colors.grey.shade600),
           ),
         ),
       ],
@@ -140,7 +141,7 @@ class LesrideFareSummary extends ConsumerWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
                 fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
-                color: isTotal ? const Color(0xFF5F2D82) : Colors.black87,
+                color: isTotal ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
               ),
             ),
           ),
@@ -150,7 +151,7 @@ class LesrideFareSummary extends ConsumerWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-              color: isTotal ? const Color(0xFF5F2D82) : Colors.black87,
+              color: isTotal ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],

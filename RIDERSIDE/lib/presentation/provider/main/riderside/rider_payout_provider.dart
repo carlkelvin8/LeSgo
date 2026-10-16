@@ -190,12 +190,12 @@ class PayoutRecord {
       status: json['status']?.toString() ?? 'pending',
       paymentMethod: json['payment_method']?.toString() ?? '',
       accountNumber: json['account_number']?.toString() ?? '',
-      requestedAt: json['requested_at'] != null
-          ? DateTime.parse(json['requested_at'].toString()).toLocal()
-          : DateTime.now(),
-      completedAt: json['completed_at'] != null
-          ? DateTime.parse(json['completed_at'].toString()).toLocal()
-          : null,
+      requestedAt:
+          DateTime.tryParse(json['requested_at']?.toString() ?? '')
+              ?.toLocal() ??
+          DateTime.now(),
+      completedAt:
+          DateTime.tryParse(json['completed_at']?.toString() ?? '')?.toLocal(),
     );
   }
 

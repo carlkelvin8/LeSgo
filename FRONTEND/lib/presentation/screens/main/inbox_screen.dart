@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -92,12 +93,12 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     final conversations = chatState.conversations;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       body: SafeArea(
         child: Column(
           children: [
             Container(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               child: Row(
                 children: [
@@ -113,7 +114,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -174,7 +175,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                   Icon(
                                     Icons.chat_bubble_outline,
                                     size: 48,
-                                    color: Colors.grey[400],
+                                    color: AppColors.foreground(context, Colors.grey[400]!),
                                   ),
                                   SizedBox(
                                     height: ResponsiveUtils.spacing(context, 12),
@@ -186,7 +187,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                       fontFamily: 'TT Fors',
                                       fontSize:
                                           ResponsiveUtils.fontSize(context, 15),
-                                      color: Colors.grey[600],
+                                      color: AppColors.foreground(context, Colors.grey[600]!),
                                     ),
                                   ),
                                   Text(
@@ -196,7 +197,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                       fontFamily: 'TT Fors',
                                       fontSize:
                                           ResponsiveUtils.fontSize(context, 13),
-                                      color: Colors.grey[500],
+                                      color: AppColors.foreground(context, Colors.grey[500]!),
                                     ),
                                   ),
                                 ],
@@ -208,7 +209,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                           onRefresh: () => ref
                               .read(chatProviderGlobal.notifier)
                               .loadConversations(),
-                          color: const Color(0xFF5F2D82),
+                          color: AppColors.accent(context, Color(0xFF5F2D82)),
                           child: ListView.separated(
                             padding: EdgeInsets.symmetric(
                               vertical: ResponsiveUtils.spacing(context, 8),
@@ -235,7 +236,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
   Widget _buildAdminSupportItem(BuildContext context) {
     return Container(
-      color: const Color(0xFFF3E8FF),
+      color: AppColors.surface(context, Color(0xFFF3E8FF)),
       child: InkWell(
         onTap: _openCustomerService,
         child: Padding(
@@ -262,7 +263,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -271,7 +272,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: Colors.grey[700],
+                        color: AppColors.foreground(context, Colors.grey[700]!),
                       ),
                     ),
                   ],
@@ -295,7 +296,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         driverName != null ? 'Chat with $driverName' : orderName;
 
     return Container(
-      color: Colors.white,
+      color: AppColors.surface(context, Colors.white),
       child: InkWell(
         onTap: () => _openConversation(
           conversation,
@@ -324,7 +325,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                           )
                         : Icon(
                             _getOrderIcon(conversation),
-                            color: const Color(0xFF5F2D82),
+                            color: AppColors.accent(context, Color(0xFF5F2D82)),
                             size: 28,
                           ),
                   ),
@@ -374,7 +375,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                     fontFamily: 'TT Fors',
                                     fontSize:
                                         ResponsiveUtils.fontSize(context, 12),
-                                    color: Colors.grey[600],
+                                    color: AppColors.foreground(context, Colors.grey[600]!),
                                   ),
                                 ),
                             ],
@@ -387,7 +388,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                               fontFamily: 'TT Fors',
                               fontSize:
                                   ResponsiveUtils.fontSize(context, 12),
-                              color: Colors.grey[600],
+                              color: AppColors.foreground(context, Colors.grey[600]!),
                             ),
                           ),
                       ],
@@ -405,8 +406,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                               fontSize:
                                   ResponsiveUtils.fontSize(context, 14),
                               color: hasUnread
-                                  ? Colors.black87
-                                  : Colors.grey[600],
+                                  ? AppColors.foreground(context, Colors.black87)
+                                  : AppColors.foreground(context, Colors.grey[600]!),
                               fontWeight: hasUnread
                                   ? FontWeight.w500
                                   : FontWeight.normal,
@@ -423,7 +424,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF5F2D82),
+                              color: AppColors.accent(context, Color(0xFF5F2D82)),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(

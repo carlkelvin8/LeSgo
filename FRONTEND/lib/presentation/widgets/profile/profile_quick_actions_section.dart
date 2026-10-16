@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -25,15 +26,15 @@ class ProfileQuickActionsSection extends ConsumerWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: AppColors.border(context, Colors.grey.shade200)),
             ),
             child: Column(
               children: [
@@ -49,7 +50,7 @@ class ProfileQuickActionsSection extends ConsumerWidget {
                 ),
                 Divider(
                   height: 1,
-                  color: Colors.grey.shade200,
+                  color: AppColors.foreground(context, Colors.grey.shade200),
                   indent: 56,
                 ),
                 _QuickActionTile(
@@ -60,7 +61,7 @@ class ProfileQuickActionsSection extends ConsumerWidget {
                 ),
                 Divider(
                   height: 1,
-                  color: Colors.grey.shade200,
+                  color: AppColors.foreground(context, Colors.grey.shade200),
                   indent: 56,
                 ),
                 _QuickActionTile(
@@ -71,7 +72,7 @@ class ProfileQuickActionsSection extends ConsumerWidget {
                 ),
                 Divider(
                   height: 1,
-                  color: Colors.grey.shade200,
+                  color: AppColors.foreground(context, Colors.grey.shade200),
                   indent: 56,
                 ),
                 _QuickActionTile(
@@ -82,7 +83,7 @@ class ProfileQuickActionsSection extends ConsumerWidget {
                 ),
                 Divider(
                   height: 1,
-                  color: Colors.grey.shade200,
+                  color: AppColors.foreground(context, Colors.grey.shade200),
                   indent: 56,
                 ),
                 _QuickActionTile(
@@ -120,12 +121,12 @@ class _QuickActionTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+          color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
-          color: const Color(0xFF5F2D82),
+          color: AppColors.accent(context, Color(0xFF5F2D82)),
           size: 20,
         ),
       ),
@@ -135,7 +136,7 @@ class _QuickActionTile extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 14),
           fontWeight: FontWeight.w600,
-          color: Colors.black87,
+          color: AppColors.foreground(context, Colors.black87),
         ),
       ),
       subtitle: Text(
@@ -143,13 +144,13 @@ class _QuickActionTile extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 12),
-          color: Colors.grey[600],
+          color: AppColors.foreground(context, Colors.grey[600]!),
         ),
       ),
       trailing: Icon(
         Icons.arrow_forward_ios,
         size: 14,
-        color: Colors.grey[400],
+        color: AppColors.foreground(context, Colors.grey[400]!),
       ),
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

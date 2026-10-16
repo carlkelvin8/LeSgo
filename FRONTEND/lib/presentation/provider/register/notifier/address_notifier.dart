@@ -161,6 +161,16 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
   }
 
   Future<void> _getAddressFromLocation(LatLng location) async {
+    // Keep the chosen pin even when the geocoder has no address for it.
+    state = state.copyWith(
+      error: null,
+      data: state.data.copyWith(
+        address: (state.data.address ?? Address()).copyWith(
+          latitude: location.latitude,
+          longitude: location.longitude,
+        ),
+      ),
+    );
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
         location.latitude,
@@ -204,6 +214,8 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
         isLoading: false,
         error: 'Failed to get address: ${e.toString()}',
       );
+    } finally {
+      state = state.copyWith(isLoading: false);
     }
   }
 
@@ -251,7 +263,7 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
     print('  - subdivBarangay: "$subdivBarangay"');
     print('  - cityProvince: "$cityProvince"');
     print('  - zipCode: "$zipCode"');
-    
+
     String houseNumber = '';
     String streetName = houseNumberStreet.trim();
 
@@ -361,18 +373,29 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
 
     try {
       final address = state.data.address;
-      
+
       // Debug logging
       print('🔍 DEBUG saveAddress - address: $address');
-      print('🔍 DEBUG saveAddress - address.isComplete: ${address?.isComplete}');
+      print(
+        '🔍 DEBUG saveAddress - address.isComplete: ${address?.isComplete}',
+      );
       print('🔍 DEBUG saveAddress - houseNumber: ${address?.houseNumber}');
       print('🔍 DEBUG saveAddress - streetName: ${address?.streetName}');
       print('🔍 DEBUG saveAddress - barangay: ${address?.barangay}');
       print('🔍 DEBUG saveAddress - city: ${address?.city}');
       print('🔍 DEBUG saveAddress - zipCode: ${address?.zipCode}');
-      
+
       if (address == null || !address.isComplete) {
         throw Exception('Please complete all required address fields');
+      }
+
+      if (address.latitude == null || address.longitude == null) {
+        throw Exception('Please select your address on the map');
+      }
+      if (address.deliveryDetails.length > 255) {
+        throw Exception(
+          'Please shorten your subdivision, barangay, and landmark to 255 characters combined',
+        );
       }
 
       state = state.copyWith(isLoading: false);

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
-	<string>This app needs access to the camera for selfie verification during registration.</string>
+	<string>LeSGo uses the camera to capture your live selfie and government ID for identity verification.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to save and show your selfie.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
@@ -11,7 +11,7 @@
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app needs access to your location to help you fill in your address.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Use Face ID to unlock LEZGO quickly and securely.</string>
+	<string>Use Face ID to unlock LeSgo quickly and securely.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

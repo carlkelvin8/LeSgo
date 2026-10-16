@@ -144,7 +144,10 @@ class RiderVehicleNotifier extends StateNotifier<RiderVehicleState> {
 
   Future<bool> addVehicle(RiderVehicle vehicle) async {
     try {
-      await ApiService.dio.post('/v1/drivers/vehicles', data: vehicle.toJson());
+      // Server owns the authoritative vehicle id; never send the local
+      // placeholder/timestamp id on create.
+      final payload = vehicle.toJson()..remove('id');
+      await ApiService.dio.post('/v1/drivers/vehicles', data: payload);
       await loadVehicles(silent: true);
       return true;
     } catch (e) {

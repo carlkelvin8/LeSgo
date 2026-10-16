@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesride_location_provider.dart';
+import '../../../../core/constants/map_styles.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/marker_utils.dart';
 import '../../global/googlemaps/map_route_info_banner.dart';
@@ -147,6 +149,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
         GoogleMap(
           key: const ValueKey('lesride_map_stable'),
           mapType: MapType.normal,
+          style: MapStyles.darkIfDark(context),
           onMapCreated: (controller) {
             _mapController = controller;
             widget.onMapCreated(controller);
@@ -196,7 +199,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
               // Zoom In Button
               FloatingActionButton(
                 mini: true,
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.surface(context, Colors.white),
                 foregroundColor: const Color(0xFF7B1FA2),
                 elevation: 4,
                 heroTag: "zoom_in", // Unique hero tag
@@ -211,7 +214,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
               // Zoom Out Button
               FloatingActionButton(
                 mini: true,
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.surface(context, Colors.white),
                 foregroundColor: const Color(0xFF7B1FA2),
                 elevation: 4,
                 heroTag: "zoom_out", // Unique hero tag
@@ -226,7 +229,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
               // My Location Button
               FloatingActionButton(
                 mini: true,
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.surface(context, Colors.white),
                 foregroundColor: const Color(0xFF7B1FA2),
                 elevation: 4,
                 heroTag: "my_location", // Unique hero tag
@@ -237,7 +240,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
               // Center Map Button
               FloatingActionButton(
                 mini: true,
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.surface(context, Colors.white),
                 foregroundColor: const Color(0xFF7B1FA2),
                 elevation: 4,
                 heroTag: "center_map", // Unique hero tag
@@ -256,7 +259,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
               // Map Type Toggle Button
               FloatingActionButton(
                 mini: true,
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.surface(context, Colors.white),
                 foregroundColor: const Color(0xFF7B1FA2),
                 elevation: 4,
                 heroTag: "map_type", // Unique hero tag

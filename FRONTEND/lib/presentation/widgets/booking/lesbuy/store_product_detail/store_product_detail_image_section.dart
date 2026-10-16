@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
@@ -12,7 +13,7 @@ class StoreProductDetailImageSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: Colors.grey[200]),
+      decoration: BoxDecoration(color: AppColors.surface(context, Colors.grey[200]!)),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -23,12 +24,12 @@ class StoreProductDetailImageSection extends StatelessWidget {
                   product.imagePath,
                   fit: BoxFit.cover,
                   placeholderBuilder: (BuildContext context) => Container(
-                    color: Colors.grey[300],
+                    color: AppColors.surface(context, Colors.grey[300]!),
                     child: Center(
                       child: Icon(
                         Icons.shopping_bag,
                         size: ResponsiveUtils.fontSize(context, 80),
-                        color: Colors.grey[400],
+                        color: AppColors.foreground(context, Colors.grey[400]!),
                       ),
                     ),
                   ),
@@ -38,12 +39,12 @@ class StoreProductDetailImageSection extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
-                      color: Colors.grey[300],
+                      color: AppColors.surface(context, Colors.grey[300]!),
                       child: Center(
                         child: Icon(
                           Icons.shopping_bag,
                           size: ResponsiveUtils.fontSize(context, 80),
-                          color: Colors.grey[400],
+                          color: AppColors.foreground(context, Colors.grey[400]!),
                         ),
                       ),
                     );

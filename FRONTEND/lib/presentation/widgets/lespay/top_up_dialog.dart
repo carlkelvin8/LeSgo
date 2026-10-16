@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,11 +9,18 @@ import '../../provider/main/lespay/lespay_provider.dart';
 import '../../screens/main/lespay/xendit_payment_screen.dart';
 import 'top_up_fee_summary.dart';
 
+enum TopUpPurpose { topUp, qrPay }
+
 class TopUpDialog extends ConsumerStatefulWidget {
   /// Scaffold context from LesPay screen (stays valid after dialog closes).
   final BuildContext parentContext;
+  final TopUpPurpose purpose;
 
-  const TopUpDialog({super.key, required this.parentContext});
+  const TopUpDialog({
+    super.key,
+    required this.parentContext,
+    this.purpose = TopUpPurpose.topUp,
+  });
 
   @override
   ConsumerState<TopUpDialog> createState() => _TopUpDialogState();
@@ -79,7 +87,9 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
 
     return AlertDialog(
       title: Text(
-        'Top Up (1.5% fee)',
+        widget.purpose == TopUpPurpose.qrPay
+            ? 'QR Pay (1.5% fee)'
+            : 'Top Up (1.5% fee)',
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -93,11 +103,14 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'A 1.5% top-up fee applies. You pay the total below using your credit or debit card.',
+              widget.purpose == TopUpPurpose.qrPay
+                  ? 'A 1.5% top-up fee applies. Pay the total below with QR Ph — '
+                      'scan the PayMongo QR code using GCash, Maya, or your banking app.'
+                  : 'A 1.5% top-up fee applies. You pay the total below using your credit or debit card.',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.grey[700],
+                color: AppColors.foreground(context, Colors.grey[700]!),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -145,7 +158,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
             'Cancel',
             style: TextStyle(
               fontFamily: 'TT Fors',
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
               fontSize: ResponsiveUtils.fontSize(context, 14),
             ),
           ),

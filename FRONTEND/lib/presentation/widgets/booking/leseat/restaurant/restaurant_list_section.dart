@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../domain/entities/booking/leseat/restaurant.dart';
@@ -23,7 +24,7 @@ class RestaurantListSection extends StatelessWidget {
             Icon(
               Icons.restaurant_menu,
               size: ResponsiveUtils.fontSize(context, 64),
-              color: Colors.grey[400],
+              color: AppColors.foreground(context, Colors.grey[400]!),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             Text(
@@ -31,7 +32,7 @@ class RestaurantListSection extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
               ),
             ),
           ],

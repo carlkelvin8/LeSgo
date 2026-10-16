@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomRefreshIndicator extends StatelessWidget {
@@ -18,8 +19,8 @@ class CustomRefreshIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      color: color ?? const Color(0xFF6B4CE6),
-      backgroundColor: backgroundColor ?? Colors.white,
+      color: color ?? AppColors.accent(context, Color(0xFF6B4CE6)),
+      backgroundColor: backgroundColor ?? AppColors.surface(context, Colors.white),
       strokeWidth: 2.5,
       displacement: 40.0,
       child: child,

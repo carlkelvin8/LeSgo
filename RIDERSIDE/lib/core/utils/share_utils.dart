@@ -16,6 +16,7 @@ class ShareUtils {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
+      if (!context.mounted) return;
       _fallbackCopy(context, text);
     }
   }
@@ -44,6 +45,7 @@ class ShareUtils {
                 if (await canLaunchUrl(uri)) {
                   await launchUrl(uri);
                 } else {
+                  if (!context.mounted) return;
                   _fallbackCopy(context, content);
                 }
               },

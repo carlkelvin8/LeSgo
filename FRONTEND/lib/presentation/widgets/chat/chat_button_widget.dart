@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/responsive_utils.dart';
@@ -39,7 +40,7 @@ class ChatButtonWidget extends ConsumerWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF5F2D82),
+            color: AppColors.accent(context, Color(0xFF5F2D82)),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(

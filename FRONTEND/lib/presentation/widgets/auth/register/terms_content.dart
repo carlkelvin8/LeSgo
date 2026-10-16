@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -45,7 +46,7 @@ class TermsContent extends ConsumerWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 20),
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -54,7 +55,7 @@ class TermsContent extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey[600],
+                        color: AppColors.foreground(context, Colors.grey[600]!),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 20)),
@@ -72,7 +73,7 @@ class TermsContent extends ConsumerWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 15),
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                color: AppColors.foreground(context, Colors.black87),
                               ),
                             ),
                             SizedBox(
@@ -83,7 +84,7 @@ class TermsContent extends ConsumerWidget {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: Colors.grey[700],
+                                color: AppColors.foreground(context, Colors.grey[700]!),
                                 height: 1.6,
                               ),
                             ),
@@ -101,7 +102,11 @@ class TermsContent extends ConsumerWidget {
             text: 'Sign up with Google',
             iconUrl: 'https://www.google.com/favicon.ico',
             iconData: Icons.g_mobiledata,
-            onPressed: () => GoogleAuthHelper.signIn(context, ref),
+            onPressed: () => GoogleAuthHelper.signIn(
+              context,
+              ref,
+              mode: GoogleAuthMode.signup,
+            ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           DualActionButtons(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/utils/responsive_utils.dart';
+import 'package:flutter/services.dart';
 import '../../../common/menu_image_widget.dart';
 
-class MerchantOrderCard extends StatelessWidget {
+class MerchantOrderCard extends StatefulWidget {
   final String orderId;
   final String itemName;
   final String price;
@@ -25,144 +25,233 @@ class MerchantOrderCard extends StatelessWidget {
   });
 
   @override
+  State<MerchantOrderCard> createState() => _MerchantOrderCardState();
+}
+
+class _MerchantOrderCardState extends State<MerchantOrderCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _press = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 90),
+  );
+
+  @override
+  void dispose() {
+    _press.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.14),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AnimatedBuilder(
+      animation: _press,
+      builder: (_, child) => Transform.scale(
+        scale: 1.0 - .012 * _press.value,
+        child: child,
       ),
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 10)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: ResponsiveUtils.spacing(context, 68),
-            height: ResponsiveUtils.spacing(context, 68),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F1F1),
-              borderRadius: BorderRadius.circular(8),
+      child: GestureDetector(
+        onTapDown: (_) {
+          HapticFeedback.selectionClick();
+          _press.forward();
+        },
+        onTapUp: (_) => _press.reverse(),
+        onTapCancel: () => _press.reverse(),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1730) : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: isDark
+                  ? const Color(0xFF2E2540)
+                  : const Color(0xFFEDE9F2),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: MenuImageWidget(
-              source: imageUrl,
-              fit: BoxFit.cover,
-              placeholder: Icon(
-                Icons.restaurant,
-                color: const Color(0xFFCCCCCC),
-                size: ResponsiveUtils.fontSize(context, 28),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF5F2D82)
+                    .withValues(alpha: isDark ? .08 : .05),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+                spreadRadius: -4,
               ),
-            ),
+            ],
           ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 10)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 68,
+                  height: 68,
+                  child: MenuImageWidget(
+                    source: widget.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: Container(
+                      color: const Color(0xFFEDD9FF),
+                      child: const Icon(Icons.restaurant_rounded,
+                          color: Color(0xFF9B70CC), size: 28),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        orderId,
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 9),
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      "PHP $price",
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 10),
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 2)),
-                Text(
-                  itemName,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                    height: 1.0,
-                  ),
-                ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                Text(
-                  customerName,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 10),
-                    color: Colors.black,
-                  ),
-                ),
-                Text(
-                  address,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 10),
-                    color: Colors.black,
-                  ),
-                ),
-                if (specialInstructionsPreview != null &&
-                    specialInstructionsPreview!.trim().isNotEmpty) ...[
-                  SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: ResponsiveUtils.spacing(context, 8),
-                      vertical: ResponsiveUtils.spacing(context, 5),
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF8E1),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFFFB300)),
-                    ),
-                    child: Row(
+                    // Order ID + price
+                    Row(
                       children: [
-                        Icon(
-                          Icons.campaign_outlined,
-                          size: ResponsiveUtils.fontSize(context, 11),
-                          color: Colors.orange.shade800,
-                        ),
-                        SizedBox(width: ResponsiveUtils.spacing(context, 4)),
                         Expanded(
                           child: Text(
-                            specialInstructionsPreview!.trim(),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            widget.orderId,
                             style: TextStyle(
                               fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 9),
-                              fontWeight: FontWeight.w700,
-                              color: Colors.orange.shade900,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w500,
+                              color: isDark
+                                  ? const Color(0xFF9A85B8)
+                                  : const Color(0xFFAA90C0),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5F2D82).withValues(alpha: .09),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'PHP ${widget.price}',
+                            style: const TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF5F2D82),
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-                if (trailingBadge != null) ...[
-                  SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                  trailingBadge!,
-                ],
-              ],
-            ),
+                    const SizedBox(height: 4),
+
+                    // Item name
+                    Text(
+                      widget.itemName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF1A0A2E),
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+
+                    // Customer + address
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.person_outline_rounded,
+                            size: 12, color: Color(0xFF9B70CC)),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            widget.customerName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 11.5,
+                              color: isDark
+                                  ? const Color(0xFFD4C8E8)
+                                  : const Color(0xFF4A3060),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.location_on_outlined,
+                            size: 12, color: Color(0xFF9B70CC)),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            widget.address,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 11.5,
+                              color: isDark
+                                  ? const Color(0xFF9A85B8)
+                                  : const Color(0xFFAA90C0),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Special instructions
+                    if (widget.specialInstructionsPreview != null &&
+                        widget.specialInstructionsPreview!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF8ED),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFFF59E0B).withValues(alpha: .40),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.sticky_note_2_outlined,
+                                size: 12, color: Color(0xFFB45309)),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: Text(
+                                widget.specialInstructionsPreview!.trim(),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF92400E),
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    if (widget.trailingBadge != null) ...[
+                      const SizedBox(height: 6),
+                      widget.trailingBadge!,
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

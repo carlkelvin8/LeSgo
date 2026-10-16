@@ -28,6 +28,8 @@ class PaymentStatusBadge extends StatelessWidget {
       ),
       child: Text(
         PaymentStatusUtils.label(status),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, compact ? 9 : 10),

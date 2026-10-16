@@ -1,7 +1,7 @@
 # Create Test Rider Account Script (PowerShell)
 # This script creates a test rider account for development/testing
 
-$API_BASE_URL = "https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api/v1"
+$API_BASE_URL = "https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api/v1"
 
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host "Creating Test Rider Account" -ForegroundColor Cyan

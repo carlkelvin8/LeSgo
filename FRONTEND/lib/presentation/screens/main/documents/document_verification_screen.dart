@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,7 +18,7 @@ class DocumentVerificationScreen extends ConsumerWidget {
     final notifier = ref.read(documentProvider.notifier);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       body: SafeArea(
         child: Column(
           children: [
@@ -36,7 +37,7 @@ class DocumentVerificationScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: Colors.grey.shade700,
+                    color: AppColors.foreground(context, Colors.grey.shade700),
                   ),
                 ),
               ),
@@ -51,7 +52,7 @@ class DocumentVerificationScreen extends ConsumerWidget {
                           onRetry: notifier.loadAll,
                         )
                       : RefreshIndicator(
-                          color: const Color(0xFF5F2D82),
+                          color: AppColors.accent(context, Color(0xFF5F2D82)),
                           onRefresh: notifier.loadAll,
                           child: ListView(
                             padding: EdgeInsets.all(
@@ -60,7 +61,7 @@ class DocumentVerificationScreen extends ConsumerWidget {
                             children: [
                               ...state.documents.map(
                                 (doc) => ListTile(
-                                  tileColor: Colors.grey.shade50,
+                                  tileColor: AppColors.surface(context, Colors.grey.shade50),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -75,7 +76,7 @@ class DocumentVerificationScreen extends ConsumerWidget {
                                     '${doc.status} · ${doc.documentNumber}',
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
-                                      color: Colors.grey.shade600,
+                                      color: AppColors.foreground(context, Colors.grey.shade600),
                                     ),
                                   ),
                                 ),
@@ -212,7 +213,7 @@ class _DocumentSubmitSheetState extends ConsumerState<_DocumentSubmitSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 16,
         right: 16,
@@ -233,7 +234,7 @@ class _DocumentSubmitSheetState extends ConsumerState<_DocumentSubmitSheet> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _selectedType,
+            initialValue: _selectedType,
             items: widget.types
                 .map(
                   (t) => DropdownMenuItem(

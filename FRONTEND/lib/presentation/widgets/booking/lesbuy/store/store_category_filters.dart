@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 
@@ -45,18 +46,18 @@ class StoreCategoryFilters extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected ? Colors.white : Colors.black87,
+                  color: isSelected ? Colors.white : AppColors.foreground(context, Colors.black87),
                 ),
               ),
               selected: isSelected,
               onSelected: (_) => onCategorySelected(category),
-              backgroundColor: Colors.grey[100],
+              backgroundColor: AppColors.surface(context, Colors.grey[100]!),
               selectedColor: const Color(0xFF5F2D82),
               checkmarkColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: isSelected ? const Color(0xFF5F2D82) : Colors.transparent,
+                  color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : Colors.transparent,
                 ),
               ),
               padding: EdgeInsets.symmetric(

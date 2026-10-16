@@ -1,8 +1,19 @@
+import '../constants/app_info.dart';
+
 /// Helpers for referral / invite-friends flows.
 class ReferralUtils {
   ReferralUtils._();
 
-  static const String appName = 'LEZGO';
+  static const String appName = AppInfo.appName;
+
+  /// Google Play listing for the customer app.
+  static const String appStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.lesgo_customer';
+
+  /// Invite message shared via the OS share sheet, always branded with the
+  /// approved trade name and pointing at the Google Play listing.
+  static String referralShareMessage({required String referralCode}) =>
+      'Sign up on $appName and use my referral code: $referralCode to get bonuses! 🎁';
 
   /// Stable code when API has not assigned one yet.
   static String generateFallbackCode(int userId, {String? name}) {

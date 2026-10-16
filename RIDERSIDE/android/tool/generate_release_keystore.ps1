@@ -1,12 +1,25 @@
 param(
   [string]$AppName = "lesgo-rider",
   [string]$KeyAlias = "lesgo-rider",
-  [string]$StorePassword = "LesgoRiderRelease2026!",
-  [string]$KeyPassword = "LesgoRiderRelease2026!",
+  [string]$StorePassword,
+  [string]$KeyPassword,
   [int]$ValidityDays = 10000
 )
 
 $ErrorActionPreference = "Stop"
+
+# Release passwords are never hardcoded. Provide them via -StorePassword /
+# -KeyPassword (e.g. from your secrets manager) or get prompted interactively.
+if ([string]::IsNullOrWhiteSpace($StorePassword)) {
+  $secure = Read-Host "Keystore store password" -AsSecureString
+  $StorePassword = [System.Net.NetworkCredential]::new("", $secure).Password
+}
+if ([string]::IsNullOrWhiteSpace($KeyPassword)) {
+  $KeyPassword = $StorePassword
+}
+if ([string]::IsNullOrWhiteSpace($StorePassword)) {
+  Write-Error "No store password supplied - aborting."
+}
 $androidRoot = Split-Path -Parent $PSScriptRoot
 $keystoreName = "$AppName-release.jks"
 $keystorePath = Join-Path $androidRoot $keystoreName

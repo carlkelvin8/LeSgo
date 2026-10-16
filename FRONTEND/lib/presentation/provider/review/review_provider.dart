@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import '../../../data/data_source/review_remote_datasource.dart';
 import '../../../data/data_source/dto/review/review_dto.dart';
 import '../../../data/data_source/dto/review/create_review_request_dto.dart';
@@ -44,10 +45,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
   ReviewNotifier() : super(ReviewState());
 
   /// Load reviews for a specific item (order, partner, driver)
-  Future<void> loadReviews({
-    String? reviewableType,
-    int? reviewableId,
-  }) async {
+  Future<void> loadReviews({String? reviewableType, int? reviewableId}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -58,10 +56,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
       );
 
       if (response.success) {
-        state = state.copyWith(
-          reviews: response.data,
-          isLoading: false,
-        );
+        state = state.copyWith(reviews: response.data, isLoading: false);
       } else {
         state = state.copyWith(
           reviews: [],
@@ -110,16 +105,18 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
 
     try {
       final reviewDataSource = getIt<ReviewRemoteDataSource>();
+      if (reviewableType.toLowerCase() != 'order') {
+        throw ArgumentError('Reviews must be submitted for a completed order.');
+      }
       final request = CreateReviewRequestDto(
-        reviewableType: reviewableType,
-        reviewableId: reviewableId,
+        orderId: reviewableId,
         rating: rating,
         comment: comment,
       );
 
       final response = await reviewDataSource.createReview(request);
 
-      if (response.success) {
+      if (response) {
         state = state.copyWith(isSubmitting: false);
 
         if (context != null && context.mounted) {
@@ -190,7 +187,9 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
   }
 }
 
-final reviewProvider =
-    StateNotifierProvider<ReviewNotifier, ReviewState>((ref) {
+final reviewProvider = StateNotifierProvider<ReviewNotifier, ReviewState>((
+  ref,
+) {
+  ref.watch(userSessionEpochProvider);
   return ReviewNotifier();
 });

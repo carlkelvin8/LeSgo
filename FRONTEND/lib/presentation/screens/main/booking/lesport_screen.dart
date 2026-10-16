@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../widgets/widgets.dart';
@@ -69,7 +70,7 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
     final maxWidth = ResponsiveUtils.maxContentWidth(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: const BookingServiceHeader(title: 'LesTransport'),
       body: SafeArea(
         child: Center(
@@ -99,7 +100,7 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface(context, Colors.white),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),

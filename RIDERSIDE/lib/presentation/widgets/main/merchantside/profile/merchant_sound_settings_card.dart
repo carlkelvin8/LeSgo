@@ -45,7 +45,7 @@ class MerchantSoundSettingsCard extends ConsumerWidget {
               const Spacer(),
               Switch(
                 value: soundEnabled,
-                activeColor: const Color(0xFF5F2D82),
+                activeThumbColor: const Color(0xFF5F2D82),
                 onChanged: (value) {
                   ref.read(soundEnabledProvider.notifier).set(value);
                 },

@@ -15,6 +15,7 @@ class ChatWebSocketService {
 
   ReverbClient? _client;
   bool _connected = false;
+  Future<bool>? _connecting;
   final Set<ChatWebSocketEventHandler> _handlers = {};
   final Set<String> _subscribedChannels = {};
 
@@ -31,6 +32,17 @@ class ChatWebSocketService {
       return true;
     }
 
+    final pending = _connecting;
+    if (pending != null) return pending;
+
+    final attempt = _openConnection(userId).whenComplete(() {
+      _connecting = null;
+    });
+    _connecting = attempt;
+    return attempt;
+  }
+
+  Future<bool> _openConnection(int userId) async {
     final config = await RealtimeRemoteDataSource.fetchConfig();
     if (config['enabled'] != true) {
       debugPrint('WebSocket disabled: Reverb not configured on server');
@@ -48,6 +60,10 @@ class ChatWebSocketService {
 
     if (host.isEmpty || appKey.isEmpty || authEndpoint.isEmpty) {
       return false;
+    }
+
+    if (_client != null) {
+      await disconnect();
     }
 
     _client = ReverbClient.instance(

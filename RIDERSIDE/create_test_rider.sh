@@ -3,7 +3,7 @@
 # Create Test Rider Account Script
 # This script creates a test rider account for development/testing
 
-API_BASE_URL="https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api/v1"
+API_BASE_URL="https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api/v1"
 
 echo "========================================="
 echo "Creating Test Rider Account"

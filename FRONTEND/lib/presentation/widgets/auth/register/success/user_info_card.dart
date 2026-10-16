@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -22,10 +23,10 @@ class UserInfoCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.grey.shade200,
+          color: AppColors.foreground(context, Colors.grey.shade200),
           width: 1,
         ),
         boxShadow: [
@@ -43,7 +44,7 @@ class UserInfoCard extends StatelessWidget {
             "Here's your information:",
             style: TextStyle(
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.black54,
+              color: AppColors.foreground(context, Colors.black54),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -60,7 +61,7 @@ class UserInfoCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -68,7 +69,7 @@ class UserInfoCard extends StatelessWidget {
                       birthday,
                       style: TextStyle(
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.grey[700],
+                        color: AppColors.foreground(context, Colors.grey[700]!),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -76,7 +77,7 @@ class UserInfoCard extends StatelessWidget {
                       email,
                       style: TextStyle(
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.grey[700],
+                        color: AppColors.foreground(context, Colors.grey[700]!),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -84,7 +85,7 @@ class UserInfoCard extends StatelessWidget {
                       phoneNumber,
                       style: TextStyle(
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.grey[700],
+                        color: AppColors.foreground(context, Colors.grey[700]!),
                       ),
                     ),
                   ],

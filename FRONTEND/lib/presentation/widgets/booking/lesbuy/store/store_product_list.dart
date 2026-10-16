@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/booking/lesbuy/product.dart';
@@ -25,7 +26,7 @@ class StoreProductList extends StatelessWidget {
               Icon(
                 Icons.search_off,
                 size: ResponsiveUtils.fontSize(context, 48),
-                color: Colors.grey[400],
+                color: AppColors.foreground(context, Colors.grey[400]!),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
               Text(
@@ -33,7 +34,7 @@ class StoreProductList extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 16),
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                 ),
               ),
             ],
@@ -52,9 +53,9 @@ class StoreProductList extends StatelessWidget {
         return Container(
           margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 16)),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface(context, Colors.white),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!),
+            border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
           ),
           child: Material(
             color: Colors.transparent,
@@ -76,14 +77,14 @@ class StoreProductList extends StatelessWidget {
                       child: Container(
                         width: ResponsiveUtils.cardImageSize(context, 80),
                         height: ResponsiveUtils.cardImageSize(context, 80),
-                        color: Colors.grey[100],
+                        color: AppColors.surface(context, Colors.grey[100]!),
                         child: Image.asset(
                           product.imagePath,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Icon(
                               Icons.image_not_supported,
-                              color: Colors.grey[400],
+                              color: AppColors.foreground(context, Colors.grey[400]!),
                               size: 24,
                             );
                           },
@@ -103,7 +104,7 @@ class StoreProductList extends StatelessWidget {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 16),
                               fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                              color: AppColors.foreground(context, Colors.black87),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -114,7 +115,7 @@ class StoreProductList extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12),
-                              color: Colors.grey[600],
+                              color: AppColors.foreground(context, Colors.grey[600]!),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -129,7 +130,7 @@ class StoreProductList extends StatelessWidget {
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(context, 14),
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF5F2D82),
+                                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                                 ),
                               ),
                             ],

@@ -248,7 +248,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
           infoWindow: InfoWindow(
             title: 'Order #${order.id}',
-            snippet: 'â‚±${order.displayEarnings.toStringAsFixed(0)} â€¢ ${order.distanceKm.toStringAsFixed(1)}km',
+            snippet: '₱${order.displayEarnings.toStringAsFixed(0)} • ${order.distanceKm.toStringAsFixed(1)}km',
           ),
         ),
       );
@@ -688,7 +688,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 ),
                 const Spacer(),
                 Text(
-                  'â‚±${order.displayEarnings.toStringAsFixed(2)}',
+                  '₱${order.displayEarnings.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 16.0,
@@ -884,7 +884,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               ),
               const Spacer(),
               Text(
-                'â‚±${order.displayEarnings.toStringAsFixed(0)}',
+                '₱${order.displayEarnings.toStringAsFixed(0)}',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 16.0,

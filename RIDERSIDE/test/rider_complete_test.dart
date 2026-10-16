@@ -113,54 +113,87 @@ void main() {
   group('BookingWorkflow', () {
     group('mapApiStatus - LesRide (serviceId=2)', () {
       test('accepted → pending', () {
-        expect(BookingWorkflow.mapApiStatus('accepted', 2), BookingStatus.pending);
+        expect(
+          BookingWorkflow.mapApiStatus('accepted', 2),
+          BookingStatus.pending,
+        );
       });
 
       test('driver_arrived_at_pickup → forPickUp', () {
-        expect(BookingWorkflow.mapApiStatus('driver_arrived_at_pickup', 2), BookingStatus.forPickUp);
+        expect(
+          BookingWorkflow.mapApiStatus('driver_arrived_at_pickup', 2),
+          BookingStatus.forPickUp,
+        );
       });
 
       test('in_progress → inProgress', () {
-        expect(BookingWorkflow.mapApiStatus('in_progress', 2), BookingStatus.inProgress);
+        expect(
+          BookingWorkflow.mapApiStatus('in_progress', 2),
+          BookingStatus.inProgress,
+        );
       });
 
       test('picked_up → forDelivery', () {
-        expect(BookingWorkflow.mapApiStatus('picked_up', 2), BookingStatus.forDelivery);
+        expect(
+          BookingWorkflow.mapApiStatus('picked_up', 2),
+          BookingStatus.forDelivery,
+        );
       });
 
       test('completed → delivered', () {
-        expect(BookingWorkflow.mapApiStatus('completed', 2), BookingStatus.delivered);
+        expect(
+          BookingWorkflow.mapApiStatus('completed', 2),
+          BookingStatus.delivered,
+        );
       });
 
       test('cancelled → cancelled', () {
-        expect(BookingWorkflow.mapApiStatus('cancelled', 2), BookingStatus.cancelled);
+        expect(
+          BookingWorkflow.mapApiStatus('cancelled', 2),
+          BookingStatus.cancelled,
+        );
       });
     });
 
     group('mapApiStatus - LesEat (serviceId=3)', () {
       test('ready_for_pickup → forPickUp', () {
-        expect(BookingWorkflow.mapApiStatus('ready_for_pickup', 3), BookingStatus.forPickUp);
+        expect(
+          BookingWorkflow.mapApiStatus('ready_for_pickup', 3),
+          BookingStatus.forPickUp,
+        );
       });
 
       test('picked_up → forDelivery', () {
-        expect(BookingWorkflow.mapApiStatus('picked_up', 3), BookingStatus.forDelivery);
+        expect(
+          BookingWorkflow.mapApiStatus('picked_up', 3),
+          BookingStatus.forDelivery,
+        );
       });
     });
 
     group('mapApiStatus - LesBuy (serviceId=4)', () {
       test('accepted → inProgress', () {
-        expect(BookingWorkflow.mapApiStatus('accepted', 4), BookingStatus.inProgress);
+        expect(
+          BookingWorkflow.mapApiStatus('accepted', 4),
+          BookingStatus.inProgress,
+        );
       });
 
       test('picked_up → forDelivery', () {
-        expect(BookingWorkflow.mapApiStatus('picked_up', 4), BookingStatus.forDelivery);
+        expect(
+          BookingWorkflow.mapApiStatus('picked_up', 4),
+          BookingStatus.forDelivery,
+        );
       });
     });
 
     test('isActiveApiStatus recognizes all active statuses', () {
       expect(BookingWorkflow.isActiveApiStatus('accepted'), isTrue);
       expect(BookingWorkflow.isActiveApiStatus('ready_for_pickup'), isTrue);
-      expect(BookingWorkflow.isActiveApiStatus('driver_arrived_at_pickup'), isTrue);
+      expect(
+        BookingWorkflow.isActiveApiStatus('driver_arrived_at_pickup'),
+        isTrue,
+      );
       expect(BookingWorkflow.isActiveApiStatus('in_progress'), isTrue);
       expect(BookingWorkflow.isActiveApiStatus('picked_up'), isTrue);
     });
@@ -180,26 +213,35 @@ void main() {
     });
 
     test('isHistoryEligible includes completed/cancelled orders', () {
-      expect(BookingWorkflow.isHistoryEligible({'status': 'completed'}), isTrue);
-      expect(BookingWorkflow.isHistoryEligible({'status': 'cancelled'}), isTrue);
+      expect(
+        BookingWorkflow.isHistoryEligible({'status': 'completed'}),
+        isTrue,
+      );
+      expect(
+        BookingWorkflow.isHistoryEligible({'status': 'cancelled'}),
+        isTrue,
+      );
     });
 
     test('isHistoryEligible includes active assigned orders', () {
       expect(
-        BookingWorkflow.isHistoryEligible({'status': 'accepted', 'driver_id': 1}),
+        BookingWorkflow.isHistoryEligible({
+          'status': 'accepted',
+          'driver_id': 1,
+        }),
         isTrue,
       );
       expect(
-        BookingWorkflow.isHistoryEligible({'status': 'picked_up', 'driver_id': 1}),
+        BookingWorkflow.isHistoryEligible({
+          'status': 'picked_up',
+          'driver_id': 1,
+        }),
         isTrue,
       );
     });
 
     test('isHistoryEligible excludes unassigned pending', () {
-      expect(
-        BookingWorkflow.isHistoryEligible({'status': 'pending'}),
-        isFalse,
-      );
+      expect(BookingWorkflow.isHistoryEligible({'status': 'pending'}), isFalse);
       expect(
         BookingWorkflow.isHistoryEligible({'status': 'searching_driver'}),
         isFalse,
@@ -235,11 +277,17 @@ void main() {
 
     test('nextActions empty for terminal statuses', () {
       expect(
-        BookingWorkflow.nextActions(apiStatus: 'completed', category: BookingCategory.lesRide),
+        BookingWorkflow.nextActions(
+          apiStatus: 'completed',
+          category: BookingCategory.lesRide,
+        ),
         isEmpty,
       );
       expect(
-        BookingWorkflow.nextActions(apiStatus: 'cancelled', category: BookingCategory.lesBuy),
+        BookingWorkflow.nextActions(
+          apiStatus: 'cancelled',
+          category: BookingCategory.lesBuy,
+        ),
         isEmpty,
       );
     });
@@ -363,10 +411,22 @@ void main() {
     });
 
     test('serviceName maps service IDs correctly', () {
-      expect(RiderOrder.fromJson(_minimalOrder(serviceId: 1)).serviceName, 'LesGo');
-      expect(RiderOrder.fromJson(_minimalOrder(serviceId: 2)).serviceName, 'LesRide');
-      expect(RiderOrder.fromJson(_minimalOrder(serviceId: 3)).serviceName, 'LesEat');
-      expect(RiderOrder.fromJson(_minimalOrder(serviceId: 4)).serviceName, 'LesBuy');
+      expect(
+        RiderOrder.fromJson(_minimalOrder(serviceId: 1)).serviceName,
+        'LesGo',
+      );
+      expect(
+        RiderOrder.fromJson(_minimalOrder(serviceId: 2)).serviceName,
+        'LesRide',
+      );
+      expect(
+        RiderOrder.fromJson(_minimalOrder(serviceId: 3)).serviceName,
+        'LesEat',
+      );
+      expect(
+        RiderOrder.fromJson(_minimalOrder(serviceId: 4)).serviceName,
+        'LesBuy',
+      );
     });
 
     test('displayEarnings returns shipping fee', () {
@@ -420,7 +480,11 @@ void main() {
 
     test('copyWith clears active order', () {
       final state = RiderOrdersState(
-        activeOrder: RiderOrder.fromJson({..._minimalOrder(), 'status': 'accepted', 'driver_id': 1}),
+        activeOrder: RiderOrder.fromJson({
+          ..._minimalOrder(),
+          'status': 'accepted',
+          'driver_id': 1,
+        }),
       );
       final cleared = state.copyWith(clearActiveOrder: true);
       expect(cleared.activeOrder, isNull);
@@ -445,16 +509,25 @@ void main() {
       expect(MerchantOrderOpsUtils.canAccept('searching_driver'), isFalse);
     });
 
-    test('canCancelAfterAccept for searching/accepted/ready', () {
-      expect(MerchantOrderOpsUtils.canCancelAfterAccept('searching_driver'), isTrue);
-      expect(MerchantOrderOpsUtils.canCancelAfterAccept('accepted'), isTrue);
-      expect(MerchantOrderOpsUtils.canCancelAfterAccept('ready_for_pickup'), isTrue);
+    test('canCancelAfterAccept for backend-allowed statuses', () {
+      expect(
+        MerchantOrderOpsUtils.canCancelAfterAccept('searching_driver'),
+        isTrue,
+      );
+      expect(MerchantOrderOpsUtils.canCancelAfterAccept('accepted'), isFalse);
+      expect(
+        MerchantOrderOpsUtils.canCancelAfterAccept('ready_for_pickup'),
+        isTrue,
+      );
       expect(MerchantOrderOpsUtils.canCancelAfterAccept('picked_up'), isFalse);
       expect(MerchantOrderOpsUtils.canCancelAfterAccept('completed'), isFalse);
     });
 
     test('canMarkReadyForPickup for searching/accepted', () {
-      expect(MerchantOrderOpsUtils.canMarkReadyForPickup('searching_driver'), isTrue);
+      expect(
+        MerchantOrderOpsUtils.canMarkReadyForPickup('searching_driver'),
+        isTrue,
+      );
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('accepted'), isTrue);
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('pending'), isFalse);
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('picked_up'), isFalse);
@@ -464,7 +537,10 @@ void main() {
       expect(MerchantOrderOpsUtils.isRiderFlowStatus('picked_up'), isTrue);
       expect(MerchantOrderOpsUtils.isRiderFlowStatus('in_progress'), isTrue);
       expect(MerchantOrderOpsUtils.isRiderFlowStatus('completed'), isTrue);
-      expect(MerchantOrderOpsUtils.isRiderFlowStatus('searching_driver'), isFalse);
+      expect(
+        MerchantOrderOpsUtils.isRiderFlowStatus('searching_driver'),
+        isFalse,
+      );
     });
   });
 }

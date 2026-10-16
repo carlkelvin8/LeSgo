@@ -166,7 +166,7 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
         intervalDuration: intervalDuration,
         foregroundNotificationConfig: const ForegroundNotificationConfig(
           notificationText:
-              'LezGo is sharing your location for active deliveries.',
+              'LeSgo is sharing your location for active deliveries.',
           notificationTitle: 'Location tracking active',
           enableWakeLock: true,
         ),

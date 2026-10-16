@@ -4,6 +4,8 @@ part 'register_merchant_request_dto.g.dart';
 
 @JsonSerializable()
 class RegisterMerchantRequestDto {
+  @JsonKey(name: 'phone_verification_token')
+  final String? phoneVerificationToken;
   final String name;
   final String email;
   final String? phone;
@@ -36,6 +38,7 @@ class RegisterMerchantRequestDto {
   final String? dtiPermitPath;
 
   RegisterMerchantRequestDto({
+    this.phoneVerificationToken,
     required this.name,
     required this.email,
     this.phone,
@@ -47,7 +50,7 @@ class RegisterMerchantRequestDto {
     this.zipCode,
     this.latitude,
     this.longitude,
-    this.termsAccepted = true,
+    this.termsAccepted = false,
     this.privacyAccepted = true,
     this.selfiePath,
     this.validIdPath,

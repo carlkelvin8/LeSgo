@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/voucher_service_utils.dart';
@@ -15,7 +16,7 @@ Future<String?> showVoucherBottomSheet(
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: AppColors.surface(context, Colors.white),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -98,7 +99,7 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: AppColors.surface(context, Colors.grey[300]!),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -138,10 +139,10 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
                       hintText: 'Enter voucher code',
                       hintStyle: TextStyle(
                         fontFamily: 'TT Fors',
-                        color: Colors.grey[400],
+                        color: AppColors.foreground(context, Colors.grey[400]!),
                       ),
                       filled: true,
-                      fillColor: Colors.grey[100],
+                      fillColor: AppColors.surface(context, Colors.grey[100]!),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -195,7 +196,7 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
                           _error!,
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Colors.grey[500],
+                            color: AppColors.foreground(context, Colors.grey[500]!),
                           ),
                         ),
                       )
@@ -205,7 +206,7 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.local_offer_outlined,
-                                    size: 48, color: Colors.grey[300]),
+                                    size: 48, color: AppColors.foreground(context, Colors.grey[300]!)),
                                 const SizedBox(height: 12),
                                 Text(
                                   widget.serviceId == null
@@ -213,7 +214,7 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
                                       : 'No LesGo vouchers available',
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
-                                    color: Colors.grey[500],
+                                    color: AppColors.foreground(context, Colors.grey[500]!),
                                   ),
                                 ),
                               ],
@@ -259,12 +260,12 @@ class _VoucherCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface(context, Colors.white),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isEligible
-                  ? const Color(0xFF5F2D82).withValues(alpha: 0.3)
-                  : Colors.grey[300]!,
+                  ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.3)
+                  : AppColors.foreground(context, Colors.grey[300]!),
             ),
             boxShadow: [
               BoxShadow(
@@ -279,7 +280,7 @@ class _VoucherCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -307,7 +308,7 @@ class _VoucherCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: AppColors.foreground(context, Colors.grey[600]!),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -319,15 +320,15 @@ class _VoucherCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF5F2D82),
+                            color: AppColors.accent(context, Color(0xFF5F2D82)),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             voucher.code,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 11,
-                              color: Colors.white,
+                              color: AppColors.onAccent(context),
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.5,
                             ),

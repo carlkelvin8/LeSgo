@@ -10,7 +10,10 @@ import 'dto/merchant/order_dto.dart';
 import 'dto/merchant/review_dto.dart';
 
 class MerchantRemoteDataSource {
-  Dio get _dio => ApiService.dio;
+  MerchantRemoteDataSource({Dio? dio}) : _client = dio;
+
+  final Dio? _client;
+  Dio get _dio => _client ?? ApiService.dio;
   
   /// Get partner profile by ID
   Future<PartnerDto> getPartnerProfile(int partnerId) async {
@@ -24,9 +27,12 @@ class MerchantRemoteDataSource {
   }
   
   /// Get menu with categories and items for a partner
-  Future<MenuResponse> getMenu(int partnerId) async {
+  Future<MenuResponse> getMenu(int partnerId) =>
+      _getMenu('/v1/partners/$partnerId/menu');
+
+  Future<MenuResponse> _getMenu(String path) async {
     try {
-      final response = await _dio.get('/v1/partners/$partnerId/menu');
+      final response = await _dio.get(path);
       final raw = response.data as Map<String, dynamic>;
       final normalized = MenuImageUtils.normalizeMenuJson(raw);
       final data = normalized['data'] ?? normalized;
@@ -45,91 +51,17 @@ class MerchantRemoteDataSource {
     }
   }
   
-  /// Get all menu items for a partner (flattened list)
+  /// Includes hidden categories and sold-out items; failures remain visible.
+  Future<MenuResponse> getMerchantMenu(int partnerId) =>
+      _getMenu('/v1/partners/$partnerId/merchant-menu');
+
   Future<List<MenuItemDto>> getMenuItems(int partnerId) async {
-    try {
-      final directItems = await _fetchPartnerMenuItemsList(partnerId);
-      if (directItems.isNotEmpty) return directItems;
-
-      final menuResponse = await getMenu(partnerId);
-      final items = <MenuItemDto>[];
-
-      for (final category in menuResponse.categories) {
-        if (category.availableItems != null) {
-          items.addAll(category.availableItems!);
-        }
-      }
-
-      return items;
-    } catch (e) {
-      throw Exception('Failed to fetch menu items: ${ApiService.extractError(e)}');
-    }
+    final menu = await getMerchantMenu(partnerId);
+    return [
+      for (final category in menu.categories) ...?category.availableItems,
+    ];
   }
 
-  /// Merchant menu including sold-out / hidden items for inventory management.
-  Future<MenuResponse> getMerchantMenu(int partnerId) async {
-    final menuResponse = await getMenu(partnerId);
-    final allItems = await getMenuItems(partnerId);
-    if (allItems.isEmpty) return menuResponse;
-
-    final itemsByCategory = <int, List<MenuItemDto>>{};
-    for (final item in allItems) {
-      itemsByCategory.putIfAbsent(item.menuCategoryId, () => []).add(item);
-    }
-
-    final categories = menuResponse.categories.map((category) {
-      final items = itemsByCategory[category.id];
-      if (items == null || items.isEmpty) return category;
-      return MenuCategoryDto(
-        id: category.id,
-        partnerId: category.partnerId,
-        name: category.name,
-        description: category.description,
-        imageUrl: category.imageUrl,
-        iconEmoji: category.iconEmoji,
-        isActive: category.isActive,
-        sortOrder: category.sortOrder,
-        availableItems: items,
-      );
-    }).toList();
-
-    return MenuResponse(categories: categories, partner: menuResponse.partner);
-  }
-
-  Future<List<MenuItemDto>> _fetchPartnerMenuItemsList(int partnerId) async {
-    try {
-      final response = await _dio.get(
-        '/v1/partners/$partnerId/menu-items',
-        queryParameters: {'per_page': 200},
-      );
-      return _parseMenuItemsList(response.data);
-    } catch (_) {
-      return const [];
-    }
-  }
-
-  List<MenuItemDto> _parseMenuItemsList(dynamic raw) {
-    final root = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
-    final data = root['data'] ?? root;
-
-    if (data is List) {
-      return data
-          .whereType<Map>()
-          .map((item) => MenuItemDto.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
-    }
-
-    if (data is Map) {
-      final list = (data['data'] as List<dynamic>? ?? const [])
-          .whereType<Map>()
-          .map((item) => MenuItemDto.fromJson(Map<String, dynamic>.from(item)))
-          .toList();
-      return list;
-    }
-
-    return const [];
-  }
-  
   /// Get orders for a partner
   Future<List<OrderDto>> getPartnerOrders(int partnerId, {String? status}) async {
     try {
@@ -142,25 +74,32 @@ class MerchantRemoteDataSource {
         queryParams['status'] = status;
       }
       
-      final response = await _dio.get('/v1/orders', queryParameters: queryParams);
-      
-      // Handle both paginated and non-paginated responses
-      final dynamic responseData = response.data['data'];
-      final List<dynamic> ordersList;
-      
-      if (responseData is Map && responseData.containsKey('data')) {
-        // Paginated response
-        ordersList = responseData['data'] as List<dynamic>;
-      } else if (responseData is List) {
-        // Direct list response
-        ordersList = responseData;
-      } else {
-        ordersList = [];
-      }
-      
-      return ordersList
-          .map((json) => OrderDto.fromJson(json as Map<String, dynamic>))
-          .toList();
+      final orders = <int, OrderDto>{};
+      var page = 1;
+      var lastPage = 1;
+      do {
+        final response = await _dio.get('/v1/orders', queryParameters: {
+          ...queryParams,
+          'page': page,
+        });
+        final root = response.data as Map;
+        final data = root['data'];
+        final rows = data is Map ? data['data'] : data;
+        if (rows is! List) {
+          throw const FormatException('Invalid orders response');
+        }
+        for (final row in rows) {
+          final order = OrderDto.fromJson(Map<String, dynamic>.from(row as Map));
+          orders[order.id] = order;
+        }
+        final meta = root['meta'] is Map ? root['meta'] as Map : data;
+        lastPage = meta is Map
+            ? int.tryParse('${meta['last_page']}') ?? page
+            : page;
+        page++;
+        if (rows.isEmpty) break;
+      } while (page <= lastPage);
+      return orders.values.toList();
     } catch (e) {
       throw Exception('Failed to fetch partner orders: ${ApiService.extractError(e)}');
     }

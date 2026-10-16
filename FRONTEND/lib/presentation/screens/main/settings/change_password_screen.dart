@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -67,11 +68,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       appBar: AppBar(
         title: const Text('Change Password'),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
@@ -85,7 +84,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: Colors.grey[700],
+                  color: AppColors.foreground(context, Colors.grey[700]!),
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -122,7 +121,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               FilledButton(
                 onPressed: _isSubmitting ? null : _submit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5F2D82),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: _isSubmitting
@@ -163,7 +162,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surface(context, Colors.white),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         suffixIcon: IconButton(
           icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),

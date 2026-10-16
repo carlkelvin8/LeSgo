@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,7 +18,7 @@ class ChangePhoneSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -141,7 +142,7 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: AppColors.surface(context, Colors.grey[300]!),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -161,7 +162,7 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),

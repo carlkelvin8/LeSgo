@@ -42,6 +42,14 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
 
   void _openChat(ConversationDto conversation) {
     final orderId = conversation.orderId ?? 0;
+    if (orderId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chat is not available for this conversation.'),
+        ),
+      );
+      return;
+    }
     final customerName = conversation.customer?.name ?? 'Customer';
     Navigator.push(
       context,

@@ -80,7 +80,7 @@ class _RiderDocumentVerificationScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: selectedType,
+                initialValue: selectedType,
                 items: _types
                     .map((t) => t as Map<String, dynamic>)
                     .where((t) => t['type'] != null)

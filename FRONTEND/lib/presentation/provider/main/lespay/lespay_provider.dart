@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/app_preferences_service.dart';
@@ -111,6 +112,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
     if (getIt.isRegistered<AppPreferencesService>()) {
       await getIt<AppPreferencesService>().setLespayBalanceVisible(next);
     }
+    if (!mounted) return;
     state = state.copyWith(balanceVisible: next);
   }
 
@@ -119,6 +121,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
 
     try {
       final wallet = await getIt<WalletRemoteDataSource>().getMyWallet();
+      if (!mounted) return;
       state = state.copyWith(
         balance: wallet.balance,
         isLoading: false,
@@ -126,6 +129,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
         clearError: true,
       );
     } on DioException catch (e) {
+      if (!mounted) return;
       debugPrint('Wallet load failed: $e');
       state = state.copyWith(
         isLoading: false,
@@ -139,6 +143,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
               ),
       );
     } catch (e) {
+      if (!mounted) return;
       debugPrint('Wallet load failed: $e');
       state = state.copyWith(
         isLoading: false,
@@ -153,6 +158,11 @@ class LespayNotifier extends StateNotifier<LespayState> {
   }
 
   Future<TopUpCheckout?> startTopUp(double amount) async {
+    if (state.isProcessingTopUp) return null;
+    if (!amount.isFinite || amount <= 0) {
+      state = state.copyWith(error: 'Enter a valid top-up amount.');
+      return null;
+    }
     state = state.copyWith(
       isProcessingTopUp: true,
       clearError: true,
@@ -161,12 +171,14 @@ class LespayNotifier extends StateNotifier<LespayState> {
 
     try {
       final checkout = await _createTopUpCheckout(amount);
+      if (!mounted) return null;
       state = state.copyWith(
         isProcessingTopUp: false,
         pendingCheckout: checkout,
       );
       return checkout;
     } catch (e, stack) {
+      if (!mounted) return null;
       debugPrint('LesPay top-up error: $e\n$stack');
       state = state.copyWith(
         isProcessingTopUp: false,
@@ -185,6 +197,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
   Future<TopUpCheckout?> startXenditTopUp(double amount) => startTopUp(amount);
 
   Future<bool> completeTopUp(TopUpCheckout checkout) async {
+    if (state.isProcessingTopUp) return false;
     state = state.copyWith(isProcessingTopUp: true, clearError: true);
 
     try {
@@ -200,6 +213,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
           externalReference: checkout.externalId,
         );
       } on DioException catch (e) {
+        if (!mounted) return false;
         final code = e.response?.statusCode;
         if (code == 402 || code == 400) {
           // Payment genuinely not completed yet
@@ -226,7 +240,9 @@ class LespayNotifier extends StateNotifier<LespayState> {
         // 409 = already processed, treat as success
       }
 
+      if (!mounted) return false;
       await loadWallet();
+      if (!mounted) return false;
 
       if (!state.walletLoaded) {
         state = state.copyWith(
@@ -244,12 +260,18 @@ class LespayNotifier extends StateNotifier<LespayState> {
       );
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(isProcessingTopUp: false, error: _extractError(e));
       return false;
     }
   }
 
   Future<void> withdraw(double amount, {String method = 'bank'}) async {
+    if (state.isLoading) return;
+    if (!amount.isFinite || amount <= 0) {
+      state = state.copyWith(error: 'Enter a valid withdrawal amount.');
+      return;
+    }
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
@@ -262,8 +284,10 @@ class LespayNotifier extends StateNotifier<LespayState> {
         amount: amount,
         withdrawalMethod: method,
       );
+      if (!mounted) return;
       await loadWallet();
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoading: false, error: _extractError(e));
     }
   }
@@ -277,8 +301,10 @@ class LespayNotifier extends StateNotifier<LespayState> {
     );
     try {
       final list = await getIt<WalletRemoteDataSource>().getMyTransactions();
+      if (!mounted) return;
       state = state.copyWith(transactions: list, isLoadingTransactions: false);
     } on DioException catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoadingTransactions: false,
         transactionsError: ApiErrorMapper.message(
@@ -288,6 +314,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         isLoadingTransactions: false,
         transactionsError: e.toString(),
@@ -298,6 +325,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
   Future<void> syncAfterWalletOrder(double amount) async {
     if (amount <= 0) return;
     await loadWallet();
+    if (!mounted) return;
     if (!state.walletLoaded) {
       state = state.copyWith(
         error: 'Could not verify LesPay balance after payment.',
@@ -320,6 +348,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
     try {
       final invoiceData = await getIt<WalletRemoteDataSource>()
           .createTopUpInvoice(amount: pricing.walletAmount);
+      if (!mounted) throw StateError('Wallet session changed.');
       final invoiceId = invoiceData['invoice_id']?.toString();
       final invoiceUrl = invoiceData['invoice_url']?.toString();
       final provider = invoiceData['provider']?.toString() ?? 'paymongo';
@@ -339,6 +368,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
         );
       }
     } catch (e) {
+      if (!mounted) rethrow;
       debugPrint('Wallet API top-up invoice failed, trying gateway: $e');
     }
 
@@ -359,6 +389,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
             ),
           );
 
+      if (!mounted) throw StateError('Wallet session changed.');
       final invoiceUrl = gateway.data.invoiceUrl;
       if (invoiceUrl != null && invoiceUrl.isNotEmpty) {
         return TopUpCheckout(
@@ -372,6 +403,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
         );
       }
     } catch (e) {
+      if (!mounted) rethrow;
       debugPrint('Gateway top-up invoice failed: $e');
     }
 
@@ -388,6 +420,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
   }
 
   Future<bool> linkPaymentAccount(String provider) async {
+    if (state.isProcessingTopUp) return false;
     state = state.copyWith(isProcessingTopUp: true, clearError: true);
     try {
       await getIt<WalletRemoteDataSource>().linkAccount(
@@ -398,9 +431,11 @@ class LespayNotifier extends StateNotifier<LespayState> {
           _ => 'Bank Account',
         },
       );
+      if (!mounted) return false;
       state = state.copyWith(isProcessingTopUp: false);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(isProcessingTopUp: false, error: _extractError(e));
       return false;
     }
@@ -409,8 +444,10 @@ class LespayNotifier extends StateNotifier<LespayState> {
   Future<bool> verifyLinkedAccount(String provider) async {
     try {
       await getIt<WalletRemoteDataSource>().verifyLinkedAccount(provider);
+      if (!mounted) return false;
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(error: _extractError(e));
       return false;
     }
@@ -420,6 +457,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
 final lespayProvider = StateNotifierProvider<LespayNotifier, LespayState>((
   ref,
 ) {
+  ref.watch(userSessionEpochProvider);
   final notifier = LespayNotifier();
   notifier.loadWallet();
   notifier.loadTransactions();

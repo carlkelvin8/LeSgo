@@ -49,7 +49,7 @@ class RiderCustomerServiceChatState {
 }
 
 const _welcomeMessage =
-    'Hi! This is LeSgo Rider Support. Message our admin team here for help with safety, orders, earnings, LesPay, and account issues.';
+    'Hi! This is LeSgo Support. Message our admin team here for help with safety, orders, earnings, LesPay, and account issues.';
 
 class RiderCustomerServiceChatNotifier
     extends StateNotifier<RiderCustomerServiceChatState> {
@@ -159,5 +159,17 @@ class RiderCustomerServiceChatNotifier
 
 final riderCustomerServiceChatProvider = StateNotifierProvider.autoDispose<
     RiderCustomerServiceChatNotifier, RiderCustomerServiceChatState>((ref) {
-  return RiderCustomerServiceChatNotifier(getIt<GeminiCustomerService>());
+  final notifier =
+      RiderCustomerServiceChatNotifier(getIt<GeminiCustomerService>());
+  final keepAliveLink = ref.keepAlive();
+  final removeListener = notifier.addListener(
+    (state) {
+      if (state.messages.length <= 1) {
+        keepAliveLink.close();
+      }
+    },
+    fireImmediately: false,
+  );
+  ref.onDispose(removeListener);
+  return notifier;
 });

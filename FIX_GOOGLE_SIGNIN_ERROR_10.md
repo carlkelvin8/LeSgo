@@ -61,7 +61,7 @@ keytool -list -v -keystore "%USERPROFILE%\.android\debug.keystore" -alias androi
 
 Kunin ulit:
 ```
-keytool -list -v -keystore "FRONTEND\android\lesgo-customer-release.jks" -alias lesgo-customer -storepass "LesgoCustomerRelease2026!"
+keytool -list -v -keystore "FRONTEND\android\lesgo-customer-release.jks" -alias lesgo-customer -storepass "<from FRONTEND/android/key.properties - never commit it>"
 ```
 
 ⚠️ **I-add ang PAREHONG SHA-1** (debug + release) sa Google Cloud Console para gumana sa testing AT production.

@@ -7,7 +7,7 @@ import '../../../core/di/injection.dart';
 import '../../../core/di/local_storage_service.dart';
 import '../../provider/auth/auth_provider.dart';
 
-/// Decides whether to restore a remembered session or show the login screen.
+/// Restores any saved session token, or shows login when no token exists.
 class AuthStartupScreen extends ConsumerStatefulWidget {
   const AuthStartupScreen({super.key});
 
@@ -25,7 +25,7 @@ class _AuthStartupScreenState extends ConsumerState<AuthStartupScreen> {
   Future<void> _bootstrap() async {
     final storage = getIt<LocalStorageService>();
 
-    if (storage.isRememberMeSessionValid()) {
+    if ((storage.token ?? '').isNotEmpty) {
       final restored = await ref.read(authProvider.notifier).restoreSession();
       if (!mounted) return;
 
@@ -34,9 +34,8 @@ class _AuthStartupScreenState extends ConsumerState<AuthStartupScreen> {
         return;
       }
 
-      await storage.clearRememberMeSession();
-    } else if ((storage.token ?? '').isNotEmpty) {
-      await storage.clearToken();
+      // A rejected token is cleared by restoreSession; transient failures keep
+      // the token for the next attempt rather than silently signing out.
     }
 
     if (!mounted) return;

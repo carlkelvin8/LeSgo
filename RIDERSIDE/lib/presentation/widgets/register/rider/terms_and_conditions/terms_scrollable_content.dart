@@ -4,7 +4,8 @@ import '../../../../../core/utils/utils.dart';
 
 /// The scrollable terms and conditions text container with a purple accent line.
 class TermsScrollableContent extends StatelessWidget {
-  const TermsScrollableContent({super.key});
+  final String? content;
+  const TermsScrollableContent({super.key, this.content});
 
   @override
   Widget build(BuildContext context) {
@@ -24,19 +25,34 @@ class TermsScrollableContent extends StatelessWidget {
               bottom: ResponsiveUtils.spacing(context, 16),
             ),
             child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionTitle(context, 'Rider Terms and Conditions'),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  _buildSectionText(context, AffiliateTerms.rider),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                  _buildSectionTitle(context, 'Partner Terms and Conditions'),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  _buildSectionText(context, AffiliateTerms.partner),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                ],
-              ),
+              child: content != null
+                  ? SelectableText(
+                      content!,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 13),
+                        height: 1.5,
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle(
+                          context,
+                          'Rider Terms and Conditions',
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                        _buildSectionText(context, AffiliateTerms.rider),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+                        _buildSectionTitle(
+                          context,
+                          'Partner Terms and Conditions',
+                        ),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                        _buildSectionText(context, AffiliateTerms.partner),
+                        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                      ],
+                    ),
             ),
           ),
 

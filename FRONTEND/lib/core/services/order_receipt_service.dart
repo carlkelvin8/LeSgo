@@ -171,7 +171,7 @@ class OrderReceiptService {
           ),
           pw.SizedBox(height: 24),
           pw.Text(
-            'Thank you for using LEZGO.',
+            'Thank you for using LeSgo.',
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
           ),
         ],
@@ -270,7 +270,7 @@ class OrderReceiptService {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'LEZGO',
+          'LeSgo',
           style: pw.TextStyle(
             fontSize: 28,
             fontWeight: pw.FontWeight.bold,
@@ -278,7 +278,7 @@ class OrderReceiptService {
           ),
         ),
         pw.Text(
-          'Cagayan de Oro, Philippines',
+          'Claveria, Cagayan, Philippines',
           style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
         ),
       ],

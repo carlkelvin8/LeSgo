@@ -79,7 +79,8 @@ class RiderWalletState {
       if (account['provider']?.toString() == provider) {
         final meta = WalletResponseParser.parseMeta(account['meta']);
         final hasNumber = meta['account_number']?.toString().isNotEmpty == true;
-        final hasLast4 = account['account_last4']?.toString().isNotEmpty == true;
+        final hasLast4 =
+            account['account_last4']?.toString().isNotEmpty == true;
         if (hasNumber || hasLast4 || account['is_verified'] == true) {
           return account;
         }
@@ -109,21 +110,30 @@ class RiderWalletState {
 }
 
 class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
-  RiderWalletNotifier() : super(const RiderWalletState()) {
+  final Dio? _client;
+  Dio get _dio => _client ?? ApiService.dio;
+  int _walletRevision = 0;
+
+  RiderWalletNotifier({Dio? client})
+    : _client = client,
+      super(const RiderWalletState()) {
     loadWallet();
   }
 
   Future<void> loadWallet({bool silent = false}) async {
+    final revision = ++_walletRevision;
     if (!silent) {
       state = state.copyWith(isLoading: true, clearError: true);
     }
     try {
-      final data = await ApiService.dio.get('/v1/wallets/my/wallet');
+      final data = await _dio.get('/v1/wallets/my/wallet');
       final wallet = (data.data['data'] ?? data.data) as Map<String, dynamic>;
 
       final balance = _d(wallet['balance']);
       final deposit = await _loadTotalDeposits();
       final linked = await getLinkedAccounts();
+
+      if (!mounted || revision != _walletRevision) return;
 
       state = state.copyWith(
         balance: balance,
@@ -132,6 +142,7 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
         isLoading: false,
       );
     } catch (e) {
+      if (!mounted || revision != _walletRevision) return;
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),
@@ -177,14 +188,13 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
 
   /// Loads history without polluting wallet balance error state.
   Future<({List<Map<String, dynamic>> items, String? error})>
-      fetchTransactionHistory() async {
+  fetchTransactionHistory() async {
     try {
       final path = await _transactionsPath();
       final response = await ApiService.dio.get(path);
-      final items = WalletResponseParser.parseListBody(response.data)
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
+      final items = WalletResponseParser.parseListBody(
+        response.data,
+      ).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
       return (items: items, error: null);
     } catch (e) {
       return (
@@ -199,6 +209,7 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
   }
 
   Future<RiderTopUpCheckout?> startTopUp(double walletAmount) async {
+    if (state.isProcessingTopUp) return null;
     state = state.copyWith(isProcessingTopUp: true, clearError: true);
 
     try {
@@ -230,44 +241,14 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
     }
   }
 
-  Future<RiderTopUpCheckout?> _createTopUpCheckout(LespayTopupFee pricing) async {
-    final description =
-        'LesPay Top-up PHP ${pricing.walletAmount.toStringAsFixed(2)} '
-        '+ 1.5% fee (PHP ${pricing.feeAmount.toStringAsFixed(2)})';
-
-    try {
-      final response = await ApiService.dio.post(
-        '/v1/wallets/my/topup',
-        data: {
-          'amount': pricing.walletAmount,
-          'payment_method': 'paymongo',
-        },
-      );
-      final checkout = _checkoutFromResponse(response.data, pricing);
-      if (checkout != null) return checkout;
-    } catch (e) {
-      debugPrint('Wallet API top-up failed, trying gateway: $e');
-    }
-
-    try {
-      final response = await ApiService.dio.post(
-        '/v1/payment-gateway/invoices',
-        data: {
-          'amount': pricing.walletAmount,
-          'description': description,
-          'payment_method': 'paymongo',
-          'metadata': {
-            'wallet_amount': pricing.walletAmount,
-            'fee_amount': pricing.feeAmount,
-            'purpose': 'lespay_topup',
-          },
-        },
-      );
-      return _checkoutFromResponse(response.data, pricing);
-    } catch (e) {
-      if (e is DioException) rethrow;
-      throw Exception(e.toString());
-    }
+  Future<RiderTopUpCheckout?> _createTopUpCheckout(
+    LespayTopupFee pricing,
+  ) async {
+    final response = await _dio.post(
+      '/v1/wallets/my/topup',
+      data: {'amount': pricing.walletAmount, 'payment_method': 'paymongo'},
+    );
+    return _checkoutFromResponse(response.data, pricing);
   }
 
   RiderTopUpCheckout? _checkoutFromResponse(
@@ -277,7 +258,8 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
     final invoice = WalletResponseParser.extractInvoiceMap(raw);
     if (invoice == null) return null;
 
-    final invoiceId = invoice['invoice_id']?.toString() ?? invoice['id']?.toString();
+    final invoiceId =
+        invoice['invoice_id']?.toString() ?? invoice['id']?.toString();
     final invoiceUrl = invoice['invoice_url']?.toString();
 
     if (invoiceId == null ||
@@ -297,21 +279,25 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
   }
 
   Future<bool> completeTopUp(RiderTopUpCheckout checkout) async {
+    if (state.isProcessingTopUp) return false;
     state = state.copyWith(isProcessingTopUp: true, clearError: true);
 
     try {
       await _confirmTopUpOnServer(checkout);
-      await loadWallet();
+      // Force a fresh wallet load after successful top-up
+      await loadWallet(
+        silent: false,
+      ); // Explicit non-silent reload to update UI
       state = state.copyWith(isProcessingTopUp: false);
       return true;
     } on DioException catch (e) {
       final code = e.response?.statusCode;
-      if (code == 409) {
-        final paid = await _pollGatewayInvoicePaid(checkout.invoiceId);
+      if (code == 402 || code == 409) {
+        final paid = await pollInvoicePaid(checkout.invoiceId);
         if (paid) {
           try {
             await _confirmTopUpOnServer(checkout);
-            await loadWallet();
+            await loadWallet(silent: false);
             state = state.copyWith(isProcessingTopUp: false);
             return true;
           } catch (retryErr) {
@@ -338,33 +324,58 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
   }
 
   Future<void> _confirmTopUpOnServer(RiderTopUpCheckout checkout) async {
-    final response = await ApiService.dio.post(
+    final response = await _dio.post(
       '/v1/wallets/my/topup',
       data: {
         'amount': checkout.walletAmount,
-          'payment_method': 'paymongo',
-          'gateway_reference': checkout.invoiceId,
+        'payment_method': 'paymongo',
+        'gateway_reference': checkout.invoiceId,
       },
     );
-    
+
     // Verify response contains success confirmation
     final data = response.data as Map<String, dynamic>?;
     if (data == null) {
       throw Exception('TopUp confirmation failed: No response data');
     }
-    
+
     // Check for success flag
     final success = data['success'] as bool?;
-    if (success == false) {
+    if (success != true) {
       final message = data['message'] as String? ?? 'TopUp confirmation failed';
       throw Exception(message);
     }
+
+    // Extract and immediately update the wallet balance from response
+    final responseData = data['data'];
+    if (responseData is Map) {
+      final wallet = responseData['wallet'] ?? responseData;
+      if (wallet is Map) {
+        final newBalance = double.tryParse('${wallet['balance']}');
+        if (newBalance != null && newBalance.isFinite) {
+          // Immediately update state with new balance from server response
+          ++_walletRevision;
+          state = state.copyWith(
+            balance: newBalance,
+            isLoading: false,
+            clearError: true,
+          );
+          return;
+        }
+      }
+    }
+    throw Exception(
+      'Payment confirmation did not include the wallet balance. Please retry.',
+    );
   }
 
-  Future<bool> _pollGatewayInvoicePaid(String invoiceId) async {
+  /// Checks the gateway invoice status; the backend credits the wallet and
+  /// returns the fresh state when the invoice is paid.
+  Future<bool> pollInvoicePaid(String invoiceId) async {
     try {
-      final response =
-          await ApiService.dio.get('/v1/payment-gateway/invoices/$invoiceId');
+      final response = await _dio.get(
+        '/v1/payment-gateway/invoices/$invoiceId',
+      );
       final payload = response.data;
       if (payload is! Map) return false;
 
@@ -379,11 +390,12 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
 
   Future<List<Map<String, dynamic>>> getLinkedAccounts() async {
     try {
-      final response = await ApiService.dio.get('/v1/wallets/my/linked-accounts');
-      return WalletResponseParser.parseListBody(response.data)
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
+      final response = await ApiService.dio.get(
+        '/v1/wallets/my/linked-accounts',
+      );
+      return WalletResponseParser.parseListBody(
+        response.data,
+      ).whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
     } catch (e) {
       return [];
     }
@@ -396,12 +408,16 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
   }) async {
     state = state.copyWith(clearError: true);
     try {
-      await ApiService.dio.post('/v1/wallets/my/linked-accounts', data: {
-        'provider': provider,
-        'account_number':
-            WalletResponseParser.normalizePhilippineMobile(accountNumber),
-        'account_holder_name': accountHolderName.trim(),
-      });
+      await ApiService.dio.post(
+        '/v1/wallets/my/linked-accounts',
+        data: {
+          'provider': provider,
+          'account_number': WalletResponseParser.normalizePhilippineMobile(
+            accountNumber,
+          ),
+          'account_holder_name': accountHolderName.trim(),
+        },
+      );
       final linked = await getLinkedAccounts();
       state = state.copyWith(linkedAccounts: linked, clearError: true);
       return true;
@@ -427,10 +443,10 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
   Future<bool> withdraw(double amount, String method) async {
     state = state.copyWith(clearError: true);
     try {
-      final response = await ApiService.dio.post('/v1/wallets/my/withdraw', data: {
-        'amount': amount,
-        'withdrawal_method': method,
-      });
+      final response = await ApiService.dio.post(
+        '/v1/wallets/my/withdraw',
+        data: {'amount': amount, 'withdrawal_method': method},
+      );
       final raw = response.data;
       if (raw is! Map) {
         await loadWallet();

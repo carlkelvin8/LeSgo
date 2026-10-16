@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import '../../../../data/data_source/user_remote_datasource.dart';
 import '../../../../data/data_source/dto/user/user_profile_dto.dart';
 import '../../../../data/data_source/dto/user/update_user_request_dto.dart';
@@ -24,7 +25,7 @@ class ProfileState {
   final bool isLoading;
   final bool isUpdating;
   final String? error;
-  
+
   // UI fields for compatibility
   final String name;
   final String birthdate;
@@ -98,12 +99,18 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       final userDataSource = getIt<UserRemoteDataSource>();
       print('🔵 ProfileProvider: Calling getMe()...');
       final response = await userDataSource.getMe();
-      print('🔵 ProfileProvider: Response - success: ${response.success}, data: ${response.data}');
+      print(
+        '🔵 ProfileProvider: Response - success: ${response.success}, data: ${response.data}',
+      );
 
       if (response.success && response.data != null) {
         final user = response.data!;
-        print('🔵 ProfileProvider: User fields - id: ${user.id}, name: "${user.name}", email: ${user.email}, phone: ${user.phone}');
-        print('🔵 ProfileProvider: Profile photo URL from API: ${user.profilePhoto}');
+        print(
+          '🔵 ProfileProvider: User fields - id: ${user.id}, name: "${user.name}", email: ${user.email}, phone: ${user.phone}',
+        );
+        print(
+          '🔵 ProfileProvider: Profile photo URL from API: ${user.profilePhoto}',
+        );
         state = state.copyWith(
           user: user,
           name: user.name,
@@ -121,10 +128,17 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           address2: user.addressLine2 ?? '',
           isLoading: false,
         );
-        print('🔵 ProfileProvider: State updated - name: "${state.name}", email: ${state.email}, profileImageUrl: ${state.profileImageUrl}');
+        print(
+          '🔵 ProfileProvider: State updated - name: "${state.name}", email: ${state.email}, profileImageUrl: ${state.profileImageUrl}',
+        );
       } else {
-        print('🔴 ProfileProvider: Failed - success: ${response.success}, data is null: ${response.data == null}');
-        state = state.copyWith(isLoading: false, error: 'Failed to load profile');
+        print(
+          '🔴 ProfileProvider: Failed - success: ${response.success}, data is null: ${response.data == null}',
+        );
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to load profile',
+        );
       }
     } catch (e, stackTrace) {
       print('🔴 ProfileProvider: Error - $e');
@@ -161,8 +175,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
       if (response.success && response.data != null) {
         final userData = response.data!;
-        print('🔵 ProfileProvider: Update successful - profilePhoto from API: ${userData.profilePhoto}');
-        
+        print(
+          '🔵 ProfileProvider: Update successful - profilePhoto from API: ${userData.profilePhoto}',
+        );
+
         // Create a new state with all updated fields
         // IMPORTANT: Use null for profileImageUrl if API returns null
         final newState = state.copyWith(
@@ -175,7 +191,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           address2: userData.addressLine2 ?? address2 ?? state.address2,
           isUpdating: false,
         );
-        
+
         // Handle profileImageUrl separately to allow setting it to null
         final resolvedPhoto = _resolveProfileImageUrl(userData);
         if (resolvedPhoto != null) {
@@ -196,8 +212,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
             isUpdating: false,
           );
         }
-        
-        print('🔵 ProfileProvider: State updated - profileImageUrl: ${state.profileImageUrl}');
+
+        print(
+          '🔵 ProfileProvider: State updated - profileImageUrl: ${state.profileImageUrl}',
+        );
         if (context != null && context.mounted) {
           SnackBarUtils.showSuccess(context, 'Profile updated successfully');
         }
@@ -227,7 +245,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   Future<bool> updateProfileImage(dynamic imageFile) async {
     print('🔵 ProfileProvider: updateProfileImage called');
     print('🔵 ProfileProvider: imageFile type: ${imageFile.runtimeType}');
-    
+
     state = state.copyWith(isUpdating: true, error: null);
     try {
       final XFile xFile = imageFile is XFile
@@ -246,12 +264,14 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
           context: 'profile',
         );
         print('✅ ProfileProvider: File uploaded! URL: ${uploaded.url}');
-        
+
         final response = await userDataSource.updateMe(
           UpdateUserRequestDto(profilePhoto: uploaded.url),
         );
-        print('🔵 ProfileProvider: updateMe response - success: ${response.success}');
-        
+        print(
+          '🔵 ProfileProvider: updateMe response - success: ${response.success}',
+        );
+
         if (response.success && response.data != null) {
           updatedUser = response.data;
           print('✅ ProfileProvider: User updated via FileUploadService!');
@@ -259,10 +279,12 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       } catch (mediaError) {
         print('⚠️ ProfileProvider: FileUploadService failed: $mediaError');
         print('🔵 ProfileProvider: Trying direct uploadProfilePicture...');
-        
+
         final response = await userDataSource.uploadProfilePicture(xFile);
-        print('🔵 ProfileProvider: uploadProfilePicture response - success: ${response.success}');
-        
+        print(
+          '🔵 ProfileProvider: uploadProfilePicture response - success: ${response.success}',
+        );
+
         if (response.success && response.data != null) {
           updatedUser = response.data;
           print('✅ ProfileProvider: User updated via uploadProfilePicture!');
@@ -272,7 +294,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       if (updatedUser != null) {
         final resolvedUrl = _resolveProfileImageUrl(updatedUser);
         print('✅ ProfileProvider: Profile updated! New URL: $resolvedUrl');
-        
+
         state = state.copyWith(
           user: updatedUser,
           profileImageUrl: resolvedUrl,
@@ -289,11 +311,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       );
       return false;
     } catch (e, stackTrace) {
-      debugPrint('❌ ProfileProvider: Profile image upload error: $e\n$stackTrace');
-      state = state.copyWith(
-        isUpdating: false,
-        error: e.toString(),
+      debugPrint(
+        '❌ ProfileProvider: Profile image upload error: $e\n$stackTrace',
       );
+      state = state.copyWith(isUpdating: false, error: e.toString());
       return false;
     }
   }
@@ -303,7 +324,9 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   }
 }
 
-final profileProvider =
-    StateNotifierProvider<ProfileNotifier, ProfileState>((ref) {
+final profileProvider = StateNotifierProvider<ProfileNotifier, ProfileState>((
+  ref,
+) {
+  ref.watch(userSessionEpochProvider);
   return ProfileNotifier();
 });

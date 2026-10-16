@@ -281,10 +281,10 @@ class PrinterSettingsScreen extends ConsumerWidget {
         value: state.isAutoPrintEnabled,
         activeThumbColor: const Color(0xFF5F2D82),
         onChanged: state.hasSavedPrinter
-            ? null
-            : (v) {
+            ? (v) {
                 ref.read(printerSettingsProvider.notifier).toggleAutoPrint(v);
-              },
+              }
+            : null,
       ),
     );
   }

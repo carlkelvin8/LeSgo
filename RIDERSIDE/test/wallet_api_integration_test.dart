@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Live API checks for wallet endpoints against staging/production API.
 void main() {
   const baseUrl =
-      'https://lesgo-api-feature-auth-secmes.free.laravel.cloud/api';
+      'https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api';
   const email = 'testrider@lesgo.com';
   const password = 'TestRider123!';
 

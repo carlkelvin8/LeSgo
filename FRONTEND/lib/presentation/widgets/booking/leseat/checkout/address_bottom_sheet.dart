@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../data/data_source/dto/address/address_dto.dart';
@@ -13,7 +14,7 @@ Future<AddressDto?> showAddressBottomSheet(
   return showModalBottomSheet<AddressDto>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
+    backgroundColor: AppColors.surface(context, Colors.white),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -64,7 +65,7 @@ class _AddressBottomSheetState extends ConsumerState<_AddressBottomSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: AppColors.surface(context, Colors.grey[300]!),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -107,7 +108,7 @@ class _AddressBottomSheetState extends ConsumerState<_AddressBottomSheet> {
                         Icon(
                           Icons.location_off_outlined,
                           size: 48,
-                          color: Colors.grey[300],
+                          color: AppColors.foreground(context, Colors.grey[300]!),
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -115,7 +116,7 @@ class _AddressBottomSheetState extends ConsumerState<_AddressBottomSheet> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Colors.grey[500],
+                            color: AppColors.foreground(context, Colors.grey[500]!),
                             fontSize: 14,
                           ),
                         ),
@@ -164,11 +165,11 @@ class _AddressTile extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF5F2D82).withValues(alpha: 0.05)
-              : Colors.white,
+              ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.05)
+              : AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF5F2D82) : Colors.grey[200]!,
+            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey[200]!),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -178,13 +179,13 @@ class _AddressTile extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF5F2D82).withValues(alpha: 0.1)
-                    : Colors.grey[100],
+                    ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1)
+                    : AppColors.foreground(context, Colors.grey[100]!),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 address.isDefault ? Icons.home : Icons.location_on_outlined,
-                color: isSelected ? const Color(0xFF5F2D82) : Colors.grey[600],
+                color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey[600]!),
                 size: 20,
               ),
             ),
@@ -202,8 +203,8 @@ class _AddressTile extends StatelessWidget {
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: isSelected
-                              ? const Color(0xFF5F2D82)
-                              : Colors.black87,
+                              ? AppColors.accent(context, Color(0xFF5F2D82))
+                              : AppColors.foreground(context, Colors.black87),
                         ),
                       ),
                       if (address.isDefault) ...[
@@ -214,15 +215,15 @@ class _AddressTile extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF5F2D82),
+                            color: AppColors.accent(context, Color(0xFF5F2D82)),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Default',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 10,
-                              color: Colors.white,
+                              color: AppColors.onAccent(context),
                             ),
                           ),
                         ),
@@ -235,7 +236,7 @@ class _AddressTile extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: AppColors.foreground(context, Colors.grey[600]!),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -247,7 +248,7 @@ class _AddressTile extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 11,
-                        color: Colors.grey[400],
+                        color: AppColors.foreground(context, Colors.grey[400]!),
                       ),
                     ),
                 ],

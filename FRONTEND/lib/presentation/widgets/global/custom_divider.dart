@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -24,7 +25,7 @@ class CustomDivider extends StatelessWidget {
       thickness: thickness,
       indent: indent ?? ResponsiveUtils.spacing(context, 16),
       endIndent: endIndent ?? ResponsiveUtils.spacing(context, 16),
-      color: color ?? Colors.grey[300],
+      color: color ?? AppColors.border(context, Colors.grey[300]!),
     );
   }
 }

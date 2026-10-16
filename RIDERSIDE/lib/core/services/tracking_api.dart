@@ -45,10 +45,30 @@ class TrackingApi {
         'is_available': isAvailable,
       });
     } catch (e) {
-      // Don't rethrow — availability sync failure should not block the rider
-      // from using the app (e.g., new riders with pending_approval status)
-      AppLogger.error('Error updating driver availability (non-fatal)', e);
+      AppLogger.error('Error updating driver availability', e);
+      rethrow;
     }
+  }
+
+  /// Resolves the current user's driver profile on API versions that do not
+  /// embed `driver_profile` in the login or `/auth/me` response.
+  static Future<Map<String, dynamic>?> getMyDriverProfile(int userId) async {
+    final res = await _dio.get('/v1/drivers');
+    dynamic data = res.data;
+    if (data is Map) data = data['data'] ?? data;
+    if (data is Map) data = data['data'] ?? data;
+
+    if (data is! List) return null;
+    for (final item in data) {
+      if (item is! Map) continue;
+      final profile = Map<String, dynamic>.from(item);
+      final rawUserId = profile['user_id'];
+      final profileUserId = rawUserId is num
+          ? rawUserId.toInt()
+          : int.tryParse(rawUserId?.toString() ?? '');
+      if (profileUserId == userId) return profile;
+    }
+    return null;
   }
 
   static Future<Map<String, dynamic>> submitDutyAttendance(

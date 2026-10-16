@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/responsive_utils.dart';
@@ -22,9 +23,9 @@ class OfferCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -80,7 +81,7 @@ class OfferCard extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 17),
                         fontWeight: FontWeight.w800,
-                        color: Colors.black,
+                        color: AppColors.foreground(context, Colors.black),
                       ),
                     ),
                   ],
@@ -102,7 +103,7 @@ class OfferCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
               height: 1.35,
             ),
           ),
@@ -116,9 +117,9 @@ class OfferCard extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: AppColors.surface(context, Colors.grey[100]!),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey[200]!),
+                    border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
                   ),
                   child: Row(
                     children: [
@@ -135,7 +136,7 @@ class OfferCard extends StatelessWidget {
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
                             fontWeight: FontWeight.w800,
-                            color: Colors.black87,
+                            color: AppColors.foreground(context, Colors.black87),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -169,7 +170,7 @@ class OfferCard extends StatelessWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 14)),
           Row(
             children: [
-              Icon(Icons.schedule, size: 16, color: Colors.grey[500]),
+              Icon(Icons.schedule, size: 16, color: AppColors.foreground(context, Colors.grey[500]!)),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -177,7 +178,7 @@ class OfferCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey[500],
+                    color: AppColors.foreground(context, Colors.grey[500]!),
                   ),
                 ),
               ),

@@ -9,6 +9,8 @@ import 'package:injectable/injectable.dart';
 
 import '../../firebase_options.dart';
 import '../../presentation/widgets/notifications/in_app_notification_banner.dart';
+import '../constants/routers/app_router.dart';
+import '../constants/routers/main/main_routes.dart';
 import '../config/mobile_config_service.dart';
 import 'fcm_background_handler.dart';
 
@@ -20,6 +22,8 @@ class FcmService {
 
   String? _fcmToken;
   bool _firebaseReady = false;
+  bool _messagingInitializing = false;
+  bool _localNotificationsInitialized = false;
   final List<void Function(Map<String, dynamic>)> _messageHandlers = [];
   final List<void Function(String token)> _tokenRefreshListeners = [];
   final FlutterLocalNotificationsPlugin _localNotifications =
@@ -30,18 +34,24 @@ class FcmService {
   bool get isFirebaseReady => _firebaseReady;
 
   Future<void> initialize() async {
+    if (_messagingInitializing || _firebaseReady) return;
+    _messagingInitializing = true;
     try {
       await _initLocalNotifications();
       await _initFirebaseMessaging();
     } catch (e, stack) {
       debugPrint('❌ FCM initialization error: $e');
       debugPrint('$stack');
+    } finally {
+      _messagingInitializing = false;
     }
   }
 
   Future<void> _initLocalNotifications() async {
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    if (_localNotificationsInitialized) return;
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -49,26 +59,28 @@ class FcmService {
     );
 
     await _localNotifications.initialize(
-      const InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-      ),
+      const InitializationSettings(android: androidSettings, iOS: iosSettings),
       onDidReceiveNotificationResponse: (response) {
         if (response.payload == 'offers') {
           onPromoNotificationTap?.call();
+        } else if (response.payload == 'orders') {
+          final context = AppRouter.navigatorKey.currentContext;
+          if (context != null) AppRouter.push(context, MainRoutes.orderHistory);
         }
       },
     );
+    _localNotificationsInitialized = true;
 
     if (!kIsWeb && Platform.isAndroid) {
-      final androidPlugin =
-          _localNotifications.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await androidPlugin?.createNotificationChannel(
         const AndroidNotificationChannel(
           _promoChannelId,
           'Promotions & Offers',
-          description: 'Exclusive offers and promos from LEZGO',
+          description: 'Exclusive offers and promos from LeSgo',
           importance: Importance.high,
         ),
       );
@@ -133,7 +145,9 @@ class FcmService {
     }
   }
 
-  Future<void> _requestNotificationPermissions(FirebaseMessaging messaging) async {
+  Future<void> _requestNotificationPermissions(
+    FirebaseMessaging messaging,
+  ) async {
     if (kIsWeb) return;
 
     final settings = await messaging.requestPermission(
@@ -148,16 +162,18 @@ class FcmService {
     }
 
     if (!kIsWeb && Platform.isAndroid) {
-      final androidPlugin =
-          _localNotifications.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await androidPlugin?.requestNotificationsPermission();
     }
 
     if (!kIsWeb && Platform.isIOS) {
-      final iosPlugin =
-          _localNotifications.resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>();
+      final iosPlugin = _localNotifications
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       await iosPlugin?.requestPermissions(
         alert: true,
         badge: true,
@@ -195,7 +211,11 @@ class FcmService {
     _showLocalTrayNotification(
       title: title,
       body: body,
-      payload: route == 'offers' ? 'offers' : null,
+      payload: route == 'offers'
+          ? 'offers'
+          : (payload['order_id'] != null || type.startsWith('order_'))
+          ? 'orders'
+          : null,
       channelId: _channelForType(type),
     );
   }
@@ -207,15 +227,21 @@ class FcmService {
     final route = payload['route']?.toString();
     if (route == 'offers') {
       onPromoNotificationTap?.call();
+    } else if (payload['order_id'] != null ||
+        payload['type']?.toString().startsWith('order_') == true) {
+      final context = AppRouter.navigatorKey.currentContext;
+      if (context != null) AppRouter.push(context, MainRoutes.orderHistory);
     }
   }
 
   Map<String, dynamic> _remoteMessageToMap(RemoteMessage message) {
     final data = Map<String, dynamic>.from(message.data);
-    final title = message.notification?.title ??
+    final title =
+        message.notification?.title ??
         data['title']?.toString() ??
         'Notification';
-    final body = message.notification?.body ??
+    final body =
+        message.notification?.body ??
         data['message']?.toString() ??
         data['body']?.toString() ??
         '';
@@ -282,7 +308,8 @@ class FcmService {
       title: title,
       body: body,
       payload: payload,
-      channelId: channelId ?? _channelForType(message['type']?.toString() ?? ''),
+      channelId:
+          channelId ?? _channelForType(message['type']?.toString() ?? ''),
     );
   }
 
@@ -299,7 +326,7 @@ class FcmService {
         ? 'Promotions & Offers'
         : 'Order Updates';
     final channelDescription = resolvedChannel == _promoChannelId
-        ? 'Exclusive offers and promos from LEZGO'
+        ? 'Exclusive offers and promos from LeSgo'
         : 'Order status and delivery updates';
 
     final details = NotificationDetails(

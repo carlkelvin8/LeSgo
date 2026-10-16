@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/navigation/favorite_navigation.dart';
@@ -45,7 +46,7 @@ class HomeFavoritesSection extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 18),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: AppColors.foreground(context, Colors.black87),
                     ),
                   ),
                 ],
@@ -60,7 +61,7 @@ class HomeFavoritesSection extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF5F2D82),
+                    color: AppColors.accent(context, Color(0xFF5F2D82)),
                   ),
                 ),
               ),
@@ -91,7 +92,7 @@ class HomeFavoritesSection extends ConsumerWidget {
       width: 140,
       margin: EdgeInsets.only(right: ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -133,7 +134,7 @@ class HomeFavoritesSection extends ConsumerWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: AppColors.foreground(context, Colors.black87),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -146,7 +147,7 @@ class HomeFavoritesSection extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey[600],
+                    color: AppColors.foreground(context, Colors.grey[600]!),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

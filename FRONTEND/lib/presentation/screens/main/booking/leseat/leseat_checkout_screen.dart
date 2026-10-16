@@ -1,6 +1,8 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../data/data_source/dto/address/address_dto.dart';
@@ -58,8 +60,8 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Colors.white,
+        decoration:  BoxDecoration(
+          color: AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -70,7 +72,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.surface(context, Colors.grey[300]!),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -93,12 +95,9 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                         address.contactPhone ?? '',
                       );
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Delivery address updated'),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
+                  SnackBarUtils.showSuccess(
+                    context,
+                    'Delivery address updated',
                   );
                 },
               ),
@@ -116,34 +115,36 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     final error = await ref.read(checkoutProvider.notifier).applyVoucher(code);
     if (!context.mounted) return;
 
-    if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Voucher applied'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+    if (error == null) {
+      SnackBarUtils.showSuccess(context, 'Voucher applied');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String?>(
+      checkoutProvider.select((state) => state.voucherError),
+      (previous, next) {
+        if (next != null && next != previous && context.mounted) {
+          SnackBarUtils.showError(context, next);
+        }
+      },
+    );
+    ref.listen<String?>(
+      checkoutProvider.select((state) => state.fareError),
+      (previous, next) {
+        if (next != null && next != previous && context.mounted) {
+          SnackBarUtils.showError(context, next);
+        }
+      },
+    );
     final checkoutState = ref.watch(checkoutProvider);
     final checkoutNotifier = ref.read(checkoutProvider.notifier);
     final order = checkoutState.order;
 
     if (order == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: AppColors.surface(context, Color(0xFFF5F5F5)),
         body: SafeArea(
           child: Column(
             children: [
@@ -165,7 +166,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     final total = isCartEmpty ? 0.0 : order.total;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.surface(context, Color(0xFFF5F5F5)),
       body: SafeArea(
         child: Column(
           children: [
@@ -207,7 +208,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                             Icon(
                               Icons.shopping_cart_outlined,
                               size: 48,
-                              color: Colors.grey[400],
+                              color: AppColors.foreground(context, Colors.grey[400]!),
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 16),
@@ -217,7 +218,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                               ),
                             ),
                             TextButton(
@@ -231,7 +232,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                                     14,
                                   ),
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF5F2D82),
+                                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                                 ),
                               ),
                             ),
@@ -308,7 +309,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface(context, Colors.white),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -318,13 +319,27 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
           ],
         ),
         child: SafeArea(
-          child: PrimaryButton(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (checkoutState.fareError != null)
+                TextButton.icon(
+                  onPressed: checkoutState.isLoadingFare
+                      ? null
+                      : checkoutNotifier.refreshDeliveryFee,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry delivery fee'),
+                ),
+              PrimaryButton(
             text: 'Checkout',
             isLoading: checkoutState.isLoading,
             backgroundColor: isCartEmpty
                 ? Colors.grey
                 : const Color(0xFF5F2D82),
-            onPressed: isCartEmpty
+            onPressed: isCartEmpty || checkoutState.isLoading ||
+                    checkoutState.isLoadingFare ||
+                    checkoutState.isValidatingVoucher ||
+                    !checkoutState.hasValidDeliveryFee
                 ? null
                 : () async {
                     final success = await checkoutNotifier.placeOrder(context);
@@ -367,15 +382,11 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                       final errorMsg = raw.startsWith('Exception: ')
                           ? raw.substring(11)
                           : raw;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(errorMsg),
-                          backgroundColor: Colors.red,
-                          duration: const Duration(seconds: 4),
-                        ),
-                      );
+                      SnackBarUtils.showError(context, errorMsg);
                     }
                   },
+              ),
+            ],
           ),
         ),
       ),

@@ -1,4 +1,6 @@
 import 'package:injectable/injectable.dart';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
 import 'dto/auth/otp_response_dto.dart';
@@ -95,17 +97,43 @@ class AuthRemoteDataSource {
   }
 
   /// Register user
-  Future<RegisterResponseDto> register(RegisterRequestDto request) async {
+  Future<RegisterResponseDto> register(
+    RegisterRequestDto request, {
+    XFile? selfie,
+    XFile? validIdFront,
+    XFile? validIdBack,
+  }) async {
     try {
+      final hasIdentityFiles =
+          selfie != null && validIdFront != null && validIdBack != null;
+      final data = hasIdentityFiles
+          ? FormData.fromMap({
+              ...request.toJson(),
+              // Multipart fields are strings; Laravel boolean validation
+              // accepts '1'/'0', but rejects Dio's 'true'/'false' strings.
+              'terms_accepted': request.termsAccepted ? '1' : '0',
+              'privacy_accepted': request.privacyAccepted ? '1' : '0',
+              'is_default': request.isDefault ? '1' : '0',
+              'selfie': await _multipartFile(selfie),
+              'valid_id_front': await _multipartFile(validIdFront),
+              'valid_id_back': await _multipartFile(validIdBack),
+            })
+          : request.toJson();
       final response = await _dioClient.dio.post(
         '/v1/auth/register',
-        data: request.toJson(),
+        data: data,
       );
 
       return RegisterResponseDto.fromJson(response.data);
     } catch (e) {
       rethrow;
     }
+  }
+
+  Future<MultipartFile> _multipartFile(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final filename = file.name.trim().isNotEmpty ? file.name : 'capture.jpg';
+    return MultipartFile.fromBytes(bytes, filename: filename);
   }
 
   /// Logout user

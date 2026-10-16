@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/services/order_receipt_service.dart';
@@ -88,7 +89,7 @@ class _OrderReceiptButtonState extends State<OrderReceiptButton> {
           ),
         ),
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF5F2D82),
+          foregroundColor: AppColors.accent(context, Color(0xFF5F2D82)),
           side: const BorderSide(color: Color(0xFF5F2D82)),
           padding: EdgeInsets.symmetric(
             vertical: ResponsiveUtils.spacing(context, 14),

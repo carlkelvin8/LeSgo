@@ -1,8 +1,10 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/snackbar_utils.dart';
 import '../../provider/main/offers/offers_provider.dart';
 import '../../widgets/offers/offer_card.dart';
 import '../../widgets/offers/offers_empty_state.dart';
@@ -19,7 +21,7 @@ class OffersScreen extends ConsumerWidget {
     final filteredOffers = offersState.filteredOffers;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       body: SafeArea(
         child: Column(
           children: [
@@ -63,7 +65,7 @@ class OffersScreen extends ConsumerWidget {
                   : filteredOffers.isEmpty
                   ? const OffersEmptyState()
                   : RefreshIndicator(
-                      color: const Color(0xFF5F2D82),
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
                       onRefresh: offersNotifier.loadOffers,
                       child: ListView.separated(
                         physics: const AlwaysScrollableScrollPhysics(),
@@ -91,14 +93,9 @@ class OffersScreen extends ConsumerWidget {
                                   ClipboardData(text: offer.code),
                                 );
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        '${offer.code} claimed and copied',
-                                      ),
-                                      backgroundColor:
-                                          const Color(0xFF5F2D82),
-                                    ),
+                                  SnackBarUtils.showInfo(
+                                    context,
+                                    '${offer.code} claimed and copied',
                                   );
                                 }
                               } catch (e) {
@@ -107,12 +104,7 @@ class OffersScreen extends ConsumerWidget {
                                         'Exception: ',
                                         '',
                                       );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(message),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
+                                  SnackBarUtils.showError(context, message);
                                 }
                               }
                             },

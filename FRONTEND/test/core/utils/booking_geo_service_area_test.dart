@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lesgo/core/utils/booking_geo_utils.dart';
 
 void main() {
-  test('CDO center is inside service area', () {
+  test('Claveria center is inside service area', () {
     expect(
       BookingGeoUtils.isInsideServiceArea(
         BookingGeoUtils.defaultLat,
@@ -12,7 +12,7 @@ void main() {
     );
   });
 
-  test('Manila is outside CDO service radius', () {
+  test('Manila is outside Claveria service radius', () {
     expect(
       BookingGeoUtils.isInsideServiceArea(14.5995, 120.9842),
       isFalse,
@@ -27,8 +27,9 @@ void main() {
     expect(pin.latitude, closeTo(8.5, 0.001));
   });
 
-  test('resolveCoords falls back to CDO when invalid', () {
+  test('resolveCoords falls back to Claveria when invalid', () {
     final pin = BookingGeoUtils.resolveCoords(lat: 0, lng: 0);
     expect(pin, BookingGeoUtils.defaultLatLng);
   });
 }
+

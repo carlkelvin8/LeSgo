@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
@@ -29,22 +30,22 @@ class LesbuySearchField extends StatelessWidget {
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: fontSize,
-          color: Colors.black87,
+          color: AppColors.foreground(context, Colors.black87),
         ),
         decoration: InputDecoration(
           hintText: 'Search stores and products',
           hintStyle: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: fontSize,
-            color: Colors.grey[500],
+            color: AppColors.foreground(context, Colors.grey[500]!),
           ),
           prefixIcon: Icon(
             Icons.search,
-            color: Colors.grey[600],
+            color: AppColors.foreground(context, Colors.grey[600]!),
             size: ResponsiveUtils.fontSize(context, 20),
           ),
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: AppColors.surface(context, Colors.grey[100]!),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius),
             borderSide: BorderSide.none,

@@ -9,6 +9,7 @@ part of 'register_merchant_request_dto.dart';
 RegisterMerchantRequestDto _$RegisterMerchantRequestDtoFromJson(
         Map<String, dynamic> json) =>
     RegisterMerchantRequestDto(
+      phoneVerificationToken: json['phone_verification_token'] as String?,
       name: json['name'] as String,
       email: json['email'] as String,
       phone: json['phone'] as String?,
@@ -20,7 +21,7 @@ RegisterMerchantRequestDto _$RegisterMerchantRequestDtoFromJson(
       zipCode: json['zip_code'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
-      termsAccepted: json['terms_accepted'] as bool? ?? true,
+      termsAccepted: json['terms_accepted'] as bool? ?? false,
       privacyAccepted: json['privacy_accepted'] as bool? ?? true,
       selfiePath: json['selfie_path'] as String?,
       validIdPath: json['valid_id_path'] as String?,
@@ -33,6 +34,7 @@ RegisterMerchantRequestDto _$RegisterMerchantRequestDtoFromJson(
 Map<String, dynamic> _$RegisterMerchantRequestDtoToJson(
         RegisterMerchantRequestDto instance) =>
     <String, dynamic>{
+      'phone_verification_token': instance.phoneVerificationToken,
       'name': instance.name,
       'email': instance.email,
       'phone': instance.phone,

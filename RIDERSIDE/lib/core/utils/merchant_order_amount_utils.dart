@@ -7,13 +7,22 @@ class MerchantOrderAmountUtils {
     final items = order.orderItems;
     if (items == null || items.isEmpty) return 0;
 
-    var total = 0.0;
-    for (final item in items) {
-      final lineTotal = item.totalPrice ??
-          ((item.unitPrice ?? 0) * item.quantity);
-      total += lineTotal;
-    }
-    return total;
+    return items.fold(0.0, (sum, item) => sum + lineTotal(item));
+  }
+
+  /// Total for a single order [item].
+  ///
+  /// Prefers the server-computed [OrderItemDto.totalPrice] (`actual_price`).
+  /// When that is missing (e.g. snapshot/estimate-only orders), falls back to
+  /// `(unit price + selected options extras) × quantity` so add-ons are never
+  /// silently dropped from the line, subtotal and earnings math.
+  static double lineTotal(OrderItemDto item) {
+    final total = item.totalPrice;
+    if (total != null && total > 0) return total;
+
+    final base = item.unitPrice ?? 0;
+    final extras = item.selectedOptions.extrasTotal;
+    return (base + extras) * item.quantity;
   }
 
   static double foodEarnings(OrderDto order) {

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -50,7 +51,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     final otpSent = registerState.otpSent;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: LayoutBuilder(

@@ -167,7 +167,19 @@ class _MerchantSalesReportScreenState
               child: Center(
                 child: Padding(
                   padding: EdgeInsets.all(hp),
-                  child: Text('Failed to load orders: $err'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Failed to load orders: $err'),
+                      const SizedBox(height: 12),
+                      TextButton.icon(
+                        onPressed: () =>
+                            ref.invalidate(merchantOrdersProvider),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -176,6 +188,9 @@ class _MerchantSalesReportScreenState
               final completed = filtered
                   .where((o) => MerchantOrderAmountUtils.isCompleted(o))
                   .toList();
+              final cancelled = filtered
+                  .where((o) => MerchantOrderAmountUtils.isCancelled(o))
+                  .toList();
               final revenue = completed.fold<double>(
                 0,
                 (s, o) => s + MerchantOrderAmountUtils.foodEarnings(o),
@@ -183,7 +198,8 @@ class _MerchantSalesReportScreenState
 
               return SliverList(
                 delegate: SliverChildListDelegate([
-                  _summaryPreview(context, filtered, completed, revenue, hp),
+                  _summaryPreview(
+                      context, filtered, completed, cancelled, revenue, hp),
                   SizedBox(height: ResponsiveUtils.spacing(context, 20)),
                   _exportButtons(context, filtered, hp),
                   SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -301,6 +317,7 @@ class _MerchantSalesReportScreenState
     BuildContext context,
     List<OrderDto> filtered,
     List<OrderDto> completed,
+    List<OrderDto> cancelled,
     double revenue,
     double hp,
   ) {
@@ -342,7 +359,7 @@ class _MerchantSalesReportScreenState
             _summaryRow(
               context,
               'Cancelled',
-              '${filtered.length - completed.length}',
+              '${cancelled.length}',
             ),
             Divider(height: ResponsiveUtils.spacing(context, 16)),
             _summaryRow(

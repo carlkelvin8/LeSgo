@@ -10,11 +10,16 @@ class ValidateVoucherRequestDto {
   final double orderValue;
   @JsonKey(name: 'service_id')
   final int? serviceId;
+  @JsonKey(name: 'delivery_fee')
+  final double? deliveryFee;
+  final List<Map<String, dynamic>>? items;
 
   ValidateVoucherRequestDto({
     required this.voucherCode,
     required this.orderValue,
     this.serviceId,
+    this.deliveryFee,
+    this.items,
   });
 
   factory ValidateVoucherRequestDto.fromJson(Map<String, dynamic> json) =>

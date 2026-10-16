@@ -47,6 +47,8 @@ class RegisterDriverDataDto {
 
 @JsonSerializable()
 class UserDto {
+  @JsonKey(name: 'registration_fee')
+  final Map<String, dynamic>? registrationFee;
   final int id;
   final String name;
   final String email;
@@ -55,6 +57,7 @@ class UserDto {
   final String role;
 
   UserDto({
+    this.registrationFee,
     required this.id,
     required this.name,
     required this.email,

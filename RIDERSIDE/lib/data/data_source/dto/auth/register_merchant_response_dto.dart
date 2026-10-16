@@ -38,6 +38,8 @@ class MerchantUserDto {
   final String role;
   @JsonKey(name: 'partner_id')
   final int? partnerId;
+  @JsonKey(name: 'registration_fee')
+  final Map<String, dynamic>? registrationFee;
 
   MerchantUserDto({
     required this.id,
@@ -46,6 +48,7 @@ class MerchantUserDto {
     this.phoneNumber,
     required this.role,
     this.partnerId,
+    this.registrationFee,
   });
 
   factory MerchantUserDto.fromJson(Map<String, dynamic> json) =>

@@ -91,7 +91,7 @@ class LoginControllers {
   }
 
   Future<void> handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
-    await GoogleAuthHelper.signIn(context, ref);
+    await GoogleAuthHelper.signIn(context, ref, mode: GoogleAuthMode.login);
   }
 
   void dispose() {

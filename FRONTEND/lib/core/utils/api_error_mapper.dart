@@ -56,6 +56,13 @@ class ApiErrorMapper {
   static bool _isTechnical(String text) {
     final lower = text.toLowerCase();
     return lower.contains('dioexception') ||
+        lower.contains('is not a subtype of type') ||
+        lower.contains('null check operator') ||
+        lower.contains('typeerror') ||
+        lower.contains('sqlstate') ||
+        lower.contains('stack trace') ||
+        lower.contains('<html') ||
+        lower.contains('<!doctype') ||
         lower.contains('socketexception') ||
         lower.contains('formatexception') ||
         lower.contains('status code of') ||
@@ -81,7 +88,14 @@ class ApiErrorMapper {
     }
 
     final apiMsg = _extractApiMessage(error.response?.data);
-    if (apiMsg != null && !_looksLikeRateLimit(apiMsg)) return apiMsg;
+    final status = error.response?.statusCode;
+    if (apiMsg != null &&
+        !_looksLikeRateLimit(apiMsg) &&
+        status != 401 &&
+        status != 429 &&
+        (status == null || status < 500)) {
+      return apiMsg;
+    }
 
     switch (error.type) {
       case DioExceptionType.connectionTimeout:

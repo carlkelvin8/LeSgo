@@ -45,8 +45,6 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
       ),
       body: ListView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
@@ -55,28 +53,28 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             title: const Text('Promotions & offers'),
             subtitle: const Text('Daily promos and voucher alerts'),
             value: _promotions,
-            activeThumbColor: const Color(0xFF5F2D82),
+            activeThumbColor: Theme.of(context).colorScheme.primary,
             onChanged: (v) => setState(() => _promotions = v),
           ),
           SwitchListTile(
             title: const Text('Order updates'),
             subtitle: const Text('Driver assigned, picked up, delivered'),
             value: _orderUpdates,
-            activeThumbColor: const Color(0xFF5F2D82),
+            activeThumbColor: Theme.of(context).colorScheme.primary,
             onChanged: (v) => setState(() => _orderUpdates = v),
           ),
           SwitchListTile(
             title: const Text('Mission reminders'),
             subtitle: const Text('Referral and mission reward alerts'),
             value: _missionReminders,
-            activeThumbColor: const Color(0xFF5F2D82),
+            activeThumbColor: Theme.of(context).colorScheme.primary,
             onChanged: (v) => setState(() => _missionReminders = v),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           FilledButton(
             onPressed: _saving ? null : _save,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               minimumSize: const Size.fromHeight(48),
             ),
             child: _saving

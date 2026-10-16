@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../../core/constants/map_styles.dart';
+
 class AddressMapView extends StatelessWidget {
   final LatLng? location;
   final Function(GoogleMapController) onMapCreated;
@@ -22,6 +24,7 @@ class AddressMapView extends StatelessWidget {
     }
 
     return GoogleMap(
+      style: MapStyles.darkIfDark(context),
       onMapCreated: onMapCreated,
       initialCameraPosition: CameraPosition(target: location!, zoom: 16.0),
       onTap: onMapTap,

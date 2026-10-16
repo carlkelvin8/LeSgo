@@ -33,7 +33,7 @@ class UserDto {
 
   String get name => user?.name ?? '';
 
-  String get role => user?.role ?? '';
+  String? get role => user?.role;
 
   factory UserDto.withError(String errorMessage) {
     return UserDto(

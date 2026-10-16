@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -25,7 +26,7 @@ class SectionContainer extends StatelessWidget {
       margin: margin ?? defaultMargin,
       padding: padding ?? defaultPadding,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(

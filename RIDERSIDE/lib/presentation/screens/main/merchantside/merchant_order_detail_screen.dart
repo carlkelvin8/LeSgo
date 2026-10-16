@@ -111,7 +111,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     double itemSubtotal = 0;
     if (resolvedOrder.orderItems != null) {
       for (var item in resolvedOrder.orderItems!) {
-        itemSubtotal += item.totalPrice ?? ((item.unitPrice ?? 0.0) * item.quantity);
+        itemSubtotal += MerchantOrderAmountUtils.lineTotal(item);
       }
     }
     
@@ -394,7 +394,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'PHP ${((item.unitPrice ?? 0.0) * item.quantity).toStringAsFixed(2)}',
+                            'PHP ${MerchantOrderAmountUtils.lineTotal(item).toStringAsFixed(2)}',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontWeight: FontWeight.w600,

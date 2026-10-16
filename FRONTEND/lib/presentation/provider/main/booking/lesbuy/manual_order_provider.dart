@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../../core/utils/booking_geo_utils.dart';
 
 // Manual Order Item Model
 class ManualOrderItem {
@@ -54,9 +55,8 @@ class ManualOrderState {
 
   bool get hasPickupLocation =>
       pickupLocationName != null &&
-      pickupLocationName!.isNotEmpty &&
-      pickupLat != null &&
-      pickupLng != null;
+      pickupLocationName!.trim().isNotEmpty &&
+      BookingGeoUtils.hasValidCoords(pickupLat, pickupLng);
 
   ManualOrderState copyWith({
     List<ManualOrderItem>? items,
@@ -67,6 +67,7 @@ class ManualOrderState {
     double? pickupLat,
     double? pickupLng,
     bool clearPickupLocation = false,
+    bool clearPickupPin = false,
   }) {
     return ManualOrderState(
       items: items ?? this.items,
@@ -74,8 +75,8 @@ class ManualOrderState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       pickupLocationName: clearPickupLocation ? null : (pickupLocationName ?? this.pickupLocationName),
-      pickupLat: clearPickupLocation ? null : (pickupLat ?? this.pickupLat),
-      pickupLng: clearPickupLocation ? null : (pickupLng ?? this.pickupLng),
+      pickupLat: clearPickupLocation || clearPickupPin ? null : (pickupLat ?? this.pickupLat),
+      pickupLng: clearPickupLocation || clearPickupPin ? null : (pickupLng ?? this.pickupLng),
     );
   }
 
@@ -89,9 +90,18 @@ class ManualOrderNotifier extends StateNotifier<ManualOrderState> {
   ManualOrderNotifier() : super(ManualOrderState());
 
   /// Set the pickup location where rider should buy the items
+  void setPickupAddress(String address) {
+    if (address.trim() == state.pickupLocationName?.trim()) return;
+    state = state.copyWith(
+      pickupLocationName: address,
+      clearPickupPin: true,
+    );
+  }
+
+  /// Save an address together with its explicitly confirmed map pin.
   void setPickupLocation(String name, double lat, double lng) {
     state = state.copyWith(
-      pickupLocationName: name,
+      pickupLocationName: name.trim(),
       pickupLat: lat,
       pickupLng: lng,
     );

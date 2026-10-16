@@ -76,11 +76,15 @@ class ChatRealtimeService {
       debugPrint('Realtime session connect failed: $e');
     }
 
-    await _ensureWebSocket();
+    try {
+      await _ensureWebSocket();
 
-    if (_activeConversationId != null) {
-      await ChatWebSocketService.instance
-          .subscribeConversation(_activeConversationId!);
+      if (_activeConversationId != null) {
+        await ChatWebSocketService.instance
+            .subscribeConversation(_activeConversationId!);
+      }
+    } catch (e) {
+      debugPrint('WebSocket setup failed: $e');
     }
 
     _timer = Timer.periodic(PollingIntervals.chatRealtime, (_) => _poll());

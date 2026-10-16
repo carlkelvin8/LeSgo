@@ -8,10 +8,7 @@ import 'rider_history_booking_card.dart';
 class RiderHistoryBookingsList extends StatelessWidget {
   final List<RiderBooking> bookings;
 
-  const RiderHistoryBookingsList({
-    super.key,
-    required this.bookings,
-  });
+  const RiderHistoryBookingsList({super.key, required this.bookings});
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +30,7 @@ class RiderHistoryBookingsList extends StatelessWidget {
     }
 
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.only(
         top: ResponsiveUtils.spacing(context, 4),
         bottom: ResponsiveUtils.spacing(context, 24),
@@ -42,12 +40,12 @@ class RiderHistoryBookingsList extends StatelessWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
       itemBuilder: (context, index) {
         final booking = bookings[index];
-        
+
         // Determine status display
         String statusLabel;
         Color statusColor;
         Color statusBackgroundColor;
-        
+
         if (booking.currentStatus == BookingStatus.complete ||
             booking.currentStatus == BookingStatus.delivered) {
           statusLabel = 'Completed';
@@ -62,7 +60,7 @@ class RiderHistoryBookingsList extends StatelessWidget {
           statusColor = const Color(0xFFFF9800);
           statusBackgroundColor = const Color(0xFFFFF3E0);
         }
-        
+
         return GestureDetector(
           onTap: () {
             // Navigate to detail screen with the booking
@@ -70,7 +68,9 @@ class RiderHistoryBookingsList extends StatelessWidget {
               MaterialPageRoute(
                 builder: (context) => RiderBookingDetailScreen(
                   booking: booking,
-                  currentApiStatus: _mapBookingStatusToApiStatus(booking.currentStatus),
+                  currentApiStatus: _mapBookingStatusToApiStatus(
+                    booking.currentStatus,
+                  ),
                 ),
               ),
             );
@@ -79,7 +79,8 @@ class RiderHistoryBookingsList extends StatelessWidget {
             bookingId: booking.id,
             restaurantName: booking.restaurantName,
             address: booking.deliveryAddress ?? booking.address,
-            price: booking.earnings?.replaceFirst('Your earnings ', '') ??
+            price:
+                booking.earnings?.replaceFirst('Your earnings ', '') ??
                 'PHP 0.00',
             status: statusLabel,
             statusColor: statusColor,
@@ -90,7 +91,7 @@ class RiderHistoryBookingsList extends StatelessWidget {
       },
     );
   }
-  
+
   // Helper to map BookingStatus to API status string
   String _mapBookingStatusToApiStatus(BookingStatus status) {
     switch (status) {

@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../provider/main/riderside/rider_trip_analytics_provider.dart';
 
 class RiderTripAnalyticsScreen extends ConsumerWidget {
@@ -16,6 +17,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
     });
 
     final analyticsState = ref.watch(riderTripAnalyticsProvider);
+    final lang = ref.watch(appLanguageProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
@@ -25,7 +27,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'Trip Analytics',
+          AppLocalization.translate('trip_analytics', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -45,7 +47,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Loading analytics...',
+                    AppLocalization.translate('loading_analytics', lang),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -55,7 +57,41 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 ],
               ),
             )
-          : RefreshIndicator(
+          : analyticsState.error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          analyticsState.error!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 14),
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        onPressed: () => ref
+                            .read(riderTripAnalyticsProvider.notifier)
+                            .loadTripAnalytics(period: 'week'),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
               onRefresh: () async {
                 await ref.read(riderTripAnalyticsProvider.notifier).refreshAnalytics();
               },
@@ -411,7 +447,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'PHP ${hourly.earnings.toStringAsFixed(0)} â€¢ ${hourly.trips} trips',
+                  'PHP ${hourly.earnings.toStringAsFixed(0)} • ${hourly.trips} trips',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),

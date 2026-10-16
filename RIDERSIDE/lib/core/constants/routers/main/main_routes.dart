@@ -1,5 +1,7 @@
 class MainRoutes {
   static const String riderMain = '/rider/main';
+  /// Shared registration-fee payment/approval gate for rider & merchant accounts.
+  static const String registrationFeeStatus = '/registration-fee/status';
   static const String riderBookingDetail = '/rider/booking-detail';
   static const String riderHistoryDetail = '/rider/history-detail';
   static const String riderChangePassword = '/rider/change-password';

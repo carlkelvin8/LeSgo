@@ -1,5 +1,9 @@
+import 'package:lesgo/core/theme/app_colors.dart';
+import '../../../core/constants/routers/app_router.dart';
+import '../../../core/constants/routers/main/main_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../provider/main/profile/profile_provider.dart';
 import '../../provider/main/profile/controller/profile.controller.notifier.dart';
@@ -9,22 +13,21 @@ import '../../widgets/common/retry_widget.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
-
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  late ProfileControllers _controllers;
+  late final ProfileControllers _controllers;
 
   @override
   void initState() {
     super.initState();
-    final profileState = ref.read(profileProvider);
+    final state = ref.read(profileProvider);
     _controllers = ProfileControllers(
-      name: profileState.name,
-      address1: profileState.address1,
-      address2: profileState.address2,
+      name: state.name,
+      address1: state.address1,
+      address2: state.address2,
     );
   }
 
@@ -34,82 +37,480 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final profileState = ref.watch(profileProvider);
-    final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: profileState.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF5F2D82),
-              ),
-            )
-          : profileState.error != null && profileState.user == null
-              ? RetryWidget(
-                  message: profileState.error!,
-                  isLoading: profileState.isLoading,
-                  onRetry: () =>
-                      ref.read(profileProvider.notifier).refreshProfile(),
-                )
-              : SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+  void _openSheet(String title, Widget child) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: AppColors.surface(context, Color(0xFFFAF9FC)),
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.78,
+          minChildSize: 0.45,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (_, controller) => SingleChildScrollView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   children: [
-                    Container(
-                      color: Colors.white,
-                      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-                      child: const AuthHeader(
-                        title: 'Profile',
-                      ),
-                    ),
-                    
-                    
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                      child:                       ProfileHeader(
-                        name: profileState.name,
-                        birthdate: profileState.birthdate,
-                        email: profileState.email,
-                        phone: profileState.phone,
-                        profileImageUrl: profileState.profileImageUrl,
-                        onImageTap: () =>
-                            _controllers.showImagePicker(context, ref),
-                        onChangePhoneTap: () => ChangePhoneSheet.show(
-                          context,
-                          profileState.phone,
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 18),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    
-                    SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-      
-                    ProfileEditSection(
-                      controllers: _controllers,
+                    IconButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close_rounded),
                     ),
-                    
-                    SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                    
-                    ProfileRewardsSection(
-                      referralCode: profileState.referralCode,
-                      points: profileState.points,
-                      userName: profileState.name,
-                    ),
-
-                    SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-
-                    const ProfileAccountSection(),
-                    
-                    SizedBox(height: ResponsiveUtils.spacing(context, 40)),
                   ],
+                ),
+                const SizedBox(height: 12),
+                child,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _go(String route) => AppRouter.push(context, route);
+  void _sync(TextEditingController c, String before, String after) {
+    if (before != after && c.text == before) c.text = after;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(profileProvider);
+    ref.listen<ProfileState>(profileProvider, (prev, next) {
+      if (prev == null) return;
+      _sync(_controllers.nameController, prev.name, next.name);
+      _sync(_controllers.address1Controller, prev.address1, next.address1);
+      _sync(_controllers.address2Controller, prev.address2, next.address2);
+    });
+
+    if (state.isLoading && state.user == null) {
+      return Scaffold(
+        backgroundColor: AppColors.surface(context, Colors.grey[50]!),
+        appBar: AppBar(title: const Text('Profile')),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      );
+    }
+
+    if (state.error != null && state.user == null) {
+      return Scaffold(
+        backgroundColor: AppColors.surface(context, Colors.grey[50]!),
+        appBar: AppBar(title: const Text('Profile')),
+        body: RetryWidget(
+          message: state.error!,
+          onRetry: () => ref.read(profileProvider.notifier).refreshProfile(),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
+      body: RefreshIndicator(
+        color: AppColors.accent(context, Color(0xFF5F2D82)),
+        displacement: 80,
+        onRefresh: () async {
+          if (!state.isUpdating) {
+            await ref.read(profileProvider.notifier).refreshProfile();
+          }
+        },
+        child: CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: AppColors.surface(context, Colors.white),
+              surfaceTintColor: Colors.transparent,
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  tooltip: 'Settings',
+                  onPressed: () => _go(MainRoutes.settings),
+                  icon: Icon(
+                    Icons.settings_outlined,
+                    size: 21,
+                    color: AppColors.foreground(context, Color(0xFF292235)),
+                  ),
+                ),
+              ],
+              leading: IconButton(
+                onPressed: () => Navigator.maybePop(context),
+                icon: Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.foreground(context, Color(0xFF292235)),
+                ),
+              ),
+              title: Text(
+                'Profile',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 18),
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.foreground(context, Color(0xFF292235)),
                 ),
               ),
             ),
+            SliverToBoxAdapter(
+              child: ProfileHeroSection(
+                name: state.name,
+                profileImageUrl: state.profileImageUrl,
+                email: state.email,
+                phone: state.phone,
+                birthdate: state.birthdate,
+                onImageTap: state.isUpdating
+                    ? null
+                    : () => _controllers.showImagePicker(context, ref),
+                onChangePhoneTap: state.isUpdating
+                    ? null
+                    : () => ChangePhoneSheet.show(context, state.phone),
+              ),
+            ),
+            // ── Loading / error banners ────────────────────────────────
+            if (state.isLoading)
+              SliverToBoxAdapter(
+                child: LinearProgressIndicator(
+                  minHeight: 2,
+                  color: Theme.of(context).colorScheme.primary,
+                  backgroundColor: Colors.transparent,
+                ),
+              ),
+            if (state.error != null)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            ApiErrorMapper.message(state.error!),
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // ── Content ───────────────────────────────────────────────
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                ResponsiveUtils.spacing(context, 16),
+                0,
+                ResponsiveUtils.spacing(context, 16),
+                MediaQuery.of(context).padding.bottom + 36,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _MenuGroup(
+                    children: [
+                      _ProfileRow(
+                        icon: Icons.headset_mic_outlined,
+                        title: 'Let’s stay connected',
+                        subtitle: 'We’re here whenever you need us',
+                        onTap: () => _go(MainRoutes.customerServiceChat),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _Shortcut(
+                            icon: Icons.local_offer_outlined,
+                            title: 'Just for you',
+                            subtitle: 'Discover your offers',
+                            onTap: () => _go(MainRoutes.offers),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _Shortcut(
+                            icon: Icons.auto_awesome_outlined,
+                            title: '${state.points} points',
+                            subtitle: 'Your little rewards',
+                            onTap: () => _go(MainRoutes.loyaltyRedeem),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const _SectionTitle('Personal information'),
+                  _MenuGroup(
+                    children: [
+                      _ProfileRow(
+                        icon: Icons.person_outline_rounded,
+                        title: 'Personal details',
+                        subtitle: 'Your name and delivery addresses',
+                        onTap: () => _openSheet(
+                          'Personal details',
+                          ProfileEditSection(controllers: _controllers),
+                        ),
+                      ),
+                      _ProfileRow(
+                        icon: Icons.phone_outlined,
+                        title: 'Mobile number',
+                        subtitle: state.phone.isEmpty
+                            ? 'Add your mobile number'
+                            : state.phone,
+                        onTap: state.isUpdating
+                            ? null
+                            : () => ChangePhoneSheet.show(context, state.phone),
+                      ),
+                      if (state.birthdate.isNotEmpty)
+                        _ProfileRow(
+                          icon: Icons.cake_outlined,
+                          title: 'Birthday',
+                          subtitle: state.birthdate,
+                        ),
+                      _ProfileRow(
+                        icon: Icons.location_on_outlined,
+                        title: 'Saved addresses',
+                        subtitle: 'Your everyday destinations',
+                        onTap: () => _go(MainRoutes.addressManagement),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 28),
+                  Center(
+                    child: Text(
+                      'A little easier. Every day.',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                        color: AppColors.foreground(context, Color(0xFFA5A0AB)),
+                      ),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  const _SectionTitle(this.title);
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(left: 4, top: 24, bottom: 8),
+    child: Text(
+      title,
+      style: TextStyle(
+        fontFamily: 'TT Fors',
+        fontSize: ResponsiveUtils.fontSize(context, 14),
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.3,
+        color: AppColors.foreground(context, Colors.grey[600]!),
+      ),
+    ),
+  );
+}
 
+class _MenuGroup extends StatelessWidget {
+  final List<Widget> children;
+  const _MenuGroup({required this.children});
+  @override
+  Widget build(BuildContext context) => Material(
+    color: AppColors.surface(context, Colors.white),
+    elevation: 1,
+    shadowColor: Colors.black.withValues(alpha: 0.05),
+    borderRadius: BorderRadius.circular(12),
+    clipBehavior: Clip.antiAlias,
+    child: Column(
+      children: [
+        for (var i = 0; i < children.length; i++) ...[
+          if (i > 0)
+            Divider(
+              height: 1,
+              indent: 56,
+              color: AppColors.border(context, Colors.grey[200]!),
+            ),
+          children[i],
+        ],
+      ],
+    ),
+  );
+}
+
+class _ProfileRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+  const _ProfileRow({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) => ListTile(
+    leading: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.accent(
+          context,
+          const Color(0xFF5F2D82),
+        ).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(
+        icon,
+        color: AppColors.accent(context, const Color(0xFF5F2D82)),
+        size: 20,
+      ),
+    ),
+    title: Text(
+      title,
+      style: TextStyle(
+        fontFamily: 'TT Fors',
+        fontSize: ResponsiveUtils.fontSize(context, 15),
+        fontWeight: FontWeight.w600,
+        color: AppColors.foreground(context, Colors.black87),
+      ),
+    ),
+    subtitle: subtitle == null
+        ? null
+        : Text(
+            subtitle!,
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 13),
+              color: AppColors.foreground(context, Colors.grey[600]!),
+            ),
+          ),
+    trailing: onTap == null
+        ? null
+        : Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: AppColors.foreground(context, Colors.grey[400]!),
+          ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    onTap: onTap,
+  );
+}
+
+class _Shortcut extends StatelessWidget {
+  final IconData icon;
+  final String title, subtitle;
+  final VoidCallback onTap;
+  const _Shortcut({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) => Material(
+    color: AppColors.surface(context, Colors.white),
+    elevation: 1,
+    shadowColor: Colors.black.withValues(alpha: 0.05),
+    borderRadius: BorderRadius.circular(12),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface(context, Colors.white),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 17,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.north_east_rounded,
+                  size: 14,
+                  color: AppColors.foreground(context, Color(0xFFA49BAE)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 14),
+                fontWeight: FontWeight.w600,
+                color: AppColors.foreground(context, Color(0xFF302B36)),
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 12),
+                height: 1.4,
+                color: AppColors.foreground(context, Color(0xFF918A98)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}

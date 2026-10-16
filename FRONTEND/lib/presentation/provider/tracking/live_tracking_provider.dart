@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
@@ -205,7 +206,9 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
           .getOrderEventStream(orderId)
           .listen(_handleOrderEvent);
 
-      debugPrint('✅ Live tracking WebSocket + poll fallback for order $orderId');
+      debugPrint(
+        '✅ Live tracking WebSocket + poll fallback for order $orderId',
+      );
     } catch (e) {
       debugPrint('⚠️ Live tracking poller setup failed: $e');
     }
@@ -283,7 +286,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         if (!state.isOrderActive) {
           if (newStatus.toLowerCase() == 'completed') {
             unawaited(
-              getIt<CustomerSatisfactionService>().onOrderCompletedFromTracking(),
+              getIt<CustomerSatisfactionService>()
+                  .onOrderCompletedFromTracking(),
             );
           }
           stopTracking();
@@ -359,19 +363,27 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         // Extract real locations with fallback to mock data
         final double pLat =
             double.tryParse(trackingData['pickup_lat']?.toString() ?? '') ??
-            double.tryParse(trackingData['pickup_latitude']?.toString() ?? '') ??
+            double.tryParse(
+              trackingData['pickup_latitude']?.toString() ?? '',
+            ) ??
             BookingGeoUtils.defaultLat;
         final double pLng =
             double.tryParse(trackingData['pickup_lng']?.toString() ?? '') ??
-            double.tryParse(trackingData['pickup_longitude']?.toString() ?? '') ??
+            double.tryParse(
+              trackingData['pickup_longitude']?.toString() ?? '',
+            ) ??
             BookingGeoUtils.defaultLng;
         final double dLat =
             double.tryParse(trackingData['dropoff_lat']?.toString() ?? '') ??
-            double.tryParse(trackingData['dropoff_latitude']?.toString() ?? '') ??
+            double.tryParse(
+              trackingData['dropoff_latitude']?.toString() ?? '',
+            ) ??
             pLat;
         final double dLng =
             double.tryParse(trackingData['dropoff_lng']?.toString() ?? '') ??
-            double.tryParse(trackingData['dropoff_longitude']?.toString() ?? '') ??
+            double.tryParse(
+              trackingData['dropoff_longitude']?.toString() ?? '',
+            ) ??
             pLng;
 
         final pickupLoc = LatLng(pLat, pLng);
@@ -379,9 +391,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
         final driverInfo = DriverInfo.fromDriverProfileMap(
           trackingData['driver_profile'] is Map
-              ? Map<String, dynamic>.from(
-                  trackingData['driver_profile'] as Map,
-                )
+              ? Map<String, dynamic>.from(trackingData['driver_profile'] as Map)
               : null,
         );
 
@@ -457,10 +467,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         );
       }
 
-      state = state.copyWith(
-        driverLocation: location,
-        driverHeading: heading,
-      );
+      state = state.copyWith(driverLocation: location, driverHeading: heading);
 
       if (state.displayedDriverLocation == null) {
         state = state.copyWith(displayedDriverLocation: location);
@@ -522,7 +529,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
     if (meters < 80) return 'Arriving now / Paparating na';
 
     final km = meters / 1000;
-  final minutes = (km / 35 * 60).ceil().clamp(1, 180);
+    final minutes = (km / 35 * 60).ceil().clamp(1, 180);
     return '$minutes min';
   }
 
@@ -632,10 +639,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
           final lng = point['longitude'] ?? point['lng'];
           if (lat != null && lng != null) {
             points.add(
-              LatLng(
-                (lat as num).toDouble(),
-                (lng as num).toDouble(),
-              ),
+              LatLng((lat as num).toDouble(), (lng as num).toDouble()),
             );
           }
         }
@@ -692,8 +696,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
   }
 
   void _animateDriverTo(LatLng target) {
-    final from = state.displayedDriverLocation ?? state.driverLocation ?? target;
-    if (from.latitude == target.latitude && from.longitude == target.longitude) {
+    final from =
+        state.displayedDriverLocation ?? state.driverLocation ?? target;
+    if (from.latitude == target.latitude &&
+        from.longitude == target.longitude) {
       state = state.copyWith(displayedDriverLocation: target);
       _updateMarkers();
       return;
@@ -701,7 +707,9 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
 
     _driverAnimTimer?.cancel();
     var step = 0;
-    _driverAnimTimer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
+    _driverAnimTimer = Timer.periodic(const Duration(milliseconds: 40), (
+      timer,
+    ) {
       step++;
       final t = (step / _driverAnimSteps).clamp(0.0, 1.0);
       final lat = from.latitude + (target.latitude - from.latitude) * t;
@@ -777,7 +785,6 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
     await loadTracking();
   }
 
-
   LatLngBounds? getCameraBounds() {
     if (state.markers.isEmpty) return null;
 
@@ -811,10 +818,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
   }
 }
 
-final liveTrackingProvider =
-    StateNotifierProvider.family<LiveTrackingNotifier, LiveTrackingState, int>((
-      ref,
-      orderId,
-    ) {
+final liveTrackingProvider = StateNotifierProvider.autoDispose
+    .family<LiveTrackingNotifier, LiveTrackingState, int>((ref, orderId) {
+      ref.watch(userSessionEpochProvider);
       return LiveTrackingNotifier(orderId);
     });

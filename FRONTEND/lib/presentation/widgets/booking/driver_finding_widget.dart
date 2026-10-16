@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -45,7 +46,7 @@ class DriverFindingWidget extends ConsumerWidget {
       height: ResponsiveUtils.spacing(context, 120),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+        color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
       ),
       child: Stack(
         alignment: Alignment.center,
@@ -58,7 +59,7 @@ class DriverFindingWidget extends ConsumerWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFF5F2D82).withValues(alpha: 0.3),
+                color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -89,7 +90,7 @@ class DriverFindingWidget extends ConsumerWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 20),
         fontWeight: FontWeight.w700,
-        color: Colors.black87,
+        color: AppColors.foreground(context, Colors.black87),
       ),
       textAlign: TextAlign.center,
     );
@@ -101,7 +102,7 @@ class DriverFindingWidget extends ConsumerWidget {
       style: TextStyle(
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 14),
-        color: Colors.grey[600],
+        color: AppColors.foreground(context, Colors.grey[600]!),
       ),
       textAlign: TextAlign.center,
     );

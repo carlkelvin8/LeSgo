@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/utils/responsive_utils.dart';
@@ -26,7 +27,7 @@ class OtpContactSection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -43,7 +44,7 @@ class OtpContactSection extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.black54,
+                  color: AppColors.foreground(context, Colors.black54),
                 ),
                 children: [
                   const TextSpan(text: "Didn't receive code? "),
@@ -51,7 +52,7 @@ class OtpContactSection extends StatelessWidget {
                     text: 'Resend OTP',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
-                      color: Colors.black,
+                      color: AppColors.foreground(context, Colors.black),
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
                       fontSize: ResponsiveUtils.fontSize(context, 12),

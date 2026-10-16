@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../domain/entities/booking/lesbuy/store.dart';
@@ -24,7 +25,7 @@ class StoreCard extends StatelessWidget {
           bottom: ResponsiveUtils.spacing(context, 16),
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: [
             BoxShadow(
@@ -47,12 +48,12 @@ class StoreCard extends StatelessWidget {
                   child: Container(
                     width: double.infinity,
                     height: imageHeight,
-                    color: Colors.grey[200],
+                    color: AppColors.surface(context, Colors.grey[200]!),
                     child: Center(
                       child: Icon(
                         _getStoreIcon(store.categories),
                         size: ResponsiveUtils.fontSize(context, 64),
-                        color: const Color(0xFF5F2D82).withValues(alpha: 0.6),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.6),
                       ),
                     ),
                   ),
@@ -96,7 +97,7 @@ class StoreCard extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: AppColors.foreground(context, Colors.black87),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -107,7 +108,7 @@ class StoreCard extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey[600],
+                      color: AppColors.foreground(context, Colors.grey[600]!),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -127,7 +128,7 @@ class StoreCard extends StatelessWidget {
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: AppColors.foreground(context, Colors.black87),
                         ),
                       ),
                       Text(
@@ -135,7 +136,7 @@ class StoreCard extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 12),
-                          color: Colors.grey[500],
+                          color: AppColors.foreground(context, Colors.grey[500]!),
                         ),
                       ),
                       const Spacer(),
@@ -143,7 +144,7 @@ class StoreCard extends StatelessWidget {
                         Icon(
                           Icons.access_time,
                           size: ResponsiveUtils.fontSize(context, 14),
-                          color: Colors.grey[500],
+                          color: AppColors.foreground(context, Colors.grey[500]!),
                         ),
                         SizedBox(width: ResponsiveUtils.spacing(context, 4)),
                         Text(
@@ -151,7 +152,7 @@ class StoreCard extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 12),
-                            color: Colors.grey[600],
+                            color: AppColors.foreground(context, Colors.grey[600]!),
                           ),
                         ),
                       ],
@@ -164,7 +165,7 @@ class StoreCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 11),
-                        color: Colors.grey[500],
+                        color: AppColors.foreground(context, Colors.grey[500]!),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

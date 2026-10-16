@@ -13,9 +13,7 @@ class MerchantOrderOpsUtils {
 
   static bool canCancelAfterAccept(String status) {
     final s = normalizedStatus(status);
-    return s == 'searching_driver' ||
-        s == 'accepted' ||
-        s == 'ready_for_pickup';
+    return s == 'searching_driver' || s == 'ready_for_pickup';
   }
 
   /// Rider has picked up — merchant can no longer cancel.

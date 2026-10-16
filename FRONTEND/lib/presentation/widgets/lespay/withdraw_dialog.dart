@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -46,7 +47,7 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -72,7 +73,7 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
                 'Cancel',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                 ),
               ),

@@ -54,6 +54,11 @@ Map<String, dynamic> _$CreateTicketDtoToJson(CreateTicketDto instance) =>
 
 TicketMessageDto _$TicketMessageDtoFromJson(Map<String, dynamic> json) =>
     TicketMessageDto(
+      attachments:
+          (json['attachments'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       id: (json['id'] as num).toInt(),
       ticketId: (json['ticket_id'] as num).toInt(),
       userId: (json['user_id'] as num).toInt(),
@@ -64,6 +69,7 @@ TicketMessageDto _$TicketMessageDtoFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$TicketMessageDtoToJson(TicketMessageDto instance) =>
     <String, dynamic>{
+      'attachments': instance.attachments,
       'id': instance.id,
       'ticket_id': instance.ticketId,
       'user_id': instance.userId,

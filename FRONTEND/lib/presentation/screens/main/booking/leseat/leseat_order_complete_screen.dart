@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/di/injection.dart';
@@ -7,7 +8,7 @@ import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../widgets/orders/proof_of_delivery_section.dart';
-import '../../../../widgets/review/rating_dialog.dart';
+import '../../../../provider/review/review_provider.dart';
 import '../../../../widgets/transactions/order_receipt_button.dart';
 import '../../../../../core/utils/payment_status_utils.dart';
 
@@ -24,13 +25,16 @@ class LeseatOrderCompleteScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<LeseatOrderCompleteScreen> createState() => _LeseatOrderCompleteScreenState();
+  ConsumerState<LeseatOrderCompleteScreen> createState() =>
+      _LeseatOrderCompleteScreenState();
 }
 
-class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteScreen> {
+class _LeseatOrderCompleteScreenState
+    extends ConsumerState<LeseatOrderCompleteScreen> {
   int _rating = 5;
   final TextEditingController _feedbackController = TextEditingController();
   bool _hasSubmittedReview = false;
+  bool _submittingReview = false;
   int? _driverId;
   List<String> _proofImages = const [];
 
@@ -48,7 +52,8 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
   Future<void> _loadOrderMeta() async {
     final orderId = int.tryParse(widget.orderId) ?? 0;
     if (orderId <= 0) return;
-    _driverId = widget.orderData?['driver_id'] as int? ??
+    _driverId =
+        widget.orderData?['driver_id'] as int? ??
         widget.orderData?['driverId'] as int?;
     try {
       final dataSource = getIt<OrderRemoteDataSource>();
@@ -93,31 +98,22 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
     final orderId = int.tryParse(widget.orderId) ?? 0;
     if (orderId <= 0) return;
 
-    final result = await showRatingDialog(
-      context: context,
-      title: 'Rate Your Order',
-      subtitle: 'How was your food and delivery?',
+    setState(() => _submittingReview = true);
+    final reviewNotifier = ref.read(reviewProvider.notifier);
+    await reviewNotifier.submitReview(
       reviewableType: 'order',
       reviewableId: orderId,
-      onSuccess: () {
-        if (mounted) setState(() => _hasSubmittedReview = true);
-      },
+      rating: _rating,
+      comment: _feedbackController.text.trim().isEmpty
+          ? null
+          : _feedbackController.text.trim(),
+      context: context,
     );
-
-    if (result != true || !mounted) return;
-
-    setState(() => _hasSubmittedReview = true);
-
-    final driverId = _driverId;
-    if (driverId != null && driverId > 0) {
-      await showRatingDialog(
-        context: context,
-        title: 'Rate Your Driver',
-        subtitle: 'How was your delivery experience?',
-        reviewableType: 'driver',
-        reviewableId: driverId,
-      );
-    }
+    if (!mounted) return;
+    setState(() {
+      _submittingReview = false;
+      _hasSubmittedReview = true;
+    });
   }
 
   void _orderAgain() {
@@ -131,12 +127,15 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
     final restaurantName = orderData['restaurantName'] ?? 'Restaurant';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface(context, Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(
+            Icons.arrow_back,
+            color: AppColors.foreground(context, Colors.black87),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -145,7 +144,7 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         centerTitle: true,
@@ -216,7 +215,7 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 20),
                   fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                  color: AppColors.foreground(context, Colors.black87),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -275,9 +274,11 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
                 width: double.infinity,
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: AppColors.surface(context, Colors.grey[50]!),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey[200]!),
+                  border: Border.all(
+                    color: AppColors.border(context, Colors.grey[200]!),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +289,7 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: AppColors.foreground(context, Colors.black87),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -313,7 +314,10 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
                                 size: 32,
                                 color: index < _rating
                                     ? Colors.amber[600]
-                                    : Colors.grey[300],
+                                    : AppColors.foreground(
+                                        context,
+                                        Colors.grey[300]!,
+                                      ),
                               ),
                             ),
                           );
@@ -332,15 +336,22 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
                         hintStyle: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 14),
-                          color: Colors.grey[500],
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[500]!,
+                          ),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
+                          borderSide: BorderSide(
+                            color: AppColors.border(context, Colors.grey[300]!),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF5F2D82)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF5F2D82),
+                          ),
                         ),
                         contentPadding: EdgeInsets.all(
                           ResponsiveUtils.spacing(context, 16),
@@ -358,7 +369,9 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _hasSubmittedReview ? null : _submitRating,
+                        onPressed: (_hasSubmittedReview || _submittingReview)
+                            ? null
+                            : _submitRating,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _hasSubmittedReview
                               ? Colors.grey
@@ -370,15 +383,29 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(
-                          _hasSubmittedReview ? 'REVIEW SUBMITTED' : 'SUBMIT',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 16),
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _submittingReview
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                _hasSubmittedReview
+                                    ? 'REVIEW SUBMITTED'
+                                    : 'SUBMIT',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    16,
+                                  ),
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -387,55 +414,14 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
 
               SizedBox(height: ResponsiveUtils.spacing(context, 24)),
 
-              // Rate LesEat Section
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F4FF),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE1D4F7)),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Rate LesEat',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 16),
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF5F2D82),
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-
-                    // LesEat Star Rating (default 5 stars)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        return Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: ResponsiveUtils.spacing(context, 2),
-                          ),
-                          child: Icon(
-                            Icons.star,
-                            size: 24,
-                            color: Colors.amber[600],
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
               OrderReceiptButton(
                 orderId: widget.orderId,
                 serviceName: 'LesEat',
                 serviceId: 3,
-                amount: (widget.orderData?['total'] as num?)?.toDouble() ??
+                amount:
+                    (widget.orderData?['total'] as num?)?.toDouble() ??
                     (widget.orderData?['estimated_fare'] as num?)?.toDouble() ??
                     0,
                 pickupAddress:
@@ -482,7 +468,9 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false),
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/', (route) => false),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF5F2D82)),
                     padding: EdgeInsets.symmetric(
@@ -498,7 +486,7 @@ class _LeseatOrderCompleteScreenState extends ConsumerState<LeseatOrderCompleteS
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 18),
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF5F2D82),
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
                     ),
                   ),
                 ),

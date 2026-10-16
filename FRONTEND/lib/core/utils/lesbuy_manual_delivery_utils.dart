@@ -1,7 +1,19 @@
+import '../../data/data_source/dto/address/address_dto.dart';
+import 'booking_geo_utils.dart';
+
 /// LesBuy manual (papabili) orders: delivery fee is calculated after the rider
 /// uploads the first item photo — distance from that store location to customer.
 class LesbuyManualDeliveryUtils {
   LesbuyManualDeliveryUtils._();
+
+  /// A manual order needs a real customer drop-off, never map defaults.
+  static bool hasDeliveryLocation(AddressDto? address) =>
+      address != null &&
+      address.addressLine1.trim().isNotEmpty &&
+      BookingGeoUtils.hasValidCoords(address.latitude, address.longitude);
+
+  static const missingDeliveryMessage =
+      'Select a delivery address with a map pin before checkout.';
 
   static const pendingLabel = 'TBD';
   static const pendingHint =

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -85,22 +86,25 @@ class LocationNotifier extends StateNotifier<LocationState> {
       }
 
       print('🔵 LocationProvider: Getting position...');
-      Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 15),
-        ),
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw Exception(
-            'Location request timed out. Tap the button again or pick a spot on the map.',
+      Position position =
+          await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 15),
+            ),
+          ).timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              throw Exception(
+                'Location request timed out. Tap the button again or pick a spot on the map.',
+              );
+            },
           );
-        },
-      );
 
       final location = LatLng(position.latitude, position.longitude);
-      print('🔵 LocationProvider: Got position - ${location.latitude}, ${location.longitude}');
+      print(
+        '🔵 LocationProvider: Got position - ${location.latitude}, ${location.longitude}',
+      );
 
       print('🔵 LocationProvider: Getting address from location...');
       final address = await _getAddressFromLocation(location);
@@ -246,7 +250,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
   Future<LocationAddress?> _getAddressFromLocation(LatLng location) async {
     try {
       print('🔵 LocationProvider: Trying Google Geocoding API first...');
-      
+
       // Try Google Geocoding API first for better results
       try {
         final googleAddress = await _getAddressFromGoogleAPI(location);
@@ -257,42 +261,49 @@ class LocationNotifier extends StateNotifier<LocationState> {
       } catch (e) {
         print('🔴 LocationProvider: Google API failed - $e');
       }
-      
+
       print('🔵 LocationProvider: Falling back to geocoding package...');
-      
+
       // Fallback to geocoding package with better error handling
       try {
-        List<Placemark> placemarks = await placemarkFromCoordinates(
-          location.latitude,
-          location.longitude,
-        ).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {
-            print('🔴 LocationProvider: Geocoding timeout');
-            return <Placemark>[];
-          },
-        );
+        List<Placemark> placemarks =
+            await placemarkFromCoordinates(
+              location.latitude,
+              location.longitude,
+            ).timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                print('🔴 LocationProvider: Geocoding timeout');
+                return <Placemark>[];
+              },
+            );
 
         if (placemarks.isNotEmpty) {
           final place = placemarks.first;
           print('🔵 LocationProvider: Geocoding success');
           print('🔵 LocationProvider: - locality: ${place.locality}');
           print('🔵 LocationProvider: - subLocality: ${place.subLocality}');
-          print('🔵 LocationProvider: - administrativeArea: ${place.administrativeArea}');
+          print(
+            '🔵 LocationProvider: - administrativeArea: ${place.administrativeArea}',
+          );
           print('🔵 LocationProvider: - thoroughfare: ${place.thoroughfare}');
-          print('🔵 LocationProvider: - subThoroughfare: ${place.subThoroughfare}');
+          print(
+            '🔵 LocationProvider: - subThoroughfare: ${place.subThoroughfare}',
+          );
 
           final streetName = place.thoroughfare ?? place.street ?? '';
           final houseNumber = place.subThoroughfare ?? '';
           final houseNumberStreet =
               houseNumber.isNotEmpty && streetName.isNotEmpty
               ? '$houseNumber $streetName'
-              : streetName.isNotEmpty ? streetName : null;
+              : streetName.isNotEmpty
+              ? streetName
+              : null;
 
           final barangay = place.subLocality ?? place.locality ?? '';
           final city = place.locality ?? place.subAdministrativeArea ?? '';
           final province = place.administrativeArea ?? '';
-          
+
           final cityProvince = city.isNotEmpty && province.isNotEmpty
               ? '$city, $province'
               : city.isNotEmpty
@@ -316,11 +327,10 @@ class LocationNotifier extends StateNotifier<LocationState> {
       } catch (e) {
         print('🔴 LocationProvider: Geocoding package error - $e');
       }
-      
+
       // Always return default address as fallback
       print('🔵 LocationProvider: Using default address');
       return _getDefaultAddress(location);
-      
     } catch (e, stackTrace) {
       print('🔴 LocationProvider: Unexpected error - $e');
       print('🔴 LocationProvider: Stack trace - $stackTrace');
@@ -330,27 +340,33 @@ class LocationNotifier extends StateNotifier<LocationState> {
 
   Future<LocationAddress?> _getAddressFromGoogleAPI(LatLng location) async {
     try {
-      final url = 'https://maps.googleapis.com/maps/api/geocode/json'
+      final url =
+          'https://maps.googleapis.com/maps/api/geocode/json'
           '?latlng=${location.latitude},${location.longitude}'
           '&key=${ApiConstants.googleMapsApiKey}';
 
       print('🔵 LocationProvider: Calling Google Geocoding API...');
-      
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          print('🔴 LocationProvider: Google API timeout');
-          throw Exception('Timeout');
-        },
-      );
+
+      final response = await http
+          .get(Uri.parse(url))
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              print('🔴 LocationProvider: Google API timeout');
+              throw Exception('Timeout');
+            },
+          );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
-        if (data['status'] == 'OK' && data['results'] != null && data['results'].isNotEmpty) {
+
+        if (data['status'] == 'OK' &&
+            data['results'] != null &&
+            data['results'].isNotEmpty) {
           final result = data['results'][0];
-          final addressComponents = result['address_components'] as List<dynamic>?;
-          
+          final addressComponents =
+              result['address_components'] as List<dynamic>?;
+
           if (addressComponents != null) {
             String? streetNumber;
             String? route;
@@ -359,17 +375,18 @@ class LocationNotifier extends StateNotifier<LocationState> {
             String? adminArea1; // Province
             String? adminArea2; // City
             String? postalCode;
-            
+
             for (var component in addressComponents) {
               final types = component['types'] as List<dynamic>?;
               final longName = component['long_name'] as String?;
-              
+
               if (types != null && longName != null) {
                 if (types.contains('street_number')) {
                   streetNumber = longName;
                 } else if (types.contains('route')) {
                   route = longName;
-                } else if (types.contains('sublocality') || types.contains('sublocality_level_1')) {
+                } else if (types.contains('sublocality') ||
+                    types.contains('sublocality_level_1')) {
                   sublocality = longName;
                 } else if (types.contains('locality')) {
                   locality = longName;
@@ -382,7 +399,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
                 }
               }
             }
-            
+
             // Build street address
             String? houseNumberStreet;
             if (streetNumber != null && route != null) {
@@ -390,7 +407,7 @@ class LocationNotifier extends StateNotifier<LocationState> {
             } else if (route != null) {
               houseNumberStreet = route;
             }
-            
+
             // Build city/province
             String cityProvince = '';
             if (locality != null && adminArea1 != null) {
@@ -402,14 +419,16 @@ class LocationNotifier extends StateNotifier<LocationState> {
             } else if (adminArea1 != null) {
               cityProvince = adminArea1;
             }
-            
+
             final address = LocationAddress(
               houseNumberStreet: houseNumberStreet,
               subdivisionBarangay: sublocality,
-              cityProvince: cityProvince.isNotEmpty ? cityProvince : 'Philippines',
+              cityProvince: cityProvince.isNotEmpty
+                  ? cityProvince
+                  : 'Philippines',
               zipCode: postalCode,
             );
-            
+
             print('🔵 LocationProvider: Google API address - $cityProvince');
             return address;
           }
@@ -417,50 +436,60 @@ class LocationNotifier extends StateNotifier<LocationState> {
           print('🔴 LocationProvider: Google API error: ${data['status']}');
         }
       } else {
-        print('🔴 LocationProvider: Google API HTTP error: ${response.statusCode}');
+        print(
+          '🔴 LocationProvider: Google API HTTP error: ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('🔴 LocationProvider: Google API exception: $e');
     }
-    
+
     return null;
   }
 
   LocationAddress _getDefaultAddress(LatLng location) {
-    print('🔵 LocationProvider: Using default address for ${location.latitude}, ${location.longitude}');
-    
+    print(
+      '🔵 LocationProvider: Using default address for ${location.latitude}, ${location.longitude}',
+    );
+
     // Determine default city based on coordinates
     String defaultCity = 'Philippines';
     String defaultBarangay = 'Barangay';
     String defaultZip = '';
-    
+
     // Metro Manila area (rough bounds)
-    if (location.latitude >= 14.4 && location.latitude <= 14.8 &&
-        location.longitude >= 120.9 && location.longitude <= 121.2) {
+    if (location.latitude >= 14.4 &&
+        location.latitude <= 14.8 &&
+        location.longitude >= 120.9 &&
+        location.longitude <= 121.2) {
       defaultCity = 'Metro Manila, Philippines';
       defaultBarangay = 'Barangay';
       defaultZip = '1000';
     }
     // Cagayan de Oro area
-    else if (location.latitude >= 8.3 && location.latitude <= 8.6 &&
-        location.longitude >= 124.5 && location.longitude <= 124.8) {
+    else if (location.latitude >= 8.3 &&
+        location.latitude <= 8.6 &&
+        location.longitude >= 124.5 &&
+        location.longitude <= 124.8) {
       defaultCity = 'Cagayan de Oro, Misamis Oriental';
       defaultBarangay = 'Barangay';
       defaultZip = '9000';
     }
-    
+
     return LocationAddress(
       houseNumberStreet: null,
       subdivisionBarangay: defaultBarangay,
       cityProvince: defaultCity,
       zipCode: defaultZip,
-      landmark: 'Coordinates: ${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
+      landmark:
+          'Coordinates: ${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
     );
   }
 }
 
 final locationProvider = StateNotifierProvider<LocationNotifier, LocationState>(
   (ref) {
+    ref.watch(userSessionEpochProvider);
     return LocationNotifier();
   },
 );

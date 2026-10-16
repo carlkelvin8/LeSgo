@@ -1,5 +1,5 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../domain/entities/booking/leseat/menu_item.dart';
 import 'menu_item_card.dart';
 
@@ -22,35 +22,49 @@ class MenuItemsSection extends StatelessWidget {
     if (items.isEmpty) {
       return Center(
         child: Padding(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 32)),
-          child: Text(
-            'No items in this category',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              color: Colors.grey[600],
-            ),
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.restaurant_menu,
+                size: 64,
+                color: AppColors.foreground(context, Colors.grey[300]!),
+              ),
+              const SizedBox(height: 16),
+               Text(
+                'No items in this category',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground(context, Color(0xFF69626F)),
+                ),
+              ),
+            ],
           ),
         ),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Menu Items List
-        ...items.map(
-          (item) => Padding(
-            padding: EdgeInsets.only(
-              bottom: ResponsiveUtils.spacing(context, 16),
-            ),
-            child: MenuItemCard(
-              item: item,
-              onTap: onItemTap != null ? () => onItemTap!(item) : null,
-            ),
-          ),
-        ),
-      ],
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return MenuItemCard(
+          item: item,
+          onTap: onItemTap != null ? () => onItemTap!(item) : null,
+          onAddToCart: () => onAddToCart(item),
+        );
+      },
     );
   }
 }

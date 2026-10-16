@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/proof_image_utils.dart';
@@ -18,7 +19,7 @@ class ProofOfDeliverySection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -26,7 +27,7 @@ class ProofOfDeliverySection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.photo_camera_outlined, color: Colors.grey[700], size: 20),
+              Icon(Icons.photo_camera_outlined, color: AppColors.foreground(context, Colors.grey[700]!), size: 20),
               const SizedBox(width: 8),
               const Text(
                 'Proof of Delivery',
@@ -120,7 +121,7 @@ class _ProofNetworkImageState extends State<_ProofNetworkImage> {
       loadingBuilder: (context, child, progress) {
         if (progress == null) return child;
         return Container(
-          color: Colors.grey[200],
+          color: AppColors.surface(context, Colors.grey[200]!),
           child: const Center(
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
@@ -137,15 +138,15 @@ class _ProofNetworkImageState extends State<_ProofNetworkImage> {
             }
           });
           return Container(
-            color: Colors.grey[200],
+            color: AppColors.surface(context, Colors.grey[200]!),
             child: const Center(
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
           );
         }
         return Container(
-          color: Colors.grey[200],
-          child: const Icon(Icons.broken_image, color: Colors.grey),
+          color: AppColors.surface(context, Colors.grey[200]!),
+          child:  Icon(Icons.broken_image, color: AppColors.foreground(context, Colors.grey)),
         );
       },
     );

@@ -9,15 +9,20 @@ part of 'review_dto.dart';
 ReviewDto _$ReviewDtoFromJson(Map<String, dynamic> json) => ReviewDto(
   id: (json['id'] as num).toInt(),
   userId: (json['user_id'] as num).toInt(),
-  reviewableType: json['reviewable_type'] as String,
-  reviewableId: (json['reviewable_id'] as num).toInt(),
-  rating: (json['rating'] as num).toInt(),
-  comment: json['comment'] as String?,
-  helpfulCount: (json['helpful_count'] as num).toInt(),
+  reviewableType: json['driver_id'] != null ? 'driver' : 'service',
+  reviewableId: ((json['driver_id'] ?? json['service_id'] ?? 0) as num).toInt(),
+  rating: (json['overall_rating'] as num).toInt(),
+  comment: json['review_comment'] as String?,
+  helpfulCount: (json['helpful_count'] as num?)?.toInt() ?? 0,
   createdAt: json['created_at'] as String,
   updatedAt: json['updated_at'] as String,
-  userName: json['user_name'] as String?,
-  userPhoto: json['user_photo'] as String?,
+  userName:
+      (json['user'] as Map<String, dynamic>?)?['name'] as String? ??
+      json['user_name'] as String?,
+  userPhoto:
+      (json['user'] as Map<String, dynamic>?)?['profile_photo_url']
+          as String? ??
+      json['user_photo'] as String?,
 );
 
 Map<String, dynamic> _$ReviewDtoToJson(ReviewDto instance) => <String, dynamic>{

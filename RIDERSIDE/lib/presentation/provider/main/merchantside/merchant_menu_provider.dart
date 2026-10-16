@@ -71,15 +71,33 @@ final merchantMenuItemsProvider = FutureProvider.autoDispose<List<MenuItemDto>>(
 /// Provider for selected category filter
 final selectedCategoryProvider = StateProvider<int?>((ref) => null);
 
-/// Provider for filtered menu items by category
+/// Provider for search query
+final merchantMenuSearchQueryProvider = StateProvider<String>((ref) => '');
+
+/// Provider for filtered menu items by category and search
 final filteredMenuItemsProvider = Provider<List<MenuItemDto>>((ref) {
   final menuItemsAsync = ref.watch(merchantMenuItemsProvider);
   final selectedCategory = ref.watch(selectedCategoryProvider);
+  final searchQuery = ref.watch(merchantMenuSearchQueryProvider);
   
   return menuItemsAsync.when(
     data: (items) {
-      if (selectedCategory == null) return items;
-      return items.where((item) => item.menuCategoryId == selectedCategory).toList();
+      var filtered = items;
+      
+      // Filter by search query first (if not empty)
+      if (searchQuery.isNotEmpty) {
+        final query = searchQuery.toLowerCase();
+        filtered = filtered.where((item) {
+          final name = item.name.toLowerCase();
+          final desc = (item.description ?? '').toLowerCase();
+          return name.contains(query) || desc.contains(query);
+        }).toList();
+      } else if (selectedCategory != null) {
+        // Only filter by category if no search query
+        filtered = filtered.where((item) => item.menuCategoryId == selectedCategory).toList();
+      }
+      
+      return filtered;
     },
     loading: () => [],
     error: (_, __) => [],

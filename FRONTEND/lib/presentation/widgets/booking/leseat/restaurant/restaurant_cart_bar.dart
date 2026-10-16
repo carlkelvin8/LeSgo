@@ -1,5 +1,5 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../../../../core/utils/responsive_utils.dart';
 
 class RestaurantCartBar extends StatelessWidget {
   final int itemCount;
@@ -16,73 +16,108 @@ class RestaurantCartBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
-        vertical: ResponsiveUtils.spacing(context, 16),
-      ),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF5F2D82),
+        color: AppColors.accent(context, Color(0xFF5F2D82)),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+            color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            // Cart Icon with Count
-            Container(
-              width: ResponsiveUtils.spacing(context, 40),
-              height: ResponsiveUtils.spacing(context, 40),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  itemCount.toString(),
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF5F2D82),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onViewCart,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                // Cart Icon with Count
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration:  BoxDecoration(
+                    color: AppColors.surface(context, Colors.white),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.shopping_bag,
+                        color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        itemCount.toString(),
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ),
-            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+                const SizedBox(width: 16),
 
-            // View Cart Text
-            Expanded(
-              child: GestureDetector(
-                onTap: onViewCart,
-                child: Text(
-                  'View Cart',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                // Items text and total
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$itemCount ${itemCount == 1 ? 'item' : 'items'}',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 12,
+                          color: AppColors.onAccent(context).withValues(alpha: 0.7),
+                        ),
+                      ),
+                      Text(
+                        '₱${total.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.onAccent(context),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ),
 
-            // Total Price
-            Text(
-              '₱${total.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 18),
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
+                // Arrow
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'View Cart',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onAccent(context),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward,
+                      color: AppColors.onAccent(context),
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -38,7 +39,9 @@ class RatingStars extends StatelessWidget {
             child: Icon(
               isActive ? Icons.star : Icons.star_border,
               size: size,
-              color: isActive ? activeColor : inactiveColor,
+              color: isActive
+                  ? activeColor
+                  : AppColors.foreground(context, inactiveColor),
             ),
           ),
         );
@@ -76,7 +79,9 @@ class RatingStarsDisplay extends StatelessWidget {
           return Icon(
             isHalf ? Icons.star_half : (isActive ? Icons.star : Icons.star_border),
             size: size,
-            color: (isActive || isHalf) ? activeColor : inactiveColor,
+            color: (isActive || isHalf)
+                ? activeColor
+                : AppColors.foreground(context, inactiveColor),
           );
         }),
         if (showRatingText) ...[
@@ -87,7 +92,7 @@ class RatingStarsDisplay extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],

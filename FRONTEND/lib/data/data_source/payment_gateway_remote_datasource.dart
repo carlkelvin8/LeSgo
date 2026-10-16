@@ -50,12 +50,8 @@ class PaymentGatewayRemoteDataSource {
   /// Get invoice by ID
   Future<InvoiceResponseDto> getInvoice(String invoiceId) async {
     final dio = _dioClient.dio;
-    try {
-      final response = await dio.get('/v1/payment-gateway/invoices/$invoiceId');
-      return InvoiceResponseDto.fromJson(response.data as Map<String, dynamic>);
-    } catch (e) {
-      throw Exception('Failed to get invoice: $e');
-    }
+    final response = await dio.get('/v1/payment-gateway/invoices/$invoiceId');
+    return InvoiceResponseDto.fromJson(response.data as Map<String, dynamic>);
   }
 
   /// Compatibility alias for provider code.

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../domain/entities/booking/booking_service.dart';
@@ -18,13 +19,13 @@ class ServiceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF000000).withValues(alpha: 0.20),
+            color: AppColors.foreground(context, Color(0xFF000000)).withValues(alpha: 0.20),
             blurRadius: 24,
             offset: const Offset(0, 6),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: const Color(0xFF000000).withValues(alpha: 0.20),
+            color: AppColors.foreground(context, Color(0xFF000000)).withValues(alpha: 0.20),
             blurRadius: 12,
             offset: const Offset(0, 2),
             spreadRadius: 0,
@@ -32,7 +33,7 @@ class ServiceCard extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
           onTap: isComingSoon ? null : onTap,
@@ -52,7 +53,7 @@ class ServiceCard extends StatelessWidget {
                           ResponsiveUtils.spacing(context, 12),
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.grey[50],
+                          color: AppColors.surface(context, Colors.grey[50]!),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: SvgPicture.asset(
@@ -71,7 +72,7 @@ class ServiceCard extends StatelessWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 18),
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: AppColors.foreground(context, Colors.black87),
                               ),
                             ),
                             SizedBox(
@@ -82,7 +83,7 @@ class ServiceCard extends StatelessWidget {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                                 height: 1.4,
                               ),
                               maxLines: 2,
@@ -109,7 +110,7 @@ class ServiceCard extends StatelessWidget {
                         vertical: ResponsiveUtils.spacing(context, 10),
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(

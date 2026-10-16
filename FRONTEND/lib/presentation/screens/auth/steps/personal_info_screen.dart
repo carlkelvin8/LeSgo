@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -43,7 +44,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Builder(
@@ -86,8 +87,11 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               text: 'Sign up with Google',
                               iconUrl: 'https://www.google.com/favicon.ico',
                               iconData: Icons.g_mobiledata,
-                              onPressed: () =>
-                                  GoogleAuthHelper.signIn(context, ref),
+                              onPressed: () => GoogleAuthHelper.signIn(
+                                context,
+                                ref,
+                                mode: GoogleAuthMode.signup,
+                              ),
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 20),
@@ -99,16 +103,20 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                                 const Expanded(child: Divider(thickness: 1)),
                                 Padding(
                                   padding: EdgeInsets.symmetric(
-                                    horizontal:
-                                        ResponsiveUtils.spacing(context, 12),
+                                    horizontal: ResponsiveUtils.spacing(
+                                      context,
+                                      12,
+                                    ),
                                   ),
                                   child: Text(
                                     'OR',
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
-                                      fontSize:
-                                          ResponsiveUtils.fontSize(context, 12),
-                                      color: Colors.grey[500],
+                                      fontSize: ResponsiveUtils.fontSize(
+                                        context,
+                                        12,
+                                      ),
+                                      color: AppColors.foreground(context, Colors.grey[500]!),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -132,7 +140,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               textCapitalization: TextCapitalization.words,
                               prefixIcon: Icon(
                                 Icons.person_outline,
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                               ),
                               required: true,
                             ),
@@ -152,7 +160,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               textCapitalization: TextCapitalization.words,
                               prefixIcon: Icon(
                                 Icons.person_outline,
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                               ),
                               required: true,
                             ),
@@ -180,7 +188,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               keyboardType: TextInputType.emailAddress,
                               prefixIcon: Icon(
                                 Icons.email_outlined,
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                               ),
                               required: true,
                             ),
@@ -196,7 +204,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               keyboardType: TextInputType.phone,
                               prefixIcon: Icon(
                                 Icons.phone_outlined,
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                               ),
                               required: true,
                             ),
@@ -238,7 +246,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               validator: RegisterValidator.referralCode,
                               prefixIcon: Icon(
                                 Icons.card_giftcard_outlined,
-                                color: Colors.grey[600],
+                                color: AppColors.foreground(context, Colors.grey[600]!),
                               ),
                               required: false,
                             ),

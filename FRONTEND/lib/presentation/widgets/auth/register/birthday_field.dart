@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
@@ -49,10 +50,10 @@ class _BirthdayFieldState extends State<BirthdayField> {
       controller: widget.controller,
       readOnly: true,
       onTap: _selectBirthday,
-      style: TextStyle(fontFamily: 'TT Fors', fontSize: ResponsiveUtils.fontSize(context, 16), color: Colors.black87),
+      style: TextStyle(fontFamily: 'TT Fors', fontSize: ResponsiveUtils.fontSize(context, 16), color: AppColors.foreground(context, Colors.black87)),
       decoration: InputDecoration(
         labelText: widget.labelText,
-        labelStyle: TextStyle(fontFamily: 'TT Fors', color: Colors.grey[600], fontSize: ResponsiveUtils.fontSize(context, 14)),
+        labelStyle: TextStyle(fontFamily: 'TT Fors', color: AppColors.foreground(context, Colors.grey[600]!), fontSize: ResponsiveUtils.fontSize(context, 14)),
         suffixIcon: Icon(
           Icons.calendar_today,
           color: widget.focusedBorderColor,
@@ -60,7 +61,7 @@ class _BirthdayFieldState extends State<BirthdayField> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+          borderSide: BorderSide(color: AppColors.border(context, Colors.grey[300]!), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

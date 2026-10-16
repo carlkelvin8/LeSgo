@@ -14,7 +14,8 @@ class GeminiCustomerService {
   static const _offTopicReply =
       'I can only help with LeSGo app customer service — orders, deliveries, LesPay, vouchers, missions, account settings, and app issues. For anything else, please open Settings > Support Tickets to reach our team.';
 
-  static const _systemInstruction = '''
+  static const _systemInstruction =
+      '''
 You are LeSGo Assistant, a customer service bot ONLY for the LeSGo mobile app in the Philippines.
 
 STRICT SCOPE — you may ONLY answer questions about:
@@ -48,18 +49,18 @@ Rules:
   ChatSession? _session;
   String _activeModel = _modelCandidates.first;
 
-  bool get isConfigured => SecretsConfig.isGeminiConfigured;
+  /// Built-in customer support remains available even when the optional
+  /// cloud model is unavailable or its credential has expired.
+  bool get isConfigured => true;
+
+  bool get _hasRemoteModel => SecretsConfig.isGeminiConfigured;
 
   void startConversation() {
-    if (!isConfigured) return;
+    if (!_hasRemoteModel) return;
     _resetSession(modelName: _modelCandidates.first);
   }
 
   Future<String> sendMessage(String message) async {
-    if (!isConfigured) {
-      throw GeminiNotConfiguredException();
-    }
-
     final trimmed = message.trim();
     if (_isClearlyOffTopic(trimmed)) {
       return _offTopicReply;
@@ -70,7 +71,10 @@ Rules:
       return localAnswer;
     }
 
-    Object? lastError;
+    if (!_hasRemoteModel) {
+      return _tryLocalAnswer(trimmed, force: true)!;
+    }
+
     for (final modelName in _modelCandidates) {
       try {
         if (_activeModel != modelName) {
@@ -90,10 +94,7 @@ Rules:
           _activeModel = modelName;
           return text;
         }
-
-        lastError = 'Empty response from $modelName';
       } on GenerativeAIException catch (e) {
-        lastError = e;
         if (kDebugMode) {
           debugPrint('Gemini $modelName error: ${e.message}');
         }
@@ -101,9 +102,10 @@ Rules:
           _resetSession(modelName: modelName);
           continue;
         }
-        throw GeminiServiceException(_mapGenerativeError(e));
+        // Credentials and model availability can change independently of an
+        // installed app. Keep customer support usable through local answers.
+        break;
       } catch (e) {
-        lastError = e;
         if (kDebugMode) {
           debugPrint('Gemini $modelName unexpected error: $e');
         }
@@ -113,29 +115,7 @@ Rules:
     final fallback = _tryLocalAnswer(trimmed, force: true);
     if (fallback != null) return fallback;
 
-    if (lastError is GenerativeAIException) {
-      throw GeminiServiceException(_mapGenerativeError(lastError));
-    }
-    throw const GeminiServiceException(
-      'Sorry, I had trouble responding. Please try again in a moment.',
-    );
-  }
-
-  String _mapGenerativeError(GenerativeAIException error) {
-    final message = error.message.toLowerCase();
-    if (_isQuotaError(error)) {
-      return 'AI is temporarily busy (quota limit). Please wait a minute and try again, or open Settings > Support Tickets.';
-    }
-    if (message.contains('api key') ||
-        message.contains('permission') ||
-        message.contains('401') ||
-        message.contains('403')) {
-      return 'AI assistant is misconfigured. Check GEMINI_API_KEY in secrets.json.';
-    }
-    if (message.contains('not found') || message.contains('404')) {
-      return 'AI model unavailable. Please try again shortly.';
-    }
-    return 'Sorry, I had trouble responding. Please try again.';
+    return _tryLocalAnswer(trimmed, force: true)!;
   }
 
   bool _isQuotaError(GenerativeAIException error) {
@@ -199,13 +179,32 @@ Rules:
   String? _tryLocalAnswer(String message, {bool force = false}) {
     final normalized = message.toLowerCase();
 
-    if (_containsAny(normalized, ['rate', 'rates', 'price', 'pricing', 'fee', 'cost', 'magkano', 'presyo', 'bayad'])) {
+    if (_isInScopeGreeting(normalized)) {
+      return 'Hi! How can I help you with the LeSGo app today — orders, deliveries, LesPay, vouchers, or account settings?';
+    }
+
+    if (_containsAny(normalized, [
+      'rate',
+      'rates',
+      'price',
+      'pricing',
+      'fee',
+      'cost',
+      'magkano',
+      'presyo',
+      'bayad',
+    ])) {
       return 'LeSGo rates depend on the service (ride, LeSeat food delivery, or LesBuy), distance, and current demand. '
           'Open the app, enter your destination or pick a restaurant/store, and you\'ll see the estimated fare or delivery fee before you confirm — no surprise charges. '
           'For a specific trip, check the estimate shown at checkout or booking.';
     }
 
-    if (_containsAny(normalized, ['track', 'where is my order', 'order status', 'saan na'])) {
+    if (_containsAny(normalized, [
+      'track',
+      'where is my order',
+      'order status',
+      'saan na',
+    ])) {
       return 'To track your order, open the app and go to Transactions or your active order screen. '
           'You should see live status updates there. If it looks stuck, open Settings > Support Tickets and our team can help.';
     }
@@ -215,13 +214,67 @@ Rules:
           'If you still need help, open Settings > Support Tickets and include your order reference so our team can assist.';
     }
 
-    if (_containsAny(normalized, ['lespay', 'wallet', 'top up', 'top-up', 'balance'])) {
+    if (_containsAny(normalized, [
+      'lespay',
+      'wallet',
+      'top up',
+      'top-up',
+      'balance',
+    ])) {
       return 'For LesPay wallet issues, open the LesPay section and check your balance and transaction history. '
           'If a top-up or payment failed, wait a few minutes and refresh. For unresolved issues, use Settings > Support Tickets.';
     }
 
-    if (force && _isInScopeGreeting(normalized)) {
-      return 'Hi! How can I help you with the LeSGo app today — orders, deliveries, LesPay, vouchers, or account settings?';
+    if (_containsAny(normalized, [
+      'voucher',
+      'promo',
+      'discount',
+      'mission',
+      'loyalty',
+      'reward',
+      'referral',
+    ])) {
+      return 'Open the LeSGo app menu to view your vouchers, missions, loyalty rewards, or referral progress. '
+          'Check the item details for eligibility and expiry. If a valid reward is not applying, send its name or code through Settings > Support Tickets.';
+    }
+
+    if (_containsAny(normalized, [
+      'login',
+      'password',
+      'account',
+      'profile',
+      'address',
+      'notification',
+    ])) {
+      return 'For account help, open Profile or Settings to update your details, saved addresses, password, and notifications. '
+          'If you cannot sign in, use Forgot Password on the login screen or contact us through Settings > Support Tickets.';
+    }
+
+    if (_containsAny(normalized, [
+      'driver',
+      'rider',
+      'delivery',
+      'wrong item',
+      'missing item',
+      'late',
+      'delay',
+    ])) {
+      return 'Open the active order or Transactions to check the latest delivery status. '
+          'For a delay, missing or wrong item, or a driver concern, create a Support Ticket and include the order reference so the team can investigate.';
+    }
+
+    if (_containsAny(normalized, [
+      'support',
+      'ticket',
+      'contact',
+      'help center',
+    ])) {
+      return 'Go to Settings > Support Tickets to create or review a request. Include your order reference and a short description so the LeSGo support team can assist faster.';
+    }
+
+    if (force) {
+      return 'I can help with LeSGo orders, deliveries, LesPay, vouchers, missions, and account settings. '
+          'Please describe the app issue or open Settings > Support Tickets for help from the support team.';
     }
 
     return null;

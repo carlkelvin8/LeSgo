@@ -1,7 +1,9 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../data/data_source/dto/order/order_dto.dart';
+import '../../../core/constants/map_styles.dart';
 import '../../../core/constants/order_status_constants.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../screens/tracking/live_tracking_screen.dart';
@@ -192,7 +194,7 @@ class _OrderCardState extends State<OrderCard> {
       Polyline(
         polylineId: const PolylineId('route'),
         points: points,
-        color: const Color(0xFF5F2D82),
+        color: AppColors.accent(context, Color(0xFF5F2D82)),
         width: 3,
         // Use solid line for actual route, dashed for straight line
         patterns: _routePolyline.isEmpty
@@ -220,7 +222,7 @@ class _OrderCardState extends State<OrderCard> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -243,7 +245,7 @@ class _OrderCardState extends State<OrderCard> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                    color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -252,7 +254,7 @@ class _OrderCardState extends State<OrderCard> {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF5F2D82),
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
                     ),
                   ),
                 ),
@@ -264,7 +266,7 @@ class _OrderCardState extends State<OrderCard> {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
+                    color: AppColors.foreground(context, Colors.grey[700]!),
                   ),
                 ),
                 const Spacer(),
@@ -319,7 +321,7 @@ class _OrderCardState extends State<OrderCard> {
                 child: Container(
                   height: 140,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: AppColors.surface(context, Colors.grey[200]!),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: ClipRRect(
@@ -327,6 +329,7 @@ class _OrderCardState extends State<OrderCard> {
                     child: Stack(
                       children: [
                         GoogleMap(
+                          style: MapStyles.darkIfDark(context),
                           initialCameraPosition: CameraPosition(
                             target: LatLng(
                               (widget.order.pickupLat +
@@ -372,7 +375,7 @@ class _OrderCardState extends State<OrderCard> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
+                              color: AppColors.surface(context, Colors.black).withValues(alpha: 0.6),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -421,7 +424,7 @@ class _OrderCardState extends State<OrderCard> {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    Container(width: 2, height: 20, color: Colors.grey[300]),
+                    Container(width: 2, height: 20, color: AppColors.surface(context, Colors.grey[300]!)),
                     Container(
                       width: 8,
                       height: 8,
@@ -442,7 +445,7 @@ class _OrderCardState extends State<OrderCard> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey[800],
+                          color: AppColors.foreground(context, Colors.grey[800]!),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -453,7 +456,7 @@ class _OrderCardState extends State<OrderCard> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey[800],
+                          color: AppColors.foreground(context, Colors.grey[800]!),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -469,14 +472,14 @@ class _OrderCardState extends State<OrderCard> {
             // Footer row
             Row(
               children: [
-                Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
+                Icon(Icons.access_time, size: 14, color: AppColors.foreground(context, Colors.grey[500]!)),
                 const SizedBox(width: 4),
                 Text(
                   formattedDate,
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey[600],
+                    color: AppColors.foreground(context, Colors.grey[600]!),
                   ),
                 ),
                 const Spacer(),
@@ -486,7 +489,7 @@ class _OrderCardState extends State<OrderCard> {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF5F2D82),
+                    color: AppColors.accent(context, Color(0xFF5F2D82)),
                   ),
                 ),
               ],

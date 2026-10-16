@@ -1,3 +1,5 @@
+import '../../../core/utils/snackbar_utils.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -9,19 +11,14 @@ import '../chat/chat_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/constants/map_styles.dart';
-import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/order_cancel_utils.dart';
 import '../../../data/data_source/order_remote_datasource.dart';
 import '../../../core/di/injection.dart';
-import '../../../core/utils/cart_cleanup.dart';
 
 class LiveTrackingScreen extends ConsumerStatefulWidget {
   final int orderId;
 
-  const LiveTrackingScreen({
-    Key? key,
-    required this.orderId,
-  }) : super(key: key);
+  const LiveTrackingScreen({Key? key, required this.orderId}) : super(key: key);
 
   @override
   ConsumerState<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
@@ -65,7 +62,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   }
 
   void _callDriver() {
-    final driverInfo = ref.read(liveTrackingProvider(widget.orderId)).driverInfo;
+    final driverInfo = ref
+        .read(liveTrackingProvider(widget.orderId))
+        .driverInfo;
     if (driverInfo?.phone != null) {
       launchUrl(Uri.parse('tel:${driverInfo!.phone}'));
     }
@@ -74,9 +73,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   void _openChat() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ChatScreen(orderId: widget.orderId),
-      ),
+      MaterialPageRoute(builder: (_) => ChatScreen(orderId: widget.orderId)),
     );
   }
 
@@ -92,32 +89,20 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       try {
         final dataSource = getIt<OrderRemoteDataSource>();
         await dataSource.cancelOrder(widget.orderId, result);
-        await CartCleanup.clearAllCarts(ref);
 
         if (mounted) {
           setState(() => _isCancelling = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Order cancelled successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          SnackBarUtils.showSuccess(context, 'Order cancelled successfully');
           Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {
           setState(() => _isCancelling = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                ApiErrorMapper.message(
-                  e,
-                  fallbackEn: 'Could not cancel order.',
-                  fallbackTl: 'Hindi makansela ang order.',
-                ),
-              ),
-              backgroundColor: Colors.red,
-            ),
+          SnackBarUtils.showErrorFrom(
+            context,
+            e,
+            fallbackEn: 'Could not cancel order.',
+            fallbackTl: 'Hindi makansela ang order.',
           );
         }
       }
@@ -128,7 +113,10 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   Widget build(BuildContext context) {
     final trackingState = ref.watch(liveTrackingProvider(widget.orderId));
 
-    ref.listen<LiveTrackingState>(liveTrackingProvider(widget.orderId), (previous, next) {
+    ref.listen<LiveTrackingState>(liveTrackingProvider(widget.orderId), (
+      previous,
+      next,
+    ) {
       if (!next.followDriver) return;
       final target = next.displayedDriverLocation ?? next.driverLocation;
       if (previous?.displayedDriverLocation != next.displayedDriverLocation &&
@@ -147,12 +135,6 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
         );
       }
 
-      final wasCancelled =
-          previous?.orderStatus.toLowerCase() == 'cancelled';
-      final isCancelled = next.orderStatus.toLowerCase() == 'cancelled';
-      if (isCancelled && !wasCancelled) {
-        CartCleanup.clearAllCarts(ref);
-      }
     });
 
     return Scaffold(
@@ -183,10 +165,11 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
           // Loading overlay
           if (trackingState.isLoading)
             Container(
-              color: Colors.black.withValues(alpha: 0.3),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              color: AppColors.surface(
+                context,
+                Colors.black,
+              ).withValues(alpha: 0.3),
+              child: const Center(child: CircularProgressIndicator()),
             ),
 
           // Top bar
@@ -202,7 +185,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                     // Back button
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface(context, Colors.white),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -226,7 +209,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface(context, Colors.white),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
@@ -249,7 +232,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                     // Refresh button
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surface(context, Colors.white),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -262,7 +245,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                         icon: const Icon(Icons.refresh),
                         onPressed: () {
                           ref
-                              .read(liveTrackingProvider(widget.orderId).notifier)
+                              .read(
+                                liveTrackingProvider(widget.orderId).notifier,
+                              )
                               .refreshTracking();
                         },
                       ),
@@ -293,7 +278,14 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
 
           Positioned(
             right: 16,
-            bottom: _isBottomSheetExpanded ? 400 : 250,
+            bottom:
+                (_isBottomSheetExpanded
+                    ? (MediaQuery.sizeOf(context).height * 0.8).clamp(440, 640)
+                    : (MediaQuery.sizeOf(context).height * 0.28).clamp(
+                        160,
+                        280,
+                      )) +
+                8,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -335,123 +327,142 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: GestureDetector(
-              onVerticalDragUpdate: (details) {
-                final delta = details.primaryDelta ?? 0;
-                if (delta < -5) {
-                  setState(() => _isBottomSheetExpanded = true);
-                } else if (delta > 5) {
-                  setState(() => _isBottomSheetExpanded = false);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: _isBottomSheetExpanded ? 500 : 220,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: _isBottomSheetExpanded
+                  ? (MediaQuery.sizeOf(context).height * 0.8).clamp(440, 640)
+                  : (MediaQuery.sizeOf(context).height * 0.28).clamp(160, 280),
+              decoration: BoxDecoration(
+                color: AppColors.surface(context, Colors.white),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
-                child: Column(
-                  children: [
-                    // Drag handle
-                    Container(
-                      margin: const EdgeInsets.only(top: 12),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Drag handle
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => setState(
+                      () => _isBottomSheetExpanded = !_isBottomSheetExpanded,
                     ),
-
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ETA Section
-                            if (trackingState.eta != null)
-                              _buildEtaSection(trackingState),
-
-                            const SizedBox(height: 20),
-
-                            // Order Status
-                            _buildStatusSection(trackingState),
-
-                            const SizedBox(height: 20),
-
-                            // Driver Info
-                            if (trackingState.driverInfo != null)
-                              DriverInfoCard(
-                                driverInfo: trackingState.driverInfo!,
-                                onCall: _callDriver,
-                                onChat: _openChat,
-                              ),
-
-                            // Cancel button (only if order can be cancelled)
-                            if (canCustomerCancelOrderStatus(
-                              trackingState.orderStatus,
-                            )) ...[
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: _isCancelling ? null : _handleCancelOrder,
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.red[700],
-                                    side: BorderSide(color: Colors.red[700]!),
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: _isCancelling
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Text(
-                                          'Cancel Order',
-                                          style: TextStyle(
-                                            fontFamily: 'TT Fors',
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ],
-
-                            if (_isBottomSheetExpanded) ...[
-                              const SizedBox(height: 20),
-                              const Divider(),
-                              const SizedBox(height: 20),
-
-                              // Order Timeline
-                              if (trackingState.tracking != null)
-                                OrderStatusTimeline(
-                                  tracking: trackingState.tracking!,
-                                ),
-                            ],
-                          ],
+                    onVerticalDragUpdate: (details) {
+                      final delta = details.primaryDelta ?? 0;
+                      if (delta < -5) {
+                        setState(() => _isBottomSheetExpanded = true);
+                      } else if (delta > 5) {
+                        setState(() => _isBottomSheetExpanded = false);
+                      }
+                    },
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface(
+                              context,
+                              Colors.grey[300]!,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ETA Section
+                          if (trackingState.eta != null)
+                            _buildEtaSection(trackingState),
+
+                          const SizedBox(height: 20),
+
+                          // Order Status
+                          _buildStatusSection(trackingState),
+
+                          const SizedBox(height: 20),
+
+                          // Driver Info
+                          if (trackingState.driverInfo != null)
+                            DriverInfoCard(
+                              driverInfo: trackingState.driverInfo!,
+                              onCall: _callDriver,
+                              onChat: _openChat,
+                            ),
+
+                          // Cancel button (only if order can be cancelled)
+                          if (canCustomerCancelOrderStatus(
+                            trackingState.orderStatus,
+                          )) ...[
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: _isCancelling
+                                    ? null
+                                    : _handleCancelOrder,
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.red[700],
+                                  side: BorderSide(color: Colors.red[700]!),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: _isCancelling
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Cancel Order',
+                                        style: TextStyle(
+                                          fontFamily: 'TT Fors',
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ],
+
+                          if (_isBottomSheetExpanded) ...[
+                            const SizedBox(height: 20),
+                            const Divider(),
+                            const SizedBox(height: 20),
+
+                            // Order Timeline
+                            if (trackingState.tracking != null)
+                              OrderStatusTimeline(
+                                tracking: trackingState.tracking!,
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -477,11 +488,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
               color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.access_time,
-              color: Colors.white,
-              size: 32,
-            ),
+            child: const Icon(Icons.access_time, color: Colors.white, size: 32),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -490,10 +497,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
               children: [
                 const Text(
                   'Estimated Arrival',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -507,10 +511,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                 if (state.distance != null)
                   Text(
                     state.distance!,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
               ],
             ),
@@ -542,21 +543,17 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            _getStatusIcon(state.orderStatus),
-            color: statusColor,
-            size: 24,
-          ),
+          Icon(_getStatusIcon(state.orderStatus), color: statusColor, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Order Status',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey,
+                    color: AppColors.foreground(context, Colors.grey),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -643,18 +640,22 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFF5F2D82) : Colors.white,
+        color: isActive
+            ? AppColors.accent(context, Color(0xFF5F2D82))
+            : AppColors.surface(context, Colors.white),
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8),
         ],
       ),
       child: IconButton(
         tooltip: tooltip,
-        icon: Icon(icon, color: isActive ? Colors.white : Colors.black87),
+        icon: Icon(
+          icon,
+          color: isActive
+              ? Colors.white
+              : AppColors.foreground(context, Colors.black87),
+        ),
         onPressed: onPressed,
       ),
     );

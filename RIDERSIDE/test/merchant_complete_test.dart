@@ -30,29 +30,47 @@ void main() {
       expect(MerchantOrderOpsUtils.canReject('accepted'), isFalse);
     });
 
-    test('canCancelAfterAccept for correct statuses', () {
-      expect(MerchantOrderOpsUtils.canCancelAfterAccept('searching_driver'), isTrue);
-      expect(MerchantOrderOpsUtils.canCancelAfterAccept('accepted'), isTrue);
-      expect(MerchantOrderOpsUtils.canCancelAfterAccept('ready_for_pickup'), isTrue);
+    test('canCancelAfterAccept matches backend-allowed statuses', () {
+      expect(
+        MerchantOrderOpsUtils.canCancelAfterAccept('searching_driver'),
+        isTrue,
+      );
+      expect(MerchantOrderOpsUtils.canCancelAfterAccept('accepted'), isFalse);
+      expect(
+        MerchantOrderOpsUtils.canCancelAfterAccept('ready_for_pickup'),
+        isTrue,
+      );
       expect(MerchantOrderOpsUtils.canCancelAfterAccept('picked_up'), isFalse);
       expect(MerchantOrderOpsUtils.canCancelAfterAccept('completed'), isFalse);
       expect(MerchantOrderOpsUtils.canCancelAfterAccept('pending'), isFalse);
     });
 
     test('canMarkReadyForPickup from searching/accepted only', () {
-      expect(MerchantOrderOpsUtils.canMarkReadyForPickup('searching_driver'), isTrue);
+      expect(
+        MerchantOrderOpsUtils.canMarkReadyForPickup('searching_driver'),
+        isTrue,
+      );
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('accepted'), isTrue);
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('pending'), isFalse);
-      expect(MerchantOrderOpsUtils.canMarkReadyForPickup('ready_for_pickup'), isFalse);
+      expect(
+        MerchantOrderOpsUtils.canMarkReadyForPickup('ready_for_pickup'),
+        isFalse,
+      );
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('picked_up'), isFalse);
     });
 
     test('isRiderFlowStatus detects rider has taken over', () {
       expect(MerchantOrderOpsUtils.isRiderFlowStatus('picked_up'), isTrue);
       expect(MerchantOrderOpsUtils.isRiderFlowStatus('in_progress'), isTrue);
-      expect(MerchantOrderOpsUtils.isRiderFlowStatus('driver_arrived_at_pickup'), isTrue);
+      expect(
+        MerchantOrderOpsUtils.isRiderFlowStatus('driver_arrived_at_pickup'),
+        isTrue,
+      );
       expect(MerchantOrderOpsUtils.isRiderFlowStatus('completed'), isTrue);
-      expect(MerchantOrderOpsUtils.isRiderFlowStatus('searching_driver'), isFalse);
+      expect(
+        MerchantOrderOpsUtils.isRiderFlowStatus('searching_driver'),
+        isFalse,
+      );
       expect(MerchantOrderOpsUtils.isRiderFlowStatus('pending'), isFalse);
     });
 
@@ -101,18 +119,27 @@ void main() {
     });
 
     test('forDelivery filter returns picked_up', () {
-      final result = filterMerchantOrders(orders, MerchantOrderFilter.forDelivery);
+      final result = filterMerchantOrders(
+        orders,
+        MerchantOrderFilter.forDelivery,
+      );
       expect(result.length, 1);
       expect(result.first.status, 'picked_up');
     });
 
     test('completed filter returns completed', () {
-      final result = filterMerchantOrders(orders, MerchantOrderFilter.completed);
+      final result = filterMerchantOrders(
+        orders,
+        MerchantOrderFilter.completed,
+      );
       expect(result.length, 1);
     });
 
     test('cancelled filter returns cancelled', () {
-      final result = filterMerchantOrders(orders, MerchantOrderFilter.cancelled);
+      final result = filterMerchantOrders(
+        orders,
+        MerchantOrderFilter.cancelled,
+      );
       expect(result.length, 1);
     });
   });
@@ -200,15 +227,24 @@ void main() {
     });
 
     test('creditsMerchantWallet true for wallet + paid', () {
-      expect(MerchantPaymentUtils.creditsMerchantWallet('wallet', 'paid'), isTrue);
+      expect(
+        MerchantPaymentUtils.creditsMerchantWallet('wallet', 'paid'),
+        isTrue,
+      );
     });
 
     test('creditsMerchantWallet false for cash', () {
-      expect(MerchantPaymentUtils.creditsMerchantWallet('cash', 'paid'), isFalse);
+      expect(
+        MerchantPaymentUtils.creditsMerchantWallet('cash', 'paid'),
+        isFalse,
+      );
     });
 
     test('creditsMerchantWallet false for wallet + pending', () {
-      expect(MerchantPaymentUtils.creditsMerchantWallet('wallet', 'pending'), isFalse);
+      expect(
+        MerchantPaymentUtils.creditsMerchantWallet('wallet', 'pending'),
+        isFalse,
+      );
     });
   });
 
@@ -217,13 +253,25 @@ void main() {
   // ═══════════════════════════════════════════════════════════════════════════
   group('MerchantOrderAmountUtils', () {
     test('isCompleted recognizes completed status', () {
-      expect(MerchantOrderAmountUtils.isCompleted(_makeOrder(status: 'completed')), isTrue);
-      expect(MerchantOrderAmountUtils.isCompleted(_makeOrder(status: 'pending')), isFalse);
+      expect(
+        MerchantOrderAmountUtils.isCompleted(_makeOrder(status: 'completed')),
+        isTrue,
+      );
+      expect(
+        MerchantOrderAmountUtils.isCompleted(_makeOrder(status: 'pending')),
+        isFalse,
+      );
     });
 
     test('isCancelled recognizes cancelled status', () {
-      expect(MerchantOrderAmountUtils.isCancelled(_makeOrder(status: 'cancelled')), isTrue);
-      expect(MerchantOrderAmountUtils.isCancelled(_makeOrder(status: 'completed')), isFalse);
+      expect(
+        MerchantOrderAmountUtils.isCancelled(_makeOrder(status: 'cancelled')),
+        isTrue,
+      );
+      expect(
+        MerchantOrderAmountUtils.isCancelled(_makeOrder(status: 'completed')),
+        isFalse,
+      );
     });
 
     test('foodEarnings calculates from partner_share', () {
@@ -240,10 +288,7 @@ void main() {
     });
 
     test('foodEarnings falls back to metaOrderValue', () {
-      final order = _makeOrder(
-        status: 'completed',
-        metaOrderValue: 300.0,
-      );
+      final order = _makeOrder(status: 'completed', metaOrderValue: 300.0);
       expect(MerchantOrderAmountUtils.foodEarnings(order), 300.0);
     });
   });

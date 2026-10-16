@@ -1,3 +1,5 @@
+import '../../../../provider/main/booking/lesbuy/store_detail_provider.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
@@ -17,7 +19,9 @@ import '../../../../provider/main/booking/lesbuy/manual_order_provider.dart';
 import '../../../../provider/main/profile/profile_provider.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/payment/booking_payment_method_section.dart';
+import '../../../../widgets/address/address_selector_widget.dart';
 import '../../../../widgets/widgets.dart';
+import '../../../../widgets/booking/lesbuy/manual_order/manual_pickup_section.dart';
 
 class ManualOrderScreen extends ConsumerStatefulWidget {
   final bool fromCart;
@@ -41,9 +45,9 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
       }
       if (!mounted) return;
 
-      await ref.read(lesbuyCheckoutProvider.notifier).initialize(
-            storePartnerId: null,
-          );
+      await ref
+          .read(lesbuyCheckoutProvider.notifier)
+          .initialize(storePartnerId: null);
       ref
           .read(lesbuyCheckoutProvider.notifier)
           .setManualDeliveryFeeUncertain(true);
@@ -54,28 +58,32 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
     BuildContext context,
     ManualOrderState manualOrderState,
   ) async {
-    if (!await NetworkGuard.ensureOnline(context)) return;
+    if (!manualOrderState.hasPickupLocation) {
+      SnackBarUtils.showError(
+        context,
+        'Enter the buying address and set its pickup pin first.',
+      );
+      return;
+    }
+    final deliveryAddr = ref.read(addressProvider).deliveryAddress;
+    if (!LesbuyManualDeliveryUtils.hasDeliveryLocation(deliveryAddr)) {
+      SnackBarUtils.showError(
+        context,
+        LesbuyManualDeliveryUtils.missingDeliveryMessage,
+      );
+      return;
+    }
+    if (!await NetworkGuard.ensureOnline(context) || !context.mounted) return;
     if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
 
     try {
       final orderDataSource = getIt<OrderRemoteDataSource>();
       final profileState = ref.read(profileProvider);
-      final addressState = ref.read(addressProvider);
       final user = profileState.user;
 
-      var dropoffLat = BookingGeoUtils.defaultLat;
-      var dropoffLng = BookingGeoUtils.defaultLng;
-      var dropoffAddress = user?.addressLine1 ??
-          (profileState.address1.isNotEmpty
-              ? profileState.address1
-              : 'Brgy 6, Claveria, Cagayan');
-
-      final deliveryAddr = addressState.deliveryAddress;
-      if (deliveryAddr != null) {
-        dropoffLat = deliveryAddr.latitude;
-        dropoffLng = deliveryAddr.longitude;
-        dropoffAddress = deliveryAddr.addressLine1;
-      }
+      final dropoffLat = deliveryAddr!.latitude;
+      final dropoffLng = deliveryAddr.longitude;
+      final dropoffAddress = deliveryAddr.addressLine1;
 
       const deliveryFee = 0.0;
       const total = 0.0;
@@ -85,6 +93,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
           .map(
             (item) => OrderItemDto(
               name: item.name,
+              source: 'manual',
               quantity: item.quantity,
               estimatedPrice: 0.0,
               notes: item.description,
@@ -94,21 +103,26 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
 
       final createOrderRequest = CreateOrderRequestDto(
         serviceId: 4,
-        estimatedDistanceM: 0,
+        estimatedDistanceM: BookingGeoUtils.distanceMeters(
+          lat1: manualOrderState.pickupLat!,
+          lng1: manualOrderState.pickupLng!,
+          lat2: dropoffLat,
+          lng2: dropoffLng,
+        ),
         pickup: OrderAddressDto(
-          address: 'Store location — set when rider uploads item photo',
-          lat: 0,
-          lng: 0,
-          contactName: 'LesBuy Rider',
-          contactPhone: '+639123456789',
+          address: manualOrderState.pickupLocationName!,
+          lat: manualOrderState.pickupLat!,
+          lng: manualOrderState.pickupLng!,
         ),
         dropoff: OrderAddressDto(
           address: dropoffAddress,
           lat: dropoffLat,
           lng: dropoffLng,
-          contactName: user?.name ??
+          contactName:
+              deliveryAddr.contactName ??
+              user?.name ??
               (profileState.name.isNotEmpty ? profileState.name : 'Customer'),
-          contactPhone: user?.phone ?? '+639123456789',
+          contactPhone: deliveryAddr.contactPhone ?? user?.phone,
         ),
         notes: 'Manual LesBuy order: ${orderItems.length} items',
         paymentMethod: _paymentMethod,
@@ -120,7 +134,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
           'total': total,
           'grand_total': total,
           'order_type': 'lesbuy_manual',
-          'manual_pickup_source': 'rider_first_item_photo',
+          'manual_pickup_source': 'customer_pin',
           'order_value_uncertain': true,
           'minimum_order_exempt': true,
         },
@@ -196,7 +210,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
     final deliveryFeeUncertain = lesbuyCheckout.deliveryFeeUncertain;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.surface(context, Color(0xFFF5F5F5)),
       body: SafeArea(
         child: Column(
           children: [
@@ -218,7 +232,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                         ResponsiveUtils.spacing(context, 16),
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3E8FF),
+                        color: AppColors.surface(context, Color(0xFFF3E8FF)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -251,7 +265,10 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                                       14,
                                     ),
                                     fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF5F2D82),
+                                    color: AppColors.accent(
+                                      context,
+                                      Color(0xFF5F2D82),
+                                    ),
                                   ),
                                 ),
                                 SizedBox(
@@ -265,7 +282,10 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                                       context,
                                       12,
                                     ),
-                                    color: const Color(0xFF5F2D82),
+                                    color: AppColors.accent(
+                                      context,
+                                      Color(0xFF5F2D82),
+                                    ),
                                     height: 1.4,
                                   ),
                                 ),
@@ -307,7 +327,10 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                               Icon(
                                 Icons.shopping_bag_outlined,
                                 size: 80,
-                                color: Colors.grey[300],
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[300]!,
+                                ),
                               ),
                               SizedBox(
                                 height: ResponsiveUtils.spacing(context, 16),
@@ -321,7 +344,10 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                                     16,
                                   ),
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black87,
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.black87,
+                                  ),
                                 ),
                               ),
                               SizedBox(
@@ -336,7 +362,10 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                                     context,
                                     13,
                                   ),
-                                  color: Colors.grey[600],
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.grey[600]!,
+                                  ),
                                   height: 1.4,
                                 ),
                               ),
@@ -354,15 +383,26 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Your List (${manualOrderState.items.length} items)',
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 16),
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black87,
+                            Expanded(
+                              child: Text(
+                                'Your List (${manualOrderState.items.length} items)',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    16,
+                                  ),
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.black87,
+                                  ),
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             TextButton(
                               onPressed: () {
                                 showDialog(
@@ -400,7 +440,10 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                                     14,
                                   ),
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF5F2D82),
+                                  color: AppColors.accent(
+                                    context,
+                                    Color(0xFF5F2D82),
+                                  ),
                                 ),
                               ),
                             ),
@@ -410,7 +453,9 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                       Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: ResponsiveUtils.horizontalPadding(context),
+                          horizontal: ResponsiveUtils.horizontalPadding(
+                            context,
+                          ),
                         ),
                         child: Column(
                           children: manualOrderState.items.map((item) {
@@ -430,6 +475,22 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                         ),
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                      const ManualPickupSection(),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: AddressSelectorWidget(title: 'Delivery address'),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          'Your delivery address is the rider’s drop-off point.',
+                        ),
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                       BookingPaymentMethodSection(
                         selectedMethod: _paymentMethod,
                         onMethodChanged: (method) {
@@ -440,7 +501,9 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: ResponsiveUtils.horizontalPadding(context),
+                          horizontal: ResponsiveUtils.horizontalPadding(
+                            context,
+                          ),
                           vertical: ResponsiveUtils.spacing(context, 8),
                         ),
                         child: Column(
@@ -454,7 +517,10 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 13),
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey[800],
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[800]!,
+                                ),
                               ),
                             ),
                             if (deliveryFeeUncertain) ...[
@@ -465,8 +531,14 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                                 LesbuyManualDeliveryUtils.pendingHint,
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 11),
-                                  color: Colors.grey[600],
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    11,
+                                  ),
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.grey[600]!,
+                                  ),
                                   height: 1.35,
                                 ),
                               ),
@@ -486,7 +558,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface(context, Colors.white),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -505,7 +577,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 10),
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -518,6 +590,16 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                         onPressed: isEmpty
                             ? null
                             : () {
+                                if (ref
+                                    .read(storeDetailProvider)
+                                    .cartItems
+                                    .isNotEmpty) {
+                                  SnackBarUtils.showError(
+                                    context,
+                                    'Place these manual purchases as a separate order using Checkout. Store purchases keep their own pickup.',
+                                  );
+                                  return;
+                                }
                                 manualOrderNotifier.confirmItems();
                                 SnackBarUtils.showSuccess(
                                   context,
@@ -535,13 +617,19 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
                             color: isEmpty
-                                ? Colors.grey[300]!
-                                : const Color(0xFF5F2D82),
+                                ? AppColors.foreground(
+                                    context,
+                                    Colors.grey[300]!,
+                                  )
+                                : AppColors.accent(context, Color(0xFF5F2D82)),
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          backgroundColor: Colors.white,
+                          backgroundColor: AppColors.surface(
+                            context,
+                            Colors.white,
+                          ),
                         ),
                         child: Text(
                           'Add to Cart',
@@ -550,8 +638,11 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                             fontSize: ResponsiveUtils.fontSize(context, 16),
                             fontWeight: FontWeight.w600,
                             color: isEmpty
-                                ? Colors.grey[600]
-                                : const Color(0xFF5F2D82),
+                                ? AppColors.foreground(
+                                    context,
+                                    Colors.grey[600]!,
+                                  )
+                                : AppColors.accent(context, Color(0xFF5F2D82)),
                           ),
                         ),
                       ),
@@ -562,7 +653,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                     child: PrimaryButton(
                       text: 'Checkout Now',
                       backgroundColor: isEmpty
-                          ? Colors.grey[300]
+                          ? AppColors.surface(context, Colors.grey[300]!)
                           : const Color(0xFF5F2D82),
                       onPressed: isEmpty
                           ? null

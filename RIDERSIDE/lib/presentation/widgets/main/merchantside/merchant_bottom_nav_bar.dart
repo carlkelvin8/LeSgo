@@ -137,7 +137,7 @@ class MerchantBottomNavBar extends ConsumerWidget {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 8),
+                          fontSize: ResponsiveUtils.fontSize(context, 10),
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
                         ),

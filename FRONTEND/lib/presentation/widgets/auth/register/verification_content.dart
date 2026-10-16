@@ -1,8 +1,8 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../widgets.dart';
@@ -11,189 +11,278 @@ class VerificationContent extends StatelessWidget {
   const VerificationContent({
     super.key,
     required this.selfiePath,
+    required this.idType,
+    required this.idNumber,
+    required this.validIdFrontPath,
+    required this.validIdBackPath,
     required this.isLoading,
-    required this.onStart,
+    required this.onCaptureSelfie,
+    required this.onCaptureIdFront,
+    required this.onCaptureIdBack,
+    required this.onIdTypeChanged,
+    required this.onIdNumberChanged,
     required this.onNext,
   });
 
+  static const Map<String, String> idTypes = {
+    'philippine_national_id': 'Philippine National ID',
+    'drivers_license': "Driver's License",
+    'passport': 'Passport',
+    'umid': 'UMID',
+    'sss_id': 'SSS ID',
+    'postal_id': 'Postal ID',
+    'voters_id': "Voter's ID",
+    'prc_id': 'PRC ID',
+  };
+
   final String selfiePath;
+  final String idType;
+  final String idNumber;
+  final String validIdFrontPath;
+  final String validIdBackPath;
   final bool isLoading;
-  final Future<void> Function() onStart;
+  final Future<void> Function() onCaptureSelfie;
+  final Future<void> Function() onCaptureIdFront;
+  final Future<void> Function() onCaptureIdBack;
+  final ValueChanged<String> onIdTypeChanged;
+  final ValueChanged<String> onIdNumberChanged;
   final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
+    final spacing = ResponsiveUtils.spacing(context, 16);
 
     return Padding(
-      padding: EdgeInsets.all(horizontalPadding),
+      padding: EdgeInsets.all(ResponsiveUtils.horizontalPadding(context)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const AuthHeader(title: 'SIGN UP'),
-          SizedBox(height: ResponsiveUtils.spacing(context, 32)),
+          SizedBox(height: spacing),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Selfie for verification',
+                    'Identity Verification',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 16),
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                      fontSize: ResponsiveUtils.fontSize(context, 22),
+                      fontWeight: FontWeight.w700,
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                  Center(
-                    child: selfiePath.isNotEmpty
-                        ? Container(
-                            width: ResponsiveUtils.imageHeight(context, 400),
-                            height: ResponsiveUtils.imageHeight(context, 400),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: kIsWeb
-                                  ? Image.network(
-                                      selfiePath,
-                                      fit: BoxFit.cover,
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
-                                        return Container(
-                                          color: Colors.grey[300],
-                                          child: Center(
-                                            child: CircularProgressIndicator(
-                                              value: loadingProgress.expectedTotalBytes != null
-                                                  ? loadingProgress.cumulativeBytesLoaded / 
-                                                    loadingProgress.expectedTotalBytes!
-                                                  : null,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      errorBuilder: (context, error, stackTrace) {
-                                        debugPrint('Image loading error on web: $error');
-                                        return Container(
-                                          color: Colors.grey[300],
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              const Icon(
-                                                Icons.error,
-                                                color: Colors.red,
-                                                size: 50,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                'Failed to load image',
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    )
-                                  : Image.file(
-                                      File(selfiePath),
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        debugPrint('Image loading error on mobile: $error');
-                                        return Container(
-                                          color: Colors.grey[300],
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              const Icon(
-                                                Icons.error,
-                                                color: Colors.red,
-                                                size: 50,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                'Failed to load image',
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
-                            ),
-                          )
-                        : SvgPicture.asset(
-                            'assets/images/register/10.svg',
-                            width: ResponsiveUtils.imageHeight(context, 400),
-                            height: ResponsiveUtils.imageHeight(context, 400),
-                            fit: BoxFit.contain,
+                  const SizedBox(height: 6),
+                  Text(
+                    'Required: take a live selfie and clear photos of your government ID using the camera.',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 13),
+                      color: AppColors.foreground(context, Colors.grey.shade700),
+                      height: 1.35,
+                    ),
+                  ),
+                  SizedBox(height: spacing),
+                  _CaptureCard(
+                    title: '1. Live selfie',
+                    subtitle:
+                        'Face the camera in a bright area. No masks, filters, or screenshots.',
+                    imagePath: selfiePath,
+                    icon: Icons.face_retouching_natural,
+                    buttonText: selfiePath.isEmpty
+                        ? 'Capture Selfie'
+                        : 'Retake Selfie',
+                    onPressed: isLoading ? null : onCaptureSelfie,
+                    circularPreview: true,
+                  ),
+                  SizedBox(height: spacing),
+                  DropdownButtonFormField<String>(
+                    initialValue: idType.isEmpty ? null : idType,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Government ID type *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.badge_outlined),
+                    ),
+                    items: idTypes.entries
+                        .map(
+                          (entry) => DropdownMenuItem(
+                            value: entry.key,
+                            child: Text(entry.value),
                           ),
+                        )
+                        .toList(),
+                    onChanged: isLoading
+                        ? null
+                        : (value) {
+                            if (value != null) onIdTypeChanged(value);
+                          },
                   ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    initialValue: idNumber,
+                    enabled: !isLoading,
+                    autocorrect: false,
+                    textCapitalization: TextCapitalization.characters,
+                    onChanged: onIdNumberChanged,
+                    decoration: const InputDecoration(
+                      labelText: 'ID number *',
+                      hintText: 'Enter the number shown on your ID',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.numbers),
+                    ),
+                  ),
+                  SizedBox(height: spacing),
+                  _CaptureCard(
+                    title: '2. Front of ID',
+                    subtitle:
+                        'Keep all four corners visible and make sure the details are readable.',
+                    imagePath: validIdFrontPath,
+                    icon: Icons.credit_card,
+                    buttonText: validIdFrontPath.isEmpty
+                        ? 'Capture ID Front'
+                        : 'Retake ID Front',
+                    onPressed: isLoading ? null : onCaptureIdFront,
+                  ),
+                  SizedBox(height: spacing),
+                  _CaptureCard(
+                    title: '3. Back of ID',
+                    subtitle:
+                        'Capture the back side or supporting page of the same ID.',
+                    imagePath: validIdBackPath,
+                    icon: Icons.credit_card,
+                    buttonText: validIdBackPath.isEmpty
+                        ? 'Capture ID Back'
+                        : 'Retake ID Back',
+                    onPressed: isLoading ? null : onCaptureIdBack,
+                  ),
+                  SizedBox(height: spacing),
                   Container(
-                    padding: EdgeInsets.all(
-                      ResponsiveUtils.spacing(context, 8),
-                    ),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFECC9FF),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.surface(context, Color(0xFFF4E8FA)),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Row(
+                    child: const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: const Color.fromRGBO(100, 45, 130, 1),
-                          size: ResponsiveUtils.fontSize(context, 20),
-                        ),
-                        SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                        Icon(Icons.lock_outline, color: Color(0xFF5F2D82)),
+                        SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            kIsWeb 
-                                ? 'Click "Start Verification" to take a photo using your camera. If camera access is blocked, you can select a photo from your files instead.'
-                                : 'Make sure you are in a place where there is enough light to take a clear photo.',
+                            'Your photos are securely submitted for identity review and are not taken from the gallery.',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 12),
-                              color: Colors.grey[800],
-                              height: 1.2,
+                              height: 1.3,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
+                  SizedBox(height: spacing),
                 ],
               ),
             ),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
           PrimaryButton(
-            text: selfiePath.isEmpty ? 'Start Verification' : 'Retake Photo',
-            onPressed: isLoading ? null : onStart,
+            text: 'Continue',
+            onPressed: isLoading ? null : onNext,
             backgroundColor: const Color(0xFF5F2D82),
             isLoading: isLoading,
           ),
-          if (selfiePath.isNotEmpty) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            PrimaryButton(
-              text: 'Next',
-              onPressed: isLoading ? null : onNext,
-              backgroundColor: const Color(0xFF5F2D82),
-              isLoading: false,
-            ),
-          ],
-          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
         ],
       ),
     );
   }
 }
 
+class _CaptureCard extends StatelessWidget {
+  const _CaptureCard({
+    required this.title,
+    required this.subtitle,
+    required this.imagePath,
+    required this.icon,
+    required this.buttonText,
+    required this.onPressed,
+    this.circularPreview = false,
+  });
+
+  final String title;
+  final String subtitle;
+  final String imagePath;
+  final IconData icon;
+  final String buttonText;
+  final Future<void> Function()? onPressed;
+  final bool circularPreview;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface(context, Colors.grey.shade50),
+        border: Border.all(
+          color: imagePath.isEmpty
+              ? AppColors.foreground(context, Colors.grey.shade300)
+              : AppColors.accent(context, Color(0xFF5F2D82)),
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 12,
+              color: AppColors.foreground(context, Colors.grey.shade700),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (imagePath.isNotEmpty)
+            Align(
+              alignment: Alignment.center,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(circularPreview ? 80 : 10),
+                child: SizedBox(
+                  width: circularPreview ? 150 : double.infinity,
+                  height: circularPreview ? 150 : 180,
+                  child: kIsWeb
+                      ? Image.network(imagePath, fit: BoxFit.cover)
+                      : Image.file(File(imagePath), fit: BoxFit.cover),
+                ),
+              ),
+            )
+          else
+            Container(
+              height: 110,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.surface(context, Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 48, color: AppColors.foreground(context, Colors.grey.shade500)),
+            ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: onPressed,
+            icon: const Icon(Icons.camera_alt_outlined),
+            label: Text(buttonText),
+          ),
+        ],
+      ),
+    );
+  }
+}

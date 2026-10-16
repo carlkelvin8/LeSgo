@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/booking/lesbuy/store.dart';
@@ -12,7 +13,7 @@ class StoreInfoCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -32,7 +33,7 @@ class StoreInfoCard extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 22),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -86,7 +87,7 @@ class StoreInfoCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey[700],
+                color: AppColors.foreground(context, Colors.grey[700]!),
               ),
             ),
 
@@ -140,7 +141,7 @@ class _DeliveryDetail extends StatelessWidget {
         Icon(
           icon,
           size: ResponsiveUtils.fontSize(context, 16),
-          color: const Color(0xFF5F2D82),
+          color: AppColors.accent(context, Color(0xFF5F2D82)),
         ),
         SizedBox(width: ResponsiveUtils.spacing(context, 4)),
         Flexible(
@@ -149,7 +150,7 @@ class _DeliveryDetail extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey[700],
+              color: AppColors.foreground(context, Colors.grey[700]!),
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

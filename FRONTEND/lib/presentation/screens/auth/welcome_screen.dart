@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/routers/auth/auth_routes.dart';
@@ -20,7 +21,7 @@ class WelcomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              
+
               // Logo
               Center(
                 child: Image.asset(
@@ -36,7 +37,7 @@ class WelcomeScreen extends ConsumerWidget {
                       ),
                       child: const Center(
                         child: Text(
-                          'LEZGO',
+                          'LeSgo',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 24,
@@ -48,34 +49,34 @@ class WelcomeScreen extends ConsumerWidget {
                   },
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Welcome Text
-              const Text(
-                'Welcome to Lezgo!',
+               Text(
+                'Welcome to LeSgo!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F2937),
+                  color: AppColors.foreground(context, Color(0xFF1F2937)),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
-              const Text(
+
+               Text(
                 'Your reliable courier service for food delivery, shopping, and ride booking.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Color(0xFF6B7280),
+                  color: AppColors.foreground(context, Color(0xFF6B7280)),
                   height: 1.5,
                 ),
               ),
-              
+
               const Spacer(),
-              
+
               // Login Button
               ElevatedButton(
                 onPressed: () {
@@ -92,15 +93,12 @@ class WelcomeScreen extends ConsumerWidget {
                 ),
                 child: const Text(
                   'Log In',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Register Button
               OutlinedButton(
                 onPressed: () {
@@ -112,40 +110,35 @@ class WelcomeScreen extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  side: const BorderSide(
-                    color: Color(0xFF6B46C1),
-                    width: 2,
-                  ),
+                  side: const BorderSide(color: Color(0xFF6B46C1), width: 2),
                 ),
                 child: const Text(
                   'Sign Up',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
 
               SocialLoginButton(
                 text: 'Sign up with Google',
                 iconData: Icons.g_mobiledata,
-                onPressed: () => GoogleAuthHelper.signIn(context, ref),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Terms and Privacy
-              const Text(
-                'By continuing, you agree to our Terms of Service and Privacy Policy',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF9CA3AF),
+                onPressed: () => GoogleAuthHelper.signIn(
+                  context,
+                  ref,
+                  mode: GoogleAuthMode.signup,
                 ),
               ),
-              
+
+              const SizedBox(height: 32),
+
+              // Terms and Privacy
+               Text(
+                'By continuing, you agree to our Terms of Service and Privacy Policy',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: AppColors.foreground(context, Color(0xFF9CA3AF))),
+              ),
+
               const SizedBox(height: 24),
             ],
           ),

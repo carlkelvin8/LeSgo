@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/utils/responsive_utils.dart';
@@ -23,7 +24,7 @@ class OtpCodeSection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w500,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -31,7 +32,7 @@ class OtpCodeSection extends StatelessWidget {
           'We have sent a verification code to your phone number',
           style: TextStyle(
             fontSize: ResponsiveUtils.fontSize(context, 12),
-            color: Colors.black54,
+            color: AppColors.foreground(context, Colors.black54),
             height: 1.4,
           ),
         ),

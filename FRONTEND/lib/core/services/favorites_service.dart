@@ -4,11 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Types of favorites
-enum FavoriteType {
-  restaurant,
-  store,
-  address,
-}
+enum FavoriteType { restaurant, store, address }
 
 /// Favorite item model
 class FavoriteItem {
@@ -31,14 +27,14 @@ class FavoriteItem {
   }) : addedAt = addedAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type.name,
-        'name': name,
-        'subtitle': subtitle,
-        'imageUrl': imageUrl,
-        'metadata': metadata,
-        'addedAt': addedAt.toIso8601String(),
-      };
+    'id': id,
+    'type': type.name,
+    'name': name,
+    'subtitle': subtitle,
+    'imageUrl': imageUrl,
+    'metadata': metadata,
+    'addedAt': addedAt.toIso8601String(),
+  };
 
   factory FavoriteItem.fromJson(Map<String, dynamic> json) {
     return FavoriteItem(
@@ -64,15 +60,26 @@ class FavoritesService {
   static const String _keyAddresses = 'favorites_addresses';
 
   final SharedPreferences _prefs;
+  String? _userScope;
 
   FavoritesService(this._prefs);
+
+  /// Scope device-persisted favorites to the signed-in customer. Legacy
+  /// unscoped entries are intentionally not exposed to whichever account logs
+  /// in next on a shared device.
+  void setUserScope(String? userId) {
+    final normalized = userId?.trim();
+    _userScope = normalized == null || normalized.isEmpty ? null : normalized;
+  }
+
+  String _scopedKey(String base) => '${base}_${_userScope ?? 'signed_out'}';
 
   // ─────────────────────────────────────────────────────────────────────────
   // Restaurants
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<List<FavoriteItem>> getFavoriteRestaurants() async {
-    return _getFavorites(_keyRestaurants);
+    return _userScope == null ? [] : _getFavorites(_scopedKey(_keyRestaurants));
   }
 
   Future<bool> addFavoriteRestaurant({
@@ -83,7 +90,7 @@ class FavoritesService {
     Map<String, dynamic>? metadata,
   }) async {
     return _addFavorite(
-      _keyRestaurants,
+      _scopedKey(_keyRestaurants),
       FavoriteItem(
         id: id,
         type: FavoriteType.restaurant,
@@ -96,11 +103,15 @@ class FavoritesService {
   }
 
   Future<bool> removeFavoriteRestaurant(String id) async {
-    return _removeFavorite(_keyRestaurants, id);
+    return _userScope == null
+        ? false
+        : _removeFavorite(_scopedKey(_keyRestaurants), id);
   }
 
   Future<bool> isFavoriteRestaurant(String id) async {
-    return _isFavorite(_keyRestaurants, id);
+    return _userScope == null
+        ? false
+        : _isFavorite(_scopedKey(_keyRestaurants), id);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -108,7 +119,7 @@ class FavoritesService {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<List<FavoriteItem>> getFavoriteStores() async {
-    return _getFavorites(_keyStores);
+    return _userScope == null ? [] : _getFavorites(_scopedKey(_keyStores));
   }
 
   Future<bool> addFavoriteStore({
@@ -119,7 +130,7 @@ class FavoritesService {
     Map<String, dynamic>? metadata,
   }) async {
     return _addFavorite(
-      _keyStores,
+      _scopedKey(_keyStores),
       FavoriteItem(
         id: id,
         type: FavoriteType.store,
@@ -132,11 +143,13 @@ class FavoritesService {
   }
 
   Future<bool> removeFavoriteStore(String id) async {
-    return _removeFavorite(_keyStores, id);
+    return _userScope == null
+        ? false
+        : _removeFavorite(_scopedKey(_keyStores), id);
   }
 
   Future<bool> isFavoriteStore(String id) async {
-    return _isFavorite(_keyStores, id);
+    return _userScope == null ? false : _isFavorite(_scopedKey(_keyStores), id);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -144,7 +157,7 @@ class FavoritesService {
   // ─────────────────────────────────────────────────────────────────────────
 
   Future<List<FavoriteItem>> getFavoriteAddresses() async {
-    return _getFavorites(_keyAddresses);
+    return _userScope == null ? [] : _getFavorites(_scopedKey(_keyAddresses));
   }
 
   Future<bool> addFavoriteAddress({
@@ -154,7 +167,7 @@ class FavoritesService {
     Map<String, dynamic>? metadata,
   }) async {
     return _addFavorite(
-      _keyAddresses,
+      _scopedKey(_keyAddresses),
       FavoriteItem(
         id: id,
         type: FavoriteType.address,
@@ -166,11 +179,15 @@ class FavoritesService {
   }
 
   Future<bool> removeFavoriteAddress(String id) async {
-    return _removeFavorite(_keyAddresses, id);
+    return _userScope == null
+        ? false
+        : _removeFavorite(_scopedKey(_keyAddresses), id);
   }
 
   Future<bool> isFavoriteAddress(String id) async {
-    return _isFavorite(_keyAddresses, id);
+    return _userScope == null
+        ? false
+        : _isFavorite(_scopedKey(_keyAddresses), id);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -226,6 +243,7 @@ class FavoritesService {
   }
 
   Future<bool> _addFavorite(String key, FavoriteItem item) async {
+    if (_userScope == null) return false;
     try {
       final favorites = await _getFavorites(key);
 

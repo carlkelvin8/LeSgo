@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_shift_provider.dart';
 
@@ -55,6 +56,7 @@ class _RiderShiftSummarySheetState extends ConsumerState<RiderShiftSummarySheet>
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryPurple = const Color(0xFF5F2D82);
     final bg = isDark ? const Color(0xFF1E1E2E) : Colors.white;
@@ -82,7 +84,7 @@ class _RiderShiftSummarySheetState extends ConsumerState<RiderShiftSummarySheet>
               ),
             ),
             Text(
-              'Shift Summary',
+              AppLocalization.translate('shift_summary', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 20),
@@ -92,7 +94,7 @@ class _RiderShiftSummarySheetState extends ConsumerState<RiderShiftSummarySheet>
             ),
             const SizedBox(height: 4),
             Text(
-              'Here\'s how your shift went',
+              AppLocalization.translate('heres_how_shift_went', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -113,7 +115,7 @@ class _RiderShiftSummarySheetState extends ConsumerState<RiderShiftSummarySheet>
                     Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
                     const SizedBox(height: 12),
                     Text(
-                      'Could not load summary',
+                      AppLocalization.translate('could_not_load_summary', lang),
                       style: TextStyle(color: fg.withValues(alpha: 0.7)),
                     ),
                   ],
@@ -129,47 +131,48 @@ class _RiderShiftSummarySheetState extends ConsumerState<RiderShiftSummarySheet>
 
   Widget _buildSummaryContent(BuildContext context, Color primaryPurple, Color fg) {
     final s = _summary!;
+    final lang = ref.watch(appLanguageProvider);
 
     return Column(
       children: [
         _StatCard(
           icon: Icons.access_time,
-          label: 'Shift Duration',
+          label: AppLocalization.translate('shift_duration', lang),
           value: _formatDuration(s.shiftDuration),
           color: primaryPurple,
         ),
         const SizedBox(height: 12),
         _StatRow(
           icon: Icons.delivery_dining,
-          label: 'Completed Trips',
+          label: AppLocalization.translate('completed_trips', lang),
           value: '${s.totalTrips}',
           color: const Color(0xFF2E7D32),
         ),
         const SizedBox(height: 12),
         _StatRow(
           icon: Icons.cancel_outlined,
-          label: 'Cancelled',
+          label: AppLocalization.translate('cancelled', lang),
           value: '${s.cancelledTrips}',
           color: Colors.orange.shade700,
         ),
         const SizedBox(height: 12),
         _StatRow(
           icon: Icons.monetization_on,
-          label: 'Total Earnings',
+          label: AppLocalization.translate('total_earnings', lang),
           value: 'PHP ${NumberFormat('#,##0.00').format(s.totalEarnings)}',
           color: const Color(0xFF2E7D32),
         ),
         const SizedBox(height: 12),
         _StatRow(
           icon: Icons.route,
-          label: 'Total Distance',
+          label: AppLocalization.translate('total_distance', lang),
           value: '${s.totalDistanceKm.toStringAsFixed(1)} km',
           color: primaryPurple,
         ),
         const SizedBox(height: 12),
         _StatRow(
           icon: Icons.trending_up,
-          label: 'Avg per Trip',
+          label: AppLocalization.translate('avg_per_trip', lang),
           value: 'PHP ${NumberFormat('#,##0.00').format(s.averageEarningsPerTrip)}',
           color: primaryPurple,
         ),
@@ -187,9 +190,9 @@ class _RiderShiftSummarySheetState extends ConsumerState<RiderShiftSummarySheet>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'OK',
-                style: TextStyle(
+              child: Text(
+                AppLocalization.translate('ok', lang),
+                style: const TextStyle(
                   fontFamily: 'TT Fors',
                   fontWeight: FontWeight.w700,
                   fontSize: 16,

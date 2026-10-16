@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 
 import '../../../core/constants/polling_intervals.dart';
 import '../../../core/utils/api_error_mapper.dart';
@@ -81,12 +82,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Load conversations
   Future<void> loadConversations() async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final conversations = await _chatDataSource.getConversations();
       final enriched = await _enrichConversations(conversations);
       final unreadCount = await _chatDataSource.getUnreadCount();
-      
+
       state = state.copyWith(
         conversations: enriched,
         unreadCount: unreadCount,
@@ -116,8 +117,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
       }
 
       try {
-        final orderResponse =
-            await _orderDataSource.getOrder(conversation.orderId);
+        final orderResponse = await _orderDataSource.getOrder(
+          conversation.orderId,
+        );
         if (orderResponse.success) {
           final order = orderResponse.data;
           enriched.add(
@@ -148,7 +150,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Get or create conversation for order
   Future<ConversationDto?> getOrCreateConversation(int orderId) async {
     try {
-      final conversation = await _chatDataSource.getOrCreateConversation(orderId);
+      final conversation = await _chatDataSource.getOrCreateConversation(
+        orderId,
+      );
       state = state.copyWith(currentConversation: conversation);
       await loadMessages(conversation.id);
       _startPolling();
@@ -162,48 +166,46 @@ class ChatNotifier extends StateNotifier<ChatState> {
   // Load messages for conversation
   Future<void> loadMessages(int conversationId, {bool silent = false}) async {
     if (!silent) state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
       final messages = await _chatDataSource.getMessages(conversationId);
       if (!mounted) return;
-      state = state.copyWith(
-        messages: messages,
-        isLoading: false,
-      );
-      
+      state = state.copyWith(messages: messages, isLoading: false);
+
       // Mark as read
       await _chatDataSource.markAsRead(conversationId);
       await loadUnreadCount();
     } catch (e) {
       if (!mounted) return;
       if (!silent) {
-        state = state.copyWith(
-          error: e.toString(),
-          isLoading: false,
-        );
+        state = state.copyWith(error: e.toString(), isLoading: false);
       }
     }
   }
 
   // Send message
-  Future<bool> sendMessage(String message, {String messageType = 'text', Map<String, dynamic>? metadata}) async {
+  Future<bool> sendMessage(
+    String message, {
+    String messageType = 'text',
+    Map<String, dynamic>? metadata,
+  }) async {
     if (state.currentConversation == null) return false;
-    
+
     state = state.copyWith(isSending: true, error: null);
-    
+
     try {
       final request = SendMessageRequestDto(
         message: message,
         messageType: messageType,
         metadata: metadata,
       );
-      
+
       final newMessage = await _chatDataSource.sendMessage(
         state.currentConversation!.id,
         request,
       );
       if (!mounted) return false;
-      
+
       // Reload messages to get server-side data (id, timestamps, etc.)
       await loadMessages(state.currentConversation!.id, silent: true);
       if (!mounted) return false;
@@ -218,10 +220,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       return true;
     } catch (e) {
       if (!mounted) return false;
-      state = state.copyWith(
-        error: e.toString(),
-        isSending: false,
-      );
+      state = state.copyWith(error: e.toString(), isSending: false);
       return false;
     }
   }
@@ -257,10 +256,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     _pollTimer?.cancel();
     _chatRealtime.removeListener(_realtimeRefresh);
     _chatRealtime.release();
-    state = state.copyWith(
-      currentConversation: null,
-      messages: [],
-    );
+    state = state.copyWith(currentConversation: null, messages: []);
   }
 
   // Clear error
@@ -287,14 +283,18 @@ final chatDataSourceProvider = Provider<ChatRemoteDataSource>((ref) {
 });
 
 // Provider - per-order family so each order has its own chat state
-final chatProvider = StateNotifierProvider.family<ChatNotifier, ChatState, int>((ref, orderId) {
-  return ChatNotifier(ref.watch(chatDataSourceProvider));
-});
+final chatProvider = StateNotifierProvider.autoDispose
+    .family<ChatNotifier, ChatState, int>((ref, orderId) {
+      ref.watch(userSessionEpochProvider);
+      return ChatNotifier(ref.watch(chatDataSourceProvider));
+    });
 
 // Keep a simple global provider for backward compat (uses orderId 0)
-final chatProviderGlobal = StateNotifierProvider<ChatNotifier, ChatState>((ref) {
-  return ChatNotifier(ref.watch(chatDataSourceProvider));
-});
+final chatProviderGlobal =
+    StateNotifierProvider.autoDispose<ChatNotifier, ChatState>((ref) {
+      ref.watch(userSessionEpochProvider);
+      return ChatNotifier(ref.watch(chatDataSourceProvider));
+    });
 
 // Unread count provider (for badge)
 final unreadCountProvider = Provider<int>((ref) {

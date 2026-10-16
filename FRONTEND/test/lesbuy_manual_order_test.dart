@@ -8,6 +8,39 @@ void main() {
   // MANUAL ORDER STATE - PICKUP LOCATION
   // ═══════════════════════════════════════════════════════════════════════════
   group('ManualOrderState - Pickup Location', () {
+    test('rejects blank addresses and invalid or placeholder pins', () {
+      for (final coords in [
+        [0.0, 0.0],
+        [91.0, 124.0],
+        [8.0, 181.0],
+        [double.nan, 124.0],
+        [8.0, double.infinity],
+      ]) {
+        expect(ManualOrderState(
+          pickupLocationName: 'Store',
+          pickupLat: coords[0],
+          pickupLng: coords[1],
+        ).hasPickupLocation, isFalse);
+      }
+      expect(ManualOrderState(
+        pickupLocationName: '   ', pickupLat: 8.45, pickupLng: 124.63,
+      ).hasPickupLocation, isFalse);
+    });
+
+    test('buying address and pin survive adding to cart and clear with the order', () {
+      final notifier = ManualOrderNotifier();
+      addTearDown(notifier.dispose);
+      notifier.setPickupLocation('  Store, Main Street  ', 8.45, 124.63);
+      notifier.addItem('Rice', '', 1);
+      notifier.confirmItems();
+      expect(notifier.state.pickupLocationName, 'Store, Main Street');
+      expect(notifier.state.pickupLat, 8.45);
+      expect(notifier.state.pickupLng, 124.63);
+      expect(notifier.state.hasPickupLocation, isTrue);
+      notifier.clearAll();
+      expect(notifier.state.hasPickupLocation, isFalse);
+    });
+
     test('initially has no pickup location', () {
       final state = ManualOrderState();
       expect(state.hasPickupLocation, isFalse);

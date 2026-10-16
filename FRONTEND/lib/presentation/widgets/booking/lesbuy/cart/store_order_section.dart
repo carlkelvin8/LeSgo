@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../domain/entities/booking/lesbuy/cart_item.dart';
@@ -27,7 +28,7 @@ class StoreOrderSection extends StatelessWidget {
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -39,7 +40,7 @@ class StoreOrderSection extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -67,7 +68,7 @@ class StoreOrderSection extends StatelessWidget {
             icon: Icon(
               Icons.add_circle_outline,
               size: ResponsiveUtils.fontSize(context, 20),
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
             ),
             label: Text(
               'Add more items',
@@ -75,7 +76,7 @@ class StoreOrderSection extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF5F2D82),
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
               ),
             ),
             style: TextButton.styleFrom(

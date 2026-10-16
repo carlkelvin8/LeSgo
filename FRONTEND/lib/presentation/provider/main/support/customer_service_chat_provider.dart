@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/injection.dart';
@@ -144,5 +145,6 @@ final customerServiceChatProvider =
       CustomerServiceChatNotifier,
       CustomerServiceChatState
     >((ref) {
+      ref.watch(userSessionEpochProvider);
       return CustomerServiceChatNotifier(getIt<GeminiCustomerService>());
     });

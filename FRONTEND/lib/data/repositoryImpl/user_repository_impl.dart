@@ -51,12 +51,33 @@ class UserRepositoryImpl implements UserRepository {
       await localStorageService.saveRefreshToken(refreshToken);
     }
 
+    var role = dto.role?.trim().toLowerCase();
+    if (role == null || role.isEmpty) {
+      // Some legacy login responses omit role. Resolve it from the
+      // authenticated profile instead of treating "unknown" as another app's
+      // account type and deleting a valid token.
+      try {
+        final profileResponse = await remoteDataSource.getMe();
+        role = profileResponse.success == true
+            ? profileResponse.data?.role.trim().toLowerCase()
+            : null;
+      } catch (_) {
+        role = null;
+      }
+    }
+
+    if (role == null || role.isEmpty) {
+      throw Exception(
+        'Unable to verify your account type. Check your connection and try again.',
+      );
+    }
+
     return User(
       id: dto.id,
       email: dto.email,
       name: dto.name,
       token: token,
-      role: dto.role,
+      role: role,
     );
   }
 

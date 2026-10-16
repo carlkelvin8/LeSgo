@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -37,7 +38,7 @@ class LocationFullscreenMapOverlay extends ConsumerWidget {
 
     return Positioned.fill(
       child: Container(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         child: Stack(
           children: [
             LocationMapWidget(

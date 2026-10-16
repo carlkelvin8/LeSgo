@@ -1,3 +1,4 @@
+import '../register_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
@@ -424,7 +425,14 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     }
   }
 
+  String? _phoneProof;
+  void setPhoneProof(String token) => _phoneProof = token;
+
   Future<void> submitForm({String? selectedPackage}) async {
+    if (!_ref.read(hasAcceptedTermsProvider) || _phoneProof == null) {
+      state = state.copyWith(errorMessage: 'Accept Terms & Conditions and verify your phone before registering.');
+      return;
+    }
     if (!state.isFormValid) {
       state = state.copyWith(
         errorMessage:
@@ -448,6 +456,8 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
         licenseNumber: info.licenseNumber,
         licenseExpiryDate: _formatDateForApi(info.licenseExpiryDate),
         packageTier: selectedPackage,
+        termsAccepted: _ref.read(hasAcceptedTermsProvider),
+        phoneVerificationToken: _phoneProof,
       );
 
       final documents = registerDriverDocumentsFromPaths(
@@ -531,6 +541,9 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
   }
 
   void reset() {
+    _phoneProof = null;
+    _ref.read(hasAcceptedTermsProvider.notifier).state = false;
+    _ref.read(termsAcceptedProvider.notifier).state = false;
     state = RegisterInfoState();
   }
 

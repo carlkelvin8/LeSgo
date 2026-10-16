@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 
@@ -33,7 +34,7 @@ class DualActionButtons extends StatelessWidget {
             onPressed: isLoading ? null : onSecondaryPressed,
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.spacing(context, 12)),
-              side: BorderSide(color: Colors.grey[400]!),
+              side: BorderSide(color: AppColors.border(context, Colors.grey[400]!)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -42,14 +43,14 @@ class DualActionButtons extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (secondaryIcon != null) ...[
-                  Icon(secondaryIcon, size: ResponsiveUtils.fontSize(context, 18), color: Colors.grey[700]),
+                  Icon(secondaryIcon, size: ResponsiveUtils.fontSize(context, 18), color: AppColors.foreground(context, Colors.grey[700]!)),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                 ],
                 Text(
                   secondaryText,
                   style: TextStyle(
                     fontSize: ResponsiveUtils.fontSize(context, 16),
-                    color: Colors.grey[700],
+                    color: AppColors.foreground(context, Colors.grey[700]!),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

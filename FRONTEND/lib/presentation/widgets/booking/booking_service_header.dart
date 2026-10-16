@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/constants/routers/app_router.dart';
@@ -20,10 +21,10 @@ class BookingServiceHeader extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black)),
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: Text(
@@ -32,7 +33,7 @@ class BookingServiceHeader extends StatelessWidget
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 18),
           fontWeight: FontWeight.w600,
-          color: Colors.black,
+          color: AppColors.foreground(context, Colors.black),
         ),
       ),
       centerTitle: true,

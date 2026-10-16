@@ -13,19 +13,20 @@ class AppInfo {
       'riders, and partner merchants so everyday errands are faster, safer, and '
       'more convenient — proudly serving communities across the Philippines.';
 
-  static const String version = '1.0.0';
-  static const String buildNumber = '1';
+  static const String version = '1.1.8';
+  static const String buildNumber = '24';
 
   
 
   // Updated contact details
   static const String supportEmail = 'lesgoclaveria@gmail.com';
   static const String privacyEmail = 'lesgoclaveria@gmail.com';
-  static const String website = 'https://lesgo.ph';
+  static const String website = 'https://lesgocourierservices.com/';
 
   static const String supportPhone = '+639624040948';
 
-  static const String companyAddress = 'Kilkiling Claveria Cagayan';
+  static const String companyAddress = 'Claveria, Cagayan';
 
   static String get versionLabel => 'Version $version ($buildNumber)';
 }
+

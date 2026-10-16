@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../data/data_source/dto/merchant/order_dto.dart';
+import 'merchant_order_amount_utils.dart';
 
 /// Utility to export merchant orders to CSV and share the file.
 class MerchantCsvExportUtils {
@@ -63,8 +64,7 @@ class MerchantCsvExportUtils {
       double subtotal = 0;
       if (order.orderItems != null) {
         for (final item in order.orderItems!) {
-          subtotal +=
-              item.totalPrice ?? ((item.unitPrice ?? 0.0) * item.quantity);
+          subtotal += MerchantOrderAmountUtils.lineTotal(item);
         }
       }
 

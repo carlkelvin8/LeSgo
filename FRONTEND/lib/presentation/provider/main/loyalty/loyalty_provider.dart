@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/api_error_mapper.dart';
@@ -121,7 +122,9 @@ class LoyaltyNotifier extends StateNotifier<LoyaltyState> {
   }
 }
 
-final loyaltyProvider =
-    StateNotifierProvider<LoyaltyNotifier, LoyaltyState>((ref) {
+final loyaltyProvider = StateNotifierProvider<LoyaltyNotifier, LoyaltyState>((
+  ref,
+) {
+  ref.watch(userSessionEpochProvider);
   return LoyaltyNotifier(ref);
 });

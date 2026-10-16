@@ -1,4 +1,6 @@
 import 'package:injectable/injectable.dart';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
@@ -9,7 +11,9 @@ class DocumentRemoteDataSource {
 
   DocumentRemoteDataSource(this._dioClient);
 
-  Future<List<DocumentVerificationDto>> getMyDocuments({int perPage = 30}) async {
+  Future<List<DocumentVerificationDto>> getMyDocuments({
+    int perPage = 30,
+  }) async {
     final response = await _dioClient.dio.get(
       ApiConstants.documentsMy,
       queryParameters: {'per_page': perPage},
@@ -26,8 +30,9 @@ class DocumentRemoteDataSource {
   }
 
   Future<DocumentVerificationStatusDto> getVerificationStatus() async {
-    final response =
-        await _dioClient.dio.get(ApiConstants.documentsVerificationStatus);
+    final response = await _dioClient.dio.get(
+      ApiConstants.documentsVerificationStatus,
+    );
     return DocumentVerificationStatusDto.fromJson(
       response.data['data'] as Map<String, dynamic>,
     );
@@ -55,17 +60,50 @@ class DocumentRemoteDataSource {
     );
   }
 
+  Future<DocumentVerificationDto> submitIdentityOnboarding({
+    required XFile selfie,
+    required String idType,
+    required String idNumber,
+    required XFile validIdFront,
+    required XFile validIdBack,
+  }) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.documentsIdentityOnboarding,
+      data: FormData.fromMap({
+        'selfie': await _multipartFile(selfie),
+        'id_type': idType,
+        'id_number': idNumber,
+        'valid_id_front': await _multipartFile(validIdFront),
+        'valid_id_back': await _multipartFile(validIdBack),
+      }),
+    );
+    return DocumentVerificationDto.fromJson(
+      response.data['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<MultipartFile> _multipartFile(XFile file) async {
+    return MultipartFile.fromBytes(
+      await file.readAsBytes(),
+      filename: file.name.isEmpty ? 'capture.jpg' : file.name,
+    );
+  }
+
   List<DocumentVerificationDto> _parseList(dynamic body) {
     if (body is! Map<String, dynamic>) return [];
     final raw = body['data'];
     if (raw is List) {
       return raw
-          .map((e) => DocumentVerificationDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) => DocumentVerificationDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList();
     }
     if (raw is Map && raw['data'] is List) {
       return (raw['data'] as List)
-          .map((e) => DocumentVerificationDto.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) => DocumentVerificationDto.fromJson(e as Map<String, dynamic>),
+          )
           .toList();
     }
     return [];
@@ -99,9 +137,8 @@ class DocumentVerificationDto {
       documentType: json['document_type']?.toString() ?? '',
       documentNumber: json['document_number']?.toString() ?? '',
       status: json['status']?.toString() ?? 'pending',
-      documentUrls: (json['document_urls'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
+      documentUrls:
+          (json['document_urls'] as List?)?.map((e) => e.toString()).toList() ??
           [],
       description: json['description']?.toString(),
       submittedAt: json['submitted_at']?.toString(),
@@ -154,10 +191,21 @@ class DocumentVerificationStatusDto {
   factory DocumentVerificationStatusDto.fromJson(Map<String, dynamic> json) {
     return DocumentVerificationStatusDto(
       overallStatus: json['overall_status']?.toString() ?? 'not_started',
-      verifiedCount: (json['verified_count'] as num?)?.toInt() ?? 0,
-      pendingCount: (json['pending_count'] as num?)?.toInt() ?? 0,
-      rejectedCount: (json['rejected_count'] as num?)?.toInt() ?? 0,
-      totalCount: (json['total_count'] as num?)?.toInt() ?? 0,
+      verifiedCount:
+          ((json['verified_count'] ?? json['verified_documents']) as num?)
+              ?.toInt() ??
+          0,
+      pendingCount:
+          ((json['pending_count'] ?? json['pending_documents']) as num?)
+              ?.toInt() ??
+          0,
+      rejectedCount:
+          ((json['rejected_count'] ?? json['rejected_documents']) as num?)
+              ?.toInt() ??
+          0,
+      totalCount:
+          ((json['total_count'] ?? json['total_documents']) as num?)?.toInt() ??
+          0,
     );
   }
 }

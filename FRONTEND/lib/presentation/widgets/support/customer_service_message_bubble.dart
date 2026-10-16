@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -45,8 +46,8 @@ class CustomerServiceMessageBubble extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isUser
-                        ? const Color(0xFF5F2D82)
-                        : Colors.grey.shade100,
+                        ? AppColors.accent(context, Color(0xFF5F2D82))
+                        : AppColors.foreground(context, Colors.grey.shade100),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -59,7 +60,7 @@ class CustomerServiceMessageBubble extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: isUser ? Colors.white : Colors.black87,
+                      color: isUser ? Colors.white : AppColors.foreground(context, Colors.black87),
                       height: 1.45,
                     ),
                   ),
@@ -70,7 +71,7 @@ class CustomerServiceMessageBubble extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey.shade500,
+                    color: AppColors.foreground(context, Colors.grey.shade500),
                   ),
                 ),
               ],

@@ -25,7 +25,7 @@ Future<FormData> buildRegisterDriverFormData(
     );
 
   for (final entry in fields.entries) {
-    formData.fields.add(MapEntry(entry.key, entry.value.toString()));
+    formData.fields.add(MapEntry(entry.key, entry.value is bool ? (entry.value == true ? '1' : '0') : entry.value.toString()));
   }
 
   for (final entry in documents.entries) {

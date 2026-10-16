@@ -9,6 +9,8 @@ part of 'register_driver_request_dto.dart';
 RegisterDriverRequestDto _$RegisterDriverRequestDtoFromJson(
         Map<String, dynamic> json) =>
     RegisterDriverRequestDto(
+      phoneVerificationToken: json['phone_verification_token'] as String?,
+      termsAccepted: json['terms_accepted'] as bool? ?? false,
       name: json['name'] as String,
       email: json['email'] as String,
       phoneNumber: json['phone_number'] as String,
@@ -24,6 +26,8 @@ RegisterDriverRequestDto _$RegisterDriverRequestDtoFromJson(
 Map<String, dynamic> _$RegisterDriverRequestDtoToJson(
         RegisterDriverRequestDto instance) =>
     <String, dynamic>{
+      'phone_verification_token': instance.phoneVerificationToken,
+      'terms_accepted': instance.termsAccepted,
       'name': instance.name,
       'email': instance.email,
       'phone_number': instance.phoneNumber,

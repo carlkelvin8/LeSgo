@@ -20,7 +20,15 @@ export 'rider_orders_state.dart';
 
 class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   RiderOrdersNotifier(this._ref) : super(RiderOrdersState()) {
-    _ref.read(riderDutyProvider.notifier).onDutyChanged = _onDutyChanged;
+    // riderDutyProvider watches auth.user.id, so logout/login rebuilds it and
+    // hands back a brand-new notifier. Re-register on every recreation (and
+    // immediately for the current instance) so going on duty always resumes
+    // order polling instead of silently doing nothing.
+    _ref.listen(
+      riderDutyProvider.notifier,
+      (_, duty) => duty.onDutyChanged = _onDutyChanged,
+      fireImmediately: true,
+    );
   }
 
   final Ref _ref;
@@ -28,6 +36,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   Set<int> _knownAvailableOrderIds = {};
   String? _lastActiveStatus;
   bool _isDisposed = false;
+  int _loadRevision = 0;
 
   void _onDutyChanged() {
     if (_isDisposed) return;
@@ -85,6 +94,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
   void reset() {
     if (_isDisposed) return;
+    ++_loadRevision;
     stopAutoRefresh();
     _knownAvailableOrderIds = {};
     _lastActiveStatus = null;
@@ -92,7 +102,12 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
   }
 
   Future<void> loadOrders({bool silent = false}) async {
+    if (_isDisposed) return;
     if (!_ref.read(riderDutyProvider) && silent) return;
+    final revision = ++_loadRevision;
+    final userId = _ref.read(riderAuthProvider).user?.id;
+    bool isCurrent() => !_isDisposed && revision == _loadRevision &&
+        _ref.read(riderAuthProvider).user?.id == userId;
 
     if (!silent) {
       state = state.copyWith(isLoading: true, clearError: true);
@@ -100,8 +115,11 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
       state = state.copyWith(isRefreshing: true, clearError: true);
     }
 
+    final driverProfileId = await _resolveDriverProfileId();
+
     try {
       final allRaw = await ApiService.getOrders(perPage: 100);
+      if (!isCurrent()) return;
       final all = allRaw
           .map((j) => RiderOrder.fromJson(j as Map<String, dynamic>))
           .toList();
@@ -114,19 +132,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
               o.driverId == null)
           .toList();
 
-      final driverProfileId =
-          _ref.read(riderAuthProvider).user?.driverProfileId;
-      final active =
-          all.where((o) => isActiveOrderForDriver(o, driverProfileId)).toList();
-
-      final currentActive = state.activeOrder;
-      if (currentActive != null &&
-          isActiveOrderForDriver(currentActive, driverProfileId) &&
-          !active.any((o) => o.id == currentActive.id)) {
-        active.insert(0, currentActive);
-      }
-
-      active.sort((a, b) => b.id.compareTo(a.id));
+      final active = reconcileActiveOrders(all, state.activeOrder, driverProfileId);
 
       _notifyOrderChanges(available, active.isNotEmpty ? active.first : null);
 
@@ -156,18 +162,28 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         await RiderActiveOrderCache.clear();
       }
 
+      if (!isCurrent()) return;
       if (_ref.read(riderDutyProvider) &&
           (_autoRefreshTimer == null || !_autoRefreshTimer!.isActive)) {
         _startAutoRefresh();
       }
     } catch (e) {
+      if (!isCurrent()) return;
       AppLogger.error('Error loading orders', e);
       final cached = await RiderActiveOrderCache.loadOrder();
+      if (!isCurrent()) return;
+      final candidates = reconcileActiveOrders(
+        state.activeOrder != null ? [state.activeOrder!] : (cached == null ? [] : [cached]),
+        null,
+        driverProfileId,
+      );
       state = state.copyWith(
         isLoading: false,
         isRefreshing: false,
-        activeOrder: state.activeOrder ?? cached,
-        error: cached != null
+        activeOrder: candidates.isEmpty ? null : candidates.first,
+        activeOrders: candidates,
+        clearActiveOrder: candidates.isEmpty,
+        error: candidates.isNotEmpty
             ? '${ApiService.extractError(e)} (showing cached active order)'
             : ApiService.extractError(e),
       );
@@ -194,6 +210,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
 
     try {
       final data = await ApiService.updateOrderStatus(orderId, 'accepted');
+      await _resolveDriverProfileId();
       final updated = _parseOrder(data);
       if (updated != null) {
         final newAvailable =
@@ -366,6 +383,23 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
       _lastActiveStatus = active.status;
     } else {
       _lastActiveStatus = null;
+    }
+  }
+
+  Future<int?> _resolveDriverProfileId() async {
+    final user = _ref.read(riderAuthProvider).user;
+    if (user == null || !user.isDriver) return null;
+    if (user.driverProfileId != null) return user.driverProfileId;
+    try {
+      final resolved =
+          await _ref.read(riderAuthProvider.notifier).ensureDriverProfileId();
+      if (resolved == null) {
+        AppLogger.warn('Driver profile id unavailable for order assignment');
+      }
+      return resolved;
+    } catch (e) {
+      AppLogger.warn('Driver profile id lookup failed: $e');
+      return null;
     }
   }
 

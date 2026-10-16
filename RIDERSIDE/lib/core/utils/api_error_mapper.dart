@@ -24,6 +24,18 @@ class ApiErrorMapper {
     return _sanitize(raw);
   }
 
+  /// True when the API rejected an operational request because the account is
+  /// not yet active (registration fee unpaid and/or application unapproved).
+  static bool isRegistrationNotActiveError(Object? error) {
+    if (error is! DioException) return false;
+    return _isRegistrationNotActive(error.response?.data);
+  }
+
+  static bool _isRegistrationNotActive(dynamic data) {
+    if (data is! Map) return false;
+    return data['error_code']?.toString() == 'REGISTRATION_NOT_ACTIVE';
+  }
+
   static bool _isTechnical(String text) {
     final lower = text.toLowerCase();
     return lower.contains('dioexception') ||
@@ -42,6 +54,17 @@ class ApiErrorMapper {
     String? fallbackEn,
     String? fallbackTl,
   }) {
+    // Registration fee / application gate — detect first so the app can route
+    // the user to the payment/status screen instead of a generic 403.
+    if (_isRegistrationNotActive(error.response?.data)) {
+      return _pick(
+        fallbackEn,
+        fallbackTl,
+        'Your account is still under review. Complete your registration fee and wait for admin approval to use the app.',
+        'Nire-review pa ang iyong account. Bayaran ang registration fee at hintayin ang approval ng admin para magamit ang app.',
+      );
+    }
+
     final apiMsg = _extractApiMessage(error.response?.data);
     if (apiMsg != null) return apiMsg;
 

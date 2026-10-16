@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../widgets/widgets.dart';
@@ -9,6 +10,7 @@ import '../../../../provider/main/booking/checkout_provider.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
+import '../../../../../core/constants/routers/main/main_routes.dart';
 
 class LeseatScreen extends ConsumerStatefulWidget {
   const LeseatScreen({super.key});
@@ -41,7 +43,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
     final userName = profileState.name.isNotEmpty ? profileState.name : 'Guest';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       appBar: BookingServiceHeader(
         title: 'LesEat',
         action: IconButton(
@@ -90,7 +92,9 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
             SizedBox(height: ResponsiveUtils.spacing(context, 2)),
 
             // Banner
-            const LeseatBanner(),
+            LeseatBanner(
+              onTap: () => AppRouter.push(context, MainRoutes.offers),
+            ),
 
             // Section Header
             const SectionHeader(title: 'Explore restaurants'),

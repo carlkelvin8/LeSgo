@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -31,20 +32,20 @@ class OtpInputBox extends StatelessWidget {
         style: TextStyle(
           fontSize: ResponsiveUtils.fontSize(context, 24),
           fontWeight: FontWeight.w600,
-          color: Colors.black,
+          color: AppColors.foreground(context, Colors.black),
         ),
         decoration: InputDecoration(
           counterText: '',
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[300]!, width: 2),
+            borderSide: BorderSide(color: AppColors.border(context, Colors.grey[300]!), width: 2),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: focusedBorderColor, width: 2),
           ),
           filled: true,
-          fillColor: Colors.grey[50],
+          fillColor: AppColors.surface(context, Colors.grey[50]!),
         ),
         onChanged: onChanged,
       ),

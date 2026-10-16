@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 import '../utils/app_logger.dart';
 
 /// Service for handling order sound alerts with customization options
@@ -14,12 +15,15 @@ class OrderSoundAlertService {
   late AudioPlayer _audioPlayer;
   late SharedPreferences _prefs;
   bool _isInitialized = false;
+  bool _isLooping = false;
+  Timer? _vibrationTimer;
 
   // Sound preference keys
   static const String _soundEnabledKey = 'order_sound_enabled';
   static const String _soundVolumeKey = 'order_sound_volume';
   static const String _selectedSoundKey = 'order_sound_selected';
   static const String _vibrationEnabledKey = 'order_vibration_enabled';
+  static const String _loopingEnabledKey = 'order_sound_looping_enabled';
 
   // Available sounds
   static const Map<String, String> availableSounds = {
@@ -120,7 +124,27 @@ class OrderSoundAlertService {
     return _prefs.getBool(_vibrationEnabledKey) ?? true;
   }
 
-  /// Play order alert sound
+  /// Enable or disable sound looping (persistent alerts)
+  Future<void> setLoopingEnabled(bool enabled) async {
+    if (!_isInitialized) return;
+    try {
+      await _prefs.setBool(_loopingEnabledKey, enabled);
+      AppLogger.debug('Order sound looping ${enabled ? 'enabled' : 'disabled'}');
+    } catch (e) {
+      AppLogger.error('Failed to set looping enabled', e);
+    }
+  }
+
+  /// Check if looping is enabled
+  bool getLoopingEnabled() {
+    if (!_isInitialized) return true; // Default: enabled for better UX
+    return _prefs.getBool(_loopingEnabledKey) ?? true;
+  }
+
+  /// Check if sound is currently looping
+  bool get isLooping => _isLooping;
+
+  /// Play order alert sound (persistent looping until stopped)
   Future<void> playOrderAlert({bool useVibration = true}) async {
     if (!_isInitialized) return;
 
@@ -130,6 +154,9 @@ class OrderSoundAlertService {
     }
 
     try {
+      // Stop any existing playback first
+      await stopSound();
+
       // Apply volume setting
       await _audioPlayer.setVolume(getVolume());
 
@@ -137,24 +164,82 @@ class OrderSoundAlertService {
       final selectedSound = getSelectedSound();
       final soundPath = availableSounds[selectedSound] ?? availableSounds['bell']!;
 
+      // Set up looping if enabled
+      final shouldLoop = getLoopingEnabled();
+      
+      if (shouldLoop) {
+        // Set looping mode
+        await _audioPlayer.setLoopMode(LoopMode.one);
+        _isLooping = true;
+        
+        // Start vibration pattern if enabled
+        if (useVibration && getVibrationEnabled()) {
+          _startVibrationPattern();
+        }
+      } else {
+        await _audioPlayer.setLoopMode(LoopMode.off);
+        _isLooping = false;
+      }
+
       // Play sound
       await _audioPlayer.setAsset(soundPath);
       await _audioPlayer.play();
 
-      AppLogger.debug('Playing order alert: $selectedSound');
+      AppLogger.debug('Playing order alert: $selectedSound (looping: $shouldLoop)');
     } catch (e) {
       AppLogger.error('Failed to play order alert sound', e);
+      _isLooping = false;
+      // The alert never started, so drop the haptic timer instead of buzzing
+      // every 2s until the rider happens to open the bookings screen.
+      _stopVibrationPattern();
     }
   }
 
-  /// Stop current sound
+  /// Start vibration pattern (repeating every 2 seconds)
+  void _startVibrationPattern() {
+    _stopVibrationPattern();
+    
+    _vibrationTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      try {
+        HapticFeedback.heavyImpact();
+      } catch (e) {
+        AppLogger.debug('Vibration error: $e');
+      }
+    });
+
+    // Initial vibration
+    try {
+      HapticFeedback.heavyImpact();
+    } catch (e) {
+      AppLogger.debug('Initial vibration error: $e');
+    }
+  }
+
+  /// Stop vibration pattern
+  void _stopVibrationPattern() {
+    _vibrationTimer?.cancel();
+    _vibrationTimer = null;
+  }
+
+  /// Stop current sound and vibration
   Future<void> stopSound() async {
     if (!_isInitialized) return;
     try {
       await _audioPlayer.stop();
+      await _audioPlayer.setLoopMode(LoopMode.off);
+      _stopVibrationPattern();
+      _isLooping = false;
+      AppLogger.debug('Order alert sound stopped');
     } catch (e) {
       AppLogger.error('Failed to stop sound', e);
+      _isLooping = false;
     }
+  }
+
+  /// Acknowledge order alert (stops persistent sound/vibration)
+  Future<void> acknowledgeOrderAlert() async {
+    await stopSound();
+    AppLogger.debug('Order alert acknowledged');
   }
 
   /// Test current sound settings
@@ -170,6 +255,7 @@ class OrderSoundAlertService {
       await _prefs.remove(_soundVolumeKey);
       await _prefs.remove(_selectedSoundKey);
       await _prefs.remove(_vibrationEnabledKey);
+      await _prefs.remove(_loopingEnabledKey);
       AppLogger.debug('Order sound alert settings reset to defaults');
     } catch (e) {
       AppLogger.error('Failed to reset settings', e);
@@ -180,8 +266,10 @@ class OrderSoundAlertService {
   Future<void> dispose() async {
     if (!_isInitialized) return;
     try {
+      _stopVibrationPattern();
       await _audioPlayer.dispose();
       _isInitialized = false;
+      _isLooping = false;
       AppLogger.debug('OrderSoundAlertService disposed');
     } catch (e) {
       AppLogger.error('Failed to dispose OrderSoundAlertService', e);

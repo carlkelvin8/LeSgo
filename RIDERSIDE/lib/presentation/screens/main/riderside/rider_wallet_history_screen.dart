@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
@@ -69,6 +70,7 @@ class _RiderWalletHistoryScreenState
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(appLanguageProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -87,7 +89,7 @@ class _RiderWalletHistoryScreenState
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'LesPay History',
+                  AppLocalization.translate('lespay_history', lang),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 20),

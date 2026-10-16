@@ -161,7 +161,7 @@ class _RiderBookingDetailMapSectionState
         position: LatLng(locationState.latitude!, locationState.longitude!),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         infoWindow: const InfoWindow(title: 'Your Location'),
-        zIndex: 2,
+        zIndexInt: 2,
       ));
     }
 

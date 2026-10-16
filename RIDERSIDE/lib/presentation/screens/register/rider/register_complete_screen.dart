@@ -16,7 +16,11 @@ class RegisterCompleteScreen extends ConsumerWidget {
     ref.read(registerInfoProvider.notifier).reset();
 
     if (ref.read(riderAuthProvider).isLoggedIn) {
-      AppRouter.pushAndRemoveUntil(context, MainRoutes.riderMain);
+      AppRouter.pushAndRemoveUntil(
+        context,
+        MainRoutes.registrationFeeStatus,
+        arguments: {'target': MainRoutes.riderMain},
+      );
       return;
     }
 

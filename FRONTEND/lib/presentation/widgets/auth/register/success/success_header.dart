@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -20,7 +21,7 @@ class SuccessHeader extends StatelessWidget {
           style: TextStyle(
             fontSize: ResponsiveUtils.fontSize(context, 24),
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
             letterSpacing: 1.2,
           ),
           textAlign: TextAlign.center,
@@ -30,7 +31,7 @@ class SuccessHeader extends StatelessWidget {
           subtitle,
           style: TextStyle(
             fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: Colors.black54,
+            color: AppColors.foreground(context, Colors.black54),
           ),
           textAlign: TextAlign.center,
         ),

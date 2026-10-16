@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,6 +16,7 @@ class LesgoDetailsPanel extends ConsumerWidget {
     required this.paymentMethod,
     required this.onPaymentChanged,
     required this.onBook,
+    required this.isBooking,
     this.appliedVoucher,
     this.onApplyVoucher,
     this.onRemoveVoucher,
@@ -34,6 +36,7 @@ class LesgoDetailsPanel extends ConsumerWidget {
   final String paymentMethod;
   final ValueChanged<String?> onPaymentChanged;
   final VoidCallback onBook;
+  final bool isBooking;
   final String? appliedVoucher;
   final VoidCallback? onApplyVoucher;
   final VoidCallback? onRemoveVoucher;
@@ -55,17 +58,19 @@ class LesgoDetailsPanel extends ConsumerWidget {
       }
       // Otherwise, try to build a more detailed address from parts
       final parts = <String>[];
-      
-      if (address.houseNumberStreet != null && address.houseNumberStreet!.isNotEmpty) {
+
+      if (address.houseNumberStreet != null &&
+          address.houseNumberStreet!.isNotEmpty) {
         parts.add(address.houseNumberStreet!);
       }
-      
-      if (address.subdivisionBarangay != null && address.subdivisionBarangay!.isNotEmpty) {
+
+      if (address.subdivisionBarangay != null &&
+          address.subdivisionBarangay!.isNotEmpty) {
         parts.add(address.subdivisionBarangay!);
       }
-      
+
       parts.add(address.cityProvince!);
-      
+
       return parts.join(', ');
     }
 
@@ -89,13 +94,12 @@ class LesgoDetailsPanel extends ConsumerWidget {
     return 'Address not available';
   }
 
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
@@ -125,11 +129,10 @@ class LesgoDetailsPanel extends ConsumerWidget {
                   : locationState.pickupLocation != null
                   ? 'Getting address...'
                   : 'Fetching current location...',
-              trailing: LesrideChangeButton(
-                onPressed: () => onChangeCurrent(),
-              ),
+              trailing: LesrideChangeButton(onPressed: () => onChangeCurrent()),
             ),
-            if (locationState.pickupLocation != null && pickupNotesController != null)
+            if (locationState.pickupLocation != null &&
+                pickupNotesController != null)
               Padding(
                 padding: EdgeInsets.only(
                   top: ResponsiveUtils.spacing(context, 8),
@@ -143,26 +146,41 @@ class LesgoDetailsPanel extends ConsumerWidget {
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Unit #, floor, building name, landmark (optional)',
+                    hintText:
+                        'Unit #, floor, building name, landmark (optional)',
                     hintStyle: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade400,
+                      color: AppColors.foreground(
+                        context,
+                        Colors.grey.shade400,
+                      ),
                     ),
-                    prefixIcon: Icon(Icons.apartment, size: 18, color: Colors.grey.shade500),
+                    prefixIcon: Icon(
+                      Icons.apartment,
+                      size: 18,
+                      color: AppColors.foreground(
+                        context,
+                        Colors.grey.shade500,
+                      ),
+                    ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: AppColors.surface(context, Colors.grey.shade50),
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: ResponsiveUtils.spacing(context, 12),
                       vertical: ResponsiveUtils.spacing(context, 10),
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: BorderSide(
+                        color: AppColors.border(context, Colors.grey.shade200),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: BorderSide(
+                        color: AppColors.border(context, Colors.grey.shade200),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -183,7 +201,8 @@ class LesgoDetailsPanel extends ConsumerWidget {
                 onPressed: () => onChangeDestination(),
               ),
             ),
-            if (locationState.destinationLocation != null && dropoffNotesController != null)
+            if (locationState.destinationLocation != null &&
+                dropoffNotesController != null)
               Padding(
                 padding: EdgeInsets.only(
                   top: ResponsiveUtils.spacing(context, 8),
@@ -197,26 +216,41 @@ class LesgoDetailsPanel extends ConsumerWidget {
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Unit #, floor, building name, landmark (optional)',
+                    hintText:
+                        'Unit #, floor, building name, landmark (optional)',
                     hintStyle: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade400,
+                      color: AppColors.foreground(
+                        context,
+                        Colors.grey.shade400,
+                      ),
                     ),
-                    prefixIcon: Icon(Icons.apartment, size: 18, color: Colors.grey.shade500),
+                    prefixIcon: Icon(
+                      Icons.apartment,
+                      size: 18,
+                      color: AppColors.foreground(
+                        context,
+                        Colors.grey.shade500,
+                      ),
+                    ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: AppColors.surface(context, Colors.grey.shade50),
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: ResponsiveUtils.spacing(context, 12),
                       vertical: ResponsiveUtils.spacing(context, 10),
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: BorderSide(
+                        color: AppColors.border(context, Colors.grey.shade200),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
+                      borderSide: BorderSide(
+                        color: AppColors.border(context, Colors.grey.shade200),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -247,7 +281,11 @@ class LesgoDetailsPanel extends ConsumerWidget {
               onRemoveTap: onRemoveVoucher,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            PrimaryButton(text: 'Book', onPressed: onBook),
+            PrimaryButton(
+              text: 'Book',
+              onPressed: isBooking ? null : onBook,
+              isLoading: isBooking,
+            ),
           ],
         ),
       ),

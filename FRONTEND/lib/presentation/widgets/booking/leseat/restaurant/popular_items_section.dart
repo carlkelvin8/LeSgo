@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../domain/entities/booking/leseat/menu_item.dart';
 import 'menu_item_card.dart';
 
@@ -21,24 +20,24 @@ class PopularItemsSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Menu Items List
-
-        // Menu Items List
-        ...items.map(
-          (item) => Padding(
-            padding: EdgeInsets.only(
-              bottom: ResponsiveUtils.spacing(context, 16),
-            ),
-            child: MenuItemCard(
-              item: item,
-              onTap: onItemTap != null ? () => onItemTap!(item) : null,
-            ),
-          ),
-        ),
-      ],
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return MenuItemCard(
+          item: item,
+          onTap: onItemTap != null ? () => onItemTap!(item) : null,
+          onAddToCart: () => onAddToCart(item),
+        );
+      },
     );
   }
 }

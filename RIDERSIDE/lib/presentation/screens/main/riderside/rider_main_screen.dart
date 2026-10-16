@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
+import '../../../../core/services/order_sound_alert_service.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/riderside/rider_main_nav_provider.dart';
 import '../../../provider/main/riderside/rider_mission_provider.dart';
@@ -25,6 +26,7 @@ import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
+import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/services/notification_navigation_service.dart';
 
 // Actually, RegisterScaffold is specific to registration. Standard Scaffold is better for Main Screen.
@@ -58,6 +60,10 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
         ref.read(riderNavProvider.notifier).navigateTo(tab);
       };
       NotificationNavigationService.onAppReady();
+      
+      // Stop persistent notification sound when rider opens app
+      OrderSoundAlertService().acknowledgeOrderAlert();
+      
       _checkAuthentication();
       ref.read(riderDutyProvider.notifier);
       ref.read(riderWalletProvider.notifier).loadWallet();
@@ -90,6 +96,18 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
           }
           AppRouter.pushReplacement(context, AuthRoutes.auth);
         }
+      });
+    } else if (authState.user!.isRegistrationRestricted) {
+      AppLogger.auth(
+        'RiderMainScreen: account restricted (registration fee/approval pending)',
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppRouter.pushAndRemoveUntil(
+          context,
+          MainRoutes.registrationFeeStatus,
+          arguments: {'target': MainRoutes.riderMain},
+        );
       });
     } else {
       AppLogger.auth(

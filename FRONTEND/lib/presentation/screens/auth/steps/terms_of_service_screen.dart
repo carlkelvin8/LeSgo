@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,7 +21,7 @@ class TermsOfServiceScreen extends ConsumerWidget {
         ),
       ),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface(context, Colors.white),
         body: SafeArea(
           child: Builder(
             builder: (context) {

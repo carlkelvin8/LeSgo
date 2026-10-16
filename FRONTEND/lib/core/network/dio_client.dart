@@ -9,6 +9,8 @@ import 'token_refresh_service.dart';
 
 @lazySingleton
 class DioClient {
+  // Use the platform's HTTPS trust checks so valid certificate renewals keep
+  // working without rebuilding the app. Do not override certificate validation.
   final Dio dio;
   final LocalStorageService _localStorageService;
   final RateLimiterService _rateLimiter;

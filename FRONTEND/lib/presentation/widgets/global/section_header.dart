@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -30,8 +31,7 @@ class SectionHeader extends StatelessWidget {
                 18,
               ), // Increased size for bold header
               fontWeight: FontWeight.bold,
-              color: Colors
-                  .black, // Darker color as per image (Offers for You is bold black/dark grey)
+              color: AppColors.foreground(context, Colors.black), // Darker color as per image (Offers for You is bold black/dark grey)
             ),
           ),
           if (onSeeAllPressed != null)

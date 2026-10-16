@@ -140,6 +140,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     if (!ref.read(riderLocationProvider).isTracking) {
       await notifier.startTracking(orderId: widget.orderId);
     }
+    if (!mounted) return;
     final loc = ref.read(riderLocationProvider);
     if (loc.latitude != null && loc.longitude != null) {
       setState(() {
@@ -331,7 +332,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
         _fitBoundsToRoute();
       }
 
-      AppLogger.debug('âœ… Route created for order ${order.id}');
+      AppLogger.debug('✅ Route created for order ${order.id}');
     } catch (e) {
       AppLogger.error('Error fetching route', e);
       if (mounted) {
@@ -684,7 +685,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                       ),
                                     ),
                                     Text(
-                                      'â‚±${currentOrder.estimatedFare.toStringAsFixed(2)}',
+                                      '₱${currentOrder.estimatedFare.toStringAsFixed(2)}',
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -966,7 +967,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                 // Try to set a specific style to ensure map loads
                 try {
                   await controller.setMapStyle(null); // Reset to default style
-                  AppLogger.debug('âœ… Map style set successfully');
+                  AppLogger.debug('✅ Map style set successfully');
                 } catch (e) {
                   AppLogger.warn('Could not set map style: $e');
                 }
@@ -1000,7 +1001,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                       15,
                     ),
                   );
-                  AppLogger.debug('ðŸŽ¯ Map centered on current location');
+                  AppLogger.debug('🎯 Map centered on current location');
                 }
               },
             ),

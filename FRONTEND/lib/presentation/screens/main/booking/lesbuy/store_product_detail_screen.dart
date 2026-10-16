@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
@@ -50,7 +51,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -58,7 +59,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
         leading: Container(
           margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
+            color: AppColors.surface(context, Colors.white).withValues(alpha: 0.9),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -69,7 +70,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black)),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -87,7 +88,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
             flex: 4,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: AppColors.surface(context, Colors.grey[50]!),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(
                     ResponsiveUtils.spacing(context, 24),
@@ -118,7 +119,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 24),
                             fontWeight: FontWeight.w700,
-                            color: Colors.black87,
+                            color: AppColors.foreground(context, Colors.black87),
                             height: 1.2,
                           ),
                         ),
@@ -130,7 +131,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 20),
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF5F2D82),
+                            color: AppColors.accent(context, Color(0xFF5F2D82)),
                           ),
                         ),
                       ],
@@ -153,7 +154,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: Colors.grey[700],
+                              color: AppColors.foreground(context, Colors.grey[700]!),
                               height: 1.5,
                               letterSpacing: 0.2,
                             ),
@@ -171,7 +172,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
                       vertical: ResponsiveUtils.spacing(context, 16),
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.grey[50],
+                      color: AppColors.surface(context, Colors.grey[50]!),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.05),

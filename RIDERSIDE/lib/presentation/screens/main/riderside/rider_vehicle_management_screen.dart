@@ -465,7 +465,7 @@ class _VehicleFormScreenState
                   height:
                       ResponsiveUtils.spacing(context, 8)),
               DropdownButtonFormField<VehicleType>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 items: VehicleType.values.map((type) {
                   return DropdownMenuItem(
                     value: type,

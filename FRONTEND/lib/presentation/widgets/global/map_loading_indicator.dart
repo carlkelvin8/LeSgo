@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -56,11 +57,11 @@ class _LoadingTextWithDotsState extends State<LoadingTextWithDots>
 
         return Text(
           'Loading${'.' * dotCount}',
-          style: const TextStyle(
+          style:  TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         );
       },

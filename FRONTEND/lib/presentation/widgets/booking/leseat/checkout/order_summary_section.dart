@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
@@ -33,7 +34,7 @@ class OrderSummarySection extends StatelessWidget {
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -45,7 +46,7 @@ class OrderSummarySection extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -64,7 +65,7 @@ class OrderSummarySection extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
                 height: 1.35,
               ),
             ),
@@ -85,7 +86,7 @@ class OrderSummarySection extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
                 height: 1.35,
               ),
             ),
@@ -104,7 +105,7 @@ class OrderSummarySection extends StatelessWidget {
             padding: EdgeInsets.symmetric(
               vertical: ResponsiveUtils.spacing(context, 12),
             ),
-            child: Divider(color: Colors.grey[300], height: 1),
+            child: Divider(color: AppColors.border(context, Colors.grey[300]!), height: 1),
           ),
           
           _buildSummaryRow(
@@ -136,7 +137,7 @@ class OrderSummarySection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
             fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
-            color: isDiscount ? Colors.red : (isTotal ? Colors.black87 : Colors.grey[600]),
+            color: isDiscount ? Colors.red : (isTotal ? AppColors.foreground(context, Colors.black87) : AppColors.foreground(context, Colors.grey[600]!)),
           ),
         ),
         Text(
@@ -145,7 +146,7 @@ class OrderSummarySection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
             fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-            color: isDiscount ? Colors.red : Colors.black87,
+            color: isDiscount ? Colors.red : AppColors.foreground(context, Colors.black87),
           ),
         ),
       ],

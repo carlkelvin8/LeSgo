@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/responsive_utils.dart';
@@ -58,10 +59,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         border: Border(
           top: BorderSide(
-            color: Colors.grey[300]!,
+            color: AppColors.foreground(context, Colors.grey[300]!),
             width: 1,
           ),
         ),
@@ -75,7 +76,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                 onPressed: widget.enabled ? widget.onSendLocation : null,
                 icon: Icon(
                   Icons.location_on,
-                  color: widget.enabled ? const Color(0xFF5F2D82) : Colors.grey[400],
+                  color: widget.enabled ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey[400]!),
                 ),
                 tooltip: 'Share location',
               ),
@@ -84,10 +85,10 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: AppColors.surface(context, Colors.grey[100]!),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: Colors.grey[300]!,
+                    color: AppColors.foreground(context, Colors.grey[300]!),
                     width: 1,
                   ),
                 ),
@@ -104,7 +105,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                     hintStyle: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.grey[500],
+                      color: AppColors.foreground(context, Colors.grey[500]!),
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
@@ -125,7 +126,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
             // Send button
             Container(
               decoration: BoxDecoration(
-                color: _hasText && widget.enabled ? const Color(0xFF5F2D82) : Colors.grey[300],
+                color: _hasText && widget.enabled ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey[300]!),
                 shape: BoxShape.circle,
               ),
               child: IconButton(
@@ -143,7 +144,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                       )
                     : Icon(
                         Icons.send,
-                        color: _hasText && widget.enabled ? Colors.white : Colors.grey[600],
+                        color: _hasText && widget.enabled ? Colors.white : AppColors.foreground(context, Colors.grey[600]!),
                         size: 20,
                       ),
               ),

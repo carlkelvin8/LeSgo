@@ -1,6 +1,9 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/booking_geo_utils.dart';
 import '../../../data/data_source/dto/address/address_dto.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/main/address/address_provider.dart';
@@ -34,16 +37,13 @@ class _AddressManagementScreenState
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface(context, Colors.white),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => UncontrolledProviderScope(
         container: ProviderScope.containerOf(context),
-        child: _AddEditAddressSheet(
-          userId: _userId,
-          existing: existing,
-        ),
+        child: _AddEditAddressSheet(userId: _userId, existing: existing),
       ),
     );
   }
@@ -64,9 +64,12 @@ class _AddressManagementScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(fontFamily: 'TT Fors', color: Colors.grey),
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                color: AppColors.foreground(context, Colors.grey),
+              ),
             ),
           ),
           ElevatedButton(
@@ -87,7 +90,9 @@ class _AddressManagementScreenState
     );
 
     if (confirmed == true && mounted) {
-      await ref.read(addressProvider.notifier).deleteAddress(
+      await ref
+          .read(addressProvider.notifier)
+          .deleteAddress(
             userId: _userId,
             addressId: address.id,
             context: context,
@@ -97,11 +102,9 @@ class _AddressManagementScreenState
 
   Future<void> _setDefault(AddressDto address) async {
     if (address.isDefault) return;
-    await ref.read(addressProvider.notifier).setAsDefault(
-          userId: _userId,
-          addressId: address.id,
-          context: context,
-        );
+    await ref
+        .read(addressProvider.notifier)
+        .setAsDefault(userId: _userId, addressId: address.id, context: context);
   }
 
   @override
@@ -109,17 +112,20 @@ class _AddressManagementScreenState
     final addressState = ref.watch(addressProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             Container(
-              color: Colors.white,
+              color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               child: const AuthHeader(title: 'Saved Addresses'),
             ),
-            Container(height: 1, color: Colors.grey[200]),
+            Container(
+              height: 1,
+              color: AppColors.surface(context, Colors.grey[200]!),
+            ),
 
             Expanded(
               child: addressState.isLoading
@@ -129,33 +135,32 @@ class _AddressManagementScreenState
                       ),
                     )
                   : addressState.addresses.isEmpty
-                      ? _EmptyState(onAdd: () => _showAddEditSheet())
-                      : RefreshIndicator(
-                          color: const Color(0xFF5F2D82),
-                          onRefresh: () => ref
-                              .read(addressProvider.notifier)
-                              .loadAddresses(_userId),
-                          child: ListView.separated(
-                            padding: EdgeInsets.all(
-                              ResponsiveUtils.spacing(context, 16),
-                            ),
-                            itemCount: addressState.addresses.length,
-                            separatorBuilder: (_, __) => SizedBox(
-                              height: ResponsiveUtils.spacing(context, 10),
-                            ),
-                            itemBuilder: (_, i) {
-                              final addr = addressState.addresses[i];
-                              return _AddressTile(
-                                address: addr,
-                                onEdit: () =>
-                                    _showAddEditSheet(existing: addr),
-                                onDelete: () => _deleteAddress(addr),
-                                onSetDefault: () => _setDefault(addr),
-                                isSettingDefault: addressState.isUpdating,
-                              );
-                            },
-                          ),
+                  ? _EmptyState(onAdd: () => _showAddEditSheet())
+                  : RefreshIndicator(
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
+                      onRefresh: () => ref
+                          .read(addressProvider.notifier)
+                          .loadAddresses(_userId),
+                      child: ListView.separated(
+                        padding: EdgeInsets.all(
+                          ResponsiveUtils.spacing(context, 16),
                         ),
+                        itemCount: addressState.addresses.length,
+                        separatorBuilder: (_, __) => SizedBox(
+                          height: ResponsiveUtils.spacing(context, 10),
+                        ),
+                        itemBuilder: (_, i) {
+                          final addr = addressState.addresses[i];
+                          return _AddressTile(
+                            address: addr,
+                            onEdit: () => _showAddEditSheet(existing: addr),
+                            onDelete: () => _deleteAddress(addr),
+                            onSetDefault: () => _setDefault(addr),
+                            isSettingDefault: addressState.isUpdating,
+                          );
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -201,12 +206,15 @@ class _AddressTile extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: address.isDefault
-              ? const Color(0xFF5F2D82).withValues(alpha: 0.4)
-              : Colors.grey.shade200,
+              ? AppColors.accent(
+                  context,
+                  Color(0xFF5F2D82),
+                ).withValues(alpha: 0.4)
+              : AppColors.border(context, Colors.grey.shade200),
           width: address.isDefault ? 1.5 : 1,
         ),
       ),
@@ -217,14 +225,11 @@ class _AddressTile extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: address.isDefault
-                      ? const Color(0xFF5F2D82)
-                      : Colors.grey.shade100,
+                      ? AppColors.accent(context, Color(0xFF5F2D82))
+                      : AppColors.surface(context, Colors.grey.shade100),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -235,7 +240,7 @@ class _AddressTile extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: address.isDefault
                         ? Colors.white
-                        : Colors.grey.shade700,
+                        : AppColors.foreground(context, Colors.grey.shade700),
                   ),
                 ),
               ),
@@ -267,19 +272,13 @@ class _AddressTile extends StatelessWidget {
               IconButton(
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined, size: 18),
-                color: Colors.grey.shade600,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                visualDensity: VisualDensity.compact,
+                color: AppColors.foreground(context, Colors.grey.shade600),
               ),
               const SizedBox(width: 8),
               IconButton(
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline, size: 18),
                 color: Colors.red.shade400,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                visualDensity: VisualDensity.compact,
               ),
             ],
           ),
@@ -292,7 +291,7 @@ class _AddressTile extends StatelessWidget {
               Icon(
                 Icons.location_on_outlined,
                 size: 16,
-                color: Colors.grey.shade500,
+                color: AppColors.foreground(context, Colors.grey.shade500),
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -301,7 +300,7 @@ class _AddressTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 13,
-                    color: Colors.black87,
+                    color: AppColors.foreground(context, Colors.black87),
                   ),
                 ),
               ),
@@ -316,7 +315,7 @@ class _AddressTile extends StatelessWidget {
                 Icon(
                   Icons.person_outline,
                   size: 14,
-                  color: Colors.grey.shade400,
+                  color: AppColors.foreground(context, Colors.grey.shade400),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -324,7 +323,7 @@ class _AddressTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 12,
-                    color: Colors.grey.shade500,
+                    color: AppColors.foreground(context, Colors.grey.shade500),
                   ),
                 ),
               ],
@@ -334,21 +333,26 @@ class _AddressTile extends StatelessWidget {
           // Set as default button
           if (!address.isDefault) ...[
             const SizedBox(height: 8),
-            GestureDetector(
-              onTap: isSettingDefault ? null : onSetDefault,
-              child: Text(
-                'Set as default',
-                style: TextStyle(
+            TextButton(
+              onPressed: isSettingDefault ? null : onSetDefault,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.accent(context, Color(0xFF5F2D82)),
+                disabledForegroundColor: Colors.grey,
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveUtils.spacing(context, 8),
+                  vertical: 6,
+                ),
+                minimumSize: const Size(48, 44),
+                visualDensity: VisualDensity.compact,
+                textStyle: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: isSettingDefault
-                      ? Colors.grey
-                      : const Color(0xFF5F2D82),
                   decoration: TextDecoration.underline,
                   decorationColor: const Color(0xFF5F2D82),
                 ),
               ),
+              child: const Text('Set as default'),
             ),
           ],
         ],
@@ -371,14 +375,18 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.location_off_outlined, size: 64, color: Colors.grey[300]),
+          Icon(
+            Icons.location_off_outlined,
+            size: 64,
+            color: AppColors.foreground(context, Colors.grey[300]!),
+          ),
           const SizedBox(height: 16),
           Text(
             'No saved addresses',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 16,
-              color: Colors.grey[600],
+              color: AppColors.foreground(context, Colors.grey[600]!),
             ),
           ),
           const SizedBox(height: 8),
@@ -387,7 +395,7 @@ class _EmptyState extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,
-              color: Colors.grey[400],
+              color: AppColors.foreground(context, Colors.grey[400]!),
             ),
           ),
           const SizedBox(height: 24),
@@ -396,7 +404,10 @@ class _EmptyState extends StatelessWidget {
             icon: const Icon(Icons.add, size: 18),
             label: const Text(
               'Add Address',
-              style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontWeight: FontWeight.w600,
+              ),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5F2D82),
@@ -437,6 +448,7 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
   late final TextEditingController _addressLine2Ctrl;
   bool _isDefault = false;
   bool _isSaving = false;
+  LatLng? _selectedLocation;
 
   bool get _isEditing => widget.existing != null;
 
@@ -450,6 +462,9 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
     _addressLine1Ctrl = TextEditingController(text: e?.addressLine1 ?? '');
     _addressLine2Ctrl = TextEditingController(text: e?.addressLine2 ?? '');
     _isDefault = e?.isDefault ?? false;
+    if (BookingGeoUtils.hasValidCoords(e?.latitude, e?.longitude)) {
+      _selectedLocation = LatLng(e!.latitude, e.longitude);
+    }
   }
 
   @override
@@ -464,11 +479,21 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tap the map to pin this address location.'),
+        ),
+      );
+      return;
+    }
     setState(() => _isSaving = true);
 
     bool success;
     if (_isEditing) {
-      success = await ref.read(addressProvider.notifier).updateAddress(
+      success = await ref
+          .read(addressProvider.notifier)
+          .updateAddress(
             userId: widget.userId,
             addressId: widget.existing!.id,
             label: _labelCtrl.text.trim(),
@@ -478,11 +503,15 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
             addressLine2: _addressLine2Ctrl.text.trim().isEmpty
                 ? null
                 : _addressLine2Ctrl.text.trim(),
+            latitude: _selectedLocation!.latitude,
+            longitude: _selectedLocation!.longitude,
             isDefault: _isDefault,
             context: context,
           );
     } else {
-      success = await ref.read(addressProvider.notifier).createAddress(
+      success = await ref
+          .read(addressProvider.notifier)
+          .createAddress(
             userId: widget.userId,
             label: _labelCtrl.text.trim(),
             contactName: _contactNameCtrl.text.trim(),
@@ -491,8 +520,8 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
             addressLine2: _addressLine2Ctrl.text.trim().isEmpty
                 ? null
                 : _addressLine2Ctrl.text.trim(),
-            latitude: 0,
-            longitude: 0,
+            latitude: _selectedLocation!.latitude,
+            longitude: _selectedLocation!.longitude,
             isDefault: _isDefault,
             context: context,
           );
@@ -523,7 +552,7 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.surface(context, Colors.grey[300]!),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -561,6 +590,56 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        'Pin the exact delivery location',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.foreground(context, Colors.black87),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 190,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target:
+                                  _selectedLocation ??
+                                  BookingGeoUtils.defaultLatLng,
+                              zoom: 15,
+                            ),
+                            myLocationButtonEnabled: false,
+                            myLocationEnabled: false,
+                            onTap: (location) =>
+                                setState(() => _selectedLocation = location),
+                            markers: _selectedLocation == null
+                                ? const <Marker>{}
+                                : {
+                                    Marker(
+                                      markerId: const MarkerId('saved_address'),
+                                      position: _selectedLocation!,
+                                    ),
+                                  },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _selectedLocation == null
+                            ? 'Tap the map to select a pin.'
+                            : 'Pinned: ${_selectedLocation!.latitude.toStringAsFixed(5)}, ${_selectedLocation!.longitude.toStringAsFixed(5)}',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 12,
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey.shade600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       _Field(
                         controller: _labelCtrl,
                         label: 'Label',
@@ -609,44 +688,62 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
 
                       // Set as default toggle
                       GestureDetector(
-                        onTap: () =>
-                            setState(() => _isDefault = !_isDefault),
-                        child: Row(
-                          children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: 22,
-                              height: 22,
-                              decoration: BoxDecoration(
-                                color: _isDefault
-                                    ? const Color(0xFF5F2D82)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(5),
-                                border: Border.all(
+                        onTap: () => setState(() => _isDefault = !_isDefault),
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
                                   color: _isDefault
-                                      ? const Color(0xFF5F2D82)
-                                      : Colors.grey.shade400,
-                                  width: 1.5,
+                                      ? AppColors.accent(
+                                          context,
+                                          Color(0xFF5F2D82),
+                                        )
+                                      : AppColors.surface(
+                                          context,
+                                          Colors.white,
+                                        ),
+                                  borderRadius: BorderRadius.circular(5),
+                                  border: Border.all(
+                                    color: _isDefault
+                                        ? AppColors.accent(
+                                            context,
+                                            Color(0xFF5F2D82),
+                                          )
+                                        : AppColors.border(
+                                            context,
+                                            Colors.grey.shade400,
+                                          ),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: _isDefault
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 14,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Set as default address',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: 14,
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.black87,
+                                  ),
                                 ),
                               ),
-                              child: _isDefault
-                                  ? const Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: 14,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'Set as default address',
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
 
@@ -726,11 +823,11 @@ class _Field extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Colors.black54,
+            color: AppColors.foreground(context, Colors.black54),
           ),
         ),
         const SizedBox(height: 6),
@@ -745,22 +842,30 @@ class _Field extends StatelessWidget {
             hintStyle: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,
-              color: Colors.grey[400],
+              color: AppColors.foreground(context, Colors.grey[400]!),
             ),
-            prefixIcon: Icon(icon, size: 18, color: Colors.grey[500]),
+            prefixIcon: Icon(
+              icon,
+              size: 18,
+              color: AppColors.foreground(context, Colors.grey[500]!),
+            ),
             filled: true,
-            fillColor: Colors.grey[50],
+            fillColor: AppColors.surface(context, Colors.grey[50]!),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 12,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(
+                color: AppColors.border(context, Colors.grey.shade300),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(
+                color: AppColors.border(context, Colors.grey.shade300),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

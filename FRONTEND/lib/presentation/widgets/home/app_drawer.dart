@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/app_localization.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/constants/routers/app_router.dart';
@@ -26,7 +27,7 @@ class AppDrawer extends ConsumerWidget {
             // Menu Items
             DrawerMenuItem(
               iconPath: 'assets/images/navbar/Profile.svg',
-              title: 'My Profile',
+              title: tr(context, 'my_profile'),
               onTap: () {
                 Navigator.pop(context);
                 AppRouter.push(context, MainRoutes.profile);
@@ -34,7 +35,7 @@ class AppDrawer extends ConsumerWidget {
             ),
             DrawerMenuItem(
               iconPath: 'assets/images/navbar/Transaction.svg',
-              title: 'Transactions',
+              title: tr(context, 'transactions'),
               onTap: () {
                 Navigator.pop(context);
                 AppRouter.push(context, MainRoutes.transactions);
@@ -42,7 +43,7 @@ class AppDrawer extends ConsumerWidget {
             ),
             DrawerMenuItem(
               iconPath: 'assets/images/navbar/mission.svg',
-              title: 'Missions',
+              title: tr(context, 'missions'),
               onTap: () {
                 Navigator.pop(context);
                 AppRouter.push(context, MainRoutes.missions);
@@ -50,7 +51,7 @@ class AppDrawer extends ConsumerWidget {
             ),
             DrawerMenuItem(
               iconPath: 'assets/images/navbar/Profile.svg',
-              title: 'Invite friends',
+              title: tr(context, 'invite_friends'),
               onTap: () {
                 Navigator.pop(context);
                 InviteFriendsSheet.show(
@@ -68,14 +69,14 @@ class AppDrawer extends ConsumerWidget {
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
             DrawerTextButton(
-              title: 'FAQs',
+              title: tr(context, 'faqs'),
               onTap: () {
                 Navigator.pop(context);
                 AppRouter.push(context, MainRoutes.faqs);
               },
             ),
             DrawerTextButton(
-              title: 'About LeSgo',
+              title: tr(context, 'about_lesgo'),
               onTap: () {
                 Navigator.pop(context);
                 AppRouter.push(context, MainRoutes.about);

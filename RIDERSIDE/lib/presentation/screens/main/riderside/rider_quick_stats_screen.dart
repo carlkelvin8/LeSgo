@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_stats_provider.dart';
 
@@ -9,6 +10,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(riderStatsProvider);
+    final lang = ref.watch(appLanguageProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
@@ -18,7 +20,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'Today\'s Stats',
+          AppLocalization.translate('todays_stats', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -38,7 +40,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Loading your stats...',
+                AppLocalization.translate('loading_your_stats', lang),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -77,6 +79,14 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                     color: Colors.grey.shade600,
                   ),
+                ),
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: () {
+                    ref.invalidate(riderStatsProvider);
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
                 ),
               ],
             ),

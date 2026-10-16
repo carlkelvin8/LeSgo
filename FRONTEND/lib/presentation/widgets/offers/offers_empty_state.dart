@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/responsive_utils.dart';
@@ -17,12 +18,12 @@ class OffersEmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: AppColors.surface(context, Colors.grey[100]!),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.local_offer_outlined,
-                color: Colors.grey[400],
+                color: AppColors.foreground(context, Colors.grey[400]!),
                 size: 34,
               ),
             ),
@@ -33,7 +34,7 @@ class OffersEmptyState extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
                 fontWeight: FontWeight.w800,
-                color: Colors.black87,
+                color: AppColors.foreground(context, Colors.black87),
               ),
             ),
             const SizedBox(height: 6),
@@ -42,7 +43,7 @@ class OffersEmptyState extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.grey[500],
+                color: AppColors.foreground(context, Colors.grey[500]!),
               ),
             ),
           ],

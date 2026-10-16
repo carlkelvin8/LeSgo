@@ -186,12 +186,7 @@ class MerchantInfoFormFields extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  Image.network(
-                    'https://flagcdn.com/w40/ph.png', // Fallback or use asset
-                    width: 24,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.flag, size: 24),
-                  ),
+                  Icon(Icons.flag, size: 24, color: const Color(0xFF5F2D82)),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                   Text(
                     '+63',
@@ -235,14 +230,20 @@ class MerchantInfoFormFields extends ConsumerWidget {
                 ],
               ),
             ),
-            if (state
-                .hasError) // Optionally show error text if design changes, but currently hidden requested
+            if (state.hasError) ...[
+              const SizedBox(height: 4),
               Padding(
-                // But wait, user requested "remove the error message beneath" in Step 399.
-                padding: const EdgeInsets.only(top: 5.0),
-                child:
-                    Container(), // Keeping implementation clean of text as requested.
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  state.errorText ?? 'Enter a valid phone number',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
               ),
+            ],
           ],
         );
       },

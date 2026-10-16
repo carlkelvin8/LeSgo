@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../core/constants/map_styles.dart';
 import '../../../core/utils/marker_utils.dart';
+import '../../../core/utils/booking_geo_utils.dart';
 import '../../provider/main/location/location_provider.dart';
 
 class LocationMapWidget extends ConsumerStatefulWidget {
@@ -102,7 +104,7 @@ class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
       initialCameraPosition: CameraPosition(
         target:
             locationState.selectedLocation ??
-            const LatLng(8.4542, 124.6319),
+            BookingGeoUtils.defaultLatLng,
         zoom: 16.0,
       ),
       onTap: widget.onMapTap,
@@ -111,6 +113,7 @@ class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
+      style: MapStyles.darkIfDark(context),
       scrollGesturesEnabled: widget.isFullscreen,
       zoomGesturesEnabled: widget.isFullscreen,
       rotateGesturesEnabled: widget.isFullscreen,
@@ -118,3 +121,4 @@ class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
     );
   }
 }
+

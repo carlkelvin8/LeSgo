@@ -32,155 +32,117 @@ class MerchantMenuItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 14)),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 10)),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: ResponsiveUtils.spacing(context, 70),
-              height: ResponsiveUtils.spacing(context, 70),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFD69A),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: _buildImage(context),
-            ),
-            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
+      child: Material(
+        color: const Color(0xFFF5F4F7),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onEditTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: ResponsiveUtils.spacing(context, 60),
+                  height: ResponsiveUtils.spacing(context, 60),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: _buildImage(context),
+                ),
+                SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          name,
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 14),
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: ResponsiveUtils.fontSize(context, 13),
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF302B36),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ),
+                          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                           Text(
-                            'PHP $price',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 12),
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
+                            '₱$price',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 12.5),
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF8054A2),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 11),
-                      height: 1.3,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                  if (inventoryBadge != null) ...[
-                    SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                    inventoryBadge!,
-                  ],
-                  SizedBox(height: ResponsiveUtils.spacing(context, 3)),
-                  Row(
-                    children: [
-                      if (stockControls != null) ...[
-                        stockControls!,
-                        SizedBox(width: ResponsiveUtils.spacing(context, 10)),
-                      ],
-                      GestureDetector(
-                        onTap: onEditTap,
-                        child: Text(
-                          'Edit Menu',
+                      if (description.isNotEmpty) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 3)),
+                        Text(
+                          description,
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 11),
-                            color: const Color(0xFFC320D6),
-                            fontWeight: FontWeight.w500,
+                            fontSize: ResponsiveUtils.fontSize(context, 10.5),
+                            height: 1.4,
+                            color: const Color(0xFF918A98),
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      if (onDeleteTap != null) ...[
-                        Padding(
+                      ],
+                      if (category != null && category!.isNotEmpty) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                        Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: ResponsiveUtils.spacing(context, 8),
+                            vertical: ResponsiveUtils.spacing(context, 3),
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            '|',
-                            style: TextStyle(
-                              fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: onDeleteTap,
-                          child: Text(
-                            'Delete',
+                            category!,
                             style: TextStyle(
                               fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: Colors.red.shade700,
-                              fontWeight: FontWeight.w500,
+                              fontSize: ResponsiveUtils.fontSize(context, 9.5),
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF8054A2),
                             ),
                           ),
                         ),
                       ],
-                      if (onDuplicateTap != null) ...[
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: ResponsiveUtils.spacing(context, 8),
-                          ),
-                          child: Text(
-                            '|',
-                            style: TextStyle(
-                              fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: onDuplicateTap,
-                          child: Text(
-                            'Duplicate',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: const Color(0xFF5F2D82),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
+                      if (inventoryBadge != null) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                        inventoryBadge!,
+                      ],
+                      if (stockControls != null) ...[
+                        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                        stockControls!,
                       ],
                     ],
                   ),
-                ],
-              ),
+                ),
+                SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: ResponsiveUtils.fontSize(context, 18),
+                  color: const Color(0xFF8F8798),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -208,10 +170,11 @@ class MerchantMenuItemCard extends StatelessWidget {
         if (progress == null) return child;
         return Center(
           child: SizedBox(
-            width: 20,
-            height: 20,
+            width: 18,
+            height: 18,
             child: CircularProgressIndicator(
               strokeWidth: 2,
+              color: const Color(0xFF8054A2),
               value: progress.expectedTotalBytes != null
                   ? progress.cumulativeBytesLoaded /
                       progress.expectedTotalBytes!
@@ -224,10 +187,12 @@ class MerchantMenuItemCard extends StatelessWidget {
   }
 
   Widget _buildPlaceholder(BuildContext context) {
-    return Icon(
-      Icons.restaurant,
-      size: ResponsiveUtils.spacing(context, 34),
-      color: const Color(0xFF9A5A00),
+    return Center(
+      child: Icon(
+        Icons.restaurant_menu,
+        size: ResponsiveUtils.spacing(context, 24),
+        color: const Color(0xFFA49BAE),
+      ),
     );
   }
 }

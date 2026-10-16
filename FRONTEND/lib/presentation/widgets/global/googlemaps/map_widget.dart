@@ -1,6 +1,8 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/constants/map_styles.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../provider/register/register_provider.dart';
 
@@ -47,6 +49,7 @@ class MapWidget extends ConsumerWidget {
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
+      style: MapStyles.darkIfDark(context),
       // Temporarily disable advanced markers to fix booking issue
       // markerType: GoogleMapMarkerType.advancedMarker,
     );
@@ -66,7 +69,7 @@ class LocationButton extends StatelessWidget {
     return Material(
       elevation: 4,
       borderRadius: BorderRadius.circular(8),
-      color: Colors.white,
+      color: AppColors.surface(context, Colors.white),
       child: InkWell(
         onTap: onUseCurrentLocation,
         borderRadius: BorderRadius.circular(8),
@@ -88,7 +91,7 @@ class LocationButton extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+                    color: AppColors.foreground(context, Colors.grey[800]!),
                   ),
                 ),
               ],

@@ -4,13 +4,14 @@ class ApiConstants {
   /// Restricted Google Maps key from `--dart-define-from-file=secrets.json`.
   static String get googleMapsApiKey => SecretsConfig.googleMapsApiKey;
 
-  static bool get isGoogleMapsConfigured => SecretsConfig.isGoogleMapsConfigured;
+  static bool get isGoogleMapsConfigured =>
+      SecretsConfig.isGoogleMapsConfigured;
 
   // API Base URL - Force Production for testing
   static String get baseUrl {
     // Force production API for testing
     return 'https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api';
-    
+
     // Original logic (commented out)
     // if (kDebugMode) {
     //   // Development - Local server
@@ -28,47 +29,55 @@ class ApiConstants {
   static const String authChangePassword = '/v1/auth/change-password';
   static const String authDeactivateAccount = '/v1/auth/account/deactivate';
   static const String authDeleteAccount = '/v1/auth/account/delete';
-  
+
   // Auth endpoints
   static const String authMe = '/v1/auth/me';
   static const String googleSignIn = '/v1/auth/google';
-  
+
   // User endpoints
   static String userById(int userId) => '/v1/users/$userId';
-  
+
   // Order endpoints
   static const String orders = '/v1/orders';
   static const String orderEstimate = '/v1/orders/estimate';
   static String orderById(int orderId) => '/v1/orders/$orderId';
   static String orderStatus(int orderId) => '/v1/orders/$orderId/status';
   static String orderReceipt(int orderId) => '/v1/orders/$orderId/receipt';
-  
+
   // Partner endpoints
   static const String partners = '/v1/partners';
   static String partnerById(int id) => '/v1/partners/$id';
   static String partnerMenu(int partnerId) => '/v1/partners/$partnerId/menu';
-  static String partnerBranches(int partnerId) => '/v1/partners/$partnerId/branches';
+  static String partnerBranches(int partnerId) =>
+      '/v1/partners/$partnerId/branches';
   static String branchById(int branchId) => '/v1/branches/$branchId';
-  
+
   // Legacy partner endpoints (for backward compatibility)
   static const String partnersEndpoint = '/v1/partners';
   static String partnerByIdEndpoint(int id) => '/v1/partners/$id';
-  static String partnerBranchesEndpoint(int partnerId) => '/v1/partners/$partnerId/branches';
+  static String partnerBranchesEndpoint(int partnerId) =>
+      '/v1/partners/$partnerId/branches';
   static String branchByIdEndpoint(int branchId) => '/v1/branches/$branchId';
-  
+
   // Service endpoints
   static const String servicesEndpoint = '/v1/services';
   static String serviceByIdEndpoint(int id) => '/v1/services/$id';
 
   // Chat endpoints - using functions for type safety
   static const String chatConversations = '/v1/chat/conversations';
-  static String chatConversationByOrder(int orderId) => '/v1/chat/conversations/order/$orderId';
-  static String chatMessages(int conversationId) => '/v1/chat/conversations/$conversationId/messages';
-  static String chatSendMessage(int conversationId) => '/v1/chat/conversations/$conversationId/messages';
-  static String chatSendSystemMessage(int conversationId) => '/v1/chat/conversations/$conversationId/system-message';
-  static String chatEndConversation(int conversationId) => '/v1/chat/conversations/$conversationId/end';
+  static String chatConversationByOrder(int orderId) =>
+      '/v1/chat/conversations/order/$orderId';
+  static String chatMessages(int conversationId) =>
+      '/v1/chat/conversations/$conversationId/messages';
+  static String chatSendMessage(int conversationId) =>
+      '/v1/chat/conversations/$conversationId/messages';
+  static String chatSendSystemMessage(int conversationId) =>
+      '/v1/chat/conversations/$conversationId/system-message';
+  static String chatEndConversation(int conversationId) =>
+      '/v1/chat/conversations/$conversationId/end';
   static const String chatUnreadCount = '/v1/chat/unread-count';
-  static String chatMarkAsRead(int conversationId) => '/v1/chat/conversations/$conversationId/read';
+  static String chatMarkAsRead(int conversationId) =>
+      '/v1/chat/conversations/$conversationId/read';
 
   // Missions, vouchers, FAQ, loyalty
   static const String missions = '/v1/missions';
@@ -76,7 +85,8 @@ class ApiConstants {
   static const String vouchersAvailable = '/v1/vouchers/available';
   static const String faqArticles = '/v1/faq/articles';
   static const String loyaltyRewards = '/v1/loyalty/rewards';
-  static String loyaltyRedeem(int rewardId) => '/v1/loyalty/rewards/$rewardId/redeem';
+  static String loyaltyRedeem(int rewardId) =>
+      '/v1/loyalty/rewards/$rewardId/redeem';
 
   // Referrals, surveys, devices, security, tracking, distance, payments
   static const String referralDashboard = '/v1/referrals/dashboard';
@@ -88,9 +98,11 @@ class ApiConstants {
   static const String securityBiometrics = '/v1/security/biometric/list';
   static const String securityAuditLogs = '/v1/security/audit/logs';
   static String orderTracking(int orderId) => '/v1/orders/$orderId/tracking';
-  static String orderDriverLocation(int orderId) => '/v1/orders/$orderId/driver-location';
+  static String orderDriverLocation(int orderId) =>
+      '/v1/orders/$orderId/driver-location';
   static String orderReorder(int orderId) => '/v1/orders/$orderId/reorder';
-  static String partnerReviews(int partnerId) => '/v1/partners/$partnerId/reviews';
+  static String partnerReviews(int partnerId) =>
+      '/v1/partners/$partnerId/reviews';
   static const String distanceCalculate = '/v1/distance/calculate';
   static const String distanceOverall = '/v1/distance/overall';
   static const String paymentGatewayRefunds = '/v1/payment-gateway/refunds';
@@ -99,9 +111,11 @@ class ApiConstants {
 
   // Support tickets
   static const String supportTickets = '/v1/support/tickets';
-  static const String supportTicketStatistics = '/v1/support/tickets/statistics';
+  static const String supportTicketStatistics =
+      '/v1/support/tickets/statistics';
   static String supportTicketById(int id) => '/v1/support/tickets/$id';
-  static String supportTicketMessages(int id) => '/v1/support/tickets/$id/messages';
+  static String supportTicketMessages(int id) =>
+      '/v1/support/tickets/$id/messages';
   static String supportTicketClose(int id) => '/v1/support/tickets/$id/close';
   static String supportTicketSatisfaction(int id) =>
       '/v1/support/tickets/$id/satisfaction';
@@ -110,10 +124,13 @@ class ApiConstants {
 
   // Document verification
   static const String documentsSubmit = '/v1/documents/submit';
+  static const String documentsIdentityOnboarding =
+      '/v1/documents/identity-onboarding';
   static const String documentsUpload = '/v1/documents/upload';
   static const String documentsMy = '/v1/documents/my-documents';
   static const String documentsTypes = '/v1/documents/types';
-  static const String documentsVerificationStatus = '/v1/documents/verification-status';
+  static const String documentsVerificationStatus =
+      '/v1/documents/verification-status';
   static String documentById(int id) => '/v1/documents/$id';
   static String documentResubmit(int id) => '/v1/documents/$id/resubmit';
 
@@ -140,7 +157,8 @@ class ApiConstants {
 
   // Notifications
   static const String notifications = '/v1/notifications';
-  static const String notificationsUnreadCount = '/v1/notifications/unread-count';
+  static const String notificationsUnreadCount =
+      '/v1/notifications/unread-count';
   static const String notificationsReadAll = '/v1/notifications/read-all';
   static String notificationMarkRead(int id) => '/v1/notifications/$id/read';
 
@@ -155,7 +173,8 @@ class ApiConstants {
 
   // Vouchers, missions, social, wallet linking
   static const String vouchersClaim = '/v1/vouchers/claim';
-  static String missionProgress(int missionId) => '/v1/missions/$missionId/progress';
+  static String missionProgress(int missionId) =>
+      '/v1/missions/$missionId/progress';
   static const String socialFollowConfirm = '/v1/social/follow/confirm';
   static const String socialReferralShare = '/v1/social/referral/share';
   static const String walletLinkedAccounts = '/v1/wallets/my/linked-accounts';

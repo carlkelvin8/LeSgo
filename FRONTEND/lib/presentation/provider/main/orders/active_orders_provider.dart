@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/api_error_mapper.dart';
@@ -53,14 +54,15 @@ class ActiveOrdersNotifier extends StateNotifier<ActiveOrdersState> {
         return;
       }
 
-      final active = response.data
-          .where((order) => !OrderStatusUtils.isTerminal(order.status))
-          .toList()
-        ..sort((a, b) {
-          final aDate = a.updatedAt ?? a.createdAt ?? '';
-          final bDate = b.updatedAt ?? b.createdAt ?? '';
-          return bDate.compareTo(aDate);
-        });
+      final active =
+          response.data
+              .where((order) => !OrderStatusUtils.isTerminal(order.status))
+              .toList()
+            ..sort((a, b) {
+              final aDate = a.updatedAt ?? a.createdAt ?? '';
+              final bDate = b.updatedAt ?? b.createdAt ?? '';
+              return bDate.compareTo(aDate);
+            });
 
       state = state.copyWith(
         orders: active.take(ActiveOrderLimitGuard.maxActiveOrders).toList(),
@@ -82,5 +84,6 @@ class ActiveOrdersNotifier extends StateNotifier<ActiveOrdersState> {
 
 final activeOrdersProvider =
     StateNotifierProvider<ActiveOrdersNotifier, ActiveOrdersState>((ref) {
-  return ActiveOrdersNotifier();
-});
+      ref.watch(userSessionEpochProvider);
+      return ActiveOrdersNotifier();
+    });

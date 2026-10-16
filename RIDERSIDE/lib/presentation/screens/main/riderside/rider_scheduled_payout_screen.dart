@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/services/scheduled_payout_service.dart';
+import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
 
@@ -23,6 +24,13 @@ class _RiderScheduledPayoutScreenState
   final _thresholdController = TextEditingController(text: '500');
   String? _selectedAccount;
   bool _isLoading = false;
+  bool _restored = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restorePreferences();
+  }
 
   @override
   void dispose() {
@@ -30,29 +38,64 @@ class _RiderScheduledPayoutScreenState
     super.dispose();
   }
 
+  Future<void> _restorePreferences() async {
+    final prefs = await ScheduledPayoutService.load();
+    if (!mounted) return;
+    setState(() {
+      _frequency = prefs.frequency;
+      _weeklyDay = prefs.weeklyDay;
+      _monthlyDay = prefs.monthlyDay;
+      _scheduledTime = _fromHm(prefs.time);
+      _thresholdController.text = prefs.threshold.toStringAsFixed(0);
+      _selectedAccount = prefs.accountProvider;
+      _restored = true;
+    });
+  }
+
+  TimeOfDay _fromHm(String hm) {
+    final parts = hm.split(':');
+    final hour = int.tryParse(parts.first);
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) : null;
+    if (hour == null || minute == null) {
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+    return TimeOfDay(hour: hour.clamp(0, 23), minute: minute.clamp(0, 59));
+  }
+
   Future<void> _savePayout() async {
     setState(() => _isLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('rider_payout_frequency', _frequency);
-      await prefs.setInt('rider_payout_weekly_day', _weeklyDay);
-      await prefs.setInt('rider_payout_monthly_day', _monthlyDay);
-      await prefs.setString(
-        'rider_payout_threshold',
-        _thresholdController.text,
+      final prefs = ScheduledPayoutPreferences(
+        frequency: _frequency,
+        weeklyDay: _weeklyDay,
+        monthlyDay: _monthlyDay,
+        time: _timeCode(),
+        threshold:
+            double.tryParse(_thresholdController.text.trim()) ?? 0,
+        accountProvider: _selectedAccount,
       );
-      if (_selectedAccount != null) {
-        await prefs.setString('rider_payout_account', _selectedAccount!);
-      }
+      final synced = await ScheduledPayoutService.save(prefs);
 
       if (!mounted) return;
+      final lang = ref.read(appLanguageProvider);
+      final saved = AppLocalization.translate(
+        'scheduled_payout_saved',
+        lang,
+      );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Scheduled payout saved')),
+        SnackBar(
+          content: Text(synced ? saved : '$saved (${AppLocalization.translate('pending_sync', lang)})'),
+        ),
       );
       Navigator.of(context).pop();
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  String _timeCode() {
+    return '${_scheduledTime.hour.toString().padLeft(2, '0')}:'
+        '${_scheduledTime.minute.toString().padLeft(2, '0')}';
   }
 
   String _timeLabel() {
@@ -70,6 +113,7 @@ class _RiderScheduledPayoutScreenState
   @override
   Widget build(BuildContext context) {
     final hp = ResponsiveUtils.horizontalPadding(context);
+    final lang = ref.watch(appLanguageProvider);
     final wallet = ref.watch(riderWalletProvider);
     final linkedAccounts = wallet.linkedAccounts
         .where((a) =>
@@ -84,7 +128,7 @@ class _RiderScheduledPayoutScreenState
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
         title: Text(
-          'Scheduled Payout',
+          AppLocalization.translate('scheduled_payout', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -107,6 +151,12 @@ class _RiderScheduledPayoutScreenState
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          RadioGroup<String>(
+            groupValue: _frequency,
+            onChanged: (v) => setState(() => _frequency = v!),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
           ...['daily', 'weekly', 'monthly'].map((f) {
             final selected = _frequency == f;
             return Card(
@@ -148,12 +198,13 @@ class _RiderScheduledPayoutScreenState
                   ),
                 ),
                 value: f,
-                groupValue: _frequency,
                 activeColor: const Color(0xFF5F2D82),
-                onChanged: (v) => setState(() => _frequency = v!),
               ),
             );
           }),
+              ],
+            ),
+          ),
           if (_frequency == 'weekly')
             Padding(
               padding: EdgeInsets.symmetric(
@@ -289,6 +340,12 @@ class _RiderScheduledPayoutScreenState
               ),
             )
           else
+            RadioGroup<String>(
+              groupValue: _selectedAccount,
+              onChanged: (v) => setState(() => _selectedAccount = v!),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
             ...linkedAccounts.map((account) {
               final provider = account['provider']?.toString() ?? '';
               final last4 = account['account_last4']?.toString() ?? '';
@@ -326,13 +383,13 @@ class _RiderScheduledPayoutScreenState
                         )
                       : null,
                   value: provider,
-                  groupValue: _selectedAccount,
                   activeColor: const Color(0xFF5F2D82),
-                  onChanged: (v) =>
-                      setState(() => _selectedAccount = v!),
                 ),
               );
             }),
+                ],
+              ),
+            ),
           SizedBox(height: ResponsiveUtils.spacing(context, 32)),
           SizedBox(
             width: double.infinity,
@@ -341,7 +398,7 @@ class _RiderScheduledPayoutScreenState
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
               ),
-              onPressed: _selectedAccount == null || _isLoading
+              onPressed: _selectedAccount == null || _isLoading || !_restored
                   ? null
                   : _savePayout,
               child: _isLoading

@@ -1,209 +1,149 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/media_url_utils.dart';
 import '../../../core/utils/responsive_utils.dart';
-import '../global/custom_divider.dart';
 
-class ProfileHeader extends StatelessWidget {
-  final String name;
-  final String birthdate;
-  final String email;
-  final String phone;
+class ProfileHeroSection extends StatelessWidget {
+  final String name, email, phone, birthdate;
   final String? profileImageUrl;
-  final VoidCallback? onImageTap;
-  final VoidCallback? onChangePhoneTap;
-
-  const ProfileHeader({
+  final VoidCallback? onImageTap, onChangePhoneTap;
+  const ProfileHeroSection({
     super.key,
     required this.name,
-    required this.birthdate,
     required this.email,
     required this.phone,
+    required this.birthdate,
     this.profileImageUrl,
     this.onImageTap,
     this.onChangePhoneTap,
   });
 
   @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+    child: Column(
+      children: [
+        _Avatar(profileImageUrl: profileImageUrl, onTap: onImageTap),
+        const SizedBox(height: 12),
+        Text(
+          name.isEmpty
+              ? 'Hello there!'
+              : 'Hello, ${name.trim().split(' ').first}!',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 21),
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.5,
+            color: AppColors.foreground(context, Color(0xFF25232B)),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          email,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 13),
+            color: AppColors.foreground(context, Color(0xFF89858E)),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _Avatar extends StatelessWidget {
+  final String? profileImageUrl;
+  final VoidCallback? onTap;
+  const _Avatar({this.profileImageUrl, this.onTap});
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final imgSize = ResponsiveUtils.spacing(context, 64);
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Text(
-            "Here's your information",
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey[600],
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2.5),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: .10),
+                  blurRadius: 14,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
+            child: ClipOval(child: _buildImage(imgSize)),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-          const CustomDivider(
-            indent: 0,
-            endIndent: 0,
-            height: 1,
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 16),
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    Text(
-                      birthdate,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.black87,
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    Text(
-                      email,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.black87,
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            phone,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        if (onChangePhoneTap != null)
-                          TextButton(
-                            onPressed: onChangePhoneTap,
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Change',
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: ResponsiveUtils.fontSize(context, 12),
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF5F2D82),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
+          Positioned(
+            right: -2,
+            bottom: -2,
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: AppColors.surface(context, Colors.white),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF8B3FC8), width: 2),
               ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 16)),
-              InkWell(
-                onTap: onImageTap != null
-                    ? () {
-                        print('🔵 ProfileHeader: Profile image tapped!');
-                        print('🔵 ProfileHeader: Calling onImageTap callback...');
-                        onImageTap!();
-                      }
-                    : null,
-                // Prevent tap from propagating to widgets below
-                excludeFromSemantics: false,
-                child: Container(
-                  width: ResponsiveUtils.spacing(context, 90),
-                  height: ResponsiveUtils.spacing(context, 90),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: profileImageUrl != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: _buildProfileImage(context, profileImageUrl!),
-                        )
-                      : SvgPicture.asset(
-                          'assets/images/register/10.svg',
-                          width: ResponsiveUtils.spacing(context, 90),
-                          height: ResponsiveUtils.spacing(context, 90),
-                          fit: BoxFit.contain,
-                        ),
-                ),
+              child: const Icon(
+                Icons.camera_alt_rounded,
+                size: 11,
+                color: Color(0xFF5F2D82),
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProfileImage(BuildContext context, String imagePath) {
-    final size = ResponsiveUtils.spacing(context, 90);
-    final networkUrl = MediaUrlUtils.resolve(imagePath);
-
-    if (networkUrl != null) {
-      return Image.network(
-        networkUrl,
+  Widget _buildImage(double size) {
+    if (profileImageUrl?.isNotEmpty == true) {
+      final url = MediaUrlUtils.resolve(profileImageUrl!);
+      if (url != null) {
+        return Image.network(
+          url,
+          fit: BoxFit.cover,
+          width: size,
+          height: size,
+          loadingBuilder: (_, child, prog) => prog == null
+              ? child
+              : const ColoredBox(
+                  color: Color(0xFFEDD9FF),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFF5F2D82),
+                    ),
+                  ),
+                ),
+          errorBuilder: (_, __, ___) => _placeholder(),
+        );
+      }
+      return Image.file(
+        File(profileImageUrl!),
         fit: BoxFit.cover,
         width: size,
         height: size,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: Colors.grey[200],
-            child: const Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Color(0xFF5F2D82),
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey[300],
-            child: const Icon(
-              Icons.person,
-              color: Colors.grey,
-              size: 40,
-            ),
-          );
-        },
+        errorBuilder: (_, __, ___) => _placeholder(),
       );
     }
-
-    return Image.file(
-      File(imagePath),
-      fit: BoxFit.cover,
-      width: size,
-      height: size,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          color: Colors.grey[300],
-          child: const Icon(
-            Icons.person,
-            color: Colors.grey,
-            size: 40,
-          ),
-        );
-      },
-    );
+    return _placeholder();
   }
+
+  Widget _placeholder() => Container(
+    color: const Color(0xFFDEC4F2),
+    child: const Icon(Icons.person_rounded, size: 36, color: Color(0xFF7B3FAA)),
+  );
 }
+
+typedef ProfileHeader = ProfileHeroSection;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
 
 class LesrideChangeButton extends StatelessWidget {
   const LesrideChangeButton({super.key, required this.onPressed});
@@ -9,9 +10,12 @@ class LesrideChangeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: onPressed,
-      child: const Text(
+      child: Text(
         'Change',
-        style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF7C3AED)),
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          color: AppColors.accent(context, const Color(0xFF7C3AED)),
+        ),
       ),
     );
   }

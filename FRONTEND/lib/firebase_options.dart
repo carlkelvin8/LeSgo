@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA4Scc0djM72Ail_e1B1luu_L9VkC5xQK4',
-    appId: '1:937689509907:android:e0993ab947117d82a18fe6',
+    appId: '1:937689509907:android:9250c04b5d30a87ca18fe6',
     messagingSenderId: '937689509907',
     projectId: 'lesgo-a957c',
     storageBucket: 'lesgo-a957c.firebasestorage.app',

@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/responsive_utils.dart';
@@ -122,7 +123,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
           child: _buildMessagesList(chatState),
         ),
         
-        // Input â€” always allow typing; send is blocked internally if no conversation
+        // Input — always allow typing; send is blocked internally if no conversation
         ChatInputWidget(
           onSendMessage: _sendMessage,
           isLoading: chatState.isSending,
@@ -132,9 +133,9 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
     );
 
     if (isFullScreen) {
-      // Full screen mode (inside a Scaffold) â€” just fill parent
+      // Full screen mode (inside a Scaffold) — just fill parent
       return Container(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         child: content,
       );
     }
@@ -150,7 +151,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
         maxHeight: MediaQuery.of(context).size.height * 0.9,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: widget.showHeader 
             ? const BorderRadius.vertical(top: Radius.circular(20))
             : null,
@@ -179,7 +180,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Colors.grey[300]!,
+            color: AppColors.foreground(context, Colors.grey[300]!),
             width: 1,
           ),
         ),
@@ -191,7 +192,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: AppColors.surface(context, Colors.grey[300]!),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -236,7 +237,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
             Icon(
               Icons.chat_bubble_outline,
               size: 64,
-              color: Colors.grey[400],
+              color: AppColors.foreground(context, Colors.grey[400]!),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             Text(
@@ -244,7 +245,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
-                color: Colors.grey[600],
+                color: AppColors.foreground(context, Colors.grey[600]!),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -253,7 +254,7 @@ class _OrderChatWidgetState extends ConsumerState<OrderChatWidget> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey[500],
+                color: AppColors.foreground(context, Colors.grey[500]!),
               ),
             ),
           ],

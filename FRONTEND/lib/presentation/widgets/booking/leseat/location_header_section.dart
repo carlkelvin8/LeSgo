@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -29,7 +30,7 @@ class LocationHeaderSection extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
-            color: Colors.grey[600],
+            color: AppColors.foreground(context, Colors.grey[600]!),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -44,7 +45,7 @@ class LocationHeaderSection extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 16),
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: AppColors.foreground(context, Colors.black87),
                 ),
               ),
             ),

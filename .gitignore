@@ -20,6 +20,13 @@
 **/secrets.json
 !**/secrets.example.json
 
+# --- Signing material (never commit) ---
+**/key.properties
+**/*.jks
+**/*.keystore
+**/production_credentials.txt
+production_credentials.txt
+
 # --- Android ---
 **/android/.gradle/
 **/android/app/debug/
@@ -47,6 +54,12 @@ Thumbs.db
 # --- AI context files ---
 CLAUDE/
 CONTEXT/
+/.kilo/
+/.kiro/
+
+# --- Local deployment / verification workspaces ---
+/.deploy-google-auth/
+/.verification/
 
 # --- Local test/debug files ---
 nul

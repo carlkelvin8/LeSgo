@@ -3,6 +3,8 @@ import '../../../../presentation/screens/main/home_screen.dart';
 import '../../../../presentation/screens/main/booking/booking_screen.dart';
 import '../../../../presentation/screens/main/lespay_screen.dart';
 import '../../../../presentation/screens/main/inbox_screen.dart';
+import '../../../../presentation/screens/main/notification_center_screen.dart';
+import '../../../../presentation/screens/main/orders/order_history_screen.dart';
 import '../../../../presentation/screens/main/profile_screen.dart';
 import '../../../../presentation/screens/main/transactions_screen.dart';
 import '../../../../presentation/screens/main/favorites_screen.dart';
@@ -16,6 +18,7 @@ import '../../../../presentation/screens/main/security/security_settings_screen.
 import '../../../../presentation/screens/main/referral/referral_dashboard_screen.dart';
 import '../../../../presentation/screens/main/faqs_screen.dart';
 import '../../../../presentation/screens/main/support/support_tickets_screen.dart';
+import '../../../../presentation/screens/main/support/support_ticket_detail_screen.dart';
 import '../../../../presentation/screens/main/support/customer_service_chat_screen.dart';
 import '../../../../presentation/screens/main/documents/document_verification_screen.dart';
 import '../../../../presentation/screens/main/about_screen.dart';
@@ -36,6 +39,8 @@ class MainRouter {
 
     MainRoutes.lespay: (_) => const LespayScreen(),
     MainRoutes.inbox: (_) => const InboxScreen(),
+    MainRoutes.notifications: (_) => const NotificationCenterScreen(),
+    MainRoutes.orderHistory: (_) => const OrderHistoryScreen(),
     MainRoutes.profile: (_) => const ProfileScreen(),
     MainRoutes.favorites: (_) => const FavoritesScreen(),
     MainRoutes.offers: (_) => const OffersScreen(),
@@ -66,8 +71,9 @@ class MainRouter {
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     if (settings.name == MainRoutes.transactions) {
       final args = settings.arguments;
-      final kind =
-          args is Map<String, dynamic> ? args['kind'] as String? : null;
+      final kind = args is Map<String, dynamic>
+          ? args['kind'] as String?
+          : null;
       return MaterialPageRoute(
         builder: (_) => TransactionsScreen(initialKindFilter: kind),
         settings: settings,
@@ -76,6 +82,18 @@ class MainRouter {
     if (settings.name == MainRoutes.setLocation) {
       return MaterialPageRoute<bool>(
         builder: (_) => const SetLocationScreen(),
+        settings: settings,
+      );
+    }
+    if (settings.name == MainRoutes.supportTicketDetail) {
+      final args = settings.arguments;
+      final ticketId = switch (args) {
+        int id => id,
+        String raw => int.tryParse(raw),
+        _ => null,
+      };
+      return MaterialPageRoute(
+        builder: (_) => SupportTicketDetailScreen(ticketId: ticketId),
         settings: settings,
       );
     }

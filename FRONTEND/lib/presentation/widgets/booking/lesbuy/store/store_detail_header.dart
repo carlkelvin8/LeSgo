@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/booking/lesbuy/store.dart';
@@ -20,17 +21,17 @@ class StoreDetailHeader extends StatelessWidget {
         Container(
           width: double.infinity,
           height: height,
-          decoration: BoxDecoration(color: Colors.grey[300]),
+          decoration: BoxDecoration(color: AppColors.surface(context, Colors.grey[300]!)),
           child: Image.asset(
             store.imagePath,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               return Container(
-                color: Colors.grey[300],
+                color: AppColors.surface(context, Colors.grey[300]!),
                 child: Icon(
                   Icons.store,
                   size: ResponsiveUtils.fontSize(context, 64),
-                  color: Colors.grey[400],
+                  color: AppColors.foreground(context, Colors.grey[400]!),
                 ),
               );
             },

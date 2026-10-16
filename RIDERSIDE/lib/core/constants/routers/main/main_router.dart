@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../presentation/screens/registration_fee_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_earnings_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_earnings_insights_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_safety_screen.dart';
@@ -91,6 +92,18 @@ class MainRouter {
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    // Shared registration-fee payment/approval gate (rider or merchant).
+    if (settings.name == MainRoutes.registrationFeeStatus) {
+      final args = settings.arguments;
+      final targetMain = args is Map
+          ? (args['target']?.toString() ?? MainRoutes.riderMain)
+          : (args?.toString() ?? MainRoutes.riderMain);
+      return MaterialPageRoute(
+        builder: (_) => RegistrationFeeScreen(targetMainRoute: targetMain),
+        settings: settings,
+      );
+    }
+
     // Handle booking detail route with RiderBooking argument
     if (settings.name == MainRoutes.riderBookingDetail) {
       final booking = settings.arguments as RiderBooking;

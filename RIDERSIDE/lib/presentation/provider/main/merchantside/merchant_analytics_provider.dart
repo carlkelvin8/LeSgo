@@ -366,8 +366,7 @@ MerchantAnalyticsSummary _buildSummary(
           ? (itemCategoryMap[item.menuItemId] ?? 'Uncategorized')
           : 'Uncategorized';
       categoriesInOrder.add(catName);
-      final lineRevenue = item.totalPrice ??
-          ((item.unitPrice ?? 0) * item.quantity);
+      final lineRevenue = MerchantOrderAmountUtils.lineTotal(item);
       final existing = categoryMap[catName];
       if (existing == null) {
         categoryMap[catName] = MerchantCategoryPerformance(
@@ -520,8 +519,7 @@ void _accumulateTopItems(
 
   for (final item in items) {
     final key = item.menuItemId?.toString() ?? item.itemName.trim().toLowerCase();
-    final lineRevenue = item.totalPrice ??
-        ((item.unitPrice ?? 0) * item.quantity);
+    final lineRevenue = MerchantOrderAmountUtils.lineTotal(item);
     final existing = itemMap[key];
     if (existing == null) {
       itemMap[key] = MerchantTopItem(

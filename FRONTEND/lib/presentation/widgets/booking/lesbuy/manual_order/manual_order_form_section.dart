@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/snackbar_utils.dart';
@@ -52,7 +53,7 @@ class _ManualOrderFormSectionState extends State<ManualOrderFormSection> {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -65,7 +66,7 @@ class _ManualOrderFormSectionState extends State<ManualOrderFormSection> {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
 
@@ -87,7 +88,7 @@ class _ManualOrderFormSectionState extends State<ManualOrderFormSection> {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: AppColors.foreground(context, Colors.black87),
             ),
           ),
 
@@ -110,10 +111,10 @@ class _ManualOrderFormSectionState extends State<ManualOrderFormSection> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: AppColors.surface(context, Colors.grey[200]!),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.remove, color: Colors.black87),
+                  child:  Icon(Icons.remove, color: AppColors.foreground(context, Colors.black87)),
                 ),
               ),
 
@@ -127,7 +128,7 @@ class _ManualOrderFormSectionState extends State<ManualOrderFormSection> {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 18),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: AppColors.foreground(context, Colors.black87),
                     ),
                   ),
                 ),
@@ -145,10 +146,10 @@ class _ManualOrderFormSectionState extends State<ManualOrderFormSection> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF5F2D82),
+                    color: AppColors.accent(context, Color(0xFF5F2D82)),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.add, color: Colors.white),
+                  child: Icon(Icons.add, color: AppColors.onAccent(context)),
                 ),
               ),
 

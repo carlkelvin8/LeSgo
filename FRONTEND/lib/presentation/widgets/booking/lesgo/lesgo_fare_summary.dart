@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,7 +29,7 @@ class LesgoFareSummary extends ConsumerWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 15),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: AppColors.foreground(context, Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 10)),
@@ -36,9 +37,9 @@ class LesgoFareSummary extends ConsumerWidget {
           width: double.infinity,
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: AppColors.surface(context, Colors.grey.shade50),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: AppColors.border(context, Colors.grey.shade200)),
           ),
           child: isLoading
               ? _buildLoadingState(context)
@@ -66,7 +67,7 @@ class LesgoFareSummary extends ConsumerWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
-            color: Colors.grey.shade600,
+            color: AppColors.foreground(context, Colors.grey.shade600),
           ),
         ),
       ],
@@ -98,21 +99,21 @@ class LesgoFareSummary extends ConsumerWidget {
           padding: EdgeInsets.symmetric(
             vertical: ResponsiveUtils.spacing(context, 8),
           ),
-          child: Divider(color: Colors.grey.shade300, height: 1),
+          child: Divider(color: AppColors.border(context, Colors.grey.shade300), height: 1),
         ),
         _row(context, 'Total', displayTotal, isTotal: true),
         if (fare.estimatedDurationMinutes > 0) ...[
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           Row(
             children: [
-              Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
+              Icon(Icons.access_time, size: 14, color: AppColors.foreground(context, Colors.grey.shade500)),
               SizedBox(width: ResponsiveUtils.spacing(context, 4)),
               Text(
                 'Est. ${fare.estimatedDurationMinutes.round()} min  •  ${fare.distanceKm.toStringAsFixed(1)} km',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.grey.shade600,
+                  color: AppColors.foreground(context, Colors.grey.shade600),
                 ),
               ),
             ],
@@ -130,10 +131,12 @@ class LesgoFareSummary extends ConsumerWidget {
     bool isDiscount = false,
   }) {
     final color = isDiscount
-        ? Colors.green.shade700
+        ? (Theme.of(context).brightness == Brightness.dark
+            ? Colors.green.shade300
+            : Colors.green.shade700)
         : isTotal
-            ? const Color(0xFF5F2D82)
-            : Colors.black87;
+            ? AppColors.accent(context, const Color(0xFF5F2D82))
+            : AppColors.foreground(context, Colors.black87);
 
     return Padding(
       padding: EdgeInsets.symmetric(

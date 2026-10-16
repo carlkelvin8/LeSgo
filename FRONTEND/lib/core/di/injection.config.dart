@@ -30,7 +30,6 @@ import 'package:lesgo/core/services/promo_notification_service.dart' as _i579;
 import 'package:lesgo/core/services/rate_limiter_service.dart' as _i758;
 import 'package:lesgo/core/services/secure_storage_service.dart' as _i155;
 import 'package:lesgo/core/services/session_timeout_service.dart' as _i946;
-import 'package:lesgo/core/services/ssl_pinning_service.dart' as _i373;
 import 'package:lesgo/data/data_source/address_remote_datasource.dart' as _i940;
 import 'package:lesgo/data/data_source/auth_remote_datasource.dart' as _i677;
 import 'package:lesgo/data/data_source/device_remote_datasource.dart' as _i64;
@@ -100,7 +99,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i758.RateLimiterService>(
       () => _i758.RateLimiterService(),
     );
-    gh.lazySingleton<_i373.SslPinningService>(() => _i373.SslPinningService());
     gh.lazySingleton<_i584.LocalStorageService>(
       () => _i584.LocalStorageService(gh<_i460.SharedPreferences>()),
     );

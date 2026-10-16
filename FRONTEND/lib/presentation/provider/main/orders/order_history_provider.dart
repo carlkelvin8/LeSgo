@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../data/data_source/dto/order/orders_response_dto.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/api_error_mapper.dart';
+
 class OrderHistoryState {
   final List<OrderDto> orders;
   final bool isLoading;
@@ -47,15 +49,26 @@ class OrderHistoryState {
   List<OrderDto> get filteredOrders {
     switch (selectedFilter) {
       case 'completed':
-        return orders.where((o) => o.status == 'completed').toList();
+        return orders
+            .where(
+              (o) => const {
+                'completed',
+                'delivered',
+              }.contains(o.status.trim().toLowerCase()),
+            )
+            .toList();
       case 'cancelled':
         return orders.where((o) => o.status == 'cancelled').toList();
       case 'active':
         return orders
-            .where((o) =>
-                o.status != 'completed' &&
-                o.status != 'cancelled' &&
-                o.status != 'failed')
+            .where(
+              (o) => !const {
+                'completed',
+                'delivered',
+                'cancelled',
+                'failed',
+              }.contains(o.status.trim().toLowerCase()),
+            )
             .toList();
       default:
         return orders;
@@ -130,7 +143,10 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
     }
   }
 
-  List<OrderDto> _mergeOrders(List<OrderDto> existing, List<OrderDto> incoming) {
+  List<OrderDto> _mergeOrders(
+    List<OrderDto> existing,
+    List<OrderDto> incoming,
+  ) {
     final seen = existing.map((o) => o.id).toSet();
     final merged = List<OrderDto>.from(existing);
     for (final order in incoming) {
@@ -201,9 +217,7 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
       final response = await dataSource.reorderOrder(orderId);
 
       if (response.success) {
-        state = state.copyWith(
-          orders: [response.data, ...state.orders],
-        );
+        state = state.copyWith(orders: [response.data, ...state.orders]);
         return true;
       }
       return false;
@@ -216,5 +230,6 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
 
 final orderHistoryProvider =
     StateNotifierProvider<OrderHistoryNotifier, OrderHistoryState>((ref) {
-  return OrderHistoryNotifier();
-});
+      ref.watch(userSessionEpochProvider);
+      return OrderHistoryNotifier();
+    });
