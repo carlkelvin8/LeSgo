@@ -76,14 +76,18 @@ class MerchantProfileView extends ConsumerWidget {
           );
         }
 
-        return SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-            vertical: ResponsiveUtils.spacing(context, 18),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        return Container(
+          color: const Color(0xFFF7F4FA),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              ResponsiveUtils.spacing(context, 18),
+              horizontalPadding,
+              ResponsiveUtils.spacing(context, 28),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               _buildDailySummaryBanner(ref),
               const MerchantProfileHeader(),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -268,7 +272,8 @@ class MerchantProfileView extends ConsumerWidget {
                   );
                 },
               ),
-            ],
+              ],
+            ),
           ),
         );
       },

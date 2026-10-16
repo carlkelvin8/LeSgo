@@ -9,18 +9,31 @@ class MerchantSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Settings & Support',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 15),
-            fontWeight: FontWeight.w700,
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        ResponsiveUtils.spacing(context, 16),
+        ResponsiveUtils.spacing(context, 14),
+        ResponsiveUtils.spacing(context, 10),
+        ResponsiveUtils.spacing(context, 8),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFEDE7F2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Settings & Support',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 15),
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF24172D),
+            ),
           ),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          SizedBox(height: ResponsiveUtils.spacing(context, 10)),
         _SettingsTile(
           icon: Icons.support_agent_outlined,
           label: 'Admin support chat',
@@ -52,7 +65,8 @@ class MerchantSettingsSection extends StatelessWidget {
           route: MainRoutes.merchantPrinterSettings,
         ),
         // Removed Deactivate and Delete account options - redundant for merchants
-      ],
+        ],
+      ),
     );
   }
 }
