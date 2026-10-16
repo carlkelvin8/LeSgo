@@ -270,24 +270,35 @@ class MerchantOrderQueueCard extends StatelessWidget {
                     const SizedBox(height: 12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: dark
-                            ? const Color(0xFF392F22)
-                            : const Color(0xFFFFF7E8),
+                            ? const Color(0xFF2E2540)
+                            : const Color(0xFFF5F1F9),
+                        border: Border.all(color: dark
+                            ? const Color(0xFF4B3B60)
+                            : const Color(0xFFE7DEEF)),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Text(
-                        'Note: $note',
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.4,
-                          color: dark
-                              ? const Color(0xFFFFD78A)
-                              : const Color(0xFF805516),
-                        ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.chat_bubble_outline_rounded, size: 18,
+                            color: dark ? const Color(0xFFD7BEFF) : const Color(0xFF6B4685)),
+                          const SizedBox(width: 10),
+                          Expanded(child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Order note', style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w700,
+                                color: dark ? const Color(0xFFD7BEFF) : const Color(0xFF6B4685))),
+                              const SizedBox(height: 4),
+                              Text(note, maxLines: 3, overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 14, height: 1.5,
+                                  color: OrderQueuePalette.text(context))),
+                            ],
+                          )),
+                        ],
                       ),
                     ),
                   ],

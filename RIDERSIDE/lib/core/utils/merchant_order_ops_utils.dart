@@ -38,6 +38,9 @@ class MerchantOrderOpsUtils {
   static String? orderSpecialInstructions(OrderDto order) {
     final notes = order.specialInstructions?.trim();
     if (notes == null || notes.isEmpty) return null;
+    // Checkout metadata repeats the item count; it is not a customer request.
+    if (RegExp(r'^LesEat order:\s*\d+\s+items?\s*$', caseSensitive: false)
+        .hasMatch(notes)) return null;
     return notes;
   }
 
