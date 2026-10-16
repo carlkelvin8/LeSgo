@@ -24,7 +24,7 @@ class RiderEarningsInsightsState {
   final double averageEarningsPerHour;
   final int totalTrips;
   final double totalHoursOnline;
-  final bool hasRecordedDutyTime;
+  bool get hasRecordedDutyTime => totalHoursOnline > 0;
   final String bestDay;
   final String bestHourRange;
   final double projectedEarnings;
@@ -39,7 +39,6 @@ class RiderEarningsInsightsState {
     this.averageEarningsPerHour = 0,
     this.totalTrips = 0,
     this.totalHoursOnline = 0,
-    this.hasRecordedDutyTime = false,
     this.bestDay = '--',
     this.bestHourRange = '--',
     this.projectedEarnings = 0,
@@ -103,8 +102,7 @@ final riderEarningsInsightsProvider =
       final avgPerTrip = totalTrips > 0 ? totalEarnings / totalTrips : 0.0;
       final totalHoursOnline =
           (summaryRaw['duty_hours'] as num?)?.toDouble() ?? 0;
-      final hasRecordedDutyTime = totalHoursOnline > 0;
-      final avgPerHour =
+          final avgPerHour =
           (summaryRaw['average_per_duty_hour'] as num?)?.toDouble() ?? 0;
 
       final currentWeekEarnings = dailyEarnings
@@ -160,8 +158,7 @@ final riderEarningsInsightsProvider =
         averageEarningsPerHour: avgPerHour,
         totalTrips: totalTrips,
         totalHoursOnline: totalHoursOnline,
-        hasRecordedDutyTime: hasRecordedDutyTime,
-        bestDay: bestDay,
+            bestDay: bestDay,
         bestHourRange: bestHourRange,
         projectedEarnings: projectedEarnings,
         previousPeriodEarnings: previousPeriodEarnings,
