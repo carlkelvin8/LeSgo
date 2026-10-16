@@ -65,9 +65,6 @@ class _RiderWalletWithdrawDialogState
     return null;
   }
 
-  bool get _hasLinkedPayoutAccount =>
-      _methodForProvider('gcash') != null || _methodForProvider('maya') != null;
-
   Future<void> _linkAccount(String provider, String title) async {
     final linked = await showDialog<bool>(
       context: context,
@@ -81,6 +78,7 @@ class _RiderWalletWithdrawDialogState
       final accounts = ref.read(riderWalletProvider).linkedAccounts;
       setState(() {
         _linkedAccounts = accounts;
+        _method = provider;
       });
     }
   }
@@ -91,10 +89,12 @@ class _RiderWalletWithdrawDialogState
       return AppLocalization.translate('please_enter_amount', lang);
     }
     final amount = double.tryParse(value.trim());
-    if (amount == null)
+    if (amount == null) {
       return AppLocalization.translate('please_enter_valid_number', lang);
-    if (amount < 10)
+    }
+    if (amount < 10) {
       return AppLocalization.translate('minimum_withdrawal_10', lang);
+    }
     final balance = ref.read(riderWalletProvider).balance;
     if (amount > balance) {
       return AppLocalization.translate('insufficient_balance', lang);
@@ -155,51 +155,95 @@ class _RiderWalletWithdrawDialogState
 
   Widget _linkedSummary(String provider, String label) {
     final account = _methodForProvider(provider);
-    if (account == null) {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: _providerLogo(provider),
-        title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
-        subtitle: Text(
-          AppLocalization.translate(
-            'not_linked',
-            ref.read(appLanguageProvider),
-          ),
-          style: TextStyle(fontFamily: 'TT Fors', color: Colors.orange),
-        ),
-        trailing: TextButton(
-          onPressed: _submitting ? null : () => _linkAccount(provider, label),
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFF5F2D82),
-            disabledForegroundColor: const Color(
-              0xFF5F2D82,
-            ).withValues(alpha: 0.45),
-          ),
-          child: Text(
-            AppLocalization.translate(
-              'link_account',
-              ref.read(appLanguageProvider),
-            ),
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-        ),
-      );
-    }
-
-    final meta = account['meta'];
+    final selected = _method == provider;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final meta = account?['meta'];
     final number = meta is Map ? meta['account_number']?.toString() : null;
-    final last4 = account['account_last4']?.toString();
-    final display = number != null && number.length >= 4
+    final last4 = account?['account_last4']?.toString();
+    final display = account == null
+        ? AppLocalization.translate('not_linked', ref.read(appLanguageProvider))
+        : number != null && number.length >= 4
         ? '•••• ${number.substring(number.length - 4)}'
-        : (last4 != null ? '•••• $last4' : 'Linked');
+        : last4 != null
+        ? '•••• $last4'
+        : 'Linked';
 
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: _providerLogo(provider),
-      title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
-      subtitle: Text(
-        display,
-        style: TextStyle(fontFamily: 'TT Fors', color: Colors.grey.shade700),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: selected
+            ? (dark ? const Color(0xFF352740) : const Color(0xFFF8F4FC))
+            : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: selected
+                ? const Color(0xFF8356A4)
+                : dark
+                ? const Color(0xFF51465B)
+                : const Color(0xFFE6E0EC),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _submitting ? null : () => setState(() => _method = provider),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                _providerLogo(provider, size: 32),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        display,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: dark
+                              ? const Color(0xFFC9BDCF)
+                              : const Color(0xFF766B7F),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (account == null)
+                  TextButton(
+                    onPressed: _submitting
+                        ? null
+                        : () => _linkAccount(provider, label),
+                    child: Text(
+                      AppLocalization.translate(
+                        'link_account',
+                        ref.read(appLanguageProvider),
+                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  )
+                else
+                  Icon(
+                    selected
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    color: selected
+                        ? const Color(0xFF8356A4)
+                        : const Color(0xFF9D93A5),
+                    size: 22,
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -207,114 +251,176 @@ class _RiderWalletWithdrawDialogState
   @override
   Widget build(BuildContext context) {
     final liveBalance = ref.watch(riderWalletProvider).balance;
-
     final lang = ref.watch(appLanguageProvider);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final linked = _methodForProvider(_method) != null;
+    final muted = dark ? const Color(0xFFC9BDCF) : const Color(0xFF766B7F);
+    String t(String key) => AppLocalization.translate(key, lang);
 
     return AlertDialog(
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      backgroundColor: dark ? const Color(0xFF241D2C) : Colors.white,
+      surfaceTintColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      titlePadding: const EdgeInsets.fromLTRB(24, 22, 16, 0),
+      contentPadding: const EdgeInsets.fromLTRB(24, 18, 24, 8),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 8, 24, 18),
+      title: Row(
         children: [
-          Text(
-            AppLocalization.translate('withdraw_via_xendit', lang),
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Text(
+              t('withdraw'),
+              style: const TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: 23,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Withdrawals are sent via PayMongo to your linked account.',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          IconButton(
+            tooltip: t('cancel'),
+            onPressed: _submitting ? null : () => Navigator.pop(context),
+            icon: Icon(Icons.close_rounded, color: muted, size: 22),
           ),
         ],
       ),
-      content: Form(
-        key: _formKey,
+      content: SizedBox(
+        width: 360,
         child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Available: PHP ${liveBalance.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  color: Colors.grey.shade700,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Transfer to your linked GCash or Maya account.',
+                  style: TextStyle(fontSize: 13, height: 1.5, color: muted),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Funds are sent to your linked GCash or Maya via PayMongo.',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 12,
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _linkedSummary('gcash', AppLocalization.translate('gcash', lang)),
-              _linkedSummary('maya', AppLocalization.translate('maya', lang)),
-              const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                    value: 'gcash',
-                    icon: _providerLogo('gcash', size: 22),
-                    label: Text(AppLocalization.translate('gcash', lang)),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: dark
+                        ? const Color(0xFF302637)
+                        : const Color(0xFFF7F5FA),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  ButtonSegment(
-                    value: 'maya',
-                    icon: _providerLogo('maya', size: 22),
-                    label: Text(AppLocalization.translate('maya', lang)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Available to withdraw',
+                        style: TextStyle(fontSize: 12, color: muted),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'PHP ${liveBalance.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-                selected: {_method},
-                onSelectionChanged: _submitting
-                    ? null
-                    : (selection) {
-                        setState(() => _method = selection.first);
-                      },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _amountController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
                 ),
-                decoration: InputDecoration(
-                  labelText: AppLocalization.translate('amount', lang),
-                  prefixText: 'PHP ',
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: 22),
+                const Text(
+                  'Send to',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                 ),
-                validator: _validateAmount,
-                enabled: !_submitting && _hasLinkedPayoutAccount,
-              ),
-            ],
+                const SizedBox(height: 10),
+                _linkedSummary('gcash', t('gcash')),
+                _linkedSummary('maya', t('maya')),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _amountController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: t('amount'),
+                    hintText: '0.00',
+                    prefixText: 'PHP  ',
+                    prefixStyle: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: muted,
+                    ),
+                    filled: true,
+                    fillColor: dark
+                        ? const Color(0xFF302637)
+                        : const Color(0xFFFCFAFD),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFDCD3E5)),
+                    ),
+                  ),
+                  validator: _validateAmount,
+                  enabled: !_submitting && linked,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  linked
+                      ? t('minimum_withdrawal_10')
+                      : 'Link the selected account to continue.',
+                  style: TextStyle(fontSize: 12, height: 1.4, color: muted),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Transfers are processed via PayMongo.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, height: 1.4, color: muted),
+                ),
+              ],
+            ),
           ),
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.pop(context),
-          child: Text(AppLocalization.translate('cancel', lang)),
-        ),
-        ElevatedButton(
-          onPressed: _submitting || !_hasLinkedPayoutAccount ? null : _submit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5F2D82),
-            foregroundColor: Colors.white,
-          ),
-          child: _submitting
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: _submitting || !linked || liveBalance < 10
+                ? null
+                : _submit,
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF5F2D82),
+              foregroundColor: Colors.white,
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: _submitting
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    t('withdraw'),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                )
-              : Text(AppLocalization.translate('withdraw', lang)),
+          ),
         ),
       ],
     );
