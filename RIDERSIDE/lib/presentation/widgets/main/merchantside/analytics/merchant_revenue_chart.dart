@@ -52,7 +52,33 @@ class MerchantRevenueChart extends ConsumerWidget {
                 SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                 SizedBox(
                   height: 130,
-                  child: _BarChart(trend: summary.trend),
+                  child: Stack(
+                    children: [
+                      _BarChart(trend: summary.trend),
+                      if (summary.trend.every((point) => point.revenue <= 0))
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: .85),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              'No completed sales yet',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF8E8496),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -76,15 +102,14 @@ class _BarChart extends StatelessWidget {
     );
 
     // Only show a subset of bars if there are too many
-    final displayTrend = trend.length > 14
-        ? _downsample(trend, 14)
-        : trend;
+    final displayTrend = trend.length > 14 ? _downsample(trend, 14) : trend;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: displayTrend.map((point) {
-        final barHeight =
-            maxRevenue > 0 ? (point.revenue / maxRevenue) * 100 : 0.0;
+        final barHeight = maxRevenue > 0
+            ? (point.revenue / maxRevenue) * 100
+            : 0.0;
         final showLabel = point.label.isNotEmpty;
 
         return Expanded(
@@ -100,8 +125,9 @@ class _BarChart extends StatelessWidget {
                     color: point.revenue > 0
                         ? const Color(0xFF8054A2)
                         : const Color(0xFFE0DDE5),
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(3)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(3),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),

@@ -27,78 +27,116 @@ class MerchantAnalyticsPreviewCard extends ConsumerWidget {
     );
 
     final cancelRate = summaryAsync.maybeWhen(
-      data: (summary) =>
-          summary.cancellationRate > 0
-              ? '${summary.cancellationRate.toStringAsFixed(1)}%'
-              : '0%',
+      data: (summary) => summary.cancellationRate > 0
+          ? '${summary.cancellationRate.toStringAsFixed(1)}%'
+          : '0%',
       orElse: () => '...',
     );
 
     return Material(
-      color: const Color(0xFFF5F4F7),
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: () => AppRouter.push(context, MainRoutes.merchantAnalytics),
         borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 7)),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6D318F), Color(0xFF4A1D68)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.spacing(context, 7),
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: .16),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.insights,
+                        color: Colors.white,
+                        size: ResponsiveUtils.fontSize(context, 17),
+                      ),
                     ),
-                    child: Icon(
-                      Icons.insights,
-                      color: const Color(0xFF8054A2),
-                      size: ResponsiveUtils.fontSize(context, 17),
+                    const Spacer(),
+                    Icon(
+                      Icons.north_east_rounded,
+                      size: 14,
+                      color: Colors.white.withValues(alpha: .75),
                     ),
+                  ],
+                ),
+                SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                Text(
+                  'Business Overview',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
-                  const Spacer(),
-                  const Icon(
-                    Icons.north_east_rounded,
-                    size: 14,
-                    color: Color(0xFFA49BAE),
-                  ),
-                ],
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-              Text(
-                'Business Overview',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 13),
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF302B36),
                 ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-              Text(
-                'Today: $todayOrders orders',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 11),
-                  height: 1.4,
-                  color: const Color(0xFF918A98),
+                SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                Row(
+                  children: [
+                    _Metric(label: 'Today', value: todayOrders),
+                    _Metric(label: 'This week', value: weekRevenue),
+                    _Metric(label: 'Cancelled', value: cancelRate),
+                  ],
                 ),
-              ),
-              Text(
-                'Week: $weekRevenue · Cancel: $cancelRate',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 11),
-                  height: 1.4,
-                  color: const Color(0xFF918A98),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _Metric({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 10,
+              color: Colors.white.withValues(alpha: .72),
+            ),
+          ),
+        ],
       ),
     );
   }
