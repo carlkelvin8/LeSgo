@@ -1,5 +1,5 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'wallet_light_painter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -73,7 +73,7 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
           children: [
             Positioned.fill(
               child: RepaintBoundary(
-                child: CustomPaint(painter: _WalletLightPainter(_light)),
+                child: CustomPaint(painter: WalletLightPainter(_light)),
               ),
             ),
             Container(
@@ -244,72 +244,4 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
       ),
     );
   }
-}
-
-/// Repaints the decorative layer only; the balance and controls stay static.
-class _WalletLightPainter extends CustomPainter {
-  _WalletLightPainter(this.motion) : super(repaint: motion);
-  final Animation<double> motion;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF0E0520), Color(0xFF2A0D55), Color(0xFF5B2A90)],
-        ).createShader(rect),
-    );
-    final shift = math.sin(motion.value * math.pi * 2);
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = RadialGradient(
-          center: Alignment(.75 + shift * .2, -.35),
-          radius: 1.15,
-          colors: [
-            const Color(0xFF9F62CD).withValues(alpha: .22),
-            Colors.transparent,
-          ],
-        ).createShader(rect),
-    );
-    final ring = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .8
-      ..color = const Color(0xFFD5A5FA).withValues(alpha: .08);
-    for (var i = 0; i < 5; i++) {
-      canvas.drawCircle(
-        Offset(size.width * 1.04, size.height * .08),
-        size.width * (.25 + i * .12),
-        ring,
-      );
-    }
-    final beam = Rect.fromLTWH(
-      -size.width * .6 + size.width * 2 * motion.value,
-      -size.height,
-      size.width * .4,
-      size.height * 3,
-    );
-    canvas.save();
-    canvas.rotate(-.22);
-    canvas.drawRect(
-      beam,
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            Colors.transparent,
-            Colors.white.withValues(alpha: .055),
-            Colors.transparent,
-          ],
-        ).createShader(beam),
-    );
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _WalletLightPainter oldDelegate) =>
-      oldDelegate.motion != motion;
 }

@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../widgets/main/riderside/earnings/rider_earnings_light_card.dart';
 
 import '../../../../core/utils/receipt_generator.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -14,12 +15,14 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
 
   void _shareReport(BuildContext context, RiderEarningsInsightsState state) {
     final entries = state.dailyEarnings
-        .map((d) => {
-              'order_id': '-',
-              'service_name': 'Daily Earnings',
-              'earnings': d.earnings,
-              'completed_at': d.date,
-            })
+        .map(
+          (d) => {
+            'order_id': '-',
+            'service_name': 'Daily Earnings',
+            'earnings': d.earnings,
+            'completed_at': d.date,
+          },
+        )
         .toList();
 
     final receipt = ReceiptGenerator.generateEarningSummaryReceipt(
@@ -63,7 +66,8 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.download_outlined),
             onPressed: insightsAsync.maybeWhen(
-              data: (state) => () => _shareReport(context, state),
+              data: (state) =>
+                  () => _shareReport(context, state),
               orElse: () => null,
             ),
             tooltip: 'Download/Share Report',
@@ -158,48 +162,48 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTotalCard(BuildContext context, RiderEarningsInsightsState state) {
-    return Container(
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF5F2D82), Color(0xFF8E24AA)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Total Earnings (30 days)',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-          Text(
-            'PHP ${state.totalEarnings.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 28),
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          Row(
-            children: [
-              _StatChip(label: '${state.totalTrips} trips'),
-              SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-              _StatChip(
-                label:
-                    'Avg PHP ${state.averageEarningsPerTrip.toStringAsFixed(2)}',
+  Widget _buildTotalCard(
+    BuildContext context,
+    RiderEarningsInsightsState state,
+  ) {
+    return RiderEarningsLightCard(
+      child: Padding(
+        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Earnings · Last 30 days',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 13),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
-            ],
-          ),
-        ],
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+            Text(
+              'PHP ${state.totalEarnings.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 32),
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _StatChip(label: '${state.totalTrips} trips'),
+                _StatChip(
+                  label:
+                      'Avg PHP ${state.averageEarningsPerTrip.toStringAsFixed(2)}',
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -208,8 +212,10 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     final displayData = state.dailyEarnings.length >= 7
         ? state.dailyEarnings.sublist(state.dailyEarnings.length - 7)
         : state.dailyEarnings;
-    final maxY = displayData
-        .fold<double>(0, (max, d) => d.earnings > max ? d.earnings : max);
+    final maxY = displayData.fold<double>(
+      0,
+      (max, d) => d.earnings > max ? d.earnings : max,
+    );
     final ceiling = maxY <= 0 ? 200.0 : ((maxY / 200).ceil() * 200).toDouble();
 
     return Container(
@@ -303,10 +309,8 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: ceiling / 4,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
-                    strokeWidth: 1,
-                  ),
+                  getDrawingHorizontalLine: (value) =>
+                      FlLine(color: Colors.grey.shade200, strokeWidth: 1),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: List.generate(displayData.length, (i) {
@@ -334,7 +338,9 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
   }
 
   Widget _buildMetricsGrid(
-      BuildContext context, RiderEarningsInsightsState state) {
+    BuildContext context,
+    RiderEarningsInsightsState state,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -346,13 +352,18 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
+        const SizedBox(height: 6),
+        const Text(
+          'Duty hours are recorded from on-duty to off-duty. Earlier untracked time is excluded.',
+          style: TextStyle(fontSize: 12, height: 1.5, color: Color(0xFF766B7F)),
+        ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
         Row(
           children: [
             Expanded(
               child: _MetricCard(
                 icon: Icons.timer_outlined,
-                label: 'Hours Online',
+                label: 'Hours on duty',
                 value: state.totalHoursOnline.toStringAsFixed(1),
                 unit: 'hrs',
               ),
@@ -362,8 +373,10 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
               child: _MetricCard(
                 icon: Icons.attach_money,
                 label: 'Avg / Hour',
-                value: 'PHP ${state.averageEarningsPerHour.toStringAsFixed(2)}',
-                unit: '',
+                value: state.hasRecordedDutyTime
+                    ? 'PHP ${state.averageEarningsPerHour.toStringAsFixed(2)}'
+                    : '—',
+                unit: state.hasRecordedDutyTime ? '' : 'No recorded duty time',
               ),
             ),
           ],
@@ -375,8 +388,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
               child: _MetricCard(
                 icon: Icons.trending_up,
                 label: 'Avg / Day',
-                value:
-                    'PHP ${state.averageEarningsPerDay.toStringAsFixed(2)}',
+                value: 'PHP ${state.averageEarningsPerDay.toStringAsFixed(2)}',
                 unit: '',
               ),
             ),
@@ -396,7 +408,9 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
   }
 
   Widget _buildProjectionCard(
-      BuildContext context, RiderEarningsInsightsState state) {
+    BuildContext context,
+    RiderEarningsInsightsState state,
+  ) {
     final isPositive = state.percentageChange >= 0;
 
     return Container(
@@ -432,9 +446,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                         color: Colors.grey.shade600,
                       ),
                     ),
-                    SizedBox(
-                        height:
-                            ResponsiveUtils.spacing(context, 4)),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                     Text(
                       'PHP ${state.projectedEarnings.toStringAsFixed(2)}',
                       style: TextStyle(
@@ -459,9 +471,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                         color: Colors.grey.shade600,
                       ),
                     ),
-                    SizedBox(
-                        height:
-                            ResponsiveUtils.spacing(context, 4)),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                     Row(
                       children: [
                         Icon(
@@ -476,11 +486,9 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                           '${isPositive ? '+' : ''}${state.percentageChange.toStringAsFixed(1)}%',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            fontSize:
-                                ResponsiveUtils.fontSize(context, 20),
+                            fontSize: ResponsiveUtils.fontSize(context, 20),
                             fontWeight: FontWeight.w800,
-                            color:
-                                isPositive ? Colors.green : Colors.red,
+                            color: isPositive ? Colors.green : Colors.red,
                           ),
                         ),
                       ],
