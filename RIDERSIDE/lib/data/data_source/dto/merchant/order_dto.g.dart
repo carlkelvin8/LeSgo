@@ -97,7 +97,7 @@ OrderItemDto _$OrderItemDtoFromJson(Map<String, dynamic> json) => OrderItemDto(
       unitPrice: json['estimated_price'] != null ? double.tryParse(json['estimated_price'].toString()) : null,
       totalPrice: json['actual_price'] != null ? double.tryParse(json['actual_price'].toString()) : null,
       notes: json['notes'] as String?,
-      selectedOptionsRaw: json['selected_options'] as Map<String, dynamic>?,
+      selectedOptionsRaw: _parseSelectedOptions(json['selected_options']),
       imageUrl: _parseOrderItemImageUrl(json['image_url']),
     );
 

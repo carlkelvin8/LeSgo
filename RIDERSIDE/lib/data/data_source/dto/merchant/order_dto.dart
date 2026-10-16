@@ -3,6 +3,12 @@ import '../../../../core/utils/menu_item_options.dart';
 
 part 'order_dto.g.dart';
 
+Map<String, dynamic>? _parseSelectedOptions(dynamic value) {
+  if (value == null || (value is List && value.isEmpty)) return null;
+  if (value is Map) return Map<String, dynamic>.from(value);
+  throw const FormatException('Invalid order item selected options');
+}
+
 double? _parseDouble(dynamic value) {
   if (value == null) return null;
   if (value is double) return value;
@@ -167,7 +173,7 @@ class OrderItemDto {
   final double? totalPrice;
   @JsonKey(name: 'notes')
   final String? notes;
-  @JsonKey(name: 'selected_options')
+  @JsonKey(name: 'selected_options', fromJson: _parseSelectedOptions)
   final Map<String, dynamic>? selectedOptionsRaw;
   @JsonKey(name: 'image_url', fromJson: _parseOrderItemImageUrl)
   final String? imageUrl;
