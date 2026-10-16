@@ -811,19 +811,19 @@ class _GridMenuItemCard extends StatelessWidget {
                       children: [
                         _SmallActionBtn(
                           label: 'Edit',
-                          icon: Icons.edit_outlined,
+                          icon: Icons.edit_rounded,
                           color: const Color(0xFF5F2D82),
                           onTap: onEdit,
                         ),
                         _SmallActionBtn(
                           label: 'Copy',
-                          icon: Icons.copy_outlined,
+                          icon: Icons.content_copy_rounded,
                           color: const Color(0xFF16A34A),
                           onTap: onDuplicate,
                         ),
                         _SmallActionBtn(
                           label: 'Del',
-                          icon: Icons.delete_outline,
+                          icon: Icons.delete_rounded,
                           color: Colors.red.shade600,
                           onTap: onDelete,
                         ),
@@ -855,26 +855,23 @@ class _SmallActionBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: color),
-          const SizedBox(height: 1),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 8,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
+    return Tooltip(
+      message: label == 'Del' ? 'Delete item' : label,
+      child: Material(
+        color: color.withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            width: 30,
+            height: 30,
+            child: Icon(icon, size: 15, color: color),
           ),
-        ],
+        ),
       ),
     );
   }

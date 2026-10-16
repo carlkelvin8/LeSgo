@@ -136,18 +136,18 @@ class _MerchantSalesReportScreenState
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF7F4FA),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF7F4FA),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: const IconThemeData(color: Color(0xFF4D2868)),
         title: Text(
           'Sales Reports',
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: const Color(0xFF24172D),
           ),
         ),
         centerTitle: true,
@@ -217,41 +217,45 @@ class _MerchantSalesReportScreenState
       padding: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.horizontalPadding(context),
       ),
-      child: Row(
-        children: ReportPeriod.values.map((period) {
-          final isSelected = period == _selectedPeriod;
-          return Padding(
-            padding: EdgeInsets.only(
-              right: ResponsiveUtils.spacing(context, 8),
-            ),
-            child: FilterChip(
-              label: Text(
-                period.name[0].toUpperCase() + period.name.substring(1),
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: isSelected ? Colors.white : const Color(0xFF5F2D82),
-                  fontWeight: FontWeight.w600,
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEDE7F3),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: ReportPeriod.values.map((period) {
+            final isSelected = period == _selectedPeriod;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedPeriod = period;
+                    _recalcDates();
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFF5F2D82) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    period.name[0].toUpperCase() + period.name.substring(1),
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      color: isSelected ? Colors.white : const Color(0xFF6D527E),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
-              selected: isSelected,
-              showCheckmark: false,
-              selectedColor: const Color(0xFF5F2D82),
-              backgroundColor: Colors.white,
-              side: BorderSide(
-                color: isSelected
-                    ? const Color(0xFF5F2D82)
-                    : Colors.grey.shade300,
-              ),
-              onSelected: (_) {
-                setState(() {
-                  _selectedPeriod = period;
-                  _recalcDates();
-                });
-              },
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -331,36 +335,61 @@ class _MerchantSalesReportScreenState
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.shade200),
         ),
-        child: Column(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.bar_chart,
-                  size: ResponsiveUtils.fontSize(context, 18),
-                  color: const Color(0xFF5F2D82),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0E7F8),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.insights_rounded,
+                      size: 18,
+                      color: Color(0xFF5F2D82),
+                    ),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                Text(
-                  'Report Summary',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 15),
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Report summary',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 15),
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF24172D),
+                          ),
+                        ),
+                        Text(
+                          _dateRangeLabel,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 10),
+                            color: const Color(0xFF9A8AA4),
+                          ),
+                        ),
+                      ],
                   ),
                 ),
               ],
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            _summaryRow(context, 'Total Orders', '${filtered.length}'),
-            _summaryRow(context, 'Completed', '${completed.length}'),
-            _summaryRow(
-              context,
-              'Cancelled',
-              '${cancelled.length}',
-            ),
+              Row(
+                children: [
+                  Expanded(child: _metricTile(context, 'Orders', '${filtered.length}')),
+                  const SizedBox(width: 8),
+                  Expanded(child: _metricTile(context, 'Completed', '${completed.length}')),
+                  const SizedBox(width: 8),
+                  Expanded(child: _metricTile(context, 'Cancelled', '${cancelled.length}')),
+                ],
+              ),
             Divider(height: ResponsiveUtils.spacing(context, 16)),
             _summaryRow(
               context,
@@ -376,6 +405,24 @@ class _MerchantSalesReportScreenState
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _metricTile(BuildContext context, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F5FA),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: const TextStyle(fontFamily: 'TT Fors', fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF24172D))),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(fontFamily: 'TT Fors', fontSize: 10, color: Color(0xFF91829B))),
+        ],
       ),
     );
   }
