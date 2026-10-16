@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/merchant_order_alert_service.dart';
-import '../../../../../core/utils/merchant_csv_export_utils.dart';
 import '../../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
@@ -250,22 +249,6 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   ),
                                 ],
                               ),
-                            ),
-                            IconButton.filledTonal(
-                              tooltip: 'Refresh orders',
-                              onPressed: async.isLoading ? null : _refresh,
-                              icon: const Icon(Icons.refresh_rounded),
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton.filledTonal(
-                              tooltip: 'Export orders',
-                              onPressed: all.isEmpty
-                                  ? null
-                                  : () => MerchantCsvExportUtils.exportAndShare(
-                                      context,
-                                      all,
-                                    ),
-                              icon: const Icon(Icons.file_download_outlined),
                             ),
                           ],
                         ),

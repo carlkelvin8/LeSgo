@@ -216,6 +216,7 @@ class MerchantRemoteDataSource {
   Future<String> uploadMediaFile(
     String filePath, {
     String context = 'general',
+    bool resolveUrl = true,
   }) async {
     final formData = FormData.fromMap({'context': context});
     await appendDocumentFile(formData, 'file', filePath);
@@ -229,6 +230,9 @@ class MerchantRemoteDataSource {
     if (data is Map<String, dynamic>) {
       final raw = data['url']?.toString() ?? data['path']?.toString();
       if (raw != null && raw.isNotEmpty) {
+        // Profile updates should persist the storage key. Resolving a
+        // relative key on-device can point at a stale storage host.
+        if (!resolveUrl) return raw;
         final absolute = MediaUrlUtils.toAbsoluteUrl(raw);
         if (absolute != null && absolute.isNotEmpty) return absolute;
         if (MediaUrlUtils.isHttpUrl(raw)) return raw;
@@ -406,21 +410,21 @@ class MerchantRemoteDataSource {
       final payload = request.toJson();
       payload.remove('logo_url');
 
-      // Send a newly selected logo directly to the partner endpoint so the
-      // backend stores it and persists the resulting logo_url in one request.
+      // Resolve a newly selected logo to a durable URL before updating the
+      // partner record so the profile endpoint only receives JSON fields.
       dynamic requestData = payload;
-      var requestPath = '/v1/partners/$partnerId';
       if (request.logoPath != null &&
           MediaUrlUtils.isLocalFilePath(request.logoPath)) {
-        final formData = FormData.fromMap(payload);
-        // PHP does not reliably populate multipart files for PATCH requests.
-        // Use Laravel's POST method spoofing so the logo reaches the validator.
-        formData.fields.add(const MapEntry('_method', 'PATCH'));
-        formData.files.add(MapEntry(
-          'logo',
-          await multipartFileFromPath(request.logoPath!),
-        ));
-        requestData = formData;
+        // Upload first, then send the returned URL in the normal JSON PATCH.
+        // This avoids PHP multipart/PATCH parsing differences between hosting
+        // environments and matches the reliable menu-image upload flow.
+        final uploadedLogoUrl = await uploadMediaFile(
+          request.logoPath!,
+          context: 'profile',
+          resolveUrl: false,
+        );
+        payload['logo_url'] = uploadedLogoUrl;
+        requestData = payload;
       } else {
         final existingLogoUrl = await _resolvePartnerLogoUrl(
           logoUrl: request.logoUrl,
@@ -431,9 +435,10 @@ class MerchantRemoteDataSource {
         }
       }
 
-      final response = requestData is FormData
-          ? await _dio.post(requestPath, data: requestData)
-          : await _dio.patch(requestPath, data: requestData);
+      final response = await _dio.patch(
+        '/v1/partners/$partnerId',
+        data: requestData,
+      );
       final responseData = response.data['data'] ?? response.data;
       return PartnerDto.fromJson(responseData as Map<String, dynamic>);
     } catch (e) {
