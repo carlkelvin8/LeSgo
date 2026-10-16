@@ -12,7 +12,7 @@ import '../../../provider/main/riderside/rider_earnings_insights_provider.dart';
 
 class RiderEarningsInsightsScreen extends ConsumerWidget {
   const RiderEarningsInsightsScreen({super.key, this.embedded = false});
-  final bool embedded;
+  final bool? embedded;
 
   static void shareReport(
     BuildContext context,
@@ -52,7 +52,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: embedded
+      appBar: embedded == true
           ? null
           : AppBar(
               backgroundColor: Colors.white,

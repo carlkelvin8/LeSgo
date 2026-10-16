@@ -12,7 +12,7 @@ import '../../../provider/main/riderside/rider_earnings_provider.dart';
 
 class RiderEarningsScreen extends ConsumerWidget {
   const RiderEarningsScreen({super.key, this.embedded = false});
-  final bool embedded;
+  final bool? embedded;
 
   static void shareEarnings(BuildContext context, RiderEarningsState state) {
     final periodLabel = RiderEarningsUtils.periodLabel(state.period);
@@ -51,7 +51,7 @@ class RiderEarningsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: embedded
+      appBar: embedded == true
           ? null
           : AppBar(
               backgroundColor: Colors.white,
