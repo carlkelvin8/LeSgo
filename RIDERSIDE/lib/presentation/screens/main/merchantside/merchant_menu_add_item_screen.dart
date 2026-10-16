@@ -8,6 +8,7 @@ import '../../../widgets/main/merchantside/menu/shared/merchant_item_options_sec
 import '../../../widgets/main/merchantside/menu/shared/merchant_item_inventory_section.dart';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class MerchantMenuAddItemScreen extends ConsumerStatefulWidget {
   const MerchantMenuAddItemScreen({super.key});
@@ -17,7 +18,8 @@ class MerchantMenuAddItemScreen extends ConsumerStatefulWidget {
       _MerchantMenuAddItemScreenState();
 }
 
-class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemScreen> {
+class _MerchantMenuAddItemScreenState
+    extends ConsumerState<MerchantMenuAddItemScreen> {
   static const _addInput = MerchantMenuItemFormInput.add();
   late MerchantMenuItemFormController _controller;
   final ImagePicker _picker = ImagePicker();
@@ -42,9 +44,24 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
         maxHeight: 1024,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
-        notifier.updateLocalImage(image.path);
+        final cropped = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          compressQuality: 85,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop item photo',
+              toolbarColor: const Color(0xFF5F2D82),
+              toolbarWidgetColor: Colors.white,
+              activeControlsWidgetColor: const Color(0xFF5F2D82),
+              lockAspectRatio: false,
+            ),
+            IOSUiSettings(title: 'Crop item photo'),
+          ],
+        );
+        if (cropped != null) notifier.updateLocalImage(cropped.path);
       }
     } catch (e) {
       if (mounted) {
@@ -59,19 +76,18 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
     final formState = ref.watch(formProvider);
     final notifier = ref.read(formProvider.notifier);
 
-    ref.listen(
-      formProvider,
-      (previous, next) {
-        if (next.errorMessage != null) {
-          SnackBarUtils.showError(context, next.errorMessage!);
-        }
-        // Handle success - navigate when form state shows success
-        if (next.isSubmitting == false && previous?.isSubmitting == true && next.errorMessage == null) {
-          SnackBarUtils.showSuccess(context, 'Item added successfully');
-          Navigator.pop(context);
-        }
-      },
-    );
+    ref.listen(formProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        SnackBarUtils.showError(context, next.errorMessage!);
+      }
+      // Handle success - navigate when form state shows success
+      if (next.isSubmitting == false &&
+          previous?.isSubmitting == true &&
+          next.errorMessage == null) {
+        SnackBarUtils.showSuccess(context, 'Item added successfully');
+        Navigator.pop(context);
+      }
+    });
 
     return MerchantFormLayout(
       formKey: _controller.formKey,

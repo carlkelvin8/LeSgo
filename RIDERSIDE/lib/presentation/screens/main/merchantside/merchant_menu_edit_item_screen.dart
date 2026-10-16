@@ -9,14 +9,12 @@ import '../../../widgets/main/merchantside/menu/shared/merchant_item_options_sec
 import '../../../widgets/main/merchantside/menu/shared/merchant_item_inventory_section.dart';
 import '../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class MerchantMenuEditItemScreen extends ConsumerStatefulWidget {
   final Map<String, String>? initialItem;
 
-  const MerchantMenuEditItemScreen({
-    super.key,
-    this.initialItem,
-  });
+  const MerchantMenuEditItemScreen({super.key, this.initialItem});
 
   @override
   ConsumerState<MerchantMenuEditItemScreen> createState() =>
@@ -34,13 +32,12 @@ class _MerchantMenuEditItemScreenState
     super.initState();
     _formInput = MerchantMenuItemFormInput.edit(widget.initialItem);
     _controller = MerchantMenuItemFormController(
-      initialItemName: widget.initialItem?['itemName'] ??
-          widget.initialItem?['name'] ??
-          '',
+      initialItemName:
+          widget.initialItem?['itemName'] ?? widget.initialItem?['name'] ?? '',
       initialPrice: widget.initialItem?['price'] ?? '0.00',
       initialDescription: widget.initialItem?['description'] ?? '',
     );
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final formProvider = merchantMenuItemFormProvider(_formInput);
       final notifier = ref.read(formProvider.notifier);
@@ -74,9 +71,24 @@ class _MerchantMenuEditItemScreenState
         maxHeight: 1024,
         imageQuality: 85,
       );
-      
+
       if (image != null) {
-        notifier.updateLocalImage(image.path);
+        final cropped = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          compressQuality: 85,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop item photo',
+              toolbarColor: const Color(0xFF5F2D82),
+              toolbarWidgetColor: Colors.white,
+              activeControlsWidgetColor: const Color(0xFF5F2D82),
+              lockAspectRatio: false,
+            ),
+            IOSUiSettings(title: 'Crop item photo'),
+          ],
+        );
+        if (cropped != null) notifier.updateLocalImage(cropped.path);
       }
     } catch (e) {
       if (mounted) {
@@ -96,14 +108,17 @@ class _MerchantMenuEditItemScreenState
         SnackBarUtils.showError(context, next.errorMessage!);
       }
       // Handle success - navigate when form state shows success
-      if (next.isSubmitting == false && previous?.isSubmitting == true && next.errorMessage == null) {
+      if (next.isSubmitting == false &&
+          previous?.isSubmitting == true &&
+          next.errorMessage == null) {
         SnackBarUtils.showSuccess(context, 'Item updated successfully');
         Navigator.pop(context);
       }
     });
 
     final itemId = int.tryParse(widget.initialItem?['id'] ?? '');
-    final itemName = widget.initialItem?['name'] ??
+    final itemName =
+        widget.initialItem?['name'] ??
         widget.initialItem?['itemName'] ??
         'this item';
 

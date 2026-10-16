@@ -24,6 +24,7 @@ dependencies:
 
   # Image Picker
   image_picker: ^1.0.7
+  image_cropper: ^8.0.2
   cross_file: ^0.3.4+2
 
   # File Picker
