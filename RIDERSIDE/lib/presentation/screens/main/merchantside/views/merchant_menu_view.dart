@@ -551,7 +551,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                       // Leave a little extra vertical room for the action row
                       // so fractional device pixels never trigger an
                       // overflow warning at the bottom of the card.
-                      childAspectRatio: 0.64,
+                      childAspectRatio: 0.60,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
@@ -811,27 +811,45 @@ class _GridMenuItemCard extends StatelessWidget {
 
                     const SizedBox(height: 6),
 
-                    // Action buttons
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _SmallActionBtn(
-                          label: 'Edit',
-                          icon: Icons.edit_rounded,
-                          color: const Color(0xFF5F2D82),
-                          onTap: onEdit,
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: onEdit,
+                            icon: const Icon(Icons.edit_outlined, size: 17),
+                            label: const Text('Edit'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF5F2D82),
+                              side: const BorderSide(color: Color(0xFFE4D9EC)),
+                              backgroundColor: const Color(0xFFFAF7FC),
+                              minimumSize: const Size(0, 40),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              textStyle: const TextStyle(fontFamily: 'TT Fors', fontSize: 12, fontWeight: FontWeight.w700),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          ),
                         ),
-                        _SmallActionBtn(
-                          label: 'Copy',
-                          icon: Icons.content_copy_rounded,
-                          color: const Color(0xFF16A34A),
-                          onTap: onDuplicate,
-                        ),
-                        _SmallActionBtn(
-                          label: 'Del',
-                          icon: Icons.delete_rounded,
-                          color: Colors.red.shade600,
-                          onTap: onDelete,
+                        const SizedBox(width: 4),
+                        PopupMenuButton<String>(
+                          tooltip: 'More item actions',
+                          icon: const Icon(Icons.more_horiz_rounded, color: Color(0xFF64596C)),
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          onSelected: (action) {
+                            if (action == 'duplicate') onDuplicate();
+                            if (action == 'delete') onDelete();
+                          },
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(value: 'duplicate', child: Row(children: [
+                              Icon(Icons.copy_outlined, size: 19, color: Color(0xFF64596C)),
+                              SizedBox(width: 12), Text('Duplicate'),
+                            ])),
+                            PopupMenuItem(value: 'delete', child: Row(children: [
+                              Icon(Icons.delete_outline_rounded, size: 19, color: Color(0xFFB23B47)),
+                              SizedBox(width: 12), Text('Delete', style: TextStyle(color: Color(0xFFB23B47))),
+                            ])),
+                          ],
                         ),
                       ],
                     ),
@@ -840,43 +858,6 @@ class _GridMenuItemCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SmallActionBtn extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _SmallActionBtn({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: label == 'Del' ? 'Delete item' : label,
-      child: Material(
-        color: color.withValues(alpha: .10),
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onTap();
-          },
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox(
-            width: 30,
-            height: 30,
-            child: Icon(icon, size: 15, color: color),
-          ),
         ),
       ),
     );
