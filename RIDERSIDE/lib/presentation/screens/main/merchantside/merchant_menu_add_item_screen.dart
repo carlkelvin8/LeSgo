@@ -23,6 +23,7 @@ class _MerchantMenuAddItemScreenState
   static const _addInput = MerchantMenuItemFormInput.add();
   late MerchantMenuItemFormController _controller;
   final ImagePicker _picker = ImagePicker();
+  bool _isPickingImage = false;
 
   @override
   void initState() {
@@ -37,6 +38,8 @@ class _MerchantMenuAddItemScreenState
   }
 
   Future<void> _pickImage(MerchantMenuItemFormNotifier notifier) async {
+    if (_isPickingImage) return;
+    _isPickingImage = true;
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -45,7 +48,7 @@ class _MerchantMenuAddItemScreenState
         imageQuality: 85,
       );
 
-      if (image != null) {
+      if (image != null && mounted) {
         final cropped = await ImageCropper().cropImage(
           sourcePath: image.path,
           compressQuality: 85,
@@ -61,12 +64,14 @@ class _MerchantMenuAddItemScreenState
             IOSUiSettings(title: 'Crop item photo'),
           ],
         );
-        if (cropped != null) notifier.updateLocalImage(cropped.path);
+        if (cropped != null && mounted) notifier.updateLocalImage(cropped.path);
       }
     } catch (e) {
       if (mounted) {
         SnackBarUtils.showError(context, 'Failed to pick image');
       }
+    } finally {
+      _isPickingImage = false;
     }
   }
 
