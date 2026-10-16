@@ -7,6 +7,7 @@ import '../../../../../core/utils/rider_wallet_policy.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_card.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_actions_section.dart';
+import '../../../../widgets/main/riderside/wallet/rider_top_up_dialog.dart';
 import '../../../../widgets/main/riderside/more/rider_more_components.dart';
 
 class RiderWalletScreen extends ConsumerWidget {
@@ -124,6 +125,32 @@ class _RiderWalletViewState extends ConsumerState<RiderWalletView>
                           RiderWalletPolicy.minimumBalanceToAccept
                               .toStringAsFixed(0),
                         ),
+                        action: TextButton.icon(
+                          onPressed: () => showDialog(
+                            context: context,
+                            builder: (_) =>
+                                RiderTopUpDialog(parentContext: context),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: dark
+                                ? const Color(0xFFE0C5FA)
+                                : const Color(0xFF60318B),
+                            padding: const EdgeInsets.symmetric(horizontal: 0),
+                            minimumSize: const Size(48, 44),
+                            alignment: Alignment.centerLeft,
+                          ),
+                          icon: const Icon(
+                            Icons.add_circle_outline_rounded,
+                            size: 18,
+                          ),
+                          label: Text(
+                            t('top_up'),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -215,23 +242,35 @@ class _WalletNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final color = dark ? const Color(0xFFFFD397) : const Color(0xFF88551A);
+    final color = dark ? const Color(0xFFFFD397) : const Color(0xFF94601C);
     return Semantics(
       liveRegion: true,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 18, 18, 8),
         decoration: BoxDecoration(
-          color: dark ? const Color(0xFF32291F) : const Color(0xFFFFF7E9),
-          borderRadius: BorderRadius.circular(18),
+          color: dark ? const Color(0xFF241F2D) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: dark ? const Color(0xFF58412A) : const Color(0xFFF1DFBF),
+            color: dark ? const Color(0xFF443A50) : const Color(0xFFE8E1ED),
           ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline_rounded, color: color, size: 21),
-            const SizedBox(width: 11),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: dark ? const Color(0xFF3D3020) : const Color(0xFFFFF2DC),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.account_balance_wallet_outlined,
+                color: color,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,16 +278,26 @@ class _WalletNotice extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
+                      height: 1.35,
                       fontWeight: FontWeight.w700,
-                      color: color,
+                      color: dark
+                          ? const Color(0xFFF5EFFA)
+                          : const Color(0xFF302638),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     message,
-                    style: TextStyle(fontSize: 12, height: 1.45, color: color),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.5,
+                      color: dark
+                          ? const Color(0xFFCAC0D3)
+                          : const Color(0xFF6A6073),
+                    ),
                   ),
+                  if (action == null) const SizedBox(height: 10),
                   ?action,
                 ],
               ),
