@@ -225,16 +225,6 @@ class _RiderMoreViewState extends ConsumerState<RiderMoreView>
                                 MainRoutes.riderRating,
                               ),
                             ),
-                            MoreMenuRow(
-                              icon: Icons.two_wheeler_outlined,
-                              title: t('my_vehicles'),
-                              subtitle: t('more_vehicles_subtitle'),
-                              accent: const Color(0xFF317B9C),
-                              onTap: () => AppRouter.push(
-                                context,
-                                MainRoutes.riderVehicleManagement,
-                              ),
-                            ),
                           ],
                         ),
                       ],
