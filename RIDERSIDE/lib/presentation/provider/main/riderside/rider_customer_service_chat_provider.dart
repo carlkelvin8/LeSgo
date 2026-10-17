@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/gemini_customer_service.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/services/rider_live_support_service.dart';
+import '../../../../core/services/support_api.dart';
 
 class CustomerServiceMessage {
   final String id;
@@ -24,12 +26,14 @@ class RiderCustomerServiceChatState {
   final bool isSending;
   final String? error;
   final bool isConfigured;
+  final bool isLiveAgent;
 
   const RiderCustomerServiceChatState({
     this.messages = const [],
     this.isSending = false,
     this.error,
     this.isConfigured = false,
+    this.isLiveAgent = false,
   });
 
   RiderCustomerServiceChatState copyWith({
@@ -37,6 +41,7 @@ class RiderCustomerServiceChatState {
     bool? isSending,
     String? error,
     bool? isConfigured,
+    bool? isLiveAgent,
     bool clearError = false,
   }) {
     return RiderCustomerServiceChatState(
@@ -44,132 +49,264 @@ class RiderCustomerServiceChatState {
       isSending: isSending ?? this.isSending,
       error: clearError ? null : (error ?? this.error),
       isConfigured: isConfigured ?? this.isConfigured,
+      isLiveAgent: isLiveAgent ?? this.isLiveAgent,
     );
   }
 }
 
 const _welcomeMessage =
-    'Hi! This is LeSgo Support. Message our admin team here for help with safety, orders, earnings, LesPay, and account issues.';
+    'Hi! I am the LeSgo AI assistant. Use the menu to message our support team.';
+const _liveWelcome =
+    'Message our support team here. An agent will reply in this conversation when available.';
 
 class RiderCustomerServiceChatNotifier
     extends StateNotifier<RiderCustomerServiceChatState> {
-  RiderCustomerServiceChatNotifier(this._service)
-      : super(const RiderCustomerServiceChatState()) {
+  RiderCustomerServiceChatNotifier(
+    this._service, {
+    RiderLiveSupportService? liveSupport,
+  }) : _liveSupport = liveSupport ?? RiderLiveSupportService(),
+       super(const RiderCustomerServiceChatState()) {
     _bootstrap();
   }
 
   final GeminiCustomerService _service;
+  final RiderLiveSupportService _liveSupport;
   final _uuid = const Uuid();
+  Timer? _poll;
+  Future<void>? _connecting;
+  bool _refreshing = false;
+  int? _ticketId;
+  int _revision = 0;
 
   void _bootstrap() {
     final configured = _service.isConfigured;
-    if (configured) {
-      _service.startConversation();
-    }
-
+    if (configured) _service.startConversation();
     state = state.copyWith(
       isConfigured: configured,
+      isLiveAgent: !configured,
       messages: [
         CustomerServiceMessage(
-          id: _uuid.v4(),
-          text: configured
-              ? _welcomeMessage
-              : 'Message LeSgo admin support here. Our team will respond in this chat.',
+          id: 'welcome',
+          text: configured ? _welcomeMessage : _liveWelcome,
           isUser: false,
           timestamp: DateTime.now(),
         ),
       ],
       clearError: true,
     );
+    if (!configured) unawaited(_connect().catchError((_) {}));
+  }
+
+  Future<void> _connect() {
+    return _connecting ??= _loadConversation();
+  }
+
+  Future<void> _loadConversation() async {
+    try {
+      final detail = await _liveSupport.findConversation();
+      if (!mounted) return;
+      if (detail != null) {
+        _ticketId = detail.ticket.id;
+        _applyMessages(detail);
+      }
+      _poll ??= Timer.periodic(
+        const Duration(seconds: 5),
+        (_) => refreshMessages(),
+      );
+    } catch (_) {
+      // A send retries discovery; never create a duplicate thread when discovery fails.
+      _connecting = null;
+      rethrow;
+    }
+  }
+
+  void _applyMessages(RiderSupportTicketDetail detail) {
+    if (!mounted) return;
+    final messages = detail.messages
+        .map(
+          (message) => CustomerServiceMessage(
+            id: 'support-${message.id}',
+            text: message.message,
+            isUser: !message.isStaff,
+            timestamp: DateTime.tryParse(message.createdAt) ?? DateTime.now(),
+          ),
+        )
+        .toList();
+    final sameMessages =
+        state.messages.length == messages.length + 1 &&
+        state.messages
+            .skip(1)
+            .toList()
+            .asMap()
+            .entries
+            .every(
+              (entry) =>
+                  entry.value.id == messages[entry.key].id &&
+                  entry.value.text == messages[entry.key].text,
+            );
+    if (!sameMessages) {
+      state = state.copyWith(
+        messages: [
+          CustomerServiceMessage(
+            id: 'live-welcome',
+            text: _liveWelcome,
+            isUser: false,
+            timestamp: DateTime.now(),
+          ),
+          ...messages,
+        ],
+      );
+    }
+    if (detail.ticket.status == 'closed' ||
+        detail.ticket.status == 'cancelled') {
+      _ticketId = null;
+      _connecting = null;
+    }
+  }
+
+  Future<void> refreshMessages() async {
+    final ticketId = _ticketId;
+    if (!mounted ||
+        !state.isLiveAgent ||
+        state.isSending ||
+        _refreshing ||
+        ticketId == null) {
+      return;
+    }
+    _refreshing = true;
+    final revision = _revision;
+    try {
+      final detail = await _liveSupport.load(ticketId);
+      if (mounted && !state.isSending && revision == _revision) {
+        _applyMessages(detail);
+      }
+    } catch (_) {
+      // Keep the last confirmed history on temporary polling errors.
+    } finally {
+      _refreshing = false;
+    }
+  }
+
+  Future<void> _sendToAgent(String text) async {
+    await _connect();
+    if (!mounted) return;
+    final ticketId = _ticketId;
+    CustomerServiceMessage sent;
+    if (ticketId == null) {
+      final ticket = await _liveSupport.create(text);
+      if (!mounted) return;
+      _ticketId = ticket.id;
+      sent = CustomerServiceMessage(
+        id: 'ticket-${ticket.id}',
+        text: text,
+        isUser: true,
+        timestamp: DateTime.now(),
+      );
+    } else {
+      final message = await _liveSupport.send(ticketId, text);
+      if (!mounted) return;
+      sent = CustomerServiceMessage(
+        id: 'support-${message.id}',
+        text: message.message,
+        isUser: true,
+        timestamp: DateTime.tryParse(message.createdAt) ?? DateTime.now(),
+      );
+    }
+    if (mounted) {
+      state = state.copyWith(
+        messages: [...state.messages, sent],
+        isSending: false,
+        clearError: true,
+      );
+    }
   }
 
   Future<void> sendMessage(String text) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty || state.isSending) return;
-
-    final userMessage = CustomerServiceMessage(
-      id: _uuid.v4(),
-      text: trimmed,
-      isUser: true,
-      timestamp: DateTime.now(),
-    );
-
-    if (!state.isConfigured) {
-      final adminAck = CustomerServiceMessage(
-        id: _uuid.v4(),
-        text:
-            'Your message was sent to LeSgo admin support. Our team will respond in this chat.',
-        isUser: false,
-        timestamp: DateTime.now(),
-      );
+    if (trimmed.length > 5000) {
       state = state.copyWith(
-        messages: [...state.messages, userMessage, adminAck],
-        clearError: true,
+        error: 'Please keep your message within 5,000 characters.',
       );
       return;
     }
-
-    state = state.copyWith(
-      messages: [...state.messages, userMessage],
-      isSending: true,
-      clearError: true,
-    );
-
+    _revision++;
+    state = state.copyWith(isSending: true, clearError: true);
     try {
-      final reply = await _service.sendMessage(trimmed);
-      final botMessage = CustomerServiceMessage(
-        id: _uuid.v4(),
-        text: reply,
-        isUser: false,
-        timestamp: DateTime.now(),
-      );
-      state = state.copyWith(
-        messages: [...state.messages, botMessage],
-        isSending: false,
-      );
-    } on GeminiNotConfiguredException catch (e) {
-      state = state.copyWith(
-        isSending: false,
-        isConfigured: false,
-        error: e.toString(),
-      );
-    } on GeminiServiceException catch (e) {
-      state = state.copyWith(
-        isSending: false,
-        error: e.message,
-      );
+      if (state.isLiveAgent || !state.isConfigured) {
+        await _sendToAgent(trimmed);
+        return;
+      }
+      try {
+        final reply = await _service.sendMessage(trimmed);
+        if (!mounted) return;
+        state = state.copyWith(
+          messages: [
+            ...state.messages,
+            CustomerServiceMessage(
+              id: _uuid.v4(),
+              text: trimmed,
+              isUser: true,
+              timestamp: DateTime.now(),
+            ),
+            CustomerServiceMessage(
+              id: _uuid.v4(),
+              text: reply,
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
+          ],
+          isSending: false,
+        );
+      } catch (_) {
+        if (!mounted) return;
+        state = state.copyWith(isLiveAgent: true);
+        await _sendToAgent(trimmed);
+      }
     } catch (_) {
-      state = state.copyWith(
-        isSending: false,
-        error: 'Sorry, I had trouble responding. Please try again.',
-      );
+      if (mounted) {
+        state = state.copyWith(
+          isSending: false,
+          error:
+              'Your message was not sent. Check your connection and try again.',
+        );
+      }
     }
   }
 
-  Future<void> requestAdminCallback() {
-    return sendMessage(
-      'I need an admin to call me back regarding a safety or support issue.',
+  Future<void> requestAdminCallback() async {
+    if (state.isSending) return;
+    state = state.copyWith(isLiveAgent: true, clearError: true);
+    await sendMessage(
+      'I would like to speak with a support agent. Please contact me about my support issue.',
     );
   }
 
   void clearChat() {
-    _bootstrap();
+    // Clear local AI history; confirmed live support history stays on the server.
+    if (state.isSending) return;
+    if (state.isLiveAgent) {
+      refreshMessages();
+    } else {
+      _bootstrap();
+    }
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
   }
 }
 
-final riderCustomerServiceChatProvider = StateNotifierProvider.autoDispose<
-    RiderCustomerServiceChatNotifier, RiderCustomerServiceChatState>((ref) {
-  final notifier =
-      RiderCustomerServiceChatNotifier(getIt<GeminiCustomerService>());
-  final keepAliveLink = ref.keepAlive();
-  final removeListener = notifier.addListener(
-    (state) {
-      if (state.messages.length <= 1) {
-        keepAliveLink.close();
-      }
-    },
-    fireImmediately: false,
-  );
-  ref.onDispose(removeListener);
-  return notifier;
-});
+final riderCustomerServiceChatProvider =
+    StateNotifierProvider.autoDispose<
+      RiderCustomerServiceChatNotifier,
+      RiderCustomerServiceChatState
+    >((ref) {
+      final notifier = RiderCustomerServiceChatNotifier(
+        getIt<GeminiCustomerService>(),
+      );
+      // Auto-dispose stops polling when this screen closes.
+      return notifier;
+    });

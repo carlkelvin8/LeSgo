@@ -76,7 +76,7 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
                 child: Column(
                   children: [
                     const LocationPermissionBanner(),
-                    RiderBookingsHeader(compact: map),
+                    const RiderBookingsHeader(),
                     if (!kIsWeb)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),

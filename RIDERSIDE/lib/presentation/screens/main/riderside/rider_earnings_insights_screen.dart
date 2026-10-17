@@ -2,7 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../widgets/main/riderside/earnings/rider_earnings_light_card.dart';
+import '../../../widgets/main/riderside/earnings/earnings_design.dart';
+import '../../../widgets/main/riderside/profile/profile_panel.dart';
 
 import '../../../../core/utils/receipt_generator.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -51,7 +52,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: earningsCanvas(context),
       appBar: embedded == true
           ? null
           : AppBar(
@@ -140,26 +141,12 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
               ResponsiveUtils.scrollBottomPaddingForBottomNav(context),
             ),
             children: [
-              if (state.totalTrips == 0 && state.totalEarnings == 0)
-                Padding(
-                  padding: EdgeInsets.only(
-                    bottom: ResponsiveUtils.spacing(context, 16),
-                  ),
-                  child: Text(
-                    'No completed trips in the last 30 days yet.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ),
               _buildTotalCard(context, state),
               SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-              _buildChart(context, state),
-              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
               _buildMetricsGrid(context, state),
-              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+              const SizedBox(height: 16),
+              _buildChart(context, state),
+              const SizedBox(height: 16),
               _buildProjectionCard(context, state),
             ],
           ),
@@ -172,45 +159,12 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     BuildContext context,
     RiderEarningsInsightsState state,
   ) {
-    return RiderEarningsLightCard(
-      child: Padding(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Earnings · Last 30 days',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-            Text(
-              'PHP ${state.totalEarnings.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 32),
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _StatChip(label: '${state.totalTrips} trips'),
-                _StatChip(
-                  label:
-                      'Avg PHP ${state.averageEarningsPerTrip.toStringAsFixed(2)}',
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return EarningsBalanceCard(
+      title: 'Earnings · Last 30 days',
+      total: state.totalEarnings,
+      trips: state.totalTrips,
+      average: state.averageEarningsPerTrip,
+      compact: true,
     );
   }
 
@@ -224,13 +178,58 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     );
     final ceiling = maxY <= 0 ? 200.0 : ((maxY / 200).ceil() * 200).toDouble();
 
-    return Container(
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
+    if (maxY <= 0) {
+      return EarningsPanel(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: profileDark(context)
+                    ? const Color(0xFF33263F)
+                    : const Color(0xFFF4EFF9),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.insights_rounded,
+                size: 22,
+                color: Color(0xFF9562B9),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Last 7 Days',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: profileText(context),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    'No earnings recorded yet. Your completed trips will build this chart.',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 12,
+                      height: 1.5,
+                      color: profileMuted(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return EarningsPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -242,9 +241,18 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+          const SizedBox(height: 6),
+          Text(
+            'Daily net earnings',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 12,
+              color: profileMuted(context),
+            ),
+          ),
+          const SizedBox(height: 18),
           SizedBox(
-            height: 200,
+            height: 190,
             child: BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
@@ -281,7 +289,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 10,
-                              color: Colors.grey.shade600,
+                              color: profileMuted(context),
                             ),
                           ),
                         );
@@ -291,14 +299,14 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 50,
+                      reservedSize: 64,
                       getTitlesWidget: (value, meta) {
                         return Text(
-                          'PHP ${value.toInt()}',
+                          'PHP ${NumberFormat.compact().format(value)}',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 10,
-                            color: Colors.grey.shade600,
+                            color: profileMuted(context),
                           ),
                         );
                       },
@@ -315,8 +323,13 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: ceiling / 4,
-                  getDrawingHorizontalLine: (value) =>
-                      FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: profileDark(context)
+                        ? const Color(0xFF393044)
+                        : const Color(0xFFF0ECF5),
+                    strokeWidth: 1,
+                    dashArray: [4, 4],
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: List.generate(displayData.length, (i) {
@@ -325,8 +338,12 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                     barRods: [
                       BarChartRodData(
                         toY: displayData[i].earnings,
-                        color: const Color(0xFF5F2D82),
-                        width: 24,
+                        gradient: const LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [Color(0xFF5F2D82), Color(0xFFA67BC8)],
+                        ),
+                        width: 18,
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(6),
                           topRight: Radius.circular(6),
@@ -347,67 +364,87 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     BuildContext context,
     RiderEarningsInsightsState state,
   ) {
+    final metrics = [
+      _MetricCard(
+        icon: Icons.schedule_outlined,
+        label: 'Hours on duty',
+        value: state.totalHoursOnline.toStringAsFixed(1),
+        unit: 'hours recorded',
+      ),
+      _MetricCard(
+        icon: Icons.payments_outlined,
+        label: 'Average / hour',
+        value: state.hasRecordedDutyTime
+            ? 'PHP ${state.averageEarningsPerHour.toStringAsFixed(2)}'
+            : '—',
+        unit: state.hasRecordedDutyTime
+            ? 'Per duty hour'
+            : 'No recorded duty time',
+      ),
+      _MetricCard(
+        icon: Icons.trending_up_rounded,
+        label: 'Average / day',
+        value: 'PHP ${state.averageEarningsPerDay.toStringAsFixed(2)}',
+        unit: 'Last 30 days',
+      ),
+      _MetricCard(
+        icon: Icons.wb_sunny_outlined,
+        label: 'Best day',
+        value: state.totalTrips == 0 ? '—' : state.bestDay,
+        unit: state.totalTrips == 0
+            ? 'Complete a trip to start'
+            : state.bestHourRange,
+      ),
+    ];
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           'Key Metrics',
           style: TextStyle(
             fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 16),
+            fontSize: 17,
             fontWeight: FontWeight.w700,
+            color: profileText(context),
           ),
         ),
-        const SizedBox(height: 6),
-        const Text(
+        const SizedBox(height: 14),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final single =
+                constraints.maxWidth < 290 ||
+                MediaQuery.textScalerOf(context).scale(14) > 20;
+            return Column(
+              children: [
+                for (var i = 0; i < metrics.length; i += single ? 1 : 2) ...[
+                  if (i > 0) const SizedBox(height: 12),
+                  if (single)
+                    metrics[i]
+                  else
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: metrics[i]),
+                          const SizedBox(width: 12),
+                          Expanded(child: metrics[i + 1]),
+                        ],
+                      ),
+                    ),
+                ],
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        Text(
           'Duty hours are recorded from on-duty to off-duty. Earlier untracked time is excluded.',
-          style: TextStyle(fontSize: 12, height: 1.5, color: Color(0xFF766B7F)),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        Row(
-          children: [
-            Expanded(
-              child: _MetricCard(
-                icon: Icons.timer_outlined,
-                label: 'Hours on duty',
-                value: state.totalHoursOnline.toStringAsFixed(1),
-                unit: 'hrs',
-              ),
-            ),
-            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-            Expanded(
-              child: _MetricCard(
-                icon: Icons.attach_money,
-                label: 'Avg / Hour',
-                value: state.hasRecordedDutyTime
-                    ? 'PHP ${state.averageEarningsPerHour.toStringAsFixed(2)}'
-                    : '—',
-                unit: state.hasRecordedDutyTime ? '' : 'No recorded duty time',
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        Row(
-          children: [
-            Expanded(
-              child: _MetricCard(
-                icon: Icons.trending_up,
-                label: 'Avg / Day',
-                value: 'PHP ${state.averageEarningsPerDay.toStringAsFixed(2)}',
-                unit: '',
-              ),
-            ),
-            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-            Expanded(
-              child: _MetricCard(
-                icon: Icons.star,
-                label: 'Best Day',
-                value: state.bestDay,
-                unit: state.bestHourRange,
-              ),
-            ),
-          ],
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: 11,
+            height: 1.6,
+            color: profileMuted(context),
+          ),
         ),
       ],
     );
@@ -417,129 +454,105 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     BuildContext context,
     RiderEarningsInsightsState state,
   ) {
-    final isPositive = state.percentageChange >= 0;
-
-    return Container(
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
+    final positive = state.percentageChange >= 0;
+    final hasHistory = state.totalTrips > 0 || state.previousPeriodEarnings > 0;
+    final accent = profileDark(context)
+        ? const Color(0xFFCFACED)
+        : const Color(0xFF5F2D82);
+    return EarningsPanel(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Projections & Comparison',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           Row(
             children: [
+              Icon(Icons.auto_graph_rounded, size: 20, color: accent),
+              const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Projected Next 7 Days',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    Text(
-                      'PHP ${state.projectedEarnings.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 20),
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF5F2D82),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'vs Previous Period',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    Row(
-                      children: [
-                        Icon(
-                          isPositive
-                              ? Icons.arrow_upward
-                              : Icons.arrow_downward,
-                          color: isPositive ? Colors.green : Colors.red,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${isPositive ? '+' : ''}${state.percentageChange.toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 20),
-                            fontWeight: FontWeight.w800,
-                            color: isPositive ? Colors.green : Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                child: Text(
+                  'Looking ahead',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: profileText(context),
+                  ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          const SizedBox(height: 20),
+          Text(
+            'Projected Next 7 Days',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 12,
+              color: profileMuted(context),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'PHP ${state.projectedEarnings.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 26,
+              height: 1.3,
+              fontWeight: FontWeight.w700,
+              color: accent,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              if (hasHistory)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: (positive ? Colors.green : Colors.red).withValues(
+                      alpha: .08,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${positive ? '+' : ''}${state.percentageChange.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: positive
+                          ? const Color(0xFF27835B)
+                          : const Color(0xFFBD4357),
+                    ),
+                  ),
+                ),
+              Text(
+                hasHistory
+                    ? 'vs previous period'
+                    : 'More trips will build your forecast',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 12,
+                  color: profileMuted(context),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
           Text(
             'Previous period: PHP ${state.previousPeriodEarnings.toStringAsFixed(2)}',
             style: TextStyle(
               fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey.shade600,
+              fontSize: 11,
+              height: 1.5,
+              color: profileMuted(context),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final String label;
-
-  const _StatChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: 12,
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }
@@ -550,55 +563,63 @@ class _MetricCard extends StatelessWidget {
   final String label;
   final String value;
   final String unit;
-
   const _MetricCard({
     required this.icon,
     required this.label,
     required this.value,
     required this.unit,
   });
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
+    final accent = profileDark(context)
+        ? const Color(0xFFCFACED)
+        : const Color(0xFF5F2D82);
+    return EarningsPanel(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: const Color(0xFF5F2D82), size: 22),
-          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 11),
-              color: Colors.grey.shade600,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 17, color: accent),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 11,
+                    height: 1.4,
+                    color: profileMuted(context),
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+          const SizedBox(height: 12),
           Text(
             value,
             style: TextStyle(
               fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.w800,
-              color: Colors.black87,
+              fontSize: 20,
+              height: 1.25,
+              fontWeight: FontWeight.w700,
+              color: profileText(context),
             ),
           ),
-          if (unit.isNotEmpty)
+          if (unit.isNotEmpty) ...[
+            const SizedBox(height: 6),
             Text(
               unit,
               style: TextStyle(
                 fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: Colors.grey.shade600,
+                fontSize: 11,
+                height: 1.5,
+                color: profileMuted(context),
               ),
             ),
+          ],
         ],
       ),
     );

@@ -104,10 +104,12 @@ flutter:
     - assets/images/register/
     - assets/images/wallet/
     - assets/images/mission/
+    - assets/images/faq/
     - assets/images/navbar/riderside/
     - assets/images/navbar/merchant/
     - assets/sounds/
     - assets/images/booking/
+    - assets/images/booking/services/
 
   fonts:
     - family: TT Fors

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../widgets/main/riderside/earnings/rider_earnings_light_card.dart';
+import '../../../widgets/main/riderside/earnings/earnings_design.dart';
+import '../../../widgets/main/riderside/profile/profile_panel.dart';
 
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/receipt_generator.dart';
@@ -50,7 +51,7 @@ class RiderEarningsScreen extends ConsumerWidget {
     final lang = ref.watch(appLanguageProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: earningsCanvas(context),
       appBar: embedded == true
           ? null
           : AppBar(
@@ -111,7 +112,7 @@ class RiderEarningsScreen extends ConsumerWidget {
                   side: BorderSide(
                     color: selected
                         ? const Color(0xFF5F2D82)
-                        : const Color(0xFFE3DAEA),
+                        : const Color(0xFFEAE3F0),
                   ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -165,21 +166,16 @@ class RiderEarningsScreen extends ConsumerWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w700,
+                        color: profileText(context),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                     if (state.entries.isEmpty)
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          vertical: ResponsiveUtils.spacing(context, 32),
-                        ),
-                        child: Text(
-                          'No completed trips for ${RiderEarningsUtils.periodLabel(period).toLowerCase()}.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            color: Colors.grey.shade600,
-                          ),
+                      EarningsPanel(
+                        child: EarningsEmptyState(
+                          title: 'Ready for your next earning?',
+                          message:
+                              'No completed trips for ${RiderEarningsUtils.periodLabel(period).toLowerCase()}.\nYour completed trips will appear here.',
                         ),
                       )
                     else
@@ -203,70 +199,11 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RiderEarningsLightCard(
-      child: Padding(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Net earnings · ${RiderEarningsUtils.periodLabel(period)}',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-            Text(
-              'PHP ${summary.totalEarnings.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 32),
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _StatChip(label: '${summary.completedTrips} trips'),
-                _StatChip(
-                  label: 'Avg PHP ${summary.averagePerTrip.toStringAsFixed(2)}',
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final String label;
-
-  const _StatChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: 12,
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+    return EarningsBalanceCard(
+      title: 'Net earnings · ${RiderEarningsUtils.periodLabel(period)}',
+      total: summary.totalEarnings,
+      trips: summary.completedTrips,
+      average: summary.averagePerTrip,
     );
   }
 }
@@ -286,12 +223,30 @@ class _TripTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        color: profileDark(context) ? const Color(0xFF241D30) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: profileDark(context)
+              ? const Color(0xFF393044)
+              : const Color(0xFFEFEAF4),
+        ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF8C5CB5).withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.route_outlined,
+              size: 20,
+              color: Color(0xFF8C5CB5),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,19 +265,22 @@ class _TripTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
+                    color: profileMuted(context),
                   ),
                 ),
               ],
             ),
           ),
-          Text(
-            'PHP ${entry.earnings.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontWeight: FontWeight.w700,
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: const Color(0xFF5F2D82),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              'PHP ${entry.earnings.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontWeight: FontWeight.w700,
+                fontSize: ResponsiveUtils.fontSize(context, 14),
+                color: const Color(0xFF5F2D82),
+              ),
             ),
           ),
         ],

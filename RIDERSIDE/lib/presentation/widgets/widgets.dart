@@ -65,7 +65,6 @@ export 'main/merchantside/book/merchant_food_grid_item.dart';
 export 'main/merchantside/book/food_detail/merchant_food_detail_header.dart';
 export 'main/merchantside/book/food_detail/merchant_food_detail_content.dart';
 export 'main/merchantside/book/food_detail/merchant_food_detail_quantity_bar.dart';
-export 'main/merchantside/book/food_detail/merchant_food_detail_subtotal_row.dart';
 export 'main/merchantside/orders/merchant_order_filter_chip.dart';
 export 'main/merchantside/orders/merchant_order_card.dart';
 export 'main/merchantside/orders/merchant_order_status_panel.dart';

@@ -1,178 +1,68 @@
 import 'package:flutter/material.dart';
+import '../profile/profile_panel.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
-import '../../../../../../core/utils/responsive_utils.dart';
 
 class RiderBookingStatusButton extends StatelessWidget {
-  final BookingStatus status;
-  final bool isActive;
-  final VoidCallback? onTap;
-
   const RiderBookingStatusButton({
     super.key,
     required this.status,
     required this.isActive,
     this.onTap,
   });
-
-  static LinearGradient _gradient(BookingStatus s) {
-    switch (s) {
-      case BookingStatus.pending:
-        return const LinearGradient(
-          colors: [Color(0xFFF0F0F0), Color(0xFFDDDDDD)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.cooking:
-        return const LinearGradient(
-          colors: [Color(0xFFFF6B6B), Color(0xFFFFB3B3)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.forPickUp:
-        return const LinearGradient(
-          colors: [Color(0xFFFFE57F), Color(0xFFFFF3B0)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.forDelivery:
-        return const LinearGradient(
-          colors: [Color(0xFFFFD740), Color(0xFFFFF176)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.delivered:
-        return const LinearGradient(
-          colors: [Color(0xFF81C784), Color(0xFFC8E6C9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.toBuy:
-        return const LinearGradient(
-          colors: [Color(0xFF9B59F0), Color(0xFF5F2D82)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        );
-      case BookingStatus.onTheWay:
-        return const LinearGradient(
-          colors: [Color(0xFF42A5F5), Color(0xFF90CAF9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.onTheWayGoing:
-        return const LinearGradient(
-          colors: [Color(0xFF1E88E5), Color(0xFF64B5F6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.driverHasArrived:
-        return const LinearGradient(
-          colors: [Color(0xFFFF9800), Color(0xFFFFCC80)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.inProgress:
-        return const LinearGradient(
-          colors: [Color(0xFFAB47BC), Color(0xFFCE93D8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.complete:
-        return const LinearGradient(
-          colors: [Color(0xFF81C784), Color(0xFFC8E6C9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-      case BookingStatus.cancelled:
-        return const LinearGradient(
-          colors: [Color(0xFFEF5350), Color(0xFFEF9A9A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        );
-    }
-  }
-
-  static Color _textColor(BookingStatus s) {
-    return const Color(0xFF2D2D2D);
-  }
+  final BookingStatus status;
+  final bool isActive;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final upload = status.uploadLabel;
-    final labelFontSize = ResponsiveUtils.fontSize(context, 12);
-    final subFontSize = ResponsiveUtils.fontSize(context, 10);
-
+    final dark = profileDark(context);
+    final accent = dark ? const Color(0xFFCFACED) : const Color(0xFF63368B);
+    final enabled = isActive && onTap != null;
     return Semantics(
       button: true,
-      enabled: isActive && onTap != null,
-      label: isActive && onTap != null
-          ? 'Update booking to ${status.label}'
-          : status.label,
-      child: GestureDetector(
-        onTap: isActive ? onTap : null,
-        child: Container(
-          width: double.infinity,
-          constraints: BoxConstraints(
-            minHeight: ResponsiveUtils.spacing(context, 88),
-            minWidth: ResponsiveUtils.spacing(context, 108),
+      enabled: enabled,
+      selected: isActive,
+      child: Material(
+        color: dark
+            ? (isActive ? const Color(0xFF30233F) : const Color(0xFF241D30))
+            : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: isActive
+                ? accent
+                : (dark ? const Color(0xFF493B56) : const Color(0xFFE6DFEC)),
           ),
-          margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
-          decoration: BoxDecoration(
-            gradient: _gradient(status),
-            borderRadius: BorderRadius.circular(
-              ResponsiveUtils.spacing(context, 14),
-            ),
-            border: isActive
-                ? Border.all(color: const Color(0xFF5F2D82), width: 2)
-                : null,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.hardEdge,
-          padding: EdgeInsets.symmetric(
-            vertical: ResponsiveUtils.spacing(context, 12),
-            horizontal: ResponsiveUtils.spacing(context, 8),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                status.label.replaceAll('\n', ' '),
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: labelFontSize,
-                  fontWeight: FontWeight.w700,
-                  color: _textColor(status),
-                  height: 1.2,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  isActive
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 18,
+                  color: isActive ? accent : const Color(0xFFB1A6BB),
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                softWrap: true,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (upload != null) ...[
-                SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                const SizedBox(height: 8),
                 Text(
-                  upload,
+                  status.label.replaceAll('\n', ' '),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
-                    fontSize: subFontSize,
-                    fontWeight: FontWeight.w500,
-                    color: _textColor(status).withValues(alpha: 0.85),
-                    height: 1.2,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                    color: isActive ? accent : profileMuted(context),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  softWrap: true,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
-            ],
+            ),
           ),
         ),
       ),

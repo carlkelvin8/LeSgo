@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/app_localization.dart';
+import '../profile/profile_panel.dart';
 
 class RiderBookingDetailInfo extends ConsumerWidget {
   final RiderBooking booking;
@@ -23,7 +25,9 @@ class RiderBookingDetailInfo extends ConsumerWidget {
       await launchUrl(uri);
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalization.translate('cannot_open_dialer', lang))),
+        SnackBar(
+          content: Text(AppLocalization.translate('cannot_open_dialer', lang)),
+        ),
       );
     }
   }
@@ -31,313 +35,370 @@ class RiderBookingDetailInfo extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(appLanguageProvider);
-    final hp = ResponsiveUtils.horizontalPadding(context);
-
+    String tr(String key) => AppLocalization.translate(key, lang);
+    final dark = profileDark(context);
+    final accent = dark ? const Color(0xFFCFACED) : const Color(0xFF5F2D82);
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: hp,
-        vertical: ResponsiveUtils.spacing(context, 16),
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              _ServiceBadge(category: booking.category),
-              const Spacer(),
-              Text(
-                AppLocalization.translate('order_id', lang).replaceAll('{{id}}', '${booking.id}'),
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 13),
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
-                ),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF352047), Color(0xFF75459B)],
               ),
-            ],
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-          _SectionCard(
+              borderRadius: BorderRadius.circular(24),
+            ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 72,
+                  height: 80,
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(
-                    _isFoodOrder ? Icons.storefront : Icons.local_taxi,
-                    color: const Color(0xFF5F2D82),
-                    size: 28,
+                  child: SvgPicture.asset(
+                    'assets/images/booking/services/${booking.serviceArtwork}',
+                    fit: BoxFit.contain,
+                    excludeFromSemantics: true,
                   ),
                 ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isFoodOrder ? AppLocalization.translate('pickup', lang) : AppLocalization.translate('trip', lang),
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 11),
-                          color: Colors.grey.shade600,
-                        ),
+                        tr('order_id').replaceAll('{{id}}', booking.id),
+                        style: _textStyle(
+                          context,
+                          12,
+                        ).copyWith(color: Colors.white70),
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        booking.restaurantName,
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 15),
-                          fontWeight: FontWeight.w700,
-                        ),
+                        booking.serviceName,
+                        style: _textStyle(
+                          context,
+                          24,
+                          bold: true,
+                        ).copyWith(color: Colors.white),
                       ),
+                      if (_isFoodOrder) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          booking.restaurantName,
+                          style: _textStyle(
+                            context,
+                            13,
+                          ).copyWith(color: Colors.white),
+                        ),
+                      ],
+                      if (booking.distance != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.route_rounded,
+                              size: 14,
+                              color: Colors.white70,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                booking.distance!,
+                                style: _textStyle(
+                                  context,
+                                  12,
+                                ).copyWith(color: Colors.white70),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          const SizedBox(height: 16),
           _SectionCard(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  AppLocalization.translate('customer', lang),
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey.shade600,
-                  ),
+                _SectionTitle(
+                  icon: Icons.route_outlined,
+                  title: tr('rb_route'),
                 ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                Text(
-                  booking.customerName,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                if (booking.customerPhone != null &&
-                    booking.customerPhone!.isNotEmpty) ...[
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  InkWell(
-                    onTap: () => _callCustomer(context, lang),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Icon(Icons.phone,
-                              size: 18, color: const Color(0xFF5F2D82)),
-                          SizedBox(
-                              width: ResponsiveUtils.spacing(context, 8)),
-                          Text(
-                            booking.customerPhone!,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 14),
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF5F2D82),
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ] else
-                  Text(
-                    AppLocalization.translate('no_contact_number', lang),
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          _SectionCard(
-            child: Column(
-              children: [
+                const SizedBox(height: 16),
                 _RouteRow(
-                  icon: Icons.circle,
-                  iconColor: Colors.green,
-                  label: _isFoodOrder ? AppLocalization.translate('pick_up_from', lang) : AppLocalization.translate('pick_up_label', lang),
-                  value: booking.pickupAddress ?? 'N/A',
+                  icon: Icons.trip_origin_rounded,
+                  iconColor: const Color(0xFF27835B),
+                  label: _isFoodOrder
+                      ? tr('pick_up_from')
+                      : tr('pick_up_label'),
+                  value: booking.pickupAddress ?? tr('rb_address_unavailable'),
+                  latitude: booking.pickupLat,
+                  longitude: booking.pickupLng,
+                  pinnedLabel: tr('rb_pickup_pin'),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(
-                    left: ResponsiveUtils.spacing(context, 11),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(width: 2, height: 20, color: Colors.grey.shade300),
-                    ],
+                  padding: const EdgeInsets.only(left: 17, top: 4, bottom: 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      width: 2,
+                      height: 20,
+                      color: dark
+                          ? const Color(0xFF493B56)
+                          : const Color(0xFFE5DEEC),
+                    ),
                   ),
                 ),
                 _RouteRow(
-                  icon: Icons.place,
-                  iconColor: Colors.red,
-                  label: AppLocalization.translate('deliver_to', lang),
+                  icon: Icons.location_on_outlined,
+                  iconColor: const Color(0xFFBD4357),
+                  label: tr('deliver_to'),
                   value: booking.deliveryAddress ?? booking.address,
+                  latitude: booking.dropoffLat,
+                  longitude: booking.dropoffLng,
+                  pinnedLabel: tr('rb_dropoff_pin'),
                 ),
+                if ((booking.pickupAddress ?? '').startsWith('Map pin:') ||
+                    (booking.deliveryAddress ?? booking.address).startsWith(
+                      'Map pin:',
+                    )) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    tr('rb_pin_hint'),
+                    style: _textStyle(context, 12, muted: true),
+                  ),
+                ],
               ],
             ),
           ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          const SizedBox(height: 12),
           _SectionCard(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (booking.itemsSubtotal != null) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        AppLocalization.translate('items_subtotal', lang),
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      Text(
-                        booking.itemsSubtotal!.replaceFirst('Items subtotal ', ''),
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontWeight: FontWeight.w600,
-                          fontSize: ResponsiveUtils.fontSize(context, 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                ],
-                if (booking.deliveryFee != null) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        AppLocalization.translate('delivery_fee', lang),
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      Text(
-                        booking.deliveryFee!
-                            .replaceAll('Delivery fee ', '')
-                            .replaceAll('LesPay hold (shipping only) ', ''),
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontWeight: FontWeight.w600,
-                          fontSize: ResponsiveUtils.fontSize(context, 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                ],
+                _SectionTitle(
+                  icon: Icons.person_outline_rounded,
+                  title: tr('customer'),
+                ),
+                const SizedBox(height: 16),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      AppLocalization.translate('order_total', lang),
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontWeight: FontWeight.w700,
-                      ),
+                    CircleAvatar(
+                      radius: 21,
+                      backgroundColor: accent.withValues(alpha: .1),
+                      child: Icon(Icons.person_outline_rounded, color: accent),
                     ),
-                    Text(
-                      booking.billingAmount.replaceFirst('Order total ', ''),
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF5F2D82),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        booking.customerName,
+                        style: _textStyle(context, 16, bold: true),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                Text(
-                  booking.billingMethod,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                if (booking.earnings != null) ...[
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  Text(
-                    booking.earnings!,
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ],
-                if (booking.items != null && booking.items!.isNotEmpty) ...[
-                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                  const Divider(height: 1),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                  Text(
-                    AppLocalization.translate('items', lang),
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  ...booking.items!.expand((item) {
-                    final lines = item.split('\n');
-                    return lines.map(
-                      (line) => Padding(
-                        padding: EdgeInsets.only(
-                          bottom: ResponsiveUtils.spacing(context, 6),
+                const SizedBox(height: 10),
+                if (booking.customerPhone != null &&
+                    booking.customerPhone!.isNotEmpty)
+                  Material(
+                    color: dark
+                        ? const Color(0xFF30233F)
+                        : const Color(0xFFF6F1FA),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      onTap: () => _callCustomer(context, lang),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
                         ),
-                        child: Text(
-                          line.trimLeft().startsWith('Size:') ||
-                                  line.trimLeft().startsWith('Flavor:') ||
-                                  line.trimLeft().startsWith('Add-ons:')
-                              ? '   $line'
-                              : '• $line',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: line.trimLeft().startsWith('Size:') ||
-                                    line.trimLeft().startsWith('Flavor:') ||
-                                    line.trimLeft().startsWith('Add-ons:')
-                                ? Colors.orange.shade700
-                                : Colors.black87,
-                            fontStyle: line.contains('Size:') ||
-                                    line.contains('Flavor:') ||
-                                    line.contains('Add-ons:')
-                                ? FontStyle.italic
-                                : FontStyle.normal,
-                          ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.call_outlined, size: 20, color: accent),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                booking.customerPhone!,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: accent,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: accent,
+                              size: 20,
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  }),
+                    ),
+                  )
+                else
+                  Text(
+                    tr('no_contact_number'),
+                    style: _textStyle(context, 13, muted: true),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          _SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _SectionTitle(
+                  icon: Icons.receipt_long_outlined,
+                  title: tr('rb_payment_details'),
+                ),
+                const SizedBox(height: 18),
+                if (booking.itemsSubtotal != null) ...[
+                  _MoneyRow(
+                    label: tr('items_subtotal'),
+                    value: booking.itemsSubtotal!.replaceFirst(
+                      'Items subtotal ',
+                      '',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (booking.deliveryFee != null) ...[
+                  _MoneyRow(
+                    label: tr('delivery_fee'),
+                    value: booking.deliveryFee!
+                        .replaceAll('Delivery fee ', '')
+                        .replaceAll('LesPay hold (shipping only) ', ''),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Divider(
+                  height: 1,
+                  color: dark
+                      ? const Color(0xFF493B56)
+                      : const Color(0xFFEDE7F2),
+                ),
+                const SizedBox(height: 14),
+                _MoneyRow(
+                  label: tr('order_total'),
+                  value: booking.billingAmount.replaceFirst('Order total ', ''),
+                  prominent: true,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.payments_outlined,
+                      size: 16,
+                      color: profileMuted(context),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        booking.billingMethod,
+                        style: _textStyle(context, 12, muted: true),
+                      ),
+                    ),
+                  ],
+                ),
+                if (booking.earnings != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: dark
+                          ? const Color(0xFF30233F)
+                          : const Color(0xFFF2EDF7),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.account_balance_wallet_outlined,
+                          size: 22,
+                          color: accent,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            booking.earnings!,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              color: accent,
+                              fontSize: 15,
+                              height: 1.4,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ],
             ),
           ),
+          if (booking.items != null && booking.items!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _SectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _SectionTitle(
+                    icon: Icons.list_alt_rounded,
+                    title: tr('items'),
+                  ),
+                  const SizedBox(height: 14),
+                  ...booking.items!.expand(
+                    (item) => item.split('\n').map((line) {
+                      final detail =
+                          line.trimLeft().startsWith('Size:') ||
+                          line.trimLeft().startsWith('Flavor:') ||
+                          line.trimLeft().startsWith('Add-ons:');
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          left: detail ? 12 : 0,
+                          bottom: 6,
+                        ),
+                        child: Text(
+                          detail ? line : '• $line',
+                          style: _textStyle(context, 13, muted: detail)
+                              .copyWith(
+                                fontStyle: detail
+                                    ? FontStyle.italic
+                                    : FontStyle.normal,
+                              ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (booking.proofOfDeliveryUrls != null &&
               booking.proofOfDeliveryUrls!.isNotEmpty) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            _ProofGrid(urls: booking.proofOfDeliveryUrls!, lang: lang),
+            const SizedBox(height: 16),
+            _SectionCard(
+              child: _ProofGrid(urls: booking.proofOfDeliveryUrls!, lang: lang),
+            ),
           ],
         ],
       ),
@@ -345,48 +406,98 @@ class RiderBookingDetailInfo extends ConsumerWidget {
   }
 }
 
-class _ServiceBadge extends StatelessWidget {
-  final BookingCategory category;
-
-  const _ServiceBadge({required this.category});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        category.label,
-        style: TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: ResponsiveUtils.fontSize(context, 12),
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF5F2D82),
-        ),
-      ),
-    );
-  }
-}
+TextStyle _textStyle(
+  BuildContext context,
+  double size, {
+  bool bold = false,
+  bool muted = false,
+}) => TextStyle(
+  fontFamily: 'TT Fors',
+  fontSize: size,
+  height: 1.45,
+  fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+  color: muted ? profileMuted(context) : profileText(context),
+);
 
 class _SectionCard extends StatelessWidget {
   final Widget child;
-
   const _SectionCard({required this.child});
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: profileDark(context)
+          ? const Color(0xFF241D30)
+          : const Color(0xFFFAF8FC),
+      borderRadius: BorderRadius.circular(22),
+    ),
+    child: child,
+  );
+}
 
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.icon, required this.title});
+  final IconData icon;
+  final String title;
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(
+        icon,
+        size: 20,
+        color: profileDark(context)
+            ? const Color(0xFFCFACED)
+            : const Color(0xFF5F2D82),
+      ),
+      const SizedBox(width: 10),
+      Expanded(child: Text(title, style: _textStyle(context, 15, bold: true))),
+    ],
+  );
+}
+
+class _MoneyRow extends StatelessWidget {
+  const _MoneyRow({
+    required this.label,
+    required this.value,
+    this.prominent = false,
+  });
+  final String label;
+  final String value;
+  final bool prominent;
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+    final labelWidget = Text(
+      label,
+      style: _textStyle(context, 13, bold: prominent, muted: !prominent),
+    );
+    final valueWidget = Text(
+      value,
+      style: _textStyle(context, prominent ? 18 : 14, bold: true).copyWith(
+        color: prominent
+            ? (profileDark(context)
+                  ? const Color(0xFFCFACED)
+                  : const Color(0xFF5F2D82))
+            : null,
       ),
-      child: child,
+    );
+    if (MediaQuery.textScalerOf(context).scale(14) > 20) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [labelWidget, const SizedBox(height: 4), valueWidget],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: labelWidget),
+        const SizedBox(width: 12),
+        Flexible(
+          child: SizedBox(
+            width: double.infinity,
+            child: Align(alignment: Alignment.centerRight, child: valueWidget),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -396,20 +507,60 @@ class _RouteRow extends StatelessWidget {
   final Color iconColor;
   final String label;
   final String value;
+  final double? latitude;
+  final double? longitude;
+  final String pinnedLabel;
 
   const _RouteRow({
     required this.icon,
     required this.iconColor,
     required this.label,
     required this.value,
+    this.latitude,
+    this.longitude,
+    required this.pinnedLabel,
   });
+
+  Future<void> _openMap(BuildContext context) async {
+    final uri = Uri.https('www.google.com', '/maps/search/', {
+      'api': '1',
+      'query': '$latitude,$longitude',
+    });
+    try {
+      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
+    } catch (_) {}
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open Maps. Please try again.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final hasPin =
+        latitude != null &&
+        longitude != null &&
+        latitude!.isFinite &&
+        longitude!.isFinite &&
+        latitude!.abs() <= 90 &&
+        longitude!.abs() <= 180 &&
+        (latitude != 0 || longitude != 0);
+    final pinOnly =
+        value.trim().startsWith('Map pin:') ||
+        value.trim().startsWith('Instance of ');
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: iconColor),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: .1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 20, color: iconColor),
+        ),
         SizedBox(width: ResponsiveUtils.spacing(context, 10)),
         Expanded(
           child: Column(
@@ -419,21 +570,40 @@ class _RouteRow extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 11),
-                  color: Colors.grey.shade600,
+                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                  color: profileMuted(context),
                 ),
               ),
               Text(
-                value,
+                pinOnly && hasPin ? pinnedLabel : value,
                 style: TextStyle(
                   fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                  fontSize: ResponsiveUtils.fontSize(context, 15),
                   fontWeight: FontWeight.w600,
+                  height: 1.45,
+                  color: profileText(context),
                 ),
               ),
             ],
           ),
         ),
+        if (hasPin)
+          IconButton(
+            tooltip: 'Open in Maps',
+            onPressed: () => _openMap(context),
+            style: IconButton.styleFrom(
+              backgroundColor: profileDark(context)
+                  ? const Color(0xFF30233F)
+                  : const Color(0xFFF3EEF8),
+              foregroundColor: profileDark(context)
+                  ? const Color(0xFFCFACED)
+                  : const Color(0xFF63368B),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: const Icon(Icons.near_me_outlined, size: 20),
+          ),
       ],
     );
   }
@@ -452,10 +622,7 @@ class _ProofGrid extends StatelessWidget {
       children: [
         Text(
           AppLocalization.translate('proof_of_delivery', lang),
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontWeight: FontWeight.w700,
-          ),
+          style: _textStyle(context, 15, bold: true),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
         GridView.builder(
@@ -475,7 +642,7 @@ class _ProofGrid extends StatelessWidget {
               child: Image.network(
                 imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (context, error, stackTrace) => Container(
                   color: Colors.grey.shade200,
                   child: const Icon(Icons.broken_image),
                 ),

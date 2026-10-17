@@ -31,8 +31,18 @@ class MenuItemImageLookup {
 
 final menuItemImageLookupProvider = Provider<MenuItemImageLookup>((ref) {
   final menu = ref.watch(merchantMenuProvider).valueOrNull;
+  // The full item list also covers items currently marked unavailable,
+  // which the category payload (available_items) leaves out.
+  final allItems = ref.watch(merchantMenuItemsProvider).valueOrNull;
   final byName = <String, String>{};
   final byId = <int, String>{};
+
+  for (final menuItem in allItems ?? const <MenuItemDto>[]) {
+    final url = menuItem.imageUrl?.trim();
+    if (url == null || url.isEmpty) continue;
+    byName[menuItem.name.trim().toLowerCase()] = url;
+    byId[menuItem.id] = url;
+  }
 
   if (menu != null) {
     for (final category in menu.categories) {

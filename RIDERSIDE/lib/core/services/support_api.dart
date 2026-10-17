@@ -63,8 +63,14 @@ class RiderSupportMessage {
       id: (json['id'] as num?)?.toInt() ?? 0,
       userId: (json['user_id'] as num?)?.toInt() ?? 0,
       message: json['message']?.toString() ?? '',
-      isStaff: json['is_internal'] == true ||
-          (user is Map && user['role']?.toString() == 'admin'),
+      isStaff:
+          json['is_internal'] == true ||
+          (user is Map &&
+              const [
+                'admin',
+                'partner_admin',
+                'partner_staff',
+              ].contains(user['role']?.toString())),
       createdAt: json['created_at']?.toString() ?? '',
       authorName: user is Map ? user['name']?.toString() : null,
       attachments: attachments,
@@ -154,7 +160,9 @@ class SupportApi {
       ticket: RiderSupportTicket.fromJson(data),
       messages: messagesRaw
           .whereType<Map>()
-          .map((e) => RiderSupportMessage.fromJson(Map<String, dynamic>.from(e)))
+          .map(
+            (e) => RiderSupportMessage.fromJson(Map<String, dynamic>.from(e)),
+          )
           .toList(),
       satisfactionRating: (data['satisfaction_rating'] as num?)?.toInt(),
     );
@@ -184,9 +192,7 @@ class SupportApi {
   static Future<void> requestClose(int ticketId, {String? reason}) async {
     await _dio.post(
       ApiConstants.supportTicketClose(ticketId),
-      data: {
-        if (reason != null && reason.isNotEmpty) 'reason': reason,
-      },
+      data: {if (reason != null && reason.isNotEmpty) 'reason': reason},
     );
   }
 

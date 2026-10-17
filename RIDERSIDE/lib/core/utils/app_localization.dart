@@ -3,9 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum AppLanguage { english, filipino }
 
-final appLanguageProvider = StateNotifierProvider<AppLanguageNotifier, AppLanguage>((ref) {
-  return AppLanguageNotifier();
-});
+final appLanguageProvider =
+    StateNotifierProvider<AppLanguageNotifier, AppLanguage>((ref) {
+      return AppLanguageNotifier();
+    });
 
 class AppLanguageNotifier extends StateNotifier<AppLanguage> {
   AppLanguageNotifier() : super(AppLanguage.english) {
@@ -21,19 +22,58 @@ class AppLanguageNotifier extends StateNotifier<AppLanguage> {
   Future<void> setLanguage(AppLanguage lang) async {
     state = lang;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('app_language', lang == AppLanguage.filipino ? 'tl' : 'en');
+    await prefs.setString(
+      'app_language',
+      lang == AppLanguage.filipino ? 'tl' : 'en',
+    );
   }
 }
 
 class AppLocalization {
   static String translate(String key, AppLanguage lang) {
-    if (lang == AppLanguage.filipino && _filipinoTranslations.containsKey(key)) {
+    if (lang == AppLanguage.filipino &&
+        _filipinoTranslations.containsKey(key)) {
       return _filipinoTranslations[key]!;
     }
     return _englishTranslations[key] ?? key;
   }
 
   static const Map<String, String> _englishTranslations = {
+    'rd_verified_hint':
+        'Your documents have been verified. You can view your submissions below.',
+    'rd_review_hint':
+        'Your documents are being reviewed. Check back here for updates.',
+    'rd_action_hint':
+        'Some documents need your attention. Open a submission below to view its status and any feedback.',
+    'rd_intro_hint':
+        'Manage your documents and follow your verification progress in one place.',
+    'rd_your_documents': 'Your documents',
+    'rd_no_documents': 'No documents yet',
+    'rd_upload_hint':
+        'Upload your first document to get started with verification.',
+    'rd_upload_document': 'Upload document',
+    'rd_submitting': 'Submitting...',
+    'rd_types_unavailable':
+        'Document uploads are currently unavailable. Please try again.',
+    'rd_photo_tip':
+        'Use clear, well-lit photos. Keep the full document visible and all details readable.',
+    'rs_chat_unavailable':
+        'You are messaging our support team. An agent will reply here when available.',
+    'rs_live_agent': 'Message a support agent',
+    'rs_send': 'Send message',
+    'rs_help_title': 'How can we help?',
+    'rs_help_hint':
+        'Get help with your bookings, earnings, wallet, or account.',
+    'rs_topic_draft': 'I need help with {{topic}}.',
+    'rs_message_hint': 'Type your message...',
+    'rb_status': 'Booking status',
+    'rb_booking_details': 'Booking details',
+    'rb_route': 'Trip route',
+    'rb_payment_details': 'Payment details',
+    'rb_address_unavailable': 'Address unavailable',
+    'rb_pickup_pin': 'Pinned pickup location',
+    'rb_dropoff_pin': 'Pinned drop-off location',
+    'rb_pin_hint': 'Street address unavailable. Open the saved pin in Maps.',
     // Navigation & Tabs
     'app_name': 'LeSGo Rider',
     'bookings': 'Bookings',
@@ -74,6 +114,15 @@ class AppLocalization {
     'dark_mode': 'Dark Mode',
     'log_out': 'Log Out',
     'security': 'Security & 2FA',
+    'security_header_title': 'Keep your account safe',
+    'security_header_subtitle':
+        'Manage your password and verification documents.',
+    'security_section_protection': 'ACCOUNT PROTECTION',
+    'security_section_danger': 'DANGER ZONE',
+    'change_password_hint': 'Update the password you use to sign in',
+    'document_verification_hint': 'Upload and check your IDs and permits',
+    'deactivate_account_hint': 'Temporarily pause your account',
+    'delete_account_hint': 'Permanently remove your account and data',
     'change_password': 'Change Password',
     'deactivate_account': 'Deactivate Account',
     'delete_account': 'Delete Account',
@@ -97,8 +146,10 @@ class AppLocalization {
     'enter_address': 'Enter your address',
     'loading_referral_code': 'Loading referral code…',
     'password_updated': 'Password updated successfully.',
-    'could_not_change_password': 'Could not change password. Check your current password.',
-    'change_password_instructions': 'Enter your current password, then choose a new one.',
+    'could_not_change_password':
+        'Could not change password. Check your current password.',
+    'change_password_instructions':
+        'Enter your current password, then choose a new one.',
     'current_password': 'Current password',
     'new_password': 'New password',
     'confirm_new_password': 'Confirm new password',
@@ -131,9 +182,12 @@ class AppLocalization {
     'top_up_fee': 'Top Up (1.5% fee)',
     'top_up_fee_percent': 'Top-up fee (1.5%)',
     'complete_payment': 'Complete Payment',
-    'could_not_open_payment_page': 'Could not open payment page. Tap the button below.',
-    'payment_verification_failed': 'Payment verification failed. Try again in a moment.',
-    'pay_with_gcash_maya': 'Pay with GCash, Maya, or card via our secure checkout.',
+    'could_not_open_payment_page':
+        'Could not open payment page. Tap the button below.',
+    'payment_verification_failed':
+        'Payment verification failed. Try again in a moment.',
+    'pay_with_gcash_maya':
+        'Pay with GCash, Maya, or card via our secure checkout.',
     'amount': 'Amount',
     'amount_to_add': 'Amount to add to LesPay',
     'fee_percent': 'Fee (1.5%): PHP {{amount}}',
@@ -142,7 +196,8 @@ class AppLocalization {
     'continue_to_payment': 'Continue to payment',
     'open_payment_page': 'Open payment page',
     'finish_payment_in_browser': 'Finish payment in your browser...',
-    'open_payment_page_desc': 'Open the payment page, complete payment, then confirm below.',
+    'open_payment_page_desc':
+        'Open the payment page, complete payment, then confirm below.',
     'i_completed_payment': "I've completed payment",
     'completed_payment': 'Payment completed',
     'payment_failed': 'Payment failed',
@@ -221,7 +276,8 @@ class AppLocalization {
     'cancel_order': 'Cancel Order',
     'keep_order': 'Keep Order',
     'reason_for_cancellation': 'Reason for cancellation',
-    'please_provide_reason': 'Please provide a reason for cancelling this order.',
+    'please_provide_reason':
+        'Please provide a reason for cancelling this order.',
     'upload_proof_delivery': 'Upload Proof of Delivery',
     'take_photos_or_gallery': 'Take photos or select from gallery',
     'max_5_images': 'Max 5 images • JPG, PNG • Max 5MB each',
@@ -234,8 +290,10 @@ class AppLocalization {
     'maximum_5_images': 'Maximum 5 images allowed',
     'failed_to_take_photo': 'Failed to take photo: {{error}}',
     'failed_to_pick_images': 'Failed to pick images: {{error}}',
-    'camera_permission_required': 'Camera permission is required to take photos',
-    'camera_permission_denied': 'Camera permission is permanently denied. Open Settings to enable it.',
+    'camera_permission_required':
+        'Camera permission is required to take photos',
+    'camera_permission_denied':
+        'Camera permission is permanently denied. Open Settings to enable it.',
     'proof_images_uploaded': 'Proof images uploaded successfully!',
     'status_updated_to': 'Status updated to {{status}}',
     'order_cancelled': 'Order cancelled.',
@@ -246,12 +304,17 @@ class AppLocalization {
     'confirm_cash_collection': 'Confirm cash collection',
     'cash_collected': 'Cash collected',
     'not_yet': 'Not yet',
-    'order_already_picked_up': 'Order has already been picked up. Cannot go back to In Progress.',
-    'order_already_picked_up_skip': 'Order has already been picked up. This status was skipped.',
-    'order_already_picked_up_tap': 'Order is already picked up. Tap Complete to finish.',
-    'order_already_picked_up_tap_delivered': 'Order is already picked up. Tap Delivered/Complete to finish.',
+    'order_already_picked_up':
+        'Order has already been picked up. Cannot go back to In Progress.',
+    'order_already_picked_up_skip':
+        'Order has already been picked up. This status was skipped.',
+    'order_already_picked_up_tap':
+        'Order is already picked up. Tap Complete to finish.',
+    'order_already_picked_up_tap_delivered':
+        'Order is already picked up. Tap Delivered/Complete to finish.',
     'order_must_be_accepted': 'Order must be accepted first',
-    'order_must_be_accepted_or_arrived': 'Order must be accepted or driver must have arrived first',
+    'order_must_be_accepted_or_arrived':
+        'Order must be accepted or driver must have arrived first',
     'order_must_be_picked_up_first': 'Order must be picked up first',
     'invalid_order_id': 'Invalid order ID',
     'failed_to_load_bookings': 'Failed to load bookings',
@@ -273,7 +336,8 @@ class AppLocalization {
     'trip': 'Trip',
     'order_accepted_id': 'Order #{{id}} accepted!',
     'status_set_automatically': '{{status}} status is set automatically',
-    'cod_confirm_hint': 'Only confirm after you have received the cash from the customer.',
+    'cod_confirm_hint':
+        'Only confirm after you have received the cash from the customer.',
     'uploading_images': 'Uploading...',
     'upload_images_count': 'Upload {{count}} Image(s)',
     'you_are_off_duty_short': 'You are OFF DUTY',
@@ -288,12 +352,16 @@ class AppLocalization {
     'go_off_duty_question': 'Go Off Duty?',
     'attendance_photo': 'Attendance Photo',
     'open_camera': 'Open Camera',
-    'attendance_photo_uploaded': 'Attendance photo uploaded. You are now ON DUTY.',
-    'need_attendance_photo': 'An attendance photo is required before going ON DUTY. Please open the camera.',
-    'may_active_order': 'You still have an active order. Please complete it before going OFF DUTY.',
+    'attendance_photo_uploaded':
+        'Attendance photo uploaded. You are now ON DUTY.',
+    'need_attendance_photo':
+        'An attendance photo is required before going ON DUTY. Please open the camera.',
+    'may_active_order':
+        'You still have an active order. Please complete it before going OFF DUTY.',
     'confirm_go_off_duty': 'Are you sure you want to go OFF DUTY?',
     'on_duty_semantics': 'On duty. Double tap to go off duty',
-    'off_duty_semantics': 'Off duty. Double tap to go on duty with attendance photo',
+    'off_duty_semantics':
+        'Off duty. Double tap to go on duty with attendance photo',
     'uploading': 'UPLOADING...',
     'on_duty_label': 'ON DUTY',
     'off_duty_label': 'OFF DUTY',
@@ -336,7 +404,8 @@ class AppLocalization {
     'all_marked_read': 'All notifications marked as read',
     'no_notifications': 'No notifications yet',
     'order_updates': 'Order updates',
-    'new_bookings_status_changes': 'New bookings, status changes, cancellations',
+    'new_bookings_status_changes':
+        'New bookings, status changes, cancellations',
     'promotions_offers': 'Promotions & offers',
     'daily_promo_alerts': 'Daily promos and voucher alerts',
 
@@ -344,15 +413,18 @@ class AppLocalization {
     'safety_sos': 'Safety & SOS',
     'sos_emergency_alert': 'SOS EMERGENCY ALERT',
     'panic_button_sos': 'PANIC BUTTON — SOS',
-    'panic_button_desc': 'Press the panic button to instantly share your location with emergency contacts via SMS.',
+    'panic_button_desc':
+        'Press the panic button to instantly share your location with emergency contacts via SMS.',
     'send_sos_alert': 'Send SOS Alert?',
     'send_sos': 'SEND SOS',
     'sos_sent': 'SOS sent. Location: {{lat}}, {{lng}}',
-    'your_location_sent': 'Your current location will be sent via SMS to emergency contacts.',
+    'your_location_sent':
+        'Your current location will be sent via SMS to emergency contacts.',
     'could_not_get_location': 'Could not get current location.',
     'could_not_get_location_gps': 'Could not get location. Please enable GPS.',
     'emergency': 'Emergency',
-    'if_immediate_danger': 'If you are in immediate danger, call emergency services right away.',
+    'if_immediate_danger':
+        'If you are in immediate danger, call emergency services right away.',
     'call_support': 'Call {{number}}',
     'lesgo_rider_support': 'LeSgo Support',
     'report_incidents': 'Chat or call admin support — not a phone hotline',
@@ -371,14 +443,16 @@ class AppLocalization {
     'share_live_location': 'Share live location',
     'cannot_open_dialer': 'Cannot open phone dialer',
     'safety_tips': 'Safety Tips',
-    'safety_tips_list': 'Verify order details, avoid unsafe areas at night, wear helmet',
+    'safety_tips_list':
+        'Verify order details, avoid unsafe areas at night, wear helmet',
     'tip_verify_order': 'Verify order details before pickup',
     'tip_avoid_unsafe': 'Avoid unsafe areas, especially at night',
     'tip_wear_helmet': 'Always wear your helmet',
     'tip_lock_vehicle': 'Lock your vehicle when unattended',
     'tip_keep_phone_charged': 'Keep your phone charged and accessible',
     'tip_share_location': 'Share your live location with trusted contacts',
-    'tip_report_suspicious': 'Report any suspicious behavior to support immediately',
+    'tip_report_suspicious':
+        'Report any suspicious behavior to support immediately',
 
     // Performance
     'performance': 'Performance',
@@ -490,23 +564,35 @@ class AppLocalization {
     'unknown': 'unknown',
 
     // Deactivate / Delete Account
+    'deactivate_break_title': 'Taking a break?',
+    'deactivate_confirm_title': 'Confirm your request',
+    'keep_my_account': 'Keep my account',
     'deactivate_account_question': 'Deactivate account?',
     'deactivate': 'Deactivate',
-    'deactivating_signs_out': 'Deactivating your account signs you out and hides your profile. You can reactivate by logging back in.',
+    'deactivating_signs_out':
+        'Deactivating your account signs you out and hides your profile. You can reactivate by logging back in.',
     'password_required': 'Password is required',
     'confirm_password': 'Confirm password',
     'reason_optional': 'Reason (optional)',
     'i_understand_deactivate': 'I understand my account will be deactivated.',
-    'could_not_deactivate': 'Could not deactivate account. Check your password.',
+    'could_not_deactivate':
+        'Could not deactivate account. Check your password.',
+    'delete_warning_title': 'This action is permanent',
     'delete_account_question': 'Delete account permanently?',
     'delete_forever': 'Delete forever',
-    'permanent_deletion': 'Permanent deletion removes your personal data, documents, and all associated information. This action is irreversible.',
+    'permanent_deletion':
+        'Permanent deletion removes your personal data, documents, and all associated information. This action is irreversible.',
     'type_delete_to_confirm': 'Type DELETE to confirm',
-    'i_understand_delete': 'I understand my account and personal data will be permanently deleted.',
-    'could_not_delete': 'Could not delete account. Check your password and try again.',
-    'confirm_understand_action': 'Please confirm that you understand this action.',
-    'confirm_understand_permanent': 'Please confirm that you understand this action is permanent.',
-    'deactivate_dialog_message': 'Your account will be deactivated and you will be signed out. Contact support if you need to reactivate later.',
+    'i_understand_delete':
+        'I understand my account and personal data will be permanently deleted.',
+    'could_not_delete':
+        'Could not delete account. Check your password and try again.',
+    'confirm_understand_action':
+        'Please confirm that you understand this action.',
+    'confirm_understand_permanent':
+        'Please confirm that you understand this action is permanent.',
+    'deactivate_dialog_message':
+        'Your account will be deactivated and you will be signed out. Contact support if you need to reactivate later.',
     'account_deactivated': 'Your account has been deactivated.',
     'account_deleted': 'Your account has been permanently deleted.',
 
@@ -553,7 +639,8 @@ class AppLocalization {
     'rp_rider': 'Rider',
     'rp_change_photo': 'Change profile photo',
     'rp_photo_failed': 'Could not update your photo. Please try again.',
-    'rp_refresh_error': 'Could not refresh your profile. Showing available details.',
+    'rp_refresh_error':
+        'Could not refresh your profile. Showing available details.',
     'rp_details': 'Personal details',
     'rp_vehicle': 'Vehicle',
     'rp_not_added': 'Not added yet',
@@ -563,8 +650,19 @@ class AppLocalization {
     'rp_missions_count': '{count} missions underway',
     'rp_password_hint': 'Update your sign-in password',
     'password_security_heading': 'Keep your account secure',
-    'password_requirements_hint': 'Use at least 8 characters with uppercase and lowercase letters, and a number.',
+    'password_requirements_hint':
+        'Use at least 8 characters with uppercase and lowercase letters, and a number.',
     'password_field_hint': 'Enter password',
+    'doc_status_label': 'Status',
+    'doc_status_not_started': 'Not started',
+    'doc_status_pending': 'Awaiting review',
+    'doc_status_under_review': 'Under review',
+    'doc_status_approved': 'Approved',
+    'doc_status_verified': 'Verified',
+    'doc_status_rejected': 'Rejected',
+    'doc_status_action_required': 'Action required',
+    'doc_status_expired': 'Expired',
+    'doc_status_unknown': 'Status unavailable',
     'show_password': 'Show password',
     'hide_password': 'Hide password',
     'rp_security_hint': 'Manage your account protection',
@@ -578,9 +676,11 @@ class AppLocalization {
     'wallet_balance_hidden': 'Balance hidden',
     'wallet_refresh': 'Refresh balance',
     'wallet_topup_notice': 'Top up to receive bookings',
-    'wallet_minimum_notice': 'A minimum balance of PHP {amount} is required to accept new bookings.',
+    'wallet_minimum_notice':
+        'A minimum balance of PHP {amount} is required to accept new bookings.',
     'wallet_refresh_failed': 'Could not refresh your wallet',
-    'wallet_refresh_hint': 'Your balance may be out of date. Check your connection and try again.',
+    'wallet_refresh_hint':
+        'Your balance may be out of date. Check your connection and try again.',
     'wallet_quick_actions': 'Quick actions',
     'wallet_topup_methods': 'Add funds with GCash, Maya, or card',
     'wallet_history_subtitle': 'View your credits and withdrawals',
@@ -661,6 +761,42 @@ class AppLocalization {
   };
 
   static const Map<String, String> _filipinoTranslations = {
+    'rd_verified_hint':
+        'Na-verify na ang iyong mga dokumento. Makikita mo sa ibaba ang iyong mga isinumite.',
+    'rd_review_hint':
+        'Sinusuri ang iyong mga dokumento. Balikan ito para sa mga update.',
+    'rd_action_hint':
+        'May mga dokumentong kailangan mong ayusin. Buksan ang isinumite para makita ang status at feedback.',
+    'rd_intro_hint':
+        'Pamahalaan ang iyong mga dokumento at subaybayan ang verification dito.',
+    'rd_your_documents': 'Iyong mga dokumento',
+    'rd_no_documents': 'Wala pang dokumento',
+    'rd_upload_hint':
+        'I-upload ang iyong unang dokumento para simulan ang verification.',
+    'rd_upload_document': 'Mag-upload ng dokumento',
+    'rd_submitting': 'Isinusumite...',
+    'rd_types_unavailable':
+        'Hindi available ang pag-upload ngayon. Pakisubukan muli.',
+    'rd_photo_tip':
+        'Gumamit ng malinaw at maliwanag na larawan. Ipakita ang buong dokumento at tiyaking nababasa ang lahat ng detalye.',
+    'rs_chat_unavailable':
+        'Direkta kang nagme-message sa support team. Dito sasagot ang agent kapag available.',
+    'rs_live_agent': 'Mag-message sa support agent',
+    'rs_send': 'Ipadala ang mensahe',
+    'rs_help_title': 'Paano kami makakatulong?',
+    'rs_help_hint':
+        'Humingi ng tulong tungkol sa booking, kita, wallet, o account.',
+    'rs_topic_draft': 'Kailangan ko ng tulong sa {{topic}}.',
+    'rs_message_hint': 'Isulat ang iyong mensahe...',
+    'rb_status': 'Status ng booking',
+    'rb_booking_details': 'Detalye ng booking',
+    'rb_route': 'Ruta ng biyahe',
+    'rb_payment_details': 'Detalye ng bayad',
+    'rb_address_unavailable': 'Walang address',
+    'rb_pickup_pin': 'Naka-pin na pickup location',
+    'rb_dropoff_pin': 'Naka-pin na drop-off location',
+    'rb_pin_hint':
+        'Walang street address. Buksan ang naka-save na pin sa Maps.',
     // Navigation & Tabs
     'app_name': 'LeSGo Rider',
     'bookings': 'Mga Booking',
@@ -701,6 +837,16 @@ class AppLocalization {
     'dark_mode': 'Dark Mode',
     'log_out': 'Log Out',
     'security': 'Seguridad at 2FA',
+    'security_header_title': 'Panatilihing ligtas ang account mo',
+    'security_header_subtitle':
+        'Pamahalaan ang password at mga dokumento ng beripikasyon.',
+    'security_section_protection': 'PROTEKSYON NG ACCOUNT',
+    'security_section_danger': 'DELIKADONG BAHAGI',
+    'change_password_hint': 'Palitan ang password na gamit mo sa pag-sign in',
+    'document_verification_hint':
+        'Mag-upload at tingnan ang iyong mga ID at permit',
+    'deactivate_account_hint': 'Pansamantalang i-pause ang account mo',
+    'delete_account_hint': 'Permanenteng burahin ang account at data mo',
     'change_password': 'Palitan ang Password',
     'deactivate_account': 'I-deactivate ang Account',
     'delete_account': 'Burahin ang Account',
@@ -724,8 +870,10 @@ class AppLocalization {
     'enter_address': 'Ilagay ang iyong address',
     'loading_referral_code': 'Nilo-load ang referral code…',
     'password_updated': 'Matagumpay na na-update ang password.',
-    'could_not_change_password': 'Hindi mapalitan ang password. Suriin ang iyong kasalukuyang password.',
-    'change_password_instructions': 'Ilagay ang iyong kasalukuyang password, pagkatapos ay pumili ng bago.',
+    'could_not_change_password':
+        'Hindi mapalitan ang password. Suriin ang iyong kasalukuyang password.',
+    'change_password_instructions':
+        'Ilagay ang iyong kasalukuyang password, pagkatapos ay pumili ng bago.',
     'current_password': 'Kasalukuyang password',
     'new_password': 'Bagong password',
     'confirm_new_password': 'Kumpirmahin ang bagong password',
@@ -758,9 +906,12 @@ class AppLocalization {
     'top_up_fee': 'Top Up (1.5% fee)',
     'top_up_fee_percent': 'Top-up fee (1.5%)',
     'complete_payment': 'Kumpletuhin ang Pagbabayad',
-    'could_not_open_payment_page': 'Hindi mabuksan ang payment page. I-tap ang button sa ibaba.',
-    'payment_verification_failed': 'Bigo ang payment verification. Subukan muli sa ilang sandali.',
-    'pay_with_gcash_maya': 'Magbayad gamit ang GCash, Maya, o card sa pamamagitan ng aming secure checkout.',
+    'could_not_open_payment_page':
+        'Hindi mabuksan ang payment page. I-tap ang button sa ibaba.',
+    'payment_verification_failed':
+        'Bigo ang payment verification. Subukan muli sa ilang sandali.',
+    'pay_with_gcash_maya':
+        'Magbayad gamit ang GCash, Maya, o card sa pamamagitan ng aming secure checkout.',
     'amount': 'Halaga',
     'amount_to_add': 'Halaga na idadagdag sa LesPay',
     'fee_percent': 'Fee (1.5%): PHP {{amount}}',
@@ -769,7 +920,8 @@ class AppLocalization {
     'continue_to_payment': 'Magpatuloy sa pagbabayad',
     'open_payment_page': 'Buksan ang payment page',
     'finish_payment_in_browser': 'Tapusin ang pagbabayad sa iyong browser...',
-    'open_payment_page_desc': 'Buksan ang payment page, kumpletuhin ang pagbabayad, pagkatapos ay kumpirmahin sa ibaba.',
+    'open_payment_page_desc':
+        'Buksan ang payment page, kumpletuhin ang pagbabayad, pagkatapos ay kumpirmahin sa ibaba.',
     'i_completed_payment': 'Natapos ko na ang pagbabayad',
     'completed_payment': 'Kumpleto ang pagbabayad',
     'payment_failed': 'Bigo ang pagbabayad',
@@ -795,7 +947,8 @@ class AppLocalization {
     'minimum_withdrawal_10': 'Minimum na withdrawal ay PHP 10.00',
     'insufficient_balance': 'Hindi sapat ang balanse',
     'withdraw_via_xendit': 'Mag-withdraw sa pamamagitan ng PayMongo',
-    'amount_sent': 'PHP {{amount}} naipadala sa iyong {{provider}} sa pamamagitan ng PayMongo.',
+    'amount_sent':
+        'PHP {{amount}} naipadala sa iyong {{provider}} sa pamamagitan ng PayMongo.',
     'withdrawal_failed': 'Bigo ang withdrawal. Pakisubukan muli.',
     'gcash': 'GCash',
     'maya': 'Maya',
@@ -840,29 +993,36 @@ class AppLocalization {
     'route_to_dropoff': 'Ruta papuntang Dropoff Location',
     'pick_up_from_merchant': 'Kunin mula sa merchant',
     'deliver_to_customer': 'Ihatid sa customer',
-    'your_current_location': 'Ang iyong kasalukuyang lokasyon ay ipinapakita sa mapa.',
-    'you_are_off_duty': 'Ikaw ay OFF DUTY - buksan para makatanggap ng mga order',
+    'your_current_location':
+        'Ang iyong kasalukuyang lokasyon ay ipinapakita sa mapa.',
+    'you_are_off_duty':
+        'Ikaw ay OFF DUTY - buksan para makatanggap ng mga order',
     'you_are_on_duty': 'Ikaw ay ON DUTY at tumatanggap ng mga order',
     'order_id': 'Order #{{id}}',
     'view_details_track': 'Tingnan ang Detalye at I-track',
     'cancel_order': 'Kanselahin ang Order',
     'keep_order': 'Panatilihin ang Order',
     'reason_for_cancellation': 'Dahilan ng pagkansela',
-    'please_provide_reason': 'Mangyaring magbigay ng dahilan para sa pagkansela ng order na ito.',
+    'please_provide_reason':
+        'Mangyaring magbigay ng dahilan para sa pagkansela ng order na ito.',
     'upload_proof_delivery': 'Mag-upload ng Proof of Delivery',
     'take_photos_or_gallery': 'Kumuha ng litrato o pumili mula sa gallery',
     'max_5_images': 'Max 5 images • JPG, PNG • Max 5MB bawat isa',
     'camera': 'Kamera',
     'gallery': 'Gallery',
     'minimum_1_photo_required': 'Kinakailangan ng hindi bababa sa 1 larawan',
-    'please_select_at_least_one_image': 'Mangyaring pumili ng hindi bababa sa isang larawan',
-    'all_images_too_large': 'Ang lahat ng mga imahe ay masyadong malaki (max 25MB bawat isa)',
+    'please_select_at_least_one_image':
+        'Mangyaring pumili ng hindi bababa sa isang larawan',
+    'all_images_too_large':
+        'Ang lahat ng mga imahe ay masyadong malaki (max 25MB bawat isa)',
     'image_too_large': 'Masyadong malaki ang imahe: {{name}} (max 25MB)',
     'maximum_5_images': 'Maximum na 5 imahe ang pinapayagan',
     'failed_to_take_photo': 'Bigo kumuha ng litrato: {{error}}',
     'failed_to_pick_images': 'Bigo pumili ng mga imahe: {{error}}',
-    'camera_permission_required': 'Kinakailangan ang camera permission para kumuha ng mga litrato',
-    'camera_permission_denied': 'Ang camera permission ay permanenteng tinanggihan. Buksan ang Settings para paganahin ito.',
+    'camera_permission_required':
+        'Kinakailangan ang camera permission para kumuha ng mga litrato',
+    'camera_permission_denied':
+        'Ang camera permission ay permanenteng tinanggihan. Buksan ang Settings para paganahin ito.',
     'proof_images_uploaded': 'Matagumpay na na-upload ang proof images!',
     'status_updated_to': 'Na-update ang status sa {{status}}',
     'order_cancelled': 'Nakansela ang order.',
@@ -873,17 +1033,23 @@ class AppLocalization {
     'confirm_cash_collection': 'Kumpirmahin ang cash collection',
     'cash_collected': 'Cash na nakolekta',
     'not_yet': 'Hindi pa',
-    'order_already_picked_up': 'Na-pick up na ang order. Hindi na maaaring bumalik sa In Progress.',
-    'order_already_picked_up_skip': 'Na-pick up na ang order. Na-skip ang status na ito.',
-    'order_already_picked_up_tap': 'Na-pick up na ang order. I-tap ang Complete para tapusin.',
-    'order_already_picked_up_tap_delivered': 'Na-pick up na ang order. I-tap ang Delivered/Complete para tapusin.',
+    'order_already_picked_up':
+        'Na-pick up na ang order. Hindi na maaaring bumalik sa In Progress.',
+    'order_already_picked_up_skip':
+        'Na-pick up na ang order. Na-skip ang status na ito.',
+    'order_already_picked_up_tap':
+        'Na-pick up na ang order. I-tap ang Complete para tapusin.',
+    'order_already_picked_up_tap_delivered':
+        'Na-pick up na ang order. I-tap ang Delivered/Complete para tapusin.',
     'order_must_be_accepted': 'Dapat munang tanggapin ang order',
-    'order_must_be_accepted_or_arrived': 'Dapat munang tanggapin ang order o dapat dumating muna ang driver',
+    'order_must_be_accepted_or_arrived':
+        'Dapat munang tanggapin ang order o dapat dumating muna ang driver',
     'order_must_be_picked_up_first': 'Dapat munang i-pick up ang order',
     'invalid_order_id': 'Hindi wastong order ID',
     'failed_to_load_bookings': 'Bigo i-load ang mga booking',
     'no_available_bookings': 'Walang available na booking',
-    'new_bookings_will_appear': 'Lalabas dito ang mga bagong booking kapag available',
+    'new_bookings_will_appear':
+        'Lalabas dito ang mga bagong booking kapag available',
     'updating_bookings': 'Ina-update ang mga booking...',
     'available_orders': 'Mga Available na Order',
     'booking_from': 'Booking mula sa',
@@ -899,12 +1065,15 @@ class AppLocalization {
     'proof_of_delivery': 'Proof of delivery',
     'trip': 'Biyahe',
     'order_accepted_id': 'Tinanggap ang Order #{{id}}!',
-    'status_set_automatically': 'Awtomatikong itinakda ang status na {{status}}',
-    'cod_confirm_hint': 'Kumpirmahin lamang pagkatapos mong matanggap ang cash mula sa customer.',
+    'status_set_automatically':
+        'Awtomatikong itinakda ang status na {{status}}',
+    'cod_confirm_hint':
+        'Kumpirmahin lamang pagkatapos mong matanggap ang cash mula sa customer.',
     'uploading_images': 'Ina-upload...',
     'upload_images_count': 'I-upload ang {{count}} Larawan',
     'you_are_off_duty_short': 'Ikaw ay OFF DUTY',
-    'turn_on_duty_to_receive': 'Buksan ang ON DUTY para makatanggap ng mga booking',
+    'turn_on_duty_to_receive':
+        'Buksan ang ON DUTY para makatanggap ng mga booking',
     'no_available_orders_now': 'Walang available na order sa ngayon',
     'no_demand_zones_available':
         'Walang demand zones — mag-ON DUTY at maghintay ng available orders.',
@@ -915,12 +1084,16 @@ class AppLocalization {
     'go_off_duty_question': 'Mag-OFF DUTY?',
     'attendance_photo': 'Attendance Photo',
     'open_camera': 'Buksan ang Kamera',
-    'attendance_photo_uploaded': 'Attendance photo na-upload. Naka ON DUTY ka na.',
-    'need_attendance_photo': 'Kailangan ng attendance photo bago maging ON DUTY. Pakiusap buksan ang camera.',
-    'may_active_order': 'May active order ka pa. Pakiusap tapusin muna bago mag OFF DUTY.',
+    'attendance_photo_uploaded':
+        'Attendance photo na-upload. Naka ON DUTY ka na.',
+    'need_attendance_photo':
+        'Kailangan ng attendance photo bago maging ON DUTY. Pakiusap buksan ang camera.',
+    'may_active_order':
+        'May active order ka pa. Pakiusap tapusin muna bago mag OFF DUTY.',
     'confirm_go_off_duty': 'Sigurado ka bang gusto mong mag-OFF DUTY?',
     'on_duty_semantics': 'Naka on duty. I-double tap para mag-off duty',
-    'off_duty_semantics': 'Naka off duty. I-double tap para mag-on duty gamit ang attendance photo',
+    'off_duty_semantics':
+        'Naka off duty. I-double tap para mag-on duty gamit ang attendance photo',
     'uploading': 'INA-UPLOAD...',
     'on_duty_label': 'ON DUTY',
     'off_duty_label': 'OFF DUTY',
@@ -963,7 +1136,8 @@ class AppLocalization {
     'all_marked_read': 'Lahat ng notipikasyon ay minarkahan bilang nabasa',
     'no_notifications': 'Wala pang notipikasyon',
     'order_updates': 'Mga update sa order',
-    'new_bookings_status_changes': 'Mga bagong booking, pagbabago ng status, pagkansela',
+    'new_bookings_status_changes':
+        'Mga bagong booking, pagbabago ng status, pagkansela',
     'promotions_offers': 'Mga promosyon at alok',
     'daily_promo_alerts': 'Araw-araw na promo at voucher alerts',
 
@@ -971,18 +1145,23 @@ class AppLocalization {
     'safety_sos': 'Kaligtasan at SOS',
     'sos_emergency_alert': 'SOS EMERGENCY ALERT',
     'panic_button_sos': 'PANIC BUTTON — SOS',
-    'panic_button_desc': 'Pindutin ang panic button para agad na ibahagi ang iyong lokasyon sa mga emergency contact sa pamamagitan ng SMS.',
+    'panic_button_desc':
+        'Pindutin ang panic button para agad na ibahagi ang iyong lokasyon sa mga emergency contact sa pamamagitan ng SMS.',
     'send_sos_alert': 'Magpadala ng SOS Alert?',
     'send_sos': 'MAGPADALA NG SOS',
     'sos_sent': 'Naipadala ang SOS. Lokasyon: {{lat}}, {{lng}}',
-    'your_location_sent': 'Ang iyong kasalukuyang lokasyon ay ipapadala sa pamamagitan ng SMS sa mga emergency contact.',
+    'your_location_sent':
+        'Ang iyong kasalukuyang lokasyon ay ipapadala sa pamamagitan ng SMS sa mga emergency contact.',
     'could_not_get_location': 'Hindi makuha ang kasalukuyang lokasyon.',
-    'could_not_get_location_gps': 'Hindi makuha ang lokasyon. Pakibuksan ang GPS.',
+    'could_not_get_location_gps':
+        'Hindi makuha ang lokasyon. Pakibuksan ang GPS.',
     'emergency': 'Emergency',
-    'if_immediate_danger': 'Kung ikaw ay nasa agarang panganib, tumawag agad sa emergency services.',
+    'if_immediate_danger':
+        'Kung ikaw ay nasa agarang panganib, tumawag agad sa emergency services.',
     'call_support': 'Tumawag sa {{number}}',
     'lesgo_rider_support': 'LeSgo Support',
-    'report_incidents': 'Makipag-chat o humiling ng tawag sa admin — hindi phone hotline',
+    'report_incidents':
+        'Makipag-chat o humiling ng tawag sa admin — hindi phone hotline',
     'chat_admin_support': 'Mag-chat sa admin',
     'call_admin_support': 'Humiling ng tawag sa admin',
     'admin_support_chat_subtitle': 'Mag-message sa admin team sa app',
@@ -990,14 +1169,18 @@ class AppLocalization {
     'share_live_location': 'I-share ang live location',
     'cannot_open_dialer': 'Hindi mabuksan ang phone dialer',
     'safety_tips': 'Mga Safety Tip',
-    'safety_tips_list': 'I-verify ang order details, iwasan ang mga delikadong lugar sa gabi, magsuot ng helmet',
+    'safety_tips_list':
+        'I-verify ang order details, iwasan ang mga delikadong lugar sa gabi, magsuot ng helmet',
     'tip_verify_order': 'I-verify ang order details bago mag-pickup',
     'tip_avoid_unsafe': 'Iwasan ang mga delikadong lugar, lalo na sa gabi',
     'tip_wear_helmet': 'Palaging magsuot ng helmet',
     'tip_lock_vehicle': 'I-lock ang iyong sasakyan kapag hindi ginagamit',
-    'tip_keep_phone_charged': 'Panatilihing naka-charge at accessible ang iyong telepono',
-    'tip_share_location': 'Ibahagi ang iyong live location sa mga pinagkakatiwalaang contact',
-    'tip_report_suspicious': 'Iulat agad ang anumang kahina-hinalang pag-uugali sa suporta',
+    'tip_keep_phone_charged':
+        'Panatilihing naka-charge at accessible ang iyong telepono',
+    'tip_share_location':
+        'Ibahagi ang iyong live location sa mga pinagkakatiwalaang contact',
+    'tip_report_suspicious':
+        'Iulat agad ang anumang kahina-hinalang pag-uugali sa suporta',
 
     // Performance
     'performance': 'Performance',
@@ -1040,7 +1223,8 @@ class AppLocalization {
     'scheduled_availability': 'Naka-iskedyul na Availability',
     'add_schedule': 'Magdagdag ng Iskedyul',
     'no_schedules_yet': 'Wala pang iskedyul',
-    'tap_to_add_availability': 'I-tap ang + para idagdag ang iyong availability',
+    'tap_to_add_availability':
+        'I-tap ang + para idagdag ang iyong availability',
     'active': 'Aktibo',
     'inactive': 'Hindi Aktibo',
 
@@ -1051,7 +1235,8 @@ class AppLocalization {
     'add_vehicle': 'Magdagdag ng Sasakyan',
     'edit_vehicle': 'I-edit ang Sasakyan',
     'remove_vehicle': 'Tanggalin ang Sasakyan',
-    'are_you_sure_remove_vehicle': 'Sigurado ka bang gusto mong tanggalin ang {{model}}?',
+    'are_you_sure_remove_vehicle':
+        'Sigurado ka bang gusto mong tanggalin ang {{model}}?',
     'vehicle_added': 'Matagumpay na naidagdag ang sasakyan',
     'vehicle_updated': 'Matagumpay na na-update ang sasakyan',
     'failed_save_vehicle': 'Bigo i-save ang sasakyan',
@@ -1103,29 +1288,43 @@ class AppLocalization {
     'document_number': 'Numero ng dokumento',
     'notes_optional': 'Mga tala (opsyonal)',
     'attach_photos_required': 'Mag-attach ng mga larawan (kinakailangan)',
-    'attach_new_photos_required': 'Mag-attach ng mga bagong larawan (kinakailangan)',
+    'attach_new_photos_required':
+        'Mag-attach ng mga bagong larawan (kinakailangan)',
     'number_label': 'Numero: {{number}}',
     'reason_label': 'Dahilan: {{reason}}',
     'unknown': 'hindi alam',
 
     // Deactivate / Delete Account
+    'deactivate_break_title': 'Magpapahinga muna?',
+    'deactivate_confirm_title': 'Kumpirmahin ang iyong kahilingan',
+    'keep_my_account': 'Panatilihin ang aking account',
     'deactivate_account_question': 'I-deactivate ang account?',
     'deactivate': 'I-deactivate',
-    'deactivating_signs_out': 'Ang pag-deactivate ng iyong account ay magla-log out sa iyo at itatago ang iyong profile. Maaari mong i-reactivate sa pamamagitan ng pag-log in muli.',
+    'deactivating_signs_out':
+        'Ang pag-deactivate ng iyong account ay magla-log out sa iyo at itatago ang iyong profile. Maaari mong i-reactivate sa pamamagitan ng pag-log in muli.',
     'password_required': 'Kinakailangan ang password',
     'confirm_password': 'Kumpirmahin ang password',
     'reason_optional': 'Dahilan (opsyonal)',
-    'i_understand_deactivate': 'Nauunawaan ko na ang aking account ay ide-deactivate.',
-    'could_not_deactivate': 'Hindi ma-deactivate ang account. Suriin ang iyong password.',
+    'i_understand_deactivate':
+        'Nauunawaan ko na ang aking account ay ide-deactivate.',
+    'could_not_deactivate':
+        'Hindi ma-deactivate ang account. Suriin ang iyong password.',
+    'delete_warning_title': 'Permanente ang pagbura',
     'delete_account_question': 'Burahin nang permanente ang account?',
     'delete_forever': 'Burahin nang tuluyan',
-    'permanent_deletion': 'Ang permanenteng pagbura ay nag-aalis ng iyong personal na data, mga dokumento, at lahat ng nauugnay na impormasyon. Ang pagkilos na ito ay hindi na maibabalik.',
+    'permanent_deletion':
+        'Ang permanenteng pagbura ay nag-aalis ng iyong personal na data, mga dokumento, at lahat ng nauugnay na impormasyon. Ang pagkilos na ito ay hindi na maibabalik.',
     'type_delete_to_confirm': 'I-type ang DELETE para kumpirmahin',
-    'i_understand_delete': 'Nauunawaan ko na ang aking account at personal na data ay permanenteng buburahin.',
-    'could_not_delete': 'Hindi mabura ang account. Suriin ang iyong password at subukan muli.',
-    'confirm_understand_action': 'Pakikumpirma na nauunawaan mo ang pagkilos na ito.',
-    'confirm_understand_permanent': 'Pakikumpirma na nauunawaan mo na permanente ang pagkilos na ito.',
-    'deactivate_dialog_message': 'Ide-deactivate ang iyong account at mala-log out ka. Makipag-ugnayan sa suporta kung kailangan mong i-reactivate mamaya.',
+    'i_understand_delete':
+        'Nauunawaan ko na ang aking account at personal na data ay permanenteng buburahin.',
+    'could_not_delete':
+        'Hindi mabura ang account. Suriin ang iyong password at subukan muli.',
+    'confirm_understand_action':
+        'Pakikumpirma na nauunawaan mo ang pagkilos na ito.',
+    'confirm_understand_permanent':
+        'Pakikumpirma na nauunawaan mo na permanente ang pagkilos na ito.',
+    'deactivate_dialog_message':
+        'Ide-deactivate ang iyong account at mala-log out ka. Makipag-ugnayan sa suporta kung kailangan mong i-reactivate mamaya.',
     'account_deactivated': 'Na-deactivate na ang iyong account.',
     'account_deleted': 'Permanenteng nabura ang iyong account.',
 
@@ -1150,7 +1349,8 @@ class AppLocalization {
     'upgrade_options': 'Mga Opsyon sa Pag-upgrade',
     'upgrade_option_soon': 'Ang opsyon sa pag-upgrade ay darating pa lamang',
     'upgrade_to': 'Mag-upgrade sa {{tier}}',
-    'view_tier_benefits': 'Tingnan ang iyong kasalukuyang tier at mga benepisyo',
+    'view_tier_benefits':
+        'Tingnan ang iyong kasalukuyang tier at mga benepisyo',
     'premium_package': 'Premium Package',
     'standard_package': 'Standard Package',
     'priority_booking': 'Priority booking assignment',
@@ -1172,7 +1372,8 @@ class AppLocalization {
     'rp_rider': 'Rider',
     'rp_change_photo': 'Palitan ang larawan sa profile',
     'rp_photo_failed': 'Hindi ma-update ang larawan. Subukan muli.',
-    'rp_refresh_error': 'Hindi ma-refresh ang profile. Ipinapakita ang available na detalye.',
+    'rp_refresh_error':
+        'Hindi ma-refresh ang profile. Ipinapakita ang available na detalye.',
     'rp_details': 'Personal na detalye',
     'rp_vehicle': 'Sasakyan',
     'rp_not_added': 'Hindi pa naidagdag',
@@ -1182,8 +1383,19 @@ class AppLocalization {
     'rp_missions_count': '{count} misyon ang kasalukuyang ginagawa',
     'rp_password_hint': 'Palitan ang password sa pag-sign in',
     'password_security_heading': 'Protektahan ang iyong account',
-    'password_requirements_hint': 'Gumamit ng hindi bababa sa 8 character, malaki at maliit na letra, at numero.',
+    'password_requirements_hint':
+        'Gumamit ng hindi bababa sa 8 character, malaki at maliit na letra, at numero.',
     'password_field_hint': 'Ilagay ang password',
+    'doc_status_label': 'Katayuan',
+    'doc_status_not_started': 'Hindi pa nasisimulan',
+    'doc_status_pending': 'Naghihintay ng pagsusuri',
+    'doc_status_under_review': 'Sinusuri',
+    'doc_status_approved': 'Naaprubahan',
+    'doc_status_verified': 'Beripikado',
+    'doc_status_rejected': 'Tinanggihan',
+    'doc_status_action_required': 'May kailangang ayusin',
+    'doc_status_expired': 'Paso na',
+    'doc_status_unknown': 'Walang available na status',
     'show_password': 'Ipakita ang password',
     'hide_password': 'Itago ang password',
     'rp_security_hint': 'Pamahalaan ang proteksyon ng account',
@@ -1197,9 +1409,11 @@ class AppLocalization {
     'wallet_balance_hidden': 'Nakatago ang balanse',
     'wallet_refresh': 'I-refresh ang balanse',
     'wallet_topup_notice': 'Mag-top up para makatanggap ng booking',
-    'wallet_minimum_notice': 'Magpanatili ng hindi bababa sa PHP {amount} sa wallet para tumanggap ng bagong booking.',
+    'wallet_minimum_notice':
+        'Magpanatili ng hindi bababa sa PHP {amount} sa wallet para tumanggap ng bagong booking.',
     'wallet_refresh_failed': 'Hindi ma-refresh ang iyong wallet',
-    'wallet_refresh_hint': 'Maaaring hindi updated ang balanse. Tingnan ang koneksyon at subukan muli.',
+    'wallet_refresh_hint':
+        'Maaaring hindi updated ang balanse. Tingnan ang koneksyon at subukan muli.',
     'wallet_quick_actions': 'Mga mabilisang aksyon',
     'wallet_topup_methods': 'Magdagdag gamit ang GCash, Maya, o card',
     'wallet_history_subtitle': 'Tingnan ang mga credit at withdrawal',

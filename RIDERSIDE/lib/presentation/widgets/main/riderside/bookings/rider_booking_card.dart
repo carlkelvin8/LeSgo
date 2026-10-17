@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../../../core/utils/app_localization.dart';
@@ -20,6 +21,7 @@ class RiderBookingCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(appLanguageProvider);
+    final serviceIcon = booking.serviceArtwork;
     return Semantics(
       label:
           '${AppLocalization.translate('booking_from', lang)} ${booking.restaurantName}. ${booking.address}. Earnings ${booking.earnings ?? 'unknown'} pesos.',
@@ -50,20 +52,23 @@ class RiderBookingCard extends ConsumerWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Merchant / Passenger Logo
+                  // Match the service artwork used by the customer app.
                   Container(
                     width: ResponsiveUtils.spacing(context, 60),
                     height: ResponsiveUtils.spacing(context, 60),
                     decoration: BoxDecoration(
+                      color: Colors.white,
                       border: Border.all(color: Colors.grey.shade200),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: Image.asset(
-                      booking.logoPath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.store, color: Colors.grey),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: SvgPicture.asset(
+                        'assets/images/booking/services/$serviceIcon',
+                        fit: BoxFit.contain,
+                        excludeFromSemantics: true,
+                      ),
                     ),
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 12)),

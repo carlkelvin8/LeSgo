@@ -228,9 +228,11 @@ class UserDto {
   });
 
   String? get resolvedProfilePhotoUrl {
-    final photo = profilePhotoUrl ?? profilePicture;
-    if (photo == null || photo.trim().isEmpty) return null;
-    return photo;
+    // Either column may hold an empty string, so take the first non-empty one.
+    for (final photo in [profilePhotoUrl, profilePicture]) {
+      if (photo != null && photo.trim().isNotEmpty) return photo.trim();
+    }
+    return null;
   }
   
   factory UserDto.fromJson(Map<String, dynamic> json) => 

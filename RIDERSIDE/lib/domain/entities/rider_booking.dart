@@ -114,6 +114,23 @@ extension BookingCategoryStatuses on BookingCategory {
 }
 
 class RiderBooking {
+  String get serviceName => switch (serviceId) {
+    1 => 'LesGo',
+    2 => 'LesRide',
+    3 => 'LesEat',
+    4 => 'LesBuy',
+    5 => 'LesTransport',
+    _ => category.label,
+  };
+
+  String get serviceArtwork => switch (serviceId) {
+    2 => 'Lesride.svg',
+    3 => 'Leseat.svg',
+    4 => 'Lesbuy.svg',
+    5 => 'Lesport.svg',
+    _ => 'Lesgo.svg',
+  };
+
   final String id;
   final int serviceId;
   final String restaurantName;

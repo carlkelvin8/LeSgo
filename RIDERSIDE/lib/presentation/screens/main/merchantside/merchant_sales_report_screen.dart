@@ -8,6 +8,7 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
+import '../../../widgets/common/settings_page_kit.dart';
 
 enum ReportPeriod { daily, weekly, monthly }
 
@@ -130,445 +131,492 @@ class _MerchantSalesReportScreenState
     }
   }
 
+  String get _periodName => switch (_selectedPeriod) {
+        ReportPeriod.daily => 'Today',
+        ReportPeriod.weekly => 'This week',
+        ReportPeriod.monthly => 'This month',
+      };
+
   @override
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(merchantOrdersProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F4FA),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF7F4FA),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF4D2868)),
-        title: Text(
-          'Sales Reports',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 18),
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF24172D),
+      backgroundColor: Colors.white,
+      appBar: SettingsKit.appBar(context, ''),
+      body: ordersAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: SettingsKit.brand),
+        ),
+        error: (err, _) => Center(
+          child: SettingsEmptyState(
+            icon: Icons.cloud_off_outlined,
+            title: 'Failed to load orders',
+            subtitle: '$err',
+            actionLabel: 'Retry',
+            actionIcon: Icons.refresh_rounded,
+            onAction: () => ref.invalidate(merchantOrdersProvider),
           ),
         ),
-        centerTitle: true,
-      ),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.spacing(context, 16))),
-          SliverToBoxAdapter(child: _periodSelector(context)),
-          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.spacing(context, 16))),
-          SliverToBoxAdapter(child: _dateRangeTile(context, hp)),
-          SliverToBoxAdapter(child: SizedBox(height: ResponsiveUtils.spacing(context, 16))),
-          ordersAsync.when(
-            loading: () => const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (err, _) => SliverFillRemaining(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(hp),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Failed to load orders: $err'),
-                      const SizedBox(height: 12),
-                      TextButton.icon(
-                        onPressed: () =>
-                            ref.invalidate(merchantOrdersProvider),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            data: (orders) {
-              final filtered = _filterByPeriod(orders);
-              final completed = filtered
-                  .where((o) => MerchantOrderAmountUtils.isCompleted(o))
-                  .toList();
-              final cancelled = filtered
-                  .where((o) => MerchantOrderAmountUtils.isCancelled(o))
-                  .toList();
-              final revenue = completed.fold<double>(
-                0,
-                (s, o) => s + MerchantOrderAmountUtils.foodEarnings(o),
-              );
+        data: (orders) {
+          final filtered = _filterByPeriod(orders);
+          final completed = filtered
+              .where((o) => MerchantOrderAmountUtils.isCompleted(o))
+              .toList();
+          final cancelled = filtered
+              .where((o) => MerchantOrderAmountUtils.isCancelled(o))
+              .toList();
+          final revenue = completed.fold<double>(
+            0,
+            (s, o) => s + MerchantOrderAmountUtils.foodEarnings(o),
+          );
+          final avg = completed.isNotEmpty ? revenue / completed.length : 0.0;
 
-              return SliverList(
-                delegate: SliverChildListDelegate([
-                  _summaryPreview(
-                      context, filtered, completed, cancelled, revenue, hp),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-                  _exportButtons(context, filtered, hp),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                ]),
-              );
+          return RefreshIndicator(
+            color: SettingsKit.brand,
+            onRefresh: () async {
+              ref.invalidate(merchantOrdersProvider);
+              await ref.read(merchantOrdersProvider.future);
             },
-          ),
-        ],
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(hp, 0, hp, 32),
+              children: [
+                const SettingsPageHeader(
+                  title: 'Sales Reports',
+                  subtitle: 'Track your earnings and export reports',
+                ),
+                const SizedBox(height: 20),
+                _periodSelector(context),
+                const SizedBox(height: 16),
+                _revenueCard(context, revenue, avg),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _metricTile(
+                        icon: Icons.receipt_long_outlined,
+                        color: SettingsKit.brand,
+                        value: '${filtered.length}',
+                        label: 'Orders',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _metricTile(
+                        icon: Icons.check_circle_outline_rounded,
+                        color: SettingsKit.success,
+                        value: '${completed.length}',
+                        label: 'Completed',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _metricTile(
+                        icon: Icons.cancel_outlined,
+                        color: SettingsKit.danger,
+                        value: '${cancelled.length}',
+                        label: 'Cancelled',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _completionBar(filtered.length, completed.length),
+                const SizedBox(height: 28),
+                _exportSection(filtered),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
   Widget _periodSelector(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
+    return Container(
+      height: 46,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: SettingsKit.pageBg,
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Container(
-        height: 44,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEDE7F3),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: ReportPeriod.values.map((period) {
-            final isSelected = period == _selectedPeriod;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedPeriod = period;
-                    _recalcDates();
-                  });
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF5F2D82) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    period.name[0].toUpperCase() + period.name.substring(1),
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: isSelected ? Colors.white : const Color(0xFF6D527E),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _dateRangeTile(BuildContext context, double hp) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hp),
-      child: InkWell(
-        onTap: _pickStartDate,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.calendar_today,
-                size: ResponsiveUtils.fontSize(context, 18),
-                color: const Color(0xFF5F2D82),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Report Period',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 11),
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      _dateRangeLabel,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 14),
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.grey.shade400,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _summaryPreview(
-    BuildContext context,
-    List<OrderDto> filtered,
-    List<OrderDto> completed,
-    List<OrderDto> cancelled,
-    double revenue,
-    double hp,
-  ) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hp),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-          child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0E7F8),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.insights_rounded,
-                      size: 18,
-                      color: Color(0xFF5F2D82),
-                    ),
-                ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Report summary',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 15),
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF24172D),
+      child: Row(
+        children: ReportPeriod.values.map((period) {
+          final isSelected = period == _selectedPeriod;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedPeriod = period;
+                  _recalcDates();
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(11),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: SettingsKit.brand.withValues(alpha: .12),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
                           ),
-                        ),
+                        ]
+                      : null,
+                ),
+                child: Text(
+                  period.name[0].toUpperCase() + period.name.substring(1),
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                    color: isSelected ? SettingsKit.brand : SettingsKit.muted,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _revenueCard(BuildContext context, double revenue, double avg) {
+    final money = NumberFormat('#,##0.00');
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [SettingsKit.brandLight, SettingsKit.brand, Color(0xFF3E1460)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: SettingsKit.brand.withValues(alpha: .25),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Total revenue · $_periodName',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withValues(alpha: .8),
+                ),
+              ),
+              const Spacer(),
+              Material(
+                color: Colors.white.withValues(alpha: .16),
+                borderRadius: BorderRadius.circular(20),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: _pickStartDate,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.calendar_today_rounded,
+                            size: 13, color: Colors.white),
+                        SizedBox(width: 5),
                         Text(
-                          _dateRangeLabel,
+                          'Change',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 10),
-                            color: const Color(0xFF9A8AA4),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'PHP ${money.format(revenue)}',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 30),
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -.8,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _dateRangeLabel,
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: .75),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.trending_up_rounded,
+                    size: 18, color: Colors.white.withValues(alpha: .9)),
+                const SizedBox(width: 8),
+                Text(
+                  'Avg order value',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: .85),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'PHP ${money.format(avg)}',
+                  style: const TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-              Row(
-                children: [
-                  Expanded(child: _metricTile(context, 'Orders', '${filtered.length}')),
-                  const SizedBox(width: 8),
-                  Expanded(child: _metricTile(context, 'Completed', '${completed.length}')),
-                  const SizedBox(width: 8),
-                  Expanded(child: _metricTile(context, 'Cancelled', '${cancelled.length}')),
-                ],
-              ),
-            Divider(height: ResponsiveUtils.spacing(context, 16)),
-            _summaryRow(
-              context,
-              'Total Revenue',
-              'PHP ${revenue.toStringAsFixed(2)}',
-              isBold: true,
-              valueColor: const Color(0xFF5F2D82),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricTile({
+    required IconData icon,
+    required Color color,
+    required String value,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .07),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: SettingsKit.ink,
             ),
-            _summaryRow(
-              context,
-              'Avg Order Value',
-              'PHP ${completed.isNotEmpty ? (revenue / completed.length).toStringAsFixed(2) : '0.00'}',
+          ),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: SettingsKit.muted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _completionBar(int total, int completed) {
+    final rate = total == 0 ? 0.0 : completed / total;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: SettingsKit.pageBg,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Completion rate',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: SettingsKit.ink,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                total == 0 ? '—' : '${(rate * 100).round()}%',
+                style: const TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: SettingsKit.brand,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: rate,
+              minHeight: 8,
+              backgroundColor: SettingsKit.brand.withValues(alpha: .10),
+              valueColor: const AlwaysStoppedAnimation(SettingsKit.brand),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _exportSection(List<OrderDto> filtered) {
+    final disabled = filtered.isEmpty || _isExporting;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SettingsSectionLabel(
+          'Export report',
+          trailing: _isExporting
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: SettingsKit.brand,
+                  ),
+                )
+              : null,
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: _exportTile(
+                icon: Icons.table_chart_outlined,
+                title: 'CSV',
+                subtitle: 'Spreadsheet',
+                color: SettingsKit.success,
+                onTap: disabled ? null : () => _exportCsv(filtered),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _exportTile(
+                icon: Icons.picture_as_pdf_outlined,
+                title: 'PDF',
+                subtitle: 'Printable',
+                color: SettingsKit.danger,
+                onTap: disabled ? null : () => _exportPdf(filtered),
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _metricTile(BuildContext context, String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F5FA),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value, style: const TextStyle(fontFamily: 'TT Fors', fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF24172D))),
-          const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontFamily: 'TT Fors', fontSize: 10, color: Color(0xFF91829B))),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryRow(
-    BuildContext context,
-    String label,
-    String value, {
-    bool isBold = false,
-    Color? valueColor,
-  }) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: ResponsiveUtils.spacing(context, 6),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 13),
-              fontWeight: isBold ? FontWeight.w700 : FontWeight.w400,
-              color: Colors.grey.shade700,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 13),
-              fontWeight: FontWeight.w700,
-              color: valueColor ?? Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _exportButtons(
-    BuildContext context,
-    List<OrderDto> filtered,
-    double hp,
-  ) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: hp),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Download Report',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 15),
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+        if (filtered.isEmpty) ...[
+          const SizedBox(height: 12),
           Row(
             children: [
+              Icon(Icons.info_outline_rounded,
+                  size: 16, color: Colors.grey.shade500),
+              const SizedBox(width: 6),
               Expanded(
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
-                    padding: EdgeInsets.symmetric(
-                      vertical: ResponsiveUtils.spacing(context, 14),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: filtered.isEmpty || _isExporting
-                      ? null
-                      : () => _exportCsv(filtered),
-                  icon: Icon(
-                    Icons.table_chart_outlined,
-                    size: ResponsiveUtils.fontSize(context, 18),
-                  ),
-                  label: Text(
-                    'CSV',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 14),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF5F2D82),
-                    side: const BorderSide(color: Color(0xFF5F2D82)),
-                    padding: EdgeInsets.symmetric(
-                      vertical: ResponsiveUtils.spacing(context, 14),
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: filtered.isEmpty || _isExporting
-                      ? null
-                      : () => _exportPdf(filtered),
-                  icon: Icon(
-                    Icons.picture_as_pdf_outlined,
-                    size: ResponsiveUtils.fontSize(context, 18),
-                  ),
-                  label: Text(
-                    'PDF',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 14),
-                      fontWeight: FontWeight.w700,
-                    ),
+                child: Text(
+                  'No orders in this period yet, so there is nothing to export.',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
                   ),
                 ),
               ),
             ],
           ),
-          if (filtered.isEmpty)
-            Padding(
-              padding: EdgeInsets.only(
-                top: ResponsiveUtils.spacing(context, 12),
-              ),
-              child: Text(
-                'No orders found for this period. Try a different range.',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 11),
-                  color: Colors.grey.shade500,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          if (_isExporting)
-            Padding(
-              padding: EdgeInsets.only(
-                top: ResponsiveUtils.spacing(context, 16),
-              ),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
         ],
+      ],
+    );
+  }
+
+  Widget _exportTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback? onTap,
+  }) {
+    final enabled = onTap != null;
+    return Opacity(
+      opacity: enabled ? 1 : .45,
+      child: Material(
+        color: SettingsKit.pageBg,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                SettingsIconBox(icon: icon, color: color, size: 40),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: SettingsKit.ink,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 11,
+                          color: SettingsKit.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.download_rounded,
+                    size: 18, color: SettingsKit.muted),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

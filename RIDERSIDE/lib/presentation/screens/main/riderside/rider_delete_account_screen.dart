@@ -7,6 +7,7 @@ import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
+import '../../../widgets/main/riderside/profile/profile_panel.dart';
 
 class RiderDeleteAccountScreen extends ConsumerStatefulWidget {
   const RiderDeleteAccountScreen({super.key});
@@ -44,14 +45,14 @@ class _RiderDeleteAccountScreenState
       return;
     }
     if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
 
     final proceed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         title: Text(AppLocalization.translate('delete_account_question', lang)),
-        content: Text(
-          AppLocalization.translate('permanent_deletion', lang),
-        ),
+        content: Text(AppLocalization.translate('permanent_deletion', lang)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -100,137 +101,311 @@ class _RiderDeleteAccountScreenState
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(AppLocalization.translate('delete_account', lang)),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
+    String tr(String key) => AppLocalization.translate(key, lang);
+    final dark = profileDark(context);
+    const purple = Color(0xFF5F2D82);
+    final accent = dark ? const Color(0xFFCFACED) : purple;
+    final border = dark ? const Color(0xFF493B56) : const Color(0xFFE5DEEC);
+    final canSubmit =
+        !_isSubmitting &&
+        _confirmed &&
+        _passwordController.text.isNotEmpty &&
+        _confirmationController.text.trim().toUpperCase() == 'DELETE';
+
+    InputDecoration inputDecoration(String label) => InputDecoration(
+      labelText: label,
+      alignLabelWithHint: true,
+      labelStyle: TextStyle(color: profileMuted(context), fontSize: 14),
+      filled: true,
+      fillColor: dark ? const Color(0xFF1B1525) : Colors.white,
+      contentPadding: const EdgeInsets.all(16),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: border),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          ResponsiveUtils.spacing(context, 20),
-          ResponsiveUtils.spacing(context, 20),
-          ResponsiveUtils.spacing(context, 20),
-          ResponsiveUtils.scrollBottomPaddingForKeyboard(context),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: accent, width: 1.5),
+      ),
+    );
+
+    return Scaffold(
+      backgroundColor: dark ? const Color(0xFF17121F) : Colors.white,
+      appBar: AppBar(
+        title: Text(
+          tr('delete_account'),
+          style: const TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
-                ),
-                child: Text(
-                  AppLocalization.translate('permanent_deletion', lang),
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    color: Colors.red[900],
-                    height: 1.5,
-                  ),
-                ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return AppLocalization.translate('password_required', lang);
-                  }
-                  return null;
-                },
-                decoration: InputDecoration(
-                  labelText: AppLocalization.translate('confirm_password', lang),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+        centerTitle: true,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: dark ? const Color(0xFF17121F) : Colors.white,
+        foregroundColor: profileText(context),
+      ),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            ResponsiveUtils.scrollBottomPaddingForKeyboard(context),
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: dark ? const Color(0xFF382128) : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: dark
+                                  ? const Color(0xFF4C2932)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(
+                              Icons.delete_forever_outlined,
+                              color: dark
+                                  ? const Color(0xFFFFB4BC)
+                                  : const Color(0xFFB63845),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            tr('delete_warning_title'),
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 22,
+                              height: 1.2,
+                              fontWeight: FontWeight.w700,
+                              color: profileText(context),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            tr('permanent_deletion'),
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 14,
+                              color: profileMuted(context),
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              TextFormField(
-                controller: _confirmationController,
-                textCapitalization: TextCapitalization.characters,
-                validator: (value) {
-                  if (value == null || value.trim().toUpperCase() != 'DELETE') {
-                    return AppLocalization.translate('type_delete_to_confirm', lang);
-                  }
-                  return null;
-                },
-                decoration: InputDecoration(
-                  labelText: AppLocalization.translate('type_delete_to_confirm', lang),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              TextFormField(
-                controller: _reasonController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: AppLocalization.translate('reason_optional', lang),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              CheckboxListTile(
-                value: _confirmed,
-                onChanged: _isSubmitting
-                    ? null
-                    : (value) => setState(() => _confirmed = value ?? false),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  AppLocalization.translate('i_understand_delete', lang),
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                  ),
-                ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _deleteAccount,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                    const SizedBox(height: 16),
+                    ProfilePanel(
+                      showBorder: false,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            tr('deactivate_confirm_title'),
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: profileText(context),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          TextFormField(
+                            controller: _passwordController,
+                            enabled: !_isSubmitting,
+                            obscureText: _obscurePassword,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            textInputAction: TextInputAction.next,
+                            onChanged: (_) => setState(() {}),
+                            style: TextStyle(
+                              color: profileText(context),
+                              fontSize: 15,
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? tr('password_required')
+                                : null,
+                            decoration: inputDecoration(tr('confirm_password'))
+                                .copyWith(
+                                  suffixIcon: IconButton(
+                                    tooltip: tr(
+                                      _obscurePassword
+                                          ? 'show_password'
+                                          : 'hide_password',
+                                    ),
+                                    color: profileMuted(context),
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                    ),
+                                    onPressed: _isSubmitting
+                                        ? null
+                                        : () => setState(
+                                            () => _obscurePassword =
+                                                !_obscurePassword,
+                                          ),
+                                  ),
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _confirmationController,
+                            enabled: !_isSubmitting,
+                            textCapitalization: TextCapitalization.characters,
+                            autocorrect: false,
+                            enableSuggestions: false,
+                            textInputAction: TextInputAction.next,
+                            onChanged: (_) => setState(() {}),
+                            style: TextStyle(
+                              color: profileText(context),
+                              fontSize: 15,
+                            ),
+                            validator: (value) =>
+                                value == null ||
+                                    value.trim().toUpperCase() != 'DELETE'
+                                ? tr('type_delete_to_confirm')
+                                : null,
+                            decoration: inputDecoration(
+                              tr('type_delete_to_confirm'),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _reasonController,
+                            enabled: !_isSubmitting,
+                            minLines: 3,
+                            maxLines: 5,
+                            textCapitalization: TextCapitalization.sentences,
+                            style: TextStyle(
+                              color: profileText(context),
+                              fontSize: 15,
+                            ),
+                            decoration: inputDecoration(tr('reason_optional')),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: _confirmed
+                            ? (dark ? const Color(0xFF2B203A) : Colors.white)
+                            : (dark ? const Color(0xFF241D30) : Colors.white),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: CheckboxListTile(
+                        value: _confirmed,
+                        onChanged: _isSubmitting
+                            ? null
+                            : (value) =>
+                                  setState(() => _confirmed = value ?? false),
+                        activeColor: purple,
+                        checkColor: Colors.white,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                      )
-                    : Text(AppLocalization.translate('delete_account_permanently', lang)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        title: Text(
+                          tr('i_understand_delete'),
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: 13,
+                            height: 1.5,
+                            color: profileText(context),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: canSubmit ? _deleteAccount : null,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFB63845),
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: dark
+                            ? const Color(0xFF352D3F)
+                            : const Color(0xFFE9E3EE),
+                        disabledForegroundColor: dark
+                            ? const Color(0xFFA99BB8)
+                            : const Color(0xFF807489),
+                        minimumSize: const Size.fromHeight(50),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 13,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        textStyle: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              tr('delete_account_permanently'),
+                              textAlign: TextAlign.center,
+                            ),
+                    ),
+                    const SizedBox(height: 4),
+                    TextButton(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.maybePop(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: accent,
+                        minimumSize: const Size.fromHeight(40),
+                        textStyle: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: Text(
+                        tr('keep_my_account'),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

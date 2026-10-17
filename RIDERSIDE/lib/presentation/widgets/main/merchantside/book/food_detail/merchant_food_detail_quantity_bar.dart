@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 
+/// Compact quantity stepper pill, meant to sit beside the add-to-cart button.
 class MerchantFoodDetailQuantityBar extends StatelessWidget {
   final int quantity;
   final VoidCallback onDecrease;
@@ -15,79 +16,58 @@ class MerchantFoodDetailQuantityBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
-
-    return Padding(
+    return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: ResponsiveUtils.spacing(context, 8),
+        horizontal: ResponsiveUtils.spacing(context, 6),
       ),
-      child: Container(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(
-            ResponsiveUtils.spacing(context, 8),
-          ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4EEF8),
+        borderRadius: BorderRadius.circular(
+          ResponsiveUtils.spacing(context, 14),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Quantity:',
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _StepButton(
+            icon: Icons.remove_rounded,
+            onTap: quantity > 1 ? onDecrease : null,
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 32),
+            child: Text(
+              quantity.toString(),
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 14),
-                fontWeight: FontWeight.w600,
+                fontSize: ResponsiveUtils.fontSize(context, 17),
+                fontWeight: FontWeight.w800,
                 color: Colors.black,
               ),
             ),
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: onDecrease,
-                  child: Container(
-                    width: ResponsiveUtils.spacing(context, 32),
-                    height: ResponsiveUtils.spacing(context, 32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                        ResponsiveUtils.spacing(context, 6),
-                      ),
-                    ),
-                    child: const Icon(Icons.remove, size: 18),
-                  ),
-                ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-                Text(
-                  quantity.toString(),
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-                GestureDetector(
-                  onTap: onIncrease,
-                  child: Container(
-                    width: ResponsiveUtils.spacing(context, 32),
-                    height: ResponsiveUtils.spacing(context, 32),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF5F2D82),
-                      borderRadius: BorderRadius.circular(
-                        ResponsiveUtils.spacing(context, 6),
-                      ),
-                    ),
-                    child: const Icon(Icons.add, size: 18, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+          _StepButton(icon: Icons.add_rounded, onTap: onIncrease),
+        ],
       ),
+    );
+  }
+}
+
+class _StepButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  const _StepButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: icon == Icons.add_rounded
+          ? 'Increase quantity'
+          : 'Decrease quantity',
+      onPressed: onTap,
+      color: const Color(0xFF5F2D82),
+      icon: Icon(icon, size: 22),
     );
   }
 }

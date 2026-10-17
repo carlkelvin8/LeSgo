@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -33,6 +32,7 @@ import '../../../widgets/main/riderside/bookings/rider_cod_confirm_dialog.dart';
 import '../../../widgets/main/riderside/bookings/rider_customer_rating_dialog.dart';
 import '../../../../core/utils/rider_payment_utils.dart';
 import '../../../../core/utils/app_localization.dart';
+import '../../../widgets/main/riderside/profile/profile_panel.dart';
 
 class RiderBookingDetailScreen extends ConsumerStatefulWidget {
   final RiderBooking booking;
@@ -1058,42 +1058,31 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     }
     
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: profileDark(context) ? const Color(0xFF17121F) : Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
             Column(
               children: [
-                // Header with refresh button
-                HomeHeader(
-                  showBackButton: true,
-                  action: IconButton(
-                    onPressed: _isFetchingStatus ? null : _fetchLatestStatus,
-                    icon: _isFetchingStatus
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                const Color(0xFF5F2D82),
-                              ),
-                            ),
-                          )
-                        : Icon(
-                            Icons.refresh,
-                            color: const Color(0xFF5F2D82),
-                          ),
-                    tooltip: AppLocalization.translate('refresh_status', lang),
-                  ),
-                ),
-                // Banner
                 SizedBox(
-                  height: ResponsiveUtils.adaptiveBannerHeight(context, 120),
-                  width: double.infinity,
-                  child: SvgPicture.asset(
-                    'assets/images/booking/banner.svg',
-                    fit: BoxFit.cover,
+                  height: 56,
+                  child: AppBar(
+                    primary: false,
+                    backgroundColor: profileDark(context) ? const Color(0xFF17121F) : Colors.white,
+                    foregroundColor: profileText(context),
+                    elevation: 0,
+                    scrolledUnderElevation: 0,
+                    centerTitle: true,
+                    title: Text(AppLocalization.translate('rb_booking_details', lang),
+                      style: const TextStyle(fontFamily: 'TT Fors', fontSize: 18, fontWeight: FontWeight.w700)),
+                    actions: [IconButton(
+                      onPressed: _isFetchingStatus ? null : _fetchLatestStatus,
+                      icon: _isFetchingStatus
+                          ? const SizedBox(width: 20, height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.refresh_rounded),
+                      tooltip: AppLocalization.translate('refresh_status', lang),
+                    ), const SizedBox(width: 8)],
                   ),
                 ),
                 Expanded(
@@ -1103,48 +1092,47 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         RiderBookingDetailInfo(booking: _updatedBooking ?? widget.booking),
-                        Divider(color: Colors.grey.shade200, height: 1),
+
                         
                         // Dynamic content based on status
                         _buildStatusContent(context, locationState),
                         
                         Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: ResponsiveUtils.horizontalPadding(context),
-                            vertical: ResponsiveUtils.spacing(context, 16),
-                          ),
+                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   Text(
-                                    'Status:',
+                                    AppLocalization.translate('rb_status', lang),
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: ResponsiveUtils.fontSize(context, 15),
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF2D2D2D),
+                                      color: profileText(context),
                                     ),
                                   ),
                                   if (_currentApiStatus != null)
                                     Container(
-                                      padding: EdgeInsets.symmetric(
+                                      padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                                        color: profileDark(context) ? const Color(0xFF30233F) : const Color(0xFFEDE3F5),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        _currentStatus.label.toUpperCase(),
+                                        _currentStatus.label.replaceAll('\n', ' '),
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: ResponsiveUtils.fontSize(context, 11),
                                           fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF5F2D82),
+                                          color: profileDark(context) ? const Color(0xFFCFACED) : const Color(0xFF5F2D82),
                                         ),
                                       ),
                                     ),

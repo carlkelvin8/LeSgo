@@ -42,7 +42,9 @@ class CartOrderSection extends StatelessWidget {
         children: [
           ...items.map((item) {
             return Padding(
-              padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
+              padding: EdgeInsets.only(
+                bottom: ResponsiveUtils.spacing(context, 10),
+              ),
               child: Dismissible(
                 key: ValueKey(item.id),
                 direction: DismissDirection.endToStart,
@@ -84,13 +86,15 @@ class CartOrderSection extends StatelessWidget {
                   color: Color(0xFF6B3A96),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                Text(
-                  'Add more items',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF6B3A96),
+                Flexible(
+                  child: Text(
+                    'Add more items',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 12),
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF6B3A96),
+                    ),
                   ),
                 ),
               ],

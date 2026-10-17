@@ -32,9 +32,7 @@ class CartPriceSummary extends StatelessWidget {
             ResponsiveUtils.spacing(context, 12),
           ),
         ),
-        padding: EdgeInsets.all(
-          ResponsiveUtils.spacing(context, 16),
-        ),
+        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         child: Column(
           children: [
             Align(
@@ -88,8 +86,10 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      spacing: 12,
+      runSpacing: 4,
       children: [
         Text(
           label,

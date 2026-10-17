@@ -51,7 +51,6 @@ class MainRoutes {
   static const String merchantAnalytics = '/merchant/analytics';
   static const String merchantSalesReport = '/merchant/sales-report';
   static const String merchantStaff = '/merchant/staff';
-  static const String merchantPrinterSettings = '/merchant/printer-settings';
 
   MainRoutes._();
 }

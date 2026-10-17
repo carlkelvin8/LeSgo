@@ -24,37 +24,32 @@ class MerchantSettingsSection extends StatelessWidget {
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 10)),
-        _SettingsTile(
-          icon: Icons.support_agent_outlined,
-          label: 'Admin support chat',
-          route: MainRoutes.riderCustomerServiceChat,
-        ),
-        _SettingsTile(
-          icon: Icons.security,
-          label: 'Security & 2FA',
-          route: MainRoutes.merchantSecurity,
-        ),
-        _SettingsTile(
-          icon: Icons.help_outline,
-          label: 'FAQs',
-          route: MainRoutes.merchantFaqs,
-        ),
-        _SettingsTile(
-          icon: Icons.notifications_outlined,
-          label: 'Notifications',
-          route: MainRoutes.riderNotifications,
-        ),
-        _SettingsTile(
-          icon: Icons.group_outlined,
-          label: 'Staff Accounts',
-          route: MainRoutes.merchantStaff,
-        ),
-        _SettingsTile(
-          icon: Icons.print_outlined,
-          label: 'Printer Settings',
-          route: MainRoutes.merchantPrinterSettings,
-        ),
-        // Removed Deactivate and Delete account options - redundant for merchants
+          const _SettingsTile(
+            icon: Icons.support_agent_outlined,
+            label: 'Admin support chat',
+            route: MainRoutes.riderCustomerServiceChat,
+          ),
+          const _SettingsTile(
+            icon: Icons.security,
+            label: 'Security & 2FA',
+            route: MainRoutes.merchantSecurity,
+          ),
+          const _SettingsTile(
+            icon: Icons.help_outline,
+            label: 'FAQs',
+            route: MainRoutes.merchantFaqs,
+          ),
+          const _SettingsTile(
+            icon: Icons.notifications_outlined,
+            label: 'Notifications',
+            route: MainRoutes.riderNotifications,
+          ),
+          const _SettingsTile(
+            icon: Icons.group_outlined,
+            label: 'Staff Accounts',
+            route: MainRoutes.merchantStaff,
+          ),
+          // Removed Deactivate and Delete account options - redundant for merchants
         ],
       ),
     );

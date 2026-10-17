@@ -30,7 +30,6 @@ import '../../../../presentation/screens/main/merchantside/merchant_reviews_scre
 import '../../../../presentation/screens/main/merchantside/merchant_analytics_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_sales_report_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_staff_screen.dart';
-import '../../../../presentation/screens/main/merchantside/printer_settings_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_missions_screen.dart';
 import '../../../../domain/entities/rider_booking.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
@@ -87,7 +86,6 @@ class MainRouter {
     MainRoutes.merchantAnalytics: (_) => const MerchantAnalyticsScreen(),
     MainRoutes.merchantSalesReport: (_) => const MerchantSalesReportScreen(),
     MainRoutes.merchantStaff: (_) => const MerchantStaffScreen(),
-    MainRoutes.merchantPrinterSettings: (_) => const PrinterSettingsScreen(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

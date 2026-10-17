@@ -4,6 +4,7 @@ import '../../../../../../core/utils/booking_workflow.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/app_localization.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
+import '../profile/profile_panel.dart';
 
 class RiderBookingNextActions extends ConsumerWidget {
   final BookingCategory category;
@@ -41,35 +42,42 @@ class RiderBookingNextActions extends ConsumerWidget {
       category: category,
       awaitingProof: awaitingProof,
     );
-    final step = apiStatus != null
-        ? BookingWorkflow.workflowStepIndex(apiStatus!)
-        : 0;
     final terminal = BookingWorkflow.isTerminal(apiStatus);
+    final cancelled = apiStatus == 'cancelled';
+    final dark = profileDark(context);
+    final terminalColor = cancelled
+        ? (dark ? const Color(0xFFFFB4BC) : const Color(0xFFB63845))
+        : (dark ? const Color(0xFF8CD7B4) : const Color(0xFF23774F));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _StepProgress(currentStep: terminal ? 3 : step),
-        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
         if (terminal)
           Container(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              color: terminalColor.withValues(alpha: .08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
             ),
             child: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green.shade700),
+                Icon(
+                  cancelled
+                      ? Icons.cancel_outlined
+                      : Icons.check_circle_outline,
+                  color: terminalColor,
+                ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 12)),
                 Expanded(
                   child: Text(
-                    AppLocalization.translate('order_finished', lang),
+                    AppLocalization.translate(
+                      cancelled ? 'order_cancelled' : 'order_finished',
+                      lang,
+                    ),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontWeight: FontWeight.w600,
-                      color: Colors.green.shade900,
+                      color: terminalColor,
                     ),
                   ),
                 ),
@@ -77,11 +85,28 @@ class RiderBookingNextActions extends ConsumerWidget {
             ),
           )
         else if (actions.isEmpty)
-          Text(
-            AppLocalization.translate('waiting_next_step', lang),
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              color: Colors.grey.shade600,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.schedule_rounded,
+                  size: 18,
+                  color: profileMuted(context),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    AppLocalization.translate('waiting_next_step', lang),
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 13,
+                      height: 1.4,
+                      color: profileMuted(context),
+                    ),
+                  ),
+                ),
+              ],
             ),
           )
         else
@@ -101,14 +126,14 @@ class RiderBookingNextActions extends ConsumerWidget {
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: ResponsiveUtils.spacing(context, 16),
-                      vertical: ResponsiveUtils.spacing(context, 18),
+                      vertical: ResponsiveUtils.spacing(context, 14),
                     ),
                     child: Row(
                       children: [
                         Icon(
                           _iconFor(action.iconName),
                           color: Colors.white,
-                          size: 28,
+                          size: 22,
                         ),
                         SizedBox(width: ResponsiveUtils.spacing(context, 14)),
                         Expanded(
@@ -119,21 +144,25 @@ class RiderBookingNextActions extends ConsumerWidget {
                                 action.title,
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize:
-                                      ResponsiveUtils.fontSize(context, 16),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    16,
+                                  ),
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white,
                                 ),
                               ),
                               SizedBox(
-                                  height:
-                                      ResponsiveUtils.spacing(context, 4)),
+                                height: ResponsiveUtils.spacing(context, 4),
+                              ),
                               Text(
                                 action.subtitle,
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize:
-                                      ResponsiveUtils.fontSize(context, 12),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    12,
+                                  ),
                                   color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
@@ -150,10 +179,7 @@ class RiderBookingNextActions extends ConsumerWidget {
                             ),
                           )
                         else
-                          const Icon(
-                            Icons.chevron_right,
-                            color: Colors.white,
-                          ),
+                          const Icon(Icons.chevron_right, color: Colors.white),
                       ],
                     ),
                   ),
@@ -162,78 +188,6 @@ class RiderBookingNextActions extends ConsumerWidget {
             );
           }),
       ],
-    );
-  }
-}
-
-class _StepProgress extends StatelessWidget {
-  final int currentStep;
-
-  const _StepProgress({required this.currentStep});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(BookingWorkflow.stepLabels.length, (index) {
-        final isDone = index <= currentStep;
-        final isActive = index == currentStep;
-        return Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isDone
-                            ? const Color(0xFF5F2D82)
-                            : Colors.grey.shade300,
-                        border: isActive
-                            ? Border.all(
-                                color: const Color(0xFFC320D6), width: 2)
-                            : null,
-                      ),
-                      child: isDone
-                          ? const Icon(Icons.check, size: 14, color: Colors.white)
-                          : null,
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                    Text(
-                      BookingWorkflow.stepLabels[index],
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 8),
-                        fontWeight:
-                            isActive ? FontWeight.w700 : FontWeight.w500,
-                        color: isDone
-                            ? const Color(0xFF5F2D82)
-                            : Colors.grey.shade500,
-                        height: 1.15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (index < BookingWorkflow.stepLabels.length - 1)
-                Container(
-                  width: 12,
-                  height: 2,
-                  margin: const EdgeInsets.only(bottom: 18),
-                  color: index < currentStep
-                      ? const Color(0xFF5F2D82)
-                      : Colors.grey.shade300,
-                ),
-            ],
-          ),
-        );
-      }),
     );
   }
 }

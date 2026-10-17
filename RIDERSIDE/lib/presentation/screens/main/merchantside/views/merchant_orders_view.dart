@@ -217,7 +217,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(side, 24, side, 0),
+                  padding: EdgeInsets.fromLTRB(side, 16, side, 0),
                   sliver: SliverToBoxAdapter(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +241,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   Text(
                                     'Orders',
                                     style: TextStyle(
-                                      fontSize: 32,
+                                      fontSize: 26,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: -1.2,
                                       color: OrderQueuePalette.text(context),
@@ -252,12 +252,12 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 14),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(22),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(26),
+                            borderRadius: BorderRadius.circular(20),
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -294,13 +294,13 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                               : 'Keep good food moving.',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 22,
+                                            fontSize: 18,
                                             height: 1.2,
                                             fontWeight: FontWeight.w800,
                                             letterSpacing: -.5,
                                           ),
                                         ),
-                                        const SizedBox(height: 8),
+                                        const SizedBox(height: 4),
                                         Text(
                                           async.hasError
                                               ? 'Refresh to see the latest orders.'
@@ -318,7 +318,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   ),
                                   const SizedBox(width: 12),
                                   Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(9),
                                     decoration: BoxDecoration(
                                       color: Colors.white.withValues(
                                         alpha: .12,
@@ -328,12 +328,12 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                     child: const Icon(
                                       Icons.room_service_outlined,
                                       color: Color(0xFFE7D7FF),
-                                      size: 28,
+                                      size: 22,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 22),
+                              const SizedBox(height: 14),
                               Wrap(
                                 spacing: 10,
                                 runSpacing: 10,
@@ -376,7 +376,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 14),
                         TextField(
                           controller: _search,
                           onChanged: (_) => setState(() {}),
@@ -399,7 +399,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   ),
                             filled: true,
                             fillColor: OrderQueuePalette.surface(context),
-                            contentPadding: const EdgeInsets.all(16),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: BorderSide.none,
@@ -412,7 +412,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
@@ -443,8 +443,8 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                           onTap: () => _select(filter),
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 14,
-                                              vertical: 14,
+                                              horizontal: 13,
+                                              vertical: 10,
                                             ),
                                             child: Text(
                                               '${filter == MerchantOrderFilter.pickUp
@@ -471,7 +471,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 6),
                         Row(
                           children: [
                             Expanded(
@@ -508,7 +508,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                               ],
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                                  vertical: 10,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -609,7 +609,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                           ? (visible.length / 2).ceil()
                           : visible.length,
                       itemBuilder: (_, index) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(bottom: 10),
                         child: wide
                             ? Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -617,7 +617,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   Expanded(
                                     child: card(visible[index * 2], index * 2),
                                   ),
-                                  const SizedBox(width: 16),
+                                  const SizedBox(width: 10),
                                   Expanded(
                                     child: index * 2 + 1 < visible.length
                                         ? card(
@@ -659,7 +659,7 @@ class _Metric extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        padding: const EdgeInsets.fromLTRB(14, 9, 14, 9),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -670,7 +670,7 @@ class _Metric extends StatelessWidget {
                 key: ValueKey(value),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 25,
+                  fontSize: 20,
                   fontWeight: FontWeight.w800,
                 ),
               ),

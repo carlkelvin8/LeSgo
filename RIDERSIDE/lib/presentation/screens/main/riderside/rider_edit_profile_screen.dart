@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/app_localization.dart';
@@ -23,7 +22,6 @@ class _RiderEditProfileScreenState
   late final TextEditingController _addressController;
   late final TextEditingController _vehicleController;
   late final TextEditingController _plateController;
-  late final TextEditingController _referralController;
 
   bool _isSaving = false;
   bool _hydrated = false;
@@ -36,7 +34,6 @@ class _RiderEditProfileScreenState
     _addressController = TextEditingController();
     _vehicleController = TextEditingController();
     _plateController = TextEditingController();
-    _referralController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(riderProfileProvider.notifier).loadProfile();
@@ -51,7 +48,6 @@ class _RiderEditProfileScreenState
     _addressController.text = profile.address;
     _vehicleController.text = profile.vehicle;
     _plateController.text = profile.plateNumber;
-    _referralController.text = profile.referralCode;
   }
 
   @override
@@ -61,24 +57,7 @@ class _RiderEditProfileScreenState
     _addressController.dispose();
     _vehicleController.dispose();
     _plateController.dispose();
-    _referralController.dispose();
     super.dispose();
-  }
-
-  Future<void> _copyReferralCode() async {
-    final code = _referralController.text.trim();
-    if (code.isEmpty) return;
-    await Clipboard.setData(ClipboardData(text: code));
-    if (mounted) {
-      final lang = ref.read(appLanguageProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalization.translate('referral_code_copied', lang),
-          ),
-        ),
-      );
-    }
   }
 
   Future<void> _save() async {
@@ -164,9 +143,9 @@ class _RiderEditProfileScreenState
     return PopScope(
       canPop: !_isSaving,
       child: Scaffold(
-        backgroundColor: dark ? colors.surface : const Color(0xFFF7F6FA),
+        backgroundColor: dark ? colors.surface : Colors.white,
         appBar: AppBar(
-          backgroundColor: dark ? colors.surface : const Color(0xFFF7F6FA),
+          backgroundColor: dark ? colors.surface : Colors.white,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
@@ -254,72 +233,6 @@ class _RiderEditProfileScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF5F2D82), Color(0xFF39204F)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.14),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: const Icon(
-                                    Icons.manage_accounts_outlined,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        copy(
-                                          'Your rider profile',
-                                          'Iyong rider profile',
-                                        ),
-                                        style: const TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          color: Colors.white,
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        copy(
-                                          'Keep your contact and vehicle details up to date.',
-                                          'Panatilihing updated ang iyong contact at detalye ng sasakyan.',
-                                        ),
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          color: Colors.white.withValues(
-                                            alpha: 0.8,
-                                          ),
-                                          fontSize: 13,
-                                          height: 1.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
                           _section(
                             context,
                             icon: Icons.person_outline_rounded,
@@ -393,55 +306,6 @@ class _RiderEditProfileScreenState
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          _section(
-                            context,
-                            icon: Icons.card_giftcard_outlined,
-                            title: tr('referral_code'),
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-                                decoration: BoxDecoration(
-                                  color: purple.withValues(alpha: 0.07),
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: purple.withValues(alpha: 0.15),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: SelectableText(
-                                        _referralController.text.isEmpty
-                                            ? '—'
-                                            : _referralController.text,
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 19,
-                                          letterSpacing: 2,
-                                          color: purple,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed:
-                                          _referralController.text
-                                              .trim()
-                                              .isEmpty
-                                          ? null
-                                          : _copyReferralCode,
-                                      icon: Icon(
-                                        Icons.copy_rounded,
-                                        color: purple,
-                                      ),
-                                      tooltip: tr('copy_referral_code'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),
@@ -462,20 +326,24 @@ class _RiderEditProfileScreenState
     final dark = Theme.of(context).brightness == Brightness.dark;
     final purple = dark ? const Color(0xFFD8B6F4) : const Color(0xFF5F2D82);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
       decoration: BoxDecoration(
         color: dark ? colors.surfaceContainerLow : Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: colors.outlineVariant.withValues(alpha: 0.45),
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Icon(icon, color: purple, size: 21),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: purple.withValues(alpha: .08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: purple, size: 20),
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -490,9 +358,9 @@ class _RiderEditProfileScreenState
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const SizedBox(height: 18),
+            if (i > 0) const SizedBox(height: 14),
             children[i],
           ],
         ],
@@ -560,7 +428,7 @@ class _RiderEditProfileScreenState
               color: colors.onSurfaceVariant.withValues(alpha: 0.65),
             ),
             filled: true,
-            fillColor: dark ? colors.surface : const Color(0xFFFAF9FC),
+            fillColor: dark ? colors.surface : Colors.white,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),

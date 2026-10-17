@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 
 /// Repaints the decorative layer only; the balance and controls stay static.
 class WalletLightPainter extends CustomPainter {
-  WalletLightPainter(this.motion) : super(repaint: motion);
+  WalletLightPainter(this.motion, {this.intensity = 1})
+    : super(repaint: motion);
   final Animation<double> motion;
+  final double intensity;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -26,7 +28,7 @@ class WalletLightPainter extends CustomPainter {
           center: Alignment(.75 + shift * .2, -.35),
           radius: 1.15,
           colors: [
-            const Color(0xFF9F62CD).withValues(alpha: .22),
+            const Color(0xFF9F62CD).withValues(alpha: .22 * intensity),
             Colors.transparent,
           ],
         ).createShader(rect),
@@ -56,7 +58,7 @@ class WalletLightPainter extends CustomPainter {
         ..shader = LinearGradient(
           colors: [
             Colors.transparent,
-            Colors.white.withValues(alpha: .055),
+            Colors.white.withValues(alpha: .055 * intensity),
             Colors.transparent,
           ],
         ).createShader(beam),
@@ -66,5 +68,5 @@ class WalletLightPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant WalletLightPainter oldDelegate) =>
-      oldDelegate.motion != motion;
+      oldDelegate.motion != motion || oldDelegate.intensity != intensity;
 }
