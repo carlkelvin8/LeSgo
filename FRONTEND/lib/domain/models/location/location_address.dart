@@ -6,6 +6,16 @@ class LocationAddress {
   final String? landmark;
   final bool isDefault;
 
+  String get formattedAddress =>
+      [houseNumberStreet, subdivisionBarangay, cityProvince, zipCode, landmark]
+          .whereType<String>()
+          .map((part) => part.trim())
+          .where((part) => part.isNotEmpty)
+          .join(', ');
+
+  @override
+  String toString() => formattedAddress;
+
   LocationAddress({
     this.houseNumberStreet,
     this.subdivisionBarangay,
