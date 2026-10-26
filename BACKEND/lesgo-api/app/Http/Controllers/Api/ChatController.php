@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Models\ChatReport;
 use App\Models\Order;
+use App\Models\SupportTicket;
+use App\Models\UserBlock;
 use App\Events\TypingIndicator;
 use App\Events\ReadReceipt;
+use App\Services\ChatContentFilter;
 use App\Services\RealtimeService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +19,8 @@ use Illuminate\Http\Request;
 class ChatController extends Controller
 {
     public function __construct(
-        private RealtimeService $realtimeService
+        private RealtimeService $realtimeService,
+        private ChatContentFilter $contentFilter
     ) {}
     /**
      * List user's chat conversations.
@@ -97,6 +102,8 @@ class ChatController extends Controller
             'order:id,status',
         ]);
 
+        $this->appendBlockState($conversation, $user->id);
+
         return $this->success($conversation, 'Conversation retrieved successfully');
     }
 
@@ -153,12 +160,17 @@ class ChatController extends Controller
             return $this->error('Conversation not found or ended.', 404);
         }
 
+        $otherId = $this->otherParticipantId($conversation, $user->id);
+        if ($otherId && UserBlock::existsBetween($user->id, $otherId)) {
+            return $this->error('You can no longer send messages in this conversation.', 403);
+        }
+
         // Create message
         $message = $conversation->messages()->create([
             'sender_id' => $user->id,
             'sender_type' => $user->role,
             'message_type' => 'text',
-            'content' => $validated['message'],
+            'content' => $this->contentFilter->clean($validated['message']),
             'attachments' => $validated['attachments'] ?? null,
             'is_system_message' => false,
         ]);
@@ -310,6 +322,170 @@ class ChatController extends Controller
             'conversation_id' => $conversation->id,
             'status' => 'ended',
         ], 'Conversation ended successfully');
+    }
+
+    /**
+     * Report the other participant or one of their messages to LeSgo admins.
+     * Creates a high-priority support ticket so it lands in the admin queue.
+     */
+    public function report(Request $request, $conversationId): JsonResponse
+    {
+        $user = $request->user();
+        $validated = $request->validate([
+            'reason' => 'required|string|in:' . implode(',', ChatReport::REASONS),
+            'details' => 'nullable|string|max:1000',
+            'message_id' => 'nullable|integer',
+            'block' => 'nullable|boolean',
+        ]);
+
+        $conversation = ChatConversation::forUser($user->id)->find($conversationId);
+
+        if (!$conversation) {
+            return $this->error('Conversation not found.', 404);
+        }
+
+        $reportedUserId = $this->otherParticipantId($conversation, $user->id);
+
+        $message = null;
+        if (!empty($validated['message_id'])) {
+            $message = $conversation->messages()
+                ->where('id', $validated['message_id'])
+                ->where('sender_id', '!=', $user->id)
+                ->first();
+
+            if (!$message) {
+                return $this->error('Message not found.', 404);
+            }
+        }
+
+        $reasonLabel = ucfirst(str_replace('_', ' ', $validated['reason']));
+
+        $ticket = SupportTicket::create([
+            'user_id' => $user->id,
+            'order_id' => $conversation->order_id,
+            'subject' => "Chat report: {$reasonLabel}",
+            'description' => trim(implode("\n\n", array_filter([
+                "Reported user ID: " . ($reportedUserId ?? 'unknown'),
+                "Conversation ID: {$conversation->id}",
+                $message ? "Reported message: \"{$message->content}\"" : null,
+                !empty($validated['details']) ? "Details from reporter: {$validated['details']}" : null,
+            ]))),
+            'category' => 'other',
+            'priority' => 'high',
+            'status' => 'open',
+            'metadata' => [
+                'type' => 'chat_report',
+                'reason' => $validated['reason'],
+                'reported_user_id' => $reportedUserId,
+                'conversation_id' => $conversation->id,
+                'message_id' => $message?->id,
+            ],
+        ]);
+
+        $report = ChatReport::create([
+            'reporter_id' => $user->id,
+            'reported_user_id' => $reportedUserId,
+            'conversation_id' => $conversation->id,
+            'message_id' => $message?->id,
+            'support_ticket_id' => $ticket->id,
+            'reason' => $validated['reason'],
+            'details' => $validated['details'] ?? null,
+            'message_snapshot' => $message?->content,
+            'status' => 'pending',
+        ]);
+
+        if (($validated['block'] ?? false) && $reportedUserId) {
+            $this->blockUser($user->id, $reportedUserId, $conversation->id);
+        }
+
+        return $this->created([
+            'report_id' => $report->id,
+            'ticket_number' => $ticket->ticket_number,
+            'blocked' => (bool) ($validated['block'] ?? false) && $reportedUserId !== null,
+        ], 'Thanks for reporting. Our team will review this within 24 hours.');
+    }
+
+    /**
+     * Block the other participant: neither side can send further messages.
+     */
+    public function block(Request $request, $conversationId): JsonResponse
+    {
+        $user = $request->user();
+        $conversation = ChatConversation::forUser($user->id)->find($conversationId);
+
+        if (!$conversation) {
+            return $this->error('Conversation not found.', 404);
+        }
+
+        $otherId = $this->otherParticipantId($conversation, $user->id);
+        if (!$otherId) {
+            return $this->error('There is no one to block in this conversation yet.', 422);
+        }
+
+        $this->blockUser($user->id, $otherId, $conversation->id);
+
+        return $this->success([
+            'conversation_id' => $conversation->id,
+            'blocked_by_me' => true,
+            'can_message' => false,
+        ], 'User blocked.');
+    }
+
+    /**
+     * Remove a block the current user placed on the other participant.
+     */
+    public function unblock(Request $request, $conversationId): JsonResponse
+    {
+        $user = $request->user();
+        $conversation = ChatConversation::forUser($user->id)->find($conversationId);
+
+        if (!$conversation) {
+            return $this->error('Conversation not found.', 404);
+        }
+
+        $otherId = $this->otherParticipantId($conversation, $user->id);
+        if ($otherId) {
+            UserBlock::where('blocker_id', $user->id)->where('blocked_id', $otherId)->delete();
+        }
+
+        $this->appendBlockState($conversation, $user->id);
+
+        return $this->success([
+            'conversation_id' => $conversation->id,
+            'blocked_by_me' => $conversation->blocked_by_me,
+            'can_message' => $conversation->can_message,
+        ], 'User unblocked.');
+    }
+
+    private function blockUser(int $blockerId, int $blockedId, int $conversationId): void
+    {
+        UserBlock::firstOrCreate(
+            ['blocker_id' => $blockerId, 'blocked_id' => $blockedId],
+            ['conversation_id' => $conversationId]
+        );
+    }
+
+    private function otherParticipantId(ChatConversation $conversation, int $userId): ?int
+    {
+        if ((int) $conversation->customer_id === $userId) {
+            return $conversation->driver_id ? (int) $conversation->driver_id : null;
+        }
+
+        if ((int) $conversation->driver_id === $userId) {
+            return $conversation->customer_id ? (int) $conversation->customer_id : null;
+        }
+
+        return null;
+    }
+
+    private function appendBlockState(ChatConversation $conversation, int $userId): void
+    {
+        $otherId = $this->otherParticipantId($conversation, $userId);
+
+        $conversation->blocked_by_me = $otherId
+            ? UserBlock::where('blocker_id', $userId)->where('blocked_id', $otherId)->exists()
+            : false;
+        $conversation->can_message = !$otherId || !UserBlock::existsBetween($userId, $otherId);
     }
 
     /**

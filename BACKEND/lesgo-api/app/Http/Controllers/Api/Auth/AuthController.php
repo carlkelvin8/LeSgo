@@ -28,6 +28,12 @@ class AuthController extends Controller
         if (!empty($credentials['password'])) {
             return Hash::check($credentials['password'], $user->password);
         }
+        if (!empty($credentials['apple_id_token'])) {
+            // Destructive actions need a freshly issued Apple token bound to a client nonce.
+            return !empty($credentials['apple_nonce'])
+                && app(\App\Services\AppleIdentityService::class)
+                    ->matches($user, $credentials['apple_id_token'], $credentials['apple_nonce'], 300);
+        }
         return !empty($credentials['google_id_token'])
             && app(\App\Services\GoogleIdentityVerifier::class)->matches($user, $credentials['google_id_token']);
     }
@@ -684,8 +690,10 @@ class AuthController extends Controller
     public function deactivateAccount(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'password' => 'nullable|required_without:google_id_token|string',
-            'google_id_token' => 'nullable|required_without:password|string',
+            'password' => 'nullable|required_without_all:google_id_token,apple_id_token|string',
+            'google_id_token' => 'nullable|required_without_all:password,apple_id_token|string',
+            'apple_id_token' => 'nullable|required_without_all:password,google_id_token|string',
+            'apple_nonce' => 'nullable|required_with:apple_id_token|string|max:255',
             'reason' => 'nullable|string|max:500',
         ]);
 
@@ -733,8 +741,11 @@ class AuthController extends Controller
     public function deleteAccount(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'password' => 'nullable|required_without:google_id_token|string',
-            'google_id_token' => 'nullable|required_without:password|string',
+            'password' => 'nullable|required_without_all:google_id_token,apple_id_token|string',
+            'google_id_token' => 'nullable|required_without_all:password,apple_id_token|string',
+            'apple_id_token' => 'nullable|required_without_all:password,google_id_token|string',
+            'apple_nonce' => 'nullable|required_with:apple_id_token|string|max:255',
+            'apple_authorization_code' => 'nullable|string|max:2048',
             'confirmation' => 'required|string|in:DELETE',
             'reason' => 'nullable|string|max:500',
         ]);
@@ -748,6 +759,12 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Best-effort: Apple requires revoking Sign in with Apple tokens on deletion.
+        if (!empty($validated['apple_authorization_code']) && !empty($user->apple_id)) {
+            app(\App\Services\AppleIdentityService::class)
+                ->revokeAuthorizationCode($validated['apple_authorization_code']);
+        }
+
         try {
             if ($user->isCustomer()) {
                 $this->accountDeletionService->permanentlyDeleteCustomer(
@@ -759,10 +776,20 @@ class AuthController extends Controller
                     $user,
                     $validated['reason'] ?? null
                 );
+            } elseif ($user->isPartnerAdmin()) {
+                $this->accountDeletionService->permanentlyDeleteMerchantOwner(
+                    $user,
+                    $validated['reason'] ?? null
+                );
+            } elseif ($user->isPartnerStaff()) {
+                $this->accountDeletionService->permanentlyDeleteMerchantStaff(
+                    $user,
+                    $validated['reason'] ?? null
+                );
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Permanent account deletion is only available for customer and driver accounts.',
+                    'message' => 'Permanent account deletion is not available for this account type. Please contact support.',
                 ], 403);
             }
         } catch (\Illuminate\Validation\ValidationException $e) {

@@ -108,6 +108,18 @@ return [
     ],
 
     // =========
+    // Sign in with Apple (client ID is the iOS bundle identifier)
+    // =========
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID', 'com.lesgo.app'),
+        // Only needed to revoke Apple tokens when an account is deleted.
+        // Leave unset to skip revocation (sign-in works without them).
+        'team_id' => env('APPLE_TEAM_ID'),
+        'key_id' => env('APPLE_KEY_ID'),
+        'private_key' => env('APPLE_PRIVATE_KEY'),
+    ],
+
+    // =========
     // Firebase (mobile push — public client config)
     // =========
     'firebase' => [

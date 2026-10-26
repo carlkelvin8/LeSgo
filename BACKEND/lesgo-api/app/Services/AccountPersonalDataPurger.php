@@ -23,7 +23,7 @@ class AccountPersonalDataPurger
      *
      * @return list<string>
      */
-    public function collectMediaPaths(User $user): array
+    public function collectMediaPaths(User $user, bool $includeVerificationDocuments = true): array
     {
         $paths = [
             $user->getRawOriginal('profile_photo_url'),
@@ -46,9 +46,11 @@ class AccountPersonalDataPurger
             );
         }
 
-        DocumentVerification::query()
-            ->where('user_id', $user->id)
-            ->each(fn (DocumentVerification $document) => $this->appendPaths($paths, $document->document_urls));
+        if ($includeVerificationDocuments) {
+            DocumentVerification::query()
+                ->where('user_id', $user->id)
+                ->each(fn (DocumentVerification $document) => $this->appendPaths($paths, $document->document_urls));
+        }
 
         RatingReview::query()
             ->where(function ($query) use ($user) {
@@ -233,7 +235,18 @@ class AccountPersonalDataPurger
         $user->driverLocations()->delete();
     }
 
-    private function purgeCommonData(User $user): void
+    /**
+     * Merchant owners and staff: purge the person's own data but keep their
+     * verification documents (business permits, IDs) when an account is
+     * deleted. Business policy is to keep those documents through this flow.
+     */
+    public function purgeMerchantUser(User $user): void
+    {
+        $this->purgeCommonData($user, retainVerificationDocuments: true);
+        $user->addresses()->delete();
+    }
+
+    private function purgeCommonData(User $user, bool $retainVerificationDocuments = false): void
     {
         $conversationIds = ChatConversation::query()
             ->forUser($user->id)
@@ -252,7 +265,9 @@ class AccountPersonalDataPurger
             })
             ->delete();
 
-        $user->documentVerifications()->delete();
+        if (! $retainVerificationDocuments) {
+            $user->documentVerifications()->delete();
+        }
         $user->socialShares()->delete();
         $user->userSessions()->delete();
         $user->geofenceEvents()->delete();
