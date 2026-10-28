@@ -51,7 +51,14 @@ class MerchantSettingsSection extends StatelessWidget {
           label: 'Printer Settings',
           route: MainRoutes.merchantPrinterSettings,
         ),
-        // Removed Deactivate and Delete account options - redundant for merchants
+        // Required by App Store Guideline 5.1.1(v): accounts created in-app
+        // must be deletable in-app.
+        _SettingsTile(
+          icon: Icons.delete_forever_outlined,
+          label: 'Delete account',
+          route: MainRoutes.merchantDeleteAccount,
+          isDestructive: true,
+        ),
       ],
     );
   }
@@ -61,12 +68,13 @@ class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String route;
-  final bool isDestructive = false;
+  final bool isDestructive;
 
   const _SettingsTile({
     required this.icon,
     required this.label,
     required this.route,
+    this.isDestructive = false,
   });
 
   @override

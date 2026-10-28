@@ -20,8 +20,9 @@ ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
           : CustomerDto.fromJson(json['customer'] as Map<String, dynamic>),
       latestMessage: json['latest_message'] == null
           ? null
-          : MessageDto.fromJson(
-              json['latest_message'] as Map<String, dynamic>),
+          : MessageDto.fromJson(json['latest_message'] as Map<String, dynamic>),
+      blockedByMe: json['blocked_by_me'] as bool? ?? false,
+      canMessage: json['can_message'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
@@ -35,14 +36,16 @@ Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
       'created_at': instance.createdAt,
       'customer': instance.customer,
       'latest_message': instance.latestMessage,
+      'blocked_by_me': instance.blockedByMe,
+      'can_message': instance.canMessage,
     };
 
 CustomerDto _$CustomerDtoFromJson(Map<String, dynamic> json) => CustomerDto(
-      id: parseIntOrStringStrict(json['id']),
-      name: json['name'] as String,
-      email: json['email'] as String?,
-      profilePhotoUrl: json['profile_photo_url'] as String?,
-    );
+  id: parseIntOrStringStrict(json['id']),
+  name: json['name'] as String,
+  email: json['email'] as String?,
+  profilePhotoUrl: json['profile_photo_url'] as String?,
+);
 
 Map<String, dynamic> _$CustomerDtoToJson(CustomerDto instance) =>
     <String, dynamic>{
@@ -53,19 +56,19 @@ Map<String, dynamic> _$CustomerDtoToJson(CustomerDto instance) =>
     };
 
 MessageDto _$MessageDtoFromJson(Map<String, dynamic> json) => MessageDto(
-      id: parseIntOrStringStrict(json['id']),
-      conversationId: parseIntOrStringStrict(json['conversation_id']),
-      senderId: parseIntOrStringStrict(json['sender_id']),
-      senderType: json['sender_type'] as String,
-      messageType: json['message_type'] as String,
-      content: json['content'] as String,
-      isSystemMessage: parseBool(json['is_system_message']),
-      readAt: json['read_at'] as String?,
-      createdAt: json['created_at'] as String,
-      sender: json['sender'] == null
-          ? null
-          : SenderDto.fromJson(json['sender'] as Map<String, dynamic>),
-    );
+  id: parseIntOrStringStrict(json['id']),
+  conversationId: parseIntOrStringStrict(json['conversation_id']),
+  senderId: parseIntOrStringStrict(json['sender_id']),
+  senderType: json['sender_type'] as String,
+  messageType: json['message_type'] as String,
+  content: json['content'] as String,
+  isSystemMessage: parseBool(json['is_system_message']),
+  readAt: json['read_at'] as String?,
+  createdAt: json['created_at'] as String,
+  sender: json['sender'] == null
+      ? null
+      : SenderDto.fromJson(json['sender'] as Map<String, dynamic>),
+);
 
 Map<String, dynamic> _$MessageDtoToJson(MessageDto instance) =>
     <String, dynamic>{
@@ -82,21 +85,20 @@ Map<String, dynamic> _$MessageDtoToJson(MessageDto instance) =>
     };
 
 SenderDto _$SenderDtoFromJson(Map<String, dynamic> json) => SenderDto(
-      id: parseIntOrStringStrict(json['id']),
-      name: json['name'] as String,
-      email: json['email'] as String?,
-      role: json['role'] as String,
-      profilePhotoUrl: json['profile_photo_url'] as String?,
-    );
+  id: parseIntOrStringStrict(json['id']),
+  name: json['name'] as String,
+  email: json['email'] as String?,
+  role: json['role'] as String,
+  profilePhotoUrl: json['profile_photo_url'] as String?,
+);
 
-Map<String, dynamic> _$SenderDtoToJson(SenderDto instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'email': instance.email,
-      'role': instance.role,
-      'profile_photo_url': instance.profilePhotoUrl,
-    };
+Map<String, dynamic> _$SenderDtoToJson(SenderDto instance) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'email': instance.email,
+  'role': instance.role,
+  'profile_photo_url': instance.profilePhotoUrl,
+};
 
 SendMessageDto _$SendMessageDtoFromJson(Map<String, dynamic> json) =>
     SendMessageDto(

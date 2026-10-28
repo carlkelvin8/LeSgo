@@ -216,6 +216,56 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
+  Future<bool> report({
+    required String reason,
+    String? details,
+    int? messageId,
+    bool block = false,
+  }) async {
+    final conversation = state.currentConversation;
+    if (!mounted || conversation == null) return false;
+    try {
+      await _chatDataSource.reportConversation(
+        conversation.id,
+        reason: reason,
+        details: details,
+        messageId: messageId,
+        block: block,
+      );
+      if (block && mounted) {
+        state = state.copyWith(
+          currentConversation: conversation.copyWithBlockState(
+            blockedByMe: true,
+            canMessage: false,
+          ),
+        );
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> setBlocked(bool blocked) async {
+    final conversation = state.currentConversation;
+    if (!mounted || conversation == null) return false;
+    try {
+      final canMessage = blocked
+          ? await _chatDataSource.blockUser(conversation.id)
+          : await _chatDataSource.unblockUser(conversation.id);
+      if (!mounted) return false;
+      state = state.copyWith(
+        currentConversation: conversation.copyWithBlockState(
+          blockedByMe: blocked,
+          canMessage: canMessage,
+        ),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void clearConversation() {
     _pollTimer?.cancel();
     _typingDebounce?.cancel();

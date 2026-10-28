@@ -51,6 +51,8 @@ class ApiConstants {
   static const String chatEndConversation = '/v1/chat/conversations/{id}/end';
   static const String chatUnreadCount = '/v1/chat/unread-count';
   static const String chatMarkAsRead = '/v1/chat/conversations/{id}/read';
+  static const String chatReport = '/v1/chat/conversations/{id}/report';
+  static const String chatBlock = '/v1/chat/conversations/{id}/block';
 
   // FAQ
   static const String faqArticles = '/v1/faq/articles';

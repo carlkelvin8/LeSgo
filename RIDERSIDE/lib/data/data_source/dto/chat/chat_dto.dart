@@ -26,6 +26,12 @@ class ConversationDto {
   @JsonKey(name: 'latest_message')
   final MessageDto? latestMessage;
 
+  // Block state relative to the signed-in user
+  @JsonKey(name: 'blocked_by_me', defaultValue: false)
+  final bool blockedByMe;
+  @JsonKey(name: 'can_message', defaultValue: true)
+  final bool canMessage;
+
   ConversationDto({
     required this.id,
     this.orderId,
@@ -36,7 +42,27 @@ class ConversationDto {
     required this.createdAt,
     this.customer,
     this.latestMessage,
+    this.blockedByMe = false,
+    this.canMessage = true,
   });
+
+  ConversationDto copyWithBlockState({
+    required bool blockedByMe,
+    required bool canMessage,
+  }) =>
+      ConversationDto(
+        id: id,
+        orderId: orderId,
+        customerId: customerId,
+        driverId: driverId,
+        status: status,
+        lastMessageAt: lastMessageAt,
+        createdAt: createdAt,
+        customer: customer,
+        latestMessage: latestMessage,
+        blockedByMe: blockedByMe,
+        canMessage: canMessage,
+      );
 
   factory ConversationDto.fromJson(Map<String, dynamic> json) =>
       _$ConversationDtoFromJson(json);

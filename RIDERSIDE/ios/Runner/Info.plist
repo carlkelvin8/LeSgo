@@ -53,6 +53,8 @@
 	<string>LeSgo Affiliates uses your location while on duty to navigate deliveries and share live tracking with customers.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>LeSgo Affiliates needs camera access to take attendance photos and upload delivery proof.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>LeSgo Affiliates plays order alert sounds. It does not record or transmit audio; microphone access is not used.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>LeSgo Affiliates needs photo library access to upload delivery proof images.</string>
 	<key>UIBackgroundModes</key>
@@ -60,6 +62,8 @@
 		<string>location</string>
 		<string>remote-notification</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>GMSApiKey</key>
 	<string>$(GOOGLE_MAPS_API_KEY)</string>
 </dict>

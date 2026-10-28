@@ -96,4 +96,39 @@ class ChatRemoteDataSource {
       ApiConstants.chatEndConversation.replaceAll('{id}', conversationId.toString()),
     );
   }
+
+  /// Reports the other participant (optionally a specific message) to admins.
+  Future<void> reportConversation(
+    int conversationId, {
+    required String reason,
+    String? details,
+    int? messageId,
+    bool block = false,
+  }) async {
+    await _dioClient.dio.post(
+      ApiConstants.chatReport.replaceAll('{id}', conversationId.toString()),
+      data: {
+        'reason': reason,
+        if (details != null && details.isNotEmpty) 'details': details,
+        'message_id': ?messageId,
+        'block': block,
+      },
+    );
+  }
+
+  /// Blocks the other participant. Returns the server's `can_message` flag.
+  Future<bool> blockUser(int conversationId) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.chatBlock.replaceAll('{id}', conversationId.toString()),
+    );
+    return response.data['data']?['can_message'] == true;
+  }
+
+  /// Removes the block. Returns the server's `can_message` flag.
+  Future<bool> unblockUser(int conversationId) async {
+    final response = await _dioClient.dio.delete(
+      ApiConstants.chatBlock.replaceAll('{id}', conversationId.toString()),
+    );
+    return response.data['data']?['can_message'] == true;
+  }
 }
