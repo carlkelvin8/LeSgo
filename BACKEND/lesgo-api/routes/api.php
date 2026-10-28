@@ -137,6 +137,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/google', [\App\Http\Controllers\Api\Auth\GoogleAuthController::class, 'handleGoogleSignIn']);
+        Route::post('/apple', [\App\Http\Controllers\Api\Auth\AppleAuthController::class, 'handleAppleSignIn']);
 
         // Forgot Password endpoints (public, rate-limited)
         Route::post('/forgot-password/send-otp', [\App\Http\Controllers\Api\Auth\ForgotPasswordController::class, 'sendOtp'])
@@ -538,6 +539,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/conversations/{conversation}/system-message', [\App\Http\Controllers\Api\ChatController::class, 'sendSystemMessage']);
             Route::post('/conversations/{conversation}/end', [\App\Http\Controllers\Api\ChatController::class, 'endConversation']);
             Route::post('/conversations/{conversation}/read', [\App\Http\Controllers\Api\ChatController::class, 'markMessagesAsRead']);
+            Route::post('/conversations/{conversation}/report', [\App\Http\Controllers\Api\ChatController::class, 'report'])->middleware('throttle:10,1');
+            Route::post('/conversations/{conversation}/block', [\App\Http\Controllers\Api\ChatController::class, 'block']);
+            Route::delete('/conversations/{conversation}/block', [\App\Http\Controllers\Api\ChatController::class, 'unblock']);
             Route::get('/unread-count', [\App\Http\Controllers\Api\ChatController::class, 'unreadCount']);
         });
 

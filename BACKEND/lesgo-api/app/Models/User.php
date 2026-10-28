@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'email_verified_at',
         'google_id',
+        'apple_id',
         'phone_number',
         'date_of_birth',
         'address_line1',
@@ -44,6 +45,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'apple_id',
     ];
 
     protected $casts = [

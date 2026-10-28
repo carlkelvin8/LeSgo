@@ -187,6 +187,13 @@ class PartnerController extends Controller
             'branches' => fn ($q) => $q->orderByDesc('is_primary'),
         ]);
 
+        // Current listings show closed stores generically. Order history and
+        // receipts load the partner relation directly, so they keep the
+        // original store name.
+        if ($partner->status === 'closed' && ! request()->user()?->isAdmin()) {
+            $partner->setAttribute('name', 'Closed store');
+        }
+
         return $this->success($partner);
     }
 
