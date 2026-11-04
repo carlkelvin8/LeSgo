@@ -13,6 +13,7 @@ import '../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
 import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
+import '../../../widgets/main/merchantside/orders/merchant_customer_safety_handlers.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_action_handlers.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
 import '../../../widgets/main/merchantside/orders/merchant_prep_time_estimate.dart';
@@ -90,6 +91,46 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     }
   }
 
+  /// Report or block the customer (App Store Guideline 1.2).
+  Widget _customerSafetyMenu(OrderDto order) {
+    final blocked =
+        ref.watch(merchantCustomerBlockedProvider(order.id)).value ?? false;
+    final customerLabel = order.user?.name ?? 'this customer';
+
+    return PopupMenuButton<String>(
+      tooltip: 'Customer options',
+      icon: const Icon(Icons.more_vert),
+      onSelected: (value) {
+        if (value == 'report') {
+          MerchantCustomerSafetyHandlers.report(
+            context,
+            ref,
+            orderId: order.id,
+            customerLabel: customerLabel,
+          );
+        } else {
+          MerchantCustomerSafetyHandlers.setBlocked(
+            context,
+            ref,
+            orderId: order.id,
+            block: !blocked,
+            customerLabel: customerLabel,
+          );
+        }
+      },
+      itemBuilder: (_) => [
+        const PopupMenuItem(
+          value: 'report',
+          child: Text(MerchantCustomerSafetyHandlers.reportLabel),
+        ),
+        PopupMenuItem(
+          value: 'block',
+          child: Text(MerchantCustomerSafetyHandlers.blockLabel(blocked)),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(merchantMenuProvider);
@@ -140,6 +181,9 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
         ),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black87),
+        actions: [
+          if (resolvedOrder.userId > 0) _customerSafetyMenu(resolvedOrder),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

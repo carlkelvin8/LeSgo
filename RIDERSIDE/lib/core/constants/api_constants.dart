@@ -54,6 +54,11 @@ class ApiConstants {
   static const String chatReport = '/v1/chat/conversations/{id}/report';
   static const String chatBlock = '/v1/chat/conversations/{id}/block';
 
+  // Merchant: report or block the customer of an order (Guideline 1.2).
+  static const String orderCustomerSafety = '/v1/orders/{id}/customer-safety';
+  static const String orderReportCustomer = '/v1/orders/{id}/report-customer';
+  static const String orderBlockCustomer = '/v1/orders/{id}/block-customer';
+
   // FAQ
   static const String faqArticles = '/v1/faq/articles';
   static const String faqCategories = '/v1/faq/categories';

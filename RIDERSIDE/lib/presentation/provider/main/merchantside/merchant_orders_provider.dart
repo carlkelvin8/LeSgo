@@ -75,6 +75,13 @@ final merchantOrderDetailProvider =
   return dataSource.getOrderById(orderId);
 });
 
+/// Whether the store has blocked the customer of this order.
+final merchantCustomerBlockedProvider =
+    FutureProvider.autoDispose.family<bool, int>((ref, orderId) async {
+  final dataSource = ref.read(merchantDataSourceProvider);
+  return dataSource.isCustomerBlocked(orderId);
+});
+
 final merchantPendingOrderCountProvider = Provider<int>((ref) {
   final ordersAsync = ref.watch(merchantOrdersProvider);
   return ordersAsync.maybeWhen(
@@ -189,5 +196,26 @@ class MerchantOrderActionNotifier {
     await dataSource.updateOrderStatus(orderId, 'ready_for_pickup');
     await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
     await _refresh(orderId);
+  }
+
+  /// Report the order's customer; [block] also stops them ordering here.
+  Future<void> reportCustomer(
+    int orderId, {
+    required String reason,
+    String? details,
+    bool block = false,
+  }) async {
+    await ref.read(merchantDataSourceProvider).reportCustomer(
+          orderId,
+          reason: reason,
+          details: details,
+          block: block,
+        );
+    ref.invalidate(merchantCustomerBlockedProvider(orderId));
+  }
+
+  Future<void> setCustomerBlocked(int orderId, bool block) async {
+    await ref.read(merchantDataSourceProvider).setCustomerBlocked(orderId, block);
+    ref.invalidate(merchantCustomerBlockedProvider(orderId));
   }
 }

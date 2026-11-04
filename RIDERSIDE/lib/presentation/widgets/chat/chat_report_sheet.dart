@@ -20,16 +20,21 @@ class ChatReportSheet extends StatefulWidget {
   final String targetLabel;
   final bool isMessage;
 
+  /// What blocking means here (messages in chat, orders for a store).
+  final String blockSubtitle;
+
   const ChatReportSheet({
     super.key,
     required this.targetLabel,
     this.isMessage = false,
+    this.blockSubtitle = 'You will no longer exchange messages.',
   });
 
   static Future<ChatReportResult?> show(
     BuildContext context, {
     required String targetLabel,
     bool isMessage = false,
+    String blockSubtitle = 'You will no longer exchange messages.',
   }) {
     return showModalBottomSheet<ChatReportResult>(
       context: context,
@@ -41,6 +46,7 @@ class ChatReportSheet extends StatefulWidget {
       builder: (_) => ChatReportSheet(
         targetLabel: targetLabel,
         isMessage: isMessage,
+        blockSubtitle: blockSubtitle,
       ),
     );
   }
@@ -131,7 +137,7 @@ class _ChatReportSheetState extends State<ChatReportSheet> {
                 value: _block,
                 onChanged: (v) => setState(() => _block = v ?? false),
                 title: Text('Also block ${widget.targetLabel}'),
-                subtitle: const Text('You will no longer exchange messages.'),
+                subtitle: Text(widget.blockSubtitle),
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
                 activeColor: const Color(0xFF5F2D82),
