@@ -102,7 +102,7 @@ class CartScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 pinLocation != null
-                                    ? 'ðŸ“ Pin location set'
+                                    ? '\u{1F4CD} Pin location set'
                                     : 'Pin exact location on map',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
@@ -330,6 +330,9 @@ class CartScreen extends ConsumerWidget {
             body: Stack(
               children: [
                 GoogleMap(
+                  // Keep the my-location button and Google logo above the
+                  // address card instead of underneath it.
+                  padding: const EdgeInsets.only(bottom: 104),
                   initialCameraPosition: CameraPosition(
                     target: selectedLatLng,
                     zoom: 16,
@@ -413,7 +416,7 @@ class CartScreen extends ConsumerWidget {
                           ),
                         ] else
                           Text(
-                            'ðŸ“ Tap on the map or drag the pin to set delivery location',
+                            '\u{1F4CD} Tap on the map or drag the pin to set delivery location',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'TT Fors',
