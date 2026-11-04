@@ -293,6 +293,11 @@ Route::prefix('v1')->group(function () {
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
         Route::post('/orders/{order}/upload-proof', [OrderController::class, 'uploadProof']);
         Route::post('/orders/{order}/feedback', [OrderController::class, 'submitFeedback']);
+        // Merchant: report or block the customer of an order (App Store Guideline 1.2)
+        Route::get('/orders/{order}/customer-safety', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'show']);
+        Route::post('/orders/{order}/report-customer', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'report'])->middleware('throttle:10,1');
+        Route::post('/orders/{order}/block-customer', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'block']);
+        Route::delete('/orders/{order}/block-customer', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'unblock']);
         Route::get('/orders/{order}/receipt', [ReceiptController::class, 'show']);
         Route::get('/orders/{order}/tracking', [\App\Http\Controllers\Api\OrderTrackingController::class, 'trackOrder']);
         Route::get('/orders/{order}/driver-location', [\App\Http\Controllers\Api\OrderTrackingController::class, 'liveLocation']);

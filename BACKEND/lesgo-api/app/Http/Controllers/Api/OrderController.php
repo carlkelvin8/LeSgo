@@ -17,6 +17,7 @@ use App\Models\Partner;
 use App\Models\PartnerBranch;
 use App\Models\Service;
 use App\Services\FareCalculatorService;
+use App\Services\MerchantCustomerSafetyService;
 use App\Services\MediaStorageService;
 use App\Services\MenuItemOptionsHelper;
 use App\Services\OrderCancellationService;
@@ -166,6 +167,9 @@ class OrderController extends Controller
             $partner = Partner::find($data['partner_id']);
             if ($partner && ! $partner->is_open) {
                 return $this->error('This store is currently closed and not accepting orders.', 422);
+            }
+            if ($partner && MerchantCustomerSafetyService::storeBlocksCustomer($partner, (int) $user->id)) {
+                return $this->error('This store is not accepting orders from your account.', 403);
             }
         }
 
