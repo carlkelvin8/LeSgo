@@ -82,6 +82,7 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
               'quantity': item.quantity,
               'estimated_price': item.unitPrice,
               'notes': item.size,
+              if (item.menuItemId != null) 'menu_item_id': item.menuItemId,
             },
           )
           .toList();

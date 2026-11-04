@@ -223,6 +223,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                         pageBuilder: (_, anim, _) => FadeTransition(
                           opacity: anim,
                           child: FoodDetailScreen(
+                            menuItemId: item.id as int?,
                             foodName: item.name,
                             foodImage: item.imageUrl,
                             price: 'PHP ${item.price.toStringAsFixed(2)}',

@@ -13,6 +13,7 @@ class FoodDetailScreen extends ConsumerWidget {
   final String price;
   final String description;
   final List<String> sizes;
+  final int? menuItemId;
 
   const FoodDetailScreen({
     super.key,
@@ -21,6 +22,7 @@ class FoodDetailScreen extends ConsumerWidget {
     required this.price,
     required this.description,
     required this.sizes,
+    this.menuItemId,
   });
 
   @override
@@ -68,6 +70,7 @@ class FoodDetailScreen extends ConsumerWidget {
                     size: detailState.selectedSize.label,
                         unitPrice: detailState.unitPrice,
                         quantity: detailState.quantity,
+                        menuItemId: menuItemId,
                       );
 
                   SnackBarUtils.showSuccess(context, '$foodName added to cart!');
