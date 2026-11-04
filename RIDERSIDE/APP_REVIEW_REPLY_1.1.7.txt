@@ -23,7 +23,7 @@ Steps:
 4) Sign out, sign in as the merchant to see orders, Menu and Sales Report.
 5) Delete account: Rider > Profile > Settings > Delete account. Merchant > Profile > Settings & Support > Delete account. Type DELETE to confirm.
 
-User-generated content (Guideline 1.2): the only UGC is the chat between a rider and the customer of an active order. Profanity in English and Filipino is masked automatically. Users can report a message (long-press) or the other user (chat menu) with a reason; reports go to our moderation queue and are acted on within 24 hours. Users can block and unblock from the chat menu; blocked chats cannot send messages. Riders accept a zero-tolerance policy for objectionable content in the terms. Contact: Lesgoclaveria@gmail.com.
+User-generated content (Guideline 1.2): the only UGC is the chat between a rider and the customer of an active order. Profanity in English and Filipino is masked automatically. Users can report a message (long-press) or the other user (chat menu) with a reason; reports go to our moderation queue and are acted on within 24 hours. Users can block and unblock from the chat menu; blocked chats cannot send messages. Merchants can report or block a customer from Order Details (menu); a blocked customer cannot order from that store. Riders accept a zero-tolerance policy for objectionable content in the terms. Contact: Lesgoclaveria@gmail.com.
 
 4. EXTERNAL SERVICES
 - Laravel Cloud: backend API and database
