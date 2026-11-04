@@ -33,6 +33,7 @@ class ApiConstants {
   // Auth endpoints
   static const String authMe = '/v1/auth/me';
   static const String googleSignIn = '/v1/auth/google';
+  static const String appleSignIn = '/v1/auth/apple';
 
   // User endpoints
   static String userById(int userId) => '/v1/users/$userId';

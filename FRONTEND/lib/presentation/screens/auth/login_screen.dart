@@ -1,3 +1,5 @@
+import '../../widgets/auth/apple_auth_button.dart';
+import '../../../core/utils/google_auth_helper.dart' show GoogleAuthMode;
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -188,6 +190,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           iconData: Icons.g_mobiledata,
                           onPressed: () => _controllers.handleGoogleSignIn(context, ref),
                         ),
+                        const AppleAuthButton(mode: GoogleAuthMode.login),
                         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
 
                         Row(
