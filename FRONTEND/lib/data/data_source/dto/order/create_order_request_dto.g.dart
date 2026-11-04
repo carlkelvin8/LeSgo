@@ -11,6 +11,7 @@ CreateOrderRequestDto _$CreateOrderRequestDtoFromJson(
 ) => CreateOrderRequestDto(
   serviceId: (json['service_id'] as num).toInt(),
   partnerId: (json['partner_id'] as num?)?.toInt(),
+  partnerBranchId: (json['partner_branch_id'] as num?)?.toInt(),
   estimatedDistanceM: (json['estimated_distance_m'] as num).toInt(),
   pickup: OrderAddressDto.fromJson(json['pickup'] as Map<String, dynamic>),
   dropoff: OrderAddressDto.fromJson(json['dropoff'] as Map<String, dynamic>),
@@ -32,6 +33,7 @@ Map<String, dynamic> _$CreateOrderRequestDtoToJson(
 ) => <String, dynamic>{
   'service_id': instance.serviceId,
   'partner_id': instance.partnerId,
+  'partner_branch_id': ?instance.partnerBranchId,
   'estimated_distance_m': instance.estimatedDistanceM,
   'pickup': instance.pickup,
   'dropoff': instance.dropoff,

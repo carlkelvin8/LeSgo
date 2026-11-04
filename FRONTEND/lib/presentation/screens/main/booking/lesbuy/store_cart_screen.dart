@@ -25,6 +25,7 @@ import '../../../../widgets/booking/lesbuy/cart/manual_order_section.dart';
 import '../../../../widgets/booking/lesbuy/manual_order/manual_pickup_section.dart';
 import '../../../../widgets/booking/lesbuy/cart/store_order_section.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
+import '../../../../widgets/booking/common/store_branch_selector.dart';
 import '../../../../provider/main/lespay/lespay_provider.dart';
 import '../../../../widgets/payment/booking_payment_method_section.dart';
 import '../../../../widgets/widgets.dart';
@@ -279,6 +280,21 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                     ),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+                    // Pickup branch (multi-branch stores)
+                    if (!isStoreCartEmpty && lesbuyCheckout.selectedBranch != null) ...[
+                      StoreBranchSelector(
+                        branches: lesbuyCheckout.branches,
+                        selected: lesbuyCheckout.selectedBranch,
+                        dropoffLat: ref.watch(addressProvider).deliveryAddress?.latitude ??
+                            BookingGeoUtils.defaultLat,
+                        dropoffLng: ref.watch(addressProvider).deliveryAddress?.longitude ??
+                            BookingGeoUtils.defaultLng,
+                        onSelected: (id) =>
+                            ref.read(lesbuyCheckoutProvider.notifier).selectBranch(id),
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    ],
 
                     // Empty State
                     if (isCartEmpty)
@@ -537,6 +553,12 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
 
                       final createOrderRequest = CreateOrderRequestDto(
                         serviceId: 4,
+                        // Store orders name the store and branch so the
+                        // server sets the pickup point from that branch.
+                        partnerId: isStoreCartEmpty ? null : checkoutQuote.partnerId,
+                        partnerBranchId: isStoreCartEmpty
+                            ? null
+                            : checkoutQuote.selectedBranchId,
                         estimatedDistanceM: isManualOnlyCheckout
                             ? BookingGeoUtils.distanceMeters(
                                 lat1: manualOrderState.pickupLat!,
@@ -549,7 +571,9 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                           hasStoreItems: !isStoreCartEmpty,
                           hasManualItems: !isManualOrderEmpty,
                           store: OrderAddressDto(
-                            address: storeState.storeName ?? 'Store',
+                            address: checkoutQuote.selectedBranch?.address.isNotEmpty == true
+                                ? checkoutQuote.selectedBranch!.address
+                                : storeState.storeName ?? 'Store',
                             lat: checkoutQuote.pickupLat,
                             lng: checkoutQuote.pickupLng,
                             contactName: storeState.storeName ?? 'Store',

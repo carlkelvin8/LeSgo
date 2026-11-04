@@ -8,6 +8,8 @@ class CreateOrderRequestDto {
   final int serviceId;
   @JsonKey(name: 'partner_id')
   final int? partnerId;
+  @JsonKey(name: 'partner_branch_id', includeIfNull: false)
+  final int? partnerBranchId;
   @JsonKey(name: 'estimated_distance_m')
   final int estimatedDistanceM;
   final OrderAddressDto pickup;
@@ -33,6 +35,7 @@ class CreateOrderRequestDto {
   CreateOrderRequestDto({
     required this.serviceId,
     this.partnerId,
+    this.partnerBranchId,
     required this.estimatedDistanceM,
     required this.pickup,
     required this.dropoff,

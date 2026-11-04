@@ -12,6 +12,7 @@ import '../../../../provider/auth/auth_provider.dart';
 import '../../../../provider/main/booking/checkout_provider.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
+import '../../../../widgets/booking/common/store_branch_selector.dart';
 import '../../../../widgets/payment/booking_payment_method_section.dart';
 import '../../../../widgets/booking/leseat/checkout/voucher_bottom_sheet.dart';
 import '../../../../widgets/widgets.dart';
@@ -195,6 +196,19 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                     ),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+                    // Pickup branch (multi-branch stores)
+                    if (checkoutState.selectedBranch != null) ...[
+                      StoreBranchSelector(
+                        branches: checkoutState.branches,
+                        selected: checkoutState.selectedBranch,
+                        dropoffLat: checkoutState.dropoffLat,
+                        dropoffLng: checkoutState.dropoffLng,
+                        enabled: !checkoutState.isLoading,
+                        onSelected: checkoutNotifier.selectBranch,
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    ],
 
                     // Restaurant Section or Empty State
                     if (isCartEmpty)
