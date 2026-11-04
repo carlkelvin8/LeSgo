@@ -203,6 +203,15 @@ class OrderController extends Controller
             }
         }
 
+        // Without a branch pin, the pickup contact is still the store. The apps
+        // send a placeholder number there, which would reach the rider.
+        if ($partner && ! ($branch && $branch->hasCoordinates())) {
+            $storePhone = trim((string) ($partner->support_phone ?? ''));
+            if ($storePhone !== '') {
+                $data['pickup']['contact_phone'] = $storePhone;
+            }
+        }
+
         $serviceCode = strtoupper((string) ($service->code ?? 'LESGO'));
 
         if ($serviceCode === 'LESRIDE' && ($data['vehicle_type'] ?? null) !== 'tricycle') {

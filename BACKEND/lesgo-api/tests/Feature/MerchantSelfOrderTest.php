@@ -81,6 +81,25 @@ class MerchantSelfOrderTest extends TestCase
             ->assertJsonPath('message', 'A menu item is no longer available. Refresh the cart and try again.');
     }
 
+    public function test_rider_gets_the_store_phone_instead_of_the_apps_placeholder(): void
+    {
+        $partner = $this->merchant();
+        $partner->update(['support_phone' => '09171234567']);
+        $menuItem = $this->menuItem($partner);
+        $payload = $this->payload($partner, [
+            'name' => 'hshaha', 'quantity' => 1, 'estimated_price' => 100.0,
+            'notes' => 'Regular', 'menu_item_id' => $menuItem->id,
+        ]);
+        $payload['pickup']['contact_phone'] = '+639123456789';
+
+        $id = $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum')
+            ->postJson('/api/v1/orders', $payload)
+            ->assertCreated()
+            ->json('data.id');
+
+        $this->assertSame('09171234567', \App\Models\Order::findOrFail($id)->pickup_contact_phone);
+    }
+
     public function test_stale_cart_price_is_rejected_with_a_price_message(): void
     {
         $partner = $this->merchant();
