@@ -1107,7 +1107,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
   }
 
   double get _amount => double.tryParse(_ctrl.text.trim()) ?? 0;
-  double get _fee => _amount * 0.015;
+  double get _fee => _amount * 0.03;
   double get _total => _amount + _fee;
 
   Future<void> _submit() async {
@@ -1216,7 +1216,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                     ),
                   ),
                   Text(
-                    '1.5% processing fee applies',
+                    '3% processing fee applies',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 11.5,
@@ -1345,7 +1345,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                       label: 'To wallet', value: '₱${_amount.toStringAsFixed(2)}'),
                   const SizedBox(height: 4),
                   _SummaryRow(
-                      label: 'Fee (1.5%)', value: '₱${_fee.toStringAsFixed(2)}'),
+                      label: 'Fee (3%)', value: '₱${_fee.toStringAsFixed(2)}'),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 6),
                     child: Divider(height: 1, color: Color(0xFFE8E0F0)),

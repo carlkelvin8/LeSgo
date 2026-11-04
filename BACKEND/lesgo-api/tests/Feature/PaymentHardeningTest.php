@@ -209,12 +209,12 @@ class PaymentHardeningTest extends TestCase
         $gateway = Mockery::mock(PaymentGatewayManager::class);
         $gateway->shouldReceive('createInvoice')
             ->once()
-            ->withArgs(fn ($amount) => abs($amount - 101.5) < 0.001)
+            ->withArgs(fn ($amount) => abs($amount - 103.0) < 0.001)
             ->andReturn([
                 'id' => 'checkout-safe-amount',
                 'invoice_url' => 'https://checkout.example/safe',
                 'status' => 'pending',
-                'amount' => 101.5,
+                'amount' => 103.0,
                 'currency' => 'PHP',
                 'provider' => 'paymongo',
             ]);
@@ -236,7 +236,7 @@ class PaymentHardeningTest extends TestCase
 
         $topUp = WalletTopUp::where('gateway_reference', 'checkout-safe-amount')->firstOrFail();
         $this->assertSame(100.0, (float) $topUp->amount);
-        $this->assertSame(101.5, (float) $topUp->total_charged);
+        $this->assertSame(103.0, (float) $topUp->total_charged);
     }
 
     public function test_driver_package_is_not_upgraded_when_verification_fails(): void
