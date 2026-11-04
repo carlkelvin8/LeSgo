@@ -14,6 +14,7 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\MenuItem;
 use App\Models\Partner;
+use App\Models\PartnerBranch;
 use App\Models\Service;
 use App\Services\FareCalculatorService;
 use App\Services\MediaStorageService;
@@ -95,6 +96,10 @@ class OrderController extends Controller
             $query->where('service_id', (int) $validated['service_id']);
         }
 
+        if (! empty($validated['partner_branch_id'])) {
+            $query->where('partner_branch_id', (int) $validated['partner_branch_id']);
+        }
+
         $perPage = (int) ($validated['per_page'] ?? 20);
         $paginator = $query->orderByDesc('id')->paginate($perPage);
 
@@ -156,10 +161,45 @@ class OrderController extends Controller
         }
 
         // Block orders to closed stores
+        $partner = null;
         if (! empty($data['partner_id'])) {
             $partner = Partner::find($data['partner_id']);
             if ($partner && ! $partner->is_open) {
                 return $this->error('This store is currently closed and not accepting orders.', 422);
+            }
+        }
+
+        // Multi-branch stores: the branch, not the client, decides the pickup point.
+        $branch = null;
+        if ($partner) {
+            $branchResult = $this->resolveOrderBranch($partner, $data);
+            if (is_string($branchResult)) {
+                return $this->error($branchResult, 422);
+            }
+            $branch = $branchResult;
+
+            if ($branch && $branch->hasCoordinates()) {
+                $movedM = $this->calculateHaversineDistance(
+                    (float) $data['pickup']['lat'],
+                    (float) $data['pickup']['lng'],
+                    (float) $branch->latitude,
+                    (float) $branch->longitude
+                );
+                $data['pickup'] = [
+                    'address' => $branch->fullAddress() ?: ($data['pickup']['address'] ?? $branch->name),
+                    'lat' => (float) $branch->latitude,
+                    'lng' => (float) $branch->longitude,
+                    'contact_name' => str_contains(mb_strtolower($branch->name), mb_strtolower($partner->name))
+                        ? $branch->name
+                        : trim($partner->name . ' – ' . $branch->name),
+                    'contact_phone' => $branch->phone_number
+                        ?: ($partner->support_phone ?? null)
+                        ?: ($data['pickup']['contact_phone'] ?? null),
+                ];
+                // The client priced a different pickup; re-derive the distance.
+                if ($movedM > 150) {
+                    $data['estimated_distance_m'] = 0;
+                }
             }
         }
 
@@ -271,6 +311,9 @@ class OrderController extends Controller
             $orderValue,
             $weightKg
         );
+        if ($branch) {
+            $meta['branch'] = $branch->toOrderSnapshot();
+        }
         $meta['subtotal'] = $itemSubtotal;
         $meta['delivery_fee'] = (float) $fareBreakdown['total'];
         $meta['discount'] = 0.0;
@@ -284,7 +327,7 @@ class OrderController extends Controller
         $saveAddresses = (bool) ($data['save_addresses'] ?? false);
 
         try {
-            $order = DB::transaction(function () use ($user, $data, $fareBreakdown, $meta, $saveAddresses, $voucherService) {
+            $order = DB::transaction(function () use ($user, $data, $fareBreakdown, $meta, $saveAddresses, $voucherService, $branch) {
                 $pickupAddressId = null;
                 $dropoffAddressId = null;
 
@@ -320,6 +363,7 @@ class OrderController extends Controller
                 $order = Order::create([
                     'customer_id' => $user->id,
                     'partner_id' => $data['partner_id'] ?? null,
+                    'partner_branch_id' => $branch?->id,
                     'driver_id' => null,
                     'service_id' => $data['service_id'],
                     'pickup_address_id' => $pickupAddressId,
@@ -1131,6 +1175,52 @@ class OrderController extends Controller
         }
 
         return round($fare, 2);
+    }
+
+    /**
+     * Pick the branch that fulfils a store order.
+     *
+     * An explicit partner_branch_id must belong to the store and be open.
+     * Without one (older app versions), use the primary branch, or the
+     * nearest open branch when the primary is closed.
+     *
+     * @return PartnerBranch|string|null branch, an error message, or null
+     *                                   when the store has no branches
+     */
+    private function resolveOrderBranch(Partner $partner, array $data): PartnerBranch|string|null
+    {
+        $branches = PartnerBranch::query()->where('partner_id', $partner->id)->get();
+        if ($branches->isEmpty()) {
+            return null;
+        }
+
+        if (! empty($data['partner_branch_id'])) {
+            $branch = $branches->firstWhere('id', (int) $data['partner_branch_id']);
+            if (! $branch) {
+                return 'The selected branch does not belong to this store.';
+            }
+            if (! $branch->is_open) {
+                return "{$branch->name} is currently closed. Please choose another branch.";
+            }
+
+            return $branch;
+        }
+
+        $primary = $branches->firstWhere('is_primary', true) ?? $branches->first();
+        if ($primary->is_open) {
+            return $primary;
+        }
+
+        $dropLat = (float) ($data['dropoff']['lat'] ?? 0);
+        $dropLng = (float) ($data['dropoff']['lng'] ?? 0);
+        $nearestOpen = $branches
+            ->filter(fn (PartnerBranch $b) => $b->is_open && $b->hasCoordinates())
+            ->sortBy(fn (PartnerBranch $b) => $this->calculateHaversineDistance(
+                $dropLat, $dropLng, (float) $b->latitude, (float) $b->longitude
+            ))
+            ->first();
+
+        return $nearestOpen ?? 'All branches of this store are currently closed.';
     }
 
     private function calculateHaversineDistance(

@@ -25,6 +25,7 @@ class Order extends Model
     protected $fillable = [
         'customer_id',
         'partner_id',
+        'partner_branch_id',
         'driver_id',
         'service_id',
         'pickup_address_id',
@@ -213,6 +214,11 @@ class Order extends Model
     public function partner()
     {
         return $this->belongsTo(Partner::class, 'partner_id');
+    }
+
+    public function partnerBranch()
+    {
+        return $this->belongsTo(PartnerBranch::class, 'partner_branch_id');
     }
 
     public function driverProfile()

@@ -23,8 +23,9 @@ class StorePartnerBranchRequest extends FormRequest
             'region'                     => ['nullable', 'string', 'max:100'],
             'country'                    => ['nullable', 'string', 'max:100'],
             'postal_code'                => ['nullable', 'string', 'max:20'],
-            'latitude'                   => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude'                  => ['nullable', 'numeric', 'between:-180,180'],
+            // A branch is a pickup point, so it must be on the map.
+            'latitude'                   => ['required', 'numeric', 'between:-90,90'],
+            'longitude'                  => ['required', 'numeric', 'between:-180,180'],
             'is_primary'                 => ['nullable', 'boolean'],
             'is_open'                    => ['nullable', 'boolean'],
             'estimated_delivery_minutes' => ['nullable', 'integer', 'min:1', 'max:180'],

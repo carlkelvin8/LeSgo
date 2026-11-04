@@ -25,6 +25,7 @@ class FilterOrderRequest extends FormRequest
             ])],
             'payment_status' => ['nullable', 'string', Rule::in(['pending', 'paid', 'failed', 'refunded'])],
             'service_id'     => ['nullable', 'integer', 'exists:services,id'],
+            'partner_branch_id' => ['nullable', 'integer'],
             'per_page'       => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
