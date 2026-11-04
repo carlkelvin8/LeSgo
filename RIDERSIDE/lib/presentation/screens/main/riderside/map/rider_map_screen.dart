@@ -90,13 +90,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   @override
   void initState() {
     super.initState();
-    AppLogger.debug('ðŸ—ºï¸ RiderMapScreen initState called - FIXED ZOOM CONTROLS v2');
+    AppLogger.debug('🗺️ RiderMapScreen initState called - FIXED ZOOM CONTROLS v2');
     _initializeMap();
   }
 
   @override
   void dispose() {
-    AppLogger.debug('ðŸ—ºï¸ RiderMapScreen dispose called');
+    AppLogger.debug('🗺️ RiderMapScreen dispose called');
     ref.read(riderLocationProvider.notifier).setActiveOrderId(null);
     
     // Properly dispose map controller
@@ -185,7 +185,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     try {
       final trackingData = await ApiService.getLiveOrderTracking(widget.orderId!);
       if (trackingData != null && mounted) {
-        AppLogger.debug('ðŸ“ Live tracking data received: $trackingData');
+        AppLogger.debug('📍 Live tracking data received: $trackingData');
         
         // Update markers with live driver location if available
         if (trackingData['driver_location'] != null) {
@@ -210,13 +210,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
               );
             });
             _updateMarkers();
-            AppLogger.debug('ðŸš— Updated driver position from live tracking: $driverLat, $driverLng');
+            AppLogger.debug('🚗 Updated driver position from live tracking: $driverLat, $driverLng');
           }
         }
         
         // Update ETA if available
         if (trackingData['eta'] != null) {
-          AppLogger.debug('â±ï¸ ETA: ${trackingData['eta']} minutes');
+          AppLogger.debug('⏱️ ETA: ${trackingData['eta']} minutes');
         }
       }
     } catch (e) {
@@ -305,7 +305,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     }
 
     try {
-      AppLogger.debug('ðŸ—ºï¸ Fetching route for order ${order.id}');
+      AppLogger.debug('🗺️ Fetching route for order ${order.id}');
 
       final polylines = await RiderRouteUtils.buildNavigationPolylines(
         order: order,
@@ -904,7 +904,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
           onPressed: () {
-            AppLogger.debug('ðŸ”™ Back button pressed');
+            AppLogger.debug('🔙 Back button pressed');
             Navigator.pop(context);
           },
         ),
@@ -960,9 +960,9 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                   });
                 });
                 
-                AppLogger.debug('ðŸ—ºï¸ REAL Google Maps created and ready with ${_markers.length} markers');
-                AppLogger.debug('ðŸ”‘ Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
-                AppLogger.debug('ðŸ“ Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+                AppLogger.debug('🗺️ REAL Google Maps created and ready with ${_markers.length} markers');
+                AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+                AppLogger.debug('📍 Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
                 
                 // Try to set a specific style to ensure map loads
                 try {
@@ -975,15 +975,15 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             },
             
             onTap: (LatLng position) {
-              AppLogger.debug('ðŸ—ºï¸ Google Maps tapped at: ${position.latitude}, ${position.longitude}');
+              AppLogger.debug('🗺️ Google Maps tapped at: ${position.latitude}, ${position.longitude}');
             },
             
             onCameraMove: (CameraPosition position) {
-              AppLogger.debug('ðŸ“· Google Maps camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
+              AppLogger.debug('📷 Google Maps camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
             },
             
             onCameraIdle: () {
-              AppLogger.debug('ðŸ“· Google Maps camera idle');
+              AppLogger.debug('📷 Google Maps camera idle');
             },
           ),
           

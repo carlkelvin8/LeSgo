@@ -395,8 +395,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   }
 
   Widget _buildMapView() {
-    AppLogger.debug('ðŸ—ºï¸ Building map view with position: $_currentPosition');
-    AppLogger.debug('ðŸ”‘ Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+    AppLogger.debug('🗺️ Building map view with position: $_currentPosition');
+    AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
     
     return Container(
       child: GoogleMap(
@@ -438,18 +438,18 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 _fitBounds();
               }
             });
-            AppLogger.debug('ðŸ—ºï¸ Bookings Map created and ready');
-            AppLogger.debug('ðŸ”‘ Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
-            AppLogger.debug('ðŸ“ Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+            AppLogger.debug('🗺️ Bookings Map created and ready');
+            AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+            AppLogger.debug('📍 Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
           }
         },
         
         onTap: (LatLng position) {
-          AppLogger.debug('ðŸ—ºï¸ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
+          AppLogger.debug('🗺️ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
         },
         
         onCameraMove: (CameraPosition position) {
-          AppLogger.debug('ðŸ“· Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
+          AppLogger.debug('📷 Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
         },
       ),
     );
