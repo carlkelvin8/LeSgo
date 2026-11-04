@@ -217,7 +217,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
           infoWindow: InfoWindow(
             title: AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
-            snippet: order.pickupAddress,
+            snippet: order.pickupDisplay,
           ),
         ),
       );
@@ -724,7 +724,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         ),
                       ),
                       Text(
-                        order.pickupAddress,
+                        order.pickupDisplay,
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 13.0,
@@ -975,7 +975,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         ),
                       ),
                     Text(
-                      order.pickupAddress,
+                      order.pickupDisplay,
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12.0,

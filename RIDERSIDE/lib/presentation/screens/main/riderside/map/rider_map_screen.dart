@@ -251,7 +251,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             markerId: const MarkerId('pickup'),
             position: LatLng(order.pickupLat, order.pickupLng),
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-            infoWindow: InfoWindow(title: '${AppLocalization.translate('pickup', ref.read(appLanguageProvider))}: ${order.pickupAddress}'),
+            infoWindow: InfoWindow(title: '${AppLocalization.translate('pickup', ref.read(appLanguageProvider))}: ${order.pickupDisplay}'),
           ),
         );
         
@@ -627,7 +627,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                             title: currentOrder.serviceId == 3 || currentOrder.serviceId == 4
                                 ? AppLocalization.translate('pick_up_from_merchant', ref.read(appLanguageProvider))
                                 : AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
-                            address: currentOrder.pickupAddress,
+                            address: currentOrder.pickupDisplay,
                             onNavigate: () => _openNavigation(
                               currentOrder.pickupLat,
                               currentOrder.pickupLng,

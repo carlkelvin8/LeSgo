@@ -31,6 +31,22 @@ double? _parseFareBreakdownSubtotal(dynamic value) {
       _parseDouble(value['items_total']);
 }
 
+Map? _metaBranch(Map json) {
+  final meta = json['meta'];
+  if (meta is! Map) return null;
+  final branch = meta['branch'];
+  return branch is Map ? branch : null;
+}
+
+Object? _readBranchId(Map json, String _) =>
+    int.tryParse(_metaBranch(json)?['id']?.toString() ?? '') ??
+    int.tryParse(json['partner_branch_id']?.toString() ?? '');
+
+Object? _readBranchName(Map json, String _) {
+  final name = _metaBranch(json)?['name']?.toString().trim();
+  return (name == null || name.isEmpty) ? null : name;
+}
+
 double? _parseMetaOrderValue(dynamic value) {
   if (value is! Map) return null;
   return _parseDouble(value['order_value']) ??
@@ -92,6 +108,11 @@ class OrderDto {
   final double? fareBreakdownSubtotal;
   @JsonKey(name: 'meta', fromJson: _parseMetaOrderValue)
   final double? metaOrderValue;
+  // Fulfilling branch, read from `meta.branch` (multi-branch stores).
+  @JsonKey(name: 'branch_id', readValue: _readBranchId, includeToJson: false)
+  final int? branchId;
+  @JsonKey(name: 'branch_name', readValue: _readBranchName, includeToJson: false)
+  final String? branchName;
   @JsonKey(name: 'created_at')
   final String createdAt;
   @JsonKey(name: 'updated_at')
@@ -135,6 +156,8 @@ class OrderDto {
     this.partnerShare,
     this.fareBreakdownSubtotal,
     this.metaOrderValue,
+    this.branchId,
+    this.branchName,
     required this.createdAt,
     required this.updatedAt,
     this.user,

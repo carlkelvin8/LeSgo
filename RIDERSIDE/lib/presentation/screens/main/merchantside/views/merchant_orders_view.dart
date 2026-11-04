@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/merchant_order_alert_service.dart';
 import '../../../../../core/utils/merchant_csv_export_utils.dart';
 import '../../../../../data/data_source/dto/merchant/order_dto.dart';
+import '../../../../provider/main/merchantside/merchant_branches_provider.dart';
 import '../../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
@@ -31,6 +32,9 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
     // Stop persistent notification sound when merchant views orders
     WidgetsBinding.instance.addPostFrameCallback((_) {
       MerchantOrderAlertService.acknowledgeOrderAlert();
+      if (ref.read(merchantBranchesProvider).branches.isEmpty) {
+        ref.read(merchantBranchesProvider.notifier).loadBranches();
+      }
     });
   }
 
@@ -124,7 +128,12 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(merchantOrdersProvider);
-    final all = async.valueOrNull ?? [];
+    final branches = ref.watch(merchantBranchesProvider).branches;
+    final branchFilter = ref.watch(selectedMerchantBranchFilterProvider);
+    final allOrders = async.valueOrNull ?? [];
+    final all = branchFilter == null
+        ? allOrders
+        : allOrders.where((o) => o.branchId == branchFilter).toList();
     final selected = ref.watch(selectedMerchantOrderFilterProvider);
     final images = ref.watch(menuItemImageLookupProvider);
     final timers = ref.watch(merchantPrepTimerProvider);
@@ -429,6 +438,34 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             ),
                           ),
                         ),
+                        if (branches.length > 1) ...[
+                          const SizedBox(height: 12),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                for (final option in [null, ...branches.map((b) => b.id)])
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: ChoiceChip(
+                                      avatar: const Icon(Icons.storefront_outlined, size: 16),
+                                      label: Text(
+                                        option == null
+                                            ? 'All branches'
+                                            : branches.firstWhere((b) => b.id == option).name,
+                                      ),
+                                      selected: branchFilter == option,
+                                      selectedColor: OrderQueuePalette.purple.withValues(alpha: 0.15),
+                                      onSelected: (_) {
+                                        HapticFeedback.selectionClick();
+                                        ref.read(selectedMerchantBranchFilterProvider.notifier).state = option;
+                                      },
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,

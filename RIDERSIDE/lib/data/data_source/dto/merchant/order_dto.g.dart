@@ -35,6 +35,8 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       partnerShare: json['partner_share'] != null ? double.tryParse(json['partner_share'].toString()) : null,
       fareBreakdownSubtotal: _parseFareBreakdownSubtotal(json['fare_breakdown']),
       metaOrderValue: _parseMetaOrderValue(json['meta']),
+      branchId: _readBranchId(json, 'branch_id') as int?,
+      branchName: _readBranchName(json, 'branch_name') as String?,
       createdAt: json['created_at'] as String? ?? '',
       updatedAt: json['updated_at'] as String? ?? '',
       user: json['customer'] == null

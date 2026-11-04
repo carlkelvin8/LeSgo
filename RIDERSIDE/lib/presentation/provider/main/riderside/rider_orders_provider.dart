@@ -365,7 +365,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         final order = available.firstWhere((o) => o.id == id);
         PushNotificationService.show(
           title: 'New order available',
-          body: '${order.serviceName} • ${order.pickupAddress}',
+          body: '${order.serviceName} • ${order.pickupDisplay}',
           payload: 'order_$id',
         );
       }

@@ -234,6 +234,31 @@ class MerchantOrderQueueCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (order.branchName != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.storefront_outlined,
+                          size: 15,
+                          color: OrderQueuePalette.purple,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            order.branchName!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: OrderQueuePalette.purple,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   if (order.dropoffAddress.trim().isNotEmpty) ...[
                     const SizedBox(height: 14),
                     Row(

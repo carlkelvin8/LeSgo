@@ -602,6 +602,36 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                     ],
                   ),
                   const SizedBox(height: 16),
+                  if (resolvedOrder.branchName != null) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.storefront_outlined, color: Color(0xFF5F2D82), size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Branch',
+                                style: TextStyle(fontFamily: 'TT Fors', fontSize: 12, color: Colors.grey),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                resolvedOrder.branchName!,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

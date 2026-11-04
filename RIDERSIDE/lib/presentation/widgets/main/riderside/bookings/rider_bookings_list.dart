@@ -299,7 +299,7 @@ class RiderBookingsList extends ConsumerWidget {
                 SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                 Expanded(
                   child: Text(
-                    order.pickupAddress,
+                    order.pickupDisplay,
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),

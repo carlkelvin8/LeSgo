@@ -42,6 +42,11 @@ class MerchantSettingsSection extends StatelessWidget {
           route: MainRoutes.riderNotifications,
         ),
         _SettingsTile(
+          icon: Icons.storefront_outlined,
+          label: 'Branches & Pickup Points',
+          route: MainRoutes.merchantBranches,
+        ),
+        _SettingsTile(
           icon: Icons.group_outlined,
           label: 'Staff Accounts',
           route: MainRoutes.merchantStaff,

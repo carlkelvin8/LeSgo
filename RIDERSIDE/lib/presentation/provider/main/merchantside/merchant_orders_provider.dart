@@ -84,12 +84,21 @@ final merchantPendingOrderCountProvider = Provider<int>((ref) {
   );
 });
 
+/// Branch to show orders for; null shows every branch.
+final selectedMerchantBranchFilterProvider = StateProvider<int?>((ref) => null);
+
 final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
   final ordersAsync = ref.watch(merchantOrdersProvider);
   final filter = ref.watch(selectedMerchantOrderFilterProvider);
+  final branchId = ref.watch(selectedMerchantBranchFilterProvider);
 
   return ordersAsync.when(
-    data: (orders) => filterMerchantOrders(orders, filter),
+    data: (orders) => filterMerchantOrders(
+      branchId == null
+          ? orders
+          : orders.where((order) => order.branchId == branchId).toList(),
+      filter,
+    ),
     loading: () => [],
     error: (_, __) => [],
   );
