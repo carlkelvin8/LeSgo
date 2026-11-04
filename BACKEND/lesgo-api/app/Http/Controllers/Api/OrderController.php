@@ -1049,9 +1049,9 @@ class OrderController extends Controller
 
         // Partner staff can view same orders as partner admin
         if ($user->role === 'partner_staff') {
-            $partnerId = $user->partner_id ?? optional($user->partner)->id;
+            $partnerId = $user->workingPartnerId();
 
-            return $partnerId && (int) $order->partner_id === (int) $partnerId;
+            return $partnerId && (int) $order->partner_id === $partnerId;
         }
 
         return false;

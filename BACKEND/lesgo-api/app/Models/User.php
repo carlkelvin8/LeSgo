@@ -99,6 +99,27 @@ class User extends Authenticatable
         return $this->hasOne(PartnerStaff::class, 'user_id');
     }
 
+    /**
+     * The store this account works for: the one it owns (partner_admin) or the
+     * one it is an active staff member of (partner_staff). Null for everyone else.
+     */
+    public function workingPartnerId(): ?int
+    {
+        if ($this->isPartnerAdmin()) {
+            return optional($this->partner)->id;
+        }
+
+        if ($this->role === 'partner_staff') {
+            $partnerId = $this->partnerStaff()
+                ->where(fn ($q) => $q->where('is_active', true)->orWhereNull('is_active'))
+                ->value('partner_id');
+
+            return $partnerId ? (int) $partnerId : null;
+        }
+
+        return null;
+    }
+
     public function addresses()
     {
         return $this->hasMany(Address::class, 'user_id');
