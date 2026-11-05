@@ -254,9 +254,16 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
         totalBookings: bookings.length,
         performanceStars: stars,
         isLoading: false,
+        clearError: true,
       );
     } catch (e) {
       AppLogger.error('Error loading history', e);
+      // A failed background refresh must not replace history that is already
+      // on screen with the error state.
+      if (silent && state.allBookings.isNotEmpty) {
+        state = state.copyWith(isLoading: false);
+        return;
+      }
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),

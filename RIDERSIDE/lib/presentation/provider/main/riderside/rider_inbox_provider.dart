@@ -49,7 +49,11 @@ class RiderInboxNotifier extends StateNotifier<RiderInboxState> {
     try {
       final dataSource = ChatRemoteDataSource(getIt<DioClient>());
       final conversations = await dataSource.getConversations();
-      final unread = await dataSource.getUnreadCount();
+      // The badge count is secondary: never let it hide the conversation list.
+      var unread = state.unreadCount;
+      try {
+        unread = await dataSource.getUnreadCount();
+      } catch (_) {}
 
       if (silent) {
         for (final conv in conversations) {

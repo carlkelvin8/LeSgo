@@ -120,8 +120,11 @@ class _RiderBookingDetailScreenState
   }
 
   // Fetch the latest status from API
-  Future<void> _fetchLatestStatus() async {
-    if (_isFetchingStatus || _isHandlingStatusChange) return;
+  Future<void> _fetchLatestStatus({bool force = false}) async {
+    // `force` lets _handleStatusChange refresh while it holds
+    // _isHandlingStatusChange; without it that refresh was a silent no-op and
+    // the buttons acted on a stale status.
+    if (_isFetchingStatus || (_isHandlingStatusChange && !force)) return;
     
     setState(() => _isFetchingStatus = true);
     
@@ -133,7 +136,7 @@ class _RiderBookingDetailScreenState
       final orderData = await ApiService.getOrderById(orderId);
       
       // Check if widget is still mounted and no status change is in progress
-      if (orderData == null || !mounted || _isHandlingStatusChange) {
+      if (orderData == null || !mounted || (_isHandlingStatusChange && !force)) {
         return;
       }
       
@@ -146,7 +149,7 @@ class _RiderBookingDetailScreenState
         AppLogger.debug('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
       }
 
-      if (apiStatus != null && mounted && !_isHandlingStatusChange) {
+      if (apiStatus != null && mounted && (!_isHandlingStatusChange || force)) {
         final refreshedBooking = RiderBookingMapper.fromOrder(
           order,
           proofOfDeliveryUrls:
@@ -204,7 +207,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       }
       
       // Fetch latest to get service_id
-      await _fetchLatestStatus();
+      await _fetchLatestStatus(force: true);
       if (!mounted) return;
       
       // Map BookingStatus to API status string based on service type

@@ -74,18 +74,26 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
     }
 
     if (state.error != null && state.conversations.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 56, color: Colors.grey[400]),
-            const SizedBox(height: 12),
-            Text(
-              'Could not load messages',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
+      // Keep Admin Support reachable and pull-to-refresh working on failure.
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          _AdminSupportTile(
+            onTap: () =>
+                AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
+          ),
+          const Divider(height: 1, indent: 72),
+          const SizedBox(height: 60),
+          Icon(Icons.error_outline, size: 56, color: Colors.grey[400]),
+          const SizedBox(height: 12),
+          Text(
+            'Could not load messages',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
               onPressed: () =>
                   ref.read(riderInboxProvider.notifier).loadConversations(),
               child: const Text(
@@ -93,13 +101,14 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
                 style: TextStyle(color: Color(0xFF5F2D82)),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
     if (state.conversations.isEmpty) {
       return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           _AdminSupportTile(
             onTap: () => AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
@@ -133,6 +142,7 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
     }
 
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: state.conversations.length + 1, // +1 for admin support
       separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),

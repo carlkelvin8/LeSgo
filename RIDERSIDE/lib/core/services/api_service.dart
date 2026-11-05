@@ -51,8 +51,9 @@ class ApiService {
 
   static Future<Map<String, dynamic>> login(
     String email,
-    String password,
-  ) async {
+    String password, {
+    String? twoFactorCode,
+  }) async {
     AppLogger.network('POST', ApiConstants.loginEndpoint);
     try {
       final res = await _dio.post(
@@ -60,6 +61,8 @@ class ApiService {
         data: {
           'email': email,
           'password': password,
+          if (twoFactorCode != null && twoFactorCode.trim().isNotEmpty)
+            'two_factor_code': twoFactorCode.trim(),
         },
       );
       AppLogger.network(

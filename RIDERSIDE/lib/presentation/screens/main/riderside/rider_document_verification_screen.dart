@@ -10,6 +10,17 @@ import '../../../../core/utils/responsive_utils.dart';
 class RiderDocumentVerificationScreen extends ConsumerStatefulWidget {
   const RiderDocumentVerificationScreen({super.key});
 
+  /// Returns a user-facing problem with the submit form, or null when valid.
+  /// Only a document number and at least one photo are required by the API.
+  static String? validateSubmission(String number, int fileCount) {
+    if (number.trim().isEmpty) return 'Enter the document number.';
+    if (number.trim().length > 100) {
+      return 'Document number must not exceed 100 characters.';
+    }
+    if (fileCount == 0) return 'Attach at least one photo of the document.';
+    return null;
+  }
+
   @override
   ConsumerState<RiderDocumentVerificationScreen> createState() =>
       _RiderDocumentVerificationScreenState();
@@ -58,12 +69,18 @@ class _RiderDocumentVerificationScreenState
   }
 
   Future<void> _showSubmitSheet() async {
-    if (_types.isEmpty) return;
+    if (_types.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Document types are unavailable. Pull to refresh and try again.')),
+      );
+      return;
+    }
     final picker = ImagePicker();
     String selectedType = _types.first['type']?.toString() ?? 'drivers_license';
     final numberController = TextEditingController();
     final notesController = TextEditingController();
     final files = <XFile>[];
+    String? formError;
 
     final submitted = await showModalBottomSheet<bool>(
       context: context,
@@ -122,9 +139,22 @@ class _RiderDocumentVerificationScreenState
                       : '${files.length} file(s) selected',
                 ),
               ),
+              if (formError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    formError!,
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
               ElevatedButton(
                 onPressed: () async {
-                  if (numberController.text.trim().isEmpty || files.isEmpty) {
+                  final problem = RiderDocumentVerificationScreen.validateSubmission(
+                    numberController.text,
+                    files.length,
+                  );
+                  if (problem != null) {
+                    setSheetState(() => formError = problem);
                     return;
                   }
                   Navigator.pop(context, true);
@@ -257,6 +287,7 @@ class _RiderDocumentVerificationScreenState
     );
     final notesController = TextEditingController();
     final files = <XFile>[];
+    String? formError;
 
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
@@ -298,9 +329,24 @@ class _RiderDocumentVerificationScreenState
                       : '${files.length} file(s) selected',
                 ),
               ),
+              if (formError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    formError!,
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
               ElevatedButton(
                 onPressed: () {
-                  if (numberController.text.trim().isEmpty || files.isEmpty) return;
+                  final problem = RiderDocumentVerificationScreen.validateSubmission(
+                    numberController.text,
+                    files.length,
+                  );
+                  if (problem != null) {
+                    setSheetState(() => formError = problem);
+                    return;
+                  }
                   Navigator.pop(context, true);
                 },
                 child: Text(AppLocalization.translate('resubmit', ref.read(appLanguageProvider))),

@@ -99,11 +99,28 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
 
     if (proceed != true || !mounted) return;
 
-    final photo = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 85,
-      preferredCameraDevice: CameraDevice.front,
-    );
+    XFile? photo;
+    try {
+      photo = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+        preferredCameraDevice: CameraDevice.front,
+      );
+    } catch (_) {
+      // Camera permission denied / camera unavailable: tell the rider instead
+      // of failing silently with an unhandled platform exception.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalization.translate('camera_permission_required', lang),
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+      return;
+    }
 
     if (photo == null || !mounted) return;
 

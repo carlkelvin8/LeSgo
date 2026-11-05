@@ -361,7 +361,9 @@ class RiderPayoutScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${payout.paymentMethod} • •••${payout.accountNumber.substring(max(0, payout.accountNumber.length - 4))}',
+                  payout.accountNumber.isEmpty
+                      ? payout.paymentMethod
+                      : '${payout.paymentMethod} • •••${payout.accountNumber.substring(max(0, payout.accountNumber.length - 4))}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -428,7 +430,9 @@ class RiderPayoutScreen extends ConsumerWidget {
             if (ctx.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Error: $e'),
+                  content: Text(
+                    e.toString().replaceFirst('Exception: ', ''),
+                  ),
                   backgroundColor: Colors.red.shade600,
                 ),
               );
@@ -512,7 +516,8 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
                 ),
                 prefixText: 'PHP ',
               ),
-              keyboardType: TextInputType.number,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 16),
             Text(
@@ -545,16 +550,31 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
           onPressed: _isSubmitting
               ? null
               : () async {
-                  final amount = double.tryParse(_amountController.text) ?? 0;
-                  if (amount <= 0 || amount > widget.availableBalance) {
+                  final amount =
+                      double.tryParse(_amountController.text.trim()) ?? 0;
+                  if (amount < 10) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invalid amount')),
+                      const SnackBar(
+                        content: Text('Minimum withdrawal is PHP 10'),
+                      ),
+                    );
+                    return;
+                  }
+                  if (amount > widget.availableBalance) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Insufficient balance')),
                     );
                     return;
                   }
 
                   setState(() => _isSubmitting = true);
-                  await widget.onWithdraw(amount, _selectedMethod, '');
+                  try {
+                    await widget.onWithdraw(amount, _selectedMethod, '');
+                  } finally {
+                    // Re-enable the button if the dialog is still open
+                    // (a failed withdrawal leaves it up for a retry).
+                    if (mounted) setState(() => _isSubmitting = false);
+                  }
                 },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF5F2D82),

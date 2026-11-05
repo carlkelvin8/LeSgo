@@ -10,6 +10,7 @@ class RiderSupportTicket {
   final String priority;
   final String status;
   final String createdAt;
+  final String? ticketNumber;
 
   const RiderSupportTicket({
     required this.id,
@@ -19,6 +20,7 @@ class RiderSupportTicket {
     required this.priority,
     required this.status,
     required this.createdAt,
+    this.ticketNumber,
   });
 
   factory RiderSupportTicket.fromJson(Map<String, dynamic> json) {
@@ -30,6 +32,7 @@ class RiderSupportTicket {
       priority: json['priority']?.toString() ?? 'medium',
       status: json['status']?.toString() ?? 'open',
       createdAt: json['created_at']?.toString() ?? '',
+      ticketNumber: json['ticket_number']?.toString(),
     );
   }
 }

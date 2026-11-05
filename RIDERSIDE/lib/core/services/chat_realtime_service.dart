@@ -30,6 +30,9 @@ class ChatRealtimeService {
     }
   };
 
+  @visibleForTesting
+  int get debugRefCount => _refCount;
+
   void addListener(ChatRefreshCallback callback) => _listeners.add(callback);
 
   void removeListener(ChatRefreshCallback callback) =>

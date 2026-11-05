@@ -1,31 +1,49 @@
 class LoginValidator {
-  /// Validates email address
+  // Mirrors what the API accepts: local part may contain + % etc., and the
+  // TLD may be any length (".company", ".photography"). The previous pattern
+  // rejected "name+tag@gmail.com" and TLDs longer than 4 characters.
+  static final RegExp _emailPattern = RegExp(
+    r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*\.[a-zA-Z]{2,}$',
+  );
+
+  /// Validates email address (surrounding whitespace added by keyboards or
+  /// paste is ignored; callers trim before sending).
   static String? email(String? value) {
-    if (value == null || value.isEmpty) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) {
       return 'Please enter your email';
     }
-    
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value)) {
+
+    if (!_emailPattern.hasMatch(text)) {
       return 'Please enter a valid email';
     }
-    
+
     return null;
   }
 
   /// Validates email or phone number
   static String? emailOrPhone(String? value) {
-    if (value == null || value.isEmpty) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) {
       return 'Please enter your email or phone';
     }
 
     final phoneRegex = RegExp(r'^[0-9+\-\s()]+$');
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    
-    if (!emailRegex.hasMatch(value) && !phoneRegex.hasMatch(value)) {
+
+    if (!_emailPattern.hasMatch(text) && !phoneRegex.hasMatch(text)) {
       return 'Please enter a valid email or phone number';
     }
-    
+
+    return null;
+  }
+
+  /// Sign-in password: only require that something was typed. The API is the
+  /// source of truth for credentials; enforcing a minimum length here locked
+  /// out existing accounts whose password is shorter than the sign-up rule.
+  static String? loginPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your password';
+    }
     return null;
   }
 

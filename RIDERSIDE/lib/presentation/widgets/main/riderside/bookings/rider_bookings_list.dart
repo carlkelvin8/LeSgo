@@ -41,7 +41,13 @@ class RiderBookingsList extends ConsumerWidget {
             : 'Getting the latest delivery opportunities for you.',
       );
     }
-    if (ordersState.error != null) {
+    // Only replace the list with the error panel when there is nothing to show.
+    // A failed accept/status update (or a failed refresh while a cached active
+    // order is on screen) also sets `error`; hiding the whole list for those
+    // left riders unable to see or retry their bookings.
+    if (ordersState.error != null &&
+        ordersState.availableOrders.isEmpty &&
+        ordersState.activeOrder == null) {
       return RefreshIndicator(
         onRefresh: refresh,
         child: RiderBookingsStatePanel(

@@ -95,6 +95,7 @@ class _RiderBookingDetailMapSectionState
   }
 
   Future<void> _refreshRoute() async {
+    if (!mounted) return;
     final booking = widget.booking;
     final location = widget.locationState;
     if (!location.hasLocation ||
@@ -106,18 +107,23 @@ class _RiderBookingDetailMapSectionState
     }
 
     setState(() => _loadingRoute = true);
-    final polylines = await RiderRouteUtils.buildNavigationPolylinesForBooking(
-      status: widget.currentApiStatus,
-      pickupLat: booking.pickupLat!,
-      pickupLng: booking.pickupLng!,
-      dropoffLat: booking.dropoffLat!,
-      dropoffLng: booking.dropoffLng!,
-      riderLat: location.latitude!,
-      riderLng: location.longitude!,
-    );
+    Set<Polyline>? polylines;
+    try {
+      polylines = await RiderRouteUtils.buildNavigationPolylinesForBooking(
+        status: widget.currentApiStatus,
+        pickupLat: booking.pickupLat!,
+        pickupLng: booking.pickupLng!,
+        dropoffLat: booking.dropoffLat!,
+        dropoffLng: booking.dropoffLng!,
+        riderLat: location.latitude!,
+        riderLng: location.longitude!,
+      );
+    } catch (_) {
+      // Route lookup is best-effort; never leave the spinner stuck.
+    }
     if (mounted) {
       setState(() {
-        _polylines = polylines;
+        if (polylines != null) _polylines = polylines;
         _loadingRoute = false;
       });
     }

@@ -6,6 +6,21 @@ import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/app_localization.dart';
 
+/// Builds a `tel:` URI from a customer phone string. Phone numbers come from
+/// free-text profile fields ("0912 345 6789", "(+63) 912-345-6789"), so strip
+/// everything but digits and a leading "+" instead of passing them to
+/// `Uri.parse`, which would throw on or mangle some of those formats.
+Uri riderPhoneUri(String phone) {
+  final trimmed = phone.trim();
+  final digits = trimmed.replaceAll(RegExp(r'[^0-9]'), '');
+  return Uri(
+    scheme: 'tel',
+    path: trimmed.startsWith('+') || trimmed.startsWith('(+')
+        ? '+$digits'
+        : digits,
+  );
+}
+
 class RiderBookingDetailInfo extends ConsumerWidget {
   final RiderBooking booking;
 
@@ -18,10 +33,12 @@ class RiderBookingDetailInfo extends ConsumerWidget {
   Future<void> _callCustomer(BuildContext context, AppLanguage lang) async {
     final phone = booking.customerPhone;
     if (phone == null || phone.isEmpty) return;
-    final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else if (context.mounted) {
+    final uri = riderPhoneUri(phone);
+    var launched = false;
+    try {
+      launched = await canLaunchUrl(uri) && await launchUrl(uri);
+    } catch (_) {}
+    if (!launched && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalization.translate('cannot_open_dialer', lang))),
       );

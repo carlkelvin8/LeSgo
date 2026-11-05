@@ -133,9 +133,10 @@ class RiderDutyNotifier extends StateNotifier<bool> {
       );
       return null;
     } catch (e) {
-      final errorMsg = 'Failed to sync driver availability: $e';
-      AppLogger.error('❌ $errorMsg');
-      return errorMsg;
+      AppLogger.error('❌ Failed to sync driver availability: $e');
+      // Map to a readable message (REGISTRATION_NOT_ACTIVE, 429, offline...)
+      // instead of showing the raw DioException text to the rider.
+      return ApiService.extractError(e);
     }
   }
 }

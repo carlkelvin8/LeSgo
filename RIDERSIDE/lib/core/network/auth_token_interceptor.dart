@@ -47,7 +47,11 @@ class AuthTokenInterceptor extends QueuedInterceptor {
 
     final newToken = await TokenRefreshService.instance.refreshAccessToken();
     if (newToken == null || newToken.isEmpty) {
-      await SecureStorageService.clearAuth();
+      // Only drop the session when the server actually rejected it; an
+      // offline/throttled (429) refresh must not log the rider out.
+      if (!TokenRefreshService.instance.lastFailureWasTransient) {
+        await SecureStorageService.clearAuth();
+      }
       handler.next(err);
       return;
     }

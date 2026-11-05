@@ -1,5 +1,6 @@
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/utils/json_parsers.dart';
 import 'dto/chat/chat_dto.dart';
 
 class ChatRemoteDataSource {
@@ -67,7 +68,12 @@ class ChatRemoteDataSource {
     final response = await _dioClient.dio.get(ApiConstants.chatUnreadCount);
     
     if (response.data['success'] == true && response.data['data'] != null) {
-      return response.data['data']['unread_count'] ?? 0;
+      final data = response.data['data'];
+      // PHP encodes an empty array as [] and counts may arrive as strings.
+      if (data is Map) {
+        return parseIntOrStringStrict(data['unread_count'] ?? data['count']);
+      }
+      return 0;
     }
     throw Exception(response.data['message'] ?? 'Failed to get unread count');
   }

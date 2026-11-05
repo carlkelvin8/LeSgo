@@ -70,10 +70,23 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
     }
   }
 
-  void _accept() {
+  Future<void> _accept() async {
     if (_isAccepted) return;
     setState(() => _isAccepted = true);
-    widget.onAccepted();
+    // Callers pass an async closure typed as VoidCallback; wait for it so the
+    // slider can reset when the accept fails (order taken, wallet blocked...)
+    // instead of staying stuck on "Accepted" with no way to retry.
+    final Object? pending = (widget.onAccepted as dynamic)();
+    if (pending is Future) {
+      try {
+        await pending;
+      } catch (_) {}
+      if (!mounted) return;
+      setState(() {
+        _isAccepted = false;
+        _dragOffset = 0.0;
+      });
+    }
   }
 
   @override

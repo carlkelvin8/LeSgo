@@ -379,8 +379,8 @@ class _RiderMissionViewState extends ConsumerState<RiderMissionView>
                     SnackBar(
                       content: Text(
                         success
-                            ? '✅ Reward claimed! ${mission.reward} added to LesPay'
-                            : '❌ Failed to claim reward',
+                            ? '✅ Reward claimed! ${mission.reward} is on its way to your LesPay'
+                            : '❌ ${ref.read(riderMissionProvider).error ?? 'Failed to claim reward'}',
                       ),
                       backgroundColor: success
                           ? const Color(0xFF22A060)

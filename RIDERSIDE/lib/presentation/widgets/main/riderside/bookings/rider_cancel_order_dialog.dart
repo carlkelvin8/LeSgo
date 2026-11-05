@@ -4,12 +4,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/app_localization.dart';
 
+/// The API rejects cancel reasons longer than 255 characters (422).
+const int kRiderCancelReasonMaxLength = 255;
+
 Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
   final lang = ProviderScope.containerOf(context).read(appLanguageProvider);
-  final controller = TextEditingController();
-  final result = await showDialog<String>(
+  return showDialog<String>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
+    builder: (dialogContext) => _CancelReasonDialog(lang: lang),
+  );
+}
+
+/// Owns the reason controller so it is disposed with the dialog's State.
+/// Disposing it right after `await showDialog` ran while the dialog's exit
+/// animation was still using it ("TextEditingController used after dispose").
+class _CancelReasonDialog extends StatefulWidget {
+  const _CancelReasonDialog({required this.lang});
+
+  final AppLanguage lang;
+
+  @override
+  State<_CancelReasonDialog> createState() => _CancelReasonDialogState();
+}
+
+class _CancelReasonDialogState extends State<_CancelReasonDialog> {
+  final TextEditingController controller = TextEditingController();
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = widget.lang;
+    final dialogContext = context;
+    return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
         children: [
@@ -43,8 +74,12 @@ Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
           TextField(
             controller: controller,
             maxLines: 3,
+            maxLength: kRiderCancelReasonMaxLength,
             decoration: InputDecoration(
-              hintText: AppLocalization.translate('reason_for_cancellation', lang),
+              hintText: AppLocalization.translate(
+                'reason_for_cancellation',
+                lang,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -79,8 +114,6 @@ Future<String?> showRiderCancelOrderDialog(BuildContext context) async {
           ),
         ),
       ],
-    ),
-  );
-  controller.dispose();
-  return result;
+    );
+  }
 }

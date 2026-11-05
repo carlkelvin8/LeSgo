@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -133,7 +134,7 @@ class _RiderCustomerServiceChatScreenState
       ),
       body: Column(
         children: [
-          if (!chatState.isConfigured)
+          if (!chatState.isConfigured && kDebugMode)
             Container(
               width: double.infinity,
               color: const Color(0xFFFFF8E1),

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'registration_fee_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/token_refresh_service.dart';
@@ -183,12 +184,20 @@ class PartnerStaffInfo {
   static PartnerStaffInfo? fromJson(Map<String, dynamic> json) {
     final staff = json['staff'];
     if (staff is! Map) return null;
+    final rawPermissions = staff['permissions'];
+    final isActive = staff['is_active'];
     return PartnerStaffInfo(
-      id: staff['id'] as int? ?? 0,
-      role: staff['role'] as String? ?? 'cashier',
-      permissions: (staff['permissions'] as List?)?.cast<String>(),
-      isActive: staff['is_active'] as bool? ?? true,
-      partnerName: staff['partner_name'] as String?,
+      id: RiderUser._parseInt(staff['id']) ?? 0,
+      role: staff['role']?.toString() ?? 'cashier',
+      permissions: rawPermissions is List
+          ? rawPermissions.map((e) => e.toString()).toList()
+          : null,
+      isActive: isActive is bool
+          ? isActive
+          : isActive is num
+              ? isActive != 0
+              : true,
+      partnerName: staff['partner_name']?.toString(),
     );
   }
 }
@@ -199,11 +208,16 @@ class RiderAuthState {
   final bool isLoggedIn;
   final String? error;
 
+  /// The API accepted the credentials but wants an authenticator/backup code
+  /// (HTTP 202 / 422 with `two_factor_required`) before issuing a token.
+  final bool twoFactorRequired;
+
   RiderAuthState({
     this.user,
     this.isLoading = false,
     this.isLoggedIn = false,
     this.error,
+    this.twoFactorRequired = false,
   });
 
   RiderAuthState copyWith({
@@ -212,12 +226,14 @@ class RiderAuthState {
     bool? isLoggedIn,
     String? error,
     bool clearError = false,
+    bool? twoFactorRequired,
   }) {
     return RiderAuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
       error: clearError ? null : (error ?? this.error),
+      twoFactorRequired: twoFactorRequired ?? this.twoFactorRequired,
     );
   }
 }
@@ -357,13 +373,19 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
     String password, {
     required bool rememberMe,
     required String accountType,
+    String? twoFactorCode,
   }) async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      twoFactorRequired: false,
+    );
     return _loginInternal(
       email,
       password,
       rememberMe: rememberMe,
       accountType: accountType,
+      twoFactorCode: twoFactorCode,
     );
   }
 
@@ -372,9 +394,25 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
     String password, {
     required bool rememberMe,
     required String accountType,
+    String? twoFactorCode,
   }) async {
     try {
-      final data = await ApiService.login(email, password);
+      final data = await ApiService.login(
+        email,
+        password,
+        twoFactorCode: twoFactorCode,
+      );
+
+      // 2FA accounts get HTTP 202 with no token until a code is supplied.
+      if (data['two_factor_required'] == true && data['token'] == null) {
+        state = state.copyWith(
+          isLoading: false,
+          twoFactorRequired: true,
+          error: data['message']?.toString() ??
+              'Enter the code from your authenticator app to continue.',
+        );
+        return false;
+      }
 
       final nested = data['data'];
       final payload = nested is Map<String, dynamic> ? nested : data;
@@ -382,8 +420,9 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       final refreshToken =
           payload['refresh_token'] as String? ?? data['refresh_token'] as String?;
       final userData = payload['user'] ?? data['user'];
-      final expiresIn =
-          payload['expires_in'] as int? ?? data['expires_in'] as int? ?? 3600;
+      final expiresIn = _asInt(payload['expires_in']) ??
+          _asInt(data['expires_in']) ??
+          3600;
 
       if (token == null || userData == null) {
         state = state.copyWith(
@@ -426,12 +465,20 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       await PushNotificationService.registerWithBackend();
       return true;
     } catch (e) {
+      final body = e is DioException ? e.response?.data : null;
       state = state.copyWith(
         isLoading: false,
         error: _loginErrorMessage(e),
+        twoFactorRequired: body is Map && body['two_factor_required'] == true,
       );
       return false;
     }
+  }
+
+  static int? _asInt(dynamic value) {
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   String _loginErrorMessage(Object e) {

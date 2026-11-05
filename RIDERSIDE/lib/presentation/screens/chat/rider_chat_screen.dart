@@ -22,10 +22,12 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isInitialized = false;
+  late final ChatNotifier _chatNotifier;
 
   @override
   void initState() {
     super.initState();
+    _chatNotifier = ref.read(chatProviderFamily(widget.orderId).notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeChat();
     });
@@ -35,8 +37,9 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    // Stop polling without using ref (which is invalid after dispose)
-    // The provider will be disposed by Riverpod automatically
+    // The family provider is not auto-disposed, so stop polling/realtime
+    // explicitly (without ref, which is invalid after dispose).
+    _chatNotifier.stopRealtime();
     super.dispose();
   }
 
@@ -264,7 +267,10 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: _initializeChat,
+                    onPressed: () {
+                      _isInitialized = false; // allow the retry to run
+                      _initializeChat();
+                    },
                     child: const Text('Retry'),
                   ),
                 ],

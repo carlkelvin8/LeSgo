@@ -18,6 +18,17 @@ class RiderNavigationLauncher {
     double? originLat,
     double? originLng,
   }) async {
+    // Missing coordinates arrive as 0,0; navigating there sends the rider to
+    // the Gulf of Guinea. Tell them instead of opening a useless chooser.
+    if (!RiderRouteUtils.hasValidCoordinates(destLat, destLng)) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text('No map location for $destinationLabel on this order.'),
+        ),
+      );
+      return;
+    }
+
     final apps = <RiderMapApp>[RiderMapApp.google];
     if (!Platform.isIOS) {
       apps.add(RiderMapApp.waze);
@@ -59,14 +70,24 @@ class RiderNavigationLauncher {
                       style: const TextStyle(fontFamily: 'TT Fors'),
                     ),
                     onTap: () async {
+                      final messenger = ScaffoldMessenger.maybeOf(context);
                       Navigator.pop(ctx);
-                      await launch(
+                      final opened = await launch(
                         app: app,
                         destLat: destLat,
                         destLng: destLng,
                         originLat: originLat,
                         originLng: originLng,
                       );
+                      if (!opened) {
+                        messenger?.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Could not open ${_labelFor(app)}. Is it installed?',
+                            ),
+                          ),
+                        );
+                      }
                     },
                   ),
               ],
@@ -115,9 +136,11 @@ class RiderNavigationLauncher {
         break;
     }
 
-    if (await canLaunchUrl(uri)) {
-      return launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    try {
+      if (await canLaunchUrl(uri)) {
+        return await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {}
     return false;
   }
 

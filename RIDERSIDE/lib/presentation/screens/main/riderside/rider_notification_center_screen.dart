@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/notification_api.dart';
+import '../../../../core/services/notification_navigation_service.dart';
+import '../../../../core/services/notification_payload.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../widgets/common/retry_widget.dart';
@@ -80,6 +82,16 @@ class _RiderNotificationCenterScreenState
       } catch (_) {}
     }
     await _load();
+    // Open the thing the notification is about (order / chat), if known.
+    final data = notification.data;
+    if (data == null || !mounted) return;
+    final target = NotificationPayload.fromRemoteData({
+      'type': notification.type,
+      ...data,
+    })?.toRaw();
+    if (target != null) {
+      NotificationNavigationService.handlePayload(target);
+    }
   }
 
   String _formatDate(String raw) {
