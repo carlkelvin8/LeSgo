@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,6 +12,22 @@ class PrinterSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        appBar: AppBar(title: const Text('Printer Settings')),
+        body: const Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'Bluetooth receipt printers work on Android devices only. '
+            'On iPhone, new orders still appear and ring in the app, but receipts '
+            'cannot be printed from here yet.',
+            style: TextStyle(fontSize: 15, height: 1.5),
+          ),
+        ),
+      );
+    }
+
     final state = ref.watch(printerSettingsProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 

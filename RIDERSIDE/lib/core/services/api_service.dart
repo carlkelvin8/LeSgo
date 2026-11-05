@@ -153,8 +153,9 @@ class ApiService {
   static Future<List<dynamic>> getOrders({
     String? status,
     int perPage = 30,
+    bool mine = false,
   }) =>
-      OrdersApi.getOrders(status: status, perPage: perPage);
+      OrdersApi.getOrders(status: status, perPage: perPage, mine: mine);
 
   static Future<Map<String, dynamic>?> getOrderById(int orderId) =>
       OrdersApi.getOrderById(orderId);

@@ -5,6 +5,7 @@ import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../../core/services/merchant_order_alert_service.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
+import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
@@ -130,7 +131,8 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final isLespay = currentNav == MerchantNavType.lespay;
-    final showMenuFab = currentNav == MerchantNavType.menu;
+    final showMenuFab = currentNav == MerchantNavType.menu &&
+        ref.watch(canEditMerchantMenuProvider);
 
     ref.listen<MerchantNavType>(merchantNavProvider, (previous, next) {
       if (!mounted) return;

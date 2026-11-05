@@ -24,7 +24,7 @@ MenuItemDto _$MenuItemDtoFromJson(Map<String, dynamic> json) => MenuItemDto(
       sortOrder: _parseIntNullable(json['sort_order']),
       stockCount: _parseIntNullable(json['stock_count']),
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      options: json['options'] as Map<String, dynamic>?,
+      options: _parseItemOptions(json['options']),
       category: json['category'] == null
           ? null
           : MenuCategoryDto.fromJson(json['category'] as Map<String, dynamic>),

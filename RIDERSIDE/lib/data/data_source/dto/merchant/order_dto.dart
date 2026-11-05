@@ -24,6 +24,11 @@ String? _parseOrderItemImageUrl(dynamic value) {
   return null;
 }
 
+/// The API encodes an item with no options as `[]`, not an object.
+Map<String, dynamic>? _parseSelectedOptions(dynamic value) {
+  return value is Map ? Map<String, dynamic>.from(value) : null;
+}
+
 double? _parseFareBreakdownSubtotal(dynamic value) {
   if (value is! Map) return null;
   return _parseDouble(value['subtotal']) ??
@@ -190,7 +195,7 @@ class OrderItemDto {
   final double? totalPrice;
   @JsonKey(name: 'notes')
   final String? notes;
-  @JsonKey(name: 'selected_options')
+  @JsonKey(name: 'selected_options', fromJson: _parseSelectedOptions)
   final Map<String, dynamic>? selectedOptionsRaw;
   @JsonKey(name: 'image_url', fromJson: _parseOrderItemImageUrl)
   final String? imageUrl;

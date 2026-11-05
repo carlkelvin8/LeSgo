@@ -124,10 +124,43 @@ class _MerchantEditInformationScreenState
       body: SafeArea(
         child: Column(
           children: [
-            const HomeHeader(
-              showBackButton: true,
-              backgroundColor: Colors.white,
-              borderColor: Color(0xFFE5E5E5),
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5))),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Back',
+                    icon: const Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const Expanded(
+                    child: Text(
+                      'Edit Information',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: state.isSubmitting ? null : _saveChanges,
+                    child: Text(
+                      state.isSubmitting ? 'Saving...' : 'Save',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF5F2D82),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: SingleChildScrollView(

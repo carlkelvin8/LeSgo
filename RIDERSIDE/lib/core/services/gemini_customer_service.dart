@@ -344,7 +344,7 @@ Rules:
 class GeminiNotConfiguredException implements Exception {
   @override
   String toString() =>
-      'Gemini API key is not configured. Add GEMINI_API_KEY to secrets.json.';
+      'Our assistant is unavailable right now. Please contact LeSgo support.';
 }
 
 class GeminiServiceException implements Exception {

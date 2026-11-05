@@ -32,10 +32,41 @@ class CartCheckoutState {
   }
 }
 
+/// Delivery fee quoted by the server for the pinned location; null until pinned.
+final bookFeeEstimateProvider = StateProvider<double?>((ref) => null);
+
 class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
   final Ref _ref;
 
   CartCheckoutNotifier(this._ref) : super(const CartCheckoutState());
+
+  /// Asks the server for the fee, so it follows the rates set in the admin panel.
+  Future<double?> estimateFee({
+    required double deliveryLat,
+    required double deliveryLng,
+  }) async {
+    try {
+      double pickupLat = 8.4542;
+      double pickupLng = 124.6319;
+      if (await Permission.locationWhenInUse.isGranted) {
+        final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+        );
+        pickupLat = position.latitude;
+        pickupLng = position.longitude;
+      }
+      final response = await ApiService.dio.post('/v1/orders/estimate', data: {
+        'service_id': AppConfig.leseatServiceId,
+        'pickup': {'lat': pickupLat, 'lng': pickupLng},
+        'dropoff': {'lat': deliveryLat, 'lng': deliveryLng},
+        'order_value': _ref.read(cartProvider).subtotal,
+      });
+      final data = response.data['data'] ?? response.data;
+      return double.tryParse('${data['estimated_fare']}');
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<bool> checkout({
     required String deliveryAddress,
@@ -46,6 +77,13 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
     final cart = _ref.read(cartProvider);
     if (cart.items.isEmpty) {
       state = state.copyWith(errorMessage: 'Cart is empty');
+      return false;
+    }
+
+    if (deliveryLat == null || deliveryLng == null) {
+      state = state.copyWith(
+        errorMessage: 'Pin the delivery location so the delivery fee can be calculated.',
+      );
       return false;
     }
 
@@ -83,6 +121,7 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
               'estimated_price': item.unitPrice,
               'notes': item.size,
               if (item.menuItemId != null) 'menu_item_id': item.menuItemId,
+              if (item.selectedOptions != null) 'selected_options': item.selectedOptions,
             },
           )
           .toList();
@@ -94,7 +133,6 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
       final response = await ApiService.createOrder({
         'service_id': AppConfig.leseatServiceId,
         'partner_id': partnerId,
-        'estimated_distance_m': AppConfig.defaultEstimatedDistanceM,
         'payment_method': paymentMethod,
         'notes': 'Merchant self-order from app cart',
         'pickup': {
@@ -118,6 +156,7 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
       final orderId = orderData is Map ? orderData['id'] as int? : null;
 
       _ref.read(cartProvider.notifier).clearCart();
+      _ref.read(bookFeeEstimateProvider.notifier).state = null;
       state = state.copyWith(isSubmitting: false, orderId: orderId);
       return true;
     } catch (e) {
@@ -139,10 +178,12 @@ final cartCheckoutProvider = Provider<CartCheckoutSummary>((ref) {
   final cartState = ref.watch(cartProvider);
   final partnerAsync = ref.watch(merchantProfileProvider);
 
-  final deliveryFee = partnerAsync.maybeWhen(
-    data: (partner) => partner?.deliveryFee ?? 50.0,
-    orElse: () => 50.0,
-  );
+  final estimate = ref.watch(bookFeeEstimateProvider);
+  final double deliveryFee = estimate ??
+      partnerAsync.maybeWhen<double>(
+        data: (partner) => partner?.deliveryFee ?? 50.0,
+        orElse: () => 50.0,
+      );
 
   return CartCheckoutSummary(
     subtotal: cartState.subtotal,

@@ -23,8 +23,8 @@ class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
       final response = await ApiService.dio.get('/v1/wallets/my/wallet');
       final data = response.data['data'] ?? response.data;
 
-      final availableBalance = (data['balance'] as num?)?.toDouble() ?? 0.0;
-      final pendingBalance = (data['pending_balance'] as num?)?.toDouble() ?? 0.0;
+      final availableBalance = double.tryParse('${data['balance']}') ?? 0.0;
+      final pendingBalance = double.tryParse('${data['pending_balance']}') ?? 0.0;
 
       state = state.copyWith(
         availableBalance: availableBalance,
@@ -110,7 +110,7 @@ class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
         data: {
           'provider': provider,
           'account_number': accountNumber,
-          'account_name': accountName,
+          'account_holder_name': accountName,
         },
       );
 

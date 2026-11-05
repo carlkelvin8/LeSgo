@@ -217,30 +217,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         if (_currentApiStatus == 'accepted' || 
             _currentApiStatus == 'driver_arrived_at_pickup' || 
             _currentApiStatus == 'in_progress') {
-          // Require photo proof before marking as picked up
-          if (!_showPickupProof) {
-            setState(() {
-              _showPickupProof = true;
-              _selectedImages.clear();
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('📸 Take a photo of the pickup, then tap "Picked Up" again.'),
-                backgroundColor: Color(0xFF5F2D82),
-              ),
-            );
-            return;
-          }
-          final hasProof = _selectedImages.isNotEmpty;
-          if (!hasProof) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalization.translate('minimum_1_photo_required', lang)),
-                backgroundColor: Colors.orange,
-              ),
-            );
-            return;
-          }
+          // Only the drop-off needs a photo; the server never stored a pickup one.
           apiStatus = 'picked_up';
           statusLabel = 'Picked Up';
         } else if (_currentApiStatus == 'picked_up') {
@@ -317,30 +294,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
             _currentApiStatus == 'ready_for_pickup' ||
             _currentApiStatus == 'driver_arrived_at_pickup' ||
             _currentApiStatus == 'in_progress') {
-          // Require photo proof before marking as picked up
-          if (!_showPickupProof) {
-            setState(() {
-              _showPickupProof = true;
-              _selectedImages.clear();
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('📸 Take a photo of the pickup, then tap "Picked Up" again.'),
-                backgroundColor: Color(0xFF5F2D82),
-              ),
-            );
-            return;
-          }
-          final hasProof = _selectedImages.isNotEmpty;
-          if (!hasProof) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalization.translate('minimum_1_photo_required', lang)),
-                backgroundColor: Colors.orange,
-              ),
-            );
-            return;
-          }
+          // Only the drop-off needs a photo; the server never stored a pickup one.
           apiStatus = 'picked_up';
           statusLabel = 'Picked Up';
         } else if (_currentApiStatus == 'picked_up') {

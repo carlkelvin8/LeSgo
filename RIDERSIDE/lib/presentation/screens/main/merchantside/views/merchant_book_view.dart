@@ -1,3 +1,5 @@
+import '../../../../provider/main/merchantside/merchant_food_detail_provider.dart';
+import '../../../../../core/utils/menu_item_options.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_setup_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +10,21 @@ import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../food_detail_screen.dart';
+
+/// Choices are stored as `{label, price}`; empty means the item has none.
+List<MerchantFoodSizeOption> _bookChoices(List<MenuOptionChoice> choices) => choices
+    .where((choice) => choice.label.isNotEmpty)
+    .map((choice) => MerchantFoodSizeOption(label: choice.label, price: choice.price))
+    .toList();
+
+List<MerchantFoodSizeOption> bookItemSizes(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).sizes);
+
+List<MerchantFoodSizeOption> bookItemFlavors(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).flavors);
+
+List<MerchantFoodSizeOption> bookItemAddons(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).addons);
 
 class MerchantBookView extends ConsumerStatefulWidget {
   const MerchantBookView({super.key});
@@ -108,11 +125,13 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                 1,
                 MerchantMenuSetupCard(
                   isDark: isDark,
-                  onAction: () {
-                    HapticFeedback.selectionClick();
-                    ref.read(merchantNavProvider.notifier).state =
-                        MerchantNavType.menu;
-                  },
+                  onAction: ref.watch(canEditMerchantMenuProvider)
+                      ? () {
+                          HapticFeedback.selectionClick();
+                          ref.read(merchantNavProvider.notifier).state =
+                              MerchantNavType.menu;
+                        }
+                      : null,
                 ),
               ),
             ),
@@ -228,9 +247,9 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                             foodImage: item.imageUrl,
                             price: 'PHP ${item.price.toStringAsFixed(2)}',
                             description: item.description ?? '',
-                            sizes: item.options?['sizes'] != null
-                                ? List<String>.from(item.options!['sizes'])
-                                : ['Regular'],
+                            sizes: bookItemSizes(item.options),
+                            flavors: bookItemFlavors(item.options),
+                            addons: bookItemAddons(item.options),
                           ),
                         ),
                         transitionDuration: const Duration(milliseconds: 300),

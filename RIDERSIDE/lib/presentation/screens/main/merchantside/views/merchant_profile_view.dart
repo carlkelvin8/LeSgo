@@ -1,3 +1,4 @@
+import '../../../../provider/auth/rider_auth_provider.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -18,6 +19,14 @@ import '../../../../widgets/main/merchantside/analytics/merchant_popular_items_s
 import '../merchant_edit_information_screen.dart';
 import '../merchant_menu_edit_item_screen.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
+
+bool _canEditMenu(BuildContext context, WidgetRef ref) {
+  if (ref.read(canEditMerchantMenuProvider)) return true;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Only the store owner or a staff admin can edit the menu.')),
+  );
+  return false;
+}
 
 class MerchantProfileView extends ConsumerWidget {
   const MerchantProfileView({super.key});
@@ -101,7 +110,7 @@ class MerchantProfileView extends ConsumerWidget {
               SizedBox(
                 height: ResponsiveUtils.spacing(context, 24),
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: ref.watch(riderAuthProvider).user?.isStaff == true ? null : () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -238,6 +247,7 @@ class MerchantProfileView extends ConsumerWidget {
                           category: item.category?.name ?? '',
                           imageUrl: item.imageUrl,
                           onEditTap: () {
+                            if (!_canEditMenu(context, ref)) return;
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -251,12 +261,15 @@ class MerchantProfileView extends ConsumerWidget {
                               ),
                             );
                           },
-                          onDeleteTap: () => confirmAndDeleteMerchantMenuItem(
-                            context,
-                            ref,
-                            itemId: item.id,
-                            itemName: item.name,
-                          ),
+                          onDeleteTap: () {
+                            if (!_canEditMenu(context, ref)) return;
+                            confirmAndDeleteMerchantMenuItem(
+                              context,
+                              ref,
+                              itemId: item.id,
+                              itemName: item.name,
+                            );
+                          },
                         ),
                       ),
                       SizedBox(height: ResponsiveUtils.spacing(context, 18)),

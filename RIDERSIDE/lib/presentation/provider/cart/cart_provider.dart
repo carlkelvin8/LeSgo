@@ -11,6 +11,9 @@ class CartItem {
   /// validates LesEat orders against it, so orders without it are rejected.
   final int? menuItemId;
 
+  /// The chosen size as the API expects it; the server re-prices from this.
+  final Map<String, dynamic>? selectedOptions;
+
   const CartItem({
     required this.id,
     required this.name,
@@ -18,6 +21,7 @@ class CartItem {
     required this.unitPrice,
     required this.quantity,
     this.menuItemId,
+    this.selectedOptions,
   });
 
   CartItem copyWith({
@@ -35,6 +39,7 @@ class CartItem {
       unitPrice: unitPrice ?? this.unitPrice,
       quantity: quantity ?? this.quantity,
       menuItemId: menuItemId ?? this.menuItemId,
+      selectedOptions: selectedOptions,
     );
   }
 }
@@ -83,6 +88,7 @@ class CartNotifier extends StateNotifier<CartState> {
     required double unitPrice,
     int quantity = 1,
     int? menuItemId,
+    Map<String, dynamic>? selectedOptions,
   }) {
     if (quantity <= 0) return;
 
@@ -110,6 +116,7 @@ class CartNotifier extends StateNotifier<CartState> {
       unitPrice: unitPrice,
       quantity: quantity,
       menuItemId: menuItemId,
+      selectedOptions: selectedOptions,
     );
 
     state = state.copyWith(items: [...state.items, newItem]);

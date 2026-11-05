@@ -113,6 +113,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final inventoryFilter = ref.watch(merchantInventoryFilterProvider);
     final searchQuery = ref.watch(merchantMenuSearchQueryProvider);
+    final canEdit = ref.watch(canEditMerchantMenuProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final safePad = MediaQuery.of(context).padding;
 
@@ -150,7 +151,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Manage your food items',
+                                canEdit ? 'Manage your food items' : 'Your store menu',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 13,
@@ -164,7 +165,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                         menuAsync.when(
                           data: (menu) {
                             final cat = menu == null ? null : _categoryById(menu.categories, selectedCategory);
-                            if (cat == null) return const SizedBox.shrink();
+                            if (cat == null || !canEdit) return const SizedBox.shrink();
                             return _PillButton(
                               label: 'Edit category',
                               icon: Icons.edit_outlined,
@@ -243,17 +244,19 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                   MerchantMenuSetupCard(
                     isDark: isDark,
                     actionLabel: 'Add category',
-                    onAction: () async {
-                      HapticFeedback.selectionClick();
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MerchantMenuAddCategoryScreen(),
-                        ),
-                      );
-                      if (!mounted) return;
-                      await _refreshMenu();
-                    },
+                    onAction: canEdit
+                        ? () async {
+                            HapticFeedback.selectionClick();
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const MerchantMenuAddCategoryScreen(),
+                              ),
+                            );
+                            if (!mounted) return;
+                            await _refreshMenu();
+                          }
+                        : null,
                   ),
                 ),
               ),
@@ -487,6 +490,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                             ),
                           ),
                           child: _GridMenuItemCard(
+                            canEdit: canEdit,
                             item: item,
                             categoryName: catName,
                             isDark: isDark,
@@ -594,6 +598,7 @@ class _CompactCategoryChip extends StatelessWidget {
 
 // ─── Grid Menu Item Card (vertical card for 2-column grid) ───────────────────
 class _GridMenuItemCard extends StatelessWidget {
+  final bool canEdit;
   final MenuItemDto item;
   final String categoryName;
   final bool isDark;
@@ -604,6 +609,7 @@ class _GridMenuItemCard extends StatelessWidget {
   final VoidCallback onDuplicate;
 
   const _GridMenuItemCard({
+    required this.canEdit,
     required this.item,
     required this.categoryName,
     required this.isDark,
@@ -617,10 +623,12 @@ class _GridMenuItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onEdit();
-      },
+      onTap: canEdit
+          ? () {
+              HapticFeedback.selectionClick();
+              onEdit();
+            }
+          : null,
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1730) : Colors.white,
@@ -714,6 +722,7 @@ class _GridMenuItemCard extends StatelessWidget {
                       ),
                     ),
 
+                    if (canEdit) ...[
                     const SizedBox(height: 6),
 
                     // Stock controls
@@ -745,6 +754,7 @@ class _GridMenuItemCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                    ],
                   ],
                 ),
               ),

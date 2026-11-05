@@ -1,3 +1,4 @@
+import '../../../../provider/auth/rider_auth_provider.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -186,9 +187,16 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                             2,
                             _QuickActions(
                               isDark: isDark,
-                              onTopUp: () => _showTopUpSheet(context, ref),
-                              onPayRider: () =>
-                                  _showPayRiderSheet(context, ref),
+                              onTopUp: () {
+                                // Staff top-ups are refused: they would not reach the store wallet.
+                                if (ref.read(riderAuthProvider).user?.isStaff == true) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Only the store owner can top up LesPay.')),
+                                  );
+                                  return;
+                                }
+                                _showTopUpSheet(context, ref);
+                              },
                               onWithdraw: () =>
                                   _showWithdrawSheet(context, ref),
                             ),
@@ -515,13 +523,15 @@ class _BalanceCardState extends State<_BalanceCard>
                                 // View withdrawals link
                                 GestureDetector(
                                   onTap: () {
+                                    final refresh = ProviderScope.containerOf(context, listen: false)
+                                        .read(merchantWalletProvider.notifier);
                                     HapticFeedback.lightImpact();
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => const MerchantWithdrawalHistoryScreen(),
                                       ),
-                                    );
+                                    ).then((_) => refresh.loadWallet(silent: true));
                                   },
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -712,13 +722,11 @@ class _CardBgPainter extends CustomPainter {
 class _QuickActions extends StatelessWidget {
   final bool isDark;
   final VoidCallback onTopUp;
-  final VoidCallback onPayRider;
   final VoidCallback onWithdraw;
 
   const _QuickActions({
     required this.isDark,
     required this.onTopUp,
-    required this.onPayRider,
     required this.onWithdraw,
   });
 
@@ -769,21 +777,6 @@ class _QuickActions extends StatelessWidget {
                 isDark: isDark,
                 isFirst: true,
                 onTap: onTopUp,
-              ),
-              Container(
-                height: 1,
-                margin: const EdgeInsets.only(left: 68),
-                color: isDark
-                    ? const Color(0xFF2E2540)
-                    : const Color(0xFFF0EBF6),
-              ),
-              _ActionRow(
-                icon: Icons.send_rounded,
-                iconBg: const Color(0xFF5F2D82),
-                title: 'Pay Rider',
-                subtitle: 'Send payment to a rider',
-                isDark: isDark,
-                onTap: onPayRider,
               ),
               Container(
                 height: 1,

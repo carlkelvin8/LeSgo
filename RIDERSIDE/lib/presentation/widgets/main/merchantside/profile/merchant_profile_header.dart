@@ -1,3 +1,4 @@
+import '../../../../provider/auth/rider_auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/media_url_utils.dart';
@@ -35,7 +36,7 @@ class MerchantProfileHeader extends ConsumerWidget {
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 12)),
             GestureDetector(
-              onTap: () {
+              onTap: ref.watch(riderAuthProvider).user?.isStaff == true ? null : () {
                 // Navigate to edit screen where they can change the logo
                 Navigator.push(
                   context,

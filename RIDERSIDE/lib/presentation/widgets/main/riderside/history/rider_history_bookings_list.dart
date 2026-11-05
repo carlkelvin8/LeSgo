@@ -29,8 +29,11 @@ class RiderHistoryBookingsList extends StatelessWidget {
       );
     }
 
+    // Each booking is rendered inside a sliver, so this list must size itself
+    // to its content instead of asking for unbounded height.
     return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.only(
         top: ResponsiveUtils.spacing(context, 4),
         bottom: ResponsiveUtils.spacing(context, 24),

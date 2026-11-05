@@ -164,11 +164,12 @@ class MerchantRemoteDataSource {
           .whereType<Map>()
           .map((item) => ReviewDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
+      final meta = root['meta'] is Map ? root['meta'] as Map : const {};
       return MerchantReviewsPage(
         reviews: reviews,
-        currentPage: 1,
-        lastPage: 1,
-        total: reviews.length,
+        currentPage: int.tryParse('${meta['current_page']}') ?? 1,
+        lastPage: int.tryParse('${meta['last_page']}') ?? 1,
+        total: int.tryParse('${meta['total']}') ?? reviews.length,
       );
     }
 

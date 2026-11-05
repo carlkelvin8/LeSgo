@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 // ─── Empty category banner ────────────────────────────────────────────────────
 class MerchantMenuSetupCard extends StatelessWidget {
   final bool isDark;
-  final VoidCallback onAction;
+  /// Null for staff who cannot edit the menu: the card then only explains.
+  final VoidCallback? onAction;
   final String actionLabel;
   const MerchantMenuSetupCard({
     super.key,
     required this.isDark,
-    required this.onAction,
+    this.onAction,
     this.actionLabel = 'Set up menu',
   });
 
@@ -42,7 +43,7 @@ class MerchantMenuSetupCard extends StatelessWidget {
           ),
           const SizedBox(height: 22),
           Text(
-            'Your menu starts here',
+            onAction == null ? 'No menu yet' : 'Your menu starts here',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 22,
@@ -54,7 +55,9 @@ class MerchantMenuSetupCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Create your first category, then add the dishes your customers will love.',
+            onAction == null
+                ? 'Your store owner can add categories and dishes here.'
+                : 'Create your first category, then add the dishes your customers will love.',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 14,
@@ -95,6 +98,7 @@ class MerchantMenuSetupCard extends StatelessWidget {
                 )
                 .toList(),
           ),
+          if (onAction != null) ...[
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -121,6 +125,7 @@ class MerchantMenuSetupCard extends StatelessWidget {
               label: Text(actionLabel, textAlign: TextAlign.center),
             ),
           ),
+          ],
         ],
       ),
     );

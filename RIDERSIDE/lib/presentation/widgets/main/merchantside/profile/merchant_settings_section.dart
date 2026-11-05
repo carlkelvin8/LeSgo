@@ -1,14 +1,16 @@
+import '../../../../provider/auth/rider_auth_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 
-class MerchantSettingsSection extends StatelessWidget {
+class MerchantSettingsSection extends ConsumerWidget {
   const MerchantSettingsSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -46,6 +48,7 @@ class MerchantSettingsSection extends StatelessWidget {
           label: 'Branches & Pickup Points',
           route: MainRoutes.merchantBranches,
         ),
+        if (ref.watch(riderAuthProvider).user?.isStaff != true)
         _SettingsTile(
           icon: Icons.group_outlined,
           label: 'Staff Accounts',

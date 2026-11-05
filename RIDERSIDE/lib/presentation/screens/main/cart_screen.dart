@@ -17,6 +17,7 @@ class CartScreen extends ConsumerWidget {
     String paymentMethod = 'cash';
     LatLng? pinLocation;
     String? pinAddress;
+    double? estimatedFee;
 
     final proceed = await showModalBottomSheet<bool>(
       context: context,
@@ -49,11 +50,27 @@ class CartScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
+                if (estimatedFee != null) ...[
+                  Text(
+                    'Delivery fee: \u20B1${estimatedFee!.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 // Pin location button
                 InkWell(
                   onTap: () async {
                     final result = await _openMapPicker(context, pinLocation);
                     if (result != null) {
+                      final picked = result['latLng'] as LatLng;
+                      ref.read(bookFeeEstimateProvider.notifier).state = null;
+                      ref
+                          .read(cartCheckoutStateProvider.notifier)
+                          .estimateFee(deliveryLat: picked.latitude, deliveryLng: picked.longitude)
+                          .then((fee) {
+                        ref.read(bookFeeEstimateProvider.notifier).state = fee;
+                        if (context.mounted) setState(() => estimatedFee = fee);
+                      });
                       setState(() {
                         pinLocation = result['latLng'] as LatLng;
                         pinAddress = result['address'] as String?;
@@ -185,7 +202,6 @@ class CartScreen extends ConsumerWidget {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'cash', child: Text('Cash')),
-                    DropdownMenuItem(value: 'gcash', child: Text('GCash')),
                     DropdownMenuItem(value: 'wallet', child: Text('LesPay Wallet')),
                   ],
                   onChanged: (value) {

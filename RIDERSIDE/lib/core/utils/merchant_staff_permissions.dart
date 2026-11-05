@@ -26,7 +26,6 @@ class MerchantStaffPermissions {
     ],
     cook: [
       manageOrders,
-      manageMenu,
     ],
     cashier: [
       manageOrders,
@@ -38,7 +37,7 @@ class MerchantStaffPermissions {
     admin:
         'Full access — menu, orders, staff, LeSpay, analytics, printer, and settings.',
     cook:
-        'Kitchen — view and update orders, manage menu items and availability.',
+        'Kitchen — view and update orders, and see the menu.',
     cashier:
         'Front desk — manage orders and LeSpay payments to riders.',
   };

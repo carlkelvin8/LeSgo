@@ -9,7 +9,7 @@ class MenuOptionChoice {
     if (value is Map) {
       return MenuOptionChoice(
         label: value['label']?.toString() ?? '',
-        price: (value['price'] as num?)?.toDouble() ?? 0,
+        price: double.tryParse('${value['price']}') ?? 0,
       );
     }
     return MenuOptionChoice(label: value?.toString() ?? '');

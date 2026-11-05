@@ -50,7 +50,8 @@ class MerchantProfileInfoSection extends ConsumerWidget {
                 '~$prepTime min',
                 valueColor: const Color(0xFF5F2D82),
               ),
-            _MerchantStoreStatusToggle(initialIsOpen: profile.isOpen ?? false),
+            if (ref.watch(riderAuthProvider).user?.isStaff != true)
+              _MerchantStoreStatusToggle(initialIsOpen: profile.isOpen ?? false),
             if (hours != null && hours.isNotEmpty)
               _OperatingHoursSummary(hours: hours),
             _info(

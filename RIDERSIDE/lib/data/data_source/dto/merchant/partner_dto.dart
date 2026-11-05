@@ -2,6 +2,11 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'partner_dto.g.dart';
 
+/// The API encodes empty hours as `[]`, not an object.
+Map<String, dynamic>? _parseOpeningHours(dynamic value) {
+  return value is Map ? Map<String, dynamic>.from(value) : null;
+}
+
 bool? _parseBoolNullable(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;
@@ -46,7 +51,7 @@ class PartnerDto {
   final String? status;
   @JsonKey(name: 'accepts_online_payment', fromJson: _parseBoolNullable)
   final bool? acceptsOnlinePayment;
-  @JsonKey(name: 'opening_hours')
+  @JsonKey(name: 'opening_hours', fromJson: _parseOpeningHours)
   final Map<String, dynamic>? openingHours;
   @JsonKey(name: 'support_phone')
   final String? supportPhone;
