@@ -293,7 +293,17 @@ class AuthController extends Controller
             }
         }
 
-        AuditLogger::logAuth('login', $user->id, true);
+        // Audit storage can be temporarily unavailable or out of sync during a
+        // deployment. Authentication should still complete; the failure is
+        // recorded to the application log for operators to investigate.
+        try {
+            AuditLogger::logAuth('login', $user->id, true);
+        } catch (\Throwable $e) {
+            \Log::warning('Authentication audit logging failed after login', [
+                'user_id' => $user->id,
+                'exception' => $e::class,
+            ]);
+        }
 
         if ($request->boolean('revoke_others', false)) {
             $this->authService->revokeAllTokens($user);
