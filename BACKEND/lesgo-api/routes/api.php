@@ -200,7 +200,7 @@ Route::prefix('v1')->group(function () {
 
     // Payment webhooks (public — verified by X-CALLBACK-TOKEN, no Bearer token)
     Route::post('/webhooks/payments/{provider}', [PaymentController::class, 'webhook'])
-        ->middleware('throttle:60,1')
+        ->middleware('throttle:60,1,payment-webhook')
         ->whereIn('provider', ['xendit', 'paymongo', 'gcash', 'maya']);
 
     // Public Social Media endpoints
@@ -295,7 +295,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/orders/{order}/feedback', [OrderController::class, 'submitFeedback']);
         // Merchant: report or block the customer of an order (App Store Guideline 1.2)
         Route::get('/orders/{order}/customer-safety', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'show']);
-        Route::post('/orders/{order}/report-customer', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'report'])->middleware('throttle:10,1');
+        Route::post('/orders/{order}/report-customer', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'report'])->middleware('throttle:10,1,report-customer');
         Route::post('/orders/{order}/block-customer', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'block']);
         Route::delete('/orders/{order}/block-customer', [\App\Http\Controllers\Api\MerchantCustomerSafetyController::class, 'unblock']);
         Route::get('/orders/{order}/receipt', [ReceiptController::class, 'show']);
@@ -327,9 +327,9 @@ Route::prefix('v1')->group(function () {
         Route::delete('/wallets/my/linked-accounts/{provider}', [WalletController::class, 'unlinkAccount']);
         Route::post('/wallets/my/linked-accounts/{provider}/verify', [WalletController::class, 'verifyLinkedAccount']);
         Route::post('/wallets/my/topup', [WalletController::class, 'topUp'])
-            ->middleware('throttle:5,1'); // 5 top-up attempts per minute
+            ->middleware('throttle:5,1,wallet-topup'); // 5 top-up attempts per minute
         Route::post('/wallets/my/withdraw', [WalletController::class, 'withdraw'])
-            ->middleware('throttle:3,1'); // 3 withdrawal attempts per minute
+            ->middleware('throttle:3,1,wallet-withdraw'); // 3 withdrawal attempts per minute
         Route::get('/wallets/threshold', [WalletController::class, 'getThreshold']);
         Route::get('/wallets/{user_id}', [WalletController::class, 'showByUser'])
             ->whereNumber('user_id');
@@ -544,7 +544,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/conversations/{conversation}/system-message', [\App\Http\Controllers\Api\ChatController::class, 'sendSystemMessage']);
             Route::post('/conversations/{conversation}/end', [\App\Http\Controllers\Api\ChatController::class, 'endConversation']);
             Route::post('/conversations/{conversation}/read', [\App\Http\Controllers\Api\ChatController::class, 'markMessagesAsRead']);
-            Route::post('/conversations/{conversation}/report', [\App\Http\Controllers\Api\ChatController::class, 'report'])->middleware('throttle:10,1');
+            Route::post('/conversations/{conversation}/report', [\App\Http\Controllers\Api\ChatController::class, 'report'])->middleware('throttle:10,1,chat-report');
             Route::post('/conversations/{conversation}/block', [\App\Http\Controllers\Api\ChatController::class, 'block']);
             Route::delete('/conversations/{conversation}/block', [\App\Http\Controllers\Api\ChatController::class, 'unblock']);
             Route::get('/unread-count', [\App\Http\Controllers\Api\ChatController::class, 'unreadCount']);
@@ -630,10 +630,10 @@ Route::prefix('v1')->group(function () {
         // Merchant Withdrawal Requests
         Route::prefix('merchant/withdrawals')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\MerchantWithdrawalController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\MerchantWithdrawalController::class, 'store'])->middleware('throttle:5,1');
+            Route::post('/', [\App\Http\Controllers\Api\MerchantWithdrawalController::class, 'store'])->middleware('throttle:5,1,merchant-withdraw');
             Route::get('/summary', [\App\Http\Controllers\Api\MerchantWithdrawalController::class, 'summary']);
             Route::get('/{id}', [\App\Http\Controllers\Api\MerchantWithdrawalController::class, 'show']);
-            Route::post('/{id}/cancel', [\App\Http\Controllers\Api\MerchantWithdrawalController::class, 'cancel'])->middleware('throttle:5,1');
+            Route::post('/{id}/cancel', [\App\Http\Controllers\Api\MerchantWithdrawalController::class, 'cancel'])->middleware('throttle:5,1,merchant-withdraw-cancel');
         });
 
         // ── ADVANCED ANALYTICS & BUSINESS INTELLIGENCE ────────────────────────
@@ -662,11 +662,11 @@ Route::prefix('v1')->group(function () {
             Route::prefix('2fa')->group(function () {
                 Route::post('/setup', [\App\Http\Controllers\Api\SecurityController::class, 'setup2FA']);
                 Route::post('/verify', [\App\Http\Controllers\Api\SecurityController::class, 'verify2FA'])
-                    ->middleware('throttle:10,1');
+                    ->middleware('throttle:10,1,2fa-verify');
                 Route::post('/disable', [\App\Http\Controllers\Api\SecurityController::class, 'disable2FA'])
-                    ->middleware('throttle:5,1');
+                    ->middleware('throttle:5,1,2fa-disable');
                 Route::post('/backup-codes/regenerate', [\App\Http\Controllers\Api\SecurityController::class, 'regenerateBackupCodes'])
-                    ->middleware('throttle:5,1');
+                    ->middleware('throttle:5,1,2fa-backup-codes');
             });
 
             // Biometric Authentication

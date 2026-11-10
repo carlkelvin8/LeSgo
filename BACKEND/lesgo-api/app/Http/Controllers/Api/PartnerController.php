@@ -313,7 +313,7 @@ class PartnerController extends Controller
      */
     public function merchantMenu(Partner $partner): JsonResponse
     {
-        $this->authorize('manageMenu', $partner);
+        $this->authorize('viewMenu', $partner);
         $categories = $partner->menuCategories()->with('items')->orderBy('sort_order')->get();
         foreach ($categories as $category) {
             // Keep the mobile response shape, including unavailable items.
@@ -326,7 +326,7 @@ class PartnerController extends Controller
 
     public function menuItems(Partner $partner): JsonResponse
     {
-        $this->authorize('manageMenu', $partner);
+        $this->authorize('viewMenu', $partner);
 
         return $this->success(MenuItem::where('partner_id', $partner->id)->orderBy('sort_order')->get());
     }

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_location_provider.dart';
@@ -13,7 +12,6 @@ import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
 import '../../../../../core/config/secrets_config.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/app_logger.dart';
-import '../../../../../core/utils/location_permission_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
@@ -45,7 +43,6 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   @override
   void initState() {
     super.initState();
-    _requestLocationPermission();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -107,7 +104,11 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
       final activeOrderId = ref.read(riderOrdersProvider).activeOrder?.id;
       final notifier = ref.read(riderLocationProvider.notifier);
       notifier.setActiveOrderId(activeOrderId);
-      if (!ref.read(riderLocationProvider).isTracking) {
+      // Location tracking is started by RiderDutyNotifier when the rider goes
+      // on duty. Avoid requesting GPS access just because the bookings map is
+      // visible while the rider is off duty.
+      if (ref.read(riderDutyProvider) &&
+          !ref.read(riderLocationProvider).isTracking) {
         notifier.startTracking(orderId: activeOrderId);
       }
     });
@@ -125,42 +126,12 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     super.dispose();
   }
 
-  Future<void> _requestLocationPermission() async {
-    final status = await Permission.locationWhenInUse.request();
-    if (status.isGranted) {
-      _getCurrentLocation();
-    } else if (mounted) {
-      await showLocationPermissionSnackBar(
-        context,
-        openSettings: permissionNeedsSettings(status),
-      );
-    }
-  }
-
   String _formatLastRefreshed(DateTime time) {
     final diff = DateTime.now().difference(time);
     if (diff.inSeconds < 10) return 'just now';
     if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     return '${diff.inHours}h ago';
-  }
-
-  Future<void> _getCurrentLocation() async {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      if (mounted) {
-        setState(() {
-          _currentPosition = position;
-        });
-        _updateMarkers();
-        _updateActiveOrderRoute();
-        _centerMapOnCurrentLocation();
-      }
-    } catch (e) {
-      AppLogger.error('Error getting location', e);
-    }
   }
 
   void _centerMapOnCurrentLocation() {

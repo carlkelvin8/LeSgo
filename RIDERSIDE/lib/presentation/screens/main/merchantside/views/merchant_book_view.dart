@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/merchant_grid_layout_utils.dart';
 import '../../../../widgets/common/menu_image_widget.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../widgets/widgets.dart';
@@ -12,10 +13,14 @@ import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../food_detail_screen.dart';
 
 /// Choices are stored as `{label, price}`; empty means the item has none.
-List<MerchantFoodSizeOption> _bookChoices(List<MenuOptionChoice> choices) => choices
-    .where((choice) => choice.label.isNotEmpty)
-    .map((choice) => MerchantFoodSizeOption(label: choice.label, price: choice.price))
-    .toList();
+List<MerchantFoodSizeOption> _bookChoices(List<MenuOptionChoice> choices) =>
+    choices
+        .where((choice) => choice.label.isNotEmpty)
+        .map(
+          (choice) =>
+              MerchantFoodSizeOption(label: choice.label, price: choice.price),
+        )
+        .toList();
 
 List<MerchantFoodSizeOption> bookItemSizes(Map<String, dynamic>? options) =>
     _bookChoices(MenuItemOptionGroups.fromApiMap(options).sizes);
@@ -455,7 +460,7 @@ class _AnimatedItemGrid extends StatelessWidget {
             crossAxisCount: cols,
             mainAxisSpacing: 12,
             crossAxisSpacing: 10,
-            childAspectRatio: .68,
+            childAspectRatio: merchantBookCardAspectRatio(constraints.maxWidth),
           ),
           itemBuilder: (context, i) {
             final item = items[i];

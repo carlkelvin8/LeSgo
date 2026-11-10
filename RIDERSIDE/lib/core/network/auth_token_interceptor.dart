@@ -39,8 +39,24 @@ class AuthTokenInterceptor extends QueuedInterceptor {
       return;
     }
 
+    final failedToken = _bearerOf(err.requestOptions);
+
+    // The session may have been renewed while this request was in flight
+    // (another 401 refreshed it, or a password change issued new tokens and
+    // revoked the old ones). Retry with the current token instead of
+    // refreshing again or - worse - clearing the brand-new session.
+    final storedToken = await SecureStorageService.getToken();
+    if (err.requestOptions.extra['retriedAfterRefresh'] != true &&
+        storedToken != null &&
+        storedToken.isNotEmpty &&
+        failedToken != null &&
+        storedToken != failedToken) {
+      await _retryWith(storedToken, err, handler);
+      return;
+    }
+
     if (err.requestOptions.extra['retriedAfterRefresh'] == true) {
-      await SecureStorageService.clearAuth();
+      await _clearAuthIfStillUsing(failedToken);
       handler.next(err);
       return;
     }
@@ -50,26 +66,52 @@ class AuthTokenInterceptor extends QueuedInterceptor {
       // Only drop the session when the server actually rejected it; an
       // offline/throttled (429) refresh must not log the rider out.
       if (!TokenRefreshService.instance.lastFailureWasTransient) {
-        await SecureStorageService.clearAuth();
+        await _clearAuthIfStillUsing(failedToken);
       }
       handler.next(err);
       return;
     }
 
+    await _retryWith(newToken, err, handler);
+  }
+
+  Future<void> _retryWith(
+    String token,
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     try {
       final requestOptions = err.requestOptions;
-      requestOptions.headers['Authorization'] = 'Bearer $newToken';
+      requestOptions.headers['Authorization'] = 'Bearer $token';
       requestOptions.extra['retriedAfterRefresh'] = true;
       final response = await _dio.fetch<dynamic>(requestOptions);
       handler.resolve(response);
     } on DioException catch (retryError) {
       if (retryError.response?.statusCode == 401) {
-        await SecureStorageService.clearAuth();
+        await _clearAuthIfStillUsing(token);
       }
       handler.next(retryError);
     } catch (_) {
       handler.next(err);
     }
+  }
+
+  /// Clears the session only if it still holds the exact token the server
+  /// rejected. A request that carried no token (sent while logged out or
+  /// mid-login) or an older token must never wipe a newer session that was
+  /// saved while the request was in flight.
+  Future<void> _clearAuthIfStillUsing(String? rejectedToken) async {
+    if (rejectedToken == null || rejectedToken.isEmpty) return;
+    final current = await SecureStorageService.getToken();
+    if (current == null || current.isEmpty || current == rejectedToken) {
+      await SecureStorageService.clearAuth();
+    }
+  }
+
+  String? _bearerOf(RequestOptions options) {
+    final header = options.headers['Authorization'];
+    if (header is! String || !header.startsWith('Bearer ')) return null;
+    return header.substring('Bearer '.length);
   }
 
   bool _shouldSkipRefresh(RequestOptions options) {

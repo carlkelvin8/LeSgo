@@ -45,6 +45,33 @@ class OrderTest extends TestCase
         $this->assertDatabaseHas('orders', ['service_id' => $service->id, 'status' => 'pending']);
     }
 
+    public function test_order_and_quote_apply_the_same_fare_safety_cap(): void
+    {
+        Queue::fake();
+        $service = Service::factory()->create([
+            'code' => 'LESGO',
+            'base_fare' => 40,
+            'per_km_rate' => 1000,
+        ]);
+        $this->actingAsRole('customer');
+        $payload = $this->makeOrderPayload($service->id);
+
+        $quote = $this->postJson('/api/v1/orders/estimate', [
+            'service_id' => $service->id,
+            'pickup' => $payload['pickup'],
+            'dropoff' => $payload['dropoff'],
+            'estimated_distance_m' => $payload['estimated_distance_m'],
+        ])->assertOk();
+
+        $orderResponse = $this->postJson('/api/v1/orders', $payload)->assertCreated();
+        $order = Order::findOrFail($orderResponse->json('data.id'));
+
+        $this->assertSame(500.0, (float) $quote->json('data.estimated_fare'));
+        $this->assertSame(500.0, (float) $order->estimated_fare);
+        $this->assertSame(500.0, (float) $order->fare_breakdown['total']);
+        $this->assertSame(500.0, (float) $order->meta['delivery_fee']);
+    }
+
     public function test_client_order_totals_cannot_override_server_payable_amount(): void
     {
         Queue::fake();
@@ -204,6 +231,25 @@ class OrderTest extends TestCase
         $response->assertStatus(200);
         $this->assertCount(1, $response->json('data'));
         $this->assertEquals('pending', $response->json('data.0.status'));
+    }
+
+    public function test_orders_can_be_filtered_by_each_rider_lifecycle_status(): void
+    {
+        $customer = $this->actingAsRole('customer');
+        $service = Service::factory()->create();
+
+        foreach (['driver_arrived_at_pickup', 'ready_for_pickup', 'in_progress'] as $status) {
+            Order::factory()->create([
+                'customer_id' => $customer->id,
+                'service_id' => $service->id,
+                'status' => $status,
+            ]);
+
+            $this->getJson('/api/v1/orders?status='.$status)
+                ->assertOk()
+                ->assertJsonCount(1, 'data')
+                ->assertJsonPath('data.0.status', $status);
+        }
     }
 
     // ── Show Order ────────────────────────────────────────────────────────────

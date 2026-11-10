@@ -10,6 +10,21 @@ class FareCalculatorService
 
     public const MAX_DISTANCE_KM = 30.0;
 
+    public const ESTIMATE_SAFETY_CAP = 500.0;
+
+    /** Apply the same safety cap to quotes and orders for non-LesRide services. */
+    public function applyEstimateSafetyCap(array $fareBreakdown, string $serviceCode): array
+    {
+        if (strtoupper($serviceCode) !== 'LESRIDE') {
+            $fareBreakdown['total'] = min(
+                (float) $fareBreakdown['total'],
+                self::ESTIMATE_SAFETY_CAP
+            );
+        }
+
+        return $fareBreakdown;
+    }
+
     /** Build the authoritative fare breakdown for an order. */
     public function calculate(
         Service $service,

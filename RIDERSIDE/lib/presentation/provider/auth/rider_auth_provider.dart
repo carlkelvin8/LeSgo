@@ -537,6 +537,21 @@ class RiderAuthNotifier extends StateNotifier<RiderAuthState> {
       AppLogger.warn('Logout: off-duty sync failed: $e');
     }
 
+    // The local duty flag can still be "off" while the server has the rider
+    // available (duty state is restored asynchronously after login, or the call
+    // above timed out). Always tell the server directly so a logged-out rider
+    // is never left receiving dispatches.
+    final user = state.user;
+    final profileId = user?.driverProfileId;
+    if (user != null && user.isDriver && profileId != null) {
+      try {
+        await ApiService.updateDriverAvailability(profileId, false)
+            .timeout(const Duration(seconds: 5));
+      } catch (e) {
+        AppLogger.warn('Logout: direct off-duty sync failed: $e');
+      }
+    }
+
     try {
       await ref.read(riderLocationProvider.notifier).stopTracking();
     } catch (e) {

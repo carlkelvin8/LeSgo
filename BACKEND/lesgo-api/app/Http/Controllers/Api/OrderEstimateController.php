@@ -94,12 +94,10 @@ class OrderEstimateController extends Controller
             $orderValue,
             $weightKg
         );
-
-        // Existing delivery services retain their estimate safety cap. The
-        // LesRide matrix tops out below this cap at the 30 km order limit.
-        if ($serviceCode !== 'LESRIDE') {
-            $fareBreakdown['total'] = min($fareBreakdown['total'], 500.0);
-        }
+        $fareBreakdown = $fareCalculator->applyEstimateSafetyCap(
+            $fareBreakdown,
+            $serviceCode
+        );
 
         // Estimated duration (assuming 30 km/h average speed)
         $avgSpeedKmh = 30;

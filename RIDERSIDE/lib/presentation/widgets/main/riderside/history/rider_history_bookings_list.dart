@@ -64,7 +64,7 @@ class RiderHistoryBookingsList extends StatelessWidget {
           statusBackgroundColor = const Color(0xFFFFF3E0);
         }
 
-        return GestureDetector(
+        return RiderHistoryBookingCard(
           onTap: () {
             // Navigate to detail screen with the booking
             Navigator.of(context).push(
@@ -78,18 +78,19 @@ class RiderHistoryBookingsList extends StatelessWidget {
               ),
             );
           },
-          child: RiderHistoryBookingCard(
-            bookingId: booking.id,
-            restaurantName: booking.restaurantName,
-            address: booking.deliveryAddress ?? booking.address,
-            price:
-                booking.earnings?.replaceFirst('Your earnings ', '') ??
-                'PHP 0.00',
-            status: statusLabel,
-            statusColor: statusColor,
-            statusBackgroundColor: statusBackgroundColor,
-            proofImageCount: booking.proofOfDeliveryUrls?.length,
-          ),
+          bookingId: booking.id,
+          restaurantName: booking.restaurantName,
+          address: booking.deliveryAddress ?? booking.address,
+          // A cancelled booking earned nothing; the order still carries the
+          // projected driver share from when it was accepted.
+          price: booking.currentStatus == BookingStatus.cancelled
+              ? 'PHP 0.00'
+              : booking.earnings?.replaceFirst('Your earnings ', '') ??
+                    'PHP 0.00',
+          status: statusLabel,
+          statusColor: statusColor,
+          statusBackgroundColor: statusBackgroundColor,
+          proofImageCount: booking.proofOfDeliveryUrls?.length,
         );
       },
     );

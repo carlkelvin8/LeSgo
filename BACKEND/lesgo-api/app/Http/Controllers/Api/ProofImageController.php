@@ -24,7 +24,8 @@ class ProofImageController extends Controller
                 && (int) ($user->driverProfile?->id ?? 0) === (int) $order->driver_id;
             $isAdmin = $user->isAdmin();
             $isOrderPartner = ($user->isPartnerAdmin() || $user->isPartnerStaff())
-                && (int) ($user->partner?->id ?? 0) === (int) $order->partner_id;
+                && $user->workingPartnerId() !== null
+                && $user->workingPartnerId() === (int) $order->partner_id;
             if (! ($isCustomer || $isAssignedDriver || $isAdmin || $isOrderPartner)) {
                 return $this->error('You are not authorized to view these proof images.', 403);
             }

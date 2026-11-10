@@ -81,9 +81,26 @@ class MerchantOrderQueueCard extends StatelessWidget {
           ).formatTimeOfDay(TimeOfDay.fromDateTime(created));
     final actionable =
         MerchantOrderOpsUtils.canAccept(status) ||
-        MerchantOrderOpsUtils.canMarkReadyForPickup(status);
+        MerchantOrderOpsUtils.canMarkReadyForPickup(
+          status,
+          alreadyReady: order.readyForPickupAt != null,
+        );
     final canReject = MerchantOrderOpsUtils.canReject(status);
-    final canCancel = MerchantOrderOpsUtils.canCancelAfterAccept(status);
+    final canCancel = MerchantOrderOpsUtils.canCancelAfterAccept(
+      status,
+      riderAssigned: order.driverId != null,
+    );
+    final label =
+        MerchantOrderOpsUtils.isReadyAtStore(
+          status,
+          alreadyReady: order.readyForPickupAt != null,
+        )
+        ? (status == 'driver_arrived_at_pickup'
+              ? 'Ready · rider at store'
+              : order.driverId != null
+              ? 'Ready for pickup · rider assigned'
+              : 'Ready for pickup')
+        : statusLabel(status);
     return Material(
       color: OrderQueuePalette.surface(context),
       clipBehavior: Clip.antiAlias,
@@ -120,7 +137,7 @@ class MerchantOrderQueueCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          statusLabel(status),
+                          label,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
@@ -366,7 +383,10 @@ class MerchantOrderQueueCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (MerchantOrderOpsUtils.showsPrepTimer(status) &&
+                if (MerchantOrderOpsUtils.showsPrepTimer(
+                      status,
+                      alreadyReady: order.readyForPickupAt != null,
+                    ) &&
                     timer != null) ...[
                   const SizedBox(height: 12),
                   MerchantPrepTimerBadge(timer: timer, compact: true),

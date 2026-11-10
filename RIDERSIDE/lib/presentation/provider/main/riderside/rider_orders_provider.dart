@@ -298,7 +298,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         activeOrder: updated,
         action: RiderOrderAction.none,
         actionOrderId: null,
-        successMessage: 'Order #$orderId cancelled.',
+        successMessage: 'You left order #$orderId. It was passed to other riders.',
         clearActiveOrder: true,
       );
 

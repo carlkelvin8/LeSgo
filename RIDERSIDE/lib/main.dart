@@ -17,24 +17,32 @@ import 'presentation/widgets/common/force_update_dialog.dart';
 import 'presentation/widgets/common/offline_banner.dart';
 import 'presentation/provider/theme_provider.dart';
 
-void main() async {
+bool _bootstrapCompleted = false;
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await configureGoogleMapsForPlatform();
-  await RememberMeService.init();
-  await MobileConfigService.instance.load();
+  if (!_bootstrapCompleted) {
+    await configureGoogleMapsForPlatform();
+    await RememberMeService.init();
+    await MobileConfigService.instance.load();
 
-  final existingToken = await SecureStorageService.getToken();
-  AppLogger.auth(
-    'Startup session: ${existingToken != null ? "token present" : "no token"}',
-  );
+    final existingToken = await SecureStorageService.getToken();
+    AppLogger.auth(
+      'Startup session: ${existingToken != null ? "token present" : "no token"}',
+    );
 
-  await configureDependencies();
-  await AppCrashReporter.initialize();
-  await FcmService.instance.initialize();
-  ApiService.trackAnalyticsEvent(
-    'app_opened',
-    properties: {'app': 'rider', 'timestamp': DateTime.now().toIso8601String()},
-  );
+    await configureDependencies();
+    await AppCrashReporter.initialize();
+    await FcmService.instance.initialize();
+    ApiService.trackAnalyticsEvent(
+      'app_opened',
+      properties: {
+        'app': 'rider',
+        'timestamp': DateTime.now().toIso8601String(),
+      },
+    );
+    _bootstrapCompleted = true;
+  }
 
   runApp(const ProviderScope(child: LesgoApp()));
 }

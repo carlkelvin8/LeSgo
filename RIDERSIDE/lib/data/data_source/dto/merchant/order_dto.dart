@@ -52,11 +52,12 @@ Object? _readBranchName(Map json, String _) {
   return (name == null || name.isEmpty) ? null : name;
 }
 
+/// Food value of the order from `meta`. Never `grand_total`: it includes the
+/// delivery fee, which is not the store's money.
 double? _parseMetaOrderValue(dynamic value) {
   if (value is! Map) return null;
   return _parseDouble(value['order_value']) ??
-      _parseDouble(value['subtotal']) ??
-      _parseDouble(value['grand_total']);
+      _parseDouble(value['subtotal']);
 }
 
 @JsonSerializable()
@@ -107,6 +108,8 @@ class OrderDto {
   final String? specialInstructions;
   @JsonKey(name: 'completed_at')
   final String? completedAt;
+  @JsonKey(name: 'cancelled_at')
+  final String? cancelledAt;
   @JsonKey(name: 'partner_share', fromJson: _parseDouble)
   final double? partnerShare;
   @JsonKey(name: 'fare_breakdown', fromJson: _parseFareBreakdownSubtotal)
@@ -122,6 +125,8 @@ class OrderDto {
   final String createdAt;
   @JsonKey(name: 'updated_at')
   final String updatedAt;
+  @JsonKey(name: 'ready_for_pickup_at')
+  final String? readyForPickupAt;
   
   // Relationships
   @JsonKey(name: 'customer')
@@ -158,6 +163,7 @@ class OrderDto {
     required this.paymentStatus,
     this.specialInstructions,
     this.completedAt,
+    this.cancelledAt,
     this.partnerShare,
     this.fareBreakdownSubtotal,
     this.metaOrderValue,
@@ -165,6 +171,7 @@ class OrderDto {
     this.branchName,
     required this.createdAt,
     required this.updatedAt,
+    this.readyForPickupAt,
     this.user,
     this.driver,
     this.partner,

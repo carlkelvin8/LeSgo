@@ -120,6 +120,24 @@ class User extends Authenticatable
         return null;
     }
 
+    /**
+     * Whether this account is active staff of the store with the manage_menu
+     * permission (a staff admin, or staff granted it explicitly).
+     */
+    public function canEditStoreMenu(int $partnerId): bool
+    {
+        if ($this->role !== 'partner_staff') {
+            return false;
+        }
+
+        $staff = $this->partnerStaff()
+            ->where('partner_id', $partnerId)
+            ->where(fn ($q) => $q->where('is_active', true)->orWhereNull('is_active'))
+            ->first();
+
+        return $staff !== null && $staff->hasPermission('manage_menu');
+    }
+
     public function addresses()
     {
         return $this->hasMany(Address::class, 'user_id');

@@ -99,28 +99,7 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
 
     if (proceed != true || !mounted) return;
 
-    XFile? photo;
-    try {
-      photo = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-        preferredCameraDevice: CameraDevice.front,
-      );
-    } catch (_) {
-      // Camera permission denied / camera unavailable: tell the rider instead
-      // of failing silently with an unhandled platform exception.
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalization.translate('camera_permission_required', lang),
-            ),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
-      }
-      return;
-    }
+    final photo = await _pickAttendancePhoto(lang);
 
     if (photo == null || !mounted) return;
 
@@ -148,6 +127,64 @@ class _RiderDutyToggleState extends ConsumerState<RiderDutyToggle> {
           backgroundColor: const Color(0xFF5F2D82),
         ),
       );
+    }
+  }
+
+  Future<XFile?> _pickAttendancePhoto(AppLanguage lang) async {
+    XFile? photo;
+    try {
+      photo = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+        preferredCameraDevice: CameraDevice.front,
+      );
+    } catch (_) {
+      // Fall back below. iOS Simulator has no camera hardware, and some camera
+      // implementations return null instead of throwing for that condition.
+    }
+
+    if (photo != null || !mounted) return photo;
+
+    // Keep attendance mandatory, while allowing a rider to choose a genuine
+    // photo when a camera is unavailable or the camera flow was cancelled.
+    final chooseFromGallery = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(AppLocalization.translate('camera_unavailable', lang)),
+        content: Text(
+          AppLocalization.translate('attendance_gallery_fallback', lang),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(AppLocalization.translate('cancel', lang)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(AppLocalization.translate('gallery', lang)),
+          ),
+        ],
+      ),
+    );
+    if (chooseFromGallery != true || !mounted) return null;
+
+    try {
+      return await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalization.translate('attendance_gallery_failed', lang),
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+      return null;
     }
   }
 

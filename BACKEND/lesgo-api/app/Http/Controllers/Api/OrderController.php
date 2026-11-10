@@ -101,6 +101,12 @@ class OrderController extends Controller
             $query->where('partner_branch_id', (int) $validated['partner_branch_id']);
         }
 
+        // A rider's list also holds the open pool, newest first, so a busy pool can
+        // push their own history off the first page. `mine` returns only their orders.
+        if ($request->boolean('mine') && $user->isDriver()) {
+            $query->where('driver_id', optional($user->driverProfile)->id ?? 0);
+        }
+
         $perPage = (int) ($validated['per_page'] ?? 20);
         $paginator = $query->orderByDesc('id')->paginate($perPage);
 
@@ -323,6 +329,10 @@ class OrderController extends Controller
             $distanceKm,
             $orderValue,
             $weightKg
+        );
+        $fareBreakdown = $this->fareCalculator->applyEstimateSafetyCap(
+            $fareBreakdown,
+            $serviceCode
         );
         if ($branch) {
             $meta['branch'] = $branch->toOrderSnapshot();
@@ -693,14 +703,27 @@ class OrderController extends Controller
      */
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order): JsonResponse
     {
-        return DB::transaction(function () use ($request, $order) {
+        DB::beginTransaction();
+
+        try {
             // Match automatic assignment lock order to serialize concurrent accepts.
             if ($request->user()->isDriver()) {
                 $request->user()->driverProfile()->lockForUpdate()->first();
             }
             $lockedOrder = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
-            return $this->updateLockedStatus($request, $lockedOrder);
-        });
+            $response = $this->updateLockedStatus($request, $lockedOrder);
+
+            // A refused request must leave nothing behind: cancelling credits the
+            // wallet before later field checks run, so a 403 could be replayed for
+            // repeated refunds.
+            $response->getStatusCode() >= 400 ? DB::rollBack() : DB::commit();
+
+            return $response;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            throw $e;
+        }
     }
 
     private function updateLockedStatus(UpdateOrderStatusRequest $request, Order $order): JsonResponse
@@ -721,7 +744,21 @@ class OrderController extends Controller
                 if (! $order->isDispatchableToDrivers()) {
                     return $this->error('This order is not available for driver acceptance.', 403);
                 }
-                $profile = $user->driverProfile;
+                if (\Illuminate\Support\Facades\DB::table('order_driver_releases')
+                    ->where('order_id', $order->id)
+                    ->where('driver_profile_id', (int) optional($user->driverProfile)->id)
+                    ->exists()) {
+                    return $this->error('You already left this booking. It is with other riders now.', 403);
+                }
+                // Read the locked, persisted profile state. Do not rely on a
+                // potentially cached relationship value during order acceptance.
+                $profile = $user->driverProfile()->lockForUpdate()->first();
+                if (! $profile || $profile->status !== 'active') {
+                    return $this->error('Only active drivers can accept orders.', 403);
+                }
+                if (! (bool) $profile->is_available) {
+                    return $this->error('Go on duty before accepting orders.', 403);
+                }
                 if ($profile && ! $profile->supportsVehicleTypeValue($order->vehicle_type)) {
                     return $this->error('This order requires a different vehicle type.', 403);
                 }
@@ -732,6 +769,10 @@ class OrderController extends Controller
 
             if (! $this->isStatusChangeAllowed($user, $order, $newStatus)) {
                 return $this->error('Status change not allowed for your role or current order state.', 403);
+            }
+
+            if ($newStatus === 'picked_up' && $user->isDriver() && $order->partner_id && ! $order->ready_for_pickup_at) {
+                return $this->error('The merchant has not marked this order ready for pickup.', 409);
             }
 
             if ($newStatus === 'completed' && ! collect($order->proof_images ?? [])
@@ -789,7 +830,7 @@ class OrderController extends Controller
                 try {
                     OrderDriverWalletService::chargeDriverOnAccept($user, $order);
                 } catch (\RuntimeException $e) {
-                    $chargeAmount = OrderDriverWalletService::resolveBookingChargeAmount($order);
+                    $chargeAmount = OrderDriverWalletService::resolveBookingChargeAmount($order, $user);
 
                     return $this->error($e->getMessage(), 422, [
                         'wallet_validation' => WalletValidationService::validateBalance($user),
@@ -802,6 +843,14 @@ class OrderController extends Controller
 
                 $driverProfile = $user->driverProfile;
                 $this->calculateDriverShare($order, $driverProfile);
+            }
+
+            // A rider backing out before pickup hands the order back to other
+            // riders. The customer and the store keep the order; only the
+            // rider's hold is refunded.
+            if ($newStatus === 'cancelled' && $user->isDriver()
+                && in_array($previousStatus, ['accepted', 'ready_for_pickup', 'driver_arrived_at_pickup', 'in_progress'], true)) {
+                return $this->releaseOrderFromDriver($order, $user, $data['cancel_reason'] ?? null);
             }
 
             if ($newStatus === 'cancelled' && $order->status !== 'cancelled') {
@@ -832,6 +881,15 @@ class OrderController extends Controller
                 }
             }
 
+            if ($newStatus === 'ready_for_pickup' && ($user->isPartnerAdmin() || $user->isPartnerStaff())) {
+                $order->ready_for_pickup_at ??= now();
+                // Keep the rider's arrival state when the merchant finishes
+                // preparing while the rider is already at the store.
+                if (! in_array($previousStatus, ['accepted', 'driver_arrived_at_pickup', 'in_progress'], true)) {
+                    $order->status = 'ready_for_pickup';
+                }
+            }
+
             match ($newStatus) {
                 'accepted' => $order->accepted_at = $order->accepted_at ?? now(),
                 'driver_arrived_at_pickup' => $order->driver_arrived_at_pickup = now(),
@@ -842,7 +900,9 @@ class OrderController extends Controller
                 default => null,
             };
 
-            $order->status = $newStatus;
+            if (! ($newStatus === 'ready_for_pickup' && ($user->isPartnerAdmin() || $user->isPartnerStaff()))) {
+                $order->status = $newStatus;
+            }
 
             // Safety net: accepted orders must always have an assigned driver.
             if ($newStatus === 'accepted' && $user->isDriver() && empty($order->driver_id)) {
@@ -861,7 +921,7 @@ class OrderController extends Controller
             $order->payment_status = $data['payment_status'];
         }
 
-        if (array_key_exists('cancel_reason', $data)) {
+        if (array_key_exists('cancel_reason', $data) && ($data['status'] ?? null) === 'cancelled') {
             $order->cancel_reason = $data['cancel_reason'];
         }
 
@@ -877,7 +937,13 @@ class OrderController extends Controller
                 }
             }
 
-            $order->actual_distance_m = $data['actual_distance_m'];
+            // A route can never be shorter than the straight line between pickup
+            // and dropoff. Without this floor a rider could report a tiny
+            // distance and get most of the platform-fee hold refunded.
+            $order->actual_distance_m = max(
+                (int) $data['actual_distance_m'],
+                $this->straightLineDistanceM($order)
+            );
             $order->loadMissing('service');
 
             if ($order->service) {
@@ -975,7 +1041,10 @@ class OrderController extends Controller
         }
 
         if ($user->isDriver()) {
-            $id = optional($user->driverProfile)->id;
+            // Read fresh profile state; authenticated models may already have a
+            // cached relation from middleware or an earlier status check.
+            $profile = $user->driverProfile()->first();
+            $id = $profile?->id;
             if (! $id) {
                 return $query->whereRaw('1=0');
             }
@@ -992,14 +1061,27 @@ class OrderController extends Controller
                 return $query->where('driver_id', $id);
             }
 
+            // Keep the open pool out of the app while the rider is off duty.
+            // Assigned orders remain visible so an active delivery can finish.
+            if (! $profile || ! (bool) $profile->is_available) {
+                return $query->where('driver_id', $id);
+            }
+
             // Drivers see:
             // 1. Orders assigned to them (accepted, picked_up, completed, cancelled)
             // 2. All pending/unassigned orders available to accept
-            $vehicleTypes = $user->driverProfile->supportedVehicleTypes();
+            $vehicleTypes = $profile->supportedVehicleTypes();
             return $query->where(function ($q) use ($id, $vehicleTypes) {
                 $q->where('driver_id', $id)                          // their own orders
-                    ->orWhere(function ($q2) use ($vehicleTypes) {
+                    ->orWhere(function ($q2) use ($vehicleTypes, $id) {
                         $q2->dispatchableToDrivers()
+                            // Not the orders this rider already backed out of.
+                            ->whereNotExists(function ($released) use ($id) {
+                                $released->selectRaw('1')
+                                    ->from('order_driver_releases')
+                                    ->whereColumn('order_driver_releases.order_id', 'orders.id')
+                                    ->where('order_driver_releases.driver_profile_id', $id);
+                            })
                             ->where(function ($vehicleQuery) use ($vehicleTypes) {
                                 $vehicleQuery->whereNull('vehicle_type')
                                     ->orWhere('vehicle_type', '')
@@ -1017,7 +1099,7 @@ class OrderController extends Controller
 
         // Partner staff (cashier, cook, etc.) see same orders as partner admin
         if ($user->role === 'partner_staff') {
-            $id = $user->partner_id ?? optional($user->partner)->id;
+            $id = $user->workingPartnerId();
 
             return $id ? $query->where('partner_id', $id) : $query->whereRaw('1=0');
         }
@@ -1134,12 +1216,14 @@ class OrderController extends Controller
                 'in_progress' => in_array($current, ['accepted', 'ready_for_pickup', 'driver_arrived_at_pickup'], true),
                 'picked_up' => in_array($current, ['accepted', 'ready_for_pickup', 'driver_arrived_at_pickup', 'in_progress'], true),
                 'completed' => $current === 'picked_up',
+                'cancelled' => in_array($current, ['accepted', 'ready_for_pickup', 'driver_arrived_at_pickup', 'in_progress'], true),
                 default => false,
             };
         }
 
-        if ($user->isPartnerAdmin()) {
-            $partnerId = optional($user->partner)->id;
+        // Staff work the store's orders the same way its owner does.
+        if ($user->isPartnerAdmin() || $user->isPartnerStaff()) {
+            $partnerId = $user->workingPartnerId();
             if (! $partnerId || (int) $order->partner_id !== (int) $partnerId) {
                 return false;
             }
@@ -1147,15 +1231,19 @@ class OrderController extends Controller
             // Merchant operational block if not active (cannot manage live order flow)
             if (in_array($new, ['searching_driver', 'ready_for_pickup'], true)) {
                 try {
-                    \App\Services\RegistrationFeeService::assertCanAccessOperationalFeatures($user, 'merchant order operations');
+                    \App\Services\RegistrationFeeService::assertCanAccessOperationalFeatures($order->partner?->user ?? $user, 'merchant order operations');
                 } catch (\RuntimeException $e) {
                     return false;
                 }
             }
 
+            if ($new === 'cancelled' && $order->driver_id !== null) {
+                return false;
+            }
+
             return match ($new) {
                 'searching_driver' => $current === 'pending',
-                'ready_for_pickup' => in_array($current, ['searching_driver', 'accepted'], true),
+                'ready_for_pickup' => in_array($current, ['searching_driver', 'accepted', 'driver_arrived_at_pickup', 'in_progress'], true),
                 'cancelled' => in_array($current, ['pending', 'searching_driver', 'ready_for_pickup'], true),
                 default => false,
             };
@@ -1255,6 +1343,75 @@ class OrderController extends Controller
     /**
      * Calculate driver share from shipping fee and rider package commission.
      */
+    /**
+     * Unassign the rider and put the order back up for other riders.
+     */
+    private function releaseOrderFromDriver(Order $order, $user, ?string $reason): JsonResponse
+    {
+        $driverProfileId = optional($user->driverProfile)->id;
+        if (! $driverProfileId || (int) $order->driver_id !== (int) $driverProfileId) {
+            return $this->error('You can only release your own assigned order.', 403);
+        }
+
+        $releasedFrom = strtolower((string) $order->status);
+
+        // Refund the rider's hold first; it also clears the hold markers so the
+        // next rider is charged their own hold.
+        \App\Services\OrderDriverWalletService::refundDriverOnCancel($order);
+
+        $meta = is_array($order->meta) ? $order->meta : [];
+        $releases = is_array($meta['rider_releases'] ?? null) ? $meta['rider_releases'] : [];
+        $releases[] = [
+            'driver_id' => (int) $driverProfileId,
+            'from_status' => $releasedFrom,
+            'reason' => $reason,
+            'at' => now()->toIso8601String(),
+        ];
+        $meta['rider_releases'] = $releases;
+        $order->meta = $meta;
+
+        \Illuminate\Support\Facades\DB::table('order_driver_releases')->insertOrIgnore([
+            'order_id' => $order->id,
+            'driver_profile_id' => (int) $driverProfileId,
+            'reason' => $reason !== null ? mb_substr($reason, 0, 500) : null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $order->driver_id = null;
+        $order->accepted_at = null;
+        $order->driver_arrived_at_pickup = null;
+        $order->in_progress_at = null;
+        // Shares are recalculated for whoever accepts next (columns are NOT NULL).
+        $order->driver_share = 0;
+        $order->platform_share = 0;
+        $order->status = $order->partner_id
+            ? ($order->ready_for_pickup_at ? 'ready_for_pickup' : 'searching_driver')
+            : 'pending';
+        $order->save();
+
+        app(\App\Services\OrderDispatchService::class)->publish($order->fresh());
+
+        return $this->success($order->fresh(), 'You left this booking. It was passed to other riders.');
+    }
+
+    private function straightLineDistanceM(Order $order): int
+    {
+        $lat1 = (float) $order->pickup_lat;
+        $lng1 = (float) $order->pickup_lng;
+        $lat2 = (float) $order->dropoff_lat;
+        $lng2 = (float) $order->dropoff_lng;
+        if (! $lat1 || ! $lng1 || ! $lat2 || ! $lng2) {
+            return 0;
+        }
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLng = deg2rad($lng2 - $lng1);
+        $a = sin($dLat / 2) ** 2 + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLng / 2) ** 2;
+
+        return (int) floor(6371000 * 2 * atan2(sqrt($a), sqrt(1 - $a)));
+    }
+
     private function calculateDriverShare(Order $order, ?\App\Models\DriverProfile $driverProfile = null): void
     {
         if (! $driverProfile && $order->driver_id) {
@@ -1287,6 +1444,9 @@ class OrderController extends Controller
         // Always recalculate driver share at completion (actual_fare may have been updated)
         $this->calculateDriverShare($order, $order->driverProfile);
 
+        // Online-paid orders: pay the store its items and the rider the fare.
+        \App\Services\OrderSettlementService::settleCompletedOrder($order);
+
         SendRatingReminderJob::dispatch($order->customer_id, $order->id)
             ->delay(now()->addMinutes(30));
     }
@@ -1308,7 +1468,9 @@ class OrderController extends Controller
         } // Already adjusted
 
         $actualFare = (float) ($order->actual_fare ?? $order->estimated_fare ?? 0);
-        $correctHold = RiderCommissionService::resolveShippingFee($order);
+        // Price the hold on the ACTUAL fare; using the estimate again made this
+        // always equal the amount charged, so the refund below never ran.
+        $correctHold = RiderCommissionService::resolveShippingFee($order, $actualFare, $order->driverProfile);
 
         // Only refund if the original hold was more than what it should be based on actual fare
         $difference = round($chargedAmount - $correctHold, 2);

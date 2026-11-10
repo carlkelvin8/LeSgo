@@ -30,6 +30,11 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Known-password test merchant/rider: never create them outside local/testing.
+        if (app()->environment('local', 'testing')) {
+            $this->call(E2ETestAccountsSeeder::class);
+        }
+
         // Other seeders disabled per request — retain admin account only
         // $this->call([
         //     TestMerchantSeeder::class,

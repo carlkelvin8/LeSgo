@@ -785,7 +785,8 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalization.translate('order_cancelled', lang)),
+          // The server hands the order to other riders; it is not cancelled.
+          content: Text(AppLocalization.translate('booking_released', lang)),
           backgroundColor: Colors.green,
         ),
       );

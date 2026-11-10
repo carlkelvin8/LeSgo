@@ -46,8 +46,10 @@ class MerchantItemInventorySection extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade300),
           ),
-          child: Column(
-            children: [
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              children: [
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(
@@ -142,7 +144,8 @@ class MerchantItemInventorySection extends StatelessWidget {
                   activeThumbColor: const Color(0xFF5F2D82),
                 ),
               ],
-            ],
+              ],
+            ),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),

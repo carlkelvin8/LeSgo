@@ -51,6 +51,7 @@ class Order extends Model
         'scheduled_at',
         'scheduled_delivery_time',  // When customer wants delivery
         'accepted_at',
+        'ready_for_pickup_at',
         'driver_arrived_at_pickup',
         'in_progress_at',
         'picked_up_at',
@@ -80,6 +81,7 @@ class Order extends Model
         'scheduled_at' => 'datetime',
         'scheduled_delivery_time' => 'datetime',  // Customer's preferred delivery time
         'accepted_at' => 'datetime',
+        'ready_for_pickup_at' => 'datetime',
         'driver_arrived_at_pickup' => 'datetime',
         'in_progress_at' => 'datetime',
         'picked_up_at' => 'datetime',

@@ -177,9 +177,12 @@ class RatingReviewController extends Controller
     {
         $driverId = $request->input('driver_id');
         $serviceId = $request->input('service_id');
+        $partnerId = $request->input('reviewable_type') === 'partner'
+            ? $request->integer('reviewable_id')
+            : null;
 
-        $averages = RatingReview::getAverageRatings($driverId, $serviceId);
-        $distribution = RatingReview::getRatingDistribution($driverId, $serviceId);
+        $averages = RatingReview::getAverageRatings($driverId, $serviceId, $partnerId);
+        $distribution = RatingReview::getRatingDistribution($driverId, $serviceId, $partnerId);
 
         return $this->success([
             'average_rating' => $averages['overall_rating'],

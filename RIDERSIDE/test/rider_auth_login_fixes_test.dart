@@ -118,27 +118,29 @@ void main() {
   });
 
   group('login 2FA', () {
-    test('202 two_factor_required is surfaced instead of a generic error',
-        () async {
-      dio.httpClientAdapter = _Adapter(
-        (_) => _json(202, {
-          'success': false,
-          'message': 'Enter the code from Google Authenticator to continue.',
-          'two_factor_required': true,
-        }),
-      );
-      final auth = RiderAuthNotifier();
-      final ok = await auth.login(
-        'r@example.test',
-        'pw',
-        rememberMe: false,
-        accountType: 'rider',
-      );
-      expect(ok, isFalse);
-      expect(auth.state.twoFactorRequired, isTrue);
-      expect(auth.state.error, contains('Google Authenticator'));
-      expect(auth.state.error, isNot('Invalid response from server'));
-    });
+    test(
+      '202 two_factor_required is surfaced instead of a generic error',
+      () async {
+        dio.httpClientAdapter = _Adapter(
+          (_) => _json(202, {
+            'success': false,
+            'message': 'Enter the code from Google Authenticator to continue.',
+            'two_factor_required': true,
+          }),
+        );
+        final auth = RiderAuthNotifier();
+        final ok = await auth.login(
+          'r@example.test',
+          'pw',
+          rememberMe: false,
+          accountType: 'rider',
+        );
+        expect(ok, isFalse);
+        expect(auth.state.twoFactorRequired, isTrue);
+        expect(auth.state.error, contains('Google Authenticator'));
+        expect(auth.state.error, isNot('Invalid response from server'));
+      },
+    );
 
     test('retry with a code sends two_factor_code and signs in', () async {
       final adapter = _Adapter((o) {
@@ -151,12 +153,19 @@ void main() {
       });
       dio.httpClientAdapter = adapter;
       final auth = RiderAuthNotifier();
-      await auth.login('r@example.test', 'pw',
-          rememberMe: false, accountType: 'rider');
-      final ok = await auth.login('r@example.test', 'pw',
-          rememberMe: false,
-          accountType: 'rider',
-          twoFactorCode: '123456');
+      await auth.login(
+        'r@example.test',
+        'pw',
+        rememberMe: false,
+        accountType: 'rider',
+      );
+      final ok = await auth.login(
+        'r@example.test',
+        'pw',
+        rememberMe: false,
+        accountType: 'rider',
+        twoFactorCode: '123456',
+      );
       expect(ok, isTrue);
       expect(auth.state.isLoggedIn, isTrue);
       expect(auth.state.twoFactorRequired, isFalse);
@@ -172,20 +181,28 @@ void main() {
         }),
       );
       final auth = RiderAuthNotifier();
-      final ok = await auth.login('r@example.test', 'pw',
-          rememberMe: false, accountType: 'rider', twoFactorCode: '000000');
+      final ok = await auth.login(
+        'r@example.test',
+        'pw',
+        rememberMe: false,
+        accountType: 'rider',
+        twoFactorCode: '000000',
+      );
       expect(ok, isFalse);
       expect(auth.state.twoFactorRequired, isTrue);
       expect(auth.state.error, contains('invalid'));
     });
 
-    test('string expires_in does not break an otherwise valid login',
-        () async {
+    test('string expires_in does not break an otherwise valid login', () async {
       final body = _loginOk()..['expires_in'] = '3600';
       dio.httpClientAdapter = _Adapter((_) => _json(200, body));
       final auth = RiderAuthNotifier();
-      final ok = await auth.login('r@example.test', 'pw',
-          rememberMe: false, accountType: 'rider');
+      final ok = await auth.login(
+        'r@example.test',
+        'pw',
+        rememberMe: false,
+        accountType: 'rider',
+      );
       expect(ok, isTrue);
     });
   });
@@ -208,31 +225,41 @@ void main() {
       dio.httpClientAdapter = _Adapter(
         (_) => _json(429, {
           'success': false,
-          'message': 'Too many login attempts. Please try again in a few minutes.',
+          'message':
+              'Too many login attempts. Please try again in a few minutes.',
         }),
       );
       final auth = RiderAuthNotifier();
-      await auth.login('r@example.test', 'pw',
-          rememberMe: false, accountType: 'rider');
+      await auth.login(
+        'r@example.test',
+        'pw',
+        rememberMe: false,
+        accountType: 'rider',
+      );
       expect(auth.state.error, contains('Too many login attempts'));
     });
 
-    test('forgot-password errors are readable, not raw DioException text',
-        () async {
-      dio.httpClientAdapter = _Adapter(
-        (_) => _json(429, {'message': 'Too many requests. Please slow down.'}),
-      );
-      final n = ForgotPasswordNotifier(AuthRemoteDataSource(_Client(dio)));
-      expect(await n.sendOtp('a@b.co'), isFalse);
-      expect(n.state.errorMessage, 'Too many requests. Please slow down.');
-      expect(n.state.errorMessage, isNot(contains('DioException')));
-    });
+    test(
+      'forgot-password errors are readable, not raw DioException text',
+      () async {
+        dio.httpClientAdapter = _Adapter(
+          (_) =>
+              _json(429, {'message': 'Too many requests. Please slow down.'}),
+        );
+        final n = ForgotPasswordNotifier(AuthRemoteDataSource(_Client(dio)));
+        expect(await n.sendOtp('a@b.co'), isFalse);
+        expect(n.state.errorMessage, 'Too many requests. Please slow down.');
+        expect(n.state.errorMessage, isNot(contains('DioException')));
+      },
+    );
 
     test('forgot-password offline error is readable', () async {
-      dio.httpClientAdapter = _Adapter((o) => throw DioException(
-            requestOptions: o,
-            type: DioExceptionType.connectionError,
-          ));
+      dio.httpClientAdapter = _Adapter(
+        (o) => throw DioException(
+          requestOptions: o,
+          type: DioExceptionType.connectionError,
+        ),
+      );
       final n = ForgotPasswordNotifier(AuthRemoteDataSource(_Client(dio)));
       expect(await n.sendOtp('a@b.co'), isFalse);
       expect(n.state.errorMessage, isNot(contains('DioException')));
@@ -241,24 +268,26 @@ void main() {
   });
 
   group('phone OTP', () {
-    test('HTML error body (proxy/502) does not crash or leave spinner on',
-        () async {
-      dio.httpClientAdapter = _Adapter(
-        (_) => ResponseBody.fromString('<html>Bad gateway</html>', 502),
-      );
-      getIt.registerSingleton<AuthRemoteDataSource>(
-        AuthRemoteDataSource(_Client(dio)),
-      );
-      final n = PhoneVerificationNotifier();
-      n.updatePhoneNumber('09171234567');
-      await n.sendOTP();
-      expect(n.state.isLoading, isFalse);
-      expect(n.state.errorMessage, isNotNull);
-      expect(n.state.errorMessage, isNot(contains('DioException')));
-      n.updatePhoneNumber('09171234567');
-      expect(await n.verifyOTP('123456'), isFalse);
-      expect(n.state.isLoading, isFalse);
-    });
+    test(
+      'HTML error body (proxy/502) does not crash or leave spinner on',
+      () async {
+        dio.httpClientAdapter = _Adapter(
+          (_) => ResponseBody.fromString('<html>Bad gateway</html>', 502),
+        );
+        getIt.registerSingleton<AuthRemoteDataSource>(
+          AuthRemoteDataSource(_Client(dio)),
+        );
+        final n = PhoneVerificationNotifier();
+        n.updatePhoneNumber('09171234567');
+        await n.sendOTP();
+        expect(n.state.isLoading, isFalse);
+        expect(n.state.errorMessage, isNotNull);
+        expect(n.state.errorMessage, isNot(contains('DioException')));
+        n.updatePhoneNumber('09171234567');
+        expect(await n.verifyOTP('123456'), isFalse);
+        expect(n.state.isLoading, isFalse);
+      },
+    );
   });
 
   group('token refresh', () {
@@ -268,8 +297,7 @@ void main() {
       refreshToken: 'refresh-1',
     );
 
-    test('429 on refresh keeps the refresh token (no forced logout)',
-        () async {
+    test('429 on refresh keeps the refresh token (no forced logout)', () async {
       await seedSession();
       final refreshDio = Dio(BaseOptions(baseUrl: 'http://localhost'))
         ..httpClientAdapter = _Adapter(
@@ -282,10 +310,7 @@ void main() {
       // Interceptor path: a 401 whose refresh was throttled must not wipe auth.
       dio.interceptors.add(AuthTokenInterceptor(dio));
       dio.httpClientAdapter = _Adapter((_) => _json(401, {'message': 'x'}));
-      await expectLater(
-        dio.get('/v1/auth/me'),
-        throwsA(isA<DioException>()),
-      );
+      await expectLater(dio.get('/v1/auth/me'), throwsA(isA<DioException>()));
       expect(await SecureStorageService.getRefreshToken(), 'refresh-1');
     });
 
@@ -298,10 +323,7 @@ void main() {
             );
       dio.interceptors.add(AuthTokenInterceptor(dio));
       dio.httpClientAdapter = _Adapter((_) => _json(401, {'message': 'x'}));
-      await expectLater(
-        dio.get('/v1/auth/me'),
-        throwsA(isA<DioException>()),
-      );
+      await expectLater(dio.get('/v1/auth/me'), throwsA(isA<DioException>()));
       expect(TokenRefreshService.instance.lastFailureWasTransient, isFalse);
       expect(await SecureStorageService.getRefreshToken(), isNull);
     });
@@ -367,16 +389,40 @@ void main() {
       mimeType: 'image/jpeg',
     );
 
+    test('server off-duty status clears a stale local on-duty preference', () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('rider_on_duty_7', true);
+      dio.httpClientAdapter = _Adapter(
+        (_) => _json(200, {
+          'data': {
+            'data': [
+              {'user_id': 7, 'is_available': false},
+            ],
+          },
+        }),
+      );
+
+      expect(container.read(riderDutyProvider), isFalse);
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(prefs.getBool('rider_on_duty_7'), isFalse);
+    });
+
     test('posts multipart `photo` to the duty-attendance route', () async {
-      final adapter = _Adapter((_) => _json(200, {'data': {'id': 1}}));
+      final adapter = _Adapter(
+        (_) => _json(200, {
+          'data': {'id': 1},
+        }),
+      );
       dio.httpClientAdapter = adapter;
       final err = await container
           .read(riderDutyProvider.notifier)
           .goOnDutyWithPhoto(photo());
       expect(err, isNull);
-      final first = adapter.requests.first;
-      expect(first.path, '/v1/drivers/10/duty-attendance');
-      final form = first.data as FormData;
+      final attendance = adapter.requests.firstWhere(
+        (request) => request.path.endsWith('/duty-attendance'),
+      );
+      expect(attendance.path, '/v1/drivers/10/duty-attendance');
+      final form = attendance.data as FormData;
       expect(form.files.map((f) => f.key), contains('photo'));
     });
 
@@ -394,21 +440,24 @@ void main() {
       expect(err, contains('under review'));
     });
 
-    test('availability sync failure is readable, not raw exception text',
-        () async {
-      dio.httpClientAdapter = _Adapter((o) {
-        if (o.path.contains('duty-attendance')) return _json(200, {'data': {}});
-        return _json(403, {
-          'error_code': 'REGISTRATION_NOT_ACTIVE',
-          'message': 'Restricted',
+    test(
+      'availability sync failure is readable, not raw exception text',
+      () async {
+        dio.httpClientAdapter = _Adapter((o) {
+          if (o.path.contains('duty-attendance'))
+            return _json(200, {'data': {}});
+          return _json(403, {
+            'error_code': 'REGISTRATION_NOT_ACTIVE',
+            'message': 'Restricted',
+          });
         });
-      });
-      final err = await container
-          .read(riderDutyProvider.notifier)
-          .goOnDutyWithPhoto(photo());
-      expect(err, isNotNull);
-      expect(err, isNot(contains('DioException')));
-      expect(err, isNot(contains('Failed to sync driver availability')));
-    });
+        final err = await container
+            .read(riderDutyProvider.notifier)
+            .goOnDutyWithPhoto(photo());
+        expect(err, isNotNull);
+        expect(err, isNot(contains('DioException')));
+        expect(err, isNot(contains('Failed to sync driver availability')));
+      },
+    );
   });
 }

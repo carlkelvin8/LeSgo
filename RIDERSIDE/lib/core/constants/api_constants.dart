@@ -1,31 +1,17 @@
-import '../config/secrets_config.dart';
-
 class ApiConstants {
-  /// Canonical production API (per the backend OpenAPI spec).
-  static const String _prodBaseUrl = 'https://api.lesgo.ph/api';
-
-  /// Default staging / feature-branch server, hardcoded so release builds
-  /// still work when no `--dart-define-from-file=secrets.json` is passed.
+  /// Preview host used by default. Local runs can target production with
+  /// `--dart-define=API_BASE_URL=https://api.lesgo.ph/api`.
   static const String _defaultBaseUrl =
       'https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api';
 
-  /// Resolution order:
-  /// 1. `API_BASE_URL` from `secrets.json` (always wins)
-  /// 2. `API_ENV=prod|production` -> canonical production host
-  /// 3. hardcoded staging host
-  static String get baseUrl {
-    final override = SecretsConfig.apiBaseUrl.trim();
-    if (override.isNotEmpty) return _trimTrailingSlash(override);
+  static const String _configuredBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: _defaultBaseUrl,
+  );
 
-    final env = SecretsConfig.apiEnv.trim().toLowerCase();
-    if (env == 'prod' || env == 'production') return _prodBaseUrl;
-
-    return _defaultBaseUrl;
-  }
-
-  static String _trimTrailingSlash(String url) => url.endsWith('/')
-      ? url.substring(0, url.length - 1)
-      : url;
+  static String get baseUrl => _configuredBaseUrl.endsWith('/')
+      ? _configuredBaseUrl.substring(0, _configuredBaseUrl.length - 1)
+      : _configuredBaseUrl;
 
   static const String loginEndpoint = '/v1/auth/login';
   static const String logoutEndpoint = '/v1/auth/logout';

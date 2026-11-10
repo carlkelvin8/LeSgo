@@ -20,7 +20,9 @@ class MenuCategoryPolicy
         $partner = $menuCategory->partner;
 
         // Only the partner owner or admin can update
-        return $user->id === $partner->user_id || $user->isAdmin();
+        return $user->id === $partner->user_id
+            || $user->isAdmin()
+            || $user->canEditStoreMenu((int) $partner->id);
     }
 
     /**
@@ -36,7 +38,9 @@ class MenuCategoryPolicy
         $partner = $menuCategory->partner;
 
         // Only the partner owner or admin can delete
-        return $user->id === $partner->user_id || $user->isAdmin();
+        return $user->id === $partner->user_id
+            || $user->isAdmin()
+            || $user->canEditStoreMenu((int) $partner->id);
     }
 }
 

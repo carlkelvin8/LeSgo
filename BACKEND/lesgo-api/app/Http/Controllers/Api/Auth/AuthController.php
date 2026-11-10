@@ -293,7 +293,17 @@ class AuthController extends Controller
             }
         }
 
-        AuditLogger::logAuth('login', $user->id, true);
+        // Audit storage can be temporarily unavailable or out of sync during a
+        // deployment. Authentication should still complete; the failure is
+        // recorded to the application log for operators to investigate.
+        try {
+            AuditLogger::logAuth('login', $user->id, true);
+        } catch (\Throwable $e) {
+            \Log::warning('Authentication audit logging failed after login', [
+                'user_id' => $user->id,
+                'exception' => $e::class,
+            ]);
+        }
 
         if ($request->boolean('revoke_others', false)) {
             $this->authService->revokeAllTokens($user);
@@ -961,7 +971,10 @@ class AuthController extends Controller
         // Include driver_profile if exists
         if ($user->driverProfile) {
             $profile = $user->driverProfile;
-            $plateNumber = $profile->plate_number ?? $profile->vehicle_plate;
+            // `vehicle_plate` is a legacy attribute that is not a column anymore; reading
+            // it as a property throws in strict model mode (non-production), which made
+            // login fail with a 500 for every rider who had no plate number yet.
+            $plateNumber = $profile->plate_number ?? ($profile->getAttributes()['vehicle_plate'] ?? null);
 
             $userData['driver_profile'] = [
                 'id' => $profile->id,

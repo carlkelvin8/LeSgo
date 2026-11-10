@@ -153,6 +153,19 @@ class MerchantWithdrawalTest extends TestCase
             ->assertCreated();
     }
 
+    public function test_summary_for_a_store_without_a_wallet_starts_at_zero(): void
+    {
+        $partner = $this->merchant();
+        Wallet::where('user_id', $partner->user_id)->delete();
+
+        $this->actingAs($partner->user, 'sanctum')
+            ->getJson('/api/v1/merchant/withdrawals/summary')
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseHas('wallets', ['user_id' => $partner->user_id]);
+    }
+
     public function test_customer_cannot_access_merchant_withdrawals(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum')

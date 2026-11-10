@@ -8,6 +8,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 
@@ -75,7 +76,7 @@ class AuthenticationService
         RateLimiter::clear($key);
 
         if ($logSuccessfulLogin) {
-            AuditLogger::logAuth('login', $user->id, true);
+            $this->logAuthWithoutBlockingAuthentication('login', $user->id, true);
         }
 
         return $user;
@@ -256,7 +257,28 @@ class AuthenticationService
             // Non-critical — don't let logging crash the auth flow
         }
 
-        AuditLogger::logAuth('login_failed', null, false);
+        $this->logAuthWithoutBlockingAuthentication('login', null, false);
+    }
+
+    /**
+     * An audit sink failure must not turn a valid login into a server error or
+     * hide the normal invalid-credentials response behind a 500.
+     */
+    private function logAuthWithoutBlockingAuthentication(
+        string $action,
+        ?int $userId,
+        bool $success
+    ): void {
+        try {
+            AuditLogger::logAuth($action, $userId, $success);
+        } catch (\Throwable $e) {
+            Log::warning('Authentication audit logging failed', [
+                'action' => $action,
+                'success' => $success,
+                'user_id' => $userId,
+                'exception' => $e::class,
+            ]);
+        }
     }
 
     private function isAccountDeleted(User $user): bool

@@ -33,6 +33,17 @@ class LesbuyItem extends Model
         'selected_options'  => 'array',
     ];
 
+    /**
+     * An item with no options must read as null: PHP encodes an empty array as
+     * `[]`, and released apps expect an object here and fail the whole order list.
+     */
+    public function getSelectedOptionsAttribute($value): ?array
+    {
+        $options = is_string($value) ? json_decode($value, true) : $value;
+
+        return is_array($options) && $options !== [] ? $options : null;
+    }
+
     public function order()
     {
         return $this->belongsTo(Order::class);

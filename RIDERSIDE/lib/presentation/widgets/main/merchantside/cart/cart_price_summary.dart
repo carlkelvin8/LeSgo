@@ -3,9 +3,9 @@ import '../../../../../core/utils/responsive_utils.dart';
 
 class CartPriceSummary extends StatelessWidget {
   final double subtotal;
-  final double deliveryFee;
+  final double? deliveryFee;
   final int itemCount;
-  final double total;
+  final double? total;
 
   const CartPriceSummary({
     super.key,
@@ -32,9 +32,7 @@ class CartPriceSummary extends StatelessWidget {
             ResponsiveUtils.spacing(context, 12),
           ),
         ),
-        padding: EdgeInsets.all(
-          ResponsiveUtils.spacing(context, 16),
-        ),
+        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         child: Column(
           children: [
             Align(
@@ -57,17 +55,37 @@ class CartPriceSummary extends StatelessWidget {
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
             _SummaryRow(
               label: 'Delivery',
-              value: 'PHP ${deliveryFee.toStringAsFixed(2)}',
+              value: deliveryFee == null
+                  ? 'Set at checkout'
+                  : 'PHP ${deliveryFee!.toStringAsFixed(2)}',
             ),
             Divider(
               color: Colors.grey.shade300,
               height: ResponsiveUtils.spacing(context, 16),
             ),
             _SummaryRow(
-              label: 'Total ($itemCount items)',
-              value: 'PHP ${total.toStringAsFixed(2)}',
+              label: total == null
+                  ? 'Subtotal ($itemCount items)'
+                  : 'Total ($itemCount items)',
+              value: total == null
+                  ? 'PHP ${subtotal.toStringAsFixed(2)}'
+                  : 'PHP ${total!.toStringAsFixed(2)}',
               isBold: true,
             ),
+            if (total == null) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Pin a delivery location at checkout to see the exact total.',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: 11,
+                    color: Color(0xFF747474),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -89,24 +107,34 @@ class _SummaryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 14),
-            fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-            color: isBold ? const Color(0xFF2A2A2A) : const Color(0xFF747474),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 14),
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+              color: isBold ? const Color(0xFF2A2A2A) : const Color(0xFF747474),
+            ),
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 14),
-            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
-            color: const Color(0xFF2A2A2A),
+        SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 14),
+                fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+                color: const Color(0xFF2A2A2A),
+              ),
+            ),
           ),
         ),
       ],

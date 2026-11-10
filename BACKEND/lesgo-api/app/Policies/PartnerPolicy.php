@@ -55,8 +55,18 @@ class PartnerPolicy
      */
     public function manageMenu(User $user, Partner $partner): bool
     {
-        // Only the owner or admin can manage menu
-        return $user->id === $partner->user_id || $user->isAdmin();
+        return $user->id === $partner->user_id
+            || $user->isAdmin()
+            || $user->canEditStoreMenu($partner->id);
+    }
+
+    /**
+     * Determine if the user can see the store's full menu, including hidden items.
+     */
+    public function viewMenu(User $user, Partner $partner): bool
+    {
+        return $this->manageMenu($user, $partner)
+            || $user->workingPartnerId() === (int) $partner->id;
     }
 
     /**

@@ -87,13 +87,13 @@ class _MerchantSalesReportScreenState
   }
 
   List<OrderDto> _filterByPeriod(List<OrderDto> orders) {
-    return orders.where((order) {
-      final date = MerchantOrderAmountUtils.earningsDate(order);
-      if (date == null) return false;
-      final start = DateTime(_startDate.year, _startDate.month, _startDate.day);
-      final end = DateTime(_endDate.year, _endDate.month, _endDate.day, 23, 59, 59);
-      return !date.isBefore(start) && !date.isAfter(end);
-    }).toList();
+    return orders
+        .where((order) => MerchantOrderAmountUtils.isWithinDateRange(
+              order,
+              _startDate,
+              _endDate,
+            ))
+        .toList();
   }
 
   Future<void> _exportCsv(List<OrderDto> filtered) async {

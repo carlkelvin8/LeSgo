@@ -144,15 +144,21 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
       );
 
       final updated = await dataSource.updatePartnerProfile(partnerId, request);
-      _ref.invalidate(merchantProfileProvider);
 
-      state = state.copyWith(
-        isSubmitting: false,
-        logoUrl: updated.logoUrl ?? state.logoUrl,
-        clearLogoPath: true,
-      );
+      // Update our own state BEFORE invalidating the profile: this provider
+      // watches merchantProfileProvider, so invalidating it disposes this
+      // notifier and any later `state =` throws "used after dispose".
+      if (mounted) {
+        state = state.copyWith(
+          isSubmitting: false,
+          logoUrl: updated.logoUrl ?? state.logoUrl,
+          clearLogoPath: true,
+        );
+      }
+      _ref.invalidate(merchantProfileProvider);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         isSubmitting: false,
         errorMessage: ApiService.extractError(e),

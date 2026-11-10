@@ -359,12 +359,9 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
 
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 8,
-        top: 8,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 8,
-      ),
+      // No viewInsets here: the Scaffold already resizes the body for the
+      // keyboard, so adding it again overflowed the column (and hid the list).
+      padding: const EdgeInsets.only(left: 16, right: 8, top: 8, bottom: 8),
       child: SafeArea(
         child: Row(
           children: [

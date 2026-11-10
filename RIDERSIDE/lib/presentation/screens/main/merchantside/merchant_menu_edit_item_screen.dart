@@ -97,7 +97,7 @@ class _MerchantMenuEditItemScreenState
       }
       // Handle success - navigate when form state shows success
       if (next.isSubmitting == false && previous?.isSubmitting == true && next.errorMessage == null) {
-        SnackBarUtils.showSuccess(context, 'Item updated successfully');
+        // The form closes immediately; keep the menu actions unobstructed.
         Navigator.pop(context);
       }
     });

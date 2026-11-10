@@ -131,7 +131,9 @@ class SupportApi {
   static Future<RiderSupportTicket> createTicket({
     required String subject,
     required String description,
-    String category = 'general',
+    // Must be one of the backend's ticket categories; 'general' is not one and
+    // made the server reject (and previously silently drop) every message.
+    String category = 'general_inquiry',
     String priority = 'medium',
     int? orderId,
   }) async {

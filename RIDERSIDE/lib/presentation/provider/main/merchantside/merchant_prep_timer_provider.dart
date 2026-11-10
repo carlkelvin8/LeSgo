@@ -129,7 +129,10 @@ class MerchantPrepTimerNotifier extends StateNotifier<Map<int, MerchantPrepTimer
     final activePrepIds = <int>{};
 
     for (final order in orders) {
-      if (!MerchantOrderOpsUtils.showsPrepTimer(order.status)) continue;
+      if (!MerchantOrderOpsUtils.showsPrepTimer(
+        order.status,
+        alreadyReady: order.readyForPickupAt != null,
+      )) continue;
       activePrepIds.add(order.id);
 
       if (!next.containsKey(order.id)) {

@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/constants/app_config.dart';
 import '../../../../core/services/api_service.dart';
 import '../auth/rider_auth_provider.dart';
@@ -35,6 +33,9 @@ class CartCheckoutState {
 /// Delivery fee quoted by the server for the pinned location; null until pinned.
 final bookFeeEstimateProvider = StateProvider<double?>((ref) => null);
 
+/// Error for the current pin quote; checkout must not use a guessed fee.
+final bookFeeEstimateErrorProvider = StateProvider<String?>((ref) => null);
+
 class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
   final Ref _ref;
 
@@ -45,27 +46,66 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
     required double deliveryLat,
     required double deliveryLng,
   }) async {
+    _ref.read(bookFeeEstimateErrorProvider.notifier).state = null;
     try {
-      double pickupLat = 8.4542;
-      double pickupLng = 124.6319;
-      if (await Permission.locationWhenInUse.isGranted) {
-        final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-        );
-        pickupLat = position.latitude;
-        pickupLng = position.longitude;
-      }
-      final response = await ApiService.dio.post('/v1/orders/estimate', data: {
-        'service_id': AppConfig.leseatServiceId,
-        'pickup': {'lat': pickupLat, 'lng': pickupLng},
-        'dropoff': {'lat': deliveryLat, 'lng': deliveryLng},
-        'order_value': _ref.read(cartProvider).subtotal,
-      });
+      final pickup = await _resolvePickupCoordinates();
+      final response = await ApiService.dio.post(
+        '/v1/orders/estimate',
+        data: {
+          'service_id': AppConfig.leseatServiceId,
+          'pickup': {'lat': pickup[0], 'lng': pickup[1]},
+          'dropoff': {'lat': deliveryLat, 'lng': deliveryLng},
+          'order_value': _ref.read(cartProvider).subtotal,
+        },
+      );
       final data = response.data['data'] ?? response.data;
       return double.tryParse('${data['estimated_fare']}');
-    } catch (_) {
+    } catch (e) {
+      _ref.read(bookFeeEstimateErrorProvider.notifier).state =
+          ApiService.extractError(e);
       return null;
     }
+  }
+
+  /// The order API uses the merchant's primary branch as pickup. Quote against
+  /// that same location so the cart never prices a different route from the
+  /// one the server will create.
+  Future<List<double>> _resolvePickupCoordinates() async {
+    final partnerId = _ref.read(riderAuthProvider).user?.partnerId;
+    if (partnerId == null) {
+      throw Exception('Partner account not found');
+    }
+
+    final response = await ApiService.dio.get('/v1/partners/$partnerId');
+    final root = response.data;
+    final partner = root is Map ? (root['data'] ?? root) : null;
+    if (partner is! Map) {
+      throw Exception('Merchant pickup location unavailable');
+    }
+
+    final branches = partner['branches'];
+    if (branches is List && branches.isNotEmpty) {
+      final branch = branches.cast<Map>().firstWhere(
+        (item) =>
+            item['is_primary'] == true ||
+            item['is_primary'] == 1 ||
+            item['is_primary'] == '1' ||
+            item['is_primary'] == 'true',
+        orElse: () => branches.first as Map,
+      );
+      final lat = double.tryParse('${branch['latitude']}');
+      final lng = double.tryParse('${branch['longitude']}');
+      if (lat != null && lng != null) {
+        return [lat, lng];
+      }
+    }
+
+    // Partner accessors expose the primary branch coordinates as latitude and
+    // longitude for older records without a serialized branches list.
+    final lat = double.tryParse('${partner['latitude']}');
+    final lng = double.tryParse('${partner['longitude']}');
+    if (lat != null && lng != null) return [lat, lng];
+    throw Exception('Merchant pickup location is missing map coordinates');
   }
 
   Future<bool> checkout({
@@ -82,7 +122,8 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
 
     if (deliveryLat == null || deliveryLng == null) {
       state = state.copyWith(
-        errorMessage: 'Pin the delivery location so the delivery fee can be calculated.',
+        errorMessage:
+            'Pin the delivery location so the delivery fee can be calculated.',
       );
       return false;
     }
@@ -100,18 +141,9 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
       final partner = await _ref.read(merchantProfileProvider.future);
       final pickupAddress = partner?.name ?? 'Store pickup';
 
-      double pickupLat = 8.4542;
-      double pickupLng = 124.6319;
-      final locationStatus = await Permission.locationWhenInUse.request();
-      if (locationStatus.isGranted) {
-        try {
-          final position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.medium,
-          );
-          pickupLat = position.latitude;
-          pickupLng = position.longitude;
-        } catch (_) {}
-      }
+      final pickup = await _resolvePickupCoordinates();
+      final pickupLat = pickup[0];
+      final pickupLng = pickup[1];
 
       final items = cart.items
           .map(
@@ -121,14 +153,11 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
               'estimated_price': item.unitPrice,
               'notes': item.size,
               if (item.menuItemId != null) 'menu_item_id': item.menuItemId,
-              if (item.selectedOptions != null) 'selected_options': item.selectedOptions,
+              if (item.selectedOptions != null)
+                'selected_options': item.selectedOptions,
             },
           )
           .toList();
-
-      // Use pinned delivery coordinates if available, otherwise fallback to merchant location
-      final dropLat = deliveryLat ?? pickupLat;
-      final dropLng = deliveryLng ?? pickupLng;
 
       final response = await ApiService.createOrder({
         'service_id': AppConfig.leseatServiceId,
@@ -144,8 +173,8 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
         },
         'dropoff': {
           'address': deliveryAddress,
-          'lat': dropLat,
-          'lng': dropLng,
+          'lat': deliveryLat,
+          'lng': deliveryLng,
           'contact_name': auth.user?.name,
           'contact_phone': auth.user?.phone,
         },
@@ -171,31 +200,24 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
 
 final cartCheckoutStateProvider =
     StateNotifierProvider<CartCheckoutNotifier, CartCheckoutState>((ref) {
-  return CartCheckoutNotifier(ref);
-});
+      return CartCheckoutNotifier(ref);
+    });
 
 final cartCheckoutProvider = Provider<CartCheckoutSummary>((ref) {
   final cartState = ref.watch(cartProvider);
-  final partnerAsync = ref.watch(merchantProfileProvider);
-
   final estimate = ref.watch(bookFeeEstimateProvider);
-  final double deliveryFee = estimate ??
-      partnerAsync.maybeWhen<double>(
-        data: (partner) => partner?.deliveryFee ?? 50.0,
-        orElse: () => 50.0,
-      );
 
   return CartCheckoutSummary(
     subtotal: cartState.subtotal,
     itemCount: cartState.itemCount,
-    deliveryFee: deliveryFee,
+    deliveryFee: estimate,
   );
 });
 
 class CartCheckoutSummary {
   final double subtotal;
   final int itemCount;
-  final double deliveryFee;
+  final double? deliveryFee;
 
   const CartCheckoutSummary({
     required this.subtotal,
@@ -203,5 +225,5 @@ class CartCheckoutSummary {
     required this.deliveryFee,
   });
 
-  double get total => subtotal + deliveryFee;
+  double? get total => deliveryFee == null ? null : subtotal + deliveryFee!;
 }

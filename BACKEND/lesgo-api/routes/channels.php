@@ -30,7 +30,8 @@ Broadcast::channel('order.{orderId}', function ($user, $orderId) {
     }
 
     return (int) $user->id === (int) $order->customer_id
-        || (int) $user->driverProfile?->id === (int) $order->driver_id
+        || ($user->driverProfile !== null && (int) $user->driverProfile->id === (int) $order->driver_id)
+        || ($user->workingPartnerId() !== null && $user->workingPartnerId() === (int) $order->partner_id)
         || $user->isAdmin();
 });
 
@@ -41,8 +42,8 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
         return false;
     }
 
-    return (int) $user->id === (int) $conversation->customer_id
-        || (int) $user->id === (int) $conversation->driver_id
+    // Customer, rider, or the owner/staff of the store the order was placed with.
+    return ChatConversation::forUserOrStore($user)->whereKey($conversation->id)->exists()
         || $user->isAdmin();
 });
 
