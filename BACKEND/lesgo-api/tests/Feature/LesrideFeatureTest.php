@@ -122,6 +122,21 @@ class LesrideFeatureTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_trip_beyond_thirty_km_is_rejected_instead_of_clamped(): void
+    {
+        $lesgo = Service::factory()->create(['code' => 'LESGO', 'is_active' => true]);
+        $payload = $this->payload(0, 'motor');
+        $payload['service_id'] = $lesgo->id;
+        // Pangasinan -> Cagayan, several hundred km apart.
+        $payload['pickup'] = ['address' => 'Pangasinan', 'lat' => 16.0430, 'lng' => 120.3333];
+        $payload['dropoff'] = ['address' => 'Cagayan', 'lat' => 17.6132, 'lng' => 121.7270];
+        unset($payload['estimated_distance_m']);
+
+        $this->postJson('/api/v1/orders/estimate', $payload)->assertStatus(422);
+        $this->postJson('/api/v1/orders', $payload)->assertStatus(422);
+        $this->assertDatabaseCount('orders', 0);
+    }
+
     public function test_tricycle_option_is_scoped_to_lesride(): void
     {
         $lesgo = Service::factory()->create([

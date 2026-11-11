@@ -246,6 +246,12 @@ class OrderController extends Controller
             $data['estimated_distance_m'] = (int) round($straightLineDistanceM);
         }
 
+        // A trip beyond the service range must be refused, not silently clamped
+        // to the maximum distance and charged as if it were 30 km.
+        if (max($straightLineDistanceM, (float) $data['estimated_distance_m']) > FareCalculatorService::MAX_DISTANCE_KM * 1000) {
+            return $this->error('The delivery address is too far. Deliveries are limited to 30 km from the pickup.', 422);
+        }
+
         // Clamp to valid range — same as OrderEstimateController: max(500, min(distance, 30000))
         // but respect LesRide 30km vs others 25km? Keep 30km limit consistent with StoreOrderRequest max.
         $maxDistanceM = $serviceCode === 'LESRIDE' ? 30000 : 30000;
