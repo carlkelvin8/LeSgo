@@ -20,6 +20,9 @@ class RestaurantDetailState {
   final List<OrderItem> cartItems;
   final String? activeRestaurantId;
   final String? activeRestaurantName;
+  /// Branch card the customer opened (null = default). Orders are picked up
+  /// from this branch unless they change it at checkout.
+  final int? activeBranchId;
   final String? restaurantImagePath;
   final bool isLoading;
   final String? error;
@@ -33,6 +36,7 @@ class RestaurantDetailState {
     List<OrderItem>? cartItems,
     this.activeRestaurantId,
     this.activeRestaurantName,
+    this.activeBranchId,
     this.restaurantImagePath,
     this.isLoading = false,
     this.error,
@@ -72,6 +76,8 @@ class RestaurantDetailState {
     List<OrderItem>? cartItems,
     String? activeRestaurantId,
     String? activeRestaurantName,
+    int? activeBranchId,
+    bool clearActiveBranch = false,
     String? restaurantImagePath,
     bool? isLoading,
     String? error,
@@ -85,6 +91,8 @@ class RestaurantDetailState {
       cartItems: cartItems ?? this.cartItems,
       activeRestaurantId: activeRestaurantId ?? this.activeRestaurantId,
       activeRestaurantName: activeRestaurantName ?? this.activeRestaurantName,
+      activeBranchId:
+          clearActiveBranch ? null : (activeBranchId ?? this.activeBranchId),
       restaurantImagePath: restaurantImagePath ?? this.restaurantImagePath,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -112,6 +120,7 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     state = state.copyWith(
       activeRestaurantId: cached.restaurantId,
       activeRestaurantName: cached.restaurantName,
+      activeBranchId: cached.branchId,
       cartItems: cached.items,
     );
   }
@@ -136,6 +145,7 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     await LeseatCartCache.save(
       restaurantId: restaurantId,
       restaurantName: restaurantName,
+      branchId: state.activeBranchId,
       items: items,
     );
 
@@ -148,6 +158,7 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     String restaurantId,
     List<String> restaurantCategories, {
     String? restaurantName,
+    int? branchId,
   }) async {
     final epoch = _cartEpoch;
     final cached = await LeseatCartCache.load();
@@ -160,6 +171,8 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     state = state.copyWith(
       activeRestaurantId: restaurantId,
       activeRestaurantName: restaurantName,
+      activeBranchId: branchId,
+      clearActiveBranch: branchId == null,
       isLoading: true,
       error: null,
     );

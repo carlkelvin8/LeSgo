@@ -23,6 +23,43 @@ class CartScreen extends ConsumerWidget {
     String? feeEstimateError;
     String? validationError;
 
+    // Branches the merchant can book from; the fee is priced from the chosen one.
+    ref.read(cartBranchIdProvider.notifier).state = null;
+    var branches = <CartBranch>[];
+    try {
+      branches = await ref.read(cartCheckoutStateProvider.notifier).loadBranches();
+    } catch (_) {}
+    if (!context.mounted) return;
+    int? selectedBranchId = branches.isEmpty
+        ? null
+        : (branches.firstWhere(
+            (b) => b.isPrimary,
+            orElse: () => branches.first,
+          )).id;
+
+    Future<void> runEstimate(LatLng at, StateSetter setState) async {
+      ref.read(bookFeeEstimateProvider.notifier).state = null;
+      setState(() {
+        isEstimatingFee = true;
+        estimatedFee = null;
+        feeEstimateError = null;
+      });
+      final fee = await ref
+          .read(cartCheckoutStateProvider.notifier)
+          .estimateFee(deliveryLat: at.latitude, deliveryLng: at.longitude);
+      ref.read(bookFeeEstimateProvider.notifier).state = fee;
+      if (context.mounted) {
+        setState(() {
+          isEstimatingFee = false;
+          estimatedFee = fee;
+          feeEstimateError = fee == null
+              ? ref.read(bookFeeEstimateErrorProvider) ??
+                    'Could not calculate delivery fee. Please choose the location again.'
+              : null;
+        });
+      }
+    }
+
     final proceed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -54,6 +91,51 @@ class CartScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
+                if (branches.length > 1) ...[
+                  const Text(
+                    'Book from branch',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final b in branches)
+                        ChoiceChip(
+                          label: Text(b.isOpen ? b.name : '${b.name} (closed)'),
+                          selected: selectedBranchId == b.id,
+                          selectedColor:
+                              const Color(0xFF5F2D82).withValues(alpha: 0.15),
+                          onSelected: !b.isOpen || isEstimatingFee
+                              ? null
+                              : (_) {
+                                  setState(() => selectedBranchId = b.id);
+                                  ref.read(cartBranchIdProvider.notifier).state =
+                                      b.id;
+                                  if (pinLocation != null) {
+                                    runEstimate(pinLocation!, setState);
+                                  }
+                                },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'The delivery fee is computed from the branch you pick to your pinned location.',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
                 if (isEstimatingFee) ...[
                   const LinearProgressIndicator(color: Color(0xFF5F2D82)),
                   const SizedBox(height: 8),
@@ -80,43 +162,21 @@ class CartScreen extends ConsumerWidget {
                     final result = await _openMapPicker(context, pinLocation);
                     if (result != null) {
                       final picked = result['latLng'] as LatLng;
-                      ref.read(bookFeeEstimateProvider.notifier).state = null;
                       setState(() {
-                        pinLocation = result['latLng'] as LatLng;
-                        isEstimatingFee = true;
-                        estimatedFee = null;
-                        feeEstimateError = null;
+                        pinLocation = picked;
                         pinAddress = result['address'] as String?;
                         // Always update the address field with pinned location
                         if (pinAddress != null && pinAddress!.isNotEmpty) {
                           addressController.text = pinAddress!;
                         } else {
                           // Fallback to coordinates if geocoding failed
-                          final lat = (result['latLng'] as LatLng).latitude
-                              .toStringAsFixed(5);
-                          final lng = (result['latLng'] as LatLng).longitude
-                              .toStringAsFixed(5);
+                          final lat = picked.latitude.toStringAsFixed(5);
+                          final lng = picked.longitude.toStringAsFixed(5);
                           addressController.text = '$lat, $lng';
                         }
                         validationError = null;
                       });
-                      final fee = await ref
-                          .read(cartCheckoutStateProvider.notifier)
-                          .estimateFee(
-                            deliveryLat: picked.latitude,
-                            deliveryLng: picked.longitude,
-                          );
-                      ref.read(bookFeeEstimateProvider.notifier).state = fee;
-                      if (context.mounted) {
-                        setState(() {
-                          isEstimatingFee = false;
-                          estimatedFee = fee;
-                          feeEstimateError = fee == null
-                              ? ref.read(bookFeeEstimateErrorProvider) ??
-                                    'Could not calculate delivery fee. Please choose the location again.'
-                              : null;
-                        });
-                      }
+                      await runEstimate(picked, setState);
                     }
                   },
                   borderRadius: BorderRadius.circular(12),

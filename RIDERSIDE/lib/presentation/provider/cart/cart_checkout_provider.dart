@@ -36,6 +36,30 @@ final bookFeeEstimateProvider = StateProvider<double?>((ref) => null);
 /// Error for the current pin quote; checkout must not use a guessed fee.
 final bookFeeEstimateErrorProvider = StateProvider<String?>((ref) => null);
 
+/// Branch the merchant is booking from. Null means the primary branch.
+final cartBranchIdProvider = StateProvider<int?>((ref) => null);
+
+/// A pickup branch the merchant can book from.
+class CartBranch {
+  final int id;
+  final String name;
+  final String address;
+  final double lat;
+  final double lng;
+  final bool isPrimary;
+  final bool isOpen;
+
+  const CartBranch({
+    required this.id,
+    required this.name,
+    required this.address,
+    required this.lat,
+    required this.lng,
+    required this.isPrimary,
+    required this.isOpen,
+  });
+}
+
 class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
   final Ref _ref;
 
@@ -53,6 +77,8 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
         '/v1/orders/estimate',
         data: {
           'service_id': AppConfig.leseatServiceId,
+          // Priced from the chosen branch, so the per-km rate follows where
+          // the order is actually picked up.
           'pickup': {'lat': pickup[0], 'lng': pickup[1]},
           'dropoff': {'lat': deliveryLat, 'lng': deliveryLng},
           'order_value': _ref.read(cartProvider).subtotal,
@@ -67,43 +93,75 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
     }
   }
 
-  /// The order API uses the merchant's primary branch as pickup. Quote against
-  /// that same location so the cart never prices a different route from the
-  /// one the server will create.
-  Future<List<double>> _resolvePickupCoordinates() async {
+  /// Branches of this merchant that have a map pin.
+  Future<List<CartBranch>> loadBranches() async {
     final partnerId = _ref.read(riderAuthProvider).user?.partnerId;
-    if (partnerId == null) {
-      throw Exception('Partner account not found');
-    }
+    if (partnerId == null) return const [];
 
     final response = await ApiService.dio.get('/v1/partners/$partnerId');
     final root = response.data;
     final partner = root is Map ? (root['data'] ?? root) : null;
-    if (partner is! Map) {
-      throw Exception('Merchant pickup location unavailable');
-    }
+    if (partner is! Map) return const [];
 
-    final branches = partner['branches'];
-    if (branches is List && branches.isNotEmpty) {
-      final branch = branches.cast<Map>().firstWhere(
-        (item) =>
-            item['is_primary'] == true ||
-            item['is_primary'] == 1 ||
-            item['is_primary'] == '1' ||
-            item['is_primary'] == 'true',
-        orElse: () => branches.first as Map,
-      );
-      final lat = double.tryParse('${branch['latitude']}');
-      final lng = double.tryParse('${branch['longitude']}');
-      if (lat != null && lng != null) {
-        return [lat, lng];
+    final raw = partner['branches'];
+    final result = <CartBranch>[];
+    if (raw is List) {
+      for (final item in raw) {
+        if (item is! Map) continue;
+        final lat = double.tryParse('${item['latitude']}');
+        final lng = double.tryParse('${item['longitude']}');
+        final id = int.tryParse('${item['id']}');
+        if (id == null || lat == null || lng == null) continue;
+        if (lat == 0 && lng == 0) continue;
+        final address = [
+          item['address_line1'],
+          item['address_line2'],
+          item['city'],
+        ].where((e) => e != null && '$e'.trim().isNotEmpty).join(', ');
+        result.add(CartBranch(
+          id: id,
+          name: '${item['name'] ?? 'Branch'}',
+          address: address,
+          lat: lat,
+          lng: lng,
+          isPrimary: item['is_primary'] == true ||
+              item['is_primary'] == 1 ||
+              item['is_primary'] == '1',
+          isOpen: !(item['is_open'] == false ||
+              item['is_open'] == 0 ||
+              item['is_open'] == '0'),
+        ));
       }
     }
+    return result;
+  }
 
-    // Partner accessors expose the primary branch coordinates as latitude and
-    // longitude for older records without a serialized branches list.
-    final lat = double.tryParse('${partner['latitude']}');
-    final lng = double.tryParse('${partner['longitude']}');
+  /// Pickup = the branch picked in the cart (primary by default). The server
+  /// re-derives the pickup from the branch too, so quote and order agree.
+  Future<List<double>> _resolvePickupCoordinates() async {
+    final branches = await loadBranches();
+    if (branches.isNotEmpty) {
+      final selectedId = _ref.read(cartBranchIdProvider);
+      final branch = branches.firstWhere(
+        (b) => b.id == selectedId,
+        orElse: () => branches.firstWhere(
+          (b) => b.isPrimary,
+          orElse: () => branches.first,
+        ),
+      );
+      return [branch.lat, branch.lng];
+    }
+
+    // Older records without a serialized branches list.
+    final partnerId = _ref.read(riderAuthProvider).user?.partnerId;
+    if (partnerId == null) {
+      throw Exception('Partner account not found');
+    }
+    final response = await ApiService.dio.get('/v1/partners/$partnerId');
+    final root = response.data;
+    final partner = root is Map ? (root['data'] ?? root) : null;
+    final lat = partner is Map ? double.tryParse('${partner['latitude']}') : null;
+    final lng = partner is Map ? double.tryParse('${partner['longitude']}') : null;
     if (lat != null && lng != null) return [lat, lng];
     throw Exception('Merchant pickup location is missing map coordinates');
   }
@@ -162,6 +220,8 @@ class CartCheckoutNotifier extends StateNotifier<CartCheckoutState> {
       final response = await ApiService.createOrder({
         'service_id': AppConfig.leseatServiceId,
         'partner_id': partnerId,
+        if (_ref.read(cartBranchIdProvider) != null)
+          'partner_branch_id': _ref.read(cartBranchIdProvider),
         'payment_method': paymentMethod,
         'notes': 'Merchant self-order from app cart',
         'pickup': {

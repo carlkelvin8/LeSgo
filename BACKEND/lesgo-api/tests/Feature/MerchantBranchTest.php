@@ -217,4 +217,34 @@ class MerchantBranchTest extends TestCase
             ->pluck('id')->all();
         $this->assertSame([$orderB->id], $ids);
     }
+
+    public function test_expand_branches_lists_each_open_branch_as_its_own_store_card(): void
+    {
+        $partner = $this->merchant();
+        $partner->update(['is_open' => true]);
+        $main = $this->branch($partner, ['name' => 'Main', 'is_primary' => true]);
+        $second = $this->branch($partner, [
+            'name' => 'Urdaneta branch',
+            'latitude' => 15.9761,
+            'longitude' => 120.5711,
+        ]);
+        $this->branch($partner, ['name' => 'Closed branch', 'is_open' => false]);
+        $customer = User::factory()->create();
+
+        $default = $this->actingAs($customer, 'sanctum')->getJson('/api/v1/partners')
+            ->assertOk()->json('data');
+        $this->assertCount(1, $default);
+
+        $listings = collect(
+            $this->actingAs($customer, 'sanctum')
+                ->getJson('/api/v1/partners?expand_branches=1')
+                ->assertOk()->json('data')
+        );
+
+        $this->assertCount(2, $listings);
+        $this->assertSame([$main->id, $second->id], $listings->pluck('branch_id')->all());
+        $this->assertSame([$partner->id, $partner->id], $listings->pluck('id')->all());
+        $this->assertSame('Kape Co – Urdaneta branch', $listings[1]['name']);
+        $this->assertEquals(15.9761, $listings[1]['latitude']);
+    }
 }

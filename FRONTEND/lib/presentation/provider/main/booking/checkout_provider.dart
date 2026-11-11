@@ -271,6 +271,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     await _resolvePickupCoordinates(
       restaurantState.activeRestaurantId,
       requestId,
+      preferredBranchId: restaurantState.activeBranchId,
     );
     if (!mounted || requestId != _initializeRequestId) return;
     await refreshDeliveryFee();
@@ -278,8 +279,11 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
   Future<void> _resolvePickupCoordinates(
     String? partnerIdStr,
-    int requestId,
-  ) async {
+    int requestId, {
+    // The branch card the customer opened; it wins over "nearest" so ordering
+    // from "Store – Branch" picks up at that branch.
+    int? preferredBranchId,
+  }) async {
     if (!mounted || requestId != _initializeRequestId) return;
     if (partnerIdStr == null || partnerIdStr.isEmpty) {
       state = state.copyWith(
@@ -308,7 +312,8 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
           state.dropoffLng,
         );
         if (orderable.isNotEmpty) {
-          final keep = orderable.where((b) => b.id == state.selectedBranchId);
+          final wantedId = preferredBranchId ?? state.selectedBranchId;
+          final keep = orderable.where((b) => b.id == wantedId);
           final branch = keep.isNotEmpty ? keep.first : orderable.first;
           state = state.copyWith(
             branches: orderable,

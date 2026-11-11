@@ -23,6 +23,7 @@ class _MerchantEditInformationScreenState
   late final TextEditingController _emailController;
   late final TextEditingController _referralController;
   late final TextEditingController _prepTimeController;
+  final FocusNode _prepTimeFocus = FocusNode();
 
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _MerchantEditInformationScreenState
     _emailController.dispose();
     _referralController.dispose();
     _prepTimeController.dispose();
+    _prepTimeFocus.dispose();
     super.dispose();
   }
 
@@ -111,7 +113,11 @@ class _MerchantEditInformationScreenState
     if (_referralController.text != state.referralCode) {
       _referralController.text = state.referralCode;
     }
-    if (_prepTimeController.text != state.prepTime.toString()) {
+    // Don't rewrite the field while the merchant is typing: state is clamped to
+    // 5-180 on every keystroke, which used to snap partial input (e.g. "4" of
+    // "45") back to another value.
+    if (!_prepTimeFocus.hasFocus &&
+        _prepTimeController.text != state.prepTime.toString()) {
       _prepTimeController.text = state.prepTime.toString();
     }
 
@@ -286,6 +292,10 @@ class _MerchantEditInformationScreenState
               Expanded(
                 child: TextField(
                   controller: _prepTimeController,
+                  focusNode: _prepTimeFocus,
+                  onTapOutside: (_) => _prepTimeFocus.unfocus(),
+                  maxLength: 3,
+                  buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: InputDecoration(

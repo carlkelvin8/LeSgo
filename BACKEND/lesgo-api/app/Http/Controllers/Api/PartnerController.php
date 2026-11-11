@@ -108,7 +108,64 @@ class PartnerController extends Controller
             ->orderBy('name')
             ->paginate($perPage);
 
+        // Customer listings can ask for every branch as its own store card
+        // (same menu and details, separate appearance). Opt-in so released
+        // apps keep getting one card per store.
+        if ($request->boolean('expand_branches')) {
+            $partners->setCollection(
+                $partners->getCollection()->flatMap(
+                    fn (Partner $partner) => $this->expandBranchListings($partner)
+                )->values()
+            );
+        }
+
         return $this->success($partners);
+    }
+
+    /**
+     * One listing for the store itself plus one per extra open branch. Every
+     * entry keeps the store id (menu and orders stay shared) and carries the
+     * `branch_id` the customer should be ordered from.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function expandBranchListings(Partner $partner): array
+    {
+        $base = $partner->toArray();
+        $branches = $partner->branches;
+        $primary = $branches->firstWhere('is_primary', true) ?? $branches->first();
+
+        $base['branch_id'] = $primary?->id;
+        $listings = [$base];
+
+        foreach ($branches as $branch) {
+            if ($primary && $branch->id === $primary->id) {
+                continue;
+            }
+            if (! $branch->is_open) {
+                continue;
+            }
+
+            $listing = $base;
+            $listing['branch_id'] = $branch->id;
+            $listing['name'] = str_contains(mb_strtolower($branch->name), mb_strtolower($partner->name))
+                ? $branch->name
+                : trim($partner->name . ' – ' . $branch->name);
+            $listing['logo_url'] = $branch->logo_url ?: $base['logo_url'];
+            $listing['latitude'] = $branch->latitude;
+            $listing['longitude'] = $branch->longitude;
+            $listing['address'] = $branch->fullAddress();
+            if ($branch->estimated_delivery_minutes) {
+                $listing['estimated_delivery_minutes'] = $branch->estimated_delivery_minutes;
+            }
+            if ($branch->delivery_fee !== null) {
+                $listing['delivery_fee'] = (float) $branch->delivery_fee;
+            }
+            $listing['branches'] = [$branch->toArray()];
+            $listings[] = $listing;
+        }
+
+        return $listings;
     }
 
     /**

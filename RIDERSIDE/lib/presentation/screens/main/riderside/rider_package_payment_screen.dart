@@ -99,7 +99,7 @@ class _RiderPackagePaymentScreenState
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
             Text(
-              'One-time payment: PHP ${widget.checkout.amount.toStringAsFixed(2)}',
+              'Remaining balance: PHP ${widget.checkout.amount.toStringAsFixed(2)}',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 15),

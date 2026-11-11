@@ -36,6 +36,7 @@ class _RestaurantDetailScreenState
               widget.restaurant.id,
               widget.restaurant.categories,
               restaurantName: widget.restaurant.name,
+              branchId: widget.restaurant.branchId,
             );
         ref
             .read(favoritesProvider.notifier)

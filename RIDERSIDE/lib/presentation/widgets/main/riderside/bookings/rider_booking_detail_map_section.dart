@@ -38,15 +38,25 @@ class RiderBookingDetailMapSection extends ConsumerStatefulWidget {
   }) {
     if (controller == null) return;
 
+    bool valid(double? lat, double? lng) =>
+        lat != null &&
+        lng != null &&
+        lat.isFinite &&
+        lng.isFinite &&
+        lat.abs() <= 90 &&
+        lng.abs() <= 180 &&
+        !(lat == 0 && lng == 0);
+
     final points = <LatLng>[];
-    if (booking.pickupLat != null && booking.pickupLng != null) {
+    if (valid(booking.pickupLat, booking.pickupLng)) {
       points.add(LatLng(booking.pickupLat!, booking.pickupLng!));
     }
-    if (booking.dropoffLat != null && booking.dropoffLng != null) {
+    if (valid(booking.dropoffLat, booking.dropoffLng)) {
       points.add(LatLng(booking.dropoffLat!, booking.dropoffLng!));
     }
-    if (locationState?.hasLocation == true) {
-      points.add(LatLng(locationState!.latitude!, locationState.longitude!));
+    if (locationState?.hasLocation == true &&
+        valid(locationState!.latitude, locationState.longitude)) {
+      points.add(LatLng(locationState.latitude!, locationState.longitude!));
     }
     if (points.isEmpty) return;
 
@@ -61,17 +71,39 @@ class RiderBookingDetailMapSection extends ConsumerStatefulWidget {
       maxLng = math.max(maxLng, point.longitude);
     }
 
-    controller.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat, minLng),
-          northeast: LatLng(maxLat, maxLng),
+    try {
+      // A zero-area (or tiny) bounds can crash the native map SDK, so just
+      // centre on the point instead.
+      if ((maxLat - minLat).abs() < 0.0005 &&
+          (maxLng - minLng).abs() < 0.0005) {
+        controller.animateCamera(
+          CameraUpdate.newLatLngZoom(LatLng(minLat, minLng), 16),
+        );
+        return;
+      }
+      controller.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat, minLng),
+            northeast: LatLng(maxLat, maxLng),
+          ),
+          80,
         ),
-        80,
-      ),
-    );
+      );
+    } catch (_) {
+      // Camera moves are cosmetic; never let them take the screen down.
+    }
   }
 }
+
+bool _validCoord(double? lat, double? lng) =>
+    lat != null &&
+    lng != null &&
+    lat.isFinite &&
+    lng.isFinite &&
+    lat.abs() <= 90 &&
+    lng.abs() <= 180 &&
+    !(lat == 0 && lng == 0);
 
 class _RiderBookingDetailMapSectionState
     extends ConsumerState<RiderBookingDetailMapSection> {
@@ -99,10 +131,9 @@ class _RiderBookingDetailMapSectionState
     final booking = widget.booking;
     final location = widget.locationState;
     if (!location.hasLocation ||
-        booking.pickupLat == null ||
-        booking.pickupLng == null ||
-        booking.dropoffLat == null ||
-        booking.dropoffLng == null) {
+        !_validCoord(location.latitude, location.longitude) ||
+        !_validCoord(booking.pickupLat, booking.pickupLng) ||
+        !_validCoord(booking.dropoffLat, booking.dropoffLng)) {
       return;
     }
 
@@ -123,7 +154,15 @@ class _RiderBookingDetailMapSectionState
     }
     if (mounted) {
       setState(() {
-        if (polylines != null) _polylines = polylines;
+        if (polylines != null) {
+          _polylines = {
+            for (final p in polylines)
+              if (p.points.length >= 2 &&
+                  p.points.every(
+                      (pt) => _validCoord(pt.latitude, pt.longitude)))
+                p,
+          };
+        }
         _loadingRoute = false;
       });
     }
@@ -161,7 +200,8 @@ class _RiderBookingDetailMapSectionState
     final locationState = widget.locationState;
     final markers = <Marker>{};
 
-    if (locationState.hasLocation) {
+    if (locationState.hasLocation &&
+        _validCoord(locationState.latitude, locationState.longitude)) {
       markers.add(Marker(
         markerId: const MarkerId('driver_location'),
         position: LatLng(locationState.latitude!, locationState.longitude!),
@@ -171,7 +211,7 @@ class _RiderBookingDetailMapSectionState
       ));
     }
 
-    if (booking.pickupLat != null && booking.pickupLng != null) {
+    if (_validCoord(booking.pickupLat, booking.pickupLng)) {
       final isFood = booking.category == BookingCategory.lesEat ||
           booking.category == BookingCategory.lesBuy;
       markers.add(Marker(
@@ -185,7 +225,7 @@ class _RiderBookingDetailMapSectionState
       ));
     }
 
-    if (booking.dropoffLat != null && booking.dropoffLng != null) {
+    if (_validCoord(booking.dropoffLat, booking.dropoffLng)) {
       markers.add(Marker(
         markerId: const MarkerId('dropoff'),
         position: LatLng(booking.dropoffLat!, booking.dropoffLng!),
@@ -315,7 +355,7 @@ class _RiderBookingDetailMapSectionState
           children: [
             GoogleMap(
               initialCameraPosition: CameraPosition(
-                target: booking.pickupLat != null && booking.pickupLng != null
+                target: _validCoord(booking.pickupLat, booking.pickupLng)
                     ? LatLng(booking.pickupLat!, booking.pickupLng!)
                     : const LatLng(8.4542, 124.6319),
                 zoom: 13,
@@ -334,10 +374,9 @@ class _RiderBookingDetailMapSectionState
               onMapCreated: (controller) {
                 widget.onMapCreated(controller);
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  Future.delayed(
-                    const Duration(milliseconds: 500),
-                    widget.onFitBounds,
-                  );
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (mounted) widget.onFitBounds();
+                  });
                 });
               },
             ),

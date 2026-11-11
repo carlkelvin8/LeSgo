@@ -20,6 +20,9 @@ class PartnerRemoteDataSource {
     bool? isFeatured,
     int page = 1,
     int perPage = 20,
+    // List every open branch of a store as its own card (same menu, own
+    // name/location). Older servers ignore the flag and return one card.
+    bool expandBranches = false,
   }) async {
     final dio = _dioClient.dio;
     
@@ -33,6 +36,7 @@ class PartnerRemoteDataSource {
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (isOpen != null) queryParams['is_open'] = isOpen ? '1' : '0';
       if (isFeatured != null) queryParams['is_featured'] = isFeatured ? '1' : '0';
+      if (expandBranches) queryParams['expand_branches'] = '1';
       
       print('🔵 PartnerDataSource: Fetching partners with params: $queryParams');
       

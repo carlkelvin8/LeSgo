@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -98,20 +97,10 @@ class _RiderBookingDetailScreenState
   void dispose() {
     AppLogger.debug('🗑️ RiderBookingDetailScreen dispose called');
     
-    // Clean up map controller carefully
-    try {
-      // First, remove any listeners to prevent them firing after dispose
-      if (_mapController != null) {
-        // Cancel any pending marker/polyline operations
-        _mapController!.dispose();
-        AppLogger.debug('✅ Map controller disposed successfully');
-      }
-    } catch (e) {
-      AppLogger.error('Error disposing map controller', e);
-    } finally {
-      _mapController = null;
-    }
-    
+    // The GoogleMap widget disposes its own controller; disposing it here
+    // too (double dispose) can crash the native map on iOS.
+    _mapController = null;
+
     // Don't stop location tracking or auto-refresh here - let them continue
     // for other screens. The providers will manage their own lifecycle.
     
@@ -936,13 +925,21 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     AppLogger.debug('🎨 Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
     
     if (_shouldShowProofUpload()) {
-      return RiderBookingProofUploadSection(
-        selectedImages: _selectedImages,
-        isUploading: _isUploadingProof,
-        onPickImages: _pickImages,
-        onTakePhoto: _takePhoto,
-        onRemoveImage: _removeImage,
-        onUpload: _uploadProofImages,
+      return Padding(
+        padding: EdgeInsets.fromLTRB(
+          ResponsiveUtils.horizontalPadding(context),
+          ResponsiveUtils.spacing(context, 16),
+          ResponsiveUtils.horizontalPadding(context),
+          0,
+        ),
+        child: RiderBookingProofUploadSection(
+          selectedImages: _selectedImages,
+          isUploading: _isUploadingProof,
+          onPickImages: _pickImages,
+          onTakePhoto: _takePhoto,
+          onRemoveImage: _removeImage,
+          onUpload: _uploadProofImages,
+        ),
       );
     }
 
@@ -1015,8 +1012,10 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       AppLogger.error('❌ Location tracking error: ${locationState.error}');
     }
     
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor:
+          dark ? const Color(0xFF110E1A) : const Color(0xFFF4F2F8),
       body: SafeArea(
         child: Stack(
           children: [
@@ -1045,15 +1044,6 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                     tooltip: AppLocalization.translate('refresh_status', lang),
                   ),
                 ),
-                // Banner
-                SizedBox(
-                  height: ResponsiveUtils.adaptiveBannerHeight(context, 120),
-                  width: double.infinity,
-                  child: SvgPicture.asset(
-                    'assets/images/booking/banner.svg',
-                    fit: BoxFit.cover,
-                  ),
-                ),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: ResponsiveUtils.scrollPaddingWithFab(context),
@@ -1074,49 +1064,10 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Status:',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize: ResponsiveUtils.fontSize(context, 15),
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF2D2D2D),
-                                    ),
-                                  ),
-                                  if (_currentApiStatus != null)
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        _currentStatus.label.toUpperCase(),
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          fontSize: ResponsiveUtils.fontSize(context, 11),
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF5F2D82),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                              RiderBookingStatusGrid(
-                                booking: _updatedBooking ?? widget.booking,
-                                currentStatus: _currentStatus,
-                                onStatusTap:
-                                    _isUpdating ? null : _handleStatusChange,
-                              ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                               RiderBookingNextActions(
+                                statusLabel: _currentApiStatus == null
+                                    ? null
+                                    : _currentStatus.label,
                                 category: widget.booking.category,
                                 apiStatus: _currentApiStatus,
                                 isUpdating: _isUpdating,

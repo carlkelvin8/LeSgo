@@ -172,6 +172,19 @@ class RiderCommissionService
         return self::getPackagePrices()[$tier] ?? 0.0;
     }
 
+    /**
+     * Remaining amount to move from $currentTier to $targetTier: the target
+     * price minus what the rider already paid for their current package.
+     */
+    public static function getUpgradePrice(string $currentTier, string $targetTier): float
+    {
+        $prices = self::getPackagePrices();
+        $paid = $prices[self::normalizeTier($currentTier)] ?? 0.0;
+        $target = $prices[self::normalizeTier($targetTier)] ?? 0.0;
+
+        return round(max(0.0, $target - $paid), 2);
+    }
+
     public static function setPackagePrice(string $tier, float $price, ?string $updatedBy = null): void
     {
         $tier = self::normalizeTier($tier);
@@ -210,6 +223,9 @@ class RiderCommissionService
                 'one_time_price' => $prices[self::PACKAGE_ADVANCE],
                 'is_current' => $current === self::PACKAGE_ADVANCE,
                 'is_upgradeable' => self::canUpgradeTo($current, self::PACKAGE_ADVANCE),
+                'upgrade_price' => self::canUpgradeTo($current, self::PACKAGE_ADVANCE)
+                    ? self::getUpgradePrice($current, self::PACKAGE_ADVANCE)
+                    : null,
             ],
             [
                 'tier' => self::PACKAGE_PRO,
@@ -220,6 +236,9 @@ class RiderCommissionService
                 'one_time_price' => $prices[self::PACKAGE_PRO],
                 'is_current' => $current === self::PACKAGE_PRO,
                 'is_upgradeable' => self::canUpgradeTo($current, self::PACKAGE_PRO),
+                'upgrade_price' => self::canUpgradeTo($current, self::PACKAGE_PRO)
+                    ? self::getUpgradePrice($current, self::PACKAGE_PRO)
+                    : null,
             ],
             [
                 'tier' => self::PACKAGE_EMPLOYEE,

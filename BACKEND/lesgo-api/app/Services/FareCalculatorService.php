@@ -6,7 +6,8 @@ use App\Models\Service;
 
 class FareCalculatorService
 {
-    public const INCLUDED_DISTANCE_KM = 3.0;
+    /** LesRide's base fare covers its first 3 km; other services charge per km from 0. */
+    public const LESRIDE_INCLUDED_DISTANCE_KM = 3.0;
 
     public const MAX_DISTANCE_KM = 30.0;
 
@@ -45,10 +46,10 @@ class FareCalculatorService
             ? (float) $service->minimum_fare
             : $baseFare;
 
-        $chargeableDistanceKm = max(
-            0.0,
-            $distanceKm - self::INCLUDED_DISTANCE_KM
-        );
+        $includedKm = $serviceCode === 'LESRIDE'
+            ? self::LESRIDE_INCLUDED_DISTANCE_KM
+            : 0.0;
+        $chargeableDistanceKm = max(0.0, $distanceKm - $includedKm);
         $distanceFare = round($chargeableDistanceKm * $perKmRate, 2);
 
         $serviceFee = 0.0;

@@ -9,11 +9,13 @@ import '../utils/menu_item_options.dart';
 class LeseatCartSnapshot {
   final String restaurantId;
   final String? restaurantName;
+  final int? branchId;
   final List<OrderItem> items;
 
   const LeseatCartSnapshot({
     required this.restaurantId,
     this.restaurantName,
+    this.branchId,
     required this.items,
   });
 }
@@ -34,11 +36,13 @@ class LeseatCartCache {
       final restaurantId = decoded['restaurant_id']?.toString();
       if (restaurantId == null || restaurantId.isEmpty) return null;
 
+      final branchId = int.tryParse('${decoded['branch_id'] ?? ''}');
       final itemsRaw = decoded['items'];
       if (itemsRaw is! List) {
         return LeseatCartSnapshot(
           restaurantId: restaurantId,
           restaurantName: decoded['restaurant_name']?.toString(),
+          branchId: branchId,
           items: const [],
         );
       }
@@ -52,6 +56,7 @@ class LeseatCartCache {
       return LeseatCartSnapshot(
         restaurantId: restaurantId,
         restaurantName: decoded['restaurant_name']?.toString(),
+        branchId: branchId,
         items: items,
       );
     } catch (_) {
@@ -62,6 +67,7 @@ class LeseatCartCache {
   static Future<void> save({
     required String? restaurantId,
     String? restaurantName,
+    int? branchId,
     required List<OrderItem> items,
   }) async {
     try {
@@ -78,6 +84,7 @@ class LeseatCartCache {
         jsonEncode({
           'restaurant_id': restaurantId,
           'restaurant_name': restaurantName,
+          'branch_id': branchId,
           'items': items.map(_itemToJson).toList(),
         }),
       );

@@ -58,7 +58,7 @@ class FareCalculatorServiceTest extends TestCase
         $this->assertSame(465.0, $fare['total']);
     }
 
-    public function test_lesgo_rates_are_unchanged(): void
+    public function test_lesgo_charges_per_km_from_the_first_kilometer(): void
     {
         $lesgo = new Service([
             'code' => 'LESGO',
@@ -70,7 +70,7 @@ class FareCalculatorServiceTest extends TestCase
         $fare = $this->calculator->calculate($lesgo, 5);
 
         $this->assertSame(40.0, $fare['base_fare']);
-        $this->assertSame(19.0, $fare['distance_fare']);
-        $this->assertSame(59.0, $fare['total']);
+        $this->assertSame(47.5, $fare['distance_fare']);
+        $this->assertSame(87.5, $fare['total']);
     }
 }

@@ -6,9 +6,9 @@ import '../../../core/utils/responsive_utils.dart';
 class HomeHeader extends ConsumerWidget {
   final bool showBackButton;
   final VoidCallback? onBack;
-  final Color backgroundColor;
-  final Color logoColor;
-  final Color borderColor;
+  final Color? backgroundColor;
+  final Color? logoColor;
+  final Color? borderColor;
   final Color? backIconColor;
   final Widget? action;
 
@@ -16,15 +16,19 @@ class HomeHeader extends ConsumerWidget {
     super.key,
     this.showBackButton = false,
     this.onBack,
-    this.backgroundColor = Colors.white,
-    this.logoColor = const Color(0xFF5F2D82),
-    this.borderColor = const Color(0xFFEEEEEE),
+    this.backgroundColor,
+    this.logoColor,
+    this.borderColor,
     this.backIconColor,
     this.action,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bg = backgroundColor ?? (dark ? const Color(0xFF1E1730) : Colors.white);
+    final logo = logoColor ?? (dark ? Colors.white : const Color(0xFF5F2D82));
+    final border = borderColor ?? (dark ? const Color(0xFF2E2540) : const Color(0xFFEEEEEE));
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Container(
@@ -33,8 +37,8 @@ class HomeHeader extends ConsumerWidget {
         vertical: ResponsiveUtils.spacing(context, 16),
       ),
       decoration: BoxDecoration(
-        color: backgroundColor,
-        border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+        color: bg,
+        border: Border(bottom: BorderSide(color: border, width: 1)),
       ),
       child: Row(
         children: [
@@ -48,7 +52,7 @@ class HomeHeader extends ConsumerWidget {
                     child: Icon(
                       Icons.chevron_left_rounded,
                       size: ResponsiveUtils.imageHeight(context, 32),
-                      color: backIconColor ?? const Color(0xFF5F2D82),
+                      color: backIconColor ?? (dark ? Colors.white : const Color(0xFF5F2D82)),
                     ),
                   )
                 : null,
@@ -58,7 +62,7 @@ class HomeHeader extends ConsumerWidget {
               child: SvgPicture.asset(
                 'assets/images/Logo.svg',
                 height: ResponsiveUtils.imageHeight(context, 40),
-                colorFilter: ColorFilter.mode(logoColor, BlendMode.srcIn),
+                colorFilter: ColorFilter.mode(logo, BlendMode.srcIn),
               ),
             ),
           ),
