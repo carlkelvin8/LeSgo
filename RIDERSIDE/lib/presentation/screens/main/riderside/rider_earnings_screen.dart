@@ -166,7 +166,7 @@ class RiderEarningsScreen extends ConsumerWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: context.txt(Colors.grey.shade600),
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         ),
                       )
@@ -305,7 +305,7 @@ class _TripTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
               ],

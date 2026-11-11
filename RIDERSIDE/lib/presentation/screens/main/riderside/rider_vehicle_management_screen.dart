@@ -93,7 +93,7 @@ class _RiderVehicleManagementScreenState
                           fontSize:
                               ResponsiveUtils.fontSize(context, 16),
                           fontWeight: FontWeight.w600,
-                          color: context.txt(Colors.grey.shade600),
+                          color: context.sub(Colors.grey.shade600),
                         ),
                       ),
                     ],
@@ -159,7 +159,7 @@ class _RiderVehicleManagementScreenState
               AppLocalization.translate('cancel', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
-                color: context.txt(Colors.grey.shade700),
+                color: context.sub(Colors.grey.shade700),
               ),
             ),
           ),
@@ -281,7 +281,7 @@ class _VehicleCard extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize:
                         ResponsiveUtils.fontSize(context, 12),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
                 Text(
@@ -290,7 +290,7 @@ class _VehicleCard extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize:
                         ResponsiveUtils.fontSize(context, 12),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
               ],
@@ -459,7 +459,7 @@ class _VehicleFormScreenState
                   fontSize:
                       ResponsiveUtils.fontSize(context, 13),
                   fontWeight: FontWeight.w600,
-                  color: context.txt(Colors.grey.shade600),
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
               SizedBox(
@@ -624,7 +624,7 @@ class _VehicleFormScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.w600,
-            color: context.txt(Colors.grey.shade600),
+            color: context.sub(Colors.grey.shade600),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 6)),

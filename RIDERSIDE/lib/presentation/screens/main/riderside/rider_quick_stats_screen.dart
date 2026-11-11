@@ -45,7 +45,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: context.txt(Colors.grey.shade600),
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
             ],
@@ -78,7 +78,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -168,7 +168,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: context.txt(Colors.grey.shade600),
+                        color: context.sub(Colors.grey.shade600),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -281,7 +281,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -354,7 +354,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 9),
-                color: context.txt(Colors.grey.shade600),
+                color: context.sub(Colors.grey.shade600),
               ),
             ),
           ],

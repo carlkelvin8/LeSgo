@@ -83,7 +83,7 @@ class CartPriceSummary extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 11,
-                    color: context.txt(Color(0xFF747474)),
+                    color: context.sub(Color(0xFF747474)),
                   ),
                 ),
               ),

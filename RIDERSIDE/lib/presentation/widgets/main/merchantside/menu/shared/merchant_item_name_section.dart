@@ -40,6 +40,10 @@ class MerchantItemNameSection extends StatelessWidget {
           ),
           child: TextField(
             controller: controller,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            maxLength: 80,
+            buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
             onChanged: onChanged,
             maxLines: 1,
             decoration: InputDecoration(

@@ -127,7 +127,7 @@ class _StepAction extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 18),
           fontWeight: FontWeight.w500,
-          color: context.txt(const Color(0xFF616161)),
+          color: context.sub(const Color(0xFF616161)),
         ),
       ),
     );

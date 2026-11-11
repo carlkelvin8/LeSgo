@@ -25,7 +25,7 @@ class VerificationCodeSection extends StatelessWidget {
           'we have sent a verification code to your phone number',
           style: TextStyle(
             fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: context.txt(Colors.black54),
+            color: context.sub(Colors.black54),
           ),
         ),
         // Show OTP in dev/fallback mode

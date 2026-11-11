@@ -458,7 +458,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       fontFamily: 'TT Fors',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: context.txt(Colors.grey.shade700),
+                      color: context.sub(Colors.grey.shade700),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -468,7 +468,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 14,
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -550,7 +550,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 14,
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
         ),
@@ -871,14 +871,14 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           // Distance, payment method, and customer name
           Row(
             children: [
-              Icon(Icons.straighten, size: 14, color: context.txt(Colors.grey.shade600)),
+              Icon(Icons.straighten, size: 14, color: context.sub(Colors.grey.shade600)),
               SizedBox(width: 4.0),
               Text(
                 '${order.distanceKm.toStringAsFixed(1)} km',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12.0,
-                  color: context.txt(Colors.grey.shade600),
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
               SizedBox(width: 12.0),
@@ -909,7 +909,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               ),
               if (order.dropoffContactName.isNotEmpty) ...[
                 SizedBox(width: 12.0),
-                Icon(Icons.person_outline, size: 14, color: context.txt(Colors.grey.shade600)),
+                Icon(Icons.person_outline, size: 14, color: context.sub(Colors.grey.shade600)),
                 SizedBox(width: 4.0),
                 Expanded(
                   child: Text(
@@ -917,7 +917,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 12.0,
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -951,7 +951,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12.0,
-                        color: context.txt(Colors.grey.shade700),
+                        color: context.sub(Colors.grey.shade700),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -986,7 +986,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12.0,
-                        color: context.txt(Colors.grey.shade700),
+                        color: context.sub(Colors.grey.shade700),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

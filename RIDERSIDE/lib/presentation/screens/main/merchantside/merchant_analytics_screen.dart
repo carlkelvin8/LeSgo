@@ -173,7 +173,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                                       fontFamily: 'TT Fors',
                                       fontSize:
                                           ResponsiveUtils.fontSize(context, 12),
-                                      color: context.txt(Colors.grey.shade700),
+                                      color: context.sub(Colors.grey.shade700),
                                     ),
                                   ),
                                 ),
@@ -243,7 +243,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                                           fontFamily: 'TT Fors',
                                           fontSize: ResponsiveUtils.fontSize(
                                               context, 12),
-                                          color: context.txt(Colors.grey.shade600),
+                                          color: context.sub(Colors.grey.shade600),
                                         ),
                                       ),
                                     ],
@@ -274,7 +274,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: context.txt(Colors.grey.shade700),
+                        color: context.sub(Colors.grey.shade700),
                       ),
                     ),
                   ],
@@ -317,7 +317,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
             Text(
               ApiErrorMapper.message(error),
               textAlign: TextAlign.center,
-              style: TextStyle(color: context.txt(Colors.grey.shade600)),
+              style: TextStyle(color: context.sub(Colors.grey.shade600)),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -511,7 +511,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),
-                color: context.txt(Colors.grey.shade600),
+                color: context.sub(Colors.grey.shade600),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 14)),
@@ -560,7 +560,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
         ],
@@ -578,7 +578,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 13),
-          color: context.txt(Colors.grey.shade600),
+          color: context.sub(Colors.grey.shade600),
         ),
       ),
     );
@@ -656,7 +656,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 9),
-                        color: context.txt(Colors.grey.shade600),
+                        color: context.sub(Colors.grey.shade600),
                       ),
                     ),
                   );
@@ -774,7 +774,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: context.txt(Colors.grey.shade600),
+                              color: context.sub(Colors.grey.shade600),
                             ),
                           ),
                         ],
@@ -894,7 +894,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: context.txt(Colors.grey.shade600),
+                color: context.sub(Colors.grey.shade600),
               ),
             ),
           ],
@@ -921,7 +921,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
-            color: context.txt(Colors.grey.shade700),
+            color: context.sub(Colors.grey.shade700),
           ),
         ),
       ],
@@ -989,7 +989,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 11),
-                            color: context.txt(Colors.grey.shade600),
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         ),
                       ],
@@ -1037,7 +1037,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 11),
-                            color: context.txt(Colors.grey.shade600),
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         ),
                       ],

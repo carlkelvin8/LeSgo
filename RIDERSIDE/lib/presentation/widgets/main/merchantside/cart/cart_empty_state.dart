@@ -24,7 +24,7 @@ class CartEmptyState extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 18),
               fontWeight: FontWeight.w600,
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),

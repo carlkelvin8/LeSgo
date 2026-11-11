@@ -104,6 +104,8 @@ const Map<String, String> merchantFilipinoLiterals = {
   'Customers pick a branch when ordering, and riders are sent to that branch for pickup.':
       'Pumipili ng branch ang customer kapag nag-order, at doon pupunta ang rider para kunin ito.',
   'Dark mode': 'Dark mode',
+  'Call': 'Tawagan',
+  'Could not open the phone app.': 'Hindi mabuksan ang phone app.',
   'On': 'Naka-on',
   'Off': 'Naka-off',
   'Language': 'Wika',

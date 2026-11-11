@@ -139,7 +139,7 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 14,
-            color: context.txt(Colors.grey.shade700),
+            color: context.sub(Colors.grey.shade700),
           ),
         ),
         actions: [
@@ -504,7 +504,7 @@ class _ActionTile extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
-            color: context.txt(Colors.grey.shade600),
+            color: context.sub(Colors.grey.shade600),
           ),
         ),
         trailing: const Icon(Icons.chevron_right),

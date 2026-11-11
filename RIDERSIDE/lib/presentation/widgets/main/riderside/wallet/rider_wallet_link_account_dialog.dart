@@ -178,7 +178,7 @@ class _RiderWalletLinkAccountDialogState
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 13,
-                color: context.txt(Colors.grey.shade700),
+                color: context.sub(Colors.grey.shade700),
               ),
             ),
             const SizedBox(height: 12),

@@ -76,7 +76,7 @@ class MerchantStoreToggleCard extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: context.txt(Colors.black54),
+                    color: context.sub(Colors.black54),
                   ),
                 ),
               ],

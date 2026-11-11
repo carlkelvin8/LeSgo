@@ -15,7 +15,7 @@ class SubmitInfoText extends StatelessWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 11),
         fontWeight: FontWeight.w400,
-        color: context.txt(Colors.black54),
+        color: context.sub(Colors.black54),
         height: 1.4,
       ),
     );

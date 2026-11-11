@@ -52,7 +52,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -77,7 +77,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: context.txt(Colors.grey.shade700),
+                            color: context.sub(Colors.grey.shade700),
                           ),
                         ),
                       ),
@@ -193,7 +193,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                                    color: context.txt(Colors.grey.shade600),
+                                    color: context.sub(Colors.grey.shade600),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -216,7 +216,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                                    color: context.txt(Colors.grey.shade600),
+                                    color: context.sub(Colors.grey.shade600),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -362,7 +362,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 10),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 1,
@@ -452,7 +452,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
               ],
@@ -519,7 +519,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: context.txt(Colors.grey.shade600),
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
               Text(
@@ -527,7 +527,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: context.txt(Colors.grey.shade600),
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
             ],

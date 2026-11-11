@@ -148,7 +148,7 @@ class _RiderScheduledPayoutScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w700,
-              color: context.txt(Colors.grey.shade700),
+              color: context.sub(Colors.grey.shade700),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -275,7 +275,7 @@ class _RiderScheduledPayoutScreenState
                 fontFamily: 'TT Fors',
                 fontWeight: FontWeight.w700,
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: context.txt(Colors.grey.shade700),
+                color: context.sub(Colors.grey.shade700),
               ),
             ),
             subtitle: Text(
@@ -317,7 +317,7 @@ class _RiderScheduledPayoutScreenState
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -327,7 +327,7 @@ class _RiderScheduledPayoutScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w700,
-              color: context.txt(Colors.grey.shade700),
+              color: context.sub(Colors.grey.shade700),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -337,7 +337,7 @@ class _RiderScheduledPayoutScreenState
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: context.txt(Colors.grey.shade600),
+                color: context.sub(Colors.grey.shade600),
               ),
             )
           else

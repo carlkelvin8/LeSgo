@@ -22,6 +22,7 @@ import '../../../widgets/main/merchantside/orders/merchant_quick_reply_section.d
 import '../../../widgets/main/merchantside/orders/merchant_special_instructions_banner.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
 import '../../../../core/utils/app_localization.dart';
+import '../../../widgets/common/tap_to_call_text.dart';
 import '../../../../core/utils/api_error_mapper.dart';
 
 class MerchantOrderDetailScreen extends ConsumerStatefulWidget {
@@ -258,7 +259,7 @@ class _MerchantOrderDetailScreenState
                       Icon(
                         Icons.access_time,
                         size: 16,
-                        color: context.txt(Colors.grey.shade600),
+                        color: context.sub(Colors.grey.shade600),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -266,7 +267,7 @@ class _MerchantOrderDetailScreenState
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: context.txt(Colors.grey.shade600),
+                          color: context.sub(Colors.grey.shade600),
                         ),
                       ),
                     ],
@@ -509,7 +510,7 @@ class _MerchantOrderDetailScreenState
                         context.tr('Items Subtotal'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: context.txt(Colors.black54),
+                          color: context.sub(Colors.black54),
                         ),
                       ),
                       Text(
@@ -529,7 +530,7 @@ class _MerchantOrderDetailScreenState
                         context.tr('Delivery Fee'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: context.txt(Colors.black54),
+                          color: context.sub(Colors.black54),
                         ),
                       ),
                       Text(
@@ -549,7 +550,7 @@ class _MerchantOrderDetailScreenState
                         context.tr('Payment Method'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: context.txt(Colors.black54),
+                          color: context.sub(Colors.black54),
                         ),
                       ),
                       Text(
@@ -571,7 +572,7 @@ class _MerchantOrderDetailScreenState
                         context.tr('Payment Status'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: context.txt(Colors.black54),
+                          color: context.sub(Colors.black54),
                         ),
                       ),
                       Text(
@@ -604,7 +605,7 @@ class _MerchantOrderDetailScreenState
                           context.tr('Credited to E-Wallet'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: context.txt(Colors.black54),
+                            color: context.sub(Colors.black54),
                           ),
                         ),
                         Text(
@@ -696,13 +697,12 @@ class _MerchantOrderDetailScreenState
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text(
-                              resolvedOrder.user?.phoneNumber ??
-                                  'No phone number',
+                            TapToCallText(
+                              phone: resolvedOrder.user?.phoneNumber,
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                                color: context.txt(Colors.grey.shade600),
+                                color: context.sub(Colors.grey.shade600),
                               ),
                             ),
                           ],
@@ -825,7 +825,7 @@ class _MerchantOrderDetailScreenState
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: context.txt(Colors.grey.shade600),
+                          color: context.sub(Colors.grey.shade600),
                         ),
                       ),
                   ],
@@ -895,12 +895,12 @@ class _MerchantOrderDetailScreenState
               if (driver.phoneNumber != null &&
                   driver.phoneNumber!.trim().isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(
-                  driver.phoneNumber!,
+                TapToCallText(
+                  phone: driver.phoneNumber,
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
               ],
@@ -923,7 +923,7 @@ class _MerchantOrderDetailScreenState
                       Icon(
                         Icons.confirmation_number_outlined,
                         size: 14,
-                        color: context.txt(Colors.grey.shade700),
+                        color: context.sub(Colors.grey.shade700),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -947,7 +947,7 @@ class _MerchantOrderDetailScreenState
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: context.txt(Colors.grey.shade700),
+                    color: context.sub(Colors.grey.shade700),
                   ),
                 ),
               ],

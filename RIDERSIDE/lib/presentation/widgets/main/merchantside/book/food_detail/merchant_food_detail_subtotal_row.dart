@@ -29,7 +29,7 @@ class MerchantFoodDetailSubtotalRow extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w600,
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           Text(

@@ -131,7 +131,7 @@ class CartScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 11,
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -232,7 +232,7 @@ class CartScreen extends ConsumerWidget {
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: 11,
-                                      color: context.txt(Colors.grey.shade600),
+                                      color: context.sub(Colors.grey.shade600),
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -605,7 +605,7 @@ class CartScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 13,
-                              color: context.txt(Colors.grey.shade700),
+                              color: context.sub(Colors.grey.shade700),
                             ),
                           ),
                       ],

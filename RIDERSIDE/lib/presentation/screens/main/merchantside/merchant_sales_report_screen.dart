@@ -289,7 +289,7 @@ class _MerchantSalesReportScreenState
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 11),
-                        color: context.txt(Colors.grey.shade600),
+                        color: context.sub(Colors.grey.shade600),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -403,7 +403,7 @@ class _MerchantSalesReportScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
               fontWeight: isBold ? FontWeight.w700 : FontWeight.w400,
-              color: context.txt(Colors.grey.shade700),
+              color: context.sub(Colors.grey.shade700),
             ),
           ),
           Text(

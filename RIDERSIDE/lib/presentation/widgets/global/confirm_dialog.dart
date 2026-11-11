@@ -36,14 +36,14 @@ Future<void> showConfirmDialog({
       ),
       content: Text(
         message,
-        style: TextStyle(color: context.txt(Color(0xFF6B6B6B))),
+        style: TextStyle(color: context.sub(Color(0xFF6B6B6B))),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
           child: Text(
             cancelLabel,
-            style: TextStyle(color: context.txt(Color(0xFF6B6B6B))),
+            style: TextStyle(color: context.sub(Color(0xFF6B6B6B))),
           ),
         ),
         TextButton(

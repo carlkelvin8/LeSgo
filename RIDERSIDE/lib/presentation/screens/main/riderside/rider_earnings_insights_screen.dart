@@ -141,7 +141,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'TT Fors',
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                 ),
@@ -270,7 +270,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 10,
-                              color: context.txt(Colors.grey.shade600),
+                              color: context.sub(Colors.grey.shade600),
                             ),
                           ),
                         );
@@ -287,7 +287,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 10,
-                            color: context.txt(Colors.grey.shade600),
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         );
                       },
@@ -430,7 +430,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: context.txt(Colors.grey.shade600),
+                        color: context.sub(Colors.grey.shade600),
                       ),
                     ),
                     SizedBox(
@@ -457,7 +457,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: context.txt(Colors.grey.shade600),
+                        color: context.sub(Colors.grey.shade600),
                       ),
                     ),
                     SizedBox(
@@ -497,7 +497,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
         ],
@@ -564,7 +564,7 @@ class _MetricCard extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -583,7 +583,7 @@ class _MetricCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: context.txt(Colors.grey.shade600),
+                color: context.sub(Colors.grey.shade600),
               ),
             ),
         ],

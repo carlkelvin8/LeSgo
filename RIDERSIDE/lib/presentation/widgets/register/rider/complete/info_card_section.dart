@@ -33,7 +33,7 @@ class InfoCardSection extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
               fontWeight: FontWeight.w600,
-              color: context.txt(Colors.black54),
+              color: context.sub(Colors.black54),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),

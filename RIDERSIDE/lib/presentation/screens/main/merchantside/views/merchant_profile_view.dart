@@ -224,7 +224,7 @@ class MerchantProfileView extends ConsumerWidget {
                             context.tr('No menu items yet'),
                             style: TextStyle(
                               fontSize: 18,
-                              color: context.txt(Colors.grey.shade600),
+                              color: context.sub(Colors.grey.shade600),
                             ),
                           ),
                           const SizedBox(height: 8),

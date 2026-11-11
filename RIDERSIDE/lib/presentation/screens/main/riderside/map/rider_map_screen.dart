@@ -682,7 +682,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                                        color: context.txt(Colors.grey.shade600),
+                                        color: context.sub(Colors.grey.shade600),
                                       ),
                                     ),
                                     Text(
@@ -705,7 +705,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                                        color: context.txt(Colors.grey.shade600),
+                                        color: context.sub(Colors.grey.shade600),
                                       ),
                                     ),
                                     Text(
@@ -739,7 +739,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: context.txt(Colors.grey.shade600),
+                              color: context.sub(Colors.grey.shade600),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -772,7 +772,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: ResponsiveUtils.fontSize(context, 12),
-                                          color: context.txt(Colors.grey.shade700),
+                                          color: context.sub(Colors.grey.shade700),
                                         ),
                                       ),
                                     ),
@@ -834,7 +834,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

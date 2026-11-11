@@ -200,7 +200,7 @@ class _RiderWalletWithdrawDialogState
       title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
       subtitle: Text(
         display,
-        style: TextStyle(fontFamily: 'TT Fors', color: context.txt(Colors.grey.shade700)),
+        style: TextStyle(fontFamily: 'TT Fors', color: context.sub(Colors.grey.shade700)),
       ),
     );
   }
@@ -226,7 +226,7 @@ class _RiderWalletWithdrawDialogState
           const SizedBox(height: 4),
           Text(
             'Withdrawals are sent via PayMongo to your linked account.',
-            style: TextStyle(fontSize: 12, color: context.txt(Colors.grey.shade600)),
+            style: TextStyle(fontSize: 12, color: context.sub(Colors.grey.shade600)),
           ),
         ],
       ),
@@ -241,7 +241,7 @@ class _RiderWalletWithdrawDialogState
                 'Available: PHP ${liveBalance.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
-                  color: context.txt(Colors.grey.shade700),
+                  color: context.sub(Colors.grey.shade700),
                 ),
               ),
               const SizedBox(height: 8),
@@ -250,7 +250,7 @@ class _RiderWalletWithdrawDialogState
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12,
-                  color: context.txt(Colors.black54),
+                  color: context.sub(Colors.black54),
                 ),
               ),
               const SizedBox(height: 12),

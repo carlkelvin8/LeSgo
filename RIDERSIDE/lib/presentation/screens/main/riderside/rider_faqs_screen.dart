@@ -276,7 +276,7 @@ class _RiderFaqsScreenState extends ConsumerState<RiderFaqsScreen> {
                                                     fontFamily: 'TT Fors',
                                                     fontSize: ResponsiveUtils
                                                         .fontSize(context, 13),
-                                                    color: context.txt(Colors.grey.shade700),
+                                                    color: context.sub(Colors.grey.shade700),
                                                   ),
                                                 ),
                                                 Row(

@@ -80,7 +80,7 @@ class _MerchantItemCategorySectionState
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: context.txt(Colors.grey.shade600),
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
               items: const [],
@@ -112,7 +112,7 @@ class _MerchantItemCategorySectionState
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                   items: const [],
@@ -133,7 +133,7 @@ class _MerchantItemCategorySectionState
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
                 items: categoryNames.map((category) {

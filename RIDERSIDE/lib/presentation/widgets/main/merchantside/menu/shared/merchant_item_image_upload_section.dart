@@ -67,7 +67,7 @@ class MerchantItemImageUploadSection extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: context.txt(const Color(0xFF757575)),
+                        color: context.sub(const Color(0xFF757575)),
                         fontWeight: FontWeight.w500,
                       ),
                     ),

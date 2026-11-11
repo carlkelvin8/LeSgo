@@ -251,7 +251,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                 fontFamily: 'TT Fors',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: context.txt(Colors.grey.shade700),
+                color: context.sub(Colors.grey.shade700),
               ),
             ),
             const SizedBox(height: 8),
@@ -324,7 +324,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -514,7 +514,7 @@ class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12,
-                  color: context.txt(Colors.black54),
+                  color: context.sub(Colors.black54),
                 ),
               ),
             ],

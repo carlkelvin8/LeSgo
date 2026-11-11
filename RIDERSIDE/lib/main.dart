@@ -86,7 +86,14 @@ class _LesgoAppState extends State<LesgoApp> {
           builder: (context, child) {
             return AppLangScope(
               lang: lang,
-              child: Stack(
+              // Tapping outside a text field closes the keyboard (app-wide).
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  final focus = FocusManager.instance.primaryFocus;
+                  if (focus != null && focus.hasFocus) focus.unfocus();
+                },
+                child: Stack(
                 children: [
                   if (child != null) child,
                   const Positioned(
@@ -96,6 +103,7 @@ class _LesgoAppState extends State<LesgoApp> {
                     child: OfflineBanner(),
                   ),
                 ],
+                ),
               ),
             );
           },

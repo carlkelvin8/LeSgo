@@ -52,7 +52,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -77,7 +77,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: context.txt(Colors.grey.shade700),
+                            color: context.sub(Colors.grey.shade700),
                           ),
                         ),
                       ),
@@ -145,7 +145,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: context.txt(Colors.grey.shade600),
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -387,7 +387,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: context.txt(Colors.grey.shade600),
+                        color: context.sub(Colors.grey.shade600),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -478,7 +478,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 10),
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
             textAlign: TextAlign.center,
           ),

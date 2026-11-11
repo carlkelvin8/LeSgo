@@ -199,7 +199,7 @@ class _MerchantLocationPinPickerState extends State<MerchantLocationPinPicker> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
         ],

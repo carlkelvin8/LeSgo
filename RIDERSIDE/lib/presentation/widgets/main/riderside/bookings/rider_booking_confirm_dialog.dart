@@ -41,7 +41,7 @@ Future<bool> showRiderBookingConfirmDialog({
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 14,
-            color: context.txt(Colors.grey.shade700),
+            color: context.sub(Colors.grey.shade700),
           ),
         ),
         actions: [
@@ -53,7 +53,7 @@ Future<bool> showRiderBookingConfirmDialog({
                 fontFamily: 'TT Fors',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: context.txt(Colors.grey.shade600),
+                color: context.sub(Colors.grey.shade600),
               ),
             ),
           ),

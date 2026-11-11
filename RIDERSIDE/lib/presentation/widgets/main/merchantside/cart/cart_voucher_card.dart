@@ -42,7 +42,7 @@ class CartVoucherCard extends StatelessWidget {
               ),
             ),
           ),
-          Icon(Icons.chevron_right, color: context.txt(Color(0xFF757575))),
+          Icon(Icons.chevron_right, color: context.sub(Color(0xFF757575))),
         ],
       ),
     );

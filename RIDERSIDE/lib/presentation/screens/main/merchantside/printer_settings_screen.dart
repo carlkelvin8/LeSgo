@@ -120,7 +120,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 11),
-                            color: context.txt(Colors.grey.shade600),
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         ),
                         if (state.isConnecting)
@@ -244,7 +244,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -294,7 +294,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 11),
-            color: context.txt(Colors.grey.shade600),
+            color: context.sub(Colors.grey.shade600),
           ),
         ),
         value: state.isAutoPrintEnabled,
@@ -414,7 +414,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 11),
-          color: context.txt(Colors.grey.shade600),
+          color: context.sub(Colors.grey.shade600),
         ),
       ),
       trailing: isConnected

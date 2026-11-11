@@ -156,7 +156,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 16),
-                            color: context.txt(Colors.grey.shade600),
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         ),
                       ],
@@ -223,7 +223,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: context.txt(Colors.grey.shade700),
+                        color: context.sub(Colors.grey.shade700),
                       ),
                     ),
                   ],

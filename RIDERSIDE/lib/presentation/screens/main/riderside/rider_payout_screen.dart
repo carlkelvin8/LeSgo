@@ -98,7 +98,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: context.txt(Colors.grey.shade600),
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -206,7 +206,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: context.txt(Colors.grey.shade600),
+                              color: context.sub(Colors.grey.shade600),
                             ),
                           ),
                         ],
@@ -267,7 +267,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -368,7 +368,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -498,13 +498,13 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 12,
-                color: context.txt(Colors.grey.shade600),
+                color: context.sub(Colors.grey.shade600),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Make sure your GCash/Maya is linked in the wallet page before withdrawing.',
-              style: TextStyle(fontSize: 11, color: context.txt(Colors.black54)),
+              style: TextStyle(fontSize: 11, color: context.sub(Colors.black54)),
             ),
             const SizedBox(height: 16),
             TextField(

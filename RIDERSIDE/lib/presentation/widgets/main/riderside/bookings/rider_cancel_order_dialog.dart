@@ -68,7 +68,7 @@ class _CancelReasonDialogState extends State<_CancelReasonDialog> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: context.txt(Colors.grey.shade700),
+              color: context.sub(Colors.grey.shade700),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -95,7 +95,7 @@ class _CancelReasonDialogState extends State<_CancelReasonDialog> {
             AppLocalization.translate('keep_order', lang),
             style: TextStyle(
               fontFamily: 'TT Fors',
-              color: context.txt(Colors.grey.shade600),
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
         ),

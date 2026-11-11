@@ -20,7 +20,7 @@ class ResendOTPButton extends StatelessWidget {
           text: TextSpan(
             style: TextStyle(
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: context.txt(Colors.black54),
+              color: context.sub(Colors.black54),
             ),
             children: [
               const TextSpan(

@@ -147,7 +147,7 @@ class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: context.txt(Colors.grey.shade600),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
                 const SizedBox(height: 8),

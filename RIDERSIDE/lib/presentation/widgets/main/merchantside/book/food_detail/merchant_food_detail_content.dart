@@ -103,7 +103,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.w400,
-                color: context.txt(Colors.grey.shade600),
+                color: context.sub(Colors.grey.shade600),
                 height: 1.5,
               ),
             ),
