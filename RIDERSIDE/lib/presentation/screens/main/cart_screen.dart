@@ -94,11 +94,12 @@ class CartScreen extends ConsumerWidget {
 
                 if (branches.length > 1) ...[
                   const Text(
-                    'Book from branch',
+                    'From',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: Color(0xFF5F2D82),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -157,6 +158,16 @@ class CartScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                 ],
+                const Text(
+                  'To',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    color: Color(0xFF5F2D82),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 // Pin location button
                 InkWell(
                   onTap: () async {

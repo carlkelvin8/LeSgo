@@ -103,7 +103,7 @@ class _SettingsTile extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 14),
           fontWeight: FontWeight.w600,
-          color: isDestructive ? Colors.red.shade700 : Colors.black87,
+          color: isDestructive ? Colors.red.shade700 : context.txt(Colors.black87),
         ),
       ),
       trailing: Icon(Icons.chevron_right, color: context.sub(Colors.grey.shade400)),
