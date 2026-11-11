@@ -949,23 +949,22 @@ class OrderController extends Controller
             if ($order->service) {
                 $serviceCode = strtoupper((string) ($order->service->code ?? 'LESGO'));
                 $distanceKm = $order->actual_distance_m / 1000;
-                $orderValue = (float) (($order->meta ?? [])['order_value'] ?? 0);
-
-                if ($serviceCode === 'LESRIDE') {
-                    $fareBreakdown = $this->fareCalculator->calculate(
-                        $order->service,
-                        $distanceKm
-                    );
-                    $order->actual_fare = $fareBreakdown['total'];
-                } else {
-                    // Preserve the established actual-fare behavior for all
-                    // services outside this LesRide rollout.
-                    $order->actual_fare = $this->calculateLegacyActualFare(
-                        $serviceCode,
-                        $distanceKm,
-                        $orderValue
-                    );
-                }
+                // Same calculator as the quote, so the admin's per-km rates apply
+                // to the final fare too. Item value comes from the stored items,
+                // never from client-supplied metadata.
+                $orderValue = in_array($serviceCode, ['LESBUY', 'LESEAT'], true)
+                    ? (float) $order->lesbuyItems()
+                        ->selectRaw('COALESCE(SUM(COALESCE(actual_price, estimated_price, 0) * quantity), 0) as aggregate')
+                        ->value('aggregate')
+                    : 0.0;
+                $fareBreakdown = $this->fareCalculator->calculate(
+                    $order->service,
+                    $distanceKm,
+                    $orderValue,
+                    (float) ($order->estimated_weight_kg ?? 0)
+                );
+                $fareBreakdown = $this->fareCalculator->applyEstimateSafetyCap($fareBreakdown, $serviceCode);
+                $order->actual_fare = $fareBreakdown['total'];
             }
         }
 

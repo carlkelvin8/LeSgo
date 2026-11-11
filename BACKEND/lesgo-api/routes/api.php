@@ -455,6 +455,16 @@ Route::prefix('v1')->group(function () {
             Route::put('/package-prices', [\App\Http\Controllers\Api\Admin\WalletSettingsController::class, 'updatePackagePrices']);
         });
 
+        // Admin processing of merchant withdrawal requests
+        Route::prefix('admin/merchant-withdrawals')->middleware('role:admin')->group(function () {
+            $c = \App\Http\Controllers\Api\Admin\MerchantWithdrawalAdminController::class;
+            Route::get('/', [$c, 'index']);
+            Route::post('/{withdrawal}/approve', [$c, 'approve']);
+            Route::post('/{withdrawal}/complete', [$c, 'complete']);
+            Route::post('/{withdrawal}/reject', [$c, 'reject']);
+            Route::post('/{withdrawal}/fail', [$c, 'fail']);
+        });
+
         // Admin merchant mission reset (non-production only)
         Route::post('/admin/merchant-missions/reset', [\App\Http\Controllers\Api\Admin\MerchantMissionAdminController::class, 'reset'])
             ->middleware('role:admin');

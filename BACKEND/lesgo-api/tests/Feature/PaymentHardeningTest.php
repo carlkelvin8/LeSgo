@@ -160,6 +160,35 @@ class PaymentHardeningTest extends TestCase
         $this->assertSame('paid', $payment->fresh()->status);
     }
 
+    public function test_cancelling_a_wallet_paid_order_refunds_what_was_actually_paid(): void
+    {
+        $customer = User::factory()->create();
+        $wallet = Wallet::factory()->create(['user_id' => $customer->id, 'balance' => 0]);
+        // The fare changed after the customer paid 200 (e.g. a later recalculation).
+        $order = Order::factory()->create([
+            'customer_id' => $customer->id,
+            'estimated_fare' => 200,
+            'actual_fare' => 320,
+            'discount_amount' => 0,
+            'payment_method' => 'wallet',
+            'payment_status' => 'paid',
+            'status' => 'accepted',
+        ]);
+        Payment::create([
+            'order_id' => $order->id,
+            'customer_id' => $customer->id,
+            'amount' => 200,
+            'currency' => 'PHP',
+            'method' => 'wallet',
+            'status' => 'paid',
+            'provider' => 'lespay',
+        ]);
+
+        OrderCancellationService::process($order);
+
+        $this->assertSame(200.0, (float) $wallet->fresh()->balance);
+    }
+
     public function test_cancelled_order_refund_job_updates_payment_only_after_provider_confirms(): void
     {
         $customer = User::factory()->create();
