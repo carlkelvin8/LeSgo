@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantFoodDetailSubtotalRow extends StatelessWidget {
   final double subtotal;
@@ -23,7 +24,7 @@ class MerchantFoodDetailSubtotalRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Subtotal:',
+            context.tr('Subtotal:'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),

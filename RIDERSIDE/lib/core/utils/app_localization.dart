@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'merchant_translations.dart';
 
 enum AppLanguage { english, filipino }
 
@@ -25,13 +27,44 @@ class AppLanguageNotifier extends StateNotifier<AppLanguage> {
   }
 }
 
+/// Puts the current language in the widget tree so `context.tr(...)` rebuilds
+/// its widget when the language changes (without resetting navigation).
+class AppLangScope extends InheritedWidget {
+  const AppLangScope({super.key, required this.lang, required super.child});
+
+  final AppLanguage lang;
+
+  static AppLanguage of(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<AppLangScope>();
+    return scope?.lang ?? AppLanguage.english;
+  }
+
+  @override
+  bool updateShouldNotify(AppLangScope oldWidget) => oldWidget.lang != lang;
+}
+
+extension AppTranslateX on BuildContext {
+  /// Translates an English UI string (the English text is the key). Falls back
+  /// to the English text when no translation exists.
+  String tr(String english) =>
+      AppLocalization.translateLiteral(english, AppLangScope.of(this));
+}
+
 class AppLocalization {
+  /// English text -> Filipino, for screens that keep their English literals.
+  static String translateLiteral(String english, AppLanguage lang) {
+    if (lang != AppLanguage.filipino) return english;
+    return _literalFilipino[english] ?? english;
+  }
+
   static String translate(String key, AppLanguage lang) {
     if (lang == AppLanguage.filipino && _filipinoTranslations.containsKey(key)) {
       return _filipinoTranslations[key]!;
     }
     return _englishTranslations[key] ?? key;
   }
+
+  static const Map<String, String> _literalFilipino = merchantFilipinoLiterals;
 
   static const Map<String, String> _englishTranslations = {
     // Navigation & Tabs

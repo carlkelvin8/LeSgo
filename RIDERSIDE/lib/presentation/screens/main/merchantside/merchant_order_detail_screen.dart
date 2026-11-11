@@ -21,6 +21,8 @@ import '../../../widgets/main/merchantside/orders/merchant_prep_timer_badge.dart
 import '../../../widgets/main/merchantside/orders/merchant_quick_reply_section.dart';
 import '../../../widgets/main/merchantside/orders/merchant_special_instructions_banner.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 class MerchantOrderDetailScreen extends ConsumerStatefulWidget {
   final OrderDto order;
@@ -108,7 +110,7 @@ class _MerchantOrderDetailScreenState
     final customerLabel = order.user?.name ?? 'this customer';
 
     return PopupMenuButton<String>(
-      tooltip: 'Customer options',
+      tooltip: context.tr('Customer options'),
       icon: const Icon(Icons.more_vert),
       onSelected: (value) {
         if (value == 'report') {
@@ -183,7 +185,7 @@ class _MerchantOrderDetailScreenState
         backgroundColor: context.surf(Colors.white),
         elevation: 0,
         title: Text(
-          'Order Details',
+          context.tr('Order Details'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -310,7 +312,7 @@ class _MerchantOrderDetailScreenState
                       SizedBox(width: ResponsiveUtils.spacing(context, 10)),
                       Expanded(
                         child: Text(
-                          'This order is with the rider. Merchant cancel is no longer available.',
+                          context.tr('This order is with the rider. Merchant cancel is no longer available.'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -348,7 +350,7 @@ class _MerchantOrderDetailScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Order Items',
+                    context.tr('Order Items'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -360,7 +362,7 @@ class _MerchantOrderDetailScreenState
 
                   if (resolvedOrder.orderItems == null ||
                       resolvedOrder.orderItems!.isEmpty)
-                    const Text('No items found')
+                    Text(context.tr('No items found'))
                   else
                     ...resolvedOrder.orderItems!.map(
                       (item) => Padding(
@@ -504,7 +506,7 @@ class _MerchantOrderDetailScreenState
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Items Subtotal',
+                        context.tr('Items Subtotal'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           color: context.txt(Colors.black54),
@@ -524,7 +526,7 @@ class _MerchantOrderDetailScreenState
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Delivery Fee',
+                        context.tr('Delivery Fee'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           color: context.txt(Colors.black54),
@@ -544,7 +546,7 @@ class _MerchantOrderDetailScreenState
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Payment Method',
+                        context.tr('Payment Method'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           color: context.txt(Colors.black54),
@@ -566,7 +568,7 @@ class _MerchantOrderDetailScreenState
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Payment Status',
+                        context.tr('Payment Status'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           color: context.txt(Colors.black54),
@@ -599,7 +601,7 @@ class _MerchantOrderDetailScreenState
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Credited to E-Wallet',
+                          context.tr('Credited to E-Wallet'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             color: context.txt(Colors.black54),
@@ -621,7 +623,7 @@ class _MerchantOrderDetailScreenState
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Total Amount',
+                        context.tr('Total Amount'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -653,7 +655,7 @@ class _MerchantOrderDetailScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Customer Details',
+                    context.tr('Customer Details'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -724,7 +726,7 @@ class _MerchantOrderDetailScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Branch',
+                                context.tr('Branch'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 12,
@@ -764,7 +766,7 @@ class _MerchantOrderDetailScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Delivery Address',
+                              context.tr('Delivery Address'),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 12,
@@ -799,7 +801,7 @@ class _MerchantOrderDetailScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Rider Details',
+                      context.tr('Rider Details'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -819,7 +821,7 @@ class _MerchantOrderDetailScreenState
                       _buildRiderDetails(context, resolvedOrder.driver!)
                     else
                       Text(
-                        'Rider assigned. Loading rider details...',
+                        context.tr('Rider assigned. Loading rider details...'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -1003,7 +1005,7 @@ class _MerchantOrderDetailScreenState
       try {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Updating order...')));
+        ).showSnackBar(SnackBar(content: Text(context.tr('Updating order...'))));
         await action();
         if (context.mounted) {
           ScaffoldMessenger.of(
@@ -1015,7 +1017,7 @@ class _MerchantOrderDetailScreenState
         if (context.mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+          ).showSnackBar(SnackBar(content: Text(ApiErrorMapper.message(e))));
         }
       }
     }
@@ -1081,7 +1083,7 @@ class _MerchantOrderDetailScreenState
     if (MerchantOrderOpsUtils.canAccept(status)) {
       return actionBar([
         actionButton(
-          label: 'Reject',
+          label: context.tr('Reject'),
           color: const Color(0xFFE53935),
           onPressed: () => MerchantOrderActionHandlers.reject(
             context,
@@ -1091,7 +1093,7 @@ class _MerchantOrderDetailScreenState
           ),
         ),
         actionButton(
-          label: 'Accept',
+          label: context.tr('Accept'),
           color: const Color(0xFF5F2D82),
           onPressed: () => MerchantOrderActionHandlers.accept(
             context,
@@ -1119,7 +1121,7 @@ class _MerchantOrderDetailScreenState
       )) {
         actions.add(
           actionButton(
-            label: 'Cancel',
+            label: context.tr('Cancel'),
             color: const Color(0xFFE53935),
             onPressed: () => MerchantOrderActionHandlers.cancelAfterAccept(
               context,
@@ -1137,14 +1139,14 @@ class _MerchantOrderDetailScreenState
       )) {
         actions.add(
           actionButton(
-            label: 'Mark Ready',
+            label: context.tr('Mark Ready'),
             color: const Color(0xFF5F2D82),
             onPressed: () async {
               final confirm = await showMerchantConfirmDialog(
                 context,
-                title: 'Mark Ready for Pickup?',
-                message: 'Let the rider know this order is ready.',
-                confirmLabel: 'Mark Ready',
+                title: context.tr('Mark Ready for Pickup?'),
+                message: context.tr('Let the rider know this order is ready.'),
+                confirmLabel: context.tr('Mark Ready'),
               );
               if (confirm && context.mounted) {
                 await run(

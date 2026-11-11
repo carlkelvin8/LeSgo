@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 /// Hero section for edit item screen with gradient background and pizza icon
 class MerchantItemHeroSection extends StatelessWidget {
@@ -35,7 +36,7 @@ class MerchantItemHeroSection extends StatelessWidget {
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               Text(
-                'CURRENTLY EDITING',
+                context.tr('CURRENTLY EDITING'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 11),

@@ -22,6 +22,8 @@ import '../../../../widgets/main/merchantside/menu/merchant_menu_item_duplicate.
 import '../../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../../../widgets/common/menu_image_widget.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 
 class MerchantMenuView extends ConsumerStatefulWidget {
   const MerchantMenuView({super.key});
@@ -143,7 +145,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Menu',
+                                context.tr('Menu'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 22,
@@ -181,7 +183,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                             if (cat == null || !canEdit)
                               return const SizedBox.shrink();
                             return _PillButton(
-                              label: 'Edit category',
+                              label: context.tr('Edit category'),
                               icon: Icons.edit_outlined,
                               onTap: () => _openEditCategory(cat),
                             );
@@ -223,7 +225,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                               : const Color(0xFF302B36),
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Search menu items...',
+                          hintText: context.tr('Search menu items...'),
                           hintStyle: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 14,
@@ -283,7 +285,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                   1,
                   MerchantMenuSetupCard(
                     isDark: isDark,
-                    actionLabel: 'Add category',
+                    actionLabel: context.tr('Add category'),
                     onAction: canEdit
                         ? () async {
                             HapticFeedback.selectionClick();
@@ -333,7 +335,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                             color: context.acc(Color(0xFF5F2D82)),
                           ),
                           label: Text(
-                            'Retry',
+                            context.tr('Retry'),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               color: context.acc(Color(0xFF5F2D82)),
@@ -353,7 +355,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                             Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: _CompactCategoryChip(
-                                label: 'All',
+                                label: context.tr('All'),
                                 icon: '🍽️',
                                 isSelected:
                                     selectedCategory == null &&
@@ -450,7 +452,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'FOOD MENU',
+                        context.tr('FOOD MENU'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10,
@@ -490,7 +492,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
               ),
               error: (e, _) => SliverFillRemaining(
                 child: _ErrorState(
-                  error: '$e',
+                  error: ApiErrorMapper.message(e),
                   isDark: isDark,
                   onRetry: _refreshMenu,
                 ),
@@ -589,7 +591,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                                 await _refreshMenu();
                               } catch (e) {
                                 if (ctx.mounted) {
-                                  SnackBarUtils.showError(ctx, 'Failed: $e');
+                                  SnackBarUtils.showError(ctx, ApiErrorMapper.message(e));
                                 }
                               }
                             },
@@ -841,19 +843,19 @@ class _GridMenuItemCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _SmallActionBtn(
-                            label: 'Edit',
+                            label: context.tr('Edit'),
                             icon: Icons.edit_outlined,
                             color: const Color(0xFF5F2D82),
                             onTap: onEdit,
                           ),
                           _SmallActionBtn(
-                            label: 'Copy',
+                            label: context.tr('Copy'),
                             icon: Icons.copy_outlined,
                             color: const Color(0xFF16A34A),
                             onTap: onDuplicate,
                           ),
                           _SmallActionBtn(
-                            label: 'Del',
+                            label: context.tr('Del'),
                             icon: Icons.delete_outline,
                             color: Colors.red.shade600,
                             onTap: onDelete,
@@ -1334,7 +1336,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           widget.stockControls,
                           const Spacer(),
                           _ActionBtn(
-                            label: 'Edit',
+                            label: context.tr('Edit'),
                             color: const Color(0xFF5F2D82),
                             onTap: widget.onEdit,
                           ),
@@ -1349,7 +1351,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           ),
                           const SizedBox(width: 2),
                           _ActionBtn(
-                            label: 'Dup',
+                            label: context.tr('Dup'),
                             color: const Color(0xFF16A34A),
                             onTap: widget.onDuplicate,
                           ),
@@ -1364,7 +1366,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           ),
                           const SizedBox(width: 2),
                           _ActionBtn(
-                            label: 'Del',
+                            label: context.tr('Del'),
                             color: Colors.red.shade600,
                             onTap: widget.onDelete,
                           ),
@@ -1559,7 +1561,7 @@ class _ErrorState extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.refresh_rounded, size: 16),
-            label: const Text('Retry', style: TextStyle(fontFamily: 'TT Fors')),
+            label: Text(context.tr('Retry'), style: TextStyle(fontFamily: 'TT Fors')),
           ),
         ],
       ),

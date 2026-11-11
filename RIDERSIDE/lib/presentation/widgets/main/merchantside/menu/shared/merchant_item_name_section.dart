@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantItemNameSection extends StatelessWidget {
   final TextEditingController controller;
@@ -18,7 +19,7 @@ class MerchantItemNameSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Item Name',
+          context.tr('Item Name'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -41,9 +42,9 @@ class MerchantItemNameSection extends StatelessWidget {
             controller: controller,
             onChanged: onChanged,
             maxLines: 1,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
-              hintText: 'Enter item name (e.g., Margherita Pizza)',
+              hintText: context.tr('Enter item name (e.g., Margherita Pizza)'),
             ),
             style: TextStyle(
               fontFamily: 'TT Fors',

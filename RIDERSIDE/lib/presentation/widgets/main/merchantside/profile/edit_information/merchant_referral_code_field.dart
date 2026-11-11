@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantReferralCodeField extends StatelessWidget {
   const MerchantReferralCodeField({
@@ -18,7 +19,7 @@ class MerchantReferralCodeField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'REFERRAL CODE',
+          context.tr('REFERRAL CODE'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 11),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class CartPriceSummary extends StatelessWidget {
   final double subtotal;
@@ -39,7 +40,7 @@ class CartPriceSummary extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Summary',
+                context.tr('Summary'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -50,12 +51,12 @@ class CartPriceSummary extends StatelessWidget {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             _SummaryRow(
-              label: 'Subtotal',
+              label: context.tr('Subtotal'),
               value: 'PHP ${subtotal.toStringAsFixed(2)}',
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
             _SummaryRow(
-              label: 'Delivery',
+              label: context.tr('Delivery'),
               value: deliveryFee == null
                   ? 'Set at checkout'
                   : 'PHP ${deliveryFee!.toStringAsFixed(2)}',
@@ -78,7 +79,7 @@ class CartPriceSummary extends StatelessWidget {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Pin a delivery location at checkout to see the exact total.',
+                  context.tr('Pin a delivery location at checkout to see the exact total.'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 11,

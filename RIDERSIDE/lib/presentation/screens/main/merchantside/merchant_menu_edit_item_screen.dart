@@ -9,6 +9,7 @@ import '../../../widgets/main/merchantside/menu/shared/merchant_item_options_sec
 import '../../../widgets/main/merchantside/menu/shared/merchant_item_inventory_section.dart';
 import '../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantMenuEditItemScreen extends ConsumerStatefulWidget {
   final Map<String, String>? initialItem;
@@ -131,7 +132,7 @@ class _MerchantMenuEditItemScreenState
                         }
                       },
                 child: Text(
-                  'Delete Item',
+                  context.tr('Delete Item'),
                   style: TextStyle(
                     color: Colors.red.shade700,
                     fontWeight: FontWeight.w600,

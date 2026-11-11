@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class CartScreenHeader extends StatelessWidget {
   final VoidCallback onBack;
@@ -31,7 +32,7 @@ class CartScreenHeader extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            'Checkout',
+            context.tr('Checkout'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),

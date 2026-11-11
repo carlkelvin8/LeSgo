@@ -5,6 +5,7 @@ import '../../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
 import '../../../common/menu_image_widget.dart';
 import 'merchant_prep_timer_badge.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class OrderQueuePalette {
   static const purple = Color(0xFF6D36C8);
@@ -353,7 +354,7 @@ class MerchantOrderQueueCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'FOOD TOTAL',
+                          context.tr('FOOD TOTAL'),
                           style: TextStyle(
                             fontSize: 9,
                             letterSpacing: 1.1,
@@ -451,7 +452,7 @@ class MerchantOrderQueueCard extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onOpen,
                     icon: const Icon(Icons.receipt_long_outlined, size: 17),
-                    label: const Text('View order details'),
+                    label: Text(context.tr('View order details')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: dark
                           ? const Color(0xFFD7BEFF)
@@ -465,7 +466,7 @@ class MerchantOrderQueueCard extends StatelessWidget {
                   if (canCancel)
                     TextButton(
                       onPressed: busy ? null : onCancel,
-                      child: const Text('Cancel order'),
+                      child: Text(context.tr('Cancel order')),
                     ),
                 ],
               ],

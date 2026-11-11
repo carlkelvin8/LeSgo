@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../chat/chat_report_sheet.dart';
 import 'merchant_order_dialogs.dart';
+import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 
 /// Report or block the customer of an order (App Store Guideline 1.2).
 /// Merchants have no chat with customers, so this hangs off the order.
@@ -51,11 +53,11 @@ class MerchantCustomerSafetyHandlers {
     if (block) {
       final confirm = await showMerchantConfirmDialog(
         context,
-        title: 'Block this customer?',
+        title: context.tr('Block this customer?'),
         message:
             '$customerLabel will no longer be able to order from your store. '
             'You can unblock them from this screen at any time.',
-        confirmLabel: 'Block',
+        confirmLabel: context.tr('Block'),
       );
       if (!confirm || !context.mounted) return;
     }
@@ -77,7 +79,7 @@ class MerchantCustomerSafetyHandlers {
       await action();
       messenger.showSnackBar(SnackBar(content: Text(successMessage)));
     } catch (e) {
-      final message = e.toString().replaceFirst('Exception: ', '');
+      final message = ApiErrorMapper.message(e);
       messenger.showSnackBar(SnackBar(content: Text(message)));
     }
   }

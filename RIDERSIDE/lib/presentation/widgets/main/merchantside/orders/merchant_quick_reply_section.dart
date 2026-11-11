@@ -7,6 +7,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/main/merchantside/merchant_quick_reply_provider.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// Quick Reply section for the order detail screen.
 /// Shows template chips that send a message via the chat API.
@@ -110,7 +111,7 @@ class _MerchantQuickReplySectionState
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 8)),
               Text(
-                'Quick Reply',
+                context.tr('Quick Reply'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),

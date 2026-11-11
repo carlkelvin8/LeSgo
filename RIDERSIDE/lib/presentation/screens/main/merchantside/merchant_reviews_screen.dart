@@ -10,6 +10,8 @@ import '../../../widgets/main/merchantside/reviews/merchant_rating_distribution_
 import '../../../widgets/main/merchantside/reviews/merchant_rating_stars_display.dart';
 import '../../../widgets/main/merchantside/reviews/merchant_review_card.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 final merchantReviewFilterProvider = StateProvider<int?>((ref) => null);
 
@@ -73,7 +75,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
         elevation: 0,
         iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
-          'Customer Reviews',
+          context.tr('Customer Reviews'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -94,7 +96,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
                 const Icon(Icons.error_outline, size: 48, color: Colors.red),
                 const SizedBox(height: 16),
                 Text(
-                  'Failed to load reviews',
+                  context.tr('Failed to load reviews'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -102,12 +104,12 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text('$error', textAlign: TextAlign.center),
+                Text(ApiErrorMapper.message(error), textAlign: TextAlign.center),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () =>
                       ref.read(merchantReviewsNotifierProvider.notifier).load(),
-                  child: const Text('Retry'),
+                  child: Text(context.tr('Retry')),
                 ),
               ],
             ),

@@ -5,6 +5,7 @@ import '../../../../../../core/utils/screen_auto_refresh.dart';
 import '../../../../../mixins/auto_refresh_mixin.dart';
 import '../../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantItemCategorySection extends ConsumerStatefulWidget {
   final String selectedCategory;
@@ -50,7 +51,7 @@ class _MerchantItemCategorySectionState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Category',
+          context.tr('Category'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -75,7 +76,7 @@ class _MerchantItemCategorySectionState
               onChanged: null,
               underline: const SizedBox(),
               hint: Text(
-                'Loading categories...',
+                context.tr('Loading categories...'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -90,7 +91,7 @@ class _MerchantItemCategorySectionState
               onChanged: null,
               underline: const SizedBox(),
               hint: Text(
-                'Error loading categories',
+                context.tr('Error loading categories'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -107,7 +108,7 @@ class _MerchantItemCategorySectionState
                   onChanged: null,
                   underline: const SizedBox(),
                   hint: Text(
-                    'No categories available',
+                    context.tr('No categories available'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -128,7 +129,7 @@ class _MerchantItemCategorySectionState
                 onChanged: widget.onChanged,
                 underline: const SizedBox(),
                 hint: Text(
-                  'Select a category',
+                  context.tr('Select a category'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),

@@ -1,3 +1,4 @@
+import 'core/utils/app_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/google_maps_platform_config.dart';
@@ -72,6 +73,7 @@ class _LesgoAppState extends State<LesgoApp> {
     return Consumer(
       builder: (context, ref, _) {
         final themeMode = ref.watch(themeModeProvider);
+        final lang = ref.watch(appLanguageProvider);
         return MaterialApp(
           navigatorKey: NotificationNavigationService.navigatorKey,
           title: 'LeSgo Affiliates',
@@ -82,16 +84,19 @@ class _LesgoAppState extends State<LesgoApp> {
           initialRoute: AuthRoutes.startup,
           onGenerateRoute: AppRouter.onGenerateRoute,
           builder: (context, child) {
-            return Stack(
-              children: [
-                if (child != null) child,
-                const Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: OfflineBanner(),
-                ),
-              ],
+            return AppLangScope(
+              lang: lang,
+              child: Stack(
+                children: [
+                  if (child != null) child,
+                  const Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: OfflineBanner(),
+                  ),
+                ],
+              ),
             );
           },
         );

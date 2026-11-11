@@ -7,6 +7,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/merchantside/merchant_edit_profile_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantEditInformationScreen extends ConsumerStatefulWidget {
   const MerchantEditInformationScreen({super.key});
@@ -140,13 +141,13 @@ class _MerchantEditInformationScreenState
               child: Row(
                 children: [
                   IconButton(
-                    tooltip: 'Back',
+                    tooltip: context.tr('Back'),
                     icon: Icon(Icons.arrow_back, color: context.acc(Color(0xFF5F2D82))),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
                     child: Text(
-                      'Edit Information',
+                      context.tr('Edit Information'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontFamily: 'TT Fors',
@@ -188,14 +189,14 @@ class _MerchantEditInformationScreenState
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 26)),
                     MerchantEditInformationField(
-                      label: 'RESTAURANT NAME',
+                      label: context.tr('RESTAURANT NAME'),
                       controller: _restaurantController,
                       onChanged: (value) => ref
                           .read(merchantEditProfileProvider.notifier)
                           .updateRestaurantName(value),
                     ),
                     MerchantEditInformationField(
-                      label: 'CONTACT NUMBER',
+                      label: context.tr('CONTACT NUMBER'),
                       controller: _contactController,
                       keyboardType: TextInputType.phone,
                       onChanged: (value) => ref
@@ -203,7 +204,7 @@ class _MerchantEditInformationScreenState
                           .updateContactNumber(value),
                     ),
                     MerchantEditInformationField(
-                      label: 'EMAIL',
+                      label: context.tr('EMAIL'),
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (value) => ref
@@ -228,7 +229,7 @@ class _MerchantEditInformationScreenState
                         bottom: ResponsiveUtils.spacing(context, 8),
                       ),
                       child: Text(
-                        'Share this code to earn partner rewards.',
+                        context.tr('Share this code to earn partner rewards.'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 10),
@@ -279,7 +280,7 @@ class _MerchantEditInformationScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ESTIMATED PREPARATION TIME',
+            context.tr('ESTIMATED PREPARATION TIME'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -339,7 +340,7 @@ class _MerchantEditInformationScreenState
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
           Text(
-            'How long it typically takes to prepare an order (5-180 min)',
+            context.tr('How long it typically takes to prepare an order (5-180 min)'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 10),
@@ -378,7 +379,7 @@ class _MerchantEditInformationScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'OPERATING HOURS',
+                    context.tr('OPERATING HOURS'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -506,7 +507,7 @@ class _MerchantOperatingHoursScreenState
       backgroundColor: context.bg(Colors.white),
       appBar: AppBar(
         title: Text(
-          'Operating Hours',
+          context.tr('Operating Hours'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w600,
@@ -523,7 +524,7 @@ class _MerchantOperatingHoursScreenState
           TextButton(
             onPressed: _save,
             child: Text(
-              'Save',
+              context.tr('Save'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontWeight: FontWeight.w700,
@@ -576,7 +577,7 @@ class _MerchantOperatingHoursScreenState
                               border: Border.all(color: Colors.red.shade200),
                             ),
                             child: Text(
-                              'Closed',
+                              context.tr('Closed'),
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontFamily: 'TT Fors',

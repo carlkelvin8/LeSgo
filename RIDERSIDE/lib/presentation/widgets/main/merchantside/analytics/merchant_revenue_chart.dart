@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_analytics_provider.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// A simple bar chart widget displaying revenue trend data.
 /// Uses Column of colored Container bars — no external chart package needed.
@@ -33,7 +34,7 @@ class MerchantRevenueChart extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Revenue Trend',
+                  context.tr('Revenue Trend'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),

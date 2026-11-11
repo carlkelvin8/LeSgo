@@ -7,6 +7,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/merchant/partner_staff_dto.dart';
 import '../../../provider/main/merchantside/merchant_staff_provider.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantStaffScreen extends ConsumerStatefulWidget {
   const MerchantStaffScreen({super.key});
@@ -68,17 +69,17 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Staff', style: TextStyle(fontFamily: 'TT Fors')),
+        title: Text(context.tr('Remove Staff'), style: TextStyle(fontFamily: 'TT Fors')),
         content: Text('Remove $name from your staff? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Remove'),
+            child: Text(context.tr('Remove')),
           ),
         ],
       ),
@@ -101,14 +102,14 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Change Role', style: TextStyle(fontFamily: 'TT Fors')),
+          title: Text(context.tr('Change Role'), style: TextStyle(fontFamily: 'TT Fors')),
           content: DropdownButtonFormField<String>(
             initialValue: newRole,
             decoration: const InputDecoration(border: OutlineInputBorder()),
-            items: const [
-              DropdownMenuItem(value: 'admin', child: Text('Admin')),
-              DropdownMenuItem(value: 'cook', child: Text('Cook')),
-              DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
+            items: [
+              DropdownMenuItem(value: 'admin', child: Text(context.tr('Admin'))),
+              DropdownMenuItem(value: 'cook', child: Text(context.tr('Cook'))),
+              DropdownMenuItem(value: 'cashier', child: Text(context.tr('Cashier'))),
             ],
             onChanged: (v) {
               if (v != null) setDialogState(() => newRole = v);
@@ -117,14 +118,14 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(context.tr('Cancel')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, newRole),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
               ),
-              child: const Text('Save'),
+              child: Text(context.tr('Save')),
             ),
           ],
         ),
@@ -154,7 +155,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
-          'Staff Accounts',
+          context.tr('Staff Accounts'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -198,7 +199,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.person_add_alt_1),
-        label: const Text('Invite Staff'),
+        label: Text(context.tr('Invite Staff')),
         onPressed: _showInviteDialog,
       ),
     );
@@ -215,7 +216,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'Failed to load staff',
+              context.tr('Failed to load staff'),
               style: TextStyle(fontFamily: 'TT Fors', fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -227,7 +228,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                 backgroundColor: const Color(0xFF5F2D82),
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Retry'),
+              child: Text(context.tr('Retry')),
             ),
           ],
         ),
@@ -245,7 +246,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
             Icon(Icons.group_outlined, size: 64, color: context.sub(Colors.grey.shade400)),
             const SizedBox(height: 16),
             Text(
-              'No staff yet',
+              context.tr('No staff yet'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 18,
@@ -255,7 +256,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Invite your team members to help manage orders',
+              context.tr('Invite your team members to help manage orders'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'TT Fors',
@@ -365,13 +366,13 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                 }
               },
               itemBuilder: (_) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'role',
                   child: Row(
                     children: [
                       Icon(Icons.swap_horiz, size: 18),
                       SizedBox(width: 8),
-                      Text('Change Role'),
+                      Text(context.tr('Change Role')),
                     ],
                   ),
                 ),
@@ -389,13 +390,13 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'remove',
                   child: Row(
                     children: [
                       Icon(Icons.delete_outline, size: 18, color: Colors.red),
                       SizedBox(width: 8),
-                      Text('Remove', style: TextStyle(color: Colors.red)),
+                      Text(context.tr('Remove'), style: TextStyle(color: Colors.red)),
                     ],
                   ),
                 ),
@@ -455,8 +456,8 @@ class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
         // This ensures we stay on Staff Accounts screen
       },
       child: AlertDialog(
-        title: const Text(
-          'Invite Staff',
+        title: Text(
+          context.tr('Invite Staff'),
           style: TextStyle(fontFamily: 'TT Fors'),
         ),
         content: SingleChildScrollView(
@@ -465,8 +466,8 @@ class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
             children: [
               TextField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Full Name',
+                decoration: InputDecoration(
+                  labelText: context.tr('Full Name'),
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -474,8 +475,8 @@ class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
               TextField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
+                decoration: InputDecoration(
+                  labelText: context.tr('Email'),
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -483,22 +484,22 @@ class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
               TextField(
                 controller: _passCtrl,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Temporary Password',
+                decoration: InputDecoration(
+                  labelText: context.tr('Temporary Password'),
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: _selectedRole,
-                decoration: const InputDecoration(
-                  labelText: 'Role',
+                decoration: InputDecoration(
+                  labelText: context.tr('Role'),
                   border: OutlineInputBorder(),
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  DropdownMenuItem(value: 'cook', child: Text('Cook')),
-                  DropdownMenuItem(value: 'cashier', child: Text('Cashier')),
+                items: [
+                  DropdownMenuItem(value: 'admin', child: Text(context.tr('Admin'))),
+                  DropdownMenuItem(value: 'cook', child: Text(context.tr('Cook'))),
+                  DropdownMenuItem(value: 'cashier', child: Text(context.tr('Cashier'))),
                 ],
                 onChanged: (v) {
                   if (v != null) {
@@ -522,7 +523,7 @@ class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context), // Close dialog without result
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -537,7 +538,7 @@ class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF5F2D82),
             ),
-            child: const Text('Invite'),
+            child: Text(context.tr('Invite')),
           ),
         ],
       ),

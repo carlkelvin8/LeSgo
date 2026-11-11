@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantItemDescriptionSection extends StatelessWidget {
   final TextEditingController controller;
@@ -18,7 +19,7 @@ class MerchantItemDescriptionSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Description',
+          context.tr('Description'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -42,9 +43,9 @@ class MerchantItemDescriptionSection extends StatelessWidget {
             onChanged: onChanged,
             maxLines: 4,
             minLines: 3,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               border: InputBorder.none,
-              hintText: 'Describe your item (e.g., ingredients, preparation style)',
+              hintText: context.tr('Describe your item (e.g., ingredients, preparation style)'),
             ),
             style: TextStyle(
               fontFamily: 'TT Fors',

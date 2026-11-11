@@ -5,6 +5,7 @@ import '../../../../../data/data_source/dto/merchant/review_dto.dart';
 import '../../../common/menu_image_widget.dart';
 import 'merchant_rating_stars_display.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantReviewCard extends StatelessWidget {
   final ReviewDto review;
@@ -84,7 +85,7 @@ class MerchantReviewCard extends StatelessWidget {
           ] else ...[
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
             Text(
-              'No written feedback',
+              context.tr('No written feedback'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),

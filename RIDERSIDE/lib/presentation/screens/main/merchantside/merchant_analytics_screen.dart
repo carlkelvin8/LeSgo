@@ -11,6 +11,8 @@ import '../../../provider/main/merchantside/merchant_analytics_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../widgets/main/merchantside/reviews/merchant_rating_stars_display.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 class MerchantAnalyticsScreen extends ConsumerStatefulWidget {
   const MerchantAnalyticsScreen({super.key});
@@ -43,7 +45,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
         elevation: 0,
         iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
-          'Restaurant Analytics',
+          context.tr('Restaurant Analytics'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -78,7 +80,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               _sectionCard(
                 context,
                 horizontalPadding,
-                title: 'Order Volume',
+                title: context.tr('Order Volume'),
                 subtitle: _trendSubtitle(period),
                 child: _ordersTrendChart(context, summary.trend),
               ),
@@ -90,7 +92,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                     Expanded(
                       child: _miniMetric(
                         context,
-                        label: 'Completed',
+                        label: context.tr('Completed'),
                         value: '${summary.completedOrders}',
                         icon: Icons.check_circle_outline,
                         color: const Color(0xFF2E7D32),
@@ -100,7 +102,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                     Expanded(
                       child: _miniMetric(
                         context,
-                        label: 'Cancelled',
+                        label: context.tr('Cancelled'),
                         value: '${summary.cancelledOrders}',
                         icon: Icons.cancel_outlined,
                         color: const Color(0xFFC62828),
@@ -110,7 +112,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                     Expanded(
                       child: _miniMetric(
                         context,
-                        label: 'In Progress',
+                        label: context.tr('In Progress'),
                         value: '${summary.activeOrders}',
                         icon: Icons.hourglass_top_outlined,
                         color: const Color(0xFF1565C0),
@@ -123,8 +125,8 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               _sectionCard(
                 context,
                 horizontalPadding,
-                title: 'Peak Hours',
-                subtitle: 'Busiest times for completed orders',
+                title: context.tr('Peak Hours'),
+                subtitle: context.tr('Busiest times for completed orders'),
                 child: summary.peakHours.isEmpty
                     ? _emptyHint(context, 'No completed orders in this period')
                     : Column(
@@ -185,8 +187,8 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               _sectionCard(
                 context,
                 horizontalPadding,
-                title: 'Top Menu Items',
-                subtitle: 'By quantity sold (completed orders)',
+                title: context.tr('Top Menu Items'),
+                subtitle: context.tr('By quantity sold (completed orders)'),
                 child: summary.topItems.isEmpty
                     ? _emptyHint(context, 'No item sales in this period')
                     : Column(
@@ -257,8 +259,8 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               _sectionCard(
                 context,
                 horizontalPadding,
-                title: 'Customer Satisfaction',
-                subtitle: 'Based on customer reviews',
+                title: context.tr('Customer Satisfaction'),
+                subtitle: context.tr('Based on customer reviews'),
                 child: Row(
                   children: [
                     MerchantRatingStarsDisplay(
@@ -304,7 +306,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              'Failed to load analytics',
+              context.tr('Failed to load analytics'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -313,7 +315,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
             ),
             const SizedBox(height: 8),
             Text(
-              error.toString(),
+              ApiErrorMapper.message(error),
               textAlign: TextAlign.center,
               style: TextStyle(color: context.txt(Colors.grey.shade600)),
             ),
@@ -324,7 +326,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
                 backgroundColor: const Color(0xFF5F2D82),
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Retry'),
+              child: Text(context.tr('Retry')),
             ),
           ],
         ),
@@ -361,7 +363,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Revenue',
+              context.tr('Revenue'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -707,8 +709,8 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
     return _sectionCard(
       context,
       horizontalPadding,
-      title: 'Customer Analytics',
-      subtitle: 'New vs returning, top spenders, and lifetime value',
+      title: context.tr('Customer Analytics'),
+      subtitle: context.tr('New vs returning, top spenders, and lifetime value'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -716,7 +718,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           if (summary.topCustomers.isNotEmpty) ...[
             Text(
-              'Top Customers',
+              context.tr('Top Customers'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -789,7 +791,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               Expanded(
                 child: _miniMetric(
                   context,
-                  label: 'Avg Order Value',
+                  label: context.tr('Avg Order Value'),
                   value: formatMerchantPeso(summary.averageOrderValue),
                   icon: Icons.shopping_cart_outlined,
                   color: const Color(0xFF5F2D82),
@@ -799,7 +801,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               Expanded(
                 child: _miniMetric(
                   context,
-                  label: 'Avg Lifetime Value',
+                  label: context.tr('Avg Lifetime Value'),
                   value: formatMerchantPeso(summary.avgCustomerLifetimeValue),
                   icon: Icons.trending_up,
                   color: const Color(0xFF2E7D32),
@@ -825,7 +827,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'New vs Returning',
+          context.tr('New vs Returning'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -934,14 +936,14 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
     return _sectionCard(
       context,
       horizontalPadding,
-      title: 'Product Analytics',
-      subtitle: 'Best & least sellers, category performance',
+      title: context.tr('Product Analytics'),
+      subtitle: context.tr('Best & least sellers, category performance'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (summary.leastSoldItems.isNotEmpty) ...[
             Text(
-              'Least-Selling Items',
+              context.tr('Least-Selling Items'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -1000,7 +1002,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
           ],
           if (summary.categoryPerformance.isNotEmpty) ...[
             Text(
-              'Category Performance',
+              context.tr('Category Performance'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),

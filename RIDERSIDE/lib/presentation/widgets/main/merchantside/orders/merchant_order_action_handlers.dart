@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/merchant_order_ops_utils.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
 import 'merchant_order_dialogs.dart';
+import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 
 class MerchantOrderActionHandlers {
   MerchantOrderActionHandlers._();
@@ -15,9 +17,9 @@ class MerchantOrderActionHandlers {
   }) async {
     final confirm = await showMerchantConfirmDialog(
       context,
-      title: 'Accept Order?',
-      message: 'This will accept the order and start the 15-minute prep timer.',
-      confirmLabel: 'Accept',
+      title: context.tr('Accept Order?'),
+      message: context.tr('This will accept the order and start the 15-minute prep timer.'),
+      confirmLabel: context.tr('Accept'),
     );
     if (!confirm || !context.mounted) return;
 
@@ -39,7 +41,7 @@ class MerchantOrderActionHandlers {
 
     final reason = await showMerchantCancelReasonDialog(
       context,
-      title: 'Reject Order',
+      title: context.tr('Reject Order'),
     );
     if (reason == null || !context.mounted) return;
 
@@ -61,7 +63,7 @@ class MerchantOrderActionHandlers {
 
     final reason = await showMerchantCancelReasonDialog(
       context,
-      title: 'Cancel Order',
+      title: context.tr('Cancel Order'),
     );
     if (reason == null || !context.mounted) return;
 
@@ -98,7 +100,7 @@ class MerchantOrderActionHandlers {
   }) async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating order...')),
+        SnackBar(content: Text(context.tr('Updating order...'))),
       );
       await action();
       if (!context.mounted) return;
@@ -109,7 +111,7 @@ class MerchantOrderActionHandlers {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Action failed: $e')),
+        SnackBar(content: Text(ApiErrorMapper.message(e))),
       );
     }
   }

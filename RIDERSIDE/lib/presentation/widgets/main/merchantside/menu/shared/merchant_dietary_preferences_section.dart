@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantDietaryPreferencesSection extends StatefulWidget {
   final Set<String> selectedTags;
@@ -47,7 +48,7 @@ class _MerchantDietaryPreferencesSectionState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Dietary Preferences',
+          context.tr('Dietary Preferences'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -64,7 +65,7 @@ class _MerchantDietaryPreferencesSectionState
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _addCustomTag(),
                 decoration: InputDecoration(
-                  hintText: 'Add custom preference',
+                  hintText: context.tr('Add custom preference'),
                   hintStyle: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -109,7 +110,7 @@ class _MerchantDietaryPreferencesSectionState
                 ),
               ),
               child: Text(
-                'Add',
+                context.tr('Add'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),

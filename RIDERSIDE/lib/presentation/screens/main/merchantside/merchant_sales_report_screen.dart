@@ -9,6 +9,8 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 enum ReportPeriod { daily, weekly, monthly }
 
@@ -143,7 +145,7 @@ class _MerchantSalesReportScreenState
         elevation: 0,
         iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
-          'Sales Reports',
+          context.tr('Sales Reports'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -171,13 +173,13 @@ class _MerchantSalesReportScreenState
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Failed to load orders: $err'),
+                      Text(ApiErrorMapper.message(err, fallbackEn: 'Could not load orders.', fallbackTl: 'Hindi ma-load ang mga order.')),
                       const SizedBox(height: 12),
                       TextButton.icon(
                         onPressed: () =>
                             ref.invalidate(merchantOrdersProvider),
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
+                        label: Text(context.tr('Retry')),
                       ),
                     ],
                   ),
@@ -283,7 +285,7 @@ class _MerchantSalesReportScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Report Period',
+                      context.tr('Report Period'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -344,7 +346,7 @@ class _MerchantSalesReportScreenState
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                 Text(
-                  'Report Summary',
+                  context.tr('Report Summary'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 15),
@@ -429,7 +431,7 @@ class _MerchantSalesReportScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Download Report',
+            context.tr('Download Report'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 15),
@@ -459,7 +461,7 @@ class _MerchantSalesReportScreenState
                     size: ResponsiveUtils.fontSize(context, 18),
                   ),
                   label: Text(
-                    'CSV',
+                    context.tr('CSV'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -489,7 +491,7 @@ class _MerchantSalesReportScreenState
                     size: ResponsiveUtils.fontSize(context, 18),
                   ),
                   label: Text(
-                    'PDF',
+                    context.tr('PDF'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -506,7 +508,7 @@ class _MerchantSalesReportScreenState
                 top: ResponsiveUtils.spacing(context, 12),
               ),
               child: Text(
-                'No orders found for this period. Try a different range.',
+                context.tr('No orders found for this period. Try a different range.'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 11),

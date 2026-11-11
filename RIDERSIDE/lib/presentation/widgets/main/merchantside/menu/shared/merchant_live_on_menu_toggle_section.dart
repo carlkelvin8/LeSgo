@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantLiveOnMenuToggleSection extends StatelessWidget {
   final bool isLive;
@@ -28,7 +29,7 @@ class MerchantLiveOnMenuToggleSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Live on Menu',
+                  context.tr('Live on Menu'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -38,7 +39,7 @@ class MerchantLiveOnMenuToggleSection extends StatelessWidget {
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                 Text(
-                  'Make this item visible to customers',
+                  context.tr('Make this item visible to customers'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),

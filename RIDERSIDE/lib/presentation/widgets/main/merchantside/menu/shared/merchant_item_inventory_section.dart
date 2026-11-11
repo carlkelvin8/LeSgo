@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import 'merchant_live_on_menu_toggle_section.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantItemInventorySection extends StatelessWidget {
   final bool trackStock;
@@ -31,7 +32,7 @@ class MerchantItemInventorySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Inventory',
+          context.tr('Inventory'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -54,7 +55,7 @@ class MerchantItemInventorySection extends StatelessWidget {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(
-                  'Track stock',
+                  context.tr('Track stock'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -62,7 +63,7 @@ class MerchantItemInventorySection extends StatelessWidget {
                   ),
                 ),
                 subtitle: Text(
-                  'Monitor quantity and auto-hide when sold out',
+                  context.tr('Monitor quantity and auto-hide when sold out'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -80,7 +81,7 @@ class MerchantItemInventorySection extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Stock quantity',
+                        context.tr('Stock quantity'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -125,7 +126,7 @@ class MerchantItemInventorySection extends StatelessWidget {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
-                    'Auto-hide when sold out',
+                    context.tr('Auto-hide when sold out'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -133,7 +134,7 @@ class MerchantItemInventorySection extends StatelessWidget {
                     ),
                   ),
                   subtitle: Text(
-                    'Sets item unavailable for customers at 0 stock',
+                    context.tr('Sets item unavailable for customers at 0 stock'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),

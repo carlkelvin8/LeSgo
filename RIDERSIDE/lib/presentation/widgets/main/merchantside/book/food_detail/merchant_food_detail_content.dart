@@ -3,6 +3,7 @@ import '../../../../../provider/main/merchantside/merchant_food_detail_provider.
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../common/menu_image_widget.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantFoodDetailContent extends StatelessWidget {
   final String foodName;
@@ -108,7 +109,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
             Text(
-              'Size:',
+              context.tr('Size:'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -156,7 +157,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
             ),
             if (flavors.isNotEmpty) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-              _OptionTitle(label: 'Flavor:'),
+              _OptionTitle(label: context.tr('Flavor:')),
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               _OptionChips(
                 choices: flavors,
@@ -166,7 +167,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
             ],
             if (addons.isNotEmpty) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-              _OptionTitle(label: 'Add-ons:'),
+              _OptionTitle(label: context.tr('Add-ons:')),
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               _OptionChips(
                 choices: addons,

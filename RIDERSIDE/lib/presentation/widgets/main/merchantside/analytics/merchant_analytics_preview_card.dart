@@ -7,6 +7,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/merchant_format_utils.dart';
 import '../../../../provider/main/merchantside/merchant_analytics_provider.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantAnalyticsPreviewCard extends ConsumerWidget {
   const MerchantAnalyticsPreviewCard({super.key});
@@ -70,7 +71,7 @@ class MerchantAnalyticsPreviewCard extends ConsumerWidget {
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Text(
-                'Business Overview',
+                context.tr('Business Overview'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),

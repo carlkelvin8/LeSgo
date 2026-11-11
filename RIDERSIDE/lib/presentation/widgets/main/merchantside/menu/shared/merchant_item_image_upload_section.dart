@@ -2,6 +2,7 @@
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../common/menu_image_widget.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantItemImageUploadSection extends StatelessWidget {
   final VoidCallback onTap;
@@ -62,7 +63,7 @@ class MerchantItemImageUploadSection extends StatelessWidget {
                     _placeholder(context),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                     Text(
-                      'Tap to upload item photo',
+                      context.tr('Tap to upload item photo'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -72,7 +73,7 @@ class MerchantItemImageUploadSection extends StatelessWidget {
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                     Text(
-                      'JPG, PNG (Max 5MB)',
+                      context.tr('JPG, PNG (Max 5MB)'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 11),

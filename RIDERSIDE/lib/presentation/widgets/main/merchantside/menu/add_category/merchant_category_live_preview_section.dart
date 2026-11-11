@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../common/menu_image_widget.dart';
 import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantCategoryLivePreviewSection extends StatelessWidget {
   final String categoryName;
@@ -33,7 +34,7 @@ class MerchantCategoryLivePreviewSection extends StatelessWidget {
           Row(
             children: [
               Text(
-                'LIVE PREVIEW',
+                context.tr('LIVE PREVIEW'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 10,
@@ -64,8 +65,8 @@ class MerchantCategoryLivePreviewSection extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
-                    'Live',
+                  Text(
+                    context.tr('Live'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 9.5,
@@ -204,7 +205,7 @@ class MerchantCategoryLivePreviewSection extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          'View',
+                          context.tr('View'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 11,

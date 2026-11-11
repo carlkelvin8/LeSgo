@@ -8,6 +8,7 @@ import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../provider/main/merchantside/merchant_reviews_provider.dart';
 import 'merchant_rating_stars_display.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantReviewsPreviewCard extends ConsumerWidget {
   const MerchantReviewsPreviewCard({super.key});
@@ -64,7 +65,7 @@ class MerchantReviewsPreviewCard extends ConsumerWidget {
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Text(
-                'Customer Reviews',
+                context.tr('Customer Reviews'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),

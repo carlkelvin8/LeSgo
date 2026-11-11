@@ -5,6 +5,7 @@ import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantProfileInfoSection extends ConsumerWidget {
   const MerchantProfileInfoSection({super.key});
@@ -299,7 +300,7 @@ class _OperatingHoursSummary extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Operating Hours:',
+            context.tr('Operating Hours:'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),

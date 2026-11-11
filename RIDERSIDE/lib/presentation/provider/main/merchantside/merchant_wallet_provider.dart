@@ -6,6 +6,7 @@ import '../../../../core/utils/merchant_transfer_commission_utils.dart';
 import '../../../../data/data_source/merchant_withdrawal_datasource.dart';
 import '../../../../data/data_source/dto/merchant/withdrawal_request_dto.dart';
 import '../../auth/rider_auth_provider.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 class MerchantTopUpCheckout {
   final String invoiceId;
@@ -244,7 +245,7 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
       if (!mounted) return null;
       state = state.copyWith(
         isWithdrawing: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
+        error: ApiErrorMapper.message(e),
       );
       return null;
     }

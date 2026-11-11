@@ -25,6 +25,7 @@ import 'merchant_menu_add_item_screen.dart';
 import 'merchant_menu_add_category_screen.dart';
 import '../cart_screen.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantMainScreen extends ConsumerStatefulWidget {
   const MerchantMainScreen({super.key});
@@ -103,9 +104,9 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showConfirmDialog(
       context: context,
-      title: 'Logout',
-      message: 'Are you sure you want to logout?',
-      confirmLabel: 'Logout',
+      title: context.tr('Logout'),
+      message: context.tr('Are you sure you want to logout?'),
+      confirmLabel: context.tr('Logout'),
       onConfirm: () async {
         await ref.read(riderAuthProvider.notifier).logout(ref);
       },

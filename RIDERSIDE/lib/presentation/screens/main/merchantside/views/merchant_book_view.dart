@@ -12,6 +12,7 @@ import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../food_detail_screen.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// Choices are stored as `{label, price}`; empty means the item has none.
 List<MerchantFoodSizeOption> _bookChoices(List<MenuOptionChoice> choices) =>
@@ -94,7 +95,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Menu',
+                  context.tr('Menu'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 26,
@@ -104,7 +105,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   ),
                 ),
                 Text(
-                  'Browse your menu categories',
+                  context.tr('Browse your menu categories'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 12.5,
@@ -172,7 +173,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                       TextButton(
                         onPressed: () => ref.invalidate(merchantMenuProvider),
                         child: Text(
-                          'Retry',
+                          context.tr('Retry'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             color: context.acc(Color(0xFF5F2D82)),

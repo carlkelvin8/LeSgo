@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_mission_provider.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantMissionCard extends StatefulWidget {
   final MerchantMission mission;
@@ -79,8 +80,8 @@ class _MerchantMissionCardState extends State<MerchantMissionCard> {
                                 color: Colors.green,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Text(
-                                'CLAIM',
+                              child: Text(
+                                context.tr('CLAIM'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   color: Colors.white,
@@ -100,8 +101,8 @@ class _MerchantMissionCardState extends State<MerchantMissionCard> {
                               color: Colors.green.shade800,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text(
-                              'CLAIMED',
+                            child: Text(
+                              context.tr('CLAIMED'),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 color: Colors.white,

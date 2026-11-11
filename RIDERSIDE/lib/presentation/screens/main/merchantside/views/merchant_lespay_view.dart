@@ -10,6 +10,7 @@ import '../../../../provider/main/merchantside/merchant_wallet_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../merchant_withdrawal_history_screen.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 
 class MerchantLespayView extends ConsumerStatefulWidget {
@@ -103,7 +104,7 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'LesPay',
+                                context.tr('LesPay'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 28,
@@ -115,7 +116,7 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                                 ),
                               ),
                               Text(
-                                'Merchant wallet',
+                                context.tr('Merchant wallet'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 13,
@@ -192,7 +193,7 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                                 // Staff top-ups are refused: they would not reach the store wallet.
                                 if (ref.read(riderAuthProvider).user?.isStaff == true) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Only the store owner can top up LesPay.')),
+                                    SnackBar(content: Text(context.tr('Only the store owner can top up LesPay.'))),
                                   );
                                   return;
                                 }
@@ -212,7 +213,7 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                         child: _reveal(
                           3,
                           Text(
-                            'TRANSACTION HISTORY',
+                            context.tr('TRANSACTION HISTORY'),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 10,
@@ -410,8 +411,8 @@ class _BalanceCardState extends State<_BalanceCard>
                               ),
                             ),
                             const SizedBox(width: 6),
-                            const Text(
-                              'Merchant Wallet',
+                            Text(
+                              context.tr('Merchant Wallet'),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 10.5,
@@ -501,7 +502,7 @@ class _BalanceCardState extends State<_BalanceCard>
                                 Row(
                                   children: [
                                     _CardStat(
-                                      label: 'Transactions',
+                                      label: context.tr('Transactions'),
                                       value: '${widget.wallet.transactions.length}',
                                       icon: Icons.receipt_outlined,
                                     ),
@@ -512,7 +513,7 @@ class _BalanceCardState extends State<_BalanceCard>
                                       color: Colors.white.withValues(alpha: .15),
                                     ),
                                     _CardStat(
-                                      label: 'Last activity',
+                                      label: context.tr('Last activity'),
                                       value: widget.wallet.transactions.isNotEmpty
                                           ? _shortDate(widget.wallet.transactions.first['created_at']?.toString())
                                           : 'None yet',
@@ -544,7 +545,7 @@ class _BalanceCardState extends State<_BalanceCard>
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'View Withdrawal History',
+                                        context.tr('View Withdrawal History'),
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: 11,
@@ -737,7 +738,7 @@ class _QuickActions extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ACTIONS',
+          context.tr('ACTIONS'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 10,
@@ -773,8 +774,8 @@ class _QuickActions extends StatelessWidget {
               _ActionRow(
                 icon: Icons.add_rounded,
                 iconBg: const Color(0xFF5F2D82),
-                title: 'Top up',
-                subtitle: 'Add funds via QR PH',
+                title: context.tr('Top up'),
+                subtitle: context.tr('Add funds via QR PH'),
                 isDark: isDark,
                 isFirst: true,
                 onTap: onTopUp,
@@ -789,8 +790,8 @@ class _QuickActions extends StatelessWidget {
               _ActionRow(
                 icon: Icons.account_balance_wallet_rounded,
                 iconBg: const Color(0xFF2ECC71),
-                title: 'Withdraw',
-                subtitle: 'Request earnings withdrawal',
+                title: context.tr('Withdraw'),
+                subtitle: context.tr('Request earnings withdrawal'),
                 isDark: isDark,
                 isLast: true,
                 onTap: onWithdraw,
@@ -1054,7 +1055,7 @@ class _EmptyTransactions extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'No transactions yet',
+            context.tr('No transactions yet'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 15,
@@ -1064,7 +1065,7 @@ class _EmptyTransactions extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            'Your wallet activity will appear here.',
+            context.tr('Your wallet activity will appear here.'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 12,
@@ -1200,7 +1201,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Top up wallet',
+                    context.tr('Top up wallet'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 18,
@@ -1210,7 +1211,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                     ),
                   ),
                   Text(
-                    '3% processing fee applies',
+                    context.tr('3% processing fee applies'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 11.5,
@@ -1238,7 +1239,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
               color: isDark ? Colors.white : const Color(0xFF1A0A2E),
             ),
             decoration: InputDecoration(
-              labelText: 'Amount to add',
+              labelText: context.tr('Amount to add'),
               prefixText: '₱ ',
               labelStyle: TextStyle(
                 fontFamily: 'TT Fors',
@@ -1336,16 +1337,16 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
               child: Column(
                 children: [
                   _SummaryRow(
-                      label: 'To wallet', value: '₱${_amount.toStringAsFixed(2)}'),
+                      label: context.tr('To wallet'), value: '₱${_amount.toStringAsFixed(2)}'),
                   const SizedBox(height: 4),
                   _SummaryRow(
-                      label: 'Fee (3%)', value: '₱${_fee.toStringAsFixed(2)}'),
+                      label: context.tr('Fee (3%)'), value: '₱${_fee.toStringAsFixed(2)}'),
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: 6),
                     child: Divider(height: 1, color: context.brd(Color(0xFFE8E0F0))),
                   ),
                   _SummaryRow(
-                    label: 'Total to pay',
+                    label: context.tr('Total to pay'),
                     value: '₱${_total.toStringAsFixed(2)}',
                     bold: true,
                   ),
@@ -1407,14 +1408,14 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                         height: 20,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.qr_code_rounded,
                               color: Colors.white, size: 18),
                           SizedBox(width: 8),
                           Text(
-                            'Continue to payment',
+                            context.tr('Continue to payment'),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 14.5,
@@ -1460,7 +1461,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
     if (amount <= 0) {
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: const Text('Enter a valid amount.'),
+          content: Text(context.tr('Enter a valid amount.')),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
         ),
@@ -1554,7 +1555,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Pay Rider',
+                    context.tr('Pay Rider'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 18,
@@ -1564,7 +1565,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
                     ),
                   ),
                   Text(
-                    'Transfer from your LesPay wallet',
+                    context.tr('Transfer from your LesPay wallet'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 11.5,
@@ -1580,7 +1581,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
           const SizedBox(height: 20),
           _SheetField(
             ctrl: _emailCtrl,
-            label: 'Rider email',
+            label: context.tr('Rider email'),
             icon: Icons.person_outline_rounded,
             keyboard: TextInputType.emailAddress,
             isDark: isDark,
@@ -1588,7 +1589,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
           const SizedBox(height: 12),
           _SheetField(
             ctrl: _amountCtrl,
-            label: 'Amount (PHP)',
+            label: context.tr('Amount (PHP)'),
             prefix: '₱ ',
             icon: Icons.payments_outlined,
             keyboard: const TextInputType.numberWithOptions(decimal: true),
@@ -1597,7 +1598,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
           const SizedBox(height: 12),
           _SheetField(
             ctrl: _noteCtrl,
-            label: 'Note (optional)',
+            label: context.tr('Note (optional)'),
             icon: Icons.note_outlined,
             isDark: isDark,
           ),
@@ -1635,8 +1636,8 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
                         height: 20,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const Text(
-                        'Send payment',
+                    : Text(
+                        context.tr('Send payment'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 14.5,
@@ -1831,8 +1832,8 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
       if (!widget.parentContext.mounted) return;
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: const Text(
-            'Withdrawal request submitted successfully!',
+          content: Text(
+            context.tr('Withdrawal request submitted successfully!'),
             style: TextStyle(fontFamily: 'TT Fors'),
           ),
           backgroundColor: const Color(0xFF2ECC71),
@@ -1905,7 +1906,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Withdraw Earnings',
+                    context.tr('Withdraw Earnings'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 20,
@@ -1933,7 +1934,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                     Row(
                       children: [
                         Text(
-                          'Available Balance',
+                          context.tr('Available Balance'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 12,
@@ -1986,7 +1987,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
               // Amount field
               _SheetField(
                 ctrl: _amountCtrl,
-                label: 'Withdrawal Amount',
+                label: context.tr('Withdrawal Amount'),
                 icon: Icons.payments_rounded,
                 prefix: 'PHP ',
                 keyboard: const TextInputType.numberWithOptions(decimal: true),
@@ -1996,7 +1997,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
 
               // Payout method selector
               Text(
-                'Payout Method',
+                context.tr('Payout Method'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12,
@@ -2011,7 +2012,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                 children: [
                   Expanded(
                     child: _PayoutMethodChip(
-                      label: 'GCash',
+                      label: context.tr('GCash'),
                       icon: Icons.smartphone_rounded,
                       value: 'gcash',
                       groupValue: _selectedMethod,
@@ -2022,7 +2023,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _PayoutMethodChip(
-                      label: 'Maya',
+                      label: context.tr('Maya'),
                       icon: Icons.credit_card_rounded,
                       value: 'maya',
                       groupValue: _selectedMethod,
@@ -2033,7 +2034,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _PayoutMethodChip(
-                      label: 'Bank',
+                      label: context.tr('Bank'),
                       icon: Icons.account_balance_rounded,
                       value: 'bank_transfer',
                       groupValue: _selectedMethod,
@@ -2060,7 +2061,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
               // Account name field
               _SheetField(
                 ctrl: _accountNameCtrl,
-                label: 'Account Name',
+                label: context.tr('Account Name'),
                 icon: Icons.person_rounded,
                 isDark: isDark,
               ),
@@ -2068,7 +2069,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                 const SizedBox(height: 16),
                 _SheetField(
                   ctrl: _bankNameCtrl,
-                  label: 'Bank Name',
+                  label: context.tr('Bank Name'),
                   icon: Icons.account_balance_rounded,
                   isDark: isDark,
                 ),
@@ -2108,7 +2109,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        context.tr('Cancel'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 14,
@@ -2140,8 +2141,8 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              'Submit Request',
+                          : Text(
+                              context.tr('Submit Request'),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 14,

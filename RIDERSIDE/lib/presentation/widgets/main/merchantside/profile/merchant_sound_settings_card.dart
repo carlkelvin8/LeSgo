@@ -4,6 +4,7 @@ import '../../../../../core/services/order_sound_alert_service.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_sound_settings_provider.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// A settings card for choosing notification sound.
 class MerchantSoundSettingsCard extends ConsumerWidget {
@@ -35,7 +36,7 @@ class MerchantSoundSettingsCard extends ConsumerWidget {
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 8)),
               Text(
-                'Notification Sound',
+                context.tr('Notification Sound'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 15),
@@ -56,7 +57,7 @@ class MerchantSoundSettingsCard extends ConsumerWidget {
           if (soundEnabled) ...[
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             Text(
-              'Choose a sound:',
+              context.tr('Choose a sound:'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),

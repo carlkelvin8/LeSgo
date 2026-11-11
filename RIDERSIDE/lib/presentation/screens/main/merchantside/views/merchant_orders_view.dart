@@ -12,6 +12,7 @@ import '../../../../widgets/main/merchantside/orders/merchant_order_action_handl
 import '../../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
 import '../../../../widgets/main/merchantside/orders/merchant_order_queue_card.dart';
 import '../merchant_order_detail_screen.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 enum _QueueSort { attention, newest, oldest }
 
@@ -72,23 +73,23 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
   Future<void> _ready(OrderDto order) async {
     final confirmed = await showMerchantConfirmDialog(
       context,
-      title: 'Ready for pickup?',
-      message: 'Let the rider know this order is packed and ready.',
-      confirmLabel: 'Mark ready',
+      title: context.tr('Ready for pickup?'),
+      message: context.tr('Let the rider know this order is packed and ready.'),
+      confirmLabel: context.tr('Mark ready'),
     );
     if (!confirmed || !mounted) return;
     try {
       await ref.read(merchantOrderActionProvider).markReadyForPickup(order.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order ready for pickup.')),
+          SnackBar(content: Text(context.tr('Order ready for pickup.'))),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not update the order. Please try again.'),
+          SnackBar(
+            content: Text(context.tr('Could not update the order. Please try again.')),
           ),
         );
       }
@@ -239,7 +240,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'YOUR STORE, IN MOTION',
+                                    context.tr('YOUR STORE, IN MOTION'),
                                     style: TextStyle(
                                       fontSize: 9,
                                       letterSpacing: 1.7,
@@ -249,7 +250,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
-                                    'Orders',
+                                    context.tr('Orders'),
                                     style: TextStyle(
                                       fontSize: 32,
                                       fontWeight: FontWeight.w900,
@@ -261,13 +262,13 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                               ),
                             ),
                             IconButton.filledTonal(
-                              tooltip: 'Refresh orders',
+                              tooltip: context.tr('Refresh orders'),
                               onPressed: async.isLoading ? null : _refresh,
                               icon: const Icon(Icons.refresh_rounded),
                             ),
                             const SizedBox(width: 4),
                             IconButton.filledTonal(
-                              tooltip: 'Export orders',
+                              tooltip: context.tr('Export orders'),
                               onPressed: all.isEmpty
                                   ? null
                                   : () => MerchantCsvExportUtils.exportAndShare(
@@ -365,7 +366,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                 runSpacing: 10,
                                 children: [
                                   _Metric(
-                                    label: 'NEW',
+                                    label: context.tr('NEW'),
                                     value:
                                         async.hasError ||
                                             (async.isLoading && all.isEmpty)
@@ -376,7 +377,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                     duration: duration,
                                   ),
                                   _Metric(
-                                    label: 'PREPARING',
+                                    label: context.tr('PREPARING'),
                                     value:
                                         async.hasError ||
                                             (async.isLoading && all.isEmpty)
@@ -387,7 +388,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                     duration: duration,
                                   ),
                                   _Metric(
-                                    label: 'READY',
+                                    label: context.tr('READY'),
                                     value:
                                         async.hasError ||
                                             (async.isLoading && all.isEmpty)
@@ -411,7 +412,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             color: OrderQueuePalette.text(context),
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Search order, customer or item',
+                            hintText: context.tr('Search order, customer or item'),
                             prefixIcon: const Icon(
                               Icons.search_rounded,
                               size: 22,
@@ -419,7 +420,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             suffixIcon: _search.text.isEmpty
                                 ? null
                                 : IconButton(
-                                    tooltip: 'Clear search',
+                                    tooltip: context.tr('Clear search'),
                                     icon: const Icon(Icons.close_rounded),
                                     onPressed: () => setState(_search.clear),
                                   ),
@@ -543,21 +544,21 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                               ),
                             ),
                             PopupMenuButton<_QueueSort>(
-                              tooltip: 'Sort orders',
+                              tooltip: context.tr('Sort orders'),
                               initialValue: _sort,
                               onSelected: (v) => setState(() => _sort = v),
-                              itemBuilder: (_) => const [
+                              itemBuilder: (_) => [
                                 PopupMenuItem(
                                   value: _QueueSort.attention,
-                                  child: Text('Needs attention first'),
+                                  child: Text(context.tr('Needs attention first')),
                                 ),
                                 PopupMenuItem(
                                   value: _QueueSort.newest,
-                                  child: Text('Newest first'),
+                                  child: Text(context.tr('Newest first')),
                                 ),
                                 PopupMenuItem(
                                   value: _QueueSort.oldest,
-                                  child: Text('Oldest first'),
+                                  child: Text(context.tr('Oldest first')),
                                 ),
                               ],
                               child: Padding(
@@ -624,8 +625,8 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                 else if (async.hasError)
                   SliverToBoxAdapter(
                     child: _QueueEmpty(
-                      title: 'Couldn’t load your orders',
-                      message: 'Check your connection and try again.',
+                      title: context.tr('Couldn’t load your orders'),
+                      message: context.tr('Check your connection and try again.'),
                       icon: Icons.wifi_off_rounded,
                       action: 'Try again',
                       onAction: _refresh,

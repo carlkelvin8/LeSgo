@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_analytics_provider.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// Displays the top 5 most ordered items from analytics data.
 class MerchantPopularItemsSection extends ConsumerWidget {
@@ -36,7 +37,7 @@ class MerchantPopularItemsSection extends ConsumerWidget {
                     ),
                     SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                     Text(
-                      'Top Sellers',
+                      context.tr('Top Sellers'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),

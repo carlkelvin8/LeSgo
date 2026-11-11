@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// Shows the estimated prep time based on number of items in the order.
 /// Formula: 5 min base + 2 min per item.
@@ -44,7 +45,7 @@ class MerchantPrepTimeEstimate extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Estimated Prep Time',
+                  context.tr('Estimated Prep Time'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),

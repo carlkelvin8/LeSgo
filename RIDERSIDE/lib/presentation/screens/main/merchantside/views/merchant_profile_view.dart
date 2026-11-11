@@ -20,11 +20,13 @@ import '../merchant_edit_information_screen.dart';
 import '../merchant_menu_edit_item_screen.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 
 bool _canEditMenu(BuildContext context, WidgetRef ref) {
   if (ref.read(canEditMerchantMenuProvider)) return true;
   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Only the store owner or a staff admin can edit the menu.')),
+    SnackBar(content: Text(context.tr('Only the store owner or a staff admin can edit the menu.'))),
   );
   return false;
 }
@@ -70,19 +72,19 @@ class MerchantProfileView extends ConsumerWidget {
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text('Error loading profile: $error'),
+            Text(ApiErrorMapper.message(error, fallbackEn: 'Could not load your profile.', fallbackTl: 'Hindi ma-load ang profile mo.')),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => ref.refresh(merchantProfileProvider),
-              child: const Text('Retry'),
+              child: Text(context.tr('Retry')),
             ),
           ],
         ),
       ),
       data: (profile) {
         if (profile == null) {
-          return const Center(
-            child: Text('No merchant profile found. Please contact support.'),
+          return Center(
+            child: Text(context.tr('No merchant profile found. Please contact support.')),
           );
         }
 
@@ -133,7 +135,7 @@ class MerchantProfileView extends ConsumerWidget {
                     ),
                   ),
                   child: Text(
-                    'Edit Information',
+                    context.tr('Edit Information'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 9),
@@ -159,7 +161,7 @@ class MerchantProfileView extends ConsumerWidget {
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                   Text(
-                    'Food Menu',
+                    context.tr('Food Menu'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -174,7 +176,7 @@ class MerchantProfileView extends ConsumerWidget {
                           MerchantNavType.menu;
                     },
                     child: Text(
-                      'See all',
+                      context.tr('See all'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -197,11 +199,11 @@ class MerchantProfileView extends ConsumerWidget {
                     children: [
                       const Icon(Icons.error_outline, size: 48, color: Colors.red),
                       const SizedBox(height: 16),
-                      Text('Error loading menu: $error'),
+                      Text(ApiErrorMapper.message(error, fallbackEn: 'Could not load your menu.', fallbackTl: 'Hindi ma-load ang menu mo.')),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () => ref.refresh(merchantMenuItemsProvider),
-                        child: const Text('Retry'),
+                        child: Text(context.tr('Retry')),
                       ),
                     ],
                   ),
@@ -219,7 +221,7 @@ class MerchantProfileView extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No menu items yet',
+                            context.tr('No menu items yet'),
                             style: TextStyle(
                               fontSize: 18,
                               color: context.txt(Colors.grey.shade600),
@@ -227,7 +229,7 @@ class MerchantProfileView extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Add items to your menu to get started',
+                            context.tr('Add items to your menu to get started'),
                             style: TextStyle(
                               fontSize: 14,
                               color: context.sub(Colors.grey.shade500),
@@ -320,7 +322,7 @@ class _SalesReportCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Sales Reports',
+                    context.tr('Sales Reports'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 15),
@@ -330,7 +332,7 @@ class _SalesReportCard extends StatelessWidget {
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                   Text(
-                    'Download CSV or PDF reports',
+                    context.tr('Download CSV or PDF reports'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),

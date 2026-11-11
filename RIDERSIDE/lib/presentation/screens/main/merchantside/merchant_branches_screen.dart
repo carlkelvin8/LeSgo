@@ -7,6 +7,7 @@ import '../../../../data/data_source/dto/merchant/partner_branch.dart';
 import '../../../provider/main/merchantside/merchant_branches_provider.dart';
 import 'merchant_branch_form_screen.dart';
 import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
 
 const _purple = Color(0xFF5F2D82);
 
@@ -50,19 +51,19 @@ class _MerchantBranchesScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete branch', style: TextStyle(fontFamily: 'TT Fors')),
+        title: Text(context.tr('Delete branch'), style: TextStyle(fontFamily: 'TT Fors')),
         content: Text(
           'Delete ${branch.name}? Customers will no longer be able to order from it.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(context.tr('Delete')),
           ),
         ],
       ),
@@ -87,7 +88,7 @@ class _MerchantBranchesScreenState
         iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         centerTitle: true,
         title: Text(
-          'Branches',
+          context.tr('Branches'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -100,7 +101,7 @@ class _MerchantBranchesScreenState
         backgroundColor: _purple,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_business_outlined),
-        label: const Text('Add Branch'),
+        label: Text(context.tr('Add Branch')),
         onPressed: state.isSaving ? null : () => _openForm(),
       ),
       body: RefreshIndicator(
@@ -120,7 +121,7 @@ class _MerchantBranchesScreenState
                         padding: EdgeInsets.fromLTRB(hp, 16, hp, 96),
                         children: [
                           Text(
-                            'Customers pick a branch when ordering, and riders are sent to that branch for pickup.',
+                            context.tr('Customers pick a branch when ordering, and riders are sent to that branch for pickup.'),
                             style: TextStyle(fontSize: 13, color: context.sub(Colors.grey[600]!)),
                           ),
                           const SizedBox(height: 12),
@@ -190,11 +191,11 @@ class _MerchantBranchesScreenState
                     }
                   },
                   itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    PopupMenuItem(value: 'edit', child: Text(context.tr('Edit'))),
                     if (!branch.isPrimary)
-                      const PopupMenuItem(value: 'primary', child: Text('Make primary')),
+                      PopupMenuItem(value: 'primary', child: Text(context.tr('Make primary'))),
                     if (!branch.isPrimary)
-                      const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                      PopupMenuItem(value: 'delete', child: Text(context.tr('Delete'))),
                   ],
                 ),
               ],
@@ -217,7 +218,7 @@ class _MerchantBranchesScreenState
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'No map pin yet. Edit this branch to set its pickup point.',
+                  context.tr('No map pin yet. Edit this branch to set its pickup point.'),
                   style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
                 ),
               ),
@@ -225,7 +226,7 @@ class _MerchantBranchesScreenState
               contentPadding: EdgeInsets.zero,
               dense: true,
               activeThumbColor: _purple,
-              title: const Text('Accepting orders'),
+              title: Text(context.tr('Accepting orders')),
               value: branch.isOpen,
               onChanged: busy
                   ? null

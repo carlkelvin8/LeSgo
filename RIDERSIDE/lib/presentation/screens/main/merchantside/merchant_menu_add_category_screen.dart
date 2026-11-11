@@ -8,6 +8,7 @@ import '../../../controllers/merchantside/merchant_add_category_form_controller.
 import '../../../provider/main/merchantside/merchant_add_category_form_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/main/merchantside/menu/add_category/merchant_category_image_upload_section.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantMenuAddCategoryScreen extends ConsumerStatefulWidget {
   final MenuCategoryDto? editingCategory;
@@ -178,7 +179,7 @@ class _MerchantMenuAddCategoryScreenState
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FieldLabel(label: 'CATEGORY NAME', isDark: isDark),
+              _FieldLabel(label: context.tr('CATEGORY NAME'), isDark: isDark),
               const SizedBox(height: 8),
               _StyledTextField(
                 controller: _controller.categoryNameController,
@@ -202,7 +203,7 @@ class _MerchantMenuAddCategoryScreenState
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _FieldLabel(label: 'CATEGORY IMAGE', isDark: isDark),
+              _FieldLabel(label: context.tr('CATEGORY IMAGE'), isDark: isDark),
               const SizedBox(height: 8),
               MerchantCategoryImageUploadSection(
                 uploadedImagePath: formState.previewImageSource,

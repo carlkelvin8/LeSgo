@@ -4,6 +4,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/cart/cart_provider.dart';
 import 'cart_item_card.dart';
 import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class CartOrderSection extends StatelessWidget {
   final List<CartItem> items;
@@ -86,7 +87,7 @@ class CartOrderSection extends StatelessWidget {
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                 Text(
-                  'Add more items',
+                  context.tr('Add more items'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
