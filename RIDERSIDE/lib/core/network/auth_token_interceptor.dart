@@ -29,6 +29,9 @@ class AuthTokenInterceptor extends QueuedInterceptor {
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
+    // Remember which session this request belonged to, so a late 401 can tell
+    // "my session died" from "a newer session was saved while I was in flight".
+    options.extra['refreshAtSend'] = await SecureStorageService.getRefreshToken();
     handler.next(options);
   }
 
@@ -61,12 +64,24 @@ class AuthTokenInterceptor extends QueuedInterceptor {
       return;
     }
 
+    final refreshBefore = err.requestOptions.extra['refreshAtSend'] as String?;
     final newToken = await TokenRefreshService.instance.refreshAccessToken();
     if (newToken == null || newToken.isEmpty) {
       // Only drop the session when the server actually rejected it; an
       // offline/throttled (429) refresh must not log the rider out.
       if (!TokenRefreshService.instance.lastFailureWasTransient) {
-        await _clearAuthIfStillUsing(failedToken);
+        if (failedToken != null) {
+          await _clearAuthIfStillUsing(failedToken);
+        } else {
+          // The stored access token had already expired, so the request carried
+          // no bearer. Without this the rider stayed "logged in" with a dead
+          // refresh token and every request failed. Clear only if no new
+          // session was saved while the refresh was in flight.
+          final current = await SecureStorageService.getRefreshToken();
+          if (refreshBefore != null && current == refreshBefore) {
+            await SecureStorageService.clearAuth();
+          }
+        }
       }
       handler.next(err);
       return;
