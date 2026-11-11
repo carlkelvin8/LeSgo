@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../widgets.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantDocumentUploadList extends StatelessWidget {
   final VoidCallback onUploadSelfie;
@@ -120,7 +121,7 @@ class MerchantDocumentUploadList extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),

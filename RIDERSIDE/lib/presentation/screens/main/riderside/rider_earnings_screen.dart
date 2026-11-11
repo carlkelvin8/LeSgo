@@ -8,6 +8,7 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/rider_earnings_utils.dart';
 import '../../../../core/utils/share_utils.dart';
 import '../../../provider/main/riderside/rider_earnings_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderEarningsScreen extends ConsumerWidget {
   const RiderEarningsScreen({super.key});
@@ -46,18 +47,18 @@ class RiderEarningsScreen extends ConsumerWidget {
     final lang = ref.watch(appLanguageProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('earnings', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -165,7 +166,7 @@ class RiderEarningsScreen extends ConsumerWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Colors.grey.shade600,
+                            color: context.txt(Colors.grey.shade600),
                           ),
                         ),
                       )
@@ -280,9 +281,9 @@ class _TripTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Row(
         children: [
@@ -304,7 +305,7 @@ class _TripTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
               ],
@@ -316,7 +317,7 @@ class _TripTile extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontWeight: FontWeight.w700,
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: const Color(0xFF5F2D82),
+              color: context.acc(const Color(0xFF5F2D82)),
             ),
           ),
         ],

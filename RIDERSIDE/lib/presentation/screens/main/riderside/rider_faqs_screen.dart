@@ -5,6 +5,7 @@ import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../widgets/common/retry_widget.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderFaqsScreen extends ConsumerStatefulWidget {
   const RiderFaqsScreen({super.key});
@@ -142,9 +143,9 @@ class _RiderFaqsScreenState extends ConsumerState<RiderFaqsScreen> {
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         foregroundColor: const Color(0xFF5F2D82),
         title: Text(AppLocalization.translate('faqs', lang), style: const TextStyle(fontFamily: 'TT Fors')),
       ),
@@ -275,7 +276,7 @@ class _RiderFaqsScreenState extends ConsumerState<RiderFaqsScreen> {
                                                     fontFamily: 'TT Fors',
                                                     fontSize: ResponsiveUtils
                                                         .fontSize(context, 13),
-                                                    color: Colors.grey.shade700,
+                                                    color: context.txt(Colors.grey.shade700),
                                                   ),
                                                 ),
                                                 Row(

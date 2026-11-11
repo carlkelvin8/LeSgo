@@ -6,6 +6,7 @@ import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderSecurityScreen extends ConsumerWidget {
   const RiderSecurityScreen({super.key});
@@ -18,17 +19,17 @@ class RiderSecurityScreen extends ConsumerWidget {
     final isMerchant = user?.isMerchant ?? false;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('security', lang),
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w700,
-            color: Color(0xFF5F2D82),
+            color: context.acc(Color(0xFF5F2D82)),
           ),
         ),
       ),
@@ -40,7 +41,7 @@ class RiderSecurityScreen extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: Colors.grey.shade600,
+              color: context.txt(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -94,7 +95,7 @@ class _SecurityTile extends StatelessWidget {
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: context.brd(Colors.grey.shade200)),
       ),
       child: ListTile(
         leading: Container(
@@ -104,7 +105,7 @@ class _SecurityTile extends StatelessWidget {
             color: const Color(0xFF5F2D82).withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 20, color: const Color(0xFF5F2D82)),
+          child: Icon(icon, size: 20, color: context.acc(const Color(0xFF5F2D82))),
         ),
         title: Text(
           title,
@@ -112,12 +113,12 @@ class _SecurityTile extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.chevron_right,
-          color: Colors.grey,
+          color: context.sub(Colors.grey),
         ),
         onTap: onTap,
       ),

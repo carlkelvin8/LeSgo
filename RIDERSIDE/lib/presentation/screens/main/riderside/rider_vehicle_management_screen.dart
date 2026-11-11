@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_vehicle_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 IconData _vehicleIcon(VehicleType type) {
   switch (type) {
@@ -35,18 +36,18 @@ class _RiderVehicleManagementScreenState
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('my_vehicles', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -80,7 +81,7 @@ class _RiderVehicleManagementScreenState
                       Icon(
                         Icons.directions_bike_outlined,
                         size: 64,
-                        color: Colors.grey.shade400,
+                        color: context.sub(Colors.grey.shade400),
                       ),
                       SizedBox(
                           height:
@@ -92,7 +93,7 @@ class _RiderVehicleManagementScreenState
                           fontSize:
                               ResponsiveUtils.fontSize(context, 16),
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade600,
+                          color: context.txt(Colors.grey.shade600),
                         ),
                       ),
                     ],
@@ -158,7 +159,7 @@ class _RiderVehicleManagementScreenState
               AppLocalization.translate('cancel', lang),
               style: TextStyle(
                 fontFamily: 'TT Fors',
-                color: Colors.grey.shade700,
+                color: context.txt(Colors.grey.shade700),
               ),
             ),
           ),
@@ -213,9 +214,9 @@ class _VehicleCard extends ConsumerWidget {
           bottom: ResponsiveUtils.spacing(context, 10)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Row(
         children: [
@@ -228,7 +229,7 @@ class _VehicleCard extends ConsumerWidget {
             ),
             child: Icon(
               _vehicleIcon(vehicle.type),
-              color: const Color(0xFF5F2D82),
+              color: context.acc(const Color(0xFF5F2D82)),
               size: ResponsiveUtils.fontSize(context, 24),
             ),
           ),
@@ -280,7 +281,7 @@ class _VehicleCard extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize:
                         ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
                 Text(
@@ -289,7 +290,7 @@ class _VehicleCard extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize:
                         ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
               ],
@@ -298,8 +299,8 @@ class _VehicleCard extends ConsumerWidget {
           Column(
             children: [
               IconButton(
-                icon: const Icon(Icons.edit_outlined,
-                    color: Color(0xFF5F2D82), size: 20),
+                icon: Icon(Icons.edit_outlined,
+                    color: context.acc(Color(0xFF5F2D82)), size: 20),
                 onPressed: onEdit,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(
@@ -419,13 +420,13 @@ class _VehicleFormScreenState
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios,
-              color: Color(0xFF5F2D82)),
+          icon: Icon(Icons.arrow_back_ios,
+              color: context.acc(Color(0xFF5F2D82))),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -434,7 +435,7 @@ class _VehicleFormScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -458,7 +459,7 @@ class _VehicleFormScreenState
                   fontSize:
                       ResponsiveUtils.fontSize(context, 13),
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
+                  color: context.txt(Colors.grey.shade600),
                 ),
               ),
               SizedBox(
@@ -473,7 +474,7 @@ class _VehicleFormScreenState
                       children: [
                         Icon(_vehicleIcon(type),
                             size: 20,
-                            color: const Color(0xFF5F2D82)),
+                            color: context.acc(const Color(0xFF5F2D82))),
                         const SizedBox(width: 10),
                         Text(
                           type.label,
@@ -492,7 +493,7 @@ class _VehicleFormScreenState
                 },
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: const Color(0xFFF5F5F5),
+                  fillColor: context.surf(const Color(0xFFF5F5F5)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -500,7 +501,7 @@ class _VehicleFormScreenState
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide:
-                        BorderSide(color: Colors.grey.shade200),
+                        BorderSide(color: context.brd(Colors.grey.shade200)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -623,7 +624,7 @@ class _VehicleFormScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.w600,
-            color: Colors.grey.shade600,
+            color: context.txt(Colors.grey.shade600),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 6)),
@@ -635,24 +636,24 @@ class _VehicleFormScreenState
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 15),
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey.shade400,
+              color: context.sub(Colors.grey.shade400),
             ),
             filled: true,
-            fillColor: const Color(0xFFF5F5F5),
+            fillColor: context.surf(const Color(0xFFF5F5F5)),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderSide: BorderSide(color: context.brd(Colors.grey.shade200)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/utils.dart';
 import '../../widgets/widgets.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 /// Shared terms presentation based on the original Rider registration screen.
 class RegistrationTermsScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _RegistrationTermsScreenState extends State<RegistrationTermsScreen> {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),

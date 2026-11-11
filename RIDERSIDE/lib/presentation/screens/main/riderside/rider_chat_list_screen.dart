@@ -8,6 +8,7 @@ import '../../../../data/data_source/dto/chat/chat_dto.dart';
 import '../../../provider/main/riderside/rider_inbox_provider.dart';
 import '../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
 import '../../chat/rider_chat_screen.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderChatListScreen extends ConsumerStatefulWidget {
   const RiderChatListScreen({super.key});
@@ -38,9 +39,9 @@ class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         title: Text(
           AppLocalization.translate('messages', lang),
@@ -48,7 +49,7 @@ class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 20),
             fontWeight: FontWeight.w800,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: false,
@@ -108,11 +109,11 @@ class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
           Center(
             child: Column(
               children: [
-                Icon(Icons.error_outline, size: 56, color: Colors.grey[400]),
+                Icon(Icons.error_outline, size: 56, color: context.sub(Colors.grey[400]!)),
                 const SizedBox(height: 12),
                 Text(
                   AppLocalization.translate('could_not_load_messages', lang),
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  style: TextStyle(color: context.sub(Colors.grey[600]!), fontSize: 16),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
@@ -121,7 +122,7 @@ class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
                       .loadConversations(),
                   child: Text(
                     AppLocalization.translate('retry', lang),
-                    style: const TextStyle(color: Color(0xFF5F2D82)),
+                    style: TextStyle(color: context.acc(Color(0xFF5F2D82))),
                   ),
                 ),
               ],
@@ -139,14 +140,14 @@ class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
             child: Column(
               children: [
                 Icon(Icons.chat_bubble_outline,
-                    size: 64, color: Colors.grey.shade400),
+                    size: 64, color: context.sub(Colors.grey.shade400)),
                 const SizedBox(height: 16),
                 Text(
                   AppLocalization.translate('no_conversations_yet', lang),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -158,7 +159,7 @@ class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey.shade500,
+                      color: context.sub(Colors.grey.shade500),
                     ),
                   ),
                 ),
@@ -253,10 +254,10 @@ class _ConversationTile extends StatelessWidget {
                   customerName.isNotEmpty
                       ? customerName[0].toUpperCase()
                       : 'C',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF5F2D82),
+                    color: context.acc(Color(0xFF5F2D82)),
                   ),
                 ),
               ),
@@ -277,7 +278,7 @@ class _ConversationTile extends StatelessWidget {
                               fontWeight: hasUnread
                                   ? FontWeight.w700
                                   : FontWeight.w600,
-                              color: Colors.black87,
+                              color: context.txt(Colors.black87),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

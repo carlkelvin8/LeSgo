@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class VerificationCodeSection extends StatelessWidget {
   final String? devOtp;
@@ -16,7 +17,7 @@ class VerificationCodeSection extends StatelessWidget {
           style: TextStyle(
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -24,7 +25,7 @@ class VerificationCodeSection extends StatelessWidget {
           'we have sent a verification code to your phone number',
           style: TextStyle(
             fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: Colors.black54,
+            color: context.txt(Colors.black54),
           ),
         ),
         // Show OTP in dev/fallback mode
@@ -36,7 +37,7 @@ class VerificationCodeSection extends StatelessWidget {
               vertical: ResponsiveUtils.spacing(context, 8),
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF3CD),
+              color: context.surf(const Color(0xFFFFF3CD)),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: const Color(0xFFFFD700)),
             ),

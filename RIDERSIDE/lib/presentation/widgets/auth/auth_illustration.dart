@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/utils.dart';
 import '../../provider/auth/auth_provider.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class AuthIllustration extends ConsumerWidget {
   const AuthIllustration({super.key});
@@ -18,7 +19,7 @@ class AuthIllustration extends ConsumerWidget {
       height: ResponsiveUtils.spacing(context, 340),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFF2F2F7),
+        color: context.surf(const Color(0xFFF2F2F7)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),

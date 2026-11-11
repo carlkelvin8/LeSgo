@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class InfoSectionLabel extends StatelessWidget {
   final String label;
@@ -17,7 +18,7 @@ class InfoSectionLabel extends StatelessWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 14),
         fontWeight: FontWeight.w600,
-        color: Colors.black87,
+        color: context.txt(Colors.black87),
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import 'rider_wallet_link_account_dialog.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderWalletWithdrawDialog extends ConsumerStatefulWidget {
   final BuildContext parentContext;
@@ -199,7 +200,7 @@ class _RiderWalletWithdrawDialogState
       title: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
       subtitle: Text(
         display,
-        style: TextStyle(fontFamily: 'TT Fors', color: Colors.grey.shade700),
+        style: TextStyle(fontFamily: 'TT Fors', color: context.txt(Colors.grey.shade700)),
       ),
     );
   }
@@ -225,7 +226,7 @@ class _RiderWalletWithdrawDialogState
           const SizedBox(height: 4),
           Text(
             'Withdrawals are sent via PayMongo to your linked account.',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: context.txt(Colors.grey.shade600)),
           ),
         ],
       ),
@@ -240,16 +241,16 @@ class _RiderWalletWithdrawDialogState
                 'Available: PHP ${liveBalance.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
-                  color: Colors.grey.shade700,
+                  color: context.txt(Colors.grey.shade700),
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Funds are sent to your linked GCash or Maya via PayMongo.',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12,
-                  color: Colors.black54,
+                  color: context.txt(Colors.black54),
                 ),
               ),
               const SizedBox(height: 12),

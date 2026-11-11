@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 /// Result of the report sheet: the chosen reason, optional details and
 /// whether the reporter also wants to block the other person.
@@ -101,7 +102,7 @@ class _ChatReportSheetState extends State<ChatReportSheet> {
               const SizedBox(height: 4),
               Text(
                 'Your report is confidential. Our team reviews every report within 24 hours.',
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 13, color: context.sub(Colors.grey[600]!)),
               ),
               const SizedBox(height: 12),
               RadioGroup<String>(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderSwipeAcceptButton extends StatefulWidget {
   final VoidCallback onAccepted;
@@ -212,7 +213,7 @@ class _RiderSwipeAcceptButtonState extends State<RiderSwipeAcceptButton>
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF5F2D82),
+                  color: context.acc(const Color(0xFF5F2D82)),
                 ),
               ),
             ),

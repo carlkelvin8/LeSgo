@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class SelfieUploadBox extends StatelessWidget {
   final String buttonText;
@@ -83,7 +84,7 @@ class SelfieUploadBox extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
-                      color: Colors.grey.shade500,
+                      color: context.sub(Colors.grey.shade500),
                     ),
                   ),
                   if (showRequiredError) ...[

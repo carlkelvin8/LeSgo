@@ -8,6 +8,7 @@ import '../../provider/auth/rider_auth_provider.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/auth/forgot_password_provider.dart';
 import '../widgets.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class MerchantLoginContent extends ConsumerStatefulWidget {
   const MerchantLoginContent({super.key});
@@ -129,7 +130,7 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      side: BorderSide(color: Colors.grey.shade400),
+                      side: BorderSide(color: context.brd(Colors.grey.shade400)),
                       activeColor: const Color(0xFF5F2D82),
                     ),
                   ),
@@ -140,7 +141,7 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                   ),
@@ -170,7 +171,7 @@ class _MerchantLoginContentState extends ConsumerState<MerchantLoginContent> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade500,
+                      color: context.sub(Colors.grey.shade500),
                     ),
                   ),
                 ),

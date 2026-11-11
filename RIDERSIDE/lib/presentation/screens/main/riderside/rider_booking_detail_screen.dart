@@ -32,6 +32,7 @@ import '../../../widgets/main/riderside/bookings/rider_cod_confirm_dialog.dart';
 import '../../../widgets/main/riderside/bookings/rider_customer_rating_dialog.dart';
 import '../../../../core/utils/rider_payment_utils.dart';
 import '../../../../core/utils/app_localization.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderBookingDetailScreen extends ConsumerStatefulWidget {
   final RiderBooking booking;
@@ -1039,7 +1040,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                           )
                         : Icon(
                             Icons.refresh,
-                            color: const Color(0xFF5F2D82),
+                            color: context.acc(const Color(0xFF5F2D82)),
                           ),
                     tooltip: AppLocalization.translate('refresh_status', lang),
                   ),
@@ -1051,7 +1052,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         RiderBookingDetailInfo(booking: _updatedBooking ?? widget.booking),
-                        Divider(color: Colors.grey.shade200, height: 1),
+                        Divider(color: context.brd(Colors.grey.shade200), height: 1),
                         
                         // Dynamic content based on status
                         _buildStatusContent(context, locationState),
@@ -1124,9 +1125,9 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                                   width: double.infinity,
                                   child: OutlinedButton.icon(
                                     onPressed: _shareReceipt,
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.receipt_long_outlined,
-                                      color: Color(0xFF5F2D82),
+                                      color: context.acc(Color(0xFF5F2D82)),
                                     ),
                                     label: Text(
                                       'Get Receipt',
@@ -1137,7 +1138,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                                           14,
                                         ),
                                         fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF5F2D82),
+                                        color: context.acc(const Color(0xFF5F2D82)),
                                       ),
                                     ),
                                     style: OutlinedButton.styleFrom(

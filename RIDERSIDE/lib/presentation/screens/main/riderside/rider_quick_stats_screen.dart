@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_stats_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderQuickStatsScreen extends ConsumerWidget {
   const RiderQuickStatsScreen({super.key});
@@ -14,18 +15,18 @@ class RiderQuickStatsScreen extends ConsumerWidget {
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('todays_stats', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -44,7 +45,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: Colors.grey.shade600,
+                  color: context.txt(Colors.grey.shade600),
                 ),
               ),
             ],
@@ -68,7 +69,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: context.txt(Colors.black87),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -77,7 +78,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -139,7 +140,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
               Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: context.surf(Colors.white),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -158,7 +159,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -167,7 +168,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade600,
+                        color: context.txt(Colors.grey.shade600),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -177,7 +178,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 28),
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF5F2D82),
+                        color: context.acc(const Color(0xFF5F2D82)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -192,9 +193,9 @@ class RiderQuickStatsScreen extends ConsumerWidget {
               Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
+                  color: context.surf(const Color(0xFFE8F5E9)),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFC8E6C9)),
+                  border: Border.all(color: context.brd(const Color(0xFFC8E6C9))),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +250,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -280,7 +281,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -291,7 +292,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 20),
                     fontWeight: FontWeight.w800,
-                    color: Colors.black87,
+                    color: context.txt(Colors.black87),
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -301,7 +302,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
-                      color: Colors.grey.shade500,
+                      color: context.sub(Colors.grey.shade500),
                     ),
                   ),
                 ],
@@ -353,7 +354,7 @@ class RiderQuickStatsScreen extends ConsumerWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 9),
-                color: Colors.grey.shade600,
+                color: context.txt(Colors.grey.shade600),
               ),
             ),
           ],

@@ -9,6 +9,7 @@ import '../../../../core/services/notification_payload.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../widgets/common/retry_widget.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderNotificationCenterScreen extends ConsumerStatefulWidget {
   const RiderNotificationCenterScreen({super.key});
@@ -104,9 +105,9 @@ class _RiderNotificationCenterScreenState
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         foregroundColor: const Color(0xFF5F2D82),
         title: Text(
           AppLocalization.translate('notifications', lang),
@@ -120,9 +121,9 @@ class _RiderNotificationCenterScreenState
           if (_unreadCount > 0)
             TextButton(
               onPressed: _markAllRead,
-              child: const Text(
+              child: Text(
                 'Mark all read',
-                style: TextStyle(fontFamily: 'TT Fors', color: Color(0xFF5F2D82)),
+                style: TextStyle(fontFamily: 'TT Fors', color: context.acc(Color(0xFF5F2D82))),
               ),
             ),
         ],
@@ -146,7 +147,7 @@ class _RiderNotificationCenterScreenState
                                 AppLocalization.translate('no_notifications', lang),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  color: Colors.grey.shade600,
+                                  color: context.txt(Colors.grey.shade600),
                                 ),
                               ),
                             ),
@@ -226,7 +227,7 @@ class _NotificationTile extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: Colors.grey.shade700,
+                        color: context.txt(Colors.grey.shade700),
                       ),
                     ),
                     if (formattedDate.isNotEmpty) ...[
@@ -236,7 +237,7 @@ class _NotificationTile extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 11,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                     ],

@@ -10,6 +10,7 @@ import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 import '../../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../screens/main/riderside/map/rider_map_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderBookingDetailMapSection extends ConsumerStatefulWidget {
   const RiderBookingDetailMapSection({
@@ -389,7 +390,7 @@ class _RiderBookingDetailMapSectionState
                   color: Colors.green,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
@@ -397,7 +398,7 @@ class _RiderBookingDetailMapSectionState
                       height: 8,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.surf(Colors.white),
                           shape: BoxShape.circle,
                         ),
                       ),

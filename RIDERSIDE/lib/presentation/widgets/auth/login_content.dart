@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/utils.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../widgets.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class LoginContent extends ConsumerWidget {
   const LoginContent({super.key});
@@ -44,7 +45,7 @@ class LoginText extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 24),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
           textAlign: TextAlign.center,
         ),

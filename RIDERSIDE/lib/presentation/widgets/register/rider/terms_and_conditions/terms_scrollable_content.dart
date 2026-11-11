@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/affiliate_terms.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// The scrollable terms and conditions text container with a purple accent line.
 class TermsScrollableContent extends StatelessWidget {
@@ -11,7 +12,7 @@ class TermsScrollableContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: context.surf(const Color(0xFFF5F5F5)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Stack(
@@ -92,7 +93,7 @@ class TermsScrollableContent extends StatelessWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 16),
         fontWeight: FontWeight.w700,
-        color: Colors.black87,
+        color: context.txt(Colors.black87),
       ),
     );
   }
@@ -104,7 +105,7 @@ class TermsScrollableContent extends StatelessWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 12),
         fontWeight: FontWeight.w400,
-        color: Colors.black87,
+        color: context.txt(Colors.black87),
         height: 1.4,
       ),
     );

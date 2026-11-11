@@ -11,6 +11,7 @@ import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../screens/main/riderside/rider_booking_detail_screen.dart';
 import 'rider_booking_card.dart';
 import 'rider_bookings_state_panel.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderBookingsList extends ConsumerWidget {
   final ValueChanged<RiderBooking>? onBookingTap;
@@ -124,7 +125,7 @@ class RiderBookingsList extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -139,7 +140,7 @@ class RiderBookingsList extends ConsumerWidget {
             // Divider
             Row(
               children: [
-                Expanded(child: Divider(color: Colors.grey.shade300)),
+                Expanded(child: Divider(color: context.brd(Colors.grey.shade300))),
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: ResponsiveUtils.spacing(context, 16),
@@ -150,11 +151,11 @@ class RiderBookingsList extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                 ),
-                Expanded(child: Divider(color: Colors.grey.shade300)),
+                Expanded(child: Divider(color: context.brd(Colors.grey.shade300))),
               ],
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -281,7 +282,7 @@ class RiderBookingsList extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
                 const Spacer(),
@@ -309,7 +310,7 @@ class RiderBookingsList extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: Colors.grey.shade800,
+                      color: context.txt(Colors.grey.shade800),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -330,7 +331,7 @@ class RiderBookingsList extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: Colors.grey.shade800,
+                      color: context.txt(Colors.grey.shade800),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

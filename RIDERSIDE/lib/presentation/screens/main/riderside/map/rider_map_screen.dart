@@ -17,6 +17,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../core/utils/rider_navigation_launcher.dart';
 import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 // Custom painter for map pattern
 class MapPatternPainter extends CustomPainter {
@@ -450,7 +451,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.surf(Colors.white),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             boxShadow: [
               BoxShadow(
@@ -470,7 +471,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: context.surf(Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -493,7 +494,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 18),
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF5F2D82),
+                              color: context.acc(const Color(0xFF5F2D82)),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -657,7 +658,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           Container(
                             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
+                              color: context.surf(Colors.grey.shade50),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -669,7 +670,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 14),
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF5F2D82),
+                                    color: context.acc(const Color(0xFF5F2D82)),
                                   ),
                                 ),
                                 SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -681,7 +682,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                                        color: Colors.grey.shade600,
+                                        color: context.txt(Colors.grey.shade600),
                                       ),
                                     ),
                                     Text(
@@ -690,7 +691,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 14),
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF5F2D82),
+                                        color: context.acc(const Color(0xFF5F2D82)),
                                       ),
                                     ),
                                   ],
@@ -704,7 +705,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                                        color: Colors.grey.shade600,
+                                        color: context.txt(Colors.grey.shade600),
                                       ),
                                     ),
                                     Text(
@@ -713,7 +714,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 14),
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF5F2D82),
+                                        color: context.acc(const Color(0xFF5F2D82)),
                                       ),
                                     ),
                                   ],
@@ -729,7 +730,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 18),
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF5F2D82),
+                              color: context.acc(const Color(0xFF5F2D82)),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -738,7 +739,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: Colors.grey.shade600,
+                              color: context.txt(Colors.grey.shade600),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -771,7 +772,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: ResponsiveUtils.fontSize(context, 12),
-                                          color: Colors.grey.shade700,
+                                          color: context.txt(Colors.grey.shade700),
                                         ),
                                       ),
                                     ),
@@ -802,15 +803,15 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Row(
         children: [
           Icon(
             icon,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
             size: ResponsiveUtils.fontSize(context, 20),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -824,7 +825,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -833,7 +834,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -896,13 +897,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
+          icon: Icon(Icons.arrow_back, color: context.acc(Color(0xFF5F2D82))),
           onPressed: () {
             AppLogger.debug('🔙 Back button pressed');
             Navigator.pop(context);

@@ -5,6 +5,7 @@ import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Builds a `tel:` URI from a customer phone string. Phone numbers come from
 /// free-text profile fields ("0912 345 6789", "(+63) 912-345-6789"), so strip
@@ -68,7 +69,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
+                  color: context.txt(Colors.grey.shade600),
                 ),
               ),
             ],
@@ -87,7 +88,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                   ),
                   child: Icon(
                     _isFoodOrder ? Icons.storefront : Icons.local_taxi,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                     size: 28,
                   ),
                 ),
@@ -101,7 +102,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 11),
-                          color: Colors.grey.shade600,
+                          color: context.txt(Colors.grey.shade600),
                         ),
                       ),
                       Text(
@@ -128,7 +129,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 6)),
@@ -151,7 +152,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                       child: Row(
                         children: [
                           Icon(Icons.phone,
-                              size: 18, color: const Color(0xFF5F2D82)),
+                              size: 18, color: context.acc(const Color(0xFF5F2D82))),
                           SizedBox(
                               width: ResponsiveUtils.spacing(context, 8)),
                           Text(
@@ -160,7 +161,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF5F2D82),
+                              color: context.acc(const Color(0xFF5F2D82)),
                               decoration: TextDecoration.underline,
                             ),
                           ),
@@ -174,7 +175,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: Colors.grey.shade500,
+                      color: context.sub(Colors.grey.shade500),
                     ),
                   ),
               ],
@@ -196,7 +197,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      Container(width: 2, height: 20, color: Colors.grey.shade300),
+                      Container(width: 2, height: 20, color: context.surf(Colors.grey.shade300)),
                     ],
                   ),
                 ),
@@ -223,7 +224,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade700,
+                          color: context.txt(Colors.grey.shade700),
                         ),
                       ),
                       Text(
@@ -247,7 +248,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade700,
+                          color: context.txt(Colors.grey.shade700),
                         ),
                       ),
                       Text(
@@ -279,7 +280,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF5F2D82),
+                        color: context.acc(const Color(0xFF5F2D82)),
                       ),
                     ),
                   ],
@@ -290,7 +291,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
                 if (booking.earnings != null) ...[
@@ -300,7 +301,7 @@ class RiderBookingDetailInfo extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade700,
+                      color: context.txt(Colors.grey.shade700),
                     ),
                   ),
                 ],
@@ -381,7 +382,7 @@ class _ServiceBadge extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 12),
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF5F2D82),
+          color: context.acc(const Color(0xFF5F2D82)),
         ),
       ),
     );
@@ -399,9 +400,9 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: context.surf(Colors.grey.shade50),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: child,
     );
@@ -437,7 +438,7 @@ class _RouteRow extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 11),
-                  color: Colors.grey.shade600,
+                  color: context.txt(Colors.grey.shade600),
                 ),
               ),
               Text(
@@ -493,7 +494,7 @@ class _ProofGrid extends StatelessWidget {
                 imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey.shade200,
+                  color: context.surf(Colors.grey.shade200),
                   child: const Icon(Icons.broken_image),
                 ),
               ),

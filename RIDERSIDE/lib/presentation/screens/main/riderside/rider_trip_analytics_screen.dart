@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../provider/main/riderside/rider_trip_analytics_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderTripAnalyticsScreen extends ConsumerWidget {
   const RiderTripAnalyticsScreen({super.key});
@@ -21,18 +22,18 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('trip_analytics', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -51,7 +52,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -76,7 +77,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: Colors.grey.shade700,
+                            color: context.txt(Colors.grey.shade700),
                           ),
                         ),
                       ),
@@ -158,7 +159,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                   Container(
                     padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -177,7 +178,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
                             fontWeight: FontWeight.w700,
-                            color: Colors.black87,
+                            color: context.txt(Colors.black87),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -192,7 +193,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                                    color: Colors.grey.shade600,
+                                    color: context.txt(Colors.grey.shade600),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -202,7 +203,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 18),
                                     fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF5F2D82),
+                                    color: context.acc(const Color(0xFF5F2D82)),
                                   ),
                                 ),
                               ],
@@ -215,7 +216,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                                    color: Colors.grey.shade600,
+                                    color: context.txt(Colors.grey.shade600),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -225,7 +226,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 18),
                                     fontWeight: FontWeight.w800,
-                                    color: const Color(0xFF5F2D82),
+                                    color: context.acc(const Color(0xFF5F2D82)),
                                   ),
                                 ),
                               ],
@@ -244,7 +245,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -257,7 +258,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: Colors.grey.shade500,
+                            color: context.sub(Colors.grey.shade500),
                           ),
                         ),
                       ),
@@ -289,7 +290,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -302,7 +303,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: Colors.grey.shade500,
+                            color: context.sub(Colors.grey.shade500),
                           ),
                         ),
                       ),
@@ -330,7 +331,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -361,7 +362,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 10),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 1,
@@ -386,7 +387,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),
-              color: Colors.grey.shade500,
+              color: context.sub(Colors.grey.shade500),
             ),
           ),
         ],
@@ -408,7 +409,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
@@ -428,7 +429,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF5F2D82),
+                color: context.acc(const Color(0xFF5F2D82)),
               ),
               textAlign: TextAlign.center,
             ),
@@ -451,7 +452,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
               ],
@@ -467,7 +468,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(10),
         border: Border(
           left: BorderSide(
@@ -495,7 +496,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                  color: context.txt(Colors.black87),
                 ),
               ),
               Text(
@@ -518,7 +519,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.grey.shade600,
+                  color: context.txt(Colors.grey.shade600),
                 ),
               ),
               Text(
@@ -526,7 +527,7 @@ class RiderTripAnalyticsScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.grey.shade600,
+                  color: context.txt(Colors.grey.shade600),
                 ),
               ),
             ],

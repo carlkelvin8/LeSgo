@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderDocumentVerificationScreen extends ConsumerStatefulWidget {
   const RiderDocumentVerificationScreen({super.key});
@@ -392,9 +393,9 @@ class _RiderDocumentVerificationScreenState
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         foregroundColor: const Color(0xFF5F2D82),
         title: Text(AppLocalization.translate('documents', lang), style: const TextStyle(fontFamily: 'TT Fors')),
       ),
@@ -426,7 +427,7 @@ class _RiderDocumentVerificationScreenState
                         final docId = (map['id'] as num?)?.toInt();
                         final status = map['status']?.toString() ?? '';
                         return ListTile(
-                          tileColor: Colors.grey.shade50,
+                          tileColor: context.surf(Colors.grey.shade50),
                           title: Text(
                             map['document_type']?.toString().replaceAll('_', ' ') ??
                                 'Document',

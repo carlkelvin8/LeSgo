@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 Future<bool> showRiderBookingConfirmDialog({
   required BuildContext context,
@@ -20,16 +21,16 @@ Future<bool> showRiderBookingConfirmDialog({
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(Icons.info_outline, color: Color(0xFF5F2D82), size: 28),
+            Icon(Icons.info_outline, color: context.acc(Color(0xFF5F2D82)), size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF2D2D2D),
+                  color: context.txt(Color(0xFF2D2D2D)),
                 ),
               ),
             ),
@@ -40,7 +41,7 @@ Future<bool> showRiderBookingConfirmDialog({
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 14,
-            color: Colors.grey.shade700,
+            color: context.txt(Colors.grey.shade700),
           ),
         ),
         actions: [
@@ -52,7 +53,7 @@ Future<bool> showRiderBookingConfirmDialog({
                 fontFamily: 'TT Fors',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade600,
+                color: context.txt(Colors.grey.shade600),
               ),
             ),
           ),

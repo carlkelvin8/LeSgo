@@ -19,6 +19,7 @@ import '../../../../../core/utils/rider_navigation_launcher.dart';
 import '../../../../../core/utils/offline_feedback_utils.dart';
 import '../rider_booking_detail_screen.dart';
 import '../../../../provider/main/riderside/rider_heatmap_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Enhanced Bookings View with integrated Waze-style map and ongoing orders
 class RiderBookingsMapView extends ConsumerStatefulWidget {
@@ -434,7 +435,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     if (!isOnDuty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surf(Colors.white),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: ListView(
@@ -448,7 +449,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   Icon(
                     Icons.pause_circle_outline,
                     size: 48,
-                    color: Colors.grey.shade400,
+                    color: context.sub(Colors.grey.shade400),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -457,7 +458,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       fontFamily: 'TT Fors',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
+                      color: context.txt(Colors.grey.shade700),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -467,7 +468,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -486,14 +487,14 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           width: 40,
           height: 4,
           decoration: BoxDecoration(
-            color: Colors.grey.shade300,
+            color: context.surf(Colors.grey.shade300),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
       ),
       if (ordersState.activeOrder != null) ...[
         _buildActiveOrderCard(ordersState.activeOrder!),
-        Divider(height: 1, color: Colors.grey.shade200),
+        Divider(height: 1, color: context.brd(Colors.grey.shade200)),
       ],
       Padding(
         padding: const EdgeInsets.all(16),
@@ -502,11 +503,11 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           children: [
             Text(
               AppLocalization.translate('available_orders', lang),
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF5F2D82),
+                color: context.acc(Color(0xFF5F2D82)),
               ),
             ),
             Row(
@@ -520,7 +521,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 10,
-                        color: Colors.grey.shade500,
+                        color: context.sub(Colors.grey.shade500),
                       ),
                     ),
                   ),
@@ -549,7 +550,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 14,
-              color: Colors.grey.shade600,
+              color: context.txt(Colors.grey.shade600),
             ),
           ),
         ),
@@ -572,7 +573,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
@@ -654,7 +655,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     fontFamily: 'TT Fors',
                     fontSize: 16.0,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
                 const Spacer(),
@@ -691,7 +692,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                       Text(
@@ -699,7 +700,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 13.0,
-                          color: Colors.grey.shade800,
+                          color: context.txt(Colors.grey.shade800),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -708,7 +709,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.navigation, size: 20, color: const Color(0xFF5F2D82)),
+                  icon: Icon(Icons.navigation, size: 20, color: context.acc(const Color(0xFF5F2D82))),
                   onPressed: () => _openNavigation(
                     order.pickupLat,
                     order.pickupLng,
@@ -738,7 +739,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                       Text(
@@ -746,7 +747,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 13.0,
-                          color: Colors.grey.shade800,
+                          color: context.txt(Colors.grey.shade800),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -755,7 +756,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.navigation, size: 20, color: const Color(0xFF5F2D82)),
+                  icon: Icon(Icons.navigation, size: 20, color: context.acc(const Color(0xFF5F2D82))),
                   onPressed: () => _openNavigation(
                     order.dropoffLat,
                     order.dropoffLng,
@@ -808,9 +809,9 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     return Container(
       padding: EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -839,7 +840,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     fontFamily: 'TT Fors',
                     fontSize: 10.0,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
               ),
@@ -850,7 +851,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   fontFamily: 'TT Fors',
                   fontSize: 14.0,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
+                  color: context.txt(Colors.grey.shade800),
                 ),
               ),
               const Spacer(),
@@ -860,7 +861,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   fontFamily: 'TT Fors',
                   fontSize: 16.0,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF5F2D82),
+                  color: context.acc(const Color(0xFF5F2D82)),
                 ),
               ),
             ],
@@ -870,14 +871,14 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           // Distance, payment method, and customer name
           Row(
             children: [
-              Icon(Icons.straighten, size: 14, color: Colors.grey.shade600),
+              Icon(Icons.straighten, size: 14, color: context.txt(Colors.grey.shade600)),
               SizedBox(width: 4.0),
               Text(
                 '${order.distanceKm.toStringAsFixed(1)} km',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12.0,
-                  color: Colors.grey.shade600,
+                  color: context.txt(Colors.grey.shade600),
                 ),
               ),
               SizedBox(width: 12.0),
@@ -908,7 +909,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               ),
               if (order.dropoffContactName.isNotEmpty) ...[
                 SizedBox(width: 12.0),
-                Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                Icon(Icons.person_outline, size: 14, color: context.txt(Colors.grey.shade600)),
                 SizedBox(width: 4.0),
                 Expanded(
                   child: Text(
@@ -916,7 +917,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 12.0,
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -942,7 +943,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                     Text(
@@ -950,7 +951,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12.0,
-                        color: Colors.grey.shade700,
+                        color: context.txt(Colors.grey.shade700),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -977,7 +978,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                     Text(
@@ -985,7 +986,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12.0,
-                        color: Colors.grey.shade700,
+                        color: context.txt(Colors.grey.shade700),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1091,7 +1092,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
@@ -1120,9 +1121,9 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                                   ),
                                 ),
                               )
-                            : const Icon(
+                            : Icon(
                                 Icons.refresh,
-                                color: Color(0xFF5F2D82),
+                                color: context.acc(Color(0xFF5F2D82)),
                                 size: 24,
                               ),
                       ),
@@ -1133,7 +1134,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(

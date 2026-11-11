@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderProfileTaskCard extends StatelessWidget {
   final String title;
@@ -15,7 +16,7 @@ class RiderProfileTaskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(
           ResponsiveUtils.spacing(context, 16),
         ),
@@ -47,7 +48,7 @@ class RiderProfileTaskCard extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    color: context.txt(Colors.black87),
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -57,7 +58,7 @@ class RiderProfileTaskCard extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
                     fontWeight: FontWeight.w400,
-                    color: Colors.black87,
+                    color: context.txt(Colors.black87),
                   ),
                 ),
               ],

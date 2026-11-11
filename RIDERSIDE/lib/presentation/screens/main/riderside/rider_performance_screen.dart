@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_performance_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderPerformanceScreen extends ConsumerWidget {
   const RiderPerformanceScreen({super.key});
@@ -21,18 +22,18 @@ class RiderPerformanceScreen extends ConsumerWidget {
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('performance', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -51,7 +52,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -76,7 +77,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: Colors.grey.shade700,
+                            color: context.txt(Colors.grey.shade700),
                           ),
                         ),
                       ),
@@ -102,7 +103,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                   Container(
                     padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -144,7 +145,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: Colors.grey.shade600,
+                            color: context.txt(Colors.grey.shade600),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -163,7 +164,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 12),
-                            color: Colors.grey.shade500,
+                            color: context.sub(Colors.grey.shade500),
                           ),
                         ),
                       ],
@@ -178,7 +179,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -226,7 +227,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -274,7 +275,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -304,7 +305,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                           children: [
                             Icon(
                               Icons.lightbulb_outline,
-                              color: const Color(0xFF5F2D82),
+                              color: context.acc(const Color(0xFF5F2D82)),
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -314,7 +315,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF5F2D82),
+                                color: context.acc(const Color(0xFF5F2D82)),
                               ),
                             ),
                           ],
@@ -352,7 +353,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
@@ -386,7 +387,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade600,
+                        color: context.txt(Colors.grey.shade600),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -421,7 +422,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),
-              color: Colors.grey.shade500,
+              color: context.sub(Colors.grey.shade500),
             ),
           ),
         ],
@@ -439,7 +440,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
@@ -477,7 +478,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 10),
-              color: Colors.grey.shade600,
+              color: context.txt(Colors.grey.shade600),
             ),
             textAlign: TextAlign.center,
           ),
@@ -491,7 +492,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
@@ -510,7 +511,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
             ),
           ),
           const SizedBox(height: 8),
@@ -542,7 +543,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
         ),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 10,
             color: Colors.grey,
@@ -556,7 +557,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '•',
           style: TextStyle(
             color: Color(0xFF5F2D82),
@@ -567,7 +568,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 12,
               color: Color(0xFF5F2D82),

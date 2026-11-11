@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantCompleteHeader extends StatelessWidget {
   const MerchantCompleteHeader({super.key});
@@ -15,7 +16,7 @@ class MerchantCompleteHeader extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 28),
             fontWeight: FontWeight.w900,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
           textAlign: TextAlign.center,
         ),
@@ -26,7 +27,7 @@ class MerchantCompleteHeader extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
             fontWeight: FontWeight.w400,
-            color: Colors.black54,
+            color: context.txt(Colors.black54),
           ),
           textAlign: TextAlign.center,
         ),

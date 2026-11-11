@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// The API rejects cancel reasons longer than 255 characters (422).
 const int kRiderCancelReasonMaxLength = 255;
@@ -67,7 +68,7 @@ class _CancelReasonDialogState extends State<_CancelReasonDialog> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey.shade700,
+              color: context.txt(Colors.grey.shade700),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -94,7 +95,7 @@ class _CancelReasonDialogState extends State<_CancelReasonDialog> {
             AppLocalization.translate('keep_order', lang),
             style: TextStyle(
               fontFamily: 'TT Fors',
-              color: Colors.grey.shade600,
+              color: context.txt(Colors.grey.shade600),
             ),
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/data_source/dto/chat/chat_dto.dart';
 import '../../provider/chat/chat_provider.dart';
 import '../../widgets/chat/chat_report_sheet.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class RiderChatScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -185,10 +186,10 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back, color: context.txt(Colors.black87)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -196,21 +197,21 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
           children: [
             Text(
               widget.customerName ?? 'Customer',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: context.txt(Colors.black87),
               ),
             ),
             Text(
               'Order #${widget.orderId}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 12, color: context.sub(Colors.grey[500]!)),
             ),
           ],
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Color(0xFF5F2D82)),
+            icon: Icon(Icons.more_vert, color: context.acc(Color(0xFF5F2D82))),
             onSelected: (value) async {
               if (value == 'report') return _report();
               if (value == 'block') return _toggleBlock(true);
@@ -234,7 +235,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF5F2D82)),
+            icon: Icon(Icons.refresh, color: context.acc(Color(0xFF5F2D82))),
             onPressed: () => ref
                 .read(chatProviderFamily(widget.orderId).notifier)
                 .loadMessages(),
@@ -285,13 +286,13 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.chat_bubble_outline,
-                            size: 56, color: Colors.grey[300]),
+                            size: 56, color: context.sub(Colors.grey[300]!)),
                         const SizedBox(height: 12),
                         Text(
                           'No messages yet.\nSay hello to your customer!',
                           textAlign: TextAlign.center,
                           style:
-                              TextStyle(color: Colors.grey[500], fontSize: 14),
+                              TextStyle(color: context.sub(Colors.grey[500]!), fontSize: 14),
                         ),
                       ],
                     ),
@@ -329,7 +330,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
     if (isActive && conversation != null && !conversation.canMessage) {
       return Container(
         width: double.infinity,
-        color: Colors.grey.shade200,
+        color: context.surf(Colors.grey.shade200),
         padding: const EdgeInsets.all(16),
         child: SafeArea(
           top: false,
@@ -338,7 +339,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                 ? 'You blocked this customer. Unblock them from the menu to send messages.'
                 : 'You can no longer send messages in this conversation.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.grey),
+            style: TextStyle(color: context.sub(Colors.grey)),
           ),
         ),
       );
@@ -347,18 +348,18 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
     if (!isActive) {
       return Container(
         width: double.infinity,
-        color: Colors.grey.shade200,
+        color: context.surf(Colors.grey.shade200),
         padding: const EdgeInsets.all(16),
-        child: const Text(
+        child: Text(
           'This conversation has ended.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: context.sub(Colors.grey)),
         ),
       );
     }
 
     return Container(
-      color: Colors.white,
+      color: context.surf(Colors.white),
       // No viewInsets here: the Scaffold already resizes the body for the
       // keyboard, so adding it again overflowed the column (and hid the list).
       padding: const EdgeInsets.only(left: 16, right: 8, top: 8, bottom: 8),
@@ -373,7 +374,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                 enabled: !isSending,
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
-                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  hintStyle: TextStyle(color: context.sub(Colors.grey[400]!)),
                   filled: true,
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
@@ -484,7 +485,7 @@ class _MessageBubble extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
+                          color: context.sub(Colors.grey[600]!),
                         ),
                       ),
                     ),

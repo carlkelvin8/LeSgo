@@ -9,6 +9,7 @@ import '../../../../core/services/mobile_config_service.dart';
 import '../../../../core/utils/app_localization.dart';
 import 'rider_customer_service_chat_screen.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderSafetyScreen extends ConsumerStatefulWidget {
   const RiderSafetyScreen({super.key});
@@ -138,7 +139,7 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 14,
-            color: Colors.grey.shade700,
+            color: context.txt(Colors.grey.shade700),
           ),
         ),
         actions: [
@@ -247,7 +248,7 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: context.surf(Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -259,7 +260,7 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 18),
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF5F2D82),
+                  color: context.acc(const Color(0xFF5F2D82)),
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -272,7 +273,7 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
                     children: [
                       Icon(
                         _iconFromString(t.$1),
-                        color: const Color(0xFF5F2D82),
+                        color: context.acc(const Color(0xFF5F2D82)),
                         size: 24,
                       ),
                       const SizedBox(width: 12),
@@ -282,7 +283,7 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: Colors.grey.shade800,
+                            color: context.txt(Colors.grey.shade800),
                           ),
                         ),
                       ),
@@ -325,18 +326,18 @@ class _RiderSafetyScreenState extends ConsumerState<RiderSafetyScreen> {
     final lang = ref.watch(appLanguageProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('safety_sos', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -490,7 +491,7 @@ class _ActionTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(icon, color: const Color(0xFF5F2D82)),
+        leading: Icon(icon, color: context.acc(const Color(0xFF5F2D82))),
         title: Text(
           title,
           style: const TextStyle(
@@ -503,7 +504,7 @@ class _ActionTile extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
-            color: Colors.grey.shade600,
+            color: context.txt(Colors.grey.shade600),
           ),
         ),
         trailing: const Icon(Icons.chevron_right),

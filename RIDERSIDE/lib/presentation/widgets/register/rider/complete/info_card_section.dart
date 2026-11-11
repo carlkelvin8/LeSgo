@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class InfoCardSection extends StatelessWidget {
   final String name;
@@ -20,7 +21,7 @@ class InfoCardSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: context.surf(const Color(0xFFF5F5F5)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -32,7 +33,7 @@ class InfoCardSection extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
               fontWeight: FontWeight.w600,
-              color: Colors.black54,
+              color: context.txt(Colors.black54),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -63,7 +64,7 @@ class InfoCardSection extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8D5F2),
+                  color: context.surf(const Color(0xFFE8D5F2)),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -91,7 +92,7 @@ class InfoCardSection extends StatelessWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, fontSize),
         fontWeight: fontWeight,
-        color: Colors.black87,
+        color: context.txt(Colors.black87),
       ),
     );
   }

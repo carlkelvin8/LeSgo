@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Map pin picker for merchant restaurant location during registration.
 class MerchantLocationPinPicker extends StatefulWidget {
@@ -108,7 +109,7 @@ class _MerchantLocationPinPickerState extends State<MerchantLocationPinPicker> {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: context.txt(Colors.black87),
                 ),
               ),
             ),
@@ -198,7 +199,7 @@ class _MerchantLocationPinPickerState extends State<MerchantLocationPinPicker> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),
-              color: Colors.grey.shade600,
+              color: context.txt(Colors.grey.shade600),
             ),
           ),
         ],

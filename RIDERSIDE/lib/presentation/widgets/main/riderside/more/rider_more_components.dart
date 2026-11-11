@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 const _purple = Color(0xFF6D3EA0);
 
@@ -254,7 +255,7 @@ class _MoreWalletCardState extends State<MoreWalletCard>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE0F0B8),
+                        color: context.surf(const Color(0xFFE0F0B8)),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -264,10 +265,10 @@ class _MoreWalletCardState extends State<MoreWalletCard>
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_forward_rounded,
                         size: 17,
-                        color: Color(0xFF2A0850),
+                        color: context.acc(Color(0xFF2A0850)),
                       ),
                     ),
                   ],

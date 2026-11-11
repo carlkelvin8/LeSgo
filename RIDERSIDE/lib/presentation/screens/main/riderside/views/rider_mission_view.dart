@@ -7,6 +7,7 @@ import '../../../../provider/main/riderside/rider_main_nav_provider.dart';
 import '../../../../provider/main/riderside/rider_mission_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../widgets/main/riderside/mission/rider_mission_card.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderMissionView extends ConsumerStatefulWidget {
   final bool includeBottomNavPadding;
@@ -277,16 +278,16 @@ class _RiderMissionViewState extends ConsumerState<RiderMissionView>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 24, vertical: 11),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBE478),
+                    color: context.surf(const Color(0xFFFBE478)),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Retry',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF2A0850),
+                      color: context.acc(Color(0xFF2A0850)),
                     ),
                   ),
                 ),

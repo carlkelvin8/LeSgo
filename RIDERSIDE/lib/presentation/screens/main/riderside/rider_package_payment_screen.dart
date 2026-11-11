@@ -7,6 +7,7 @@ import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/riderside/rider_package_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderPackagePaymentScreen extends ConsumerStatefulWidget {
   final RiderPackageUpgradeCheckout checkout;
@@ -103,7 +104,7 @@ class _RiderPackagePaymentScreenState
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 15),
-                color: const Color(0xFF5F2D82),
+                color: context.acc(const Color(0xFF5F2D82)),
                 fontWeight: FontWeight.w700,
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class SubmitInfoText extends StatelessWidget {
   const SubmitInfoText({super.key});
@@ -14,7 +15,7 @@ class SubmitInfoText extends StatelessWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 11),
         fontWeight: FontWeight.w400,
-        color: Colors.black54,
+        color: context.txt(Colors.black54),
         height: 1.4,
       ),
     );

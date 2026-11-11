@@ -6,6 +6,7 @@ import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_payout_provider.dart' hide PayoutRecord;
 import '../../../provider/main/riderside/rider_payout_provider.dart' show PayoutRecord, RiderPayoutState, riderPayoutProvider, riderPayoutHistoryProvider;
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderPayoutScreen extends ConsumerWidget {
   const RiderPayoutScreen({super.key});
@@ -25,18 +26,18 @@ class RiderPayoutScreen extends ConsumerWidget {
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('wallet_payouts', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -79,7 +80,7 @@ class RiderPayoutScreen extends ConsumerWidget {
             Container(
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.surf(Colors.white),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -97,7 +98,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -110,7 +111,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 28),
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF5F2D82),
+                          color: context.acc(const Color(0xFF5F2D82)),
                         ),
                       ),
                       if (payoutState.availableBalance > 0)
@@ -148,7 +149,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
                 fontWeight: FontWeight.w700,
-                color: Colors.black87,
+                color: context.txt(Colors.black87),
               ),
             ),
             const SizedBox(height: 12),
@@ -197,7 +198,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                           Icon(
                             Icons.history,
                             size: 48,
-                            color: Colors.grey.shade400,
+                            color: context.sub(Colors.grey.shade400),
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -205,7 +206,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: Colors.grey.shade600,
+                              color: context.txt(Colors.grey.shade600),
                             ),
                           ),
                         ],
@@ -235,7 +236,7 @@ class RiderPayoutScreen extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -266,7 +267,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -293,7 +294,7 @@ class RiderPayoutScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
         border: Border(
           left: BorderSide(
@@ -338,7 +339,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                     Container(
@@ -367,7 +368,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -376,7 +377,7 @@ class RiderPayoutScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 10),
-                    color: Colors.grey.shade500,
+                    color: context.sub(Colors.grey.shade500),
                   ),
                 ),
               ],
@@ -497,13 +498,13 @@ class _WithdrawalDialogState extends State<_WithdrawalDialog> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 12,
-                color: Colors.grey.shade600,
+                color: context.txt(Colors.grey.shade600),
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Make sure your GCash/Maya is linked in the wallet page before withdrawing.',
-              style: TextStyle(fontSize: 11, color: Colors.black54),
+              style: TextStyle(fontSize: 11, color: context.txt(Colors.black54)),
             ),
             const SizedBox(height: 16),
             TextField(

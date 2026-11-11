@@ -7,6 +7,7 @@ import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../widgets/widgets.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderWalletHistoryScreen extends ConsumerStatefulWidget {
   const RiderWalletHistoryScreen({super.key});
@@ -72,7 +73,7 @@ class _RiderWalletHistoryScreenState
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Column(
           children: [
@@ -94,7 +95,7 @@ class _RiderWalletHistoryScreenState
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 20),
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
               ),
@@ -175,7 +176,7 @@ class _RiderWalletHistoryScreenState
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(
                                         context, 12),
-                                    color: Colors.grey.shade600,
+                                    color: context.txt(Colors.grey.shade600),
                                   ),
                                 ),
                                 trailing: Text(
