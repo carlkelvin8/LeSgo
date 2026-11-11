@@ -319,8 +319,8 @@ class LesrideFeatureTest extends TestCase
         $this->patchJson("/api/v1/orders/{$order->id}/status", [
             'actual_distance_m' => 5000,
         ])->assertOk()
-            // 75 base + 5 km x 20 + (20 kg - 5) x 10 weight surcharge. The final
+            // 75 base (covers 3 km) + 2 km x 20 + (20 kg - 5) x 10 weight surcharge. The final
             // fare must use the admin's rates like the quote does, not hardcoded ones.
-            ->assertJsonPath('data.actual_fare', '325.00');
+            ->assertJsonPath('data.actual_fare', '265.00');
     }
 }
