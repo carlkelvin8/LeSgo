@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../provider/theme_provider.dart';
 
 class MerchantSettingsSection extends ConsumerWidget {
   const MerchantSettingsSection({super.key});
@@ -23,6 +25,7 @@ class MerchantSettingsSection extends ConsumerWidget {
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+        const _DarkModeTile(),
         _SettingsTile(
           icon: Icons.support_agent_outlined,
           label: 'Admin support chat',
@@ -103,6 +106,48 @@ class _SettingsTile extends StatelessWidget {
       ),
       trailing: Icon(Icons.chevron_right, color: Colors.grey.shade400),
       onTap: () => AppRouter.push(context, route),
+    );
+  }
+}
+
+/// Dark mode switch for the merchant app (same setting the rider app uses).
+class _DarkModeTile extends ConsumerWidget {
+  const _DarkModeTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+        color: context.acc(const Color(0xFF5F2D82)),
+        size: 22,
+      ),
+      title: Text(
+        'Dark mode',
+        style: TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: ResponsiveUtils.fontSize(context, 14),
+          fontWeight: FontWeight.w600,
+          color: context.txt(Colors.black87),
+        ),
+      ),
+      subtitle: Text(
+        isDark ? 'On' : 'Off',
+        style: TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: ResponsiveUtils.fontSize(context, 12),
+          color: context.sub(Colors.grey.shade600),
+        ),
+      ),
+      trailing: Switch.adaptive(
+        value: isDark,
+        activeTrackColor: const Color(0xFF8050AD),
+        onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
+      ),
+      onTap: () => ref.read(themeModeProvider.notifier).toggle(),
     );
   }
 }
