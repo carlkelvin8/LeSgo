@@ -56,11 +56,17 @@ class ApiService {
   }) async {
     AppLogger.network('POST', ApiConstants.loginEndpoint);
     try {
+      // One name per install. Without it every session of the same account
+      // shared the server default ("api-token"), and a token refresh on one
+      // device deleted every other device's access token, logging riders out.
+      final deviceId = await SecureStorageService.getDeviceId();
       final res = await _dio.post(
         ApiConstants.loginEndpoint,
         data: {
           'email': email,
           'password': password,
+          'device_name':
+              'lesgo-rider-${deviceId.length > 24 ? deviceId.substring(0, 24) : deviceId}',
           if (twoFactorCode != null && twoFactorCode.trim().isNotEmpty)
             'two_factor_code': twoFactorCode.trim(),
         },
