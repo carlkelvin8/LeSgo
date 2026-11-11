@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../provider/main/merchantside/merchant_food_detail_provider.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../common/menu_image_widget.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantFoodDetailContent extends StatelessWidget {
   final String foodName;
@@ -51,7 +52,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
             Container(
               height: ResponsiveUtils.imageHeight(context, 200),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F2),
+                color: context.surf(const Color(0xFFF2F2F2)),
                 borderRadius: BorderRadius.circular(
                   ResponsiveUtils.spacing(context, 16),
                 ),
@@ -65,13 +66,13 @@ class MerchantFoodDetailContent extends StatelessWidget {
                       placeholder: Icon(
                         Icons.image_not_supported,
                         size: 60,
-                        color: Colors.grey.shade400,
+                        color: context.sub(Colors.grey.shade400),
                       ),
                     )
                   : Icon(
                       Icons.image_not_supported,
                       size: 60,
-                      color: Colors.grey.shade400,
+                      color: context.sub(Colors.grey.shade400),
                     ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),
@@ -81,7 +82,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 22),
                 fontWeight: FontWeight.w800,
-                color: Colors.black,
+                color: context.txt(Colors.black),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -91,7 +92,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 18),
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF5F2D82),
+                color: context.acc(const Color(0xFF5F2D82)),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -101,7 +102,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.w400,
-                color: Colors.grey.shade600,
+                color: context.txt(Colors.grey.shade600),
                 height: 1.5,
               ),
             ),
@@ -112,7 +113,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 16),
                 fontWeight: FontWeight.w700,
-                color: Colors.black,
+                color: context.txt(Colors.black),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -193,7 +194,7 @@ class _OptionTitle extends StatelessWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 16),
         fontWeight: FontWeight.w700,
-        color: Colors.black,
+        color: context.txt(Colors.black),
       ),
     );
   }

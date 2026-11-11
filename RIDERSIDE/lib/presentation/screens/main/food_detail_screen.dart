@@ -6,6 +6,7 @@ import '../../provider/cart/cart_provider.dart';
 import '../../provider/main/merchantside/merchant_food_detail_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class FoodDetailScreen extends ConsumerWidget {
   final String foodName;
@@ -44,7 +45,7 @@ class FoodDetailScreen extends ConsumerWidget {
     final detailNotifier = ref.read(merchantFoodDetailProvider(input).notifier);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Column(
           children: [

@@ -4,6 +4,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/review_dto.dart';
 import '../../../common/menu_image_widget.dart';
 import 'merchant_rating_stars_display.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantReviewCard extends StatelessWidget {
   final ReviewDto review;
@@ -19,9 +20,9 @@ class MerchantReviewCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8D9F5)),
+        border: Border.all(color: context.brd(const Color(0xFFE8D9F5))),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -48,7 +49,7 @@ class MerchantReviewCard extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -57,7 +58,7 @@ class MerchantReviewCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade600,
+                        color: context.txt(Colors.grey.shade600),
                       ),
                     ),
                   ],
@@ -76,7 +77,7 @@ class MerchantReviewCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.black87,
+                color: context.txt(Colors.black87),
                 height: 1.45,
               ),
             ),
@@ -88,7 +89,7 @@ class MerchantReviewCard extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),
                 fontStyle: FontStyle.italic,
-                color: Colors.grey.shade500,
+                color: context.sub(Colors.grey.shade500),
               ),
             ),
           ],
@@ -113,7 +114,7 @@ class MerchantReviewCard extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 13),
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF5F2D82),
+          color: context.acc(const Color(0xFF5F2D82)),
         ),
       ),
     );

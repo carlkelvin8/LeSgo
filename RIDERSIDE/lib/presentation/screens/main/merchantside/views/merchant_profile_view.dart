@@ -19,6 +19,7 @@ import '../../../../widgets/main/merchantside/analytics/merchant_popular_items_s
 import '../merchant_edit_information_screen.dart';
 import '../merchant_menu_edit_item_screen.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 bool _canEditMenu(BuildContext context, WidgetRef ref) {
   if (ref.read(canEditMerchantMenuProvider)) return true;
@@ -143,18 +144,18 @@ class MerchantProfileView extends ConsumerWidget {
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              Divider(color: Colors.grey.shade300, thickness: 1),
+              Divider(color: context.brd(Colors.grey.shade300), thickness: 1),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
               const MerchantSettingsSection(),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-              Divider(color: Colors.grey.shade300, thickness: 1),
+              Divider(color: context.brd(Colors.grey.shade300), thickness: 1),
               SizedBox(height: ResponsiveUtils.spacing(context, 16)),
               Row(
                 children: [
                   Icon(
                     Icons.menu,
                     size: ResponsiveUtils.spacing(context, 18),
-                    color: Colors.black87,
+                    color: context.txt(Colors.black87),
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                   Text(
@@ -163,7 +164,7 @@ class MerchantProfileView extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 18),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      color: context.txt(Colors.black),
                     ),
                   ),
                   const Spacer(),
@@ -214,14 +215,14 @@ class MerchantProfileView extends ConsumerWidget {
                           Icon(
                             Icons.restaurant_menu,
                             size: 64,
-                            color: Colors.grey.shade400,
+                            color: context.sub(Colors.grey.shade400),
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'No menu items yet',
                             style: TextStyle(
                               fontSize: 18,
-                              color: Colors.grey.shade600,
+                              color: context.txt(Colors.grey.shade600),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -229,7 +230,7 @@ class MerchantProfileView extends ConsumerWidget {
                             'Add items to your menu to get started',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey.shade500,
+                              color: context.sub(Colors.grey.shade500),
                             ),
                           ),
                         ],
@@ -294,9 +295,9 @@ class _SalesReportCard extends StatelessWidget {
         width: double.infinity,
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
-          color: const Color(0xFFF3E5F5),
+          color: context.surf(const Color(0xFFF3E5F5)),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE1BEE7)),
+          border: Border.all(color: context.brd(const Color(0xFFE1BEE7))),
         ),
         child: Row(
           children: [
@@ -309,7 +310,7 @@ class _SalesReportCard extends StatelessWidget {
               ),
               child: Icon(
                 Icons.download_outlined,
-                color: const Color(0xFF7B1FA2),
+                color: context.acc(const Color(0xFF7B1FA2)),
                 size: ResponsiveUtils.fontSize(context, 22),
               ),
             ),
@@ -324,7 +325,7 @@ class _SalesReportCard extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 15),
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF4A148C),
+                      color: context.acc(const Color(0xFF4A148C)),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -341,7 +342,7 @@ class _SalesReportCard extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right,
-              color: const Color(0xFF7B1FA2),
+              color: context.acc(const Color(0xFF7B1FA2)),
             ),
           ],
         ),

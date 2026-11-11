@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class CartScreenHeader extends StatelessWidget {
   final VoidCallback onBack;
@@ -25,7 +26,7 @@ class CartScreenHeader extends StatelessWidget {
             child: Icon(
               Icons.arrow_back,
               size: ResponsiveUtils.imageHeight(context, 24),
-              color: const Color(0xFF202020),
+              color: context.txt(const Color(0xFF202020)),
             ),
           ),
           const Spacer(),
@@ -35,7 +36,7 @@ class CartScreenHeader extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF202020),
+              color: context.txt(const Color(0xFF202020)),
             ),
           ),
           const Spacer(),

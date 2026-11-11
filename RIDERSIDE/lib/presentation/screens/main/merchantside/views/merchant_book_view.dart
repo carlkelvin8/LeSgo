@@ -11,6 +11,7 @@ import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../food_detail_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Choices are stored as `{label, price}`; empty means the item has none.
 List<MerchantFoodSizeOption> _bookChoices(List<MenuOptionChoice> choices) =>
@@ -162,19 +163,19 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.wifi_off_rounded,
                         size: 16,
-                        color: Color(0xFF9A85B8),
+                        color: context.sub(Color(0xFF9A85B8)),
                       ),
                       const SizedBox(width: 8),
                       TextButton(
                         onPressed: () => ref.invalidate(merchantMenuProvider),
-                        child: const Text(
+                        child: Text(
                           'Retry',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Color(0xFF5F2D82),
+                            color: context.acc(Color(0xFF5F2D82)),
                           ),
                         ),
                       ),
@@ -563,7 +564,7 @@ class _GridItemCardState extends State<_GridItemCard>
                         )
                       : Container(
                           width: double.infinity,
-                          color: const Color(0xFFEDD9FF),
+                          color: context.surf(const Color(0xFFEDD9FF)),
                           child: const Center(
                             child: Icon(
                               Icons.restaurant_rounded,
@@ -608,11 +609,11 @@ class _GridItemCardState extends State<_GridItemCard>
                         ),
                         child: Text(
                           '₱${widget.item.price.toStringAsFixed(2)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF5F2D82),
+                            color: context.acc(Color(0xFF5F2D82)),
                           ),
                         ),
                       ),
@@ -676,10 +677,10 @@ class _EmptyItemsState extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.restaurant_menu_rounded,
                     size: 38,
-                    color: Color(0xFF6D3EA0),
+                    color: context.acc(Color(0xFF6D3EA0)),
                   ),
                 ),
               ),

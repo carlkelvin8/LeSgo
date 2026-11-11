@@ -5,6 +5,7 @@ import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../screens/main/merchantside/merchant_edit_information_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantProfileHeader extends ConsumerWidget {
   const MerchantProfileHeader({super.key});
@@ -29,7 +30,7 @@ class MerchantProfileHeader extends ConsumerWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 40),
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF5F2D82),
+                  color: context.acc(const Color(0xFF5F2D82)),
                   height: 0.95,
                 ),
               ),
@@ -51,7 +52,7 @@ class MerchantProfileHeader extends ConsumerWidget {
                     width: ResponsiveUtils.spacing(context, 126),
                     height: ResponsiveUtils.spacing(context, 126),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(
                         ResponsiveUtils.spacing(context, 16),
                       ),
@@ -81,7 +82,7 @@ class MerchantProfileHeader extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF5F2D82),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: context.brd(Colors.white), width: 2),
                       ),
                       child: const Icon(
                         Icons.camera_alt,
@@ -112,7 +113,7 @@ class MerchantProfileHeader extends ConsumerWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 32),
           fontWeight: FontWeight.w900,
-          color: const Color(0xFF5F2D82),
+          color: context.acc(const Color(0xFF5F2D82)),
           height: 0.9,
         ),
       ),

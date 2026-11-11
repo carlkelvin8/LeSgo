@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantReferralCodeField extends StatelessWidget {
   const MerchantReferralCodeField({
@@ -22,14 +23,14 @@ class MerchantReferralCodeField extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 11),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5A2E79),
+            color: context.acc(const Color(0xFF5A2E79)),
             letterSpacing: 1,
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
         DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xFFE9E4EC),
+            color: context.surf(const Color(0xFFE9E4EC)),
             borderRadius: BorderRadius.circular(
               ResponsiveUtils.spacing(context, 14),
             ),
@@ -44,7 +45,7 @@ class MerchantReferralCodeField extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 15),
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF2B2530),
+                    color: context.txt(const Color(0xFF2B2530)),
                     letterSpacing: 1.8,
                   ),
                   decoration: InputDecoration(
@@ -66,7 +67,7 @@ class MerchantReferralCodeField extends StatelessWidget {
                   child: Icon(
                     Icons.content_copy_rounded,
                     size: ResponsiveUtils.spacing(context, 20),
-                    color: const Color(0xFF5A1D8D),
+                    color: context.acc(const Color(0xFF5A1D8D)),
                   ),
                 ),
               ),

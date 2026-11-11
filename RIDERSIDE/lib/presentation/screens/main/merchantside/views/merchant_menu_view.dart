@@ -21,6 +21,7 @@ import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.da
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_duplicate.dart';
 import '../../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../../../widgets/common/menu_image_widget.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantMenuView extends ConsumerStatefulWidget {
   const MerchantMenuView({super.key});
@@ -327,15 +328,15 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                       error: (e, _) => Center(
                         child: TextButton.icon(
                           onPressed: () => ref.invalidate(merchantMenuProvider),
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.refresh_rounded,
-                            color: Color(0xFF5F2D82),
+                            color: context.acc(Color(0xFF5F2D82)),
                           ),
-                          label: const Text(
+                          label: Text(
                             'Retry',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
-                              color: Color(0xFF5F2D82),
+                              color: context.acc(Color(0xFF5F2D82)),
                             ),
                           ),
                         ),
@@ -753,19 +754,19 @@ class _GridMenuItemCard extends StatelessWidget {
                         source: item.imageUrl,
                         fit: BoxFit.cover,
                         placeholder: Container(
-                          color: const Color(0xFFF5F4F7),
-                          child: const Icon(
+                          color: context.surf(const Color(0xFFF5F4F7)),
+                          child: Icon(
                             Icons.restaurant_menu,
-                            color: Color(0xFFA49BAE),
+                            color: context.sub(Color(0xFFA49BAE)),
                             size: 40,
                           ),
                         ),
                       )
                     : Container(
-                        color: const Color(0xFFF5F4F7),
-                        child: const Icon(
+                        color: context.surf(const Color(0xFFF5F4F7)),
+                        child: Icon(
                           Icons.restaurant_menu,
-                          color: Color(0xFFA49BAE),
+                          color: context.sub(Color(0xFFA49BAE)),
                           size: 40,
                         ),
                       ),
@@ -819,11 +820,11 @@ class _GridMenuItemCard extends StatelessWidget {
                     // Price
                     Text(
                       '₱${item.price.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF5F2D82),
+                        color: context.acc(Color(0xFF5F2D82)),
                       ),
                     ),
 
@@ -961,15 +962,15 @@ class _PillButtonState extends State<_PillButton>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(widget.icon, size: 14, color: const Color(0xFF5F2D82)),
+            Icon(widget.icon, size: 14, color: context.acc(const Color(0xFF5F2D82))),
             const SizedBox(width: 5),
             Text(
               widget.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF5F2D82),
+                color: context.acc(Color(0xFF5F2D82)),
               ),
             ),
           ],
@@ -1210,7 +1211,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           source: widget.item.imageUrl,
                           fit: BoxFit.cover,
                           placeholder: Container(
-                            color: const Color(0xFFEDD9FF),
+                            color: context.surf(const Color(0xFFEDD9FF)),
                             child: const Icon(
                               Icons.restaurant_rounded,
                               size: 32,
@@ -1219,7 +1220,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           ),
                         )
                       : Container(
-                          color: const Color(0xFFEDD9FF),
+                          color: context.surf(const Color(0xFFEDD9FF)),
                           child: const Icon(
                             Icons.restaurant_rounded,
                             size: 32,
@@ -1270,11 +1271,11 @@ class _MenuItemCardState extends State<_MenuItemCard>
                             ),
                             child: Text(
                               '₱${widget.item.price.toStringAsFixed(2)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF5F2D82),
+                                color: context.acc(Color(0xFF5F2D82)),
                               ),
                             ),
                           ),
@@ -1466,7 +1467,7 @@ class _EmptyMenuState extends StatelessWidget {
                         ? Icons.search_off
                         : Icons.restaurant_menu_rounded,
                     size: 36,
-                    color: const Color(0xFF6D3EA0),
+                    color: context.acc(const Color(0xFF6D3EA0)),
                   ),
                 ),
               ),

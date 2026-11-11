@@ -9,6 +9,7 @@ import '../../../../../core/services/merchant_wallet_api.dart';
 import '../../../../provider/main/merchantside/merchant_wallet_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../merchant_withdrawal_history_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 
 class MerchantLespayView extends ConsumerStatefulWidget {
@@ -1048,8 +1049,8 @@ class _EmptyTransactions extends StatelessWidget {
                 width: 8,
               ),
             ),
-            child: const Icon(Icons.receipt_long_rounded,
-                size: 26, color: Color(0xFF6D3EA0)),
+            child: Icon(Icons.receipt_long_rounded,
+                size: 26, color: context.acc(Color(0xFF6D3EA0))),
           ),
           const SizedBox(height: 14),
           Text(
@@ -1253,7 +1254,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                   horizontal: 16, vertical: 16),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFEAE0F2)),
+                borderSide: BorderSide(color: context.brd(Color(0xFFEAE0F2))),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -1339,9 +1340,9 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                   const SizedBox(height: 4),
                   _SummaryRow(
                       label: 'Fee (3%)', value: '₱${_fee.toStringAsFixed(2)}'),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(vertical: 6),
-                    child: Divider(height: 1, color: Color(0xFFE8E0F0)),
+                    child: Divider(height: 1, color: context.brd(Color(0xFFE8E0F0))),
                   ),
                   _SummaryRow(
                     label: 'Total to pay',
@@ -1741,7 +1742,7 @@ class _SummaryRow extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: 12.5,
             fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-            color: const Color(0xFF9A85B8),
+            color: context.sub(const Color(0xFF9A85B8)),
           ),
         ),
         const Spacer(),

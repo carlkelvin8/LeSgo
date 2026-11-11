@@ -20,6 +20,7 @@ import '../../../widgets/main/merchantside/orders/merchant_prep_time_estimate.da
 import '../../../widgets/main/merchantside/orders/merchant_prep_timer_badge.dart';
 import '../../../widgets/main/merchantside/orders/merchant_quick_reply_section.dart';
 import '../../../widgets/main/merchantside/orders/merchant_special_instructions_banner.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantOrderDetailScreen extends ConsumerStatefulWidget {
   final OrderDto order;
@@ -177,9 +178,9 @@ class _MerchantOrderDetailScreenState
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         title: Text(
           'Order Details',
@@ -187,11 +188,11 @@ class _MerchantOrderDetailScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         actions: [
           if (resolvedOrder.userId > 0) _customerSafetyMenu(resolvedOrder),
         ],
@@ -202,7 +203,7 @@ class _MerchantOrderDetailScreenState
           children: [
             // Status Header
             Container(
-              color: Colors.white,
+              color: context.surf(Colors.white),
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
                 vertical: ResponsiveUtils.spacing(context, 20),
@@ -218,7 +219,7 @@ class _MerchantOrderDetailScreenState
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 20),
                           fontWeight: FontWeight.w800,
-                          color: Colors.black87,
+                          color: context.txt(Colors.black87),
                         ),
                       ),
                       Container(
@@ -255,7 +256,7 @@ class _MerchantOrderDetailScreenState
                       Icon(
                         Icons.access_time,
                         size: 16,
-                        color: Colors.grey.shade600,
+                        color: context.txt(Colors.grey.shade600),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -263,7 +264,7 @@ class _MerchantOrderDetailScreenState
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade600,
+                          color: context.txt(Colors.grey.shade600),
                         ),
                       ),
                     ],
@@ -295,7 +296,7 @@ class _MerchantOrderDetailScreenState
                   width: double.infinity,
                   padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE3F2FD),
+                    color: context.surf(const Color(0xFFE3F2FD)),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFF90CAF9)),
                   ),
@@ -341,7 +342,7 @@ class _MerchantOrderDetailScreenState
 
             // Order Items
             Container(
-              color: Colors.white,
+              color: context.surf(Colors.white),
               padding: EdgeInsets.all(horizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,7 +353,7 @@ class _MerchantOrderDetailScreenState
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -371,7 +372,7 @@ class _MerchantOrderDetailScreenState
                               width: ResponsiveUtils.spacing(context, 52),
                               height: ResponsiveUtils.spacing(context, 52),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFD69A),
+                                color: context.surf(const Color(0xFFFFD69A)),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               clipBehavior: Clip.antiAlias,
@@ -400,7 +401,7 @@ class _MerchantOrderDetailScreenState
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.grey.shade200,
+                                          color: context.surf(Colors.grey.shade200),
                                           borderRadius: BorderRadius.circular(
                                             4,
                                           ),
@@ -502,11 +503,11 @@ class _MerchantOrderDetailScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Items Subtotal',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: Colors.black54,
+                          color: context.txt(Colors.black54),
                         ),
                       ),
                       Text(
@@ -522,11 +523,11 @@ class _MerchantOrderDetailScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Delivery Fee',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: Colors.black54,
+                          color: context.txt(Colors.black54),
                         ),
                       ),
                       Text(
@@ -542,11 +543,11 @@ class _MerchantOrderDetailScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Payment Method',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: Colors.black54,
+                          color: context.txt(Colors.black54),
                         ),
                       ),
                       Text(
@@ -564,11 +565,11 @@ class _MerchantOrderDetailScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Payment Status',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: Colors.black54,
+                          color: context.txt(Colors.black54),
                         ),
                       ),
                       Text(
@@ -597,11 +598,11 @@ class _MerchantOrderDetailScreenState
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Credited to E-Wallet',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Colors.black54,
+                            color: context.txt(Colors.black54),
                           ),
                         ),
                         Text(
@@ -633,7 +634,7 @@ class _MerchantOrderDetailScreenState
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 18),
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF5F2D82),
+                          color: context.acc(const Color(0xFF5F2D82)),
                         ),
                       ),
                     ],
@@ -646,7 +647,7 @@ class _MerchantOrderDetailScreenState
 
             // Customer Info
             Container(
-              color: Colors.white,
+              color: context.surf(Colors.white),
               padding: EdgeInsets.all(horizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -657,7 +658,7 @@ class _MerchantOrderDetailScreenState
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -699,7 +700,7 @@ class _MerchantOrderDetailScreenState
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                                color: Colors.grey.shade600,
+                                color: context.txt(Colors.grey.shade600),
                               ),
                             ),
                           ],
@@ -712,9 +713,9 @@ class _MerchantOrderDetailScreenState
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.storefront_outlined,
-                          color: Color(0xFF5F2D82),
+                          color: context.acc(Color(0xFF5F2D82)),
                           size: 20,
                         ),
                         const SizedBox(width: 12),
@@ -722,12 +723,12 @@ class _MerchantOrderDetailScreenState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Branch',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 12,
-                                  color: Colors.grey,
+                                  color: context.sub(Colors.grey),
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -752,9 +753,9 @@ class _MerchantOrderDetailScreenState
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.location_on,
-                        color: Colors.grey,
+                        color: context.sub(Colors.grey),
                         size: 20,
                       ),
                       const SizedBox(width: 12),
@@ -762,12 +763,12 @@ class _MerchantOrderDetailScreenState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Delivery Address',
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 12,
-                                color: Colors.grey,
+                                color: context.sub(Colors.grey),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -792,7 +793,7 @@ class _MerchantOrderDetailScreenState
                 resolvedOrder.driver != null) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Container(
-                color: Colors.white,
+                color: context.surf(Colors.white),
                 padding: EdgeInsets.all(horizontalPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -803,7 +804,7 @@ class _MerchantOrderDetailScreenState
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -822,7 +823,7 @@ class _MerchantOrderDetailScreenState
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade600,
+                          color: context.txt(Colors.grey.shade600),
                         ),
                       ),
                   ],
@@ -897,7 +898,7 @@ class _MerchantOrderDetailScreenState
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
               ],
@@ -910,9 +911,9 @@ class _MerchantOrderDetailScreenState
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF7F2FB),
+                    color: context.surf(const Color(0xFFF7F2FB)),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE8D9F5)),
+                    border: Border.all(color: context.brd(const Color(0xFFE8D9F5))),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -920,7 +921,7 @@ class _MerchantOrderDetailScreenState
                       Icon(
                         Icons.confirmation_number_outlined,
                         size: 14,
-                        color: Colors.grey.shade700,
+                        color: context.txt(Colors.grey.shade700),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -929,7 +930,7 @@ class _MerchantOrderDetailScreenState
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 12),
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF5F2D82),
+                          color: context.acc(const Color(0xFF5F2D82)),
                         ),
                       ),
                     ],
@@ -944,7 +945,7 @@ class _MerchantOrderDetailScreenState
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade700,
+                    color: context.txt(Colors.grey.shade700),
                   ),
                 ),
               ],
@@ -1053,7 +1054,7 @@ class _MerchantOrderDetailScreenState
         width: double.infinity,
         padding: EdgeInsets.all(horizontalPadding),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surf(Colors.white),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),

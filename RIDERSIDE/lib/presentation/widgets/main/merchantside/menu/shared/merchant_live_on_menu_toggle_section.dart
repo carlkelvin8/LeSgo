@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantLiveOnMenuToggleSection extends StatelessWidget {
   final bool isLive;
@@ -18,7 +19,7 @@ class MerchantLiveOnMenuToggleSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFEAD3F7).withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEAD3F7)),
+        border: Border.all(color: context.brd(const Color(0xFFEAD3F7))),
       ),
       child: Row(
         children: [
@@ -32,7 +33,7 @@ class MerchantLiveOnMenuToggleSection extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -41,7 +42,7 @@ class MerchantLiveOnMenuToggleSection extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
               ],

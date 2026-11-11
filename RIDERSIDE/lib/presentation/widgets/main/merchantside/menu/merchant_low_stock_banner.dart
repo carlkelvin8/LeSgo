@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_low_stock_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Warning banner shown at the top of the menu view when items are low stock.
 class MerchantLowStockBanner extends ConsumerWidget {
@@ -24,7 +25,7 @@ class MerchantLowStockBanner extends ConsumerWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
+        color: context.surf(const Color(0xFFFFF3E0)),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFFFB74D)),
       ),

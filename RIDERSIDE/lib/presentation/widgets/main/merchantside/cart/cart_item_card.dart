@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class CartItemCard extends StatelessWidget {
   final String name;
@@ -28,7 +29,7 @@ class CartItemCard extends StatelessWidget {
           width: ResponsiveUtils.spacing(context, 54),
           height: ResponsiveUtils.spacing(context, 54),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFEFE5),
+            color: context.surf(const Color(0xFFFFEFE5)),
             borderRadius: BorderRadius.circular(12),
           ),
           alignment: Alignment.center,
@@ -50,7 +51,7 @@ class CartItemCard extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 16),
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF242424),
+                  color: context.txt(const Color(0xFF242424)),
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -60,7 +61,7 @@ class CartItemCard extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF8B8B8B),
+                  color: context.sub(const Color(0xFF8B8B8B)),
                 ),
               ),
             ],
@@ -71,8 +72,8 @@ class CartItemCard extends StatelessWidget {
           height: ResponsiveUtils.spacing(context, 42),
           padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.spacing(context, 10)),
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
-            border: Border.all(color: const Color(0xFFE1E1E1)),
+            color: context.surf(const Color(0xFFF5F5F5)),
+            border: Border.all(color: context.brd(const Color(0xFFE1E1E1))),
             borderRadius: BorderRadius.circular(24),
           ),
           child: Row(
@@ -94,7 +95,7 @@ class CartItemCard extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 16),
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF242424),
+                  color: context.txt(const Color(0xFF242424)),
                 ),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 14)),
@@ -126,7 +127,7 @@ class _StepAction extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 18),
           fontWeight: FontWeight.w500,
-          color: const Color(0xFF616161),
+          color: context.txt(const Color(0xFF616161)),
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class CartPriceSummary extends StatelessWidget {
   final double subtotal;
@@ -26,8 +27,8 @@ class CartPriceSummary extends StatelessWidget {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: const Color(0xFFE8E8E8)),
+          color: context.surf(Colors.white),
+          border: Border.all(color: context.brd(const Color(0xFFE8E8E8))),
           borderRadius: BorderRadius.circular(
             ResponsiveUtils.spacing(context, 12),
           ),
@@ -43,7 +44,7 @@ class CartPriceSummary extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 16),
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1F1F1F),
+                  color: context.txt(const Color(0xFF1F1F1F)),
                 ),
               ),
             ),
@@ -60,7 +61,7 @@ class CartPriceSummary extends StatelessWidget {
                   : 'PHP ${deliveryFee!.toStringAsFixed(2)}',
             ),
             Divider(
-              color: Colors.grey.shade300,
+              color: context.brd(Colors.grey.shade300),
               height: ResponsiveUtils.spacing(context, 16),
             ),
             _SummaryRow(
@@ -74,14 +75,14 @@ class CartPriceSummary extends StatelessWidget {
             ),
             if (total == null) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Pin a delivery location at checkout to see the exact total.',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 11,
-                    color: Color(0xFF747474),
+                    color: context.txt(Color(0xFF747474)),
                   ),
                 ),
               ),
@@ -132,7 +133,7 @@ class _SummaryRow extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
-                color: const Color(0xFF2A2A2A),
+                color: context.txt(const Color(0xFF2A2A2A)),
               ),
             ),
           ),

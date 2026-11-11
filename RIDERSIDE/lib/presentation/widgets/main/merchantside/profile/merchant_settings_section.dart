@@ -104,7 +104,7 @@ class _SettingsTile extends StatelessWidget {
           color: isDestructive ? Colors.red.shade700 : Colors.black87,
         ),
       ),
-      trailing: Icon(Icons.chevron_right, color: Colors.grey.shade400),
+      trailing: Icon(Icons.chevron_right, color: context.sub(Colors.grey.shade400)),
       onTap: () => AppRouter.push(context, route),
     );
   }

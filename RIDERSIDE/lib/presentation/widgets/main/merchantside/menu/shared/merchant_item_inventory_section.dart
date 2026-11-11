@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import 'merchant_live_on_menu_toggle_section.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantItemInventorySection extends StatelessWidget {
   final bool trackStock;
@@ -35,16 +36,16 @@ class MerchantItemInventorySection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 10)),
         Container(
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8F9FA),
+            color: context.surf(const Color(0xFFF8F9FA)),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: context.brd(Colors.grey.shade300)),
           ),
           child: Material(
             type: MaterialType.transparency,
@@ -65,7 +66,7 @@ class MerchantItemInventorySection extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
                 value: trackStock,
@@ -100,9 +101,9 @@ class MerchantItemInventorySection extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.surf(Colors.white),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(color: context.brd(Colors.grey.shade300)),
                       ),
                       child: Text(
                         '$stock',
@@ -110,7 +111,7 @@ class MerchantItemInventorySection extends StatelessWidget {
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 16),
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF5F2D82),
+                          color: context.acc(const Color(0xFF5F2D82)),
                         ),
                       ),
                     ),
@@ -136,7 +137,7 @@ class MerchantItemInventorySection extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                   value: autoHideWhenEmpty,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantProTipSection extends StatelessWidget {
   final String tipText;
@@ -16,7 +17,7 @@ class MerchantProTipSection extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
+        color: context.surf(const Color(0xFFFFF8E1)),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFFE082)),
       ),
@@ -35,7 +36,7 @@ class MerchantProTipSection extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),
-                color: Colors.grey.shade800,
+                color: context.txt(Colors.grey.shade800),
                 height: 1.4,
               ),
             ),

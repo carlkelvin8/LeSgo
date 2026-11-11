@@ -6,6 +6,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/merchant/partner_branch.dart';
 import '../../../provider/main/merchantside/merchant_branches_provider.dart';
 import 'merchant_branch_form_screen.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 const _purple = Color(0xFF5F2D82);
 
@@ -79,11 +80,11 @@ class _MerchantBranchesScreenState
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         centerTitle: true,
         title: Text(
           'Branches',
@@ -91,7 +92,7 @@ class _MerchantBranchesScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
       ),
@@ -120,7 +121,7 @@ class _MerchantBranchesScreenState
                         children: [
                           Text(
                             'Customers pick a branch when ordering, and riders are sent to that branch for pickup.',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: 13, color: context.sub(Colors.grey[600]!)),
                           ),
                           const SizedBox(height: 12),
                           ...state.branches.map((b) => _branchCard(context, b, state.isSaving)),
@@ -134,11 +135,11 @@ class _MerchantBranchesScreenState
     return ListView(
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-        Icon(icon, size: 56, color: Colors.grey[400]),
+        Icon(icon, size: 56, color: context.sub(Colors.grey[400]!)),
         const SizedBox(height: 12),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[600])),
+          child: Text(text, textAlign: TextAlign.center, style: TextStyle(color: context.sub(Colors.grey[600]!))),
         ),
       ],
     );
@@ -150,7 +151,7 @@ class _MerchantBranchesScreenState
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: context.brd(Colors.grey.shade200)),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
@@ -202,12 +203,12 @@ class _MerchantBranchesScreenState
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.place_outlined, size: 16, color: Colors.grey[600]),
+                Icon(Icons.place_outlined, size: 16, color: context.sub(Colors.grey[600]!)),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     branch.fullAddress.isEmpty ? 'No address' : branch.fullAddress,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    style: TextStyle(fontSize: 13, color: context.sub(Colors.grey[700]!)),
                   ),
                 ),
               ],

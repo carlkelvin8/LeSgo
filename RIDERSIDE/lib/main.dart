@@ -109,19 +109,20 @@ class _LesgoAppState extends State<LesgoApp> {
 
   ThemeData _darkTheme() {
     const violet = Color(0xFF5F2D82);
-    const violetDark = Color(0xFF3D1F57);
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       fontFamily: 'TT Fors',
-      scaffoldBackgroundColor: violetDark,
+      // Near-black surfaces (same tokens the dark screens use) so pages that
+      // rely on the theme match the ones with explicit dark colours.
+      scaffoldBackgroundColor: const Color(0xFF110E1A),
       colorScheme: const ColorScheme.dark(
         primary: violet,
         onPrimary: Colors.white,
         secondary: Color(0xFFB388FF),
         onSecondary: Colors.white,
-        surface: violet,
+        surface: Color(0xFF1E1730),
         onSurface: Colors.white,
         onSurfaceVariant: Colors.white70,
         outline: Colors.white24,
@@ -137,8 +138,12 @@ class _LesgoAppState extends State<LesgoApp> {
           fontSize: 18,
         ),
       ),
+      dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF1E1730)),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Color(0xFF1E1730),
+      ),
       cardTheme: CardThemeData(
-        color: violet,
+        color: const Color(0xFF1E1730),
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

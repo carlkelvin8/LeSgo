@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_mission_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantMissionCard extends StatefulWidget {
   final MerchantMission mission;
@@ -188,7 +189,7 @@ class _MerchantMissionProgressBar extends StatelessWidget {
               child: Container(
                 width: maxWidth * progress,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFBE478),
+                  color: context.surf(const Color(0xFFFBE478)),
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantItemDescriptionSection extends StatelessWidget {
   final TextEditingController controller;
@@ -22,7 +23,7 @@ class MerchantItemDescriptionSection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -32,9 +33,9 @@ class MerchantItemDescriptionSection extends StatelessWidget {
             vertical: ResponsiveUtils.spacing(context, 10),
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.surf(Colors.white),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: context.brd(Colors.grey.shade300)),
           ),
           child: TextField(
             controller: controller,

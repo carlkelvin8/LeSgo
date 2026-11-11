@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 // Guard to prevent duplicate dialogs
 final Set<String> _activeDialogs = {};
@@ -44,7 +45,7 @@ class _CancelReasonDialogContentState extends State<_CancelReasonDialogContent> 
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: context.brd(Colors.grey.shade300)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(

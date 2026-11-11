@@ -8,6 +8,7 @@ import '../../provider/cart/cart_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/cart_checkout_validation.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -80,13 +81,13 @@ class CartScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Delivery Details',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF5F2D82),
+                    color: context.acc(Color(0xFF5F2D82)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -130,7 +131,7 @@ class CartScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 11,
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -231,7 +232,7 @@ class CartScreen extends ConsumerWidget {
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: 11,
-                                      color: Colors.grey.shade600,
+                                      color: context.txt(Colors.grey.shade600),
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -240,7 +241,7 @@ class CartScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        Icon(Icons.map_outlined, color: Colors.grey.shade400),
+                        Icon(Icons.map_outlined, color: context.sub(Colors.grey.shade400)),
                       ],
                     ),
                   ),
@@ -487,12 +488,12 @@ class CartScreen extends ConsumerWidget {
                     'latLng': selectedLatLng,
                     'address': selectedAddress,
                   }),
-                  child: const Text(
+                  child: Text(
                     'Confirm',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF5F2D82),
+                      color: context.acc(Color(0xFF5F2D82)),
                     ),
                   ),
                 ),
@@ -553,7 +554,7 @@ class CartScreen extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -569,9 +570,9 @@ class CartScreen extends ConsumerWidget {
                             selectedAddress!.isNotEmpty) ...[
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.location_on,
-                                color: Color(0xFF5F2D82),
+                                color: context.acc(Color(0xFF5F2D82)),
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
@@ -604,7 +605,7 @@ class CartScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 13,
-                              color: Colors.grey.shade700,
+                              color: context.txt(Colors.grey.shade700),
                             ),
                           ),
                       ],
@@ -629,7 +630,7 @@ class CartScreen extends ConsumerWidget {
     final cartItems = cartState.items;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Column(
           children: [
@@ -688,7 +689,7 @@ class CartScreen extends ConsumerWidget {
       bottomNavigationBar: cartItems.isEmpty
           ? null
           : Container(
-              color: Colors.white,
+              color: context.surf(Colors.white),
               padding: EdgeInsets.fromLTRB(
                 ResponsiveUtils.horizontalPadding(context),
                 0,

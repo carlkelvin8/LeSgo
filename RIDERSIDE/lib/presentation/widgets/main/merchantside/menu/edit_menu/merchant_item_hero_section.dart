@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 /// Hero section for edit item screen with gradient background and pizza icon
 class MerchantItemHeroSection extends StatelessWidget {
@@ -50,7 +51,7 @@ class MerchantItemHeroSection extends StatelessWidget {
             right: 12,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.surf(Colors.white),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -64,7 +65,7 @@ class MerchantItemHeroSection extends StatelessWidget {
               child: Icon(
                 Icons.camera_alt,
                 size: ResponsiveUtils.fontSize(context, 20),
-                color: const Color(0xFF5F2D82),
+                color: context.acc(const Color(0xFF5F2D82)),
               ),
             ),
           ),

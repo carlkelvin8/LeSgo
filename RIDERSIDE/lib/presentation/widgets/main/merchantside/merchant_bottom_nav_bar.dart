@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantBottomNavBar extends ConsumerWidget {
   const MerchantBottomNavBar({super.key});
@@ -17,7 +18,7 @@ class MerchantBottomNavBar extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),

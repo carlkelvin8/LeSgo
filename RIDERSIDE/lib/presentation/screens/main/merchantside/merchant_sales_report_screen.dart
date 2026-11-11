@@ -8,6 +8,7 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 enum ReportPeriod { daily, weekly, monthly }
 
@@ -136,18 +137,18 @@ class _MerchantSalesReportScreenState
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
           'Sales Reports',
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         centerTitle: true,
@@ -237,7 +238,7 @@ class _MerchantSalesReportScreenState
               selected: isSelected,
               showCheckmark: false,
               selectedColor: const Color(0xFF5F2D82),
-              backgroundColor: Colors.white,
+              backgroundColor: context.surf(Colors.white),
               side: BorderSide(
                 color: isSelected
                     ? const Color(0xFF5F2D82)
@@ -265,16 +266,16 @@ class _MerchantSalesReportScreenState
         child: Container(
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.surf(Colors.white),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(color: context.brd(Colors.grey.shade200)),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.calendar_today,
                 size: ResponsiveUtils.fontSize(context, 18),
-                color: const Color(0xFF5F2D82),
+                color: context.acc(const Color(0xFF5F2D82)),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 12)),
               Expanded(
@@ -286,7 +287,7 @@ class _MerchantSalesReportScreenState
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 11),
-                        color: Colors.grey.shade600,
+                        color: context.txt(Colors.grey.shade600),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -296,7 +297,7 @@ class _MerchantSalesReportScreenState
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                   ],
@@ -304,7 +305,7 @@ class _MerchantSalesReportScreenState
               ),
               Icon(
                 Icons.chevron_right,
-                color: Colors.grey.shade400,
+                color: context.sub(Colors.grey.shade400),
               ),
             ],
           ),
@@ -327,9 +328,9 @@ class _MerchantSalesReportScreenState
         width: double.infinity,
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surf(Colors.white),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: context.brd(Colors.grey.shade200)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,7 +340,7 @@ class _MerchantSalesReportScreenState
                 Icon(
                   Icons.bar_chart,
                   size: ResponsiveUtils.fontSize(context, 18),
-                  color: const Color(0xFF5F2D82),
+                  color: context.acc(const Color(0xFF5F2D82)),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                 Text(
@@ -348,7 +349,7 @@ class _MerchantSalesReportScreenState
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 15),
                     fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    color: context.txt(Colors.black87),
                   ),
                 ),
               ],
@@ -400,7 +401,7 @@ class _MerchantSalesReportScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
               fontWeight: isBold ? FontWeight.w700 : FontWeight.w400,
-              color: Colors.grey.shade700,
+              color: context.txt(Colors.grey.shade700),
             ),
           ),
           Text(
@@ -433,7 +434,7 @@ class _MerchantSalesReportScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 15),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -509,7 +510,7 @@ class _MerchantSalesReportScreenState
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 11),
-                  color: Colors.grey.shade500,
+                  color: context.sub(Colors.grey.shade500),
                   fontStyle: FontStyle.italic,
                 ),
               ),

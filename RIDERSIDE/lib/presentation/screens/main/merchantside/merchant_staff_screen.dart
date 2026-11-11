@@ -6,6 +6,7 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/merchant/partner_staff_dto.dart';
 import '../../../provider/main/merchantside/merchant_staff_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantStaffScreen extends ConsumerStatefulWidget {
   const MerchantStaffScreen({super.key});
@@ -147,18 +148,18 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
           'Staff Accounts',
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         centerTitle: true,
@@ -241,7 +242,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.group_outlined, size: 64, color: Colors.grey.shade400),
+            Icon(Icons.group_outlined, size: 64, color: context.sub(Colors.grey.shade400)),
             const SizedBox(height: 16),
             Text(
               'No staff yet',
@@ -249,7 +250,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                 fontFamily: 'TT Fors',
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: context.txt(Colors.grey.shade700),
               ),
             ),
             const SizedBox(height: 8),
@@ -259,7 +260,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 13,
-                color: Colors.grey.shade500,
+                color: context.sub(Colors.grey.shade500),
               ),
             ),
           ],
@@ -283,7 +284,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: context.brd(Colors.grey.shade200)),
       ),
       child: Padding(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
@@ -314,7 +315,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 15),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   Text(
@@ -322,7 +323,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
-                      color: Colors.grey.shade600,
+                      color: context.txt(Colors.grey.shade600),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -349,7 +350,7 @@ class _MerchantStaffScreenState extends ConsumerState<MerchantStaffScreen> {
               ),
             ),
             PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
+              icon: Icon(Icons.more_vert, color: context.sub(Colors.grey.shade500)),
               onSelected: (value) {
                 switch (value) {
                   case 'role':
@@ -509,10 +510,10 @@ class _InviteStaffDialogContentState extends State<_InviteStaffDialogContent> {
               const SizedBox(height: 8),
               Text(
                 MerchantStaffPermissions.descriptionForRole(_selectedRole),
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12,
-                  color: Colors.black54,
+                  color: context.txt(Colors.black54),
                 ),
               ),
             ],

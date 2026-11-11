@@ -24,6 +24,7 @@ import 'views/merchant_profile_view.dart';
 import 'merchant_menu_add_item_screen.dart';
 import 'merchant_menu_add_category_screen.dart';
 import '../cart_screen.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantMainScreen extends ConsumerStatefulWidget {
   const MerchantMainScreen({super.key});
@@ -143,7 +144,7 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
     return MerchantNewOrderWatcher(
       child: MerchantPrepTimerSync(
       child: Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: isLespay
           ? const MerchantLespayView()
           : SafeArea(
@@ -222,10 +223,10 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
     return Center(
       child: Text(
         _getTitle(type),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF5F2D82),
+          color: context.acc(Color(0xFF5F2D82)),
         ),
       ),
     );

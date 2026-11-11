@@ -9,6 +9,7 @@ import '../../../provider/main/merchantside/merchant_reviews_provider.dart';
 import '../../../widgets/main/merchantside/reviews/merchant_rating_distribution_chart.dart';
 import '../../../widgets/main/merchantside/reviews/merchant_rating_stars_display.dart';
 import '../../../widgets/main/merchantside/reviews/merchant_review_card.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 final merchantReviewFilterProvider = StateProvider<int?>((ref) => null);
 
@@ -66,18 +67,18 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
           'Customer Reviews',
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         centerTitle: true,
@@ -143,7 +144,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
                         Icon(
                           Icons.rate_review_outlined,
                           size: 64,
-                          color: Colors.grey.shade400,
+                          color: context.sub(Colors.grey.shade400),
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -153,7 +154,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 16),
-                            color: Colors.grey.shade600,
+                            color: context.txt(Colors.grey.shade600),
                           ),
                         ),
                       ],
@@ -185,9 +186,9 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
       width: double.infinity,
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 18)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE8D9F5)),
+        border: Border.all(color: context.brd(const Color(0xFFE8D9F5))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,7 +202,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 42),
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF5F2D82),
+                  color: context.acc(const Color(0xFF5F2D82)),
                   height: 1,
                 ),
               ),
@@ -220,7 +221,7 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: Colors.grey.shade700,
+                        color: context.txt(Colors.grey.shade700),
                       ),
                     ),
                   ],

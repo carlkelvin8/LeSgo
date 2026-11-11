@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/cart/cart_provider.dart';
 import 'cart_item_card.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class CartOrderSection extends StatelessWidget {
   final List<CartItem> items;
@@ -26,8 +27,8 @@ class CartOrderSection extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE8E8E8)),
+        color: context.surf(Colors.white),
+        border: Border.all(color: context.brd(const Color(0xFFE8E8E8))),
         borderRadius: BorderRadius.circular(14),
         boxShadow: const [
           BoxShadow(
@@ -78,10 +79,10 @@ class CartOrderSection extends StatelessWidget {
             onTap: onAddMoreItems,
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.add_circle_outline,
                   size: 20,
-                  color: Color(0xFF6B3A96),
+                  color: context.acc(Color(0xFF6B3A96)),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                 Text(
@@ -90,7 +91,7 @@ class CartOrderSection extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF6B3A96),
+                    color: context.acc(const Color(0xFF6B3A96)),
                   ),
                 ),
               ],

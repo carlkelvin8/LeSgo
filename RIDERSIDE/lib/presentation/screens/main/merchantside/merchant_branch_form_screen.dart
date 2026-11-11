@@ -5,6 +5,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/merchant/partner_branch.dart';
 import '../../../provider/main/merchantside/merchant_branches_provider.dart';
 import '../../../widgets/register/merchant/info/merchant_location_pin_picker.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 const _purple = Color(0xFF5F2D82);
 
@@ -97,17 +98,17 @@ class _MerchantBranchFormScreenState
     final saving = ref.watch(merchantBranchesProvider).isSaving;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
           _isEdit ? 'Edit Branch' : 'Add Branch',
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
       ),

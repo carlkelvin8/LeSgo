@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_store_toggle_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// A prominent card with a switch to open/close the merchant store.
 class MerchantStoreToggleCard extends ConsumerWidget {
@@ -75,7 +76,7 @@ class MerchantStoreToggleCard extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.black54,
+                    color: context.txt(Colors.black54),
                   ),
                 ),
               ],

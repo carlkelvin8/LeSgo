@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantDietaryPreferencesSection extends StatefulWidget {
   final Set<String> selectedTags;
@@ -51,7 +52,7 @@ class _MerchantDietaryPreferencesSectionState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -67,7 +68,7 @@ class _MerchantDietaryPreferencesSectionState
                   hintStyle: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade500,
+                    color: context.sub(Colors.grey.shade500),
                   ),
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: ResponsiveUtils.spacing(context, 12),
@@ -75,11 +76,11 @@ class _MerchantDietaryPreferencesSectionState
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide(color: context.brd(Colors.grey.shade300)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide(color: context.brd(Colors.grey.shade300)),
                   ),
                   focusedBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -89,7 +90,7 @@ class _MerchantDietaryPreferencesSectionState
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.black,
+                  color: context.txt(Colors.black),
                 ),
               ),
             ),
@@ -136,7 +137,7 @@ class _MerchantDietaryPreferencesSectionState
                   color: isSelected ? Colors.white : const Color(0xFF5F2D82),
                 ),
               ),
-              backgroundColor: Colors.white,
+              backgroundColor: context.surf(Colors.white),
               selectedColor: const Color(0xFF5F2D82),
               side: BorderSide(
                 color: isSelected ? const Color(0xFF5F2D82) : Colors.grey.shade300,

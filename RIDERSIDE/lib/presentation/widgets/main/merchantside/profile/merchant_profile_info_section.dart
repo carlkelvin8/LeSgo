@@ -4,6 +4,7 @@ import '../../../../../../core/services/api_service.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantProfileInfoSection extends ConsumerWidget {
   const MerchantProfileInfoSection({super.key});
@@ -84,7 +85,7 @@ class MerchantProfileInfoSection extends ConsumerWidget {
             TextSpan(
               text: '$label ',
               style: TextStyle(
-                color: Colors.grey.shade600,
+                color: context.txt(Colors.grey.shade600),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -202,7 +203,7 @@ class _MerchantStoreStatusToggleState
                 TextSpan(
                   text: 'Store Status: ',
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -271,7 +272,7 @@ class _OperatingHoursSummary extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                    color: context.txt(Colors.grey.shade600),
                   ),
                 ),
               ),
@@ -302,7 +303,7 @@ class _OperatingHoursSummary extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey.shade600,
+              color: context.txt(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
