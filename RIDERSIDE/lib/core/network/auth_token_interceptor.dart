@@ -78,8 +78,9 @@ class AuthTokenInterceptor extends QueuedInterceptor {
   Future<void> _retryWith(
     String token,
     DioException err,
-    ErrorInterceptorHandler handler,
-  ) async {
+    ErrorInterceptorHandler handler, {
+    bool secondAttempt = false,
+  }) async {
     try {
       final requestOptions = err.requestOptions;
       requestOptions.headers['Authorization'] = 'Bearer $token';
@@ -88,6 +89,20 @@ class AuthTokenInterceptor extends QueuedInterceptor {
       handler.resolve(response);
     } on DioException catch (retryError) {
       if (retryError.response?.statusCode == 401) {
+        // The freshly refreshed token was rejected. That usually means another
+        // session of the same account refreshed at the same moment and revoked
+        // it, not that this session is dead. Refresh once more before giving up.
+        if (!secondAttempt) {
+          final again = await TokenRefreshService.instance.refreshAccessToken();
+          if (again != null && again.isNotEmpty) {
+            await _retryWith(again, retryError, handler, secondAttempt: true);
+            return;
+          }
+          if (TokenRefreshService.instance.lastFailureWasTransient) {
+            handler.next(retryError);
+            return;
+          }
+        }
         await _clearAuthIfStillUsing(token);
       }
       handler.next(retryError);
