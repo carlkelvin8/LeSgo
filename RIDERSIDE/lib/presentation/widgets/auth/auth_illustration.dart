@@ -56,6 +56,12 @@ class AuthIllustration extends ConsumerWidget {
                   key: const ValueKey('logo_illustration'),
                   height: ResponsiveUtils.imageHeight(context, 140),
                   fit: BoxFit.contain,
+                  colorFilter: context.isDarkUI
+                      ? const ColorFilter.mode(
+                          DarkAwareColors.darkAccent,
+                          BlendMode.srcIn,
+                        )
+                      : null,
                 ),
         ),
       ),
