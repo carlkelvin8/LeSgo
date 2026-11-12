@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantFoodDetailQuantityBar extends StatelessWidget {
   final int quantity;
@@ -25,7 +27,7 @@ class MerchantFoodDetailQuantityBar extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: context.surf(Colors.grey.shade100),
           borderRadius: BorderRadius.circular(
             ResponsiveUtils.spacing(context, 8),
           ),
@@ -34,12 +36,12 @@ class MerchantFoodDetailQuantityBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Quantity:',
+              context.tr('Quantity:'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: context.txt(Colors.black),
               ),
             ),
             Row(
@@ -50,7 +52,7 @@ class MerchantFoodDetailQuantityBar extends StatelessWidget {
                     width: ResponsiveUtils.spacing(context, 32),
                     height: ResponsiveUtils.spacing(context, 32),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(
                         ResponsiveUtils.spacing(context, 6),
                       ),
@@ -65,7 +67,7 @@ class MerchantFoodDetailQuantityBar extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                    color: context.txt(Colors.black),
                   ),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 12)),

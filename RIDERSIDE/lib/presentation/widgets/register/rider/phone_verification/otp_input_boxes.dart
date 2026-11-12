@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Single OTP digit input box
 class OTPInputBox extends StatelessWidget {
@@ -35,20 +36,20 @@ class OTPInputBox extends StatelessWidget {
         style: TextStyle(
           fontSize: ResponsiveUtils.fontSize(context, 24),
           fontWeight: FontWeight.w600,
-          color: Colors.black,
+          color: context.txt(Colors.black),
         ),
         decoration: InputDecoration(
           counterText: '',
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300, width: 2),
+            borderSide: BorderSide(color: context.brd(Colors.grey.shade300), width: 2),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: focusedBorderColor, width: 2),
           ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: context.surf(Colors.white),
         ),
         onChanged: onChanged,
       ),

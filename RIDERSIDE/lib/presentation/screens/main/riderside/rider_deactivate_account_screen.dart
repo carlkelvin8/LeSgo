@@ -7,6 +7,7 @@ import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderDeactivateAccountScreen extends ConsumerStatefulWidget {
   const RiderDeactivateAccountScreen({super.key});
@@ -141,7 +142,7 @@ class _RiderDeactivateAccountScreenState
                 decoration: InputDecoration(
                   labelText: AppLocalization.translate('confirm_password', lang),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.surf(Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -163,7 +164,7 @@ class _RiderDeactivateAccountScreenState
                 decoration: InputDecoration(
                   labelText: AppLocalization.translate('reason_optional', lang),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.surf(Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

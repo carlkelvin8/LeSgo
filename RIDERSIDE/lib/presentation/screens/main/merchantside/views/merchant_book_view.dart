@@ -1,13 +1,37 @@
+import '../../../../provider/main/merchantside/merchant_food_detail_provider.dart';
+import '../../../../../core/utils/menu_item_options.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_setup_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/merchant_grid_layout_utils.dart';
 import '../../../../widgets/common/menu_image_widget.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../food_detail_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
+
+/// Choices are stored as `{label, price}`; empty means the item has none.
+List<MerchantFoodSizeOption> _bookChoices(List<MenuOptionChoice> choices) =>
+    choices
+        .where((choice) => choice.label.isNotEmpty)
+        .map(
+          (choice) =>
+              MerchantFoodSizeOption(label: choice.label, price: choice.price),
+        )
+        .toList();
+
+List<MerchantFoodSizeOption> bookItemSizes(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).sizes);
+
+List<MerchantFoodSizeOption> bookItemFlavors(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).flavors);
+
+List<MerchantFoodSizeOption> bookItemAddons(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).addons);
 
 class MerchantBookView extends ConsumerStatefulWidget {
   const MerchantBookView({super.key});
@@ -71,7 +95,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Menu',
+                  context.tr('Menu'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 26,
@@ -81,7 +105,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   ),
                 ),
                 Text(
-                  'Browse your menu categories',
+                  context.tr('Browse your menu categories'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 12.5,
@@ -108,11 +132,13 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                 1,
                 MerchantMenuSetupCard(
                   isDark: isDark,
-                  onAction: () {
-                    HapticFeedback.selectionClick();
-                    ref.read(merchantNavProvider.notifier).state =
-                        MerchantNavType.menu;
-                  },
+                  onAction: ref.watch(canEditMerchantMenuProvider)
+                      ? () {
+                          HapticFeedback.selectionClick();
+                          ref.read(merchantNavProvider.notifier).state =
+                              MerchantNavType.menu;
+                        }
+                      : null,
                 ),
               ),
             ),
@@ -138,19 +164,19 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.wifi_off_rounded,
                         size: 16,
-                        color: Color(0xFF9A85B8),
+                        color: context.sub(Color(0xFF9A85B8)),
                       ),
                       const SizedBox(width: 8),
                       TextButton(
                         onPressed: () => ref.invalidate(merchantMenuProvider),
-                        child: const Text(
-                          'Retry',
+                        child: Text(
+                          context.tr('Retry'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Color(0xFF5F2D82),
+                            color: context.acc(Color(0xFF5F2D82)),
                           ),
                         ),
                       ),
@@ -223,13 +249,14 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                         pageBuilder: (_, anim, _) => FadeTransition(
                           opacity: anim,
                           child: FoodDetailScreen(
+                            menuItemId: item.id as int?,
                             foodName: item.name,
                             foodImage: item.imageUrl,
                             price: 'PHP ${item.price.toStringAsFixed(2)}',
                             description: item.description ?? '',
-                            sizes: item.options?['sizes'] != null
-                                ? List<String>.from(item.options!['sizes'])
-                                : ['Regular'],
+                            sizes: bookItemSizes(item.options),
+                            flavors: bookItemFlavors(item.options),
+                            addons: bookItemAddons(item.options),
                           ),
                         ),
                         transitionDuration: const Duration(milliseconds: 300),
@@ -435,7 +462,7 @@ class _AnimatedItemGrid extends StatelessWidget {
             crossAxisCount: cols,
             mainAxisSpacing: 12,
             crossAxisSpacing: 10,
-            childAspectRatio: .68,
+            childAspectRatio: merchantBookCardAspectRatio(constraints.maxWidth),
           ),
           itemBuilder: (context, i) {
             final item = items[i];
@@ -538,7 +565,7 @@ class _GridItemCardState extends State<_GridItemCard>
                         )
                       : Container(
                           width: double.infinity,
-                          color: const Color(0xFFEDD9FF),
+                          color: context.surf(const Color(0xFFEDD9FF)),
                           child: const Center(
                             child: Icon(
                               Icons.restaurant_rounded,
@@ -583,11 +610,11 @@ class _GridItemCardState extends State<_GridItemCard>
                         ),
                         child: Text(
                           '₱${widget.item.price.toStringAsFixed(2)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF5F2D82),
+                            color: context.acc(Color(0xFF5F2D82)),
                           ),
                         ),
                       ),
@@ -651,10 +678,10 @@ class _EmptyItemsState extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.restaurant_menu_rounded,
                     size: 38,
-                    color: Color(0xFF6D3EA0),
+                    color: context.acc(Color(0xFF6D3EA0)),
                   ),
                 ),
               ),

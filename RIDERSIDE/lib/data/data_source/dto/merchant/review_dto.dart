@@ -41,8 +41,9 @@ class ReviewDto {
       userId: (json['user_id'] as num?)?.toInt() ?? 0,
       reviewableType: json['reviewable_type']?.toString() ?? 'partner',
       reviewableId: (json['reviewable_id'] as num?)?.toInt() ?? 0,
-      rating: (json['rating'] as num).toInt(),
-      comment: json['comment']?.toString(),
+      // ratings_reviews stores these as overall_rating and review_comment.
+      rating: ((json['overall_rating'] ?? json['rating']) as num?)?.toInt() ?? 0,
+      comment: (json['review_comment'] ?? json['comment'])?.toString(),
       helpfulCount: (json['helpful_count'] as num?)?.toInt() ?? 0,
       createdAt: json['created_at']?.toString() ?? '',
       updatedAt: json['updated_at']?.toString() ?? '',

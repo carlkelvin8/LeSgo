@@ -5,6 +5,7 @@ import '../../../../../data/data_source/dto/merchant/order_dto.dart';
 import '../../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
 import '../../../common/menu_image_widget.dart';
 import 'merchant_prep_timer_badge.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class OrderQueuePalette {
   static const purple = Color(0xFF6D36C8);
@@ -81,9 +82,26 @@ class MerchantOrderQueueCard extends StatelessWidget {
           ).formatTimeOfDay(TimeOfDay.fromDateTime(created));
     final actionable =
         MerchantOrderOpsUtils.canAccept(status) ||
-        MerchantOrderOpsUtils.canMarkReadyForPickup(status);
+        MerchantOrderOpsUtils.canMarkReadyForPickup(
+          status,
+          alreadyReady: order.readyForPickupAt != null,
+        );
     final canReject = MerchantOrderOpsUtils.canReject(status);
-    final canCancel = MerchantOrderOpsUtils.canCancelAfterAccept(status);
+    final canCancel = MerchantOrderOpsUtils.canCancelAfterAccept(
+      status,
+      riderAssigned: order.driverId != null,
+    );
+    final label =
+        MerchantOrderOpsUtils.isReadyAtStore(
+          status,
+          alreadyReady: order.readyForPickupAt != null,
+        )
+        ? (status == 'driver_arrived_at_pickup'
+              ? 'Ready · rider at store'
+              : order.driverId != null
+              ? 'Ready for pickup · rider assigned'
+              : 'Ready for pickup')
+        : statusLabel(status);
     return Material(
       color: OrderQueuePalette.surface(context),
       clipBehavior: Clip.antiAlias,
@@ -120,7 +138,7 @@ class MerchantOrderQueueCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          statusLabel(status),
+                          label,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
@@ -234,6 +252,31 @@ class MerchantOrderQueueCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (order.branchName != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.storefront_outlined,
+                          size: 15,
+                          color: OrderQueuePalette.purple,
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            order.branchName!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: OrderQueuePalette.purple,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   if (order.dropoffAddress.trim().isNotEmpty) ...[
                     const SizedBox(height: 14),
                     Row(
@@ -311,7 +354,7 @@ class MerchantOrderQueueCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'FOOD TOTAL',
+                          context.tr('FOOD TOTAL'),
                           style: TextStyle(
                             fontSize: 9,
                             letterSpacing: 1.1,
@@ -341,7 +384,10 @@ class MerchantOrderQueueCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (MerchantOrderOpsUtils.showsPrepTimer(status) &&
+                if (MerchantOrderOpsUtils.showsPrepTimer(
+                      status,
+                      alreadyReady: order.readyForPickupAt != null,
+                    ) &&
                     timer != null) ...[
                   const SizedBox(height: 12),
                   MerchantPrepTimerBadge(timer: timer, compact: true),
@@ -406,7 +452,7 @@ class MerchantOrderQueueCard extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onOpen,
                     icon: const Icon(Icons.receipt_long_outlined, size: 17),
-                    label: const Text('View order details'),
+                    label: Text(context.tr('View order details')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: dark
                           ? const Color(0xFFD7BEFF)
@@ -420,7 +466,7 @@ class MerchantOrderQueueCard extends StatelessWidget {
                   if (canCancel)
                     TextButton(
                       onPressed: busy ? null : onCancel,
-                      child: const Text('Cancel order'),
+                      child: Text(context.tr('Cancel order')),
                     ),
                 ],
               ],

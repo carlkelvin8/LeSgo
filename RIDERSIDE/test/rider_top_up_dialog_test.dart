@@ -20,8 +20,8 @@ class _PaidWallet extends _Wallet {
         invoiceId: 'rider-checkout',
         invoiceUrl: 'https://checkout.example/pay',
         walletAmount: walletAmount,
-        feeAmount: 7.5,
-        totalCharge: 507.5,
+        feeAmount: 15,
+        totalCharge: 515,
       );
 
   @override
@@ -119,8 +119,8 @@ void main() {
       await tester.ensureVisible(find.text('₱500'));
       await tester.tap(find.text('₱500'));
       await tester.pumpAndSettle();
-      expect(find.text('₱7.50'), findsOneWidget);
-      expect(find.text('₱507.50'), findsOneWidget);
+      expect(find.text('₱15.00'), findsOneWidget);
+      expect(find.text('₱515.00'), findsOneWidget);
       await tester.ensureVisible(find.byType(FilledButton));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

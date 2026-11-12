@@ -7,6 +7,7 @@ import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderDeleteAccountScreen extends ConsumerStatefulWidget {
   const RiderDeleteAccountScreen({super.key});
@@ -149,7 +150,7 @@ class _RiderDeleteAccountScreenState
                 decoration: InputDecoration(
                   labelText: AppLocalization.translate('confirm_password', lang),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.surf(Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -177,7 +178,7 @@ class _RiderDeleteAccountScreenState
                 decoration: InputDecoration(
                   labelText: AppLocalization.translate('type_delete_to_confirm', lang),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.surf(Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -190,7 +191,7 @@ class _RiderDeleteAccountScreenState
                 decoration: InputDecoration(
                   labelText: AppLocalization.translate('reason_optional', lang),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.surf(Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

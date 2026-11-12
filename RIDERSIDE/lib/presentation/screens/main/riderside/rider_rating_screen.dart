@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../provider/main/riderside/rider_rating_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderRatingScreen extends ConsumerStatefulWidget {
   const RiderRatingScreen({super.key});
@@ -96,8 +97,8 @@ class _RiderRatingScreenState extends ConsumerState<RiderRatingScreen>
                 color: const Color(0xFF5F2D82).withValues(alpha: .08),
                 borderRadius: BorderRadius.circular(11),
               ),
-              child: const Icon(Icons.arrow_back_rounded,
-                  color: Color(0xFF5F2D82), size: 20),
+              child: Icon(Icons.arrow_back_rounded,
+                  color: context.acc(Color(0xFF5F2D82)), size: 20),
             ),
           ),
         ),
@@ -948,8 +949,8 @@ class _EmptyReviews extends StatelessWidget {
                   width: 8,
                 ),
               ),
-              child: const Icon(Icons.star_border_rounded,
-                  size: 30, color: Color(0xFF6D3EA0)),
+              child: Icon(Icons.star_border_rounded,
+                  size: 30, color: context.acc(Color(0xFF6D3EA0))),
             ),
           ),
           const SizedBox(height: 18),

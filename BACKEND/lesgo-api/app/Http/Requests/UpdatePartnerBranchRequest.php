@@ -25,6 +25,10 @@ class UpdatePartnerBranchRequest extends FormRequest
             'latitude'      => ['sometimes', 'nullable', 'numeric', 'between:-90,90'],
             'longitude'     => ['sometimes', 'nullable', 'numeric', 'between:-180,180'],
             'is_primary'    => ['sometimes', 'nullable', 'boolean'],
+            'is_open'       => ['sometimes', 'boolean'],
+            'logo_url'      => ['sometimes', 'nullable', 'url', 'max:500'],
+            'estimated_delivery_minutes' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:180'],
+            'delivery_fee'  => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'opening_hours' => ['sometimes', 'nullable', 'array'],
         ];
     }

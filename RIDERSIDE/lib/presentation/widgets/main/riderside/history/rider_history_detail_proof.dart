@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderHistoryDetailProof extends StatelessWidget {
   final String timestamp;
@@ -29,11 +30,11 @@ class RiderHistoryDetailProof extends StatelessWidget {
             width: double.infinity,
             height: ResponsiveUtils.spacing(context, 120),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: context.surf(Colors.grey.shade100),
               borderRadius: BorderRadius.circular(
                 ResponsiveUtils.spacing(context, 8),
               ),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: context.brd(Colors.grey.shade300)),
             ),
             child: Center(
               child: Text(
@@ -41,7 +42,7 @@ class RiderHistoryDetailProof extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: Colors.grey.shade600,
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
             ),
@@ -63,7 +64,7 @@ class RiderHistoryDetailProof extends StatelessWidget {
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     height: ResponsiveUtils.spacing(context, 120),
-                    color: Colors.grey.shade200,
+                    color: context.surf(Colors.grey.shade200),
                     child: const Center(child: Icon(Icons.broken_image)),
                   ),
                 ),
@@ -78,7 +79,7 @@ class RiderHistoryDetailProof extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 11),
             fontWeight: FontWeight.w400,
-            color: Colors.grey.shade500,
+            color: context.sub(Colors.grey.shade500),
           ),
         ),
       ],

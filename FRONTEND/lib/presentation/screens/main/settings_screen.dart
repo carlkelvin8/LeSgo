@@ -236,49 +236,53 @@ class _SettingsItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.accent(
-            context,
-            Color(0xFF5F2D82),
-          ).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          icon,
-          color: AppColors.accent(context, Color(0xFF5F2D82)),
-          size: 20,
-        ),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: ResponsiveUtils.fontSize(context, 15),
-          fontWeight: FontWeight.w600,
-          color: AppColors.foreground(context, Colors.black87),
-          fontFamily: 'TT Fors',
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(
-          fontSize: ResponsiveUtils.fontSize(context, 13),
-          color: AppColors.foreground(context, Colors.grey[600]!),
-          fontFamily: 'TT Fors',
-        ),
-      ),
-      trailing:
-          trailing ??
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: AppColors.foreground(context, Colors.grey[400]!),
+    // Material ancestor so ListTile ink is painted above the card's DecoratedBox.
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.accent(
+              context,
+              Color(0xFF5F2D82),
+            ).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
           ),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Icon(
+            icon,
+            color: AppColors.accent(context, Color(0xFF5F2D82)),
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: ResponsiveUtils.fontSize(context, 15),
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground(context, Colors.black87),
+            fontFamily: 'TT Fors',
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: ResponsiveUtils.fontSize(context, 13),
+            color: AppColors.foreground(context, Colors.grey[600]!),
+            fontFamily: 'TT Fors',
+          ),
+        ),
+        trailing:
+            trailing ??
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: AppColors.foreground(context, Colors.grey[400]!),
+            ),
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
     );
   }
 }

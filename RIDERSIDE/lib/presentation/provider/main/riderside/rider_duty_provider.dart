@@ -11,16 +11,21 @@ import 'rider_location_provider.dart';
 
 class RiderDutyNotifier extends StateNotifier<bool> {
   final Ref _ref;
-  final String? _dutyPrefKey;
+  late final int? _userId;
+  late final int? _knownDriverProfileId;
+  late final String? _dutyPrefKey;
   late final Future<void> _initialization;
   bool _changing = false;
   VoidCallback? _onDutyChanged;
 
-  RiderDutyNotifier(this._ref)
-    : _dutyPrefKey = _ref.read(riderAuthProvider).user == null
-          ? null
-          : 'rider_on_duty_${_ref.read(riderAuthProvider).user!.id}',
-      super(false) {
+  RiderDutyNotifier(this._ref) : super(false) {
+    // Keep identity tied to this notifier's session. The auth provider can
+    // rebuild while async preferences/profile reads are in flight; reading
+    // through its Ref after that rebuild triggers a Riverpod stale-Ref error.
+    final user = _ref.read(riderAuthProvider).user;
+    _userId = user?.id;
+    _knownDriverProfileId = user?.driverProfileId;
+    _dutyPrefKey = user == null ? null : 'rider_on_duty_${user.id}';
     _initialization = _initialize();
   }
 
@@ -31,21 +36,62 @@ class RiderDutyNotifier extends StateNotifier<bool> {
     if (_dutyPrefKey == null) return;
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getBool(_dutyPrefKey);
-    final onDuty = stored ?? false;
-    if (!mounted || !onDuty) return;
-    final error = await _syncAvailability(true);
-    if (!mounted || error != null) return;
+    bool? serverAvailability;
+    final userId = _userId;
+    if (userId != null) {
+      try {
+        final profile = await ApiService.getMyDriverProfile(userId);
+        serverAvailability = _parseAvailability(profile?['is_available']);
+      } catch (e) {
+        AppLogger.warn('Could not read rider availability from server: $e');
+      }
+    }
+
+    // Availability is server-owned. Preferences are only an offline fallback;
+    // otherwise an old local value can hide open orders after a server-side
+    // duty change (or keep the rider on duty after logging out elsewhere).
+    final onDuty = serverAvailability ?? stored ?? false;
+    if (!mounted) return;
+    if (serverAvailability != null && _dutyPrefKey != null) {
+      await prefs.setBool(_dutyPrefKey, serverAvailability);
+    }
+    if (!onDuty) return;
+    if (serverAvailability == null) {
+      final error = await _syncAvailability(true);
+      if (!mounted || error != null) return;
+    }
     state = true;
+    if (_dutyPrefKey != null && serverAvailability == null) {
+      await prefs.setBool(_dutyPrefKey, true);
+    }
     await _applySideEffects(true);
   }
 
+  bool? _parseAvailability(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      switch (value.trim().toLowerCase()) {
+        case '1':
+        case 'true':
+        case 'yes':
+          return true;
+        case '0':
+        case 'false':
+        case 'no':
+          return false;
+      }
+    }
+    return null;
+  }
+
   Future<String?> setOnDuty(bool onDuty) async {
-    await _initialization;
-    if (!mounted) return 'Duty screen is no longer active.';
     if (_changing) return 'A duty update is already in progress.';
-    if (state == onDuty) return null;
     _changing = true;
     try {
+      await _initialization;
+      if (!mounted) return 'Duty screen is no longer active.';
+      if (state == onDuty) return null;
       return await _commitDuty(onDuty);
     } catch (e) {
       return ApiService.extractError(e);
@@ -68,16 +114,14 @@ class RiderDutyNotifier extends StateNotifier<bool> {
   /// Requires attendance photo before going on duty.
   /// Returns an error message on failure, null on success.
   Future<String?> goOnDutyWithPhoto(XFile photo) async {
-    await _initialization;
-    if (!mounted) return 'Duty screen is no longer active.';
     if (_changing) return 'A duty update is already in progress.';
-    if (state) return null;
     _changing = true;
 
     try {
-      final driverProfileId = await _ref
-          .read(riderAuthProvider.notifier)
-          .ensureDriverProfileId();
+      await _initialization;
+      if (!mounted) return 'Duty screen is no longer active.';
+      if (state) return null;
+      final driverProfileId = await _resolveDriverProfileId();
       if (!mounted) return 'Duty screen is no longer active.';
       if (driverProfileId == null) {
         return AppLocalization.translate(
@@ -119,9 +163,7 @@ class RiderDutyNotifier extends StateNotifier<bool> {
 
   Future<String?> _syncAvailability(bool onDuty) async {
     try {
-      final driverProfileId = await _ref
-          .read(riderAuthProvider.notifier)
-          .ensureDriverProfileId();
+      final driverProfileId = await _resolveDriverProfileId();
       if (!mounted) return 'Duty screen is no longer active.';
       if (driverProfileId == null) {
         return 'Driver profile not found. Please sign in again.';
@@ -133,10 +175,18 @@ class RiderDutyNotifier extends StateNotifier<bool> {
       );
       return null;
     } catch (e) {
-      final errorMsg = 'Failed to sync driver availability: $e';
-      AppLogger.error('❌ $errorMsg');
-      return errorMsg;
+      AppLogger.error('❌ Failed to sync driver availability: $e');
+      // Map to a readable message (REGISTRATION_NOT_ACTIVE, 429, offline...)
+      // instead of showing the raw DioException text to the rider.
+      return ApiService.extractError(e);
     }
+  }
+
+  Future<int?> _resolveDriverProfileId() async {
+    if (_knownDriverProfileId != null) return _knownDriverProfileId;
+    if (!mounted) return null;
+    final authNotifier = _ref.read(riderAuthProvider.notifier);
+    return authNotifier.ensureDriverProfileId();
   }
 }
 

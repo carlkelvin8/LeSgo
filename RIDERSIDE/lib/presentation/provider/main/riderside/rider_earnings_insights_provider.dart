@@ -133,27 +133,10 @@ final riderEarningsInsightsProvider =
     bestDay = _weekdayName(bestWeekday);
   }
 
-  try {
-    final analyticsResponse = await ApiService.dio.get(
-      '/v1/drivers/me/trips/analytics',
-      queryParameters: {'period': 'month'},
-    );
-    final analytics =
-        (analyticsResponse.data['data'] ?? analyticsResponse.data)
-            as Map<String, dynamic>;
-
-    final peakHour = analytics['peak_hour']?.toString().trim();
-    if (peakHour != null && peakHour.isNotEmpty) {
-      bestHourRange = peakHour;
-    }
-
-    final analyticsBestDay = analytics['best_earning_day']?.toString().trim();
-    if (analyticsBestDay != null && analyticsBestDay.isNotEmpty) {
-      bestDay = analyticsBestDay;
-    }
-  } catch (_) {
-    // Trip analytics is optional; weekday totals above are the fallback.
-  }
+  // /v1/drivers/me/trips/analytics does not exist (404), so derive the peak
+  // hour from the entries we already have.
+  final peak = peakHourLabel(entries);
+  if (peak != null) bestHourRange = peak;
 
   return RiderEarningsInsightsState(
     dailyEarnings: dailyEarnings,
@@ -205,4 +188,18 @@ String _weekdayName(int weekday) {
 class _DayAggregate {
   double earnings = 0;
   int trips = 0;
+}
+
+/// Hour of day (e.g. "6 PM") with the highest total earnings, or null.
+String? peakHourLabel(List<RiderEarningsEntry> entries) {
+  final byHour = <int, double>{};
+  for (final e in entries) {
+    final at = e.completedAt;
+    if (at == null) continue;
+    byHour[at.hour] = (byHour[at.hour] ?? 0) + e.earnings;
+  }
+  if (byHour.isEmpty) return null;
+  final best = byHour.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+  final h12 = best % 12 == 0 ? 12 : best % 12;
+  return '$h12 ${best < 12 ? 'AM' : 'PM'}';
 }

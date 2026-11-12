@@ -34,9 +34,27 @@ class WalletController extends Controller
             abort(401, 'Unauthenticated');
         }
 
-        if ((int) $auth->id !== (int) $userId && ! $auth->isAdmin()) {
+        if ((int) $auth->id !== (int) $userId && ! $auth->isAdmin() && $this->walletOwnerId($auth) !== (int) $userId) {
             abort(403, 'Forbidden');
         }
+    }
+
+    /**
+     * Staff who may handle money see the store's wallet, not a personal one.
+     * Cooks keep their own (empty) wallet, matching the withdrawal rules.
+     */
+    private function walletOwnerId($user): int
+    {
+        $staff = $user->isPartnerStaff() ? $user->partnerStaff : null;
+
+        if (! $staff || ! $staff->is_active || ! $staff->partner) {
+            return (int) $user->id;
+        }
+
+        $canManage = $staff->isAdmin()
+            || (! empty($staff->permissions) ? $staff->hasPermission('manage_wallet') : $staff->isCashier());
+
+        return $canManage ? (int) $staff->partner->user_id : (int) $user->id;
     }
 
     /**
@@ -122,12 +140,12 @@ class WalletController extends Controller
 
     public function myWallet(Request $request): JsonResponse
     {
-        return $this->showByUser($request, (int) $request->user()->id);
+        return $this->showByUser($request, $this->walletOwnerId($request->user()));
     }
 
     public function myTransactions(Request $request): JsonResponse
     {
-        return $this->transactionsByUser($request, (int) $request->user()->id);
+        return $this->transactionsByUser($request, $this->walletOwnerId($request->user()));
     }
 
     /**
@@ -234,6 +252,12 @@ class WalletController extends Controller
         ]);
 
         $user = $request->user();
+
+        // A staff top-up would credit the staff member's own wallet, not the store's.
+        if ($user->isPartnerStaff()) {
+            return $this->error('Only the store owner can top up LesPay.', 403);
+        }
+
         $gatewayRef = $validated['gateway_reference'] ?? $validated['xendit_invoice_id'] ?? null;
 
         if (! empty($gatewayRef)) {

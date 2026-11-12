@@ -42,11 +42,26 @@ class RiderCommissionService
         self::PACKAGE_PRO => 2999.00,
     ];
 
-    public static function resolveShippingFee(Order $order): float
+    /**
+     * Platform fee held from the rider's wallet: the platform's cut for the
+     * rider's package tier (Basic 30%, Advance 20%, Pro 10% by default), min PHP 10.
+     * It matches platform_share, so the earnings shown equal what the wallet pays.
+     * Pass $fare to price it on a fare other than the estimate (e.g. the actual fare)
+     * and $profile for the rider taking the order (defaults to the assigned rider).
+     */
+    public static function resolveShippingFee(Order $order, ?float $fare = null, ?DriverProfile $profile = null): float
     {
-        $estimatedFare = (float) ($order->estimated_fare ?? 0);
+        $baseFare = $fare ?? (float) ($order->estimated_fare ?? 0);
+        $profile ??= $order->driver_id ? $order->driverProfile : null;
+        $riderRate = $profile ? self::resolveCommissionRate($profile) : self::BASIC_RATE;
+        $platformRate = max(0.0, min(1.0, 1.0 - $riderRate));
 
-        return round(max(10.0, $estimatedFare * 0.20), 2);
+        // Employees (no platform cut) are not charged a hold at all.
+        if ($platformRate <= 0.0) {
+            return 0.0;
+        }
+
+        return round(max(10.0, $baseFare * $platformRate), 2);
     }
 
     public static function applySharesToOrder(Order $order, ?DriverProfile $driverProfile): void
@@ -157,6 +172,19 @@ class RiderCommissionService
         return self::getPackagePrices()[$tier] ?? 0.0;
     }
 
+    /**
+     * Remaining amount to move from $currentTier to $targetTier: the target
+     * price minus what the rider already paid for their current package.
+     */
+    public static function getUpgradePrice(string $currentTier, string $targetTier): float
+    {
+        $prices = self::getPackagePrices();
+        $paid = $prices[self::normalizeTier($currentTier)] ?? 0.0;
+        $target = $prices[self::normalizeTier($targetTier)] ?? 0.0;
+
+        return round(max(0.0, $target - $paid), 2);
+    }
+
     public static function setPackagePrice(string $tier, float $price, ?string $updatedBy = null): void
     {
         $tier = self::normalizeTier($tier);
@@ -195,6 +223,9 @@ class RiderCommissionService
                 'one_time_price' => $prices[self::PACKAGE_ADVANCE],
                 'is_current' => $current === self::PACKAGE_ADVANCE,
                 'is_upgradeable' => self::canUpgradeTo($current, self::PACKAGE_ADVANCE),
+                'upgrade_price' => self::canUpgradeTo($current, self::PACKAGE_ADVANCE)
+                    ? self::getUpgradePrice($current, self::PACKAGE_ADVANCE)
+                    : null,
             ],
             [
                 'tier' => self::PACKAGE_PRO,
@@ -205,6 +236,9 @@ class RiderCommissionService
                 'one_time_price' => $prices[self::PACKAGE_PRO],
                 'is_current' => $current === self::PACKAGE_PRO,
                 'is_upgradeable' => self::canUpgradeTo($current, self::PACKAGE_PRO),
+                'upgrade_price' => self::canUpgradeTo($current, self::PACKAGE_PRO)
+                    ? self::getUpgradePrice($current, self::PACKAGE_PRO)
+                    : null,
             ],
             [
                 'tier' => self::PACKAGE_EMPLOYEE,

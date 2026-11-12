@@ -28,6 +28,7 @@ import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/services/notification_navigation_service.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 // Actually, RegisterScaffold is specific to registration. Standard Scaffold is better for Main Screen.
 
@@ -236,10 +237,10 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
     return Center(
       child: Text(
         _getTitle(type),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF5F2D82),
+          color: context.acc(Color(0xFF5F2D82)),
         ),
       ),
     );

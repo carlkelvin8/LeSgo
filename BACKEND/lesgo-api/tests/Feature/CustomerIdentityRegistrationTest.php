@@ -11,6 +11,12 @@ use Tests\TestCase;
 
 class CustomerIdentityRegistrationTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['services.google.client_id' => 'feature-test-google-client']);
+    }
+
     public function test_customer_registration_requires_selfie_and_government_id(): void
     {
         $response = $this->postJson('/api/v1/auth/register', [
@@ -63,7 +69,7 @@ class CustomerIdentityRegistrationTest extends TestCase
     public function test_new_google_customer_is_created_and_must_complete_identity_onboarding(): void
     {
         Http::fake([
-            'oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
                 'aud' => config('services.google.client_id'),
                 'sub' => 'google-customer-subject',
                 'email' => 'google-customer@example.com',
@@ -117,7 +123,7 @@ class CustomerIdentityRegistrationTest extends TestCase
         $user->delete();
 
         Http::fake([
-            'oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
                 'aud' => config('services.google.client_id'),
                 'sub' => 'returning-google-subject',
                 'email' => 'returning-google-customer@example.com',
@@ -151,7 +157,7 @@ class CustomerIdentityRegistrationTest extends TestCase
         ]);
 
         Http::fake([
-            'oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
                 'aud' => config('services.google.client_id'),
                 'sub' => 'existing-google-subject',
                 'email' => $user->email,
@@ -173,7 +179,7 @@ class CustomerIdentityRegistrationTest extends TestCase
     public function test_google_login_does_not_create_a_missing_account(): void
     {
         Http::fake([
-            'oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
                 'aud' => config('services.google.client_id'),
                 'sub' => 'unknown-google-subject',
                 'email' => 'unknown-google-customer@example.com',

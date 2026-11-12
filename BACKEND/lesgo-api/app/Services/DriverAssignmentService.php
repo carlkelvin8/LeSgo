@@ -56,10 +56,18 @@ class DriverAssignmentService
      */
     private function findAvailableDrivers(Order $order, int $radiusKm = 10): \Illuminate\Support\Collection
     {
+        $releasedProfileIds = \Illuminate\Support\Facades\DB::table('order_driver_releases')
+            ->where('order_id', $order->id)
+            ->pluck('driver_profile_id')
+            ->all();
+
         return User::query()
             ->where('role', 'driver')
-            ->whereHas('driverProfile', function ($query) use ($order) {
+            ->whereHas('driverProfile', function ($query) use ($order, $releasedProfileIds) {
+                // Never re-offer an order to a rider who backed out of it.
+                $query->whereNotIn('id', $releasedProfileIds);
                 $query->where('status', 'active')
+                    ->where('is_available', true)
                     ->supportsVehicleType($order->vehicle_type);
             })
             ->whereHas('wallet', function ($query) {
@@ -125,7 +133,7 @@ class DriverAssignmentService
                 ->lockForUpdate()
                 ->first();
 
-            if (! $driverProfile || $driverProfile->status !== 'active') {
+            if (! $driverProfile || $driverProfile->status !== 'active' || ! $driverProfile->is_available) {
                 return false;
             }
 

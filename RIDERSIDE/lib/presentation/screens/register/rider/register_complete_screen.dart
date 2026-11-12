@@ -8,6 +8,7 @@ import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../provider/register/riderside/rider_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RegisterCompleteScreen extends ConsumerWidget {
   const RegisterCompleteScreen({super.key});
@@ -34,7 +35,7 @@ class RegisterCompleteScreen extends ConsumerWidget {
     final state = ref.watch(registerInfoProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

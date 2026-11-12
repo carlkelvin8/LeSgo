@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_mission_provider.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantMissionView extends ConsumerWidget {
   const MerchantMissionView({super.key});
@@ -43,7 +44,7 @@ class MerchantMissionView extends ConsumerWidget {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Error loading missions',
+                                  context.tr('Error loading missions'),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
@@ -63,7 +64,7 @@ class MerchantMissionView extends ConsumerWidget {
                                   onPressed: () {
                                     ref.read(merchantMissionProvider.notifier).loadMissions();
                                   },
-                                  child: Text('Retry'),
+                                  child: Text(context.tr('Retry')),
                                 ),
                               ],
                             ),
@@ -82,7 +83,7 @@ class MerchantMissionView extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'EARN REWARDS!',
+                                    context.tr('EARN REWARDS!'),
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: ResponsiveUtils.fontSize(context, 26),
@@ -93,7 +94,7 @@ class MerchantMissionView extends ConsumerWidget {
                                   ),
                                   SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                                   Text(
-                                    'Complete missions and get rewards.',
+                                    context.tr('Complete missions and get rewards.'),
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -107,7 +108,7 @@ class MerchantMissionView extends ConsumerWidget {
                                       child: Padding(
                                         padding: EdgeInsets.all(32),
                                         child: Text(
-                                          'No missions available',
+                                          context.tr('No missions available'),
                                           style: TextStyle(
                                             color: Colors.white70,
                                             fontSize: 16,

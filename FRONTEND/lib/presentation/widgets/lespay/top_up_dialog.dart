@@ -88,8 +88,8 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
     return AlertDialog(
       title: Text(
         widget.purpose == TopUpPurpose.qrPay
-            ? 'QR Pay (1.5% fee)'
-            : 'Top Up (1.5% fee)',
+            ? 'QR Pay (3% fee)'
+            : 'Top Up (3% fee)',
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -104,9 +104,9 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
           children: [
             Text(
               widget.purpose == TopUpPurpose.qrPay
-                  ? 'A 1.5% top-up fee applies. Pay the total below with QR Ph — '
+                  ? 'A 3% top-up fee applies. Pay the total below with QR Ph — '
                       'scan the PayMongo QR code using GCash, Maya, or your banking app.'
-                  : 'A 1.5% top-up fee applies. You pay the total below using your credit or debit card.',
+                  : 'A 3% top-up fee applies. You pay the total below using your credit or debit card.',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),

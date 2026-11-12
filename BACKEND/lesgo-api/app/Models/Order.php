@@ -25,6 +25,7 @@ class Order extends Model
     protected $fillable = [
         'customer_id',
         'partner_id',
+        'partner_branch_id',
         'driver_id',
         'service_id',
         'pickup_address_id',
@@ -50,6 +51,7 @@ class Order extends Model
         'scheduled_at',
         'scheduled_delivery_time',  // When customer wants delivery
         'accepted_at',
+        'ready_for_pickup_at',
         'driver_arrived_at_pickup',
         'in_progress_at',
         'picked_up_at',
@@ -79,6 +81,7 @@ class Order extends Model
         'scheduled_at' => 'datetime',
         'scheduled_delivery_time' => 'datetime',  // Customer's preferred delivery time
         'accepted_at' => 'datetime',
+        'ready_for_pickup_at' => 'datetime',
         'driver_arrived_at_pickup' => 'datetime',
         'in_progress_at' => 'datetime',
         'picked_up_at' => 'datetime',
@@ -213,6 +216,11 @@ class Order extends Model
     public function partner()
     {
         return $this->belongsTo(Partner::class, 'partner_id');
+    }
+
+    public function partnerBranch()
+    {
+        return $this->belongsTo(PartnerBranch::class, 'partner_branch_id');
     }
 
     public function driverProfile()

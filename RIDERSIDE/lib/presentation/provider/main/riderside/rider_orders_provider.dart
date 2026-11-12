@@ -298,7 +298,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         activeOrder: updated,
         action: RiderOrderAction.none,
         actionOrderId: null,
-        successMessage: 'Order #$orderId cancelled.',
+        successMessage: 'You left order #$orderId. It was passed to other riders.',
         clearActiveOrder: true,
       );
 
@@ -365,7 +365,7 @@ class RiderOrdersNotifier extends StateNotifier<RiderOrdersState> {
         final order = available.firstWhere((o) => o.id == id);
         PushNotificationService.show(
           title: 'New order available',
-          body: '${order.serviceName} • ${order.pickupAddress}',
+          body: '${order.serviceName} • ${order.pickupDisplay}',
           payload: 'order_$id',
         );
       }

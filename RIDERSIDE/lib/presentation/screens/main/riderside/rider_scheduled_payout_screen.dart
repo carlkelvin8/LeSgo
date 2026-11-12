@@ -6,6 +6,7 @@ import '../../../../core/services/scheduled_payout_service.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderScheduledPayoutScreen extends ConsumerStatefulWidget {
   const RiderScheduledPayoutScreen({super.key});
@@ -122,18 +123,18 @@ class _RiderScheduledPayoutScreenState
         .toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('scheduled_payout', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -147,7 +148,7 @@ class _RiderScheduledPayoutScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade700,
+              color: context.sub(Colors.grey.shade700),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -274,7 +275,7 @@ class _RiderScheduledPayoutScreenState
                 fontFamily: 'TT Fors',
                 fontWeight: FontWeight.w700,
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey.shade700,
+                color: context.sub(Colors.grey.shade700),
               ),
             ),
             subtitle: Text(
@@ -316,7 +317,7 @@ class _RiderScheduledPayoutScreenState
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey.shade600,
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -326,7 +327,7 @@ class _RiderScheduledPayoutScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade700,
+              color: context.sub(Colors.grey.shade700),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -336,7 +337,7 @@ class _RiderScheduledPayoutScreenState
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.grey.shade600,
+                color: context.sub(Colors.grey.shade600),
               ),
             )
           else

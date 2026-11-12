@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../common/menu_image_widget.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantItemImageUploadSection extends StatelessWidget {
   final VoidCallback onTap;
@@ -22,10 +24,10 @@ class MerchantItemImageUploadSection extends StatelessWidget {
       height: ResponsiveUtils.spacing(context, 160),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFA),
+        color: context.surf(const Color(0xFFFAFAFA)),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFE0E0E0),
+          color: context.brd(const Color(0xFFE0E0E0)),
           width: 2,
           strokeAlign: BorderSide.strokeAlignOutside,
         ),
@@ -61,21 +63,21 @@ class MerchantItemImageUploadSection extends StatelessWidget {
                     _placeholder(context),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                     Text(
-                      'Tap to upload item photo',
+                      context.tr('Tap to upload item photo'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: const Color(0xFF757575),
+                        color: context.sub(const Color(0xFF757575)),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                     Text(
-                      'JPG, PNG (Max 5MB)',
+                      context.tr('JPG, PNG (Max 5MB)'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 11),
-                        color: const Color(0xFFBDBDBD),
+                        color: context.sub(const Color(0xFFBDBDBD)),
                       ),
                     ),
                   ],
@@ -89,7 +91,7 @@ class MerchantItemImageUploadSection extends StatelessWidget {
     return Icon(
       Icons.add_a_photo_outlined,
       size: ResponsiveUtils.fontSize(context, 48),
-      color: const Color(0xFFBDBDBD),
+      color: context.sub(const Color(0xFFBDBDBD)),
     );
   }
 }

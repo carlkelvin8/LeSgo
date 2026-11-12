@@ -7,6 +7,7 @@ import '../../../../provider/main/riderside/rider_inbox_provider.dart';
 import '../../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
 import '../../../../screens/chat/rider_chat_screen.dart';
 import '../../../../../data/data_source/dto/chat/chat_dto.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderInboxView extends ConsumerStatefulWidget {
   const RiderInboxView({super.key});
@@ -74,56 +75,65 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
     }
 
     if (state.error != null && state.conversations.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 56, color: Colors.grey[400]),
-            const SizedBox(height: 12),
-            Text(
-              'Could not load messages',
-              style: TextStyle(color: Colors.grey[600], fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
+      // Keep Admin Support reachable and pull-to-refresh working on failure.
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          _AdminSupportTile(
+            onTap: () =>
+                AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
+          ),
+          const Divider(height: 1, indent: 72),
+          const SizedBox(height: 60),
+          Icon(Icons.error_outline, size: 56, color: context.sub(Colors.grey[400]!)),
+          const SizedBox(height: 12),
+          Text(
+            'Could not load messages',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.sub(Colors.grey[600]!), fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
               onPressed: () =>
                   ref.read(riderInboxProvider.notifier).loadConversations(),
-              child: const Text(
+              child: Text(
                 'Retry',
-                style: TextStyle(color: Color(0xFF5F2D82)),
+                style: TextStyle(color: context.acc(Color(0xFF5F2D82))),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
     if (state.conversations.isEmpty) {
       return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           _AdminSupportTile(
             onTap: () => AppRouter.push(context, MainRoutes.riderCustomerServiceChat),
           ),
           const Divider(height: 1, indent: 72),
           const SizedBox(height: 80),
-          const Center(
+          Center(
             child: Column(
               children: [
-                Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
+                Icon(Icons.chat_bubble_outline, size: 64, color: context.sub(Colors.grey)),
                 SizedBox(height: 16),
                 Text(
                   'No conversations yet',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey,
+                    color: context.sub(Colors.grey),
                   ),
                 ),
                 SizedBox(height: 8),
                 Text(
                   'Chat with customers will appear here\nonce you accept an order.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  style: TextStyle(fontSize: 14, color: context.sub(Colors.grey)),
                 ),
               ],
             ),
@@ -133,6 +143,7 @@ class _RiderInboxViewState extends ConsumerState<RiderInboxView> {
     }
 
     return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: state.conversations.length + 1, // +1 for admin support
       separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
@@ -180,10 +191,10 @@ class _ConversationTile extends StatelessWidget {
           backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
           child: Text(
             customerName.isNotEmpty ? customerName[0].toUpperCase() : 'C',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF5F2D82),
+              color: context.acc(Color(0xFF5F2D82)),
             ),
           ),
         ),
@@ -235,7 +246,7 @@ class _ConversationTile extends StatelessWidget {
           lastMsg,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+          style: TextStyle(fontSize: 13, color: context.sub(Colors.grey[600]!)),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -276,28 +287,28 @@ class _AdminSupportTile extends StatelessWidget {
       leading: CircleAvatar(
         radius: 24,
         backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.15),
-        child: const Icon(
+        child: Icon(
           Icons.support_agent,
-          color: Color(0xFF5F2D82),
+          color: context.acc(Color(0xFF5F2D82)),
           size: 24,
         ),
       ),
-      title: const Text(
+      title: Text(
         'Admin Support',
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontWeight: FontWeight.w700,
           fontSize: 15,
-          color: Color(0xFF5F2D82),
+          color: context.acc(Color(0xFF5F2D82)),
         ),
       ),
-      subtitle: const Text(
+      subtitle: Text(
         'Chat with LeSGo admin support',
-        style: TextStyle(fontSize: 13, color: Colors.grey),
+        style: TextStyle(fontSize: 13, color: context.sub(Colors.grey)),
       ),
-      trailing: const Icon(
+      trailing: Icon(
         Icons.chevron_right,
-        color: Color(0xFF5F2D82),
+        color: context.acc(Color(0xFF5F2D82)),
       ),
     );
   }

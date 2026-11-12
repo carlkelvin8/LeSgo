@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_commission_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Provider to track selected package during registration
 final selectedRegistrationPackageProvider = StateProvider<String?>((ref) => null);
@@ -31,7 +32,7 @@ class RiderPackageSelectionStep extends ConsumerWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 22),
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF5F2D82),
+              color: context.acc(const Color(0xFF5F2D82)),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -40,7 +41,7 @@ class RiderPackageSelectionStep extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: Colors.grey.shade600,
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -110,7 +111,7 @@ class RiderPackageSelectionStep extends ConsumerWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: Colors.grey.shade500,
+                color: context.sub(Colors.grey.shade500),
               ),
             ),
           ),
@@ -174,9 +175,9 @@ class _PackageCard extends StatelessWidget {
                 Row(
                   children: [
                     if (isSelected)
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.only(right: 8),
-                        child: Icon(Icons.check_circle, color: Color(0xFF5F2D82), size: 22),
+                        child: Icon(Icons.check_circle, color: context.acc(Color(0xFF5F2D82)), size: 22),
                       ),
                     Text(
                       label,
@@ -184,7 +185,7 @@ class _PackageCard extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 18),
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF5F2D82),
+                        color: context.acc(const Color(0xFF5F2D82)),
                       ),
                     ),
                     if (isPopular) ...[
@@ -232,7 +233,7 @@ class _PackageCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),
-                color: Colors.grey.shade700,
+                color: context.sub(Colors.grey.shade700),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 10)),
@@ -250,7 +251,7 @@ class _PackageCard extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: Colors.grey.shade700,
+                              color: context.sub(Colors.grey.shade700),
                             ),
                           ),
                         ],

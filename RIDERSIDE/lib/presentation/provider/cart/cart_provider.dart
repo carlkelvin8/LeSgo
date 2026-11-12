@@ -7,12 +7,21 @@ class CartItem {
   final double unitPrice;
   final int quantity;
 
+  /// Server-side menu item this line was added from. The API prices and
+  /// validates LesEat orders against it, so orders without it are rejected.
+  final int? menuItemId;
+
+  /// The chosen size as the API expects it; the server re-prices from this.
+  final Map<String, dynamic>? selectedOptions;
+
   const CartItem({
     required this.id,
     required this.name,
     required this.size,
     required this.unitPrice,
     required this.quantity,
+    this.menuItemId,
+    this.selectedOptions,
   });
 
   CartItem copyWith({
@@ -21,6 +30,7 @@ class CartItem {
     String? size,
     double? unitPrice,
     int? quantity,
+    int? menuItemId,
   }) {
     return CartItem(
       id: id ?? this.id,
@@ -28,6 +38,8 @@ class CartItem {
       size: size ?? this.size,
       unitPrice: unitPrice ?? this.unitPrice,
       quantity: quantity ?? this.quantity,
+      menuItemId: menuItemId ?? this.menuItemId,
+      selectedOptions: selectedOptions,
     );
   }
 }
@@ -75,11 +87,16 @@ class CartNotifier extends StateNotifier<CartState> {
     required String size,
     required double unitPrice,
     int quantity = 1,
+    int? menuItemId,
+    Map<String, dynamic>? selectedOptions,
   }) {
     if (quantity <= 0) return;
 
     final existingIndex = state.items.indexWhere(
-      (item) => item.name == name && item.size == size,
+      (item) =>
+          item.menuItemId == menuItemId &&
+          item.name == name &&
+          item.size == size,
     );
 
     if (existingIndex >= 0) {
@@ -98,6 +115,8 @@ class CartNotifier extends StateNotifier<CartState> {
       size: size,
       unitPrice: unitPrice,
       quantity: quantity,
+      menuItemId: menuItemId,
+      selectedOptions: selectedOptions,
     );
 
     state = state.copyWith(items: [...state.items, newItem]);

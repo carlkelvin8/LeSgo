@@ -15,16 +15,29 @@ final riderPayoutHistoryProvider = FutureProvider.autoDispose<List<PayoutRecord>
 });
 
 class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
-  RiderPayoutNotifier() : super(const RiderPayoutState());
+  RiderPayoutNotifier() : super(const RiderPayoutState()) {
+    // The screen's ref.listen never fires for the initial state, so without
+    // this the balance stays 0 and the Withdraw button is never shown.
+    Future.microtask(() {
+      if (mounted) loadPayoutData();
+    });
+  }
+
+  /// Minimum withdrawal accepted by `POST /v1/wallets/my/withdraw`.
+  static const double minWithdrawal = 10;
+  static const double maxWithdrawal = 100000;
 
   Future<void> loadPayoutData() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final response = await ApiService.dio.get('/v1/wallets/my/wallet');
-      final data = response.data['data'] ?? response.data;
+      final raw = response.data;
+      final data = raw is Map ? (raw['data'] ?? raw) : null;
+      if (data is! Map) throw const FormatException('Unexpected wallet response');
+      if (!mounted) return;
 
-      final availableBalance = (data['balance'] as num?)?.toDouble() ?? 0.0;
-      final pendingBalance = (data['pending_balance'] as num?)?.toDouble() ?? 0.0;
+      final availableBalance = double.tryParse('${data['balance']}') ?? 0.0;
+      final pendingBalance = double.tryParse('${data['pending_balance']}') ?? 0.0;
 
       state = state.copyWith(
         availableBalance: availableBalance,
@@ -33,6 +46,7 @@ class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
       );
     } catch (e) {
       AppLogger.error('Failed to load payout data', e);
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to load wallet data',
@@ -43,8 +57,9 @@ class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
   Future<List<PayoutRecord>> fetchPayoutHistory() async {
     try {
       final response = await ApiService.dio.get('/v1/wallets/my/payouts');
-      final data = response.data['data'] ?? response.data;
-      
+      final raw = response.data;
+      final data = raw is Map ? (raw['data'] ?? raw) : raw;
+
       if (data is List) {
         return data
             .whereType<Map>()
@@ -63,12 +78,23 @@ class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
     required String paymentMethod,
     required String accountNumber,
   }) async {
-    if (amount <= 0 || amount > state.availableBalance) {
-      state = state.copyWith(error: 'Invalid withdrawal amount');
-      return;
+    if (amount < minWithdrawal) {
+      const msg = 'Minimum withdrawal is PHP 10';
+      state = state.copyWith(error: msg);
+      throw Exception(msg);
+    }
+    if (amount > state.availableBalance) {
+      const msg = 'Insufficient balance';
+      state = state.copyWith(error: msg);
+      throw Exception(msg);
+    }
+    if (amount > maxWithdrawal) {
+      const msg = 'Maximum withdrawal is PHP 100,000';
+      state = state.copyWith(error: msg);
+      throw Exception(msg);
     }
 
-    state = state.copyWith(isProcessing: true, error: null);
+    state = state.copyWith(isProcessing: true, clearError: true);
     try {
       final response = await ApiService.dio.post(
         '/v1/wallets/my/withdraw',
@@ -78,23 +104,27 @@ class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
         },
       );
 
-      final data = response.data['data'] ?? response.data;
-      final payout = data['payout'] ?? data;
+      final raw = response.data;
+      final data = raw is Map ? (raw['data'] ?? raw) : null;
+      final wallet = data is Map ? data['wallet'] : null;
+      final serverBalance =
+          wallet is Map ? double.tryParse('${wallet['balance']}') : null;
 
       state = state.copyWith(
-        availableBalance: state.availableBalance - amount,
+        availableBalance: serverBalance ?? state.availableBalance - amount,
         pendingBalance: state.pendingBalance + amount,
         isProcessing: false,
       );
 
-      AppLogger.info('Withdrawal request submitted: ${payout['id'] ?? ''}');
+      AppLogger.info('Withdrawal request submitted');
     } catch (e) {
       AppLogger.error('Withdrawal request failed', e);
+      final message = ApiService.extractError(e);
       state = state.copyWith(
         isProcessing: false,
-        error: 'Failed to submit withdrawal request',
+        error: message,
       );
-      rethrow;
+      throw Exception(message);
     }
   }
 
@@ -103,14 +133,14 @@ class RiderPayoutNotifier extends StateNotifier<RiderPayoutState> {
     required String accountNumber,
     required String accountName,
   }) async {
-    state = state.copyWith(isProcessing: true, error: null);
+    state = state.copyWith(isProcessing: true, clearError: true);
     try {
       await ApiService.dio.post(
         '/v1/wallets/my/linked-accounts',
         data: {
           'provider': provider,
           'account_number': accountNumber,
-          'account_name': accountName,
+          'account_holder_name': accountName,
         },
       );
 
@@ -186,7 +216,7 @@ class PayoutRecord {
   factory PayoutRecord.fromJson(Map<String, dynamic> json) {
     return PayoutRecord(
       id: json['id']?.toString() ?? '',
-      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      amount: double.tryParse('${json['amount']}') ?? 0.0,
       status: json['status']?.toString() ?? 'pending',
       paymentMethod: json['payment_method']?.toString() ?? '',
       accountNumber: json['account_number']?.toString() ?? '',

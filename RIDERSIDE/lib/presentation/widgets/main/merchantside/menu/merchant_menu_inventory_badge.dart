@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/menu_item_dto.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantMenuInventoryBadge extends StatelessWidget {
   final MenuItemDto item;
@@ -22,7 +23,7 @@ class MerchantMenuInventoryBadge extends StatelessWidget {
     if (!item.isAvailable && !inventory.trackStock) {
       return _badge(
         context,
-        label: 'Hidden',
+        label: context.tr('Hidden'),
         color: Colors.grey.shade700,
         background: Colors.grey.shade200,
       );
@@ -31,7 +32,7 @@ class MerchantMenuInventoryBadge extends StatelessWidget {
     if (inventory.isSoldOut || (!item.isAvailable && inventory.trackStock)) {
       return _badge(
         context,
-        label: 'Sold out',
+        label: context.tr('Sold out'),
         color: const Color(0xFFC62828),
         background: const Color(0xFFFFEBEE),
       );

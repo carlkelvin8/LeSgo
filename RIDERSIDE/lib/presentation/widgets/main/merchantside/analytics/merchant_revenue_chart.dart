@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_analytics_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// A simple bar chart widget displaying revenue trend data.
 /// Uses Column of colored Container bars — no external chart package needed.
@@ -24,7 +26,7 @@ class MerchantRevenueChart extends ConsumerWidget {
         }
 
         return Material(
-          color: const Color(0xFFF5F4F7),
+          color: context.surf(const Color(0xFFF5F4F7)),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
@@ -32,12 +34,12 @@ class MerchantRevenueChart extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Revenue Trend',
+                  context.tr('Revenue Trend'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF302B36),
+                    color: context.txt(const Color(0xFF302B36)),
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 3)),
@@ -46,7 +48,7 @@ class MerchantRevenueChart extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 10.5),
-                    color: const Color(0xFF918A98),
+                    color: context.sub(const Color(0xFF918A98)),
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -111,7 +113,7 @@ class _BarChart extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 9),
-                      color: const Color(0xFF918A98),
+                      color: context.sub(const Color(0xFF918A98)),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.clip,

@@ -28,6 +28,10 @@ class MerchantPrepTimerEntry {
 
   String get displayLabel {
     final abs = remaining.abs();
+    if (abs.inHours >= 1) {
+      final clock = '${abs.inHours}h ${(abs.inMinutes % 60).toString().padLeft(2, '0')}m';
+      return isOverdue ? '-$clock' : clock;
+    }
     final minutes = abs.inMinutes;
     final seconds = abs.inSeconds % 60;
     final clock = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
@@ -125,7 +129,10 @@ class MerchantPrepTimerNotifier extends StateNotifier<Map<int, MerchantPrepTimer
     final activePrepIds = <int>{};
 
     for (final order in orders) {
-      if (!MerchantOrderOpsUtils.showsPrepTimer(order.status)) continue;
+      if (!MerchantOrderOpsUtils.showsPrepTimer(
+        order.status,
+        alreadyReady: order.readyForPickupAt != null,
+      )) continue;
       activePrepIds.add(order.id);
 
       if (!next.containsKey(order.id)) {

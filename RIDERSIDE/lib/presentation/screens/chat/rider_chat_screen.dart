@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/data_source/dto/chat/chat_dto.dart';
 import '../../provider/chat/chat_provider.dart';
+import '../../widgets/chat/chat_report_sheet.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class RiderChatScreen extends ConsumerStatefulWidget {
   final int orderId;
@@ -21,10 +23,12 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isInitialized = false;
+  late final ChatNotifier _chatNotifier;
 
   @override
   void initState() {
     super.initState();
+    _chatNotifier = ref.read(chatProviderFamily(widget.orderId).notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeChat();
     });
@@ -34,8 +38,9 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    // Stop polling without using ref (which is invalid after dispose)
-    // The provider will be disposed by Riverpod automatically
+    // The family provider is not auto-disposed, so stop polling/realtime
+    // explicitly (without ref, which is invalid after dispose).
+    _chatNotifier.stopRealtime();
     super.dispose();
   }
 
@@ -86,6 +91,87 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
     }
   }
 
+  Future<void> _report({MessageDto? message}) async {
+    final result = await ChatReportSheet.show(
+      context,
+      targetLabel: 'this customer',
+      isMessage: message != null,
+    );
+    if (result == null || !mounted) return;
+
+    final ok = await ref
+        .read(chatProviderFamily(widget.orderId).notifier)
+        .report(
+          reason: result.reason,
+          details: result.details,
+          messageId: message?.id,
+          block: result.block,
+        );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? 'Thanks for reporting. Our team will review it within 24 hours.'
+            : 'Could not send report. Please try again.'),
+        backgroundColor: ok ? null : Colors.red,
+      ),
+    );
+  }
+
+  Future<void> _toggleBlock(bool block) async {
+    if (block) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Block this customer?'),
+          content: const Text(
+            'You will no longer be able to message each other in this chat.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Block'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+    }
+
+    final ok = await ref
+        .read(chatProviderFamily(widget.orderId).notifier)
+        .setBlocked(block);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? (block ? 'Customer blocked.' : 'Customer unblocked.')
+            : 'Something went wrong. Please try again.'),
+      ),
+    );
+  }
+
+  void _showMessageActions(MessageDto message) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListTile(
+          leading: Icon(Icons.flag_outlined, color: Colors.red.shade700),
+          title: const Text('Report message'),
+          onTap: () {
+            Navigator.pop(ctx);
+            _report(message: message);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProviderFamily(widget.orderId));
@@ -100,10 +186,10 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back, color: context.txt(Colors.black87)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -111,66 +197,45 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
           children: [
             Text(
               widget.customerName ?? 'Customer',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: context.txt(Colors.black87),
               ),
             ),
             Text(
               'Order #${widget.orderId}',
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              style: TextStyle(fontSize: 12, color: context.sub(Colors.grey[500]!)),
             ),
           ],
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Color(0xFF5F2D82)),
+            icon: Icon(Icons.more_vert, color: context.acc(Color(0xFF5F2D82))),
             onSelected: (value) async {
-              if (value != 'end') return;
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('End chat?'),
-                  content: const Text(
-                    'This will close the conversation with the customer. You can still view past messages in Inbox.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      child: const Text('Cancel'),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text('End chat'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmed != true || !context.mounted) return;
-              final ok = await ref
-                  .read(chatProviderFamily(widget.orderId).notifier)
-                  .endConversation();
-              if (!context.mounted) return;
-              if (ok) {
-                Navigator.pop(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Could not end conversation.'),
-                  ),
-                );
-              }
+              if (value == 'report') return _report();
+              if (value == 'block') return _toggleBlock(true);
+              if (value == 'unblock') return _toggleBlock(false);
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: 'end',
-                child: Text('End conversation'),
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'report',
+                child: Text('Report customer'),
               ),
+              if (chatState.currentConversation?.blockedByMe == true)
+                const PopupMenuItem(
+                  value: 'unblock',
+                  child: Text('Unblock customer'),
+                )
+              else
+                const PopupMenuItem(
+                  value: 'block',
+                  child: Text('Block customer'),
+                ),
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xFF5F2D82)),
+            icon: Icon(Icons.refresh, color: context.acc(Color(0xFF5F2D82))),
             onPressed: () => ref
                 .read(chatProviderFamily(widget.orderId).notifier)
                 .loadMessages(),
@@ -203,7 +268,10 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: _initializeChat,
+                    onPressed: () {
+                      _isInitialized = false; // allow the retry to run
+                      _initializeChat();
+                    },
                     child: const Text('Retry'),
                   ),
                 ],
@@ -218,13 +286,13 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.chat_bubble_outline,
-                            size: 56, color: Colors.grey[300]),
+                            size: 56, color: context.sub(Colors.grey[300]!)),
                         const SizedBox(height: 12),
                         Text(
                           'No messages yet.\nSay hello to your customer!',
                           textAlign: TextAlign.center,
                           style:
-                              TextStyle(color: Colors.grey[500], fontSize: 14),
+                              TextStyle(color: context.sub(Colors.grey[500]!), fontSize: 14),
                         ),
                       ],
                     ),
@@ -238,7 +306,12 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                     itemBuilder: (context, index) {
                       final msg = chatState.messages[index];
                       final isMe = msg.senderType == 'driver';
-                      return _MessageBubble(message: msg, isMe: isMe);
+                      final bubble = _MessageBubble(message: msg, isMe: isMe);
+                      if (isMe || msg.isSystemMessage) return bubble;
+                      return GestureDetector(
+                        onLongPress: () => _showMessageActions(msg),
+                        child: bubble,
+                      );
                     },
                   ),
           ),
@@ -254,27 +327,42 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
     final conversation = ref.watch(chatProviderFamily(widget.orderId)).currentConversation;
     final isActive = conversation?.status == 'active' || conversation == null;
 
+    if (isActive && conversation != null && !conversation.canMessage) {
+      return Container(
+        width: double.infinity,
+        color: context.surf(Colors.grey.shade200),
+        padding: const EdgeInsets.all(16),
+        child: SafeArea(
+          top: false,
+          child: Text(
+            conversation.blockedByMe
+                ? 'You blocked this customer. Unblock them from the menu to send messages.'
+                : 'You can no longer send messages in this conversation.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.sub(Colors.grey)),
+          ),
+        ),
+      );
+    }
+
     if (!isActive) {
       return Container(
         width: double.infinity,
-        color: Colors.grey.shade200,
+        color: context.surf(Colors.grey.shade200),
         padding: const EdgeInsets.all(16),
-        child: const Text(
+        child: Text(
           'This conversation has ended.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: context.sub(Colors.grey)),
         ),
       );
     }
 
     return Container(
-      color: Colors.white,
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 8,
-        top: 8,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 8,
-      ),
+      color: context.surf(Colors.white),
+      // No viewInsets here: the Scaffold already resizes the body for the
+      // keyboard, so adding it again overflowed the column (and hid the list).
+      padding: const EdgeInsets.only(left: 16, right: 8, top: 8, bottom: 8),
       child: SafeArea(
         child: Row(
           children: [
@@ -286,7 +374,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                 enabled: !isSending,
                 decoration: InputDecoration(
                   hintText: 'Type a message...',
-                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  hintStyle: TextStyle(color: context.sub(Colors.grey[400]!)),
                   filled: true,
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
@@ -397,7 +485,7 @@ class _MessageBubble extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
+                          color: context.sub(Colors.grey[600]!),
                         ),
                       ),
                     ),

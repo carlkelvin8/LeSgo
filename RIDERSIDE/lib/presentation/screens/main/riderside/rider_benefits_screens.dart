@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderOffersScreen extends ConsumerStatefulWidget {
   const RiderOffersScreen({super.key});
@@ -106,7 +107,7 @@ class _RiderOffersScreenState extends ConsumerState<RiderOffersScreen> {
                             )
                           : Text(AppLocalization.translate('claim', lang)),
                     )
-                  : Text(AppLocalization.translate('locked', lang), style: const TextStyle(color: Colors.grey)),
+                  : Text(AppLocalization.translate('locked', lang), style: TextStyle(color: context.sub(Colors.grey))),
             ),
           );
         },
@@ -168,7 +169,7 @@ class _RiderLoyaltyScreenState extends ConsumerState<RiderLoyaltyScreen> {
         itemBuilder: (context, index) {
           final reward = _rewards[index] as Map<String, dynamic>;
           return ListTile(
-            tileColor: Colors.grey.shade50,
+            tileColor: context.surf(Colors.grey.shade50),
             title: Text(
               reward['title']?.toString() ?? reward['name']?.toString() ?? 'Reward',
               style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
@@ -280,9 +281,9 @@ class _RiderApiScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         foregroundColor: const Color(0xFF5F2D82),
         title: Text(title, style: const TextStyle(fontFamily: 'TT Fors')),
       ),
@@ -316,7 +317,7 @@ class _StatTile extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontFamily: 'TT Fors', color: Colors.grey)),
+          Text(label, style: TextStyle(fontFamily: 'TT Fors', color: context.sub(Colors.grey))),
           Text(value, style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600)),
         ],
       ),

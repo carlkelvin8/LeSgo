@@ -5,6 +5,7 @@ import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderWalletLinkAccountDialog extends ConsumerStatefulWidget {
   final BuildContext parentContext;
@@ -177,7 +178,7 @@ class _RiderWalletLinkAccountDialogState
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 13,
-                color: Colors.grey.shade700,
+                color: context.sub(Colors.grey.shade700),
               ),
             ),
             const SizedBox(height: 12),

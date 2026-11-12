@@ -106,7 +106,7 @@ class ScheduledPayoutService {
       final body =
           raw is Map ? (raw['data'] ?? raw) as Map : const <String, dynamic>{};
       if (body.isEmpty) {
-        return _readLocal();
+        return await _readLocal();
       }
       final server =
           ScheduledPayoutPreferences.fromJson(Map<String, dynamic>.from(body));

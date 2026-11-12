@@ -90,6 +90,14 @@ class ApiErrorMapper {
     }
 
     final code = error.response?.statusCode;
+    if (code == 429) {
+      return _pick(
+        fallbackEn,
+        fallbackTl,
+        'Too many attempts. Please wait a minute and try again.',
+        'Masyadong maraming subok. Maghintay ng isang minuto at subukan muli.',
+      );
+    }
     if (code == 401) {
       return _pick(fallbackEn, fallbackTl, 'Please log in again.', 'Mag-log in muli.');
     }

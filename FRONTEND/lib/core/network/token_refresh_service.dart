@@ -55,31 +55,33 @@ class TokenRefreshService {
   }
 
   Future<String?> _performRefreshWithBody(String refreshToken) async {
+    final Response<dynamic> response;
     try {
-      final response = await _refreshDio.post(
+      response = await _refreshDio.post(
         ApiConstants.authRefresh,
         data: {'refresh_token': refreshToken},
       );
-
-      return _persistTokens(response.data);
     } catch (_) {
       return null;
     }
+
+    return _persistTokens(response.data);
   }
 
   Future<String?> _performRefreshWithBearer(String accessToken) async {
+    final Response<dynamic> response;
     try {
-      final response = await _refreshDio.post(
+      response = await _refreshDio.post(
         ApiConstants.authRefresh,
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken'},
         ),
       );
-
-      return _persistTokens(response.data);
     } catch (_) {
       return null;
     }
+
+    return _persistTokens(response.data);
   }
 
   Future<String?> _persistTokens(dynamic raw) async {

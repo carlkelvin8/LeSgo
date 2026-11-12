@@ -455,7 +455,7 @@ class RiderWalletNotifier extends StateNotifier<RiderWalletState> {
       final body = Map<String, dynamic>.from(raw);
       final data = body['data'];
       final walletData = data is Map ? (data['wallet'] ?? data) : null;
-      if (walletData is Map) {
+      if (walletData is Map && walletData['balance'] != null) {
         final walletMap = Map<String, dynamic>.from(walletData);
         state = state.copyWith(
           balance: _d(walletMap['balance']),

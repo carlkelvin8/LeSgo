@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/api_service.dart';
 import '../../../../core/services/gemini_customer_service.dart';
+import '../../../../core/services/support_api.dart';
 import 'package:uuid/uuid.dart';
 
 class CustomerServiceMessage {
@@ -48,17 +50,35 @@ class RiderCustomerServiceChatState {
   }
 }
 
+/// Files [text] as a support ticket for the admin team; returns a reference
+/// the rider can quote (ticket number, else `#id`, else empty).
+typedef SupportTicketSender = Future<String> Function(String text);
+
+Future<String> _defaultTicketSender(String text) async {
+  final ticket = await SupportApi.createTicket(
+    subject: 'Rider support chat',
+    description: text.length > 5000 ? text.substring(0, 5000) : text,
+  );
+  final number = ticket.ticketNumber;
+  if (number != null && number.isNotEmpty) return number;
+  return ticket.id > 0 ? '#${ticket.id}' : '';
+}
+
 const _welcomeMessage =
     'Hi! This is LeSgo Support. Message our admin team here for help with safety, orders, earnings, LesPay, and account issues.';
 
 class RiderCustomerServiceChatNotifier
     extends StateNotifier<RiderCustomerServiceChatState> {
-  RiderCustomerServiceChatNotifier(this._service)
-      : super(const RiderCustomerServiceChatState()) {
+  RiderCustomerServiceChatNotifier(
+    this._service, {
+    SupportTicketSender? ticketSender,
+  })  : _ticketSender = ticketSender ?? _defaultTicketSender,
+        super(const RiderCustomerServiceChatState()) {
     _bootstrap();
   }
 
   final GeminiCustomerService _service;
+  final SupportTicketSender _ticketSender;
   final _uuid = const Uuid();
 
   void _bootstrap() {
@@ -74,7 +94,7 @@ class RiderCustomerServiceChatNotifier
           id: _uuid.v4(),
           text: configured
               ? _welcomeMessage
-              : 'Message LeSgo admin support here. Our team will respond in this chat.',
+              : 'Tell us what you need help with. Your message is sent to LeSgo admin support as a support ticket and our team will follow up.',
           isUser: false,
           timestamp: DateTime.now(),
         ),
@@ -95,17 +115,7 @@ class RiderCustomerServiceChatNotifier
     );
 
     if (!state.isConfigured) {
-      final adminAck = CustomerServiceMessage(
-        id: _uuid.v4(),
-        text:
-            'Your message was sent to LeSgo admin support. Our team will respond in this chat.',
-        isUser: false,
-        timestamp: DateTime.now(),
-      );
-      state = state.copyWith(
-        messages: [...state.messages, userMessage, adminAck],
-        clearError: true,
-      );
+      await _escalateToAdmin(userMessage);
       return;
     }
 
@@ -146,9 +156,47 @@ class RiderCustomerServiceChatNotifier
     }
   }
 
-  Future<void> requestAdminCallback() {
-    return sendMessage(
-      'I need an admin to call me back regarding a safety or support issue.',
+  /// Really files the message as a support ticket (no AI involved) and only
+  /// confirms once the server accepted it.
+  Future<void> _escalateToAdmin(CustomerServiceMessage userMessage) async {
+    state = state.copyWith(
+      messages: [...state.messages, userMessage],
+      isSending: true,
+      clearError: true,
+    );
+    try {
+      final ticketRef = await _ticketSender(userMessage.text);
+      state = state.copyWith(
+        isSending: false,
+        messages: [
+          ...state.messages,
+          CustomerServiceMessage(
+            id: _uuid.v4(),
+            text: ticketRef.isNotEmpty
+                ? 'Your message was sent to LeSgo admin support (ticket $ticketRef). Our team will follow up.'
+                : 'Your message was sent to LeSgo admin support. Our team will follow up.',
+            isUser: false,
+            timestamp: DateTime.now(),
+          ),
+        ],
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isSending: false,
+        error: "Couldn't send your message to support. ${ApiService.extractError(e)}",
+      );
+    }
+  }
+
+  Future<void> requestAdminCallback() async {
+    if (state.isSending) return;
+    await _escalateToAdmin(
+      CustomerServiceMessage(
+        id: _uuid.v4(),
+        text: 'I need an admin to call me back regarding a safety or support issue.',
+        isUser: true,
+        timestamp: DateTime.now(),
+      ),
     );
   }
 

@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_customer_service_chat_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderCustomerServiceChatScreen extends ConsumerStatefulWidget {
   final bool requestAdminCallbackOnOpen;
@@ -133,10 +135,10 @@ class _RiderCustomerServiceChatScreenState
       ),
       body: Column(
         children: [
-          if (!chatState.isConfigured)
+          if (!chatState.isConfigured && kDebugMode)
             Container(
               width: double.infinity,
-              color: const Color(0xFFFFF8E1),
+              color: context.surf(const Color(0xFFFFF8E1)),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
               child: Text(
                 'Add GEMINI_API_KEY to secrets.json and restart the app to enable AI replies.',
@@ -188,16 +190,16 @@ class _RiderCustomerServiceChatScreenState
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 16,
             backgroundColor: Color(0xFFE8D9F5),
-            child: Icon(Icons.support_agent, size: 16, color: Color(0xFF5F2D82)),
+            child: Icon(Icons.support_agent, size: 16, color: context.acc(Color(0xFF5F2D82))),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: context.surf(Colors.grey.shade100),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const SizedBox(
@@ -220,7 +222,7 @@ class _RiderCustomerServiceChatScreenState
       child: Container(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surf(Colors.white),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -242,7 +244,7 @@ class _RiderCustomerServiceChatScreenState
                 decoration: InputDecoration(
                   hintText: 'Orders, earnings, LesPay, documents...',
                   filled: true,
-                  fillColor: Colors.grey.shade100,
+                  fillColor: context.surf(Colors.grey.shade100),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,

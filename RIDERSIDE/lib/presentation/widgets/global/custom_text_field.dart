@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class CustomTextField extends StatefulWidget {
   final String hintText;
@@ -40,7 +41,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.surf(Colors.white),
             borderRadius: BorderRadius.circular(
               ResponsiveUtils.spacing(context, 12),
             ),
@@ -73,7 +74,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
             ),
             decoration: InputDecoration(
               border: InputBorder.none,
@@ -81,7 +82,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               hintStyle: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey.shade500,
+                color: context.sub(Colors.grey.shade500),
               ),
               errorStyle: const TextStyle(height: 0, fontSize: 0),
               suffixIcon: widget.isPassword
@@ -95,7 +96,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         _obscureText
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: Colors.grey.shade400,
+                        color: context.sub(Colors.grey.shade400),
                         size: ResponsiveUtils.imageHeight(context, 20),
                       ),
                     )

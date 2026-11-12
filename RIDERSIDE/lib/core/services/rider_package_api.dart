@@ -16,6 +16,10 @@ class RiderPackageOption {
   final double? commissionPercent;
   final String profitShareLabel;
   final double? oneTimePrice;
+
+  /// Remaining balance to upgrade from the rider's current package
+  /// (target price minus what they already paid). Null when not upgradeable.
+  final double? upgradePrice;
   final bool isCurrent;
   final bool isUpgradeable;
 
@@ -26,6 +30,7 @@ class RiderPackageOption {
     this.commissionPercent,
     required this.profitShareLabel,
     this.oneTimePrice,
+    this.upgradePrice,
     required this.isCurrent,
     required this.isUpgradeable,
   });
@@ -38,10 +43,15 @@ class RiderPackageOption {
       commissionPercent: _parseAmount(json['commission_percent']),
       profitShareLabel: json['profit_share_label']?.toString() ?? '',
       oneTimePrice: _parseAmount(json['one_time_price']),
+      upgradePrice: _parseAmount(json['upgrade_price']),
       isCurrent: json['is_current'] == true,
       isUpgradeable: json['is_upgradeable'] == true,
     );
   }
+
+  /// What the rider pays now: the remaining balance when upgrading,
+  /// otherwise the full one-time price.
+  double? get payablePrice => upgradePrice ?? oneTimePrice;
 
   String get priceLabel {
     final price = oneTimePrice;

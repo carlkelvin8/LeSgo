@@ -50,12 +50,19 @@ class NotifyNearbyDriversNewOrderJob implements ShouldQueue
 
         $radiusKm = 10;
         $vehicleType = $this->order->vehicle_type;
+        $releasedProfileIds = \Illuminate\Support\Facades\DB::table('order_driver_releases')
+            ->where('order_id', $this->order->id)
+            ->pluck('driver_profile_id')
+            ->all();
 
         // Find active drivers within radius who have a wallet with sufficient balance
         $nearbyDrivers = User::query()
             ->where('role', 'driver')
-            ->whereHas('driverProfile', function ($q) use ($vehicleType) {
+            ->whereHas('driverProfile', function ($q) use ($vehicleType, $releasedProfileIds) {
+                // Never re-offer an order to a rider who backed out of it.
+                $q->whereNotIn('id', $releasedProfileIds);
                 $q->where('status', 'active')
+                    ->where('is_available', true)
                     ->supportsVehicleType($vehicleType);
             })
             ->whereHas('wallet', function ($q) {

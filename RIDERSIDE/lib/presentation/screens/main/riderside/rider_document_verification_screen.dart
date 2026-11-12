@@ -6,9 +6,21 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderDocumentVerificationScreen extends ConsumerStatefulWidget {
   const RiderDocumentVerificationScreen({super.key});
+
+  /// Returns a user-facing problem with the submit form, or null when valid.
+  /// Only a document number and at least one photo are required by the API.
+  static String? validateSubmission(String number, int fileCount) {
+    if (number.trim().isEmpty) return 'Enter the document number.';
+    if (number.trim().length > 100) {
+      return 'Document number must not exceed 100 characters.';
+    }
+    if (fileCount == 0) return 'Attach at least one photo of the document.';
+    return null;
+  }
 
   @override
   ConsumerState<RiderDocumentVerificationScreen> createState() =>
@@ -58,12 +70,18 @@ class _RiderDocumentVerificationScreenState
   }
 
   Future<void> _showSubmitSheet() async {
-    if (_types.isEmpty) return;
+    if (_types.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Document types are unavailable. Pull to refresh and try again.')),
+      );
+      return;
+    }
     final picker = ImagePicker();
     String selectedType = _types.first['type']?.toString() ?? 'drivers_license';
     final numberController = TextEditingController();
     final notesController = TextEditingController();
     final files = <XFile>[];
+    String? formError;
 
     final submitted = await showModalBottomSheet<bool>(
       context: context,
@@ -122,9 +140,22 @@ class _RiderDocumentVerificationScreenState
                       : '${files.length} file(s) selected',
                 ),
               ),
+              if (formError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    formError!,
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
               ElevatedButton(
                 onPressed: () async {
-                  if (numberController.text.trim().isEmpty || files.isEmpty) {
+                  final problem = RiderDocumentVerificationScreen.validateSubmission(
+                    numberController.text,
+                    files.length,
+                  );
+                  if (problem != null) {
+                    setSheetState(() => formError = problem);
                     return;
                   }
                   Navigator.pop(context, true);
@@ -257,6 +288,7 @@ class _RiderDocumentVerificationScreenState
     );
     final notesController = TextEditingController();
     final files = <XFile>[];
+    String? formError;
 
     final confirmed = await showModalBottomSheet<bool>(
       context: context,
@@ -298,9 +330,24 @@ class _RiderDocumentVerificationScreenState
                       : '${files.length} file(s) selected',
                 ),
               ),
+              if (formError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    formError!,
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
               ElevatedButton(
                 onPressed: () {
-                  if (numberController.text.trim().isEmpty || files.isEmpty) return;
+                  final problem = RiderDocumentVerificationScreen.validateSubmission(
+                    numberController.text,
+                    files.length,
+                  );
+                  if (problem != null) {
+                    setSheetState(() => formError = problem);
+                    return;
+                  }
                   Navigator.pop(context, true);
                 },
                 child: Text(AppLocalization.translate('resubmit', ref.read(appLanguageProvider))),
@@ -346,9 +393,9 @@ class _RiderDocumentVerificationScreenState
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         foregroundColor: const Color(0xFF5F2D82),
         title: Text(AppLocalization.translate('documents', lang), style: const TextStyle(fontFamily: 'TT Fors')),
       ),
@@ -380,7 +427,7 @@ class _RiderDocumentVerificationScreenState
                         final docId = (map['id'] as num?)?.toInt();
                         final status = map['status']?.toString() ?? '';
                         return ListTile(
-                          tileColor: Colors.grey.shade50,
+                          tileColor: context.surf(Colors.grey.shade50),
                           title: Text(
                             map['document_type']?.toString().replaceAll('_', ' ') ??
                                 'Document',

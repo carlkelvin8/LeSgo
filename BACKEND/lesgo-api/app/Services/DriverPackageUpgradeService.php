@@ -34,7 +34,8 @@ class DriverPackageUpgradeService
             throw new \RuntimeException('This package upgrade is not available for your account.');
         }
 
-        $amount = RiderCommissionService::getPackagePrice($targetTier);
+        // Riders already paid for their current package, so only the remainder is due.
+        $amount = RiderCommissionService::getUpgradePrice($currentTier, $targetTier);
         if ($amount <= 0) {
             throw new \RuntimeException('Package price is not configured.');
         }
@@ -129,7 +130,7 @@ class DriverPackageUpgradeService
 
         $externalId = 'lesgo-package-'.$user->id.'-'.Str::uuid();
         $label = RiderCommissionService::labelForTier($targetTier);
-        $description = sprintf('LeSgo %s package — one-time upgrade (₱%s)', $label, number_format($amount, 2));
+        $description = sprintf('LeSgo %s package — upgrade, remaining balance (₱%s)', $label, number_format($amount, 2));
 
         $invoice = app(PaymentGatewayService::class)->createInvoice(
             $amount,

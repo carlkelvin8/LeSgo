@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/menu_item_dto.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantMenuStockControls extends StatelessWidget {
   final MenuItemDto item;
@@ -40,7 +41,7 @@ class MerchantMenuStockControls extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF5F2D82),
+              color: context.acc(const Color(0xFF5F2D82)),
             ),
           ),
         ),

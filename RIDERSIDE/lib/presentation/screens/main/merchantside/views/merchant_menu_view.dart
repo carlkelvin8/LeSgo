@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/merchant_item_inventory_utils.dart';
+import '../../../../../core/utils/merchant_grid_layout_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../core/utils/screen_auto_refresh.dart';
 import '../../../../mixins/auto_refresh_mixin.dart';
@@ -20,6 +21,9 @@ import '../../../../widgets/main/merchantside/menu/merchant_menu_item_actions.da
 import '../../../../widgets/main/merchantside/menu/merchant_menu_item_duplicate.dart';
 import '../../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../../../widgets/common/menu_image_widget.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 
 class MerchantMenuView extends ConsumerStatefulWidget {
   const MerchantMenuView({super.key});
@@ -113,6 +117,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final inventoryFilter = ref.watch(merchantInventoryFilterProvider);
     final searchQuery = ref.watch(merchantMenuSearchQueryProvider);
+    final canEdit = ref.watch(canEditMerchantMenuProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final safePad = MediaQuery.of(context).padding;
 
@@ -140,21 +145,27 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Menu',
+                                context.tr('Menu'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
-                                  color: isDark ? Colors.white : const Color(0xFF25232B),
+                                  color: isDark
+                                      ? Colors.white
+                                      : const Color(0xFF25232B),
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Manage your food items',
+                                canEdit
+                                    ? 'Manage your food items'
+                                    : 'Your store menu',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 13,
-                                  color: isDark ? const Color(0xFF9A85B8) : const Color(0xFF89858E),
+                                  color: isDark
+                                      ? const Color(0xFF9A85B8)
+                                      : const Color(0xFF89858E),
                                 ),
                               ),
                             ],
@@ -163,10 +174,16 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                         // Edit selected category button
                         menuAsync.when(
                           data: (menu) {
-                            final cat = menu == null ? null : _categoryById(menu.categories, selectedCategory);
-                            if (cat == null) return const SizedBox.shrink();
+                            final cat = menu == null
+                                ? null
+                                : _categoryById(
+                                    menu.categories,
+                                    selectedCategory,
+                                  );
+                            if (cat == null || !canEdit)
+                              return const SizedBox.shrink();
                             return _PillButton(
-                              label: 'Edit category',
+                              label: context.tr('Edit category'),
                               icon: Icons.edit_outlined,
                               onTap: () => _openEditCategory(cat),
                             );
@@ -176,52 +193,78 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                         ),
                       ],
                     ),
-                    
+
                     // Search Field
                     const SizedBox(height: 16),
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E1730) : const Color(0xFFF5F4F7),
+                        color: isDark
+                            ? const Color(0xFF1E1730)
+                            : const Color(0xFFF5F4F7),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isDark ? const Color(0xFF2E2540) : const Color(0xFFECEAF0),
+                          color: isDark
+                              ? const Color(0xFF2E2540)
+                              : const Color(0xFFECEAF0),
                         ),
                       ),
                       child: TextField(
                         onChanged: (query) {
-                          ref.read(merchantMenuSearchQueryProvider.notifier).state = query;
+                          ref
+                                  .read(
+                                    merchantMenuSearchQueryProvider.notifier,
+                                  )
+                                  .state =
+                              query;
                         },
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 14,
-                          color: isDark ? Colors.white : const Color(0xFF302B36),
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF302B36),
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Search menu items...',
+                          hintText: context.tr('Search menu items...'),
                           hintStyle: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 14,
-                            color: isDark ? const Color(0xFF9A85B8) : const Color(0xFF918A98),
+                            color: isDark
+                                ? const Color(0xFF9A85B8)
+                                : const Color(0xFF918A98),
                           ),
                           prefixIcon: Icon(
                             Icons.search,
-                            color: isDark ? const Color(0xFF9A85B8) : const Color(0xFF918A98),
+                            color: isDark
+                                ? const Color(0xFF9A85B8)
+                                : const Color(0xFF918A98),
                             size: 20,
                           ),
                           suffixIcon: searchQuery.isNotEmpty
                               ? IconButton(
                                   icon: Icon(
                                     Icons.clear,
-                                    color: isDark ? const Color(0xFF9A85B8) : const Color(0xFF918A98),
+                                    color: isDark
+                                        ? const Color(0xFF9A85B8)
+                                        : const Color(0xFF918A98),
                                     size: 20,
                                   ),
                                   onPressed: () {
-                                    ref.read(merchantMenuSearchQueryProvider.notifier).state = '';
+                                    ref
+                                            .read(
+                                              merchantMenuSearchQueryProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        '';
                                   },
                                 )
                               : null,
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -242,18 +285,21 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                   1,
                   MerchantMenuSetupCard(
                     isDark: isDark,
-                    actionLabel: 'Add category',
-                    onAction: () async {
-                      HapticFeedback.selectionClick();
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MerchantMenuAddCategoryScreen(),
-                        ),
-                      );
-                      if (!mounted) return;
-                      await _refreshMenu();
-                    },
+                    actionLabel: context.tr('Add category'),
+                    onAction: canEdit
+                        ? () async {
+                            HapticFeedback.selectionClick();
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const MerchantMenuAddCategoryScreen(),
+                              ),
+                            );
+                            if (!mounted) return;
+                            await _refreshMenu();
+                          }
+                        : null,
                   ),
                 ),
               ),
@@ -262,7 +308,9 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
             // ── Category chips ───────────────────────────────────────────
             SliverToBoxAdapter(
               child: Container(
-                color: isDark ? const Color(0xFF1A0A2E) : const Color(0xFFFEFDFE),
+                color: isDark
+                    ? const Color(0xFF1A0A2E)
+                    : const Color(0xFFFEFDFE),
                 padding: const EdgeInsets.fromLTRB(0, 8, 0, 12),
                 child: _reveal(
                   1,
@@ -282,10 +330,16 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                       error: (e, _) => Center(
                         child: TextButton.icon(
                           onPressed: () => ref.invalidate(merchantMenuProvider),
-                          icon: const Icon(Icons.refresh_rounded, color: Color(0xFF5F2D82)),
-                          label: const Text(
-                            'Retry',
-                            style: TextStyle(fontFamily: 'TT Fors', color: Color(0xFF5F2D82)),
+                          icon: Icon(
+                            Icons.refresh_rounded,
+                            color: context.acc(Color(0xFF5F2D82)),
+                          ),
+                          label: Text(
+                            context.tr('Retry'),
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              color: context.acc(Color(0xFF5F2D82)),
+                            ),
                           ),
                         ),
                       ),
@@ -301,14 +355,27 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                             Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: _CompactCategoryChip(
-                                label: 'All',
+                                label: context.tr('All'),
                                 icon: '🍽️',
-                                isSelected: selectedCategory == null && searchQuery.isEmpty,
+                                isSelected:
+                                    selectedCategory == null &&
+                                    searchQuery.isEmpty,
                                 isDark: isDark,
                                 onTap: () {
                                   HapticFeedback.selectionClick();
-                                  ref.read(selectedCategoryProvider.notifier).state = null;
-                                  ref.read(merchantMenuSearchQueryProvider.notifier).state = '';
+                                  ref
+                                          .read(
+                                            selectedCategoryProvider.notifier,
+                                          )
+                                          .state =
+                                      null;
+                                  ref
+                                          .read(
+                                            merchantMenuSearchQueryProvider
+                                                .notifier,
+                                          )
+                                          .state =
+                                      '';
                                 },
                               ),
                             ),
@@ -319,12 +386,23 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                                   label: cat.name,
                                   icon: cat.iconEmoji ?? '🍴',
                                   imageUrl: cat.imageUrl,
-                                  isSelected: selectedCategory == cat.id && searchQuery.isEmpty,
+                                  isSelected:
+                                      selectedCategory == cat.id &&
+                                      searchQuery.isEmpty,
                                   isDark: isDark,
                                   onTap: () {
                                     HapticFeedback.selectionClick();
-                                    ref.read(selectedCategoryProvider.notifier).state = cat.id;
-                                    ref.read(merchantMenuSearchQueryProvider.notifier).state = '';
+                                    ref
+                                        .read(selectedCategoryProvider.notifier)
+                                        .state = cat
+                                        .id;
+                                    ref
+                                            .read(
+                                              merchantMenuSearchQueryProvider
+                                                  .notifier,
+                                            )
+                                            .state =
+                                        '';
                                   },
                                 ),
                               ),
@@ -374,7 +452,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'FOOD MENU',
+                        context.tr('FOOD MENU'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10,
@@ -414,7 +492,7 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
               ),
               error: (e, _) => SliverFillRemaining(
                 child: _ErrorState(
-                  error: '$e',
+                  error: ApiErrorMapper.message(e),
                   isDark: isDark,
                   onRetry: _refreshMenu,
                 ),
@@ -450,7 +528,10 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                     child: _EmptyMenuState(
                       isDark: isDark,
                       pulse: _emptyPulse,
-                      hasFilter: selectedCategory != null || inventoryFilter != MerchantInventoryFilter.all || searchQuery.isNotEmpty,
+                      hasFilter:
+                          selectedCategory != null ||
+                          inventoryFilter != MerchantInventoryFilter.all ||
+                          searchQuery.isNotEmpty,
                       searchQuery: searchQuery,
                     ),
                   );
@@ -459,72 +540,94 @@ class _MerchantMenuViewState extends ConsumerState<MerchantMenuView>
                 return SliverPadding(
                   padding: EdgeInsets.fromLTRB(16, 0, 16, safePad.bottom + 80),
                   sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.58,
+                      childAspectRatio: merchantMenuCardAspectRatio(
+                        MediaQuery.sizeOf(context).width,
+                      ),
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
-                    delegate: SliverChildBuilderDelegate(
-                      (ctx, i) {
-                        final item = filtered[i];
-                        final catName = _categoryName(menu.categories, item.menuCategoryId);
-                        final itemAnim = CurvedAnimation(
-                          parent: _entrance,
-                          curve: Interval(
-                            (.30 + i * .05).clamp(0.0, .85),
-                            1.0,
-                            curve: Curves.easeOutCubic,
+                    delegate: SliverChildBuilderDelegate((ctx, i) {
+                      final item = filtered[i];
+                      final catName = _categoryName(
+                        menu.categories,
+                        item.menuCategoryId,
+                      );
+                      final itemAnim = CurvedAnimation(
+                        parent: _entrance,
+                        curve: Interval(
+                          (.30 + i * .05).clamp(0.0, .85),
+                          1.0,
+                          curve: Curves.easeOutCubic,
+                        ),
+                      );
+                      return AnimatedBuilder(
+                        animation: itemAnim,
+                        builder: (_, child) => Opacity(
+                          opacity: itemAnim.value,
+                          child: Transform.translate(
+                            offset: Offset(0, 20 * (1 - itemAnim.value)),
+                            child: child,
                           ),
-                        );
-                        return AnimatedBuilder(
-                          animation: itemAnim,
-                          builder: (_, child) => Opacity(
-                            opacity: itemAnim.value,
-                            child: Transform.translate(
-                              offset: Offset(0, 20 * (1 - itemAnim.value)),
-                              child: child,
-                            ),
-                          ),
-                          child: _GridMenuItemCard(
+                        ),
+                        child: _GridMenuItemCard(
+                          canEdit: canEdit,
+                          item: item,
+                          categoryName: catName,
+                          isDark: isDark,
+                          inventoryBadge: MerchantMenuInventoryBadge(
                             item: item,
-                            categoryName: catName,
-                            isDark: isDark,
-                            inventoryBadge: MerchantMenuInventoryBadge(item: item),
-                            stockControls: MerchantMenuStockControls(
-                              item: item,
-                              onStockChanged: (s) async {
-                                try {
-                                  await updateMerchantItemStock(ref, item: item, newStock: s);
-                                  await _refreshMenu();
-                                } catch (e) {
-                                  if (ctx.mounted) {
-                                    SnackBarUtils.showError(ctx, 'Failed: $e');
-                                  }
+                          ),
+                          stockControls: MerchantMenuStockControls(
+                            item: item,
+                            onStockChanged: (s) async {
+                              try {
+                                await updateMerchantItemStock(
+                                  ref,
+                                  item: item,
+                                  newStock: s,
+                                );
+                                await _refreshMenu();
+                              } catch (e) {
+                                if (ctx.mounted) {
+                                  SnackBarUtils.showError(ctx, ApiErrorMapper.message(e));
                                 }
-                              },
-                            ),
-                            onEdit: () async {
-                              await Navigator.push(
-                                ctx,
-                                MaterialPageRoute(
-                                  builder: (_) => MerchantMenuEditItemScreen(
-                                    initialItem: menuItemToEditFormMap(item, categoryName: catName, encodeOptions: jsonEncode),
+                              }
+                            },
+                          ),
+                          onEdit: () async {
+                            await Navigator.push(
+                              ctx,
+                              MaterialPageRoute(
+                                builder: (_) => MerchantMenuEditItemScreen(
+                                  initialItem: menuItemToEditFormMap(
+                                    item,
+                                    categoryName: catName,
+                                    encodeOptions: jsonEncode,
                                   ),
                                 ),
-                              );
-                              await _refreshMenu();
-                            },
-                            onDelete: () => confirmAndDeleteMerchantMenuItem(ctx, ref, itemId: item.id, itemName: item.name),
-                            onDuplicate: () async {
-                              await duplicateMerchantMenuItem(ctx, ref, item: item);
-                              await _refreshMenu();
-                            },
+                              ),
+                            );
+                            await _refreshMenu();
+                          },
+                          onDelete: () => confirmAndDeleteMerchantMenuItem(
+                            ctx,
+                            ref,
+                            itemId: item.id,
+                            itemName: item.name,
                           ),
-                        );
-                      },
-                      childCount: filtered.length,
-                    ),
+                          onDuplicate: () async {
+                            await duplicateMerchantMenuItem(
+                              ctx,
+                              ref,
+                              item: item,
+                            );
+                            await _refreshMenu();
+                          },
+                        ),
+                      );
+                    }, childCount: filtered.length),
                   ),
                 );
               },
@@ -562,19 +665,20 @@ class _CompactCategoryChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF5F2D82) : (isDark ? const Color(0xFF1E1730) : Colors.white),
+          color: isSelected
+              ? const Color(0xFF5F2D82)
+              : (isDark ? const Color(0xFF1E1730) : Colors.white),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF5F2D82) : (isDark ? const Color(0xFF2E2540) : const Color(0xFFECEAF0)),
+            color: isSelected
+                ? const Color(0xFF5F2D82)
+                : (isDark ? const Color(0xFF2E2540) : const Color(0xFFECEAF0)),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              icon,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(icon, style: const TextStyle(fontSize: 16)),
             const SizedBox(width: 6),
             Text(
               label,
@@ -582,7 +686,11 @@ class _CompactCategoryChip extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : (isDark ? const Color(0xFF9A85B8) : const Color(0xFF302B36)),
+                color: isSelected
+                    ? Colors.white
+                    : (isDark
+                          ? const Color(0xFF9A85B8)
+                          : const Color(0xFF302B36)),
               ),
             ),
           ],
@@ -594,6 +702,7 @@ class _CompactCategoryChip extends StatelessWidget {
 
 // ─── Grid Menu Item Card (vertical card for 2-column grid) ───────────────────
 class _GridMenuItemCard extends StatelessWidget {
+  final bool canEdit;
   final MenuItemDto item;
   final String categoryName;
   final bool isDark;
@@ -604,6 +713,7 @@ class _GridMenuItemCard extends StatelessWidget {
   final VoidCallback onDuplicate;
 
   const _GridMenuItemCard({
+    required this.canEdit,
     required this.item,
     required this.categoryName,
     required this.isDark,
@@ -617,10 +727,12 @@ class _GridMenuItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onEdit();
-      },
+      onTap: canEdit
+          ? () {
+              HapticFeedback.selectionClick();
+              onEdit();
+            }
+          : null,
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1730) : Colors.white,
@@ -634,7 +746,9 @@ class _GridMenuItemCard extends StatelessWidget {
           children: [
             // Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               child: AspectRatio(
                 aspectRatio: 1,
                 child: item.imageUrl != null && item.imageUrl!.isNotEmpty
@@ -642,19 +756,19 @@ class _GridMenuItemCard extends StatelessWidget {
                         source: item.imageUrl,
                         fit: BoxFit.cover,
                         placeholder: Container(
-                          color: const Color(0xFFF5F4F7),
-                          child: const Icon(
+                          color: context.surf(const Color(0xFFF5F4F7)),
+                          child: Icon(
                             Icons.restaurant_menu,
-                            color: Color(0xFFA49BAE),
+                            color: context.sub(Color(0xFFA49BAE)),
                             size: 40,
                           ),
                         ),
                       )
                     : Container(
-                        color: const Color(0xFFF5F4F7),
-                        child: const Icon(
+                        color: context.surf(const Color(0xFFF5F4F7)),
+                        child: Icon(
                           Icons.restaurant_menu,
-                          color: Color(0xFFA49BAE),
+                          color: context.sub(Color(0xFFA49BAE)),
                           size: 40,
                         ),
                       ),
@@ -693,7 +807,9 @@ class _GridMenuItemCard extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 9,
-                          color: isDark ? const Color(0xFF9A85B8) : const Color(0xFF918A98),
+                          color: isDark
+                              ? const Color(0xFF9A85B8)
+                              : const Color(0xFF918A98),
                           height: 1.2,
                         ),
                         maxLines: 1,
@@ -706,45 +822,47 @@ class _GridMenuItemCard extends StatelessWidget {
                     // Price
                     Text(
                       '₱${item.price.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF5F2D82),
+                        color: context.acc(Color(0xFF5F2D82)),
                       ),
                     ),
 
-                    const SizedBox(height: 6),
+                    if (canEdit) ...[
+                      const SizedBox(height: 6),
 
-                    // Stock controls
-                    stockControls,
+                      // Stock controls
+                      stockControls,
 
-                    const SizedBox(height: 6),
+                      const SizedBox(height: 6),
 
-                    // Action buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _SmallActionBtn(
-                          label: 'Edit',
-                          icon: Icons.edit_outlined,
-                          color: const Color(0xFF5F2D82),
-                          onTap: onEdit,
-                        ),
-                        _SmallActionBtn(
-                          label: 'Copy',
-                          icon: Icons.copy_outlined,
-                          color: const Color(0xFF16A34A),
-                          onTap: onDuplicate,
-                        ),
-                        _SmallActionBtn(
-                          label: 'Del',
-                          icon: Icons.delete_outline,
-                          color: Colors.red.shade600,
-                          onTap: onDelete,
-                        ),
-                      ],
-                    ),
+                      // Action buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _SmallActionBtn(
+                            label: context.tr('Edit'),
+                            icon: Icons.edit_outlined,
+                            color: const Color(0xFF5F2D82),
+                            onTap: onEdit,
+                          ),
+                          _SmallActionBtn(
+                            label: context.tr('Copy'),
+                            icon: Icons.copy_outlined,
+                            color: const Color(0xFF16A34A),
+                            onTap: onDuplicate,
+                          ),
+                          _SmallActionBtn(
+                            label: context.tr('Del'),
+                            icon: Icons.delete_outline,
+                            color: Colors.red.shade600,
+                            onTap: onDelete,
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -846,15 +964,15 @@ class _PillButtonState extends State<_PillButton>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(widget.icon, size: 14, color: const Color(0xFF5F2D82)),
+            Icon(widget.icon, size: 14, color: context.acc(const Color(0xFF5F2D82))),
             const SizedBox(width: 5),
             Text(
               widget.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF5F2D82),
+                color: context.acc(Color(0xFF5F2D82)),
               ),
             ),
           ],
@@ -1095,7 +1213,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           source: widget.item.imageUrl,
                           fit: BoxFit.cover,
                           placeholder: Container(
-                            color: const Color(0xFFEDD9FF),
+                            color: context.surf(const Color(0xFFEDD9FF)),
                             child: const Icon(
                               Icons.restaurant_rounded,
                               size: 32,
@@ -1104,7 +1222,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           ),
                         )
                       : Container(
-                          color: const Color(0xFFEDD9FF),
+                          color: context.surf(const Color(0xFFEDD9FF)),
                           child: const Icon(
                             Icons.restaurant_rounded,
                             size: 32,
@@ -1155,11 +1273,11 @@ class _MenuItemCardState extends State<_MenuItemCard>
                             ),
                             child: Text(
                               '₱${widget.item.price.toStringAsFixed(2)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF5F2D82),
+                                color: context.acc(Color(0xFF5F2D82)),
                               ),
                             ),
                           ),
@@ -1218,7 +1336,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           widget.stockControls,
                           const Spacer(),
                           _ActionBtn(
-                            label: 'Edit',
+                            label: context.tr('Edit'),
                             color: const Color(0xFF5F2D82),
                             onTap: widget.onEdit,
                           ),
@@ -1233,7 +1351,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           ),
                           const SizedBox(width: 2),
                           _ActionBtn(
-                            label: 'Dup',
+                            label: context.tr('Dup'),
                             color: const Color(0xFF16A34A),
                             onTap: widget.onDuplicate,
                           ),
@@ -1248,7 +1366,7 @@ class _MenuItemCardState extends State<_MenuItemCard>
                           ),
                           const SizedBox(width: 2),
                           _ActionBtn(
-                            label: 'Del',
+                            label: context.tr('Del'),
                             color: Colors.red.shade600,
                             onTap: widget.onDelete,
                           ),
@@ -1311,7 +1429,7 @@ class _EmptyMenuState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery.isNotEmpty;
-    
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -1327,30 +1445,38 @@ class _EmptyMenuState extends StatelessWidget {
                   height: 88,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF5F2D82).withValues(alpha: .08 + .04 * pulse.value),
+                    color: const Color(
+                      0xFF5F2D82,
+                    ).withValues(alpha: .08 + .04 * pulse.value),
                     border: Border.all(
-                      color: const Color(0xFF5F2D82).withValues(alpha: .12 + .06 * pulse.value),
+                      color: const Color(
+                        0xFF5F2D82,
+                      ).withValues(alpha: .12 + .06 * pulse.value),
                       width: 8,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF5F2D82).withValues(alpha: .10 * pulse.value),
+                        color: const Color(
+                          0xFF5F2D82,
+                        ).withValues(alpha: .10 * pulse.value),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
                     ],
                   ),
                   child: Icon(
-                    isSearching ? Icons.search_off : Icons.restaurant_menu_rounded,
+                    isSearching
+                        ? Icons.search_off
+                        : Icons.restaurant_menu_rounded,
                     size: 36,
-                    color: const Color(0xFF6D3EA0),
+                    color: context.acc(const Color(0xFF6D3EA0)),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              isSearching 
+              isSearching
                   ? 'No items found'
                   : (hasFilter ? 'Nothing found' : 'Menu is empty'),
               style: TextStyle(
@@ -1365,14 +1491,16 @@ class _EmptyMenuState extends StatelessWidget {
               isSearching
                   ? 'Try searching with different keywords'
                   : (hasFilter
-                      ? 'No items match this filter.'
-                      : 'Tap + to add your first menu item.'),
+                        ? 'No items match this filter.'
+                        : 'Tap + to add your first menu item.'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 13,
                 height: 1.5,
-                color: isDark ? const Color(0xFF9A85B8) : const Color(0xFFAA90C0),
+                color: isDark
+                    ? const Color(0xFF9A85B8)
+                    : const Color(0xFFAA90C0),
               ),
             ),
           ],
@@ -1433,7 +1561,7 @@ class _ErrorState extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.refresh_rounded, size: 16),
-            label: const Text('Retry', style: TextStyle(fontFamily: 'TT Fors')),
+            label: Text(context.tr('Retry'), style: TextStyle(fontFamily: 'TT Fors')),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class SectionLabel extends StatelessWidget {
   final String text;
@@ -18,7 +19,7 @@ class SectionLabel extends StatelessWidget {
         style: TextStyle(
           fontSize: ResponsiveUtils.fontSize(context, 16),
           fontWeight: FontWeight.w600,
-          color: Colors.black87,
+          color: context.txt(Colors.black87),
         ),
       ),
     );

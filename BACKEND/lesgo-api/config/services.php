@@ -133,4 +133,12 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS'),
     ],
 
+    // =========
+    // Phone OTP: local/testing-only fallback that returns the code in the API
+    // response when Twilio is not configured (ignored in production).
+    // =========
+    'otp' => [
+        'allow_local_fallback' => (bool) env('OTP_ALLOW_LOCAL_FALLBACK', false),
+    ],
+
 ];

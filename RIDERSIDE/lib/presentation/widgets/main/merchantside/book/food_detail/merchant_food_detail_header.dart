@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantFoodDetailHeader extends StatelessWidget {
   final VoidCallback onBack;
@@ -27,7 +28,7 @@ class MerchantFoodDetailHeader extends StatelessWidget {
             child: Icon(
               Icons.chevron_left_rounded,
               size: ResponsiveUtils.imageHeight(context, 32),
-              color: const Color(0xFF5F2D82),
+              color: context.acc(const Color(0xFF5F2D82)),
             ),
           ),
           Align(

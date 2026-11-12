@@ -10,6 +10,7 @@ class RiderSupportTicket {
   final String priority;
   final String status;
   final String createdAt;
+  final String? ticketNumber;
 
   const RiderSupportTicket({
     required this.id,
@@ -19,6 +20,7 @@ class RiderSupportTicket {
     required this.priority,
     required this.status,
     required this.createdAt,
+    this.ticketNumber,
   });
 
   factory RiderSupportTicket.fromJson(Map<String, dynamic> json) {
@@ -30,6 +32,7 @@ class RiderSupportTicket {
       priority: json['priority']?.toString() ?? 'medium',
       status: json['status']?.toString() ?? 'open',
       createdAt: json['created_at']?.toString() ?? '',
+      ticketNumber: json['ticket_number']?.toString(),
     );
   }
 }
@@ -128,7 +131,9 @@ class SupportApi {
   static Future<RiderSupportTicket> createTicket({
     required String subject,
     required String description,
-    String category = 'general',
+    // Must be one of the backend's ticket categories; 'general' is not one and
+    // made the server reject (and previously silently drop) every message.
+    String category = 'general_inquiry',
     String priority = 'medium',
     int? orderId,
   }) async {

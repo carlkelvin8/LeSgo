@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../common/menu_image_widget.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantOrderCard extends StatefulWidget {
   final String orderId;
@@ -91,7 +92,7 @@ class _MerchantOrderCardState extends State<MerchantOrderCard>
                     source: widget.imageUrl,
                     fit: BoxFit.cover,
                     placeholder: Container(
-                      color: const Color(0xFFEDD9FF),
+                      color: context.surf(const Color(0xFFEDD9FF)),
                       child: const Icon(Icons.restaurant_rounded,
                           color: Color(0xFF9B70CC), size: 28),
                     ),
@@ -130,11 +131,11 @@ class _MerchantOrderCardState extends State<MerchantOrderCard>
                           ),
                           child: Text(
                             'PHP ${widget.price}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF5F2D82),
+                              color: context.acc(Color(0xFF5F2D82)),
                             ),
                           ),
                         ),
@@ -212,7 +213,7 @@ class _MerchantOrderCardState extends State<MerchantOrderCard>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF8ED),
+                          color: context.surf(const Color(0xFFFFF8ED)),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: const Color(0xFFF59E0B).withValues(alpha: .40),

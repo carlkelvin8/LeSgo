@@ -200,6 +200,9 @@ final merchantWeekAnalyticsPreviewProvider =
   );
 });
 
+/// "Today: N orders" on the analytics preview card = orders RECEIVED today,
+/// so this one intentionally counts by created_at (any status). Money and the
+/// completed/cancelled stats use [MerchantOrderAmountUtils.earningsDate].
 final merchantTodayOrderCountProvider = Provider<AsyncValue<int>>((ref) {
   final ordersAsync = ref.watch(merchantOrdersProvider);
 
@@ -237,9 +240,13 @@ MerchantAnalyticsSummary _buildSummary(
   // Track all customer order dates to determine new vs returning
   final allCustomerOrderDates = <int, List<DateTime>>{};
   final periodStartDate = _periodStartDate(period);
+  // Customers with at least one completed order in the period.
+  final payingCustomerIds = <int>{};
 
   for (final order in orders) {
-    if (!_isOrderCreatedInPeriod(order, period)) continue;
+    // Attributed by earningsDate: completed -> completed_at, cancelled ->
+    // cancelled_at, active -> created_at (same rule as the Sales Report).
+    if (!_isOrderInPeriod(order, period)) continue;
 
     totalOrders += 1;
     _addToTrend(trendBuckets, order, period);
@@ -247,7 +254,11 @@ MerchantAnalyticsSummary _buildSummary(
     // Track customer
     if (order.user != null) {
       final cid = order.user!.id;
-      final spent = MerchantOrderAmountUtils.foodEarnings(order);
+      // Only completed orders are money the customer actually spent; counting
+      // cancelled/pending orders inflated Top Customers "spent" amounts.
+      final spent = MerchantOrderAmountUtils.isCompleted(order)
+          ? MerchantOrderAmountUtils.foodEarnings(order)
+          : 0.0;
       final existing = customerMap[cid];
       if (existing == null) {
         customerMap[cid] = MerchantCustomerInfo(
@@ -276,12 +287,11 @@ MerchantAnalyticsSummary _buildSummary(
 
     if (MerchantOrderAmountUtils.isCompleted(order)) {
       completedOrders += 1;
-      if (_isRevenueInPeriod(order, period)) {
-        final amount = MerchantOrderAmountUtils.foodEarnings(order);
-        if (amount > 0) {
-          totalRevenue += amount;
-          _accumulateTopItems(itemMap, order, amount);
-        }
+      if (order.user != null) payingCustomerIds.add(order.user!.id);
+      final amount = MerchantOrderAmountUtils.foodEarnings(order);
+      if (amount > 0) {
+        totalRevenue += amount;
+        _accumulateTopItems(itemMap, order, amount);
       }
       final hour = _orderHour(order);
       if (hour != null) hourlyCounts[hour] += 1;
@@ -316,10 +326,11 @@ MerchantAnalyticsSummary _buildSummary(
   final topCustomersList = customerMap.values.toList()
     ..sort((a, b) => b.totalSpent.compareTo(a.totalSpent));
 
-  // Avg customer lifetime value
-  final uniqueCustomerCount = customerMap.length;
-  final avgLifetimeValue = uniqueCustomerCount > 0
-      ? totalRevenue / uniqueCustomerCount
+  // Avg customer value: revenue / customers who actually completed an order.
+  // Customers whose only orders were cancelled or still active don't dilute it.
+  final payingCustomerCount = payingCustomerIds.length;
+  final avgLifetimeValue = payingCustomerCount > 0
+      ? totalRevenue / payingCustomerCount
       : 0.0;
 
   // Peak hours
@@ -355,7 +366,7 @@ MerchantAnalyticsSummary _buildSummary(
 
   final categoryMap = <String, MerchantCategoryPerformance>{};
   for (final order in orders) {
-    if (!_isOrderCreatedInPeriod(order, period)) continue;
+    if (!_isOrderInPeriod(order, period)) continue;
     if (!MerchantOrderAmountUtils.isCompleted(order)) continue;
 
     final items = order.orderItems ?? [];
@@ -462,7 +473,9 @@ void _addToTrend(
   OrderDto order,
   MerchantEarningsPeriod period,
 ) {
-  final date = _parseDate(order.createdAt);
+  // Same day the order's money/status is attributed to (completed_at for
+  // completed orders), so a 23:50 order delivered at 00:20 is on the new day.
+  final date = MerchantOrderAmountUtils.earningsDate(order);
   if (date == null) return;
 
   int index;
@@ -483,6 +496,10 @@ void _addToTrend(
       final now = DateTime.now();
       final start = DateTime(now.year, now.month, now.day)
           .subtract(const Duration(days: 29));
+      // The All Time chart only draws the last 30 days. Orders older than
+      // that used to be clamped into bucket 0, piling all prior history onto
+      // the first day's bar; leave them out of the chart instead.
+      if (date.isBefore(start)) return;
       index = date.difference(start).inDays.clamp(0, 29);
       break;
   }
@@ -546,7 +563,8 @@ bool _isOrderCreatedInPeriod(OrderDto order, MerchantEarningsPeriod period) {
   return _isDateInPeriod(date, period);
 }
 
-bool _isRevenueInPeriod(OrderDto order, MerchantEarningsPeriod period) {
+/// Period membership by [MerchantOrderAmountUtils.earningsDate].
+bool _isOrderInPeriod(OrderDto order, MerchantEarningsPeriod period) {
   return MerchantOrderAmountUtils.isWithinPeriod(order, period);
 }
 

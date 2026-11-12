@@ -13,27 +13,30 @@ import '../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
 import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
+import '../../../widgets/main/merchantside/orders/merchant_customer_safety_handlers.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_action_handlers.dart';
 import '../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
 import '../../../widgets/main/merchantside/orders/merchant_prep_time_estimate.dart';
 import '../../../widgets/main/merchantside/orders/merchant_prep_timer_badge.dart';
 import '../../../widgets/main/merchantside/orders/merchant_quick_reply_section.dart';
 import '../../../widgets/main/merchantside/orders/merchant_special_instructions_banner.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
+import '../../../widgets/common/tap_to_call_text.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 class MerchantOrderDetailScreen extends ConsumerStatefulWidget {
   final OrderDto order;
 
-  const MerchantOrderDetailScreen({
-    super.key,
-    required this.order,
-  });
+  const MerchantOrderDetailScreen({super.key, required this.order});
 
   @override
   ConsumerState<MerchantOrderDetailScreen> createState() =>
       _MerchantOrderDetailScreenState();
 }
 
-class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailScreen>
+class _MerchantOrderDetailScreenState
+    extends ConsumerState<MerchantOrderDetailScreen>
     with WidgetsBindingObserver, AutoRefreshMixin {
   @override
   Duration get autoRefreshInterval => kScreenAutoRefreshInterval;
@@ -44,8 +47,18 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     ref.invalidate(merchantMenuProvider);
   }
 
-  String _getStatusLabel(String status) {
-    switch (status.toLowerCase()) {
+  String _getStatusLabel(OrderDto order) {
+    final status = order.status.toLowerCase();
+    if (MerchantOrderOpsUtils.isReadyAtStore(
+      status,
+      alreadyReady: order.readyForPickupAt != null,
+    )) {
+      if (status == 'driver_arrived_at_pickup') return 'Ready · Rider at Store';
+      return order.driverId != null
+          ? 'Ready for Pickup · Rider Assigned'
+          : 'Ready for Pickup';
+    }
+    switch (status) {
       case 'pending':
         return 'Pending';
       case 'searching_driver':
@@ -56,8 +69,9 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
         return 'Ready for Pickup';
       case 'picked_up':
       case 'in_progress':
-      case 'driver_arrived_at_pickup':
         return 'For Delivery';
+      case 'driver_arrived_at_pickup':
+        return 'Rider at Store';
       case 'completed':
         return 'Delivered';
       case 'cancelled':
@@ -90,6 +104,46 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     }
   }
 
+  /// Report or block the customer (App Store Guideline 1.2).
+  Widget _customerSafetyMenu(OrderDto order) {
+    final blocked =
+        ref.watch(merchantCustomerBlockedProvider(order.id)).value ?? false;
+    final customerLabel = order.user?.name ?? 'this customer';
+
+    return PopupMenuButton<String>(
+      tooltip: context.tr('Customer options'),
+      icon: const Icon(Icons.more_vert),
+      onSelected: (value) {
+        if (value == 'report') {
+          MerchantCustomerSafetyHandlers.report(
+            context,
+            ref,
+            orderId: order.id,
+            customerLabel: customerLabel,
+          );
+        } else {
+          MerchantCustomerSafetyHandlers.setBlocked(
+            context,
+            ref,
+            orderId: order.id,
+            block: !blocked,
+            customerLabel: customerLabel,
+          );
+        }
+      },
+      itemBuilder: (_) => [
+        const PopupMenuItem(
+          value: 'report',
+          child: Text(MerchantCustomerSafetyHandlers.reportLabel),
+        ),
+        PopupMenuItem(
+          value: 'block',
+          child: Text(MerchantCustomerSafetyHandlers.blockLabel(blocked)),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(merchantMenuProvider);
@@ -102,11 +156,13 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
     final status = resolvedOrder.status.toLowerCase();
     final prepTimer = ref.watch(merchantPrepTimerProvider)[resolvedOrder.id];
-    final orderInstructions =
-        MerchantOrderOpsUtils.orderSpecialInstructions(resolvedOrder);
-    final itemInstructions =
-        MerchantOrderOpsUtils.itemSpecialInstructions(resolvedOrder);
-    
+    final orderInstructions = MerchantOrderOpsUtils.orderSpecialInstructions(
+      resolvedOrder,
+    );
+    final itemInstructions = MerchantOrderOpsUtils.itemSpecialInstructions(
+      resolvedOrder,
+    );
+
     // Calculate subtotals
     double itemSubtotal = 0;
     if (resolvedOrder.orderItems != null) {
@@ -114,7 +170,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
         itemSubtotal += MerchantOrderAmountUtils.lineTotal(item);
       }
     }
-    
+
     // Format dates
     String orderDate = 'Unknown date';
     if (resolvedOrder.createdAt.isNotEmpty) {
@@ -125,21 +181,24 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         title: Text(
-          'Order Details',
+          context.tr('Order Details'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
+        actions: [
+          if (resolvedOrder.userId > 0) _customerSafetyMenu(resolvedOrder),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -147,7 +206,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
           children: [
             // Status Header
             Container(
-              color: Colors.white,
+              color: context.surf(Colors.white),
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
                 vertical: ResponsiveUtils.spacing(context, 20),
@@ -163,20 +222,27 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 20),
                           fontWeight: FontWeight.w800,
-                          color: Colors.black87,
+                          color: context.txt(Colors.black87),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(resolvedOrder.status).withValues(alpha: 0.1),
+                          color: _getStatusColor(
+                            resolvedOrder.status,
+                          ).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _getStatusColor(resolvedOrder.status).withValues(alpha: 0.5),
+                            color: _getStatusColor(
+                              resolvedOrder.status,
+                            ).withValues(alpha: 0.5),
                           ),
                         ),
                         child: Text(
-                          _getStatusLabel(resolvedOrder.status),
+                          _getStatusLabel(resolvedOrder),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -190,19 +256,26 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                   SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                   Row(
                     children: [
-                      Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+                      Icon(
+                        Icons.access_time,
+                        size: 16,
+                        color: context.sub(Colors.grey.shade600),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         orderDate,
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade600,
+                          color: context.sub(Colors.grey.shade600),
                         ),
                       ),
                     ],
                   ),
-                  if (MerchantOrderOpsUtils.showsPrepTimer(status) &&
+                  if (MerchantOrderOpsUtils.showsPrepTimer(
+                        status,
+                        alreadyReady: resolvedOrder.readyForPickupAt != null,
+                      ) &&
                       prepTimer != null) ...[
                     SizedBox(height: ResponsiveUtils.spacing(context, 10)),
                     MerchantPrepTimerBadge(timer: prepTimer),
@@ -215,7 +288,10 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
               ),
             ),
 
-            if (MerchantOrderOpsUtils.isRiderFlowStatus(status)) ...[
+            if (MerchantOrderOpsUtils.isRiderFlowStatus(
+              status,
+              riderAssigned: resolvedOrder.driverId != null,
+            )) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -223,7 +299,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                   width: double.infinity,
                   padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE3F2FD),
+                    color: context.surf(const Color(0xFFE3F2FD)),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFF90CAF9)),
                   ),
@@ -237,7 +313,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                       SizedBox(width: ResponsiveUtils.spacing(context, 10)),
                       Expanded(
                         child: Text(
-                          'This order is with the rider. Merchant cancel is no longer available.',
+                          context.tr('This order is with the rider. Merchant cancel is no longer available.'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -252,7 +328,9 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
               ),
             ],
 
-            if (MerchantOrderOpsUtils.hasSpecialInstructions(resolvedOrder)) ...[
+            if (MerchantOrderOpsUtils.hasSpecialInstructions(
+              resolvedOrder,
+            )) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -262,162 +340,185 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                 ),
               ),
             ],
-            
+
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            
+
             // Order Items
             Container(
-              color: Colors.white,
+              color: context.surf(Colors.white),
               padding: EdgeInsets.all(horizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Order Items',
+                    context.tr('Order Items'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                  
-                  if (resolvedOrder.orderItems == null || resolvedOrder.orderItems!.isEmpty)
-                    const Text('No items found')
+
+                  if (resolvedOrder.orderItems == null ||
+                      resolvedOrder.orderItems!.isEmpty)
+                    Text(context.tr('No items found'))
                   else
-                    ...resolvedOrder.orderItems!.map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: ResponsiveUtils.spacing(context, 52),
-                            height: ResponsiveUtils.spacing(context, 52),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFD69A),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: MenuImageWidget(
-                              source: imageLookup.resolve(item),
-                              fit: BoxFit.cover,
-                              placeholder: Icon(
-                                Icons.restaurant,
-                                size: ResponsiveUtils.fontSize(context, 24),
-                                color: const Color(0xFF9A5A00),
+                    ...resolvedOrder.orderItems!.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: ResponsiveUtils.spacing(context, 52),
+                              height: ResponsiveUtils.spacing(context, 52),
+                              decoration: BoxDecoration(
+                                color: context.surf(const Color(0xFFFFD69A)),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: MenuImageWidget(
+                                source: imageLookup.resolve(item),
+                                fit: BoxFit.cover,
+                                placeholder: Icon(
+                                  Icons.restaurant,
+                                  size: ResponsiveUtils.fontSize(context, 24),
+                                  color: const Color(0xFF9A5A00),
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(width: ResponsiveUtils.spacing(context, 10)),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade200,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        '${item.quantity}x',
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          fontWeight: FontWeight.w700,
-                                          fontSize:
-                                              ResponsiveUtils.fontSize(context, 14),
+                            SizedBox(
+                              width: ResponsiveUtils.spacing(context, 10),
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: context.surf(Colors.grey.shade200),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${item.quantity}x',
+                                          style: TextStyle(
+                                            fontFamily: 'TT Fors',
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: ResponsiveUtils.fontSize(
+                                              context,
+                                              14,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          item.itemName,
+                                          style: TextStyle(
+                                            fontFamily: 'TT Fors',
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: ResponsiveUtils.fontSize(
+                                              context,
+                                              15,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (item.optionsDisplay != null &&
+                                      item.optionsDisplay!.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            item.notes != null &&
+                                                item.notes!.trim().isNotEmpty
+                                            ? const Color(0xFFFFF8E1)
+                                            : Colors.grey.shade100,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color:
+                                              item.notes != null &&
+                                                  item.notes!.trim().isNotEmpty
+                                              ? const Color(0xFFFFB300)
+                                              : Colors.grey.shade300,
+                                        ),
+                                      ),
                                       child: Text(
-                                        item.itemName,
+                                        item.optionsDisplay!,
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
-                                          fontWeight: FontWeight.w600,
-                                          fontSize:
-                                              ResponsiveUtils.fontSize(context, 15),
+                                          fontSize: ResponsiveUtils.fontSize(
+                                            context,
+                                            12,
+                                          ),
+                                          color:
+                                              item.notes != null &&
+                                                  item.notes!.trim().isNotEmpty
+                                              ? Colors.orange.shade900
+                                              : Colors.black54,
+                                          fontWeight:
+                                              item.notes != null &&
+                                                  item.notes!.trim().isNotEmpty
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
                                         ),
                                       ),
                                     ),
                                   ],
-                                ),
-                                if (item.optionsDisplay != null &&
-                                    item.optionsDisplay!.isNotEmpty) ...[
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: item.notes != null &&
-                                              item.notes!.trim().isNotEmpty
-                                          ? const Color(0xFFFFF8E1)
-                                          : Colors.grey.shade100,
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(
-                                        color: item.notes != null &&
-                                                item.notes!.trim().isNotEmpty
-                                            ? const Color(0xFFFFB300)
-                                            : Colors.grey.shade300,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      item.optionsDisplay!,
-                                      style: TextStyle(
-                                        fontFamily: 'TT Fors',
-                                        fontSize:
-                                            ResponsiveUtils.fontSize(context, 12),
-                                        color: item.notes != null &&
-                                                item.notes!.trim().isNotEmpty
-                                            ? Colors.orange.shade900
-                                            : Colors.black54,
-                                        fontWeight: item.notes != null &&
-                                                item.notes!.trim().isNotEmpty
-                                            ? FontWeight.w700
-                                            : FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
                                 ],
-                              ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'PHP ${MerchantOrderAmountUtils.lineTotal(item).toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontWeight: FontWeight.w600,
-                              fontSize: ResponsiveUtils.fontSize(context, 15),
+                            const SizedBox(width: 8),
+                            Text(
+                              'PHP ${MerchantOrderAmountUtils.lineTotal(item).toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontFamily: 'TT Fors',
+                                fontWeight: FontWeight.w600,
+                                fontSize: ResponsiveUtils.fontSize(context, 15),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    )),
-                    
+                    ),
+
                   const Divider(height: 24),
-                  
+
                   // Summary
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Items Subtotal',
-                        style: TextStyle(fontFamily: 'TT Fors', color: Colors.black54),
+                      Text(
+                        context.tr('Items Subtotal'),
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          color: context.sub(Colors.black54),
+                        ),
                       ),
                       Text(
                         'PHP ${itemSubtotal.toStringAsFixed(2)}',
-                        style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -425,13 +526,19 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Delivery Fee',
-                        style: TextStyle(fontFamily: 'TT Fors', color: Colors.black54),
+                      Text(
+                        context.tr('Delivery Fee'),
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          color: context.sub(Colors.black54),
+                        ),
                       ),
                       Text(
                         'PHP ${(resolvedOrder.totalFare ?? resolvedOrder.estimatedFare ?? resolvedOrder.distanceFare ?? 0.0).toStringAsFixed(2)}',
-                        style: const TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -439,11 +546,11 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Payment Method',
+                      Text(
+                        context.tr('Payment Method'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: Colors.black54,
+                          color: context.sub(Colors.black54),
                         ),
                       ),
                       Text(
@@ -461,11 +568,11 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Payment Status',
+                      Text(
+                        context.tr('Payment Status'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          color: Colors.black54,
+                          color: context.sub(Colors.black54),
                         ),
                       ),
                       Text(
@@ -475,10 +582,11 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontWeight: FontWeight.w600,
-                          color: MerchantPaymentUtils.creditsMerchantWallet(
-                            resolvedOrder.paymentMethod,
-                            resolvedOrder.paymentStatus,
-                          )
+                          color:
+                              MerchantPaymentUtils.creditsMerchantWallet(
+                                resolvedOrder.paymentMethod,
+                                resolvedOrder.paymentStatus,
+                              )
                               ? Colors.green.shade700
                               : Colors.orange.shade800,
                         ),
@@ -493,11 +601,11 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Credited to E-Wallet',
+                        Text(
+                          context.tr('Credited to E-Wallet'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Colors.black54,
+                            color: context.sub(Colors.black54),
                           ),
                         ),
                         Text(
@@ -516,7 +624,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Total Amount',
+                        context.tr('Total Amount'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -529,7 +637,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 18),
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF5F2D82),
+                          color: context.acc(const Color(0xFF5F2D82)),
                         ),
                       ),
                     ],
@@ -537,23 +645,23 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                 ],
               ),
             ),
-            
+
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            
+
             // Customer Info
             Container(
-              color: Colors.white,
+              color: context.surf(Colors.white),
               padding: EdgeInsets.all(horizontalPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Customer Details',
+                    context.tr('Customer Details'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 16),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -569,8 +677,9 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                             resolvedOrder.user?.resolvedProfilePhotoUrl,
                             fallbackIcon: Icons.person,
                             fallbackColor: const Color(0xFF5F2D82),
-                            backgroundColor:
-                                const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                            backgroundColor: const Color(
+                              0xFF5F2D82,
+                            ).withValues(alpha: 0.1),
                           ),
                         ),
                       ),
@@ -588,12 +697,12 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text(
-                              resolvedOrder.user?.phoneNumber ?? 'No phone number',
+                            TapToCallText(
+                              phone: resolvedOrder.user?.phoneNumber,
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                                color: Colors.grey.shade600,
+                                color: context.sub(Colors.grey.shade600),
                               ),
                             ),
                           ],
@@ -602,21 +711,66 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                     ],
                   ),
                   const SizedBox(height: 16),
+                  if (resolvedOrder.branchName != null) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.storefront_outlined,
+                          color: context.acc(Color(0xFF5F2D82)),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                context.tr('Branch'),
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: 12,
+                                  color: context.sub(Colors.grey),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                resolvedOrder.branchName!,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    14,
+                                  ),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.location_on, color: Colors.grey, size: 20),
+                      Icon(
+                        Icons.location_on,
+                        color: context.sub(Colors.grey),
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Delivery Address',
+                            Text(
+                              context.tr('Delivery Address'),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 12,
-                                color: Colors.grey,
+                                color: context.sub(Colors.grey),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -635,23 +789,24 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                 ],
               ),
             ),
-            
+
             // Rider Info
-            if (resolvedOrder.driverId != null || resolvedOrder.driver != null) ...[
+            if (resolvedOrder.driverId != null ||
+                resolvedOrder.driver != null) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Container(
-                color: Colors.white,
+                color: context.surf(Colors.white),
                 padding: EdgeInsets.all(horizontalPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Rider Details',
+                      context.tr('Rider Details'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -666,11 +821,11 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                       _buildRiderDetails(context, resolvedOrder.driver!)
                     else
                       Text(
-                        'Rider assigned. Loading rider details...',
+                        context.tr('Rider assigned. Loading rider details...'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: Colors.grey.shade600,
+                          color: context.sub(Colors.grey.shade600),
                         ),
                       ),
                   ],
@@ -686,7 +841,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                 child: MerchantQuickReplySection(orderId: resolvedOrder.id),
               ),
             ],
-            
+
             // Bottom padding for scroll
             const SizedBox(height: 100),
           ],
@@ -694,7 +849,12 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
       ),
       // Bottom Action Button (Accept)
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: _buildBottomActions(context, ref, status, horizontalPadding),
+      floatingActionButton: _buildBottomActions(
+        context,
+        ref,
+        resolvedOrder,
+        horizontalPadding,
+      ),
     );
   }
 
@@ -735,12 +895,12 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
               if (driver.phoneNumber != null &&
                   driver.phoneNumber!.trim().isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(
-                  driver.phoneNumber!,
+                TapToCallText(
+                  phone: driver.phoneNumber,
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: Colors.grey.shade600,
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
               ],
@@ -748,11 +908,14 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                   driver.plateNumber!.trim().isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF7F2FB),
+                    color: context.surf(const Color(0xFFF7F2FB)),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE8D9F5)),
+                    border: Border.all(color: context.brd(const Color(0xFFE8D9F5))),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -760,7 +923,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                       Icon(
                         Icons.confirmation_number_outlined,
                         size: 14,
-                        color: Colors.grey.shade700,
+                        color: context.sub(Colors.grey.shade700),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -769,7 +932,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 12),
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF5F2D82),
+                          color: context.acc(const Color(0xFF5F2D82)),
                         ),
                       ),
                     ],
@@ -784,7 +947,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade700,
+                    color: context.sub(Colors.grey.shade700),
                   ),
                 ),
               ],
@@ -834,26 +997,27 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
   Widget? _buildBottomActions(
     BuildContext context,
     WidgetRef ref,
-    String status,
+    OrderDto order,
     double horizontalPadding,
   ) {
+    final status = order.status;
     Future<void> run(Future<void> Function() action, String success) async {
       try {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Updating order...')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.tr('Updating order...'))));
         await action();
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(success)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(success)));
           Navigator.pop(context);
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(ApiErrorMapper.message(e))));
         }
       }
     }
@@ -892,7 +1056,7 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
         width: double.infinity,
         padding: EdgeInsets.all(horizontalPadding),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surf(Colors.white),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -919,64 +1083,76 @@ class _MerchantOrderDetailScreenState extends ConsumerState<MerchantOrderDetailS
     if (MerchantOrderOpsUtils.canAccept(status)) {
       return actionBar([
         actionButton(
-          label: 'Reject',
+          label: context.tr('Reject'),
           color: const Color(0xFFE53935),
           onPressed: () => MerchantOrderActionHandlers.reject(
             context,
             ref,
-            orderId: widget.order.id,
+            orderId: order.id,
             onSuccess: popOnSuccess,
           ),
         ),
         actionButton(
-          label: 'Accept',
+          label: context.tr('Accept'),
           color: const Color(0xFF5F2D82),
           onPressed: () => MerchantOrderActionHandlers.accept(
             context,
             ref,
-            orderId: widget.order.id,
+            orderId: order.id,
             onSuccess: popOnSuccess,
           ),
         ),
       ]);
     }
 
-    if (MerchantOrderOpsUtils.canMarkReadyForPickup(status) ||
-        MerchantOrderOpsUtils.canCancelAfterAccept(status)) {
+    if (MerchantOrderOpsUtils.canMarkReadyForPickup(
+          status,
+          alreadyReady: order.readyForPickupAt != null,
+        ) ||
+        MerchantOrderOpsUtils.canCancelAfterAccept(
+          status,
+          riderAssigned: order.driverId != null,
+        )) {
       final actions = <Widget>[];
 
-      if (MerchantOrderOpsUtils.canCancelAfterAccept(status)) {
+      if (MerchantOrderOpsUtils.canCancelAfterAccept(
+        status,
+        riderAssigned: order.driverId != null,
+      )) {
         actions.add(
           actionButton(
-            label: 'Cancel',
+            label: context.tr('Cancel'),
             color: const Color(0xFFE53935),
             onPressed: () => MerchantOrderActionHandlers.cancelAfterAccept(
               context,
               ref,
-              orderId: widget.order.id,
+              orderId: order.id,
               onSuccess: popOnSuccess,
             ),
           ),
         );
       }
 
-      if (MerchantOrderOpsUtils.canMarkReadyForPickup(status)) {
+      if (MerchantOrderOpsUtils.canMarkReadyForPickup(
+        status,
+        alreadyReady: order.readyForPickupAt != null,
+      )) {
         actions.add(
           actionButton(
-            label: 'Mark Ready',
+            label: context.tr('Mark Ready'),
             color: const Color(0xFF5F2D82),
             onPressed: () async {
               final confirm = await showMerchantConfirmDialog(
                 context,
-                title: 'Mark Ready for Pickup?',
-                message: 'Let the rider know this order is ready.',
-                confirmLabel: 'Mark Ready',
+                title: context.tr('Mark Ready for Pickup?'),
+                message: context.tr('Let the rider know this order is ready.'),
+                confirmLabel: context.tr('Mark Ready'),
               );
               if (confirm && context.mounted) {
                 await run(
                   () => ref
                       .read(merchantOrderActionProvider)
-                      .markReadyForPickup(widget.order.id),
+                      .markReadyForPickup(order.id),
                   'Order marked ready for pickup!',
                 );
               }

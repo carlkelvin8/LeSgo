@@ -78,3 +78,6 @@ token_storage_flow.md
 .DS_Store
 *.swp
 Desktop.ini
+
+# Local iOS signing and API secrets
+**/ios/Flutter/Secrets.xcconfig

@@ -11,9 +11,10 @@ class OrderDriverWalletService
     /**
      * Amount deducted from the driver's wallet when accepting a booking.
      */
-    public static function resolveBookingChargeAmount(Order $order): float
+    public static function resolveBookingChargeAmount(Order $order, ?User $driver = null): float
     {
-        return RiderCommissionService::resolveShippingFee($order);
+        // Read the rider's current tier, not a relation cached earlier in the request.
+        return RiderCommissionService::resolveShippingFee($order, null, $driver?->driverProfile()->first());
     }
 
     /**
@@ -27,7 +28,7 @@ class OrderDriverWalletService
             throw new \RuntimeException('Only drivers can accept paid bookings.');
         }
 
-        $amount = self::resolveBookingChargeAmount($order);
+        $amount = self::resolveBookingChargeAmount($order, $driver);
         if ($amount <= 0) {
             return;
         }

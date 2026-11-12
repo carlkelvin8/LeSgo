@@ -9,6 +9,7 @@ import '../../../../../core/utils/rider_commission_utils.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_profile_provider.dart';
 import '../../../../screens/main/riderside/rider_edit_profile_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderProfileHeader extends ConsumerStatefulWidget {
   const RiderProfileHeader({super.key});
@@ -241,7 +242,7 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader>
                           constraints: const BoxConstraints(minHeight: 48),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.surf(Colors.white),
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
@@ -254,21 +255,21 @@ class _RiderProfileHeaderState extends ConsumerState<RiderProfileHeader>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.edit_outlined,
                                 size: 17,
-                                color: Color(0xFF5F2D82),
+                                color: context.acc(Color(0xFF5F2D82)),
                               ),
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
                                   t('edit_profile'),
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
-                                    color: Color(0xFF532779),
+                                    color: context.acc(Color(0xFF532779)),
                                   ),
                                 ),
                               ),
@@ -323,10 +324,10 @@ class _AvatarState extends State<_Avatar> with SingleTickerProviderStateMixin {
     final fallback = Center(
       child: Text(
         widget.name.isEmpty ? 'L' : widget.name.characters.first.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 30,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF5F2D82),
+          color: context.acc(Color(0xFF5F2D82)),
         ),
       ),
     );
@@ -373,7 +374,7 @@ class _AvatarState extends State<_Avatar> with SingleTickerProviderStateMixin {
               ),
               child: ClipOval(
                 child: ColoredBox(
-                  color: const Color(0xFFF0E7F8),
+                  color: context.surf(const Color(0xFFF0E7F8)),
                   child: widget.photo == null || widget.photo!.isEmpty
                       ? fallback
                       : Image.network(
@@ -394,7 +395,7 @@ class _AvatarState extends State<_Avatar> with SingleTickerProviderStateMixin {
               child: Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0F0B8),
+                  color: context.surf(const Color(0xFFE0F0B8)),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: const Color(0xFF44205F),
@@ -417,10 +418,10 @@ class _AvatarState extends State<_Avatar> with SingleTickerProviderStateMixin {
                           color: Color(0xFF44205F),
                         ),
                       )
-                    : const Icon(
+                    : Icon(
                         Icons.camera_alt_outlined,
                         size: 14,
-                        color: Color(0xFF44205F),
+                        color: context.acc(Color(0xFF44205F)),
                       ),
               ),
             ),

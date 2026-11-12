@@ -7,6 +7,7 @@ import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../widgets/widgets.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderWalletHistoryScreen extends ConsumerStatefulWidget {
   const RiderWalletHistoryScreen({super.key});
@@ -72,7 +73,7 @@ class _RiderWalletHistoryScreenState
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Column(
           children: [
@@ -94,7 +95,7 @@ class _RiderWalletHistoryScreenState
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 20),
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
               ),
@@ -103,21 +104,35 @@ class _RiderWalletHistoryScreenState
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _transactions.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal:
-                                  ResponsiveUtils.horizontalPadding(context),
-                            ),
-                            child: Text(
-                              _loadError ??
-                                  'No transactions yet',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'TT Fors',
-                                color: _loadError != null
-                                    ? Colors.red.shade700
-                                    : Colors.grey.shade600,
+                      ? RefreshIndicator(
+                          onRefresh: _load,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) =>
+                                SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight,
+                                ),
+                                child: Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal:
+                                          ResponsiveUtils.horizontalPadding(
+                                              context),
+                                    ),
+                                    child: Text(
+                                      _loadError ?? 'No transactions yet',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontFamily: 'TT Fors',
+                                        color: _loadError != null
+                                            ? Colors.red.shade700
+                                            : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -125,6 +140,7 @@ class _RiderWalletHistoryScreenState
                       : RefreshIndicator(
                           onRefresh: _load,
                           child: ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             padding: EdgeInsets.symmetric(
                               horizontal:
                                   ResponsiveUtils.horizontalPadding(context),
@@ -140,9 +156,10 @@ class _RiderWalletHistoryScreenState
                               final desc =
                                   tx['description']?.toString() ?? '';
                               final isCredit = type == 'credit';
-                              final amountStr = amount is num
-                                  ? amount.toDouble().toStringAsFixed(2)
-                                  : amount?.toString() ?? '0.00';
+                              final amountStr = (amount is num
+                                      ? amount.toDouble()
+                                      : double.tryParse('$amount') ?? 0.0)
+                                  .toStringAsFixed(2);
 
                               return ListTile(
                                 contentPadding: EdgeInsets.zero,
@@ -159,7 +176,7 @@ class _RiderWalletHistoryScreenState
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(
                                         context, 12),
-                                    color: Colors.grey.shade600,
+                                    color: context.sub(Colors.grey.shade600),
                                   ),
                                 ),
                                 trailing: Text(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,28 +6,46 @@ import '../../../../core/services/printer_service.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/merchantside/printer_settings_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class PrinterSettingsScreen extends ConsumerWidget {
   const PrinterSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return Scaffold(
+        backgroundColor: context.bg(const Color(0xFFF8F9FA)),
+        appBar: AppBar(title: Text(context.tr('Printer Settings'))),
+        body: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'Bluetooth receipt printers work on Android devices only. '
+            'On iPhone, new orders still appear and ring in the app, but receipts '
+            'cannot be printed from here yet.',
+            style: TextStyle(fontSize: 15, height: 1.5),
+          ),
+        ),
+      );
+    }
+
     final state = ref.watch(printerSettingsProvider);
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         title: Text(
-          'Printer Settings',
+          context.tr('Printer Settings'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         centerTitle: true,
@@ -56,7 +75,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: context.brd(Colors.grey.shade200)),
       ),
       child: Padding(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
@@ -64,12 +83,12 @@ class PrinterSettingsScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Connected Printer',
+              context.tr('Connected Printer'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 15),
                 fontWeight: FontWeight.w700,
-                color: Colors.black87,
+                color: context.txt(Colors.black87),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -101,21 +120,21 @@ class PrinterSettingsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 11),
-                            color: Colors.grey.shade600,
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         ),
                         if (state.isConnecting)
                           Text(
-                            'Reconnecting...',
+                            context.tr('Reconnecting...'),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: const Color(0xFF5F2D82),
+                              color: context.acc(const Color(0xFF5F2D82)),
                             ),
                           )
                         else if (!state.isLiveConnected)
                           Text(
-                            'Saved — not connected',
+                            context.tr('Saved — not connected'),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
@@ -142,7 +161,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.bluetooth_connected, size: 18),
-                    label: const Text('Reconnect'),
+                    label: Text(context.tr('Reconnect')),
                     onPressed: () async {
                       final ok = await ref
                           .read(printerSettingsProvider.notifier)
@@ -172,7 +191,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.print, size: 18),
-                      label: const Text('Test Print'),
+                      label: Text(context.tr('Test Print')),
                       onPressed: state.isConnecting
                           ? null
                           : () async {
@@ -203,7 +222,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                   Expanded(
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.link_off, size: 18),
-                      label: const Text('Disconnect'),
+                      label: Text(context.tr('Disconnect')),
                       onPressed: () {
                         ref.read(printerSettingsProvider.notifier).disconnect();
                       },
@@ -218,14 +237,14 @@ class PrinterSettingsScreen extends ConsumerWidget {
             ] else ...[
               Row(
                 children: [
-                  Icon(Icons.print_disabled, color: Colors.grey.shade400, size: 32),
+                  Icon(Icons.print_disabled, color: context.sub(Colors.grey.shade400), size: 32),
                   SizedBox(width: ResponsiveUtils.spacing(context, 12)),
                   Text(
-                    'No printer connected',
+                    context.tr('No printer connected'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.grey.shade600,
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -257,25 +276,25 @@ class PrinterSettingsScreen extends ConsumerWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: context.brd(Colors.grey.shade200)),
       ),
       child: SwitchListTile(
         contentPadding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         title: Text(
-          'Auto-print new orders',
+          context.tr('Auto-print new orders'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         subtitle: Text(
-          'Automatically print receipt when a new order arrives',
+          context.tr('Automatically print receipt when a new order arrives'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 11),
-            color: Colors.grey.shade600,
+            color: context.sub(Colors.grey.shade600),
           ),
         ),
         value: state.isAutoPrintEnabled,
@@ -298,7 +317,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: context.brd(Colors.grey.shade200)),
       ),
       child: Padding(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
@@ -309,12 +328,12 @@ class PrinterSettingsScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Available Printers',
+                  context.tr('Available Printers'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 15),
                     fontWeight: FontWeight.w700,
-                    color: Colors.black87,
+                    color: context.txt(Colors.black87),
                   ),
                 ),
                 TextButton.icon(
@@ -325,7 +344,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.refresh, size: 18),
-                  label: const Text('Scan'),
+                  label: Text(context.tr('Scan')),
                   onPressed: state.isScanning
                       ? null
                       : () {
@@ -350,7 +369,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade500,
+                      color: context.sub(Colors.grey.shade500),
                     ),
                   ),
                 ),
@@ -395,7 +414,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 11),
-          color: Colors.grey.shade600,
+          color: context.sub(Colors.grey.shade600),
         ),
       ),
       trailing: isConnected
@@ -441,7 +460,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Connect'),
+                  : Text(context.tr('Connect')),
             ),
     );
   }

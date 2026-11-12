@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../common/menu_image_widget.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantFoodGridItem extends StatelessWidget {
   final String name;
@@ -25,7 +26,7 @@ class MerchantFoodGridItem extends StatelessWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: const Color(0xFFF2F2F2),
+                color: context.surf(const Color(0xFFF2F2F2)),
               ),
               alignment: Alignment.center,
               child: _buildImage(context),
@@ -40,7 +41,7 @@ class MerchantFoodGridItem extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 10.5),
               fontWeight: FontWeight.w500,
-              color: Colors.black,
+              color: context.txt(Colors.black),
             ),
           ),
         ],
@@ -67,7 +68,7 @@ class MerchantFoodGridItem extends StatelessWidget {
     return Icon(
       Icons.image_outlined,
       size: ResponsiveUtils.fontSize(context, 34),
-      color: const Color(0xFFCCCCCC),
+      color: context.sub(const Color(0xFFCCCCCC)),
     );
   }
 }

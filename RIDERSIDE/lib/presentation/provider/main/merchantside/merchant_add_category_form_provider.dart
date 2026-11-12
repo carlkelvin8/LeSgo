@@ -3,6 +3,7 @@ import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import 'merchant_profile_provider.dart';
 import 'merchant_menu_provider.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 class MerchantAddCategoryFormState {
   final int? categoryId;
@@ -140,8 +141,8 @@ class MerchantAddCategoryFormNotifier extends StateNotifier<MerchantAddCategoryF
       state = state.copyWith(
         isSubmitting: false,
         errorMessage: state.isEditMode
-            ? 'Failed to update category: ${e.toString()}'
-            : 'Failed to create category: ${e.toString()}',
+            ? ApiErrorMapper.message(e, fallbackEn: 'Could not update the category.', fallbackTl: 'Hindi ma-update ang category.')
+            : ApiErrorMapper.message(e, fallbackEn: 'Could not create the category.', fallbackTl: 'Hindi magawa ang category.'),
       );
       return false;
     }

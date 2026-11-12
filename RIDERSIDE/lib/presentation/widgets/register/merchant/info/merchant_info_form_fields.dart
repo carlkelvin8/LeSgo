@@ -4,6 +4,7 @@ import '../../../../../core/utils/utils.dart';
 
 import '../../../widgets.dart';
 import 'merchant_location_pin_picker.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantInfoFormFields extends ConsumerWidget {
   final TextEditingController restaurantNameController;
@@ -155,7 +156,7 @@ class MerchantInfoFormFields extends ConsumerWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 14),
         fontWeight: FontWeight.w600,
-        color: Colors.black87,
+        color: context.txt(Colors.black87),
       ),
     );
   }
@@ -172,7 +173,7 @@ class MerchantInfoFormFields extends ConsumerWidget {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.surf(Colors.white),
                 borderRadius: BorderRadius.circular(
                   ResponsiveUtils.spacing(context, 12),
                 ),
@@ -186,18 +187,18 @@ class MerchantInfoFormFields extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.flag, size: 24, color: const Color(0xFF5F2D82)),
+                  Icon(Icons.flag, size: 24, color: context.acc(const Color(0xFF5F2D82))),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                   Text(
                     '+63',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                  Container(width: 1, height: 20, color: Colors.grey.shade300),
+                  Container(width: 1, height: 20, color: context.surf(Colors.grey.shade300)),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                   Expanded(
                     child: TextField(
@@ -209,7 +210,7 @@ class MerchantInfoFormFields extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                       textAlignVertical: TextAlignVertical.center,
                       decoration: InputDecoration(
@@ -219,7 +220,7 @@ class MerchantInfoFormFields extends ConsumerWidget {
                         hintStyle: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 14),
-                          color: Colors.grey.shade400,
+                          color: context.sub(Colors.grey.shade400),
                         ),
                         contentPadding: EdgeInsets.symmetric(
                           vertical: ResponsiveUtils.spacing(context, 12),

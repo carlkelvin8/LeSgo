@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/snackbar_utils.dart';
@@ -7,6 +7,8 @@ import '../../provider/cart/cart_checkout_provider.dart';
 import '../../provider/cart/cart_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/cart_checkout_validation.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -17,6 +19,47 @@ class CartScreen extends ConsumerWidget {
     String paymentMethod = 'cash';
     LatLng? pinLocation;
     String? pinAddress;
+    double? estimatedFee;
+    bool isEstimatingFee = false;
+    String? feeEstimateError;
+    String? validationError;
+
+    // Branches the merchant can book from; the fee is priced from the chosen one.
+    ref.read(cartBranchIdProvider.notifier).state = null;
+    var branches = <CartBranch>[];
+    try {
+      branches = await ref.read(cartCheckoutStateProvider.notifier).loadBranches();
+    } catch (_) {}
+    if (!context.mounted) return;
+    int? selectedBranchId = branches.isEmpty
+        ? null
+        : (branches.firstWhere(
+            (b) => b.isPrimary,
+            orElse: () => branches.first,
+          )).id;
+
+    Future<void> runEstimate(LatLng at, StateSetter setState) async {
+      ref.read(bookFeeEstimateProvider.notifier).state = null;
+      setState(() {
+        isEstimatingFee = true;
+        estimatedFee = null;
+        feeEstimateError = null;
+      });
+      final fee = await ref
+          .read(cartCheckoutStateProvider.notifier)
+          .estimateFee(deliveryLat: at.latitude, deliveryLng: at.longitude);
+      ref.read(bookFeeEstimateProvider.notifier).state = fee;
+      if (context.mounted) {
+        setState(() {
+          isEstimatingFee = false;
+          estimatedFee = fee;
+          feeEstimateError = fee == null
+              ? ref.read(bookFeeEstimateErrorProvider) ??
+                    'Could not calculate delivery fee. Please choose the location again.'
+              : null;
+        });
+      }
+    }
 
     final proceed = await showModalBottomSheet<bool>(
       context: context,
@@ -38,35 +81,114 @@ class CartScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Delivery Details',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF5F2D82),
+                    color: context.acc(Color(0xFF5F2D82)),
                   ),
                 ),
                 const SizedBox(height: 16),
 
+                if (branches.length > 1) ...[
+                  const Text(
+                    'From',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: Color(0xFF5F2D82),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final b in branches)
+                        ChoiceChip(
+                          label: Text(b.isOpen ? b.name : '${b.name} (closed)'),
+                          selected: selectedBranchId == b.id,
+                          selectedColor:
+                              const Color(0xFF5F2D82).withValues(alpha: 0.15),
+                          onSelected: !b.isOpen || isEstimatingFee
+                              ? null
+                              : (_) {
+                                  setState(() => selectedBranchId = b.id);
+                                  ref.read(cartBranchIdProvider.notifier).state =
+                                      b.id;
+                                  if (pinLocation != null) {
+                                    runEstimate(pinLocation!, setState);
+                                  }
+                                },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'The delivery fee is computed from the branch you pick to your pinned location.',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 11,
+                      color: context.sub(Colors.grey.shade600),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
+                if (isEstimatingFee) ...[
+                  const LinearProgressIndicator(color: Color(0xFF5F2D82)),
+                  const SizedBox(height: 8),
+                  const Text('Calculating delivery fee…'),
+                ] else if (estimatedFee != null) ...[
+                  Text(
+                    'Delivery fee: \u20B1${estimatedFee!.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                ] else if (feeEstimateError != null) ...[
+                  Text(
+                    feeEstimateError!,
+                    style: const TextStyle(
+                      color: Color(0xFFDC2626),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                const Text(
+                  'To',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    color: Color(0xFF5F2D82),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 // Pin location button
                 InkWell(
                   onTap: () async {
                     final result = await _openMapPicker(context, pinLocation);
                     if (result != null) {
+                      final picked = result['latLng'] as LatLng;
                       setState(() {
-                        pinLocation = result['latLng'] as LatLng;
+                        pinLocation = picked;
                         pinAddress = result['address'] as String?;
                         // Always update the address field with pinned location
                         if (pinAddress != null && pinAddress!.isNotEmpty) {
                           addressController.text = pinAddress!;
                         } else {
                           // Fallback to coordinates if geocoding failed
-                          final lat = (result['latLng'] as LatLng).latitude.toStringAsFixed(5);
-                          final lng = (result['latLng'] as LatLng).longitude.toStringAsFixed(5);
+                          final lat = picked.latitude.toStringAsFixed(5);
+                          final lng = picked.longitude.toStringAsFixed(5);
                           addressController.text = '$lat, $lng';
                         }
+                        validationError = null;
                       });
+                      await runEstimate(picked, setState);
                     }
                   },
                   borderRadius: BorderRadius.circular(12),
@@ -102,7 +224,7 @@ class CartScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 pinLocation != null
-                                    ? 'ðŸ“ Pin location set'
+                                    ? '\u{1F4CD} Pin location set'
                                     : 'Pin exact location on map',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
@@ -121,7 +243,7 @@ class CartScreen extends ConsumerWidget {
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: 11,
-                                      color: Colors.grey.shade600,
+                                      color: context.sub(Colors.grey.shade600),
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
@@ -130,7 +252,7 @@ class CartScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        Icon(Icons.map_outlined, color: Colors.grey.shade400),
+                        Icon(Icons.map_outlined, color: context.sub(Colors.grey.shade400)),
                       ],
                     ),
                   ),
@@ -153,6 +275,12 @@ class CartScreen extends ConsumerWidget {
                     ),
                   ),
                   maxLines: 2,
+                  onChanged: (_) {
+                    if (addressController.text.trim().isNotEmpty &&
+                        validationError == 'Please enter a delivery address.') {
+                      setState(() => validationError = null);
+                    }
+                  },
                 ),
                 const SizedBox(height: 12),
 
@@ -185,14 +313,28 @@ class CartScreen extends ConsumerWidget {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'cash', child: Text('Cash')),
-                    DropdownMenuItem(value: 'gcash', child: Text('GCash')),
-                    DropdownMenuItem(value: 'wallet', child: Text('LesPay Wallet')),
+                    DropdownMenuItem(
+                      value: 'wallet',
+                      child: Text('LesPay Wallet'),
+                    ),
                   ],
                   onChanged: (value) {
                     if (value != null) setState(() => paymentMethod = value);
                   },
                 ),
                 const SizedBox(height: 20),
+
+                if (validationError != null) ...[
+                  Text(
+                    validationError!,
+                    style: const TextStyle(
+                      color: Color(0xFFDC2626),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
 
                 // Action buttons
                 Row(
@@ -213,7 +355,26 @@ class CartScreen extends ConsumerWidget {
                     Expanded(
                       flex: 2,
                       child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
+                        onPressed: isEstimatingFee
+                            ? null
+                            : () {
+                                final error = validateCartDeliveryDetails(
+                                  address: addressController.text,
+                                  hasPinnedLocation: pinLocation != null,
+                                );
+                                if (error != null) {
+                                  setState(() => validationError = error);
+                                  return;
+                                }
+                                if (estimatedFee == null) {
+                                  setState(() {
+                                    feeEstimateError =
+                                        'Calculate the delivery fee by pinning the location before placing the order.';
+                                  });
+                                  return;
+                                }
+                                Navigator.pop(context, true);
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF5F2D82),
                           foregroundColor: Colors.white,
@@ -240,20 +401,29 @@ class CartScreen extends ConsumerWidget {
       ),
     );
 
-    if (proceed != true || !context.mounted) return;
+    if (proceed != true || !context.mounted) {
+      // showModalBottomSheet completes as soon as Navigator.pop is called,
+      // while the sheet may still be rebuilding during its reverse animation.
+      // Keep its TextFields' controllers alive until that route is gone.
+      await Future<void>.delayed(const Duration(milliseconds: 350));
+      addressController.dispose();
+      notesController.dispose();
+      return;
+    }
 
     final address = addressController.text.trim();
     final notes = notesController.text.trim();
     final fullAddress = notes.isNotEmpty ? '$address ($notes)' : address;
+    // The bottom sheet's reverse transition is still rendering its TextFields
+    // after the modal future resolves. Disposing immediately triggers Flutter's
+    // "controller used after being disposed" assertion on checkout.
+    await Future<void>.delayed(const Duration(milliseconds: 350));
     addressController.dispose();
     notesController.dispose();
 
-    if (fullAddress.isEmpty) {
-      SnackBarUtils.showError(context, 'Please enter a delivery address');
-      return;
-    }
-
-    final success = await ref.read(cartCheckoutStateProvider.notifier).checkout(
+    final success = await ref
+        .read(cartCheckoutStateProvider.notifier)
+        .checkout(
           deliveryAddress: fullAddress,
           paymentMethod: paymentMethod,
           deliveryLat: pinLocation?.latitude,
@@ -266,7 +436,9 @@ class CartScreen extends ConsumerWidget {
       final orderId = ref.read(cartCheckoutStateProvider).orderId;
       SnackBarUtils.showSuccess(
         context,
-        orderId != null ? 'Order #$orderId placed successfully!' : 'Order placed successfully!',
+        orderId != null
+            ? 'Order #$orderId placed successfully!'
+            : 'Order placed successfully!',
       );
       Navigator.pop(context);
     } else {
@@ -277,16 +449,24 @@ class CartScreen extends ConsumerWidget {
     }
   }
 
-  Future<Map<String, dynamic>?> _openMapPicker(BuildContext context, LatLng? initial) async {
-    LatLng selectedLatLng = initial ?? const LatLng(18.6058, 121.0779); // Default: Claveria
+  Future<Map<String, dynamic>?> _openMapPicker(
+    BuildContext context,
+    LatLng? initial,
+  ) async {
+    LatLng selectedLatLng =
+        initial ?? const LatLng(18.6058, 121.0779); // Default: Claveria
     String? selectedAddress;
     bool isGeocoding = false;
 
     Future<String?> reverseGeocode(LatLng latLng) async {
       try {
-        final apiKey = const String.fromEnvironment('GOOGLE_MAPS_API_KEY', defaultValue: '');
+        const apiKey = String.fromEnvironment(
+          'GOOGLE_MAPS_API_KEY',
+          defaultValue: '',
+        );
         if (apiKey.isEmpty) return null;
-        final url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}&key=$apiKey';
+        final url =
+            'https://maps.googleapis.com/maps/api/geocode/json?latlng=${latLng.latitude},${latLng.longitude}&key=$apiKey';
         final response = await ApiService.dio.get(url);
         final results = response.data['results'] as List?;
         if (results != null && results.isNotEmpty) {
@@ -304,7 +484,10 @@ class CartScreen extends ConsumerWidget {
             appBar: AppBar(
               title: const Text(
                 'Pin Delivery Location',
-                style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               leading: IconButton(
                 icon: const Icon(Icons.close),
@@ -316,12 +499,12 @@ class CartScreen extends ConsumerWidget {
                     'latLng': selectedLatLng,
                     'address': selectedAddress,
                   }),
-                  child: const Text(
+                  child: Text(
                     'Confirm',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF5F2D82),
+                      color: context.acc(Color(0xFF5F2D82)),
                     ),
                   ),
                 ),
@@ -330,6 +513,9 @@ class CartScreen extends ConsumerWidget {
             body: Stack(
               children: [
                 GoogleMap(
+                  // Keep the my-location button and Google logo above the
+                  // address card instead of underneath it.
+                  padding: const EdgeInsets.only(bottom: 104),
                   initialCameraPosition: CameraPosition(
                     target: selectedLatLng,
                     zoom: 16,
@@ -342,7 +528,9 @@ class CartScreen extends ConsumerWidget {
                     });
                     final addr = await reverseGeocode(latLng);
                     setState(() {
-                      selectedAddress = addr ?? '${latLng.latitude.toStringAsFixed(5)}, ${latLng.longitude.toStringAsFixed(5)}';
+                      selectedAddress =
+                          addr ??
+                          '${latLng.latitude.toStringAsFixed(5)}, ${latLng.longitude.toStringAsFixed(5)}';
                       isGeocoding = false;
                     });
                   },
@@ -359,7 +547,9 @@ class CartScreen extends ConsumerWidget {
                         });
                         final addr = await reverseGeocode(latLng);
                         setState(() {
-                          selectedAddress = addr ?? '${latLng.latitude.toStringAsFixed(5)}, ${latLng.longitude.toStringAsFixed(5)}';
+                          selectedAddress =
+                              addr ??
+                              '${latLng.latitude.toStringAsFixed(5)}, ${latLng.longitude.toStringAsFixed(5)}';
                           isGeocoding = false;
                         });
                       },
@@ -375,7 +565,7 @@ class CartScreen extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -387,10 +577,15 @@ class CartScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (selectedAddress != null && selectedAddress!.isNotEmpty) ...[
+                        if (selectedAddress != null &&
+                            selectedAddress!.isNotEmpty) ...[
                           Row(
                             children: [
-                              const Icon(Icons.location_on, color: Color(0xFF5F2D82), size: 18),
+                              Icon(
+                                Icons.location_on,
+                                color: context.acc(Color(0xFF5F2D82)),
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -406,19 +601,22 @@ class CartScreen extends ConsumerWidget {
                               ),
                               if (isGeocoding)
                                 const SizedBox(
-                                  width: 14, height: 14,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                             ],
                           ),
                         ] else
                           Text(
-                            'ðŸ“ Tap on the map or drag the pin to set delivery location',
+                            '\u{1F4CD} Tap on the map or drag the pin to set delivery location',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 13,
-                              color: Colors.grey.shade700,
+                              color: context.sub(Colors.grey.shade700),
                             ),
                           ),
                       ],
@@ -443,7 +641,7 @@ class CartScreen extends ConsumerWidget {
     final cartItems = cartState.items;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Column(
           children: [
@@ -465,10 +663,14 @@ class CartScreen extends ConsumerWidget {
                     child: CartOrderSection(
                       items: cartItems,
                       onDecrease: (itemId) {
-                        ref.read(cartProvider.notifier).decrementItemQuantity(itemId);
+                        ref
+                            .read(cartProvider.notifier)
+                            .decrementItemQuantity(itemId);
                       },
                       onIncrease: (itemId) {
-                        ref.read(cartProvider.notifier).incrementItemQuantity(itemId);
+                        ref
+                            .read(cartProvider.notifier)
+                            .incrementItemQuantity(itemId);
                       },
                       onRemove: (itemId) {
                         ref.read(cartProvider.notifier).removeItem(itemId);
@@ -498,7 +700,7 @@ class CartScreen extends ConsumerWidget {
       bottomNavigationBar: cartItems.isEmpty
           ? null
           : Container(
-              color: Colors.white,
+              color: context.surf(Colors.white),
               padding: EdgeInsets.fromLTRB(
                 ResponsiveUtils.horizontalPadding(context),
                 0,
@@ -506,12 +708,15 @@ class CartScreen extends ConsumerWidget {
                 ResponsiveUtils.spacing(context, 18),
               ),
               child: PrimaryButton(
-                text: checkoutState.isSubmitting ? 'Placing order...' : 'Checkout',
+                text: checkoutState.isSubmitting
+                    ? 'Placing order...'
+                    : 'Checkout',
                 isLoading: checkoutState.isSubmitting,
-                onPressed: checkoutState.isSubmitting ? null : () => _checkout(context, ref),
+                onPressed: checkoutState.isSubmitting
+                    ? null
+                    : () => _checkout(context, ref),
               ),
             ),
     );
   }
 }
-

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -33,6 +32,7 @@ import '../../../widgets/main/riderside/bookings/rider_cod_confirm_dialog.dart';
 import '../../../widgets/main/riderside/bookings/rider_customer_rating_dialog.dart';
 import '../../../../core/utils/rider_payment_utils.dart';
 import '../../../../core/utils/app_localization.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderBookingDetailScreen extends ConsumerStatefulWidget {
   final RiderBooking booking;
@@ -82,36 +82,26 @@ class _RiderBookingDetailScreenState
     
     // Resume order auto-refresh when entering detail screen
     ref.read(riderOrdersProvider.notifier).resumeAutoRefresh();
-    AppLogger.debug('ðŸ”„ Resumed order auto-refresh in booking detail screen');
+    AppLogger.debug('🔄 Resumed order auto-refresh in booking detail screen');
     
     // Ensure location tracking is active for delivery tracking
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         // Refresh location to ensure we have current position
         ref.read(riderLocationProvider.notifier).refreshLocation();
-        AppLogger.debug('ðŸ“ Refreshed location for booking detail tracking');
+        AppLogger.debug('📍 Refreshed location for booking detail tracking');
       }
     });
   }
 
   @override
   void dispose() {
-    AppLogger.debug('ðŸ—‘ï¸ RiderBookingDetailScreen dispose called');
+    AppLogger.debug('🗑️ RiderBookingDetailScreen dispose called');
     
-    // Clean up map controller carefully
-    try {
-      // First, remove any listeners to prevent them firing after dispose
-      if (_mapController != null) {
-        // Cancel any pending marker/polyline operations
-        _mapController!.dispose();
-        AppLogger.debug('✅ Map controller disposed successfully');
-      }
-    } catch (e) {
-      AppLogger.error('Error disposing map controller', e);
-    } finally {
-      _mapController = null;
-    }
-    
+    // The GoogleMap widget disposes its own controller; disposing it here
+    // too (double dispose) can crash the native map on iOS.
+    _mapController = null;
+
     // Don't stop location tracking or auto-refresh here - let them continue
     // for other screens. The providers will manage their own lifecycle.
     
@@ -120,8 +110,11 @@ class _RiderBookingDetailScreenState
   }
 
   // Fetch the latest status from API
-  Future<void> _fetchLatestStatus() async {
-    if (_isFetchingStatus || _isHandlingStatusChange) return;
+  Future<void> _fetchLatestStatus({bool force = false}) async {
+    // `force` lets _handleStatusChange refresh while it holds
+    // _isHandlingStatusChange; without it that refresh was a silent no-op and
+    // the buttons acted on a stale status.
+    if (_isFetchingStatus || (_isHandlingStatusChange && !force)) return;
     
     setState(() => _isFetchingStatus = true);
     
@@ -129,11 +122,11 @@ class _RiderBookingDetailScreenState
       final orderId = int.tryParse(widget.booking.id);
       if (orderId == null) return;
       
-      AppLogger.debug('ðŸ”„ Fetching latest status for order #$orderId');
+      AppLogger.debug('🔄 Fetching latest status for order #$orderId');
       final orderData = await ApiService.getOrderById(orderId);
       
       // Check if widget is still mounted and no status change is in progress
-      if (orderData == null || !mounted || _isHandlingStatusChange) {
+      if (orderData == null || !mounted || (_isHandlingStatusChange && !force)) {
         return;
       }
       
@@ -146,7 +139,7 @@ class _RiderBookingDetailScreenState
         AppLogger.debug('📸 Fetched ${proofUrls.length} proof image(s): $proofUrls');
       }
 
-      if (apiStatus != null && mounted && !_isHandlingStatusChange) {
+      if (apiStatus != null && mounted && (!_isHandlingStatusChange || force)) {
         final refreshedBooking = RiderBookingMapper.fromOrder(
           order,
           proofOfDeliveryUrls:
@@ -161,7 +154,7 @@ class _RiderBookingDetailScreenState
           );
           _updatedBooking = refreshedBooking;
         });
-        AppLogger.debug('ðŸ“Š Updated UI status to: ${_currentStatus.label}');
+        AppLogger.debug('📊 Updated UI status to: ${_currentStatus.label}');
       }
     } catch (e) {
       AppLogger.error('Error fetching status', e);
@@ -181,7 +174,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     
     // Prevent concurrent status changes with a double guard
     if (_isUpdating || _isHandlingStatusChange) {
-      AppLogger.debug('â³ Already updating, ignoring tap');
+      AppLogger.debug('⏳ Already updating, ignoring tap');
       return;
     }
     
@@ -204,7 +197,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       }
       
       // Fetch latest to get service_id
-      await _fetchLatestStatus();
+      await _fetchLatestStatus(force: true);
       if (!mounted) return;
       
       // Map BookingStatus to API status string based on service type
@@ -217,35 +210,12 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         if (_currentApiStatus == 'accepted' || 
             _currentApiStatus == 'driver_arrived_at_pickup' || 
             _currentApiStatus == 'in_progress') {
-          // Require photo proof before marking as picked up
-          if (!_showPickupProof) {
-            setState(() {
-              _showPickupProof = true;
-              _selectedImages.clear();
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('📸 Take a photo of the pickup, then tap "Picked Up" again.'),
-                backgroundColor: Color(0xFF5F2D82),
-              ),
-            );
-            return;
-          }
-          final hasProof = _selectedImages.isNotEmpty;
-          if (!hasProof) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalization.translate('minimum_1_photo_required', lang)),
-                backgroundColor: Colors.orange,
-              ),
-            );
-            return;
-          }
+          // Only the drop-off needs a photo; the server never stored a pickup one.
           apiStatus = 'picked_up';
           statusLabel = 'Picked Up';
         } else if (_currentApiStatus == 'picked_up') {
           // Already at this status
-          AppLogger.debug('â„¹ï¸ Order is already picked up');
+          AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalization.translate('order_already_picked_up_tap', lang)),
@@ -317,35 +287,12 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
             _currentApiStatus == 'ready_for_pickup' ||
             _currentApiStatus == 'driver_arrived_at_pickup' ||
             _currentApiStatus == 'in_progress') {
-          // Require photo proof before marking as picked up
-          if (!_showPickupProof) {
-            setState(() {
-              _showPickupProof = true;
-              _selectedImages.clear();
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('📸 Take a photo of the pickup, then tap "Picked Up" again.'),
-                backgroundColor: Color(0xFF5F2D82),
-              ),
-            );
-            return;
-          }
-          final hasProof = _selectedImages.isNotEmpty;
-          if (!hasProof) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(AppLocalization.translate('minimum_1_photo_required', lang)),
-                backgroundColor: Colors.orange,
-              ),
-            );
-            return;
-          }
+          // Only the drop-off needs a photo; the server never stored a pickup one.
           apiStatus = 'picked_up';
           statusLabel = 'Picked Up';
         } else if (_currentApiStatus == 'picked_up') {
           // Already at this status
-          AppLogger.debug('â„¹ï¸ Order is already picked up');
+          AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalization.translate('order_already_picked_up_tap_delivered', lang)),
@@ -418,7 +365,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
           statusLabel = 'Driver Has Arrived';
         } else if (_currentApiStatus == 'picked_up') {
           // Already past this status
-          AppLogger.debug('â„¹ï¸ Order is already picked up');
+          AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalization.translate('order_already_picked_up_skip', lang)),
@@ -444,7 +391,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         // Can transition from: accepted, driver_arrived_at_pickup
         // Cannot transition from: picked_up (already past this status)
         if (_currentApiStatus == 'picked_up') {
-          AppLogger.debug('â„¹ï¸ Order is already picked up');
+          AppLogger.debug('ℹ️ Order is already picked up');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalization.translate('order_already_picked_up', lang)),
@@ -477,7 +424,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       case BookingStatus.toBuy:
       case BookingStatus.pending:
       case BookingStatus.cancelled:
-        AppLogger.debug('â„¹ï¸ Status ${newStatus.label} is informational only');
+        AppLogger.debug('ℹ️ Status ${newStatus.label} is informational only');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalization.translate('status_set_automatically', lang).replaceAll('{{status}}', newStatus.label)),
@@ -491,7 +438,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     final targetStatus = apiStatus;
     final targetLabel = statusLabel;
 
-    AppLogger.debug('ðŸ“¡ Will update to API status: $targetStatus');
+    AppLogger.debug('📡 Will update to API status: $targetStatus');
     
     // Check if we're trying to update to the same status
     if (_currentApiStatus != null && _currentApiStatus == targetStatus) {
@@ -531,7 +478,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     );
     
     if (!mounted || !confirmed) {
-      AppLogger.error('âŒ User cancelled status update');
+      AppLogger.error('❌ User cancelled status update');
       return;
     }
 
@@ -828,7 +775,8 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalization.translate('order_cancelled', lang)),
+          // The server hands the order to other riders; it is not cancelled.
+          content: Text(AppLocalization.translate('booking_released', lang)),
           backgroundColor: Colors.green,
         ),
       );
@@ -930,16 +878,16 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
         setState(() => _showProofUpload = true);
 
         // Refresh order data
-        AppLogger.debug('ðŸ”„ Refreshing order data after proof upload...');
+        AppLogger.debug('🔄 Refreshing order data after proof upload...');
         await _fetchLatestStatus();
         
         // Refresh the orders list in the provider
-        AppLogger.debug('ðŸ”„ Refreshing orders list...');
+        AppLogger.debug('🔄 Refreshing orders list...');
         await ref.read(riderOrdersProvider.notifier).loadOrders(silent: true);
         
         // If order is completed, also refresh history
         if (_currentApiStatus == 'completed') {
-          AppLogger.debug('ðŸ”„ Order is completed, refreshing history...');
+          AppLogger.debug('🔄 Order is completed, refreshing history...');
           await ref.read(riderHistoryProvider.notifier).refresh();
           AppLogger.debug('✅ History refreshed');
         }
@@ -975,16 +923,24 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
 
   // Build dynamic content based on current status
   Widget _buildStatusContent(BuildContext context, RiderLocationState locationState) {
-    AppLogger.debug('ðŸŽ¨ Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
+    AppLogger.debug('🎨 Building status content for: ${_currentStatus.label} (API: $_currentApiStatus)');
     
     if (_shouldShowProofUpload()) {
-      return RiderBookingProofUploadSection(
-        selectedImages: _selectedImages,
-        isUploading: _isUploadingProof,
-        onPickImages: _pickImages,
-        onTakePhoto: _takePhoto,
-        onRemoveImage: _removeImage,
-        onUpload: _uploadProofImages,
+      return Padding(
+        padding: EdgeInsets.fromLTRB(
+          ResponsiveUtils.horizontalPadding(context),
+          ResponsiveUtils.spacing(context, 16),
+          ResponsiveUtils.horizontalPadding(context),
+          0,
+        ),
+        child: RiderBookingProofUploadSection(
+          selectedImages: _selectedImages,
+          isUploading: _isUploadingProof,
+          onPickImages: _pickImages,
+          onTakePhoto: _takePhoto,
+          onRemoveImage: _removeImage,
+          onUpload: _uploadProofImages,
+        ),
       );
     }
 
@@ -1052,13 +1008,15 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
     
     // Log location tracking status
     if (locationState.hasLocation) {
-      AppLogger.debug('ðŸ“ Location tracking active: ${locationState.latitude}, ${locationState.longitude}');
+      AppLogger.debug('📍 Location tracking active: ${locationState.latitude}, ${locationState.longitude}');
     } else if (locationState.error != null) {
-      AppLogger.error('âŒ Location tracking error: ${locationState.error}');
+      AppLogger.error('❌ Location tracking error: ${locationState.error}');
     }
     
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor:
+          dark ? const Color(0xFF110E1A) : const Color(0xFFF4F2F8),
       body: SafeArea(
         child: Stack(
           children: [
@@ -1082,18 +1040,9 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                           )
                         : Icon(
                             Icons.refresh,
-                            color: const Color(0xFF5F2D82),
+                            color: context.acc(const Color(0xFF5F2D82)),
                           ),
                     tooltip: AppLocalization.translate('refresh_status', lang),
-                  ),
-                ),
-                // Banner
-                SizedBox(
-                  height: ResponsiveUtils.adaptiveBannerHeight(context, 120),
-                  width: double.infinity,
-                  child: SvgPicture.asset(
-                    'assets/images/booking/banner.svg',
-                    fit: BoxFit.cover,
                   ),
                 ),
                 Expanded(
@@ -1103,7 +1052,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         RiderBookingDetailInfo(booking: _updatedBooking ?? widget.booking),
-                        Divider(color: Colors.grey.shade200, height: 1),
+                        Divider(color: context.brd(Colors.grey.shade200), height: 1),
                         
                         // Dynamic content based on status
                         _buildStatusContent(context, locationState),
@@ -1116,49 +1065,10 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Status:',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize: ResponsiveUtils.fontSize(context, 15),
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF2D2D2D),
-                                    ),
-                                  ),
-                                  if (_currentApiStatus != null)
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF5F2D82).withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        _currentStatus.label.toUpperCase(),
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          fontSize: ResponsiveUtils.fontSize(context, 11),
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF5F2D82),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                              RiderBookingStatusGrid(
-                                booking: _updatedBooking ?? widget.booking,
-                                currentStatus: _currentStatus,
-                                onStatusTap:
-                                    _isUpdating ? null : _handleStatusChange,
-                              ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                               RiderBookingNextActions(
+                                statusLabel: _currentApiStatus == null
+                                    ? null
+                                    : _currentStatus.label,
                                 category: widget.booking.category,
                                 apiStatus: _currentApiStatus,
                                 isUpdating: _isUpdating,
@@ -1215,9 +1125,9 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                                   width: double.infinity,
                                   child: OutlinedButton.icon(
                                     onPressed: _shareReceipt,
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.receipt_long_outlined,
-                                      color: Color(0xFF5F2D82),
+                                      color: context.acc(Color(0xFF5F2D82)),
                                     ),
                                     label: Text(
                                       'Get Receipt',
@@ -1228,7 +1138,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
                                           14,
                                         ),
                                         fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF5F2D82),
+                                        color: context.acc(const Color(0xFF5F2D82)),
                                       ),
                                     ),
                                     style: OutlinedButton.styleFrom(

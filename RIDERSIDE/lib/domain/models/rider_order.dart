@@ -82,6 +82,9 @@ class RiderOrder {
   final double? commissionRate;
   final List<String> parsedItems;
 
+  /// Store branch the rider picks up from (from `meta.branch`), if any.
+  final String? pickupBranchName;
+
   RiderOrder({
     required this.id,
     required this.serviceId,
@@ -108,7 +111,20 @@ class RiderOrder {
     this.shippingFee = 0.0,
     this.commissionRate,
     this.parsedItems = const [],
+    this.pickupBranchName,
   });
+
+  /// Pickup line for the UI: "Store – Branch · address" for store orders.
+  String get pickupDisplay {
+    final label = pickupStoreLabel;
+    return label == null ? pickupAddress : '$label · $pickupAddress';
+  }
+
+  /// "Store – Branch" label for store orders; null for non-store orders.
+  String? get pickupStoreLabel {
+    if (pickupBranchName == null) return null;
+    return pickupContactName.isNotEmpty ? pickupContactName : pickupBranchName;
+  }
 
   double get displayShippingFee =>
       shippingFee > 0 ? shippingFee : estimatedFare;
@@ -290,6 +306,7 @@ class RiderOrder {
       pickupLng: extractLng(j, 'pickup'),
       pickupContactName: j['pickup_contact_name'] as String? ?? '',
       pickupContactPhone: j['pickup_contact_phone'] as String? ?? '',
+      pickupBranchName: _branchName(j['meta']),
       dropoffAddress: extractAddress(j['dropoff_address'], 'Dropoff location'),
       dropoffLat: extractLat(j, 'dropoff'),
       dropoffLng: extractLng(j, 'dropoff'),
@@ -358,6 +375,15 @@ class RiderOrder {
       shippingFee: shippingFee,
       commissionRate: commissionRate,
       parsedItems: parsedItems,
+      pickupBranchName: pickupBranchName,
     );
+  }
+
+  static String? _branchName(dynamic meta) {
+    if (meta is! Map) return null;
+    final branch = meta['branch'];
+    if (branch is! Map) return null;
+    final name = branch['name']?.toString().trim() ?? '';
+    return name.isEmpty ? null : name;
   }
 }

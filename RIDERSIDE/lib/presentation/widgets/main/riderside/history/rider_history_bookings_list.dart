@@ -3,6 +3,7 @@ import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../screens/main/riderside/rider_booking_detail_screen.dart';
 import 'rider_history_booking_card.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Pure presentational bookings list — receives RiderBooking objects
 class RiderHistoryBookingsList extends StatelessWidget {
@@ -22,15 +23,18 @@ class RiderHistoryBookingsList extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w400,
-              color: Colors.grey.shade500,
+              color: context.sub(Colors.grey.shade500),
             ),
           ),
         ),
       );
     }
 
+    // Each booking is rendered inside a sliver, so this list must size itself
+    // to its content instead of asking for unbounded height.
     return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.only(
         top: ResponsiveUtils.spacing(context, 4),
         bottom: ResponsiveUtils.spacing(context, 24),
@@ -61,7 +65,7 @@ class RiderHistoryBookingsList extends StatelessWidget {
           statusBackgroundColor = const Color(0xFFFFF3E0);
         }
 
-        return GestureDetector(
+        return RiderHistoryBookingCard(
           onTap: () {
             // Navigate to detail screen with the booking
             Navigator.of(context).push(
@@ -75,18 +79,19 @@ class RiderHistoryBookingsList extends StatelessWidget {
               ),
             );
           },
-          child: RiderHistoryBookingCard(
-            bookingId: booking.id,
-            restaurantName: booking.restaurantName,
-            address: booking.deliveryAddress ?? booking.address,
-            price:
-                booking.earnings?.replaceFirst('Your earnings ', '') ??
-                'PHP 0.00',
-            status: statusLabel,
-            statusColor: statusColor,
-            statusBackgroundColor: statusBackgroundColor,
-            proofImageCount: booking.proofOfDeliveryUrls?.length,
-          ),
+          bookingId: booking.id,
+          restaurantName: booking.restaurantName,
+          address: booking.deliveryAddress ?? booking.address,
+          // A cancelled booking earned nothing; the order still carries the
+          // projected driver share from when it was accepted.
+          price: booking.currentStatus == BookingStatus.cancelled
+              ? 'PHP 0.00'
+              : booking.earnings?.replaceFirst('Your earnings ', '') ??
+                    'PHP 0.00',
+          status: statusLabel,
+          statusColor: statusColor,
+          statusBackgroundColor: statusBackgroundColor,
+          proofImageCount: booking.proofOfDeliveryUrls?.length,
         );
       },
     );

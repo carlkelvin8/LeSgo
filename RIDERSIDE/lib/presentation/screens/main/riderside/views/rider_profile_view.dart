@@ -8,6 +8,7 @@ import '../../../../widgets/main/riderside/profile/rider_profile_info_section.da
 import '../../../../widgets/main/riderside/profile/rider_profile_summary_section.dart';
 import '../../../../widgets/main/riderside/profile/rider_profile_settings_section.dart';
 import '../../../../widgets/main/riderside/profile/profile_panel.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderProfileView extends ConsumerStatefulWidget {
   const RiderProfileView({super.key});
@@ -162,10 +163,10 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
                                             .loadProfile(),
                                   child: Text(
                                     t('try_again'),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: 12,
-                                      color: Color(0xFF6D3EA0),
+                                      color: context.acc(Color(0xFF6D3EA0)),
                                     ),
                                   ),
                                 ),

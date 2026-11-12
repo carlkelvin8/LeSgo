@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'merchant_translations.dart';
 
 enum AppLanguage { english, filipino }
 
@@ -25,13 +27,44 @@ class AppLanguageNotifier extends StateNotifier<AppLanguage> {
   }
 }
 
+/// Puts the current language in the widget tree so `context.tr(...)` rebuilds
+/// its widget when the language changes (without resetting navigation).
+class AppLangScope extends InheritedWidget {
+  const AppLangScope({super.key, required this.lang, required super.child});
+
+  final AppLanguage lang;
+
+  static AppLanguage of(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<AppLangScope>();
+    return scope?.lang ?? AppLanguage.english;
+  }
+
+  @override
+  bool updateShouldNotify(AppLangScope oldWidget) => oldWidget.lang != lang;
+}
+
+extension AppTranslateX on BuildContext {
+  /// Translates an English UI string (the English text is the key). Falls back
+  /// to the English text when no translation exists.
+  String tr(String english) =>
+      AppLocalization.translateLiteral(english, AppLangScope.of(this));
+}
+
 class AppLocalization {
+  /// English text -> Filipino, for screens that keep their English literals.
+  static String translateLiteral(String english, AppLanguage lang) {
+    if (lang != AppLanguage.filipino) return english;
+    return _literalFilipino[english] ?? english;
+  }
+
   static String translate(String key, AppLanguage lang) {
     if (lang == AppLanguage.filipino && _filipinoTranslations.containsKey(key)) {
       return _filipinoTranslations[key]!;
     }
     return _englishTranslations[key] ?? key;
   }
+
+  static const Map<String, String> _literalFilipino = merchantFilipinoLiterals;
 
   static const Map<String, String> _englishTranslations = {
     // Navigation & Tabs
@@ -128,15 +161,15 @@ class AppLocalization {
     'available_balance': 'Available Balance',
     'top_up': 'Top up',
     'withdraw': 'Withdraw',
-    'top_up_fee': 'Top Up (1.5% fee)',
-    'top_up_fee_percent': 'Top-up fee (1.5%)',
+    'top_up_fee': 'Top Up (3% fee)',
+    'top_up_fee_percent': 'Top-up fee (3%)',
     'complete_payment': 'Complete Payment',
     'could_not_open_payment_page': 'Could not open payment page. Tap the button below.',
     'payment_verification_failed': 'Payment verification failed. Try again in a moment.',
     'pay_with_gcash_maya': 'Pay with GCash, Maya, or card via our secure checkout.',
     'amount': 'Amount',
     'amount_to_add': 'Amount to add to LesPay',
-    'fee_percent': 'Fee (1.5%): PHP {{amount}}',
+    'fee_percent': 'Fee (3%): PHP {{amount}}',
     'total_to_pay': 'Total to pay',
     'total_to_pay_amount': 'Total to pay: PHP {{amount}}',
     'continue_to_payment': 'Continue to payment',
@@ -234,11 +267,15 @@ class AppLocalization {
     'maximum_5_images': 'Maximum 5 images allowed',
     'failed_to_take_photo': 'Failed to take photo: {{error}}',
     'failed_to_pick_images': 'Failed to pick images: {{error}}',
-    'camera_permission_required': 'Camera permission is required to take photos',
+    'camera_permission_required': 'Unable to open the camera. Check camera access and try again.',
+    'camera_unavailable': 'Camera unavailable',
+    'attendance_gallery_fallback': 'The camera is unavailable. You can select your attendance photo from the photo library.',
+    'attendance_gallery_failed': 'Unable to open the photo library. Please try again.',
     'camera_permission_denied': 'Camera permission is permanently denied. Open Settings to enable it.',
     'proof_images_uploaded': 'Proof images uploaded successfully!',
     'status_updated_to': 'Status updated to {{status}}',
     'order_cancelled': 'Order cancelled.',
+    'booking_released': 'You left this booking. It was passed to other riders.',
     'order_completed': 'Order completed successfully.',
     'order_accepted': '{{rider}} order accepted!',
     'failed_to_accept_order': 'Failed to accept order',
@@ -750,15 +787,15 @@ class AppLocalization {
     'available_balance': 'Available na Balanse',
     'top_up': 'Mag-top up',
     'withdraw': 'Mag-withdraw',
-    'top_up_fee': 'Top Up (1.5% fee)',
-    'top_up_fee_percent': 'Top-up fee (1.5%)',
+    'top_up_fee': 'Top Up (3% fee)',
+    'top_up_fee_percent': 'Top-up fee (3%)',
     'complete_payment': 'Kumpletuhin ang Pagbabayad',
     'could_not_open_payment_page': 'Hindi mabuksan ang payment page. I-tap ang button sa ibaba.',
     'payment_verification_failed': 'Bigo ang payment verification. Subukan muli sa ilang sandali.',
     'pay_with_gcash_maya': 'Magbayad gamit ang GCash, Maya, o card sa pamamagitan ng aming secure checkout.',
     'amount': 'Halaga',
     'amount_to_add': 'Halaga na idadagdag sa LesPay',
-    'fee_percent': 'Fee (1.5%): PHP {{amount}}',
+    'fee_percent': 'Fee (3%): PHP {{amount}}',
     'total_to_pay': 'Kabuuang babayaran',
     'total_to_pay_amount': 'Kabuuang babayaran: PHP {{amount}}',
     'continue_to_payment': 'Magpatuloy sa pagbabayad',
@@ -856,11 +893,15 @@ class AppLocalization {
     'maximum_5_images': 'Maximum na 5 imahe ang pinapayagan',
     'failed_to_take_photo': 'Bigo kumuha ng litrato: {{error}}',
     'failed_to_pick_images': 'Bigo pumili ng mga imahe: {{error}}',
-    'camera_permission_required': 'Kinakailangan ang camera permission para kumuha ng mga litrato',
+    'camera_permission_required': 'Hindi mabuksan ang camera. Tingnan ang camera access at subukan muli.',
+    'camera_unavailable': 'Hindi available ang camera',
+    'attendance_gallery_fallback': 'Hindi available ang camera. Maaari mong piliin ang attendance photo mula sa photo library.',
+    'attendance_gallery_failed': 'Hindi mabuksan ang photo library. Subukan muli.',
     'camera_permission_denied': 'Ang camera permission ay permanenteng tinanggihan. Buksan ang Settings para paganahin ito.',
     'proof_images_uploaded': 'Matagumpay na na-upload ang proof images!',
     'status_updated_to': 'Na-update ang status sa {{status}}',
     'order_cancelled': 'Nakansela ang order.',
+    'booking_released': 'Iniwan mo ang booking na ito. Ipinasa ito sa ibang rider.',
     'order_completed': 'Matagumpay na natapos ang order.',
     'order_accepted': '{{rider}} tinanggap ang order!',
     'failed_to_accept_order': 'Bigo tanggapin ang order',

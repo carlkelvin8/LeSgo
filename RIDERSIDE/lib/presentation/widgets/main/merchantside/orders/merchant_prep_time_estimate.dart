@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/order_dto.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// Shows the estimated prep time based on number of items in the order.
 /// Formula: 5 min base + 2 min per item.
@@ -26,7 +28,7 @@ class MerchantPrepTimeEstimate extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3E5F5),
+        color: context.surf(const Color(0xFFF3E5F5)),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFCE93D8)),
       ),
@@ -34,7 +36,7 @@ class MerchantPrepTimeEstimate extends StatelessWidget {
         children: [
           Icon(
             Icons.timer_outlined,
-            color: const Color(0xFF7B1FA2),
+            color: context.acc(const Color(0xFF7B1FA2)),
             size: ResponsiveUtils.fontSize(context, 20),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 10)),
@@ -43,11 +45,11 @@ class MerchantPrepTimeEstimate extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Estimated Prep Time',
+                  context.tr('Estimated Prep Time'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: const Color(0xFF7B1FA2),
+                    color: context.acc(const Color(0xFF7B1FA2)),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -58,7 +60,7 @@ class MerchantPrepTimeEstimate extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF4A148C),
+                    color: context.acc(const Color(0xFF4A148C)),
                   ),
                 ),
               ],

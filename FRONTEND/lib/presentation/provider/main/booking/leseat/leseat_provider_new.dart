@@ -100,6 +100,7 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
       final response = await _partnerDataSource.getPartners(
         category: 'restaurant',
         perPage: 50,
+        expandBranches: true,
       );
 
       print('🔵 LeseatProvider: Received ${response.data.length} restaurants');
@@ -139,7 +140,10 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
     return Restaurant(
       id: partner.id.toString(),
       name: partner.name,
-      address: partner.description ?? 'No address provided',
+      address: (partner.branchId != null &&
+              (partner.address?.trim().isNotEmpty ?? false))
+          ? partner.address!.trim()
+          : (partner.description ?? 'No address provided'),
       imagePath: partner.logoUrl ?? 'assets/images/book/leseat/Pizza.svg',
       rating: partner.rating ?? 0.0,
       reviewCount: partner.totalReviews ?? 0,
@@ -147,6 +151,7 @@ class LeseatNotifier extends StateNotifier<LeseatState> {
       cuisine: cuisineStr,
       openingHours: '9:00 AM - 9:00 PM',
       isNew: partner.isFeatured ?? false,
+      branchId: partner.branchId,
     );
   }
 

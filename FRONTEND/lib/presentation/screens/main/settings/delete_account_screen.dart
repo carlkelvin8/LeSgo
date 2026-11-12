@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/apple_auth_service.dart';
 import '../../../../core/services/google_auth_service.dart';
+import '../../../../core/utils/apple_auth_helper.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/auth_remote_datasource.dart';
@@ -74,16 +76,34 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
     try {
       final password = _passwordController.text;
-      final googleIdToken = password.isEmpty
-          ? await GoogleAuthService.getIdTokenForSensitiveAction()
-          : null;
-      if (password.isEmpty && googleIdToken == null) {
-        throw StateError('Google account verification was cancelled.');
+      String? googleIdToken;
+      AppleSensitiveCredential? appleCredential;
+      if (password.isEmpty) {
+        // Social-login accounts have no password; re-verify with the provider.
+        final useApple =
+            AppleAuthService.isSupported && await AppleAuthHelper.promptProvider(context) == true;
+        if (!mounted) return;
+        if (useApple) {
+          appleCredential =
+              await AppleAuthService.getCredentialForSensitiveAction();
+          if (appleCredential == null) {
+            throw StateError('Apple account verification was cancelled.');
+          }
+        } else {
+          googleIdToken =
+              await GoogleAuthService.getIdTokenForSensitiveAction();
+          if (googleIdToken == null) {
+            throw StateError('Google account verification was cancelled.');
+          }
+        }
       }
 
       await getIt<AuthRemoteDataSource>().deleteAccountPermanently(
         password: password,
         googleIdToken: googleIdToken,
+        appleIdToken: appleCredential?.idToken,
+        appleNonce: appleCredential?.nonce,
+        appleAuthorizationCode: appleCredential?.authorizationCode,
         confirmation: _confirmationController.text.trim(),
         reason: _reasonController.text,
       );

@@ -4,6 +4,7 @@ import '../../../../core/utils/utils.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/auth/forgot_password_provider.dart';
 import '../widgets.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class ForgotPasswordContent extends ConsumerStatefulWidget {
   const ForgotPasswordContent({super.key});
@@ -55,7 +56,7 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 22),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
             ),
             textAlign: TextAlign.center,
           ),
@@ -69,7 +70,7 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: Colors.grey.shade600,
+              color: context.sub(Colors.grey.shade600),
             ),
             textAlign: TextAlign.center,
           ),
@@ -112,7 +113,7 @@ class _ForgotPasswordContentState extends ConsumerState<ForgotPasswordContent> {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                     fontWeight: FontWeight.w600,
                   ),
                 ),

@@ -80,6 +80,7 @@ class GoogleAuthService {
       );
     }
 
+    final String idToken;
     try {
       // Trigger the Google sign-in flow
       final GoogleSignInAccount? googleUser;
@@ -121,22 +122,26 @@ class GoogleAuthService {
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      final idToken = googleAuth.idToken;
+      final token = googleAuth.idToken;
 
-      if (idToken == null) {
+      if (token == null) {
         return GoogleAuthResult(
           success: false,
           error: 'Failed to get Google ID token',
         );
       }
 
-      return _authenticateWithBackend(dioClient, idToken, authMode: authMode);
+      idToken = token;
     } catch (e) {
       return GoogleAuthResult(
         success: false,
         error: 'Google sign-in error: ${e.runtimeType}: $e',
       );
     }
+
+    // Outside the try block so errors from the backend call propagate exactly
+    // as before (the previous un-awaited return was never caught here).
+    return _authenticateWithBackend(dioClient, idToken, authMode: authMode);
   }
 
   /// Complete a Google sign-in after the account requests a TOTP challenge.

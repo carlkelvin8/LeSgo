@@ -7,6 +7,7 @@ import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/utils/validators/login_validator.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderChangePasswordScreen extends ConsumerStatefulWidget {
   const RiderChangePasswordScreen({super.key});
@@ -69,7 +70,7 @@ class _RiderChangePasswordScreenState
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
         title: Text(
           AppLocalization.translate('change_password', lang),
@@ -77,12 +78,12 @@ class _RiderChangePasswordScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -102,7 +103,7 @@ class _RiderChangePasswordScreenState
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: Colors.grey[700],
+                  color: context.sub(Colors.grey[700]!),
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -180,7 +181,7 @@ class _RiderChangePasswordScreenState
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.surf(Colors.white),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         suffixIcon: IconButton(
           icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),

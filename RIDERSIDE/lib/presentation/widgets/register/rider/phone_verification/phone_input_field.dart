@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class PhoneInputField extends StatelessWidget {
   final TextEditingController controller;
@@ -20,7 +21,7 @@ class PhoneInputField extends StatelessWidget {
             vertical: ResponsiveUtils.spacing(context, 16),
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
+            color: context.surf(const Color(0xFFF5F5F5)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -28,7 +29,7 @@ class PhoneInputField extends StatelessWidget {
             style: TextStyle(
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
             ),
           ),
         ),
@@ -45,11 +46,11 @@ class PhoneInputField extends StatelessWidget {
               counterText: '',
               hintText: '9XX XXX XXXX',
               hintStyle: TextStyle(
-                color: Colors.grey.shade400,
+                color: context.sub(Colors.grey.shade400),
                 fontSize: ResponsiveUtils.fontSize(context, 16),
               ),
               filled: true,
-              fillColor: const Color(0xFFF5F5F5),
+              fillColor: context.surf(const Color(0xFFF5F5F5)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,

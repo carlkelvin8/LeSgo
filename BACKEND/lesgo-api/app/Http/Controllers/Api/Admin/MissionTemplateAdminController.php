@@ -9,16 +9,9 @@ use Illuminate\Http\Request;
 
 class MissionTemplateAdminController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:sanctum');
-        $this->middleware(function ($request, $next) {
-            if (!$request->user() || !$request->user()->isAdmin()) {
-                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
-            }
-            return $next($request);
-        });
-    }
+    // Auth + admin role are enforced by the route group (auth:sanctum + role:admin).
+    // A constructor calling $this->middleware() no longer exists on Laravel's base
+    // controller and made every request to this controller fail with a 500.
 
     public function index(Request $request): JsonResponse
     {

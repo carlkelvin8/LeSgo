@@ -34,7 +34,7 @@ class TopUpFeeSummary extends StatelessWidget {
           SizedBox(height: ResponsiveUtils.spacing(context, 6)),
           _row(
             context,
-            'Top-up fee (1.5%)',
+            'Top-up fee (3%)',
             pricing.feeAmount,
             textStyle,
           ),

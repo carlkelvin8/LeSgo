@@ -6,6 +6,8 @@ import '../../../../../core/utils/app_logger.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/main/merchantside/merchant_quick_reply_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// Quick Reply section for the order detail screen.
 /// Shows template chips that send a message via the chat API.
@@ -93,9 +95,9 @@ class _MerchantQuickReplySectionState
       width: double.infinity,
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,16 +107,16 @@ class _MerchantQuickReplySectionState
               Icon(
                 Icons.quickreply_outlined,
                 size: ResponsiveUtils.fontSize(context, 18),
-                color: const Color(0xFF5F2D82),
+                color: context.acc(const Color(0xFF5F2D82)),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 8)),
               Text(
-                'Quick Reply',
+                context.tr('Quick Reply'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                  color: context.txt(Colors.black87),
                 ),
               ),
               if (_sending) ...[

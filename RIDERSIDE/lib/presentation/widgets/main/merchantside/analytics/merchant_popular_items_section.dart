@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_analytics_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// Displays the top 5 most ordered items from analytics data.
 class MerchantPopularItemsSection extends ConsumerWidget {
@@ -19,7 +21,7 @@ class MerchantPopularItemsSection extends ConsumerWidget {
         if (topItems.isEmpty) return const SizedBox.shrink();
 
         return Material(
-          color: const Color(0xFFF5F4F7),
+          color: context.surf(const Color(0xFFF5F4F7)),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
@@ -35,12 +37,12 @@ class MerchantPopularItemsSection extends ConsumerWidget {
                     ),
                     SizedBox(width: ResponsiveUtils.spacing(context, 8)),
                     Text(
-                      'Top Sellers',
+                      context.tr('Top Sellers'),
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF302B36),
+                        color: context.txt(const Color(0xFF302B36)),
                       ),
                     ),
                   ],
@@ -83,7 +85,7 @@ class MerchantPopularItemsSection extends ConsumerWidget {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12.5),
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF302B36),
+                              color: context.txt(const Color(0xFF302B36)),
                             ),
                           ),
                         ),
@@ -93,7 +95,7 @@ class MerchantPopularItemsSection extends ConsumerWidget {
                             vertical: ResponsiveUtils.spacing(context, 4),
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.surf(Colors.white),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(

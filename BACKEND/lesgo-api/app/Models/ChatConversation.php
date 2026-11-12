@@ -72,6 +72,25 @@ class ChatConversation extends Model
         });
     }
 
+    /**
+     * Conversations the user takes part in, plus - for store owners and staff -
+     * the conversations of orders placed with their store (so the store can
+     * message the customer, e.g. merchant quick replies).
+     */
+    public function scopeForUserOrStore($query, User $user)
+    {
+        $partnerId = $user->workingPartnerId();
+
+        return $query->where(function ($q) use ($user, $partnerId) {
+            $q->where('customer_id', $user->id)
+              ->orWhere('driver_id', $user->id);
+
+            if ($partnerId) {
+                $q->orWhereHas('order', fn ($order) => $order->where('partner_id', $partnerId));
+            }
+        });
+    }
+
     // Helper methods
 
     public function getOtherParticipant(int $userId): ?User

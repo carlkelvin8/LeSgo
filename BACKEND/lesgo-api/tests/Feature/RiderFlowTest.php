@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\DriverProfile;
+use App\Models\DriverDutyAttendance;
 use App\Models\Order;
 use App\Models\Service;
 use App\Models\User;
@@ -206,6 +207,24 @@ class RiderFlowTest extends TestCase
             ->assertJsonPath('data.driver_id', $this->driverProfile->id);
     }
 
+    public function test_off_duty_driver_cannot_accept_order(): void
+    {
+        $this->driverProfile->update(['is_available' => false]);
+        $this->assertFalse($this->driverProfile->fresh()->is_available);
+        $this->driver->wallet()->create(['balance' => 100]);
+        $this->actingAs($this->driver, 'sanctum');
+
+        $ordersResponse = $this->getJson('/api/v1/orders')->assertOk();
+        $orders = collect($ordersResponse->json('data.data') ?? $ordersResponse->json('data'));
+        $this->assertNull($orders->firstWhere('id', $this->order->id));
+
+        $response = $this->patchJson("/api/v1/orders/{$this->order->id}/status", ['status' => 'accepted']);
+        $response->assertForbidden();
+
+        $this->assertNull($this->order->fresh()->driver_id);
+        $this->assertDatabaseCount('wallet_transactions', 0);
+    }
+
     public function test_driver_cannot_accept_already_accepted_order(): void
     {
         $this->actingAs($this->driver, 'sanctum');
@@ -346,6 +365,14 @@ class RiderFlowTest extends TestCase
 
     public function test_driver_can_update_availability(): void
     {
+        $this->driverProfile->update(['is_available' => false]);
+        DriverDutyAttendance::create([
+            'driver_profile_id' => $this->driverProfile->id,
+            'user_id' => $this->driver->id,
+            'photo_path' => 'attendance/test.jpg',
+            'on_duty' => true,
+            'captured_at' => now(),
+        ]);
         $this->actingAs($this->driver, 'sanctum');
 
         $response = $this->patchJson("/api/v1/drivers/{$this->driverProfile->id}", [
@@ -354,6 +381,16 @@ class RiderFlowTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
+    }
+
+    public function test_driver_cannot_go_on_duty_without_todays_attendance(): void
+    {
+        $this->driverProfile->update(['is_available' => false]);
+        $this->actingAs($this->driver, 'sanctum');
+
+        $this->patchJson("/api/v1/drivers/{$this->driverProfile->id}", ['is_available' => true])
+            ->assertStatus(422);
+        $this->assertFalse($this->driverProfile->fresh()->is_available);
     }
 
     public function test_driver_can_update_location(): void
@@ -404,6 +441,23 @@ class RiderFlowTest extends TestCase
         $data = $response->json('data');
         $this->assertGreaterThan(0, $data['estimated_fare']);
         $this->assertGreaterThanOrEqual(40, $data['fare_breakdown']['base_fare']);
+    }
+
+    public function test_fare_estimate_applies_the_standard_service_safety_cap(): void
+    {
+        $this->actingAs($this->driver, 'sanctum');
+        $this->service->update(['base_fare' => 40, 'per_km_rate' => 100]);
+
+        $response = $this->postJson('/api/v1/orders/estimate', [
+            'service_id' => $this->service->id,
+            'pickup' => ['lat' => 8.4542, 'lng' => 124.6319],
+            'dropoff' => ['lat' => 8.6000, 'lng' => 124.6319],
+            'estimated_distance_m' => 20000,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertSame(500.0, (float) $response->json('data.estimated_fare'));
+        $this->assertSame(500.0, (float) $response->json('data.fare_breakdown.total'));
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -471,6 +525,62 @@ class RiderFlowTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('data.status', 'ready_for_pickup');
+        $this->assertNotNull($this->order->fresh()->ready_for_pickup_at);
+    }
+
+    public function test_merchant_ready_state_survives_driver_acceptance(): void
+    {
+        $merchant = User::factory()->create(['role' => 'partner_admin']);
+        $partner = \App\Models\Partner::factory()->create(['user_id' => $merchant->id]);
+        $this->order->update(['partner_id' => $partner->id, 'status' => 'searching_driver']);
+        $this->payAndApprove($merchant);
+
+        $this->actingAs($merchant, 'sanctum')->patchJson("/api/v1/orders/{$this->order->id}/status", ['status' => 'ready_for_pickup'])
+            ->assertOk();
+        $readyAt = $this->order->fresh()->ready_for_pickup_at;
+
+        $this->driver->wallet()->create(['balance' => 100]);
+        $this->actingAs($this->driver, 'sanctum')->patchJson("/api/v1/orders/{$this->order->id}/status", ['status' => 'accepted'])
+            ->assertOk()->assertJsonPath('data.status', 'accepted');
+
+        $this->assertNotNull($readyAt);
+        $this->assertEquals($readyAt->toISOString(), $this->order->fresh()->ready_for_pickup_at->toISOString());
+    }
+
+    public function test_merchant_can_mark_ready_after_rider_arrives_without_regressing_rider_status(): void
+    {
+        $merchant = User::factory()->create(['role' => 'partner_admin']);
+        $partner = \App\Models\Partner::factory()->create(['user_id' => $merchant->id]);
+        $this->order->update(['partner_id' => $partner->id, 'status' => 'accepted', 'driver_id' => $this->driverProfile->id]);
+        $this->payAndApprove($merchant);
+        $this->actingAs($this->driver, 'sanctum')->patchJson("/api/v1/orders/{$this->order->id}/status", ['status' => 'driver_arrived_at_pickup'])
+            ->assertOk();
+
+        $this->actingAs($merchant, 'sanctum')->patchJson("/api/v1/orders/{$this->order->id}/status", ['status' => 'ready_for_pickup'])
+            ->assertOk()->assertJsonPath('data.status', 'driver_arrived_at_pickup');
+        $this->assertNotNull($this->order->fresh()->ready_for_pickup_at);
+    }
+
+    public function test_driver_cannot_pick_up_partner_order_before_merchant_marks_it_ready(): void
+    {
+        $merchant = User::factory()->create(['role' => 'partner_admin']);
+        $partner = \App\Models\Partner::factory()->create(['user_id' => $merchant->id]);
+        $this->order->update(['partner_id' => $partner->id, 'status' => 'accepted', 'driver_id' => $this->driverProfile->id]);
+        $this->payAndApprove($merchant);
+        $this->actingAs($this->driver, 'sanctum')->patchJson("/api/v1/orders/{$this->order->id}/status", ['status' => 'picked_up'])
+            ->assertStatus(409);
+        $this->assertSame('accepted', $this->order->fresh()->status);
+    }
+
+    public function test_merchant_cannot_cancel_order_after_driver_is_assigned(): void
+    {
+        $merchant = User::factory()->create(['role' => 'partner_admin']);
+        $partner = \App\Models\Partner::factory()->create(['user_id' => $merchant->id]);
+        $this->order->update(['partner_id' => $partner->id, 'driver_id' => $this->driverProfile->id, 'status' => 'ready_for_pickup']);
+        $this->payAndApprove($merchant);
+        $this->actingAs($merchant, 'sanctum')->patchJson("/api/v1/orders/{$this->order->id}/status", ['status' => 'cancelled'])
+            ->assertForbidden();
+        $this->assertSame('ready_for_pickup', $this->order->fresh()->status);
     }
 
     public function test_merchant_cannot_cancel_after_pickup(): void

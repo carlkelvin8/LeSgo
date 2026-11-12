@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/di/injection.dart';
 import '../../../../../core/utils/booking_geo_utils.dart';
 import '../../../../../data/data_source/dto/voucher/validate_voucher_request_dto.dart';
+import '../../../../../data/data_source/dto/partner/store_branch.dart';
 import '../../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../../data/data_source/partner_remote_datasource.dart';
 import '../../../../../data/data_source/voucher_remote_datasource.dart';
@@ -21,6 +22,17 @@ class LesbuyCheckoutState {
   final int estimatedDistanceM;
   final bool deliveryFeeUncertain;
 
+  /// Open branches of the store, nearest to the delivery address first.
+  final List<StoreBranch> branches;
+  final int? selectedBranchId;
+
+  StoreBranch? get selectedBranch {
+    for (final b in branches) {
+      if (b.id == selectedBranchId) return b;
+    }
+    return null;
+  }
+
   const LesbuyCheckoutState({
     this.deliveryFee = 50,
     this.discount = 0,
@@ -33,6 +45,8 @@ class LesbuyCheckoutState {
     this.partnerId,
     this.estimatedDistanceM = 5000,
     this.deliveryFeeUncertain = false,
+    this.branches = const [],
+    this.selectedBranchId,
   });
 
   LesbuyCheckoutState copyWith({
@@ -49,6 +63,8 @@ class LesbuyCheckoutState {
     bool? deliveryFeeUncertain,
     bool clearVoucher = false,
     bool clearVoucherError = false,
+    List<StoreBranch>? branches,
+    int? selectedBranchId,
   }) {
     return LesbuyCheckoutState(
       deliveryFee: deliveryFee ?? this.deliveryFee,
@@ -64,6 +80,8 @@ class LesbuyCheckoutState {
       estimatedDistanceM: estimatedDistanceM ?? this.estimatedDistanceM,
       deliveryFeeUncertain:
           deliveryFeeUncertain ?? this.deliveryFeeUncertain,
+      branches: branches ?? this.branches,
+      selectedBranchId: selectedBranchId ?? this.selectedBranchId,
     );
   }
 }
@@ -89,6 +107,30 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
   }
 
   Future<void> _loadPartnerPickup(int partnerId) async {
+    // Multi-branch stores: default to the open branch nearest the customer.
+    try {
+      final all = await _partners.getBranches(partnerId);
+      if (all.isNotEmpty) {
+        final drop = _ref.read(addressProvider).deliveryAddress;
+        final orderable = StoreBranch.orderableNearest(
+          all,
+          drop?.latitude ?? BookingGeoUtils.defaultLat,
+          drop?.longitude ?? BookingGeoUtils.defaultLng,
+        );
+        if (orderable.isNotEmpty) {
+          final branch = orderable.first;
+          state = state.copyWith(
+            branches: orderable,
+            selectedBranchId: branch.id,
+            pickupLat: branch.latitude!,
+            pickupLng: branch.longitude!,
+          );
+          return;
+        }
+      }
+    } catch (_) {
+      // Fall back to the store location below.
+    }
     try {
       final partner = await _partners.getPartner(partnerId);
       // Use partner's actual coordinates (from primary branch) as pickup point
@@ -99,6 +141,19 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
         );
       }
     } catch (_) {}
+  }
+
+  /// Switch the pickup branch and re-price delivery from it.
+  Future<void> selectBranch(int branchId) async {
+    final match = state.branches.where((b) => b.id == branchId);
+    if (match.isEmpty || branchId == state.selectedBranchId) return;
+    final branch = match.first;
+    state = state.copyWith(
+      selectedBranchId: branch.id,
+      pickupLat: branch.latitude!,
+      pickupLng: branch.longitude!,
+    );
+    await refreshDeliveryFee();
   }
 
   void setManualDeliveryFeeUncertain(bool uncertain) {

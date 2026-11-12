@@ -11,14 +11,31 @@ class OrdersApi {
 
   static Dio get _dio => getIt<DioClient>().dio;
 
+  /// [mine] asks for only the rider's own orders (not the open pool) and
+  /// follows every page, so older deliveries are not cut off.
   static Future<List<dynamic>> getOrders({
     String? status,
     int perPage = 30,
+    bool mine = false,
   }) async {
     final params = <String, dynamic>{'per_page': perPage};
     if (status != null) params['status'] = status;
-    final res = await _dio.get('/v1/orders', queryParameters: params);
-    return (res.data['data'] as List<dynamic>?) ?? [];
+    if (mine) params['mine'] = 1;
+
+    final orders = <dynamic>[];
+    var page = 1;
+    var lastPage = 1;
+    do {
+      final res = await _dio.get(
+        '/v1/orders',
+        queryParameters: {...params, if (mine) 'page': page},
+      );
+      orders.addAll((res.data['data'] as List<dynamic>?) ?? const []);
+      final meta = res.data['meta'];
+      lastPage = mine && meta is Map ? int.tryParse('${meta['last_page']}') ?? 1 : 1;
+      page++;
+    } while (page <= lastPage && page <= 10);
+    return orders;
   }
 
   static Future<Map<String, dynamic>?> getOrderById(int orderId) async {

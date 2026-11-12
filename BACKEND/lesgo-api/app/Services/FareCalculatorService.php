@@ -6,9 +6,25 @@ use App\Models\Service;
 
 class FareCalculatorService
 {
+    /** Every service's base fare covers the first 3 km; the per-km rate applies after that. */
     public const INCLUDED_DISTANCE_KM = 3.0;
 
     public const MAX_DISTANCE_KM = 30.0;
+
+    public const ESTIMATE_SAFETY_CAP = 500.0;
+
+    /** Apply the same safety cap to quotes and orders for non-LesRide services. */
+    public function applyEstimateSafetyCap(array $fareBreakdown, string $serviceCode): array
+    {
+        if (strtoupper($serviceCode) !== 'LESRIDE') {
+            $fareBreakdown['total'] = min(
+                (float) $fareBreakdown['total'],
+                self::ESTIMATE_SAFETY_CAP
+            );
+        }
+
+        return $fareBreakdown;
+    }
 
     /** Build the authoritative fare breakdown for an order. */
     public function calculate(
@@ -30,10 +46,7 @@ class FareCalculatorService
             ? (float) $service->minimum_fare
             : $baseFare;
 
-        $chargeableDistanceKm = max(
-            0.0,
-            $distanceKm - self::INCLUDED_DISTANCE_KM
-        );
+        $chargeableDistanceKm = max(0.0, $distanceKm - self::INCLUDED_DISTANCE_KM);
         $distanceFare = round($chargeableDistanceKm * $perKmRate, 2);
 
         $serviceFee = 0.0;
