@@ -29,6 +29,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       address1: state.address1,
       address2: state.address2,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(profileProvider.notifier).refreshPoints();
+    });
   }
 
   @override
@@ -501,7 +504,11 @@ class _Shortcut extends StatelessWidget {
                     color: AppColors.surface(context, Colors.white),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, size: 17, color: Theme.of(context).colorScheme.primary),
+                  child: Icon(
+                    icon,
+                    size: 17,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 const Spacer(),
                 Icon(

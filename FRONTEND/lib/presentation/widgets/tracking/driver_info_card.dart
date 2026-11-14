@@ -2,6 +2,7 @@ import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/driver_display_utils.dart';
 import '../../../core/utils/media_url_utils.dart';
+import '../../screens/main/reviews/reviews_list_screen.dart';
 
 class DriverInfoCard extends StatelessWidget {
   final DriverInfo driverInfo;
@@ -46,32 +47,47 @@ class DriverInfoCard extends StatelessWidget {
                       ),
                     ),
                     if (driverInfo.rating != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.amber[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              size: 14,
-                              color: Colors.amber,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              driverInfo.rating!.toStringAsFixed(1),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                      InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        // The rating badge opens this driver's reviews.
+                        onTap: driverInfo.driverId == null
+                            ? null
+                            : () => Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) => ReviewsListScreen(
+                                    title: driverInfo.name,
+                                    reviewableType: 'driver',
+                                    reviewableId: driverInfo.driverId!,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.amber[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                size: 14,
+                                color: Colors.amber,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                driverInfo.rating!.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                   ],
@@ -125,11 +141,7 @@ class DriverInfoCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(
-                      Icons.chat,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    icon: const Icon(Icons.chat, color: Colors.white, size: 20),
                     onPressed: onChat,
                     tooltip: 'Chat with Driver',
                   ),
@@ -163,17 +175,10 @@ class _DriverAvatar extends StatelessWidget {
           ? Image.network(
               resolvedUrl,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.person,
-                size: 32,
-                color: Colors.blue,
-              ),
+              errorBuilder: (_, __, ___) =>
+                  const Icon(Icons.person, size: 32, color: Colors.blue),
             )
-          : const Icon(
-              Icons.person,
-              size: 32,
-              color: Colors.blue,
-            ),
+          : const Icon(Icons.person, size: 32, color: Colors.blue),
     );
   }
 }

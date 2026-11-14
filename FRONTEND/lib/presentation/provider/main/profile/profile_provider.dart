@@ -322,6 +322,20 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   Future<void> refreshProfile() async {
     await loadProfile();
   }
+
+  /// Quietly re-reads the loyalty points (e.g. when the Profile screen opens)
+  /// without touching the loading flag or any in-progress edits.
+  Future<void> refreshPoints() async {
+    try {
+      final response = await getIt<UserRemoteDataSource>().getMe();
+      // Don't clear an existing load error / revive a missing profile.
+      if (response.success && response.data != null && state.user != null) {
+        state = state.copyWith(points: response.data!.points ?? 0);
+      }
+    } catch (_) {
+      // Keep the last known value; the next open will retry.
+    }
+  }
 }
 
 final profileProvider = StateNotifierProvider<ProfileNotifier, ProfileState>((

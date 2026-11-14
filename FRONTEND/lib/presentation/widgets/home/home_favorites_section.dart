@@ -67,12 +67,12 @@ class HomeFavoritesSection extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          
+
           // Favorites list
           SizedBox(
-            height: 100,
+            height: 120,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: favorites.length,
@@ -124,9 +124,9 @@ class HomeFavoritesSection extends ConsumerWidget {
                   size: 20,
                 ),
               ),
-              
+
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-              
+
               // Name
               Text(
                 favorite.name,
@@ -139,7 +139,7 @@ class HomeFavoritesSection extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              
+
               // Subtitle
               if (favorite.subtitle != null)
                 Text(
@@ -181,4 +181,3 @@ class HomeFavoritesSection extends ConsumerWidget {
     }
   }
 }
-

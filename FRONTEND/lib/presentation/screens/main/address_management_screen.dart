@@ -1,6 +1,7 @@
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/booking_geo_utils.dart';
@@ -467,6 +468,33 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
     }
   }
 
+  /// Fills the address field from the dropped pin, but never overwrites what
+  /// the user already typed.
+  Future<void> _fillAddressFromPin(LatLng location) async {
+    if (_addressLine1Ctrl.text.trim().isNotEmpty) return;
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      ).timeout(const Duration(seconds: 8));
+      if (!mounted || placemarks.isEmpty) return;
+      final place = placemarks.first;
+      final parts = <String>[
+        for (final part in [
+          place.street,
+          place.subLocality,
+          place.locality,
+          place.administrativeArea,
+        ])
+          if (part != null && part.trim().isNotEmpty) part.trim(),
+      ];
+      if (parts.isEmpty || _addressLine1Ctrl.text.trim().isNotEmpty) return;
+      setState(() => _addressLine1Ctrl.text = parts.toSet().join(', '));
+    } catch (_) {
+      // Geocoding is a convenience; the user can still type the address.
+    }
+  }
+
   @override
   void dispose() {
     _labelCtrl.dispose();
@@ -612,8 +640,10 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
                             ),
                             myLocationButtonEnabled: false,
                             myLocationEnabled: false,
-                            onTap: (location) =>
-                                setState(() => _selectedLocation = location),
+                            onTap: (location) {
+                              setState(() => _selectedLocation = location);
+                              _fillAddressFromPin(location);
+                            },
                             markers: _selectedLocation == null
                                 ? const <Marker>{}
                                 : {

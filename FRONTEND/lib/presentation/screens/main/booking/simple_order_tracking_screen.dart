@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/map_styles.dart';
-import '../../../../core/utils/order_contact_actions.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/order_status_utils.dart';
 import '../../../../core/services/order_polling_service.dart';
@@ -13,7 +12,6 @@ import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../core/di/injection.dart';
 import '../../../widgets/widgets.dart';
-import '../../../widgets/chat/order_chat_widget.dart';
 import '../../../widgets/chat/chat_button_widget.dart';
 import '../../../provider/tracking/live_tracking_provider.dart';
 import '../../../widgets/tracking/driver_info_card.dart';
@@ -23,16 +21,15 @@ import '../../../../core/utils/booking_geo_utils.dart';
 class SimpleOrderTrackingScreen extends ConsumerStatefulWidget {
   final int orderId;
 
-  const SimpleOrderTrackingScreen({
-    super.key,
-    required this.orderId,
-  });
+  const SimpleOrderTrackingScreen({super.key, required this.orderId});
 
   @override
-  ConsumerState<SimpleOrderTrackingScreen> createState() => _SimpleOrderTrackingScreenState();
+  ConsumerState<SimpleOrderTrackingScreen> createState() =>
+      _SimpleOrderTrackingScreenState();
 }
 
-class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingScreen> {
+class _SimpleOrderTrackingScreenState
+    extends ConsumerState<SimpleOrderTrackingScreen> {
   OrderDto? order;
   bool isLoading = true;
   String? error;
@@ -51,7 +48,9 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Set context for notifications
-      ref.read(liveTrackingProvider(widget.orderId).notifier).setContext(context);
+      ref
+          .read(liveTrackingProvider(widget.orderId).notifier)
+          .setContext(context);
     });
   }
 
@@ -67,7 +66,8 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
 
   void _handleOrderPoll(OrderPollUpdate update) {
     if (!mounted) return;
-    if (!_isOrderActive(update.status) && !OrderStatusUtils.isTerminal(update.status)) {
+    if (!_isOrderActive(update.status) &&
+        !OrderStatusUtils.isTerminal(update.status)) {
       return;
     }
 
@@ -88,7 +88,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
   Future<void> _loadOrderDetails() async {
     try {
       if (!mounted) return;
-      
+
       // Don't show loading spinner on refresh
       if (order == null) {
         setState(() {
@@ -99,18 +99,18 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
 
       final orderDataSource = getIt<OrderRemoteDataSource>();
       final response = await orderDataSource.getOrder(widget.orderId);
-      
+
       if (response.success && mounted) {
         final previousStatus = order?.status;
         final newStatus = response.data.status;
-        
+
         setState(() {
           order = response.data;
           isLoading = false;
           // Show map if order is active
           _showMap = _isOrderActive(response.data.status);
         });
-        
+
         // Show notification if status changed
         if (previousStatus != null && previousStatus != newStatus) {
           _showStatusChangeNotification(previousStatus, newStatus);
@@ -138,7 +138,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
   void _showStatusChangeNotification(String oldStatus, String newStatus) {
     String message = '';
     Color backgroundColor = Colors.blue;
-    
+
     switch (newStatus.toLowerCase()) {
       case 'accepted':
         message = 'Driver has accepted your order!';
@@ -167,7 +167,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
       default:
         return; // Don't show notification for other status changes
     }
-    
+
     if (mounted && message.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -180,7 +180,12 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
   }
 
   bool _isOrderActive(String status) {
-    final activeStatuses = ['accepted', 'picked_up', 'in_transit', 'on_the_way'];
+    final activeStatuses = [
+      'accepted',
+      'picked_up',
+      'in_transit',
+      'on_the_way',
+    ];
     return activeStatuses.contains(status.toLowerCase());
   }
 
@@ -199,24 +204,12 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
   }
 
   void _callDriver() {
-    final driverInfo = ref.read(liveTrackingProvider(widget.orderId)).driverInfo;
+    final driverInfo = ref
+        .read(liveTrackingProvider(widget.orderId))
+        .driverInfo;
     if (driverInfo?.phone != null) {
       launchUrl(Uri.parse('tel:${driverInfo!.phone}'));
     }
-  }
-
-  void _contactDriver() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => OrderChatWidget(
-        orderId: widget.orderId,
-        orderType: OrderContactActions.normalizeOrderType(
-          order?.serviceType ?? 'leseat',
-        ),
-      ),
-    );
   }
 
   @override
@@ -224,22 +217,21 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     final trackingState = ref.watch(liveTrackingProvider(widget.orderId));
 
     // Listen for tracking state changes to update map
-    ref.listen<LiveTrackingState>(
-      liveTrackingProvider(widget.orderId),
-      (previous, next) {
-        if (next.markers.isNotEmpty && _mapReady && previous?.markers != next.markers) {
-          _fitBounds();
-        }
-      },
-    );
-    
+    ref.listen<LiveTrackingState>(liveTrackingProvider(widget.orderId), (
+      previous,
+      next,
+    ) {
+      if (next.markers.isNotEmpty &&
+          _mapReady &&
+          previous?.markers != next.markers) {
+        _fitBounds();
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       floatingActionButton: order != null && _isOrderActive(order!.status)
-          ? FloatingChatButton(
-              orderId: widget.orderId,
-              orderType: 'lesride',
-            )
+          ? FloatingChatButton(orderId: widget.orderId, orderType: 'lesride')
           : null,
       body: SafeArea(
         child: Column(
@@ -271,45 +263,54 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
               ),
             ),
 
-            Container(height: 1, color: AppColors.surface(context, Colors.grey[300]!)),
+            Container(
+              height: 1,
+              color: AppColors.surface(context, Colors.grey[300]!),
+            ),
 
             // Content
             Expanded(
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : error != null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 64,
-                                color: AppColors.foreground(context, Colors.grey[400]!),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                error!,
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 16,
-                                  color: AppColors.foreground(context, Colors.grey[600]!),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _loadOrderDetails,
-                                child: const Text('Retry'),
-                              ),
-                            ],
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[400]!,
+                            ),
                           ),
-                        )
-                      : order != null
-                          ? _showMap
-                              ? _buildTrackingView(trackingState)
-                              : _buildOrderDetails()
-                          : const Center(child: Text('Order not found')),
+                          const SizedBox(height: 16),
+                          Text(
+                            error!,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: 16,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadOrderDetails,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : order != null
+                  ? _showMap
+                        ? _buildTrackingView(trackingState)
+                        : _buildOrderDetails()
+                  : const Center(child: Text('Order not found')),
             ),
           ],
         ),
@@ -324,7 +325,8 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
         GoogleMap(
           style: MapStyles.darkIfDark(context),
           initialCameraPosition: CameraPosition(
-            target: trackingState.pickupLocation ?? BookingGeoUtils.defaultLatLng,
+            target:
+                trackingState.pickupLocation ?? BookingGeoUtils.defaultLatLng,
             zoom: 14,
           ),
           markers: trackingState.markers,
@@ -348,10 +350,11 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
         // Loading overlay
         if (trackingState.isLoading)
           Container(
-            color: AppColors.surface(context, Colors.black).withValues(alpha: 0.3),
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
+            color: AppColors.surface(
+              context,
+              Colors.black,
+            ).withValues(alpha: 0.3),
+            child: const Center(child: CircularProgressIndicator()),
           ),
 
         // My location button
@@ -384,7 +387,9 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surface(context, Colors.white),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -485,7 +490,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                     DriverInfoCard(
                       driverInfo: trackingState.driverInfo!,
                       onCall: _callDriver,
-                      onChat: _contactDriver,
+                      // Chat is available from the floating chat button.
                     ),
                 ],
               ),
@@ -529,11 +534,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
       ),
       child: Row(
         children: [
-          Icon(
-            _getStatusIcon(order!.status),
-            color: statusColor,
-            size: 32,
-          ),
+          Icon(_getStatusIcon(order!.status), color: statusColor, size: 32),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -646,7 +647,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                     Text(
+                    Text(
                       'Pickup',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
@@ -662,7 +663,7 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
                       ),
                     ),
                     const SizedBox(height: 20),
-                     Text(
+                    Text(
                       'Dropoff',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
@@ -872,4 +873,3 @@ class _SimpleOrderTrackingScreenState extends ConsumerState<SimpleOrderTrackingS
     }
   }
 }
-

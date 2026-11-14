@@ -362,7 +362,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
   DateTime _parseDate(String iso) {
     try {
-      return DateTime.parse(iso);
+      return DateTime.parse(iso).toLocal();
     } catch (_) {
       return DateTime.fromMillisecondsSinceEpoch(0);
     }

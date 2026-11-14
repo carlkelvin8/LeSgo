@@ -75,6 +75,15 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
         ),
         child: Row(
           children: [
+            if (Navigator.of(context).canPop())
+              IconButton(
+                tooltip: 'Back',
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: AppColors.foreground(context, Colors.black87),
+                ),
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
             Container(
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 10)),
               decoration: BoxDecoration(
@@ -167,7 +176,10 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
           stops: const [0.0, 0.5, 1.0],
         ),
       ),
-    ).animate().shimmer(duration: 1200.ms, color: AppColors.foreground(context, Colors.grey[200]!));
+    ).animate().shimmer(
+      duration: 1200.ms,
+      color: AppColors.foreground(context, Colors.grey[200]!),
+    );
   }
 
   Widget _buildWalletSection(BuildContext context, LespayState state) {
@@ -235,4 +247,3 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
     ).animate().shake(duration: 500.ms).fadeIn(duration: 300.ms);
   }
 }
-

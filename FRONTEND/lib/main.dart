@@ -26,19 +26,117 @@ AnalyticsRouteObserver? _analyticsRouteObserver;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MobileConfigService.instance.loadFromApi();
-  await configureGoogleMapsForPlatform();
-  await configureDependencies();
+  runApp(const ProviderScope(child: _AppBootstrap()));
+}
 
-  // Initialize crash reporting (only in release builds)
-  await CrashReporterService.initialize();
+/// Render a real Flutter frame immediately instead of leaving iOS on its blank
+/// native launch screen while config, secure storage, and local services start.
+class _AppBootstrap extends StatefulWidget {
+  const _AppBootstrap();
 
-  _analyticsRouteObserver = AnalyticsRouteObserver(getIt<AnalyticsService>());
-  await getIt<WebSocketService>().initialize();
-  await getIt<NotificationService>().initialize();
-  await getIt<PromoNotificationService>().initialize();
+  @override
+  State<_AppBootstrap> createState() => _AppBootstrapState();
+}
 
-  runApp(const ProviderScope(child: LesgoApp()));
+class _AppBootstrapState extends State<_AppBootstrap> {
+  late Future<void> _initialization;
+  Future<void>? _dependenciesInitialization;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialization = _initialize();
+  }
+
+  Future<void> _initialize() async {
+    // These calls are deliberately after the first loading frame. Maps are
+    // configured before the customer routes can construct a GoogleMap.
+    await WidgetsBinding.instance.endOfFrame;
+    await MobileConfigService.instance.loadFromApi();
+    await configureGoogleMapsForPlatform();
+    try {
+      await (_dependenciesInitialization ??= configureDependencies());
+    } catch (_) {
+      // A failed registration can leave GetIt partially populated. Retry from
+      // a clean container while no customer screens have been constructed.
+      await getIt.reset();
+      _dependenciesInitialization = null;
+      rethrow;
+    }
+    await CrashReporterService.initialize();
+
+    _analyticsRouteObserver = AnalyticsRouteObserver(getIt<AnalyticsService>());
+    await getIt<WebSocketService>().initialize();
+    // Push setup can wait on APNs/Firebase in simulators. It must not block the
+    // first customer frame.
+    unawaited(_initializePushServices());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _initialization,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('LeSgo could not start. Please try again.'),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => setState(() {
+                          _initialization = _initialize();
+                        }),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.connectionState != ConnectionState.done) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(color: Color(0xFF5F2D82)),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Starting LeSgo…',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        return const LesgoApp();
+      },
+    );
+  }
+}
+
+Future<void> _initializePushServices() async {
+  try {
+    await getIt<NotificationService>().initialize();
+    await getIt<PromoNotificationService>().initialize();
+  } catch (error, stackTrace) {
+    debugPrint('Push services initialization failed: $error\n$stackTrace');
+  }
 }
 
 class LesgoApp extends ConsumerWidget {
@@ -96,5 +194,4 @@ class LesgoApp extends ConsumerWidget {
       },
     );
   }
-
 }

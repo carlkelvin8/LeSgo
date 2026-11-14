@@ -48,54 +48,97 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                 children: [
                   const AuthHeader(title: 'Favorites'),
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                  
+
                   // Tabs
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface(context, Colors.grey[100]!),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicator: BoxDecoration(
-                        color: AppColors.accent(context, Color(0xFF5F2D82)),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      labelColor: Colors.white,
-                      unselectedLabelColor: AppColors.foreground(context, Colors.grey[600]!),
-                      labelStyle: TextStyle(
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final labels = [
+                        'All (${favoritesState.totalCount})',
+                        'Restaurants (${favoritesState.restaurantsCount})',
+                        'Stores (${favoritesState.storesCount})',
+                        'Addresses (${favoritesState.addressesCount})',
+                      ];
+                      final labelStyle = TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
                         fontWeight: FontWeight.w600,
-                      ),
-                      tabs: [
-                        Tab(text: 'All (${favoritesState.totalCount})'),
-                        Tab(text: 'Restaurants (${favoritesState.restaurantsCount})'),
-                        Tab(text: 'Stores (${favoritesState.storesCount})'),
-                        Tab(text: 'Addresses (${favoritesState.addressesCount})'),
-                      ],
-                    ),
+                      );
+                      // Tabs share the full width when their labels fit;
+                      // otherwise they scroll instead of truncating the text.
+                      var needed = 0.0;
+                      for (final label in labels) {
+                        final painter = TextPainter(
+                          text: TextSpan(text: label, style: labelStyle),
+                          textDirection: TextDirection.ltr,
+                          textScaler: MediaQuery.textScalerOf(context),
+                          maxLines: 1,
+                        )..layout();
+                        needed += painter.width + 32; // default label padding
+                      }
+                      final fits = needed <= constraints.maxWidth;
+
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface(context, Colors.grey[100]!),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TabBar(
+                          controller: _tabController,
+                          isScrollable: !fits,
+                          tabAlignment: fits
+                              ? TabAlignment.fill
+                              : TabAlignment.start,
+                          dividerColor: Colors.transparent,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicator: BoxDecoration(
+                            color: AppColors.accent(
+                              context,
+                              Color(0xFF5F2D82),
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          labelColor: Colors.white,
+                          unselectedLabelColor: AppColors.foreground(
+                            context,
+                            Colors.grey[600]!,
+                          ),
+                          labelStyle: labelStyle,
+                          tabs: [for (final label in labels) Tab(text: label)],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
 
             // Divider
-            Container(height: 1, color: AppColors.border(context, Colors.grey[300]!)),
+            Container(
+              height: 1,
+              color: AppColors.border(context, Colors.grey[300]!),
+            ),
 
             // Content
             Expanded(
               child: favoritesState.isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF5F2D82),
+                        ),
                       ),
                     )
                   : TabBarView(
                       controller: _tabController,
                       children: [
-                        _buildFavoritesList(context, favoritesState.allFavorites),
-                        _buildFavoritesList(context, favoritesState.restaurants),
+                        _buildFavoritesList(
+                          context,
+                          favoritesState.allFavorites,
+                        ),
+                        _buildFavoritesList(
+                          context,
+                          favoritesState.restaurants,
+                        ),
                         _buildFavoritesList(context, favoritesState.stores),
                         _buildFavoritesList(context, favoritesState.addresses),
                       ],
@@ -161,10 +204,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
                     ),
                   ),
                 )
-              : Icon(
-                  _getTypeIcon(item.type),
-                  color: _getTypeColor(item.type),
-                ),
+              : Icon(_getTypeIcon(item.type), color: _getTypeColor(item.type)),
         ),
         title: Text(
           item.name,
@@ -177,7 +217,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
         ),
         subtitle: item.subtitle != null
             ? Padding(
-                padding: EdgeInsets.only(top: ResponsiveUtils.spacing(context, 4)),
+                padding: EdgeInsets.only(
+                  top: ResponsiveUtils.spacing(context, 4),
+                ),
                 child: Text(
                   item.subtitle!,
                   style: TextStyle(
@@ -267,4 +309,3 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
     FavoriteNavigation.open(context, item);
   }
 }
-

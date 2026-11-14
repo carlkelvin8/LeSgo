@@ -56,7 +56,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       await OrderReceiptService.shareTransactionReceipt(transaction);
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, 'Could not generate receipt. Try again.');
+        SnackBarUtils.showError(
+          context,
+          'Could not generate receipt. Try again.',
+        );
       }
     } finally {
       if (mounted) setState(() => _sharingReceipt = false);
@@ -85,7 +88,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         });
       }
     }
-    final double deliveryFee = transaction.amount > itemsTotal ? transaction.amount - itemsTotal : 0.0;
+    final double deliveryFee = transaction.amount > itemsTotal
+        ? transaction.amount - itemsTotal
+        : 0.0;
 
     final orderData = <String, dynamic>{
       'id': int.tryParse(orderId) ?? 0,
@@ -95,10 +100,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       'pickup_address': transaction.pickupLocation,
       'dropoff_address': transaction.dropoffLocation,
       // For LesEat: pickup is restaurant name
-      'restaurantName': transaction.serviceId == 3 ? transaction.pickupLocation : null,
+      'restaurantName': transaction.serviceId == 3
+          ? transaction.pickupLocation
+          : null,
       // Fare breakdown for LesGo/LesRide tracking screen
       'baseFee': transaction.amount > 0 ? 40.0 : 0.0,
-      'distanceFee': transaction.amount > 40.0 ? transaction.amount - 40.0 : 0.0,
+      'distanceFee': transaction.amount > 40.0
+          ? transaction.amount - 40.0
+          : 0.0,
       'total': transaction.amount,
       'subtotal': itemsTotal,
       'deliveryFee': deliveryFee,
@@ -183,7 +192,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(20),
-        decoration:  BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -218,7 +227,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     fontFamily: 'TT Fors',
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: isCredit ? Colors.green.shade700 : Colors.red.shade700,
+                    color: isCredit
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
                   ),
                 ),
                 PaymentStatusBadge(status: transaction.paymentStatus),
@@ -256,13 +267,23 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
-
-
   String _formatDate(String isoDate) {
     try {
       final dt = DateTime.parse(isoDate).toLocal();
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       return '${months[dt.month - 1]} ${dt.day}, ${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
     } catch (_) {
       return isoDate;
@@ -277,7 +298,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   Widget build(BuildContext context) {
     final transactionsState = ref.watch(transactionsProvider);
     final transactions = transactionsState.filteredTransactions;
-    final hasActiveFilters = transactionsState.selectedService != null ||
+    final hasActiveFilters =
+        transactionsState.selectedService != null ||
         transactionsState.selectedStatus != null ||
         transactionsState.selectedKind != null ||
         transactionsState.selectedPaymentStatus != null ||
@@ -296,16 +318,19 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 children: [
                   Row(
                     children: [
-                      const Expanded(
-                        child: AuthHeader(
-                          title: 'Transactions',
-                        ),
-                      ),
+                      const Expanded(child: AuthHeader(title: 'Transactions')),
                       // Filter toggle button
                       IconButton(
                         icon: Icon(
-                          _showFilters ? Icons.filter_alt : Icons.filter_alt_outlined,
-                          color: hasActiveFilters ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey[600]!),
+                          _showFilters
+                              ? Icons.filter_alt
+                              : Icons.filter_alt_outlined,
+                          color: hasActiveFilters
+                              ? AppColors.accent(context, Color(0xFF5F2D82))
+                              : AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                         ),
                         onPressed: () {
                           setState(() {
@@ -315,7 +340,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       ),
                     ],
                   ),
-                  
+
                   // Search bar
                   SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                   TextField(
@@ -327,13 +352,24 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         fontSize: ResponsiveUtils.fontSize(context, 14),
                         color: AppColors.foreground(context, Colors.grey[400]!),
                       ),
-                      prefixIcon: Icon(Icons.search, color: AppColors.foreground(context, Colors.grey[400]!)),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppColors.foreground(context, Colors.grey[400]!),
+                      ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon:  Icon(Icons.clear, color: AppColors.foreground(context, Colors.grey)),
+                              icon: Icon(
+                                Icons.clear,
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey,
+                                ),
+                              ),
                               onPressed: () {
                                 _searchController.clear();
-                                ref.read(transactionsProvider.notifier).searchOrders('');
+                                ref
+                                    .read(transactionsProvider.notifier)
+                                    .searchOrders('');
                               },
                             )
                           : null,
@@ -349,17 +385,26 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       ),
                     ),
                     onChanged: (value) {
-                      ref.read(transactionsProvider.notifier).searchOrders(value);
+                      ref
+                          .read(transactionsProvider.notifier)
+                          .searchOrders(value);
                       setState(() {});
                     },
                   ),
-                  
+
                   // Filters section
                   if (_showFilters) ...[
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    _buildFiltersSection(context, transactionsState),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.5,
+                      ),
+                      child: SingleChildScrollView(
+                        child: _buildFiltersSection(context, transactionsState),
+                      ),
+                    ),
                   ],
-                  
+
                   // Active filters chips
                   if (hasActiveFilters && !_showFilters) ...[
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -368,13 +413,13 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 ],
               ),
             ),
-            
+
             // Divider line
             Container(
               height: 1,
               color: AppColors.surface(context, Colors.grey[300]!),
             ),
-            
+
             // Results count
             if (transactions.isNotEmpty)
               Container(
@@ -398,7 +443,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       TextButton(
                         onPressed: () {
                           _searchController.clear();
-                          ref.read(transactionsProvider.notifier).clearFilters();
+                          ref
+                              .read(transactionsProvider.notifier)
+                              .clearFilters();
                           setState(() {});
                         },
                         child: Text(
@@ -414,85 +461,105 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   ],
                 ),
               ),
-            
+
             // Transactions List
             Expanded(
               child: transactionsState.isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF5F2D82),
+                        ),
                       ),
                     )
                   : transactionsState.error != null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 64,
-                                color: Colors.red[400],
-                              ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                              Text(
-                                'Error loading transactions',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 16),
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.foreground(context, Colors.black87),
-                                ),
-                              ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                              Text(
-                                transactionsState.error!,
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 14),
-                                  color: AppColors.foreground(context, Colors.grey[600]!),
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                              ElevatedButton(
-                                onPressed: () {
-                                  ref.read(transactionsProvider.notifier).refreshTransactions();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF5F2D82),
-                                ),
-                                child: const Text('Retry'),
-                              ),
-                            ],
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.red[400],
                           ),
-                        )
-                      : transactions.isEmpty
-                          ? _buildEmptyState(context, hasActiveFilters)
-                          : RefreshIndicator(
-                              onRefresh: () => ref.read(transactionsProvider.notifier).refreshTransactions(),
-                              color: AppColors.accent(context, Color(0xFF5F2D82)),
-                              child: ListView.builder(
-                                padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-                                itemCount: transactions.length,
-                                itemBuilder: (context, index) {
-                                  final transaction = transactions[index];
-                                  return TransactionListItem(
-                                    transaction: transaction,
-                                    index: index + 1,
-                                    onTap: () => _openOrderDetail(context, transaction),
-                                    onReorder: () async {
-                                      await ref.read(transactionsProvider.notifier).reorderTransaction(transaction.id);
-                                      if (context.mounted) {
-                                        SnackBarUtils.showSuccess(
-                                          context,
-                                          'Order placed successfully!',
-                                        );
-                                      }
-                                    },
-                                  );
-                                },
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 16),
+                          ),
+                          Text(
+                            'Error loading transactions',
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 16),
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.black87,
                               ),
                             ),
+                          ),
+                          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                          Text(
+                            transactionsState.error!,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 14),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 16),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              ref
+                                  .read(transactionsProvider.notifier)
+                                  .refreshTransactions();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF5F2D82),
+                            ),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : transactions.isEmpty
+                  ? _buildEmptyState(context, hasActiveFilters)
+                  : RefreshIndicator(
+                      onRefresh: () => ref
+                          .read(transactionsProvider.notifier)
+                          .refreshTransactions(),
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
+                      child: ListView.builder(
+                        padding: EdgeInsets.all(
+                          ResponsiveUtils.spacing(context, 16),
+                        ),
+                        itemCount: transactions.length,
+                        itemBuilder: (context, index) {
+                          final transaction = transactions[index];
+                          return TransactionListItem(
+                            transaction: transaction,
+                            index: index + 1,
+                            onTap: () => _openOrderDetail(context, transaction),
+                            onReorder: () async {
+                              await ref
+                                  .read(transactionsProvider.notifier)
+                                  .reorderTransaction(transaction.id);
+                              if (context.mounted) {
+                                SnackBarUtils.showSuccess(
+                                  context,
+                                  'Order placed successfully!',
+                                );
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -521,12 +588,22 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             _buildFilterChip(context, 'All', state.selectedKind == null, () {
               ref.read(transactionsProvider.notifier).filterByKind(null);
             }),
-            _buildFilterChip(context, 'Orders', state.selectedKind == 'order', () {
-              ref.read(transactionsProvider.notifier).filterByKind('order');
-            }),
-            _buildFilterChip(context, 'LesPay', state.selectedKind == 'wallet', () {
-              ref.read(transactionsProvider.notifier).filterByKind('wallet');
-            }),
+            _buildFilterChip(
+              context,
+              'Orders',
+              state.selectedKind == 'order',
+              () {
+                ref.read(transactionsProvider.notifier).filterByKind('order');
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'LesPay',
+              state.selectedKind == 'wallet',
+              () {
+                ref.read(transactionsProvider.notifier).filterByKind('wallet');
+              },
+            ),
           ],
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -544,21 +621,59 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildFilterChip(context, 'All', state.selectedPaymentStatus == null, () {
-              ref.read(transactionsProvider.notifier).filterByPaymentStatus(null);
-            }),
-            _buildFilterChip(context, 'Paid', state.selectedPaymentStatus == 'paid', () {
-              ref.read(transactionsProvider.notifier).filterByPaymentStatus('paid');
-            }),
-            _buildFilterChip(context, 'Pending', state.selectedPaymentStatus == OrderStatusConstants.pending_payment, () {
-              ref.read(transactionsProvider.notifier).filterByPaymentStatus(OrderStatusConstants.pending_payment);
-            }),
-            _buildFilterChip(context, 'Failed', state.selectedPaymentStatus == OrderStatusConstants.failed, () {
-              ref.read(transactionsProvider.notifier).filterByPaymentStatus(OrderStatusConstants.failed);
-            }),
-            _buildFilterChip(context, 'Refunded', state.selectedPaymentStatus == 'refunded', () {
-              ref.read(transactionsProvider.notifier).filterByPaymentStatus('refunded');
-            }),
+            _buildFilterChip(
+              context,
+              'All',
+              state.selectedPaymentStatus == null,
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByPaymentStatus(null);
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'Paid',
+              state.selectedPaymentStatus == 'paid',
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByPaymentStatus('paid');
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'Pending',
+              state.selectedPaymentStatus ==
+                  OrderStatusConstants.pending_payment,
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByPaymentStatus(
+                      OrderStatusConstants.pending_payment,
+                    );
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'Failed',
+              state.selectedPaymentStatus == OrderStatusConstants.failed,
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByPaymentStatus(OrderStatusConstants.failed);
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'Refunded',
+              state.selectedPaymentStatus == 'refunded',
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByPaymentStatus('refunded');
+              },
+            ),
           ],
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -580,23 +695,51 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             _buildFilterChip(context, 'All', state.selectedService == null, () {
               ref.read(transactionsProvider.notifier).filterByService(null);
             }),
-            _buildFilterChip(context, 'LesGo', state.selectedService == 'LesGo', () {
-              ref.read(transactionsProvider.notifier).filterByService('LesGo');
-            }),
-            _buildFilterChip(context, 'LesRide', state.selectedService == 'LesRide', () {
-              ref.read(transactionsProvider.notifier).filterByService('LesRide');
-            }),
-            _buildFilterChip(context, 'LesEat', state.selectedService == 'LesEat', () {
-              ref.read(transactionsProvider.notifier).filterByService('LesEat');
-            }),
-            _buildFilterChip(context, 'LesBuy', state.selectedService == 'LesBuy', () {
-              ref.read(transactionsProvider.notifier).filterByService('LesBuy');
-            }),
+            _buildFilterChip(
+              context,
+              'LesGo',
+              state.selectedService == 'LesGo',
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByService('LesGo');
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'LesRide',
+              state.selectedService == 'LesRide',
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByService('LesRide');
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'LesEat',
+              state.selectedService == 'LesEat',
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByService('LesEat');
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'LesBuy',
+              state.selectedService == 'LesBuy',
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByService('LesBuy');
+              },
+            ),
           ],
         ),
-        
+
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-        
+
         // Status filter
         Text(
           'Status',
@@ -615,22 +758,48 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             _buildFilterChip(context, 'All', state.selectedStatus == null, () {
               ref.read(transactionsProvider.notifier).filterByStatus(null);
             }),
-            _buildFilterChip(context, 'Completed', state.selectedStatus == OrderStatusConstants.completed, () {
-              ref.read(transactionsProvider.notifier).filterByStatus(OrderStatusConstants.completed);
-            }),
-            _buildFilterChip(context, 'Pending', state.selectedStatus == OrderStatusConstants.pending, () {
-              ref.read(transactionsProvider.notifier).filterByStatus(OrderStatusConstants.pending);
-            }),
-            _buildFilterChip(context, 'Cancelled', state.selectedStatus == 'cancelled', () {
-              ref.read(transactionsProvider.notifier).filterByStatus('cancelled');
-            }),
+            _buildFilterChip(
+              context,
+              'Completed',
+              state.selectedStatus == OrderStatusConstants.completed,
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByStatus(OrderStatusConstants.completed);
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'Pending',
+              state.selectedStatus == OrderStatusConstants.pending,
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByStatus(OrderStatusConstants.pending);
+              },
+            ),
+            _buildFilterChip(
+              context,
+              'Cancelled',
+              state.selectedStatus == 'cancelled',
+              () {
+                ref
+                    .read(transactionsProvider.notifier)
+                    .filterByStatus('cancelled');
+              },
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildFilterChip(BuildContext context, String label, bool isSelected, VoidCallback onTap) {
+  Widget _buildFilterChip(
+    BuildContext context,
+    String label,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -642,10 +811,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           vertical: ResponsiveUtils.spacing(context, 8),
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Colors.white),
+          color: isSelected
+              ? AppColors.accent(context, Color(0xFF5F2D82))
+              : AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.border(context, Colors.grey[300]!),
+            color: isSelected
+                ? AppColors.accent(context, Color(0xFF5F2D82))
+                : AppColors.border(context, Colors.grey[300]!),
           ),
         ),
         child: Text(
@@ -654,22 +827,31 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.foreground(context, Colors.grey[700]!),
+            color: isSelected
+                ? Colors.white
+                : AppColors.foreground(context, Colors.grey[700]!),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildActiveFiltersChips(BuildContext context, TransactionsState state) {
+  Widget _buildActiveFiltersChips(
+    BuildContext context,
+    TransactionsState state,
+  ) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
         if (state.selectedKind != null)
-          _buildActiveChip(context, state.selectedKind == 'wallet' ? 'LesPay' : 'Orders', () {
-            ref.read(transactionsProvider.notifier).filterByKind(null);
-          }),
+          _buildActiveChip(
+            context,
+            state.selectedKind == 'wallet' ? 'LesPay' : 'Orders',
+            () {
+              ref.read(transactionsProvider.notifier).filterByKind(null);
+            },
+          ),
         if (state.selectedPaymentStatus != null)
           _buildActiveChip(context, state.selectedPaymentStatus!, () {
             ref.read(transactionsProvider.notifier).filterByPaymentStatus(null);
@@ -692,14 +874,21 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
-  Widget _buildActiveChip(BuildContext context, String label, VoidCallback onRemove) {
+  Widget _buildActiveChip(
+    BuildContext context,
+    String label,
+    VoidCallback onRemove,
+  ) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.spacing(context, 12),
         vertical: ResponsiveUtils.spacing(context, 6),
       ),
       decoration: BoxDecoration(
-        color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
+        color: AppColors.accent(
+          context,
+          Color(0xFF5F2D82),
+        ).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.accent(context, Color(0xFF5F2D82))),
       ),
@@ -783,4 +972,3 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 }
-

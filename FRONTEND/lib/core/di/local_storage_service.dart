@@ -3,11 +3,13 @@ import 'dart:async';
 
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 @lazySingleton
 class LocalStorageService {
   static const String authTokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';
+  static const String authDeviceNameKey = 'auth_device_name';
   static const String savedEmailKey = 'saved_email';
   static const String savedPasswordKey = 'saved_password';
   static const String rememberMeKey = 'remember_me_enabled';
@@ -20,6 +22,18 @@ class LocalStorageService {
 
   LocalStorageService(this.prefs);
   SecureStorageService get secure => SecureStorageService(prefs);
+
+  /// Returns a stable, unique device name for this app installation.
+  /// The API associates refresh tokens with this value, so it must survive
+  /// logouts and app restarts while remaining different on another install.
+  Future<String> getOrCreateAuthDeviceName() async {
+    final existing = secure.getString(authDeviceNameKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+
+    final deviceName = 'lesgo-customer-${const Uuid().v4()}';
+    await secure.setString(authDeviceNameKey, deviceName);
+    return deviceName;
+  }
 
   Future<void> saveCredentials(String email, String password) async {
     await secure.setString(savedEmailKey, email);

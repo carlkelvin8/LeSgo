@@ -56,11 +56,14 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               child: Row(
                 children: [
-                  const AuthHeader(title: 'Order History'),
+                  const Expanded(child: AuthHeader(title: 'Order History')),
                 ],
               ),
             ),
-            Container(height: 1, color: AppColors.surface(context, Colors.grey[300]!)),
+            Container(
+              height: 1,
+              color: AppColors.surface(context, Colors.grey[300]!),
+            ),
             Container(
               color: AppColors.surface(context, Colors.white),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -107,7 +110,10 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                 ),
               ),
             ),
-            Container(height: 1, color: AppColors.surface(context, Colors.grey[200]!)),
+            Container(
+              height: 1,
+              color: AppColors.surface(context, Colors.grey[200]!),
+            ),
             Expanded(
               child: orderState.isLoading && orderState.orders.isEmpty
                   ? const Center(
@@ -134,15 +140,23 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                           Icon(
                             Icons.receipt_long_outlined,
                             size: 64,
-                            color: AppColors.foreground(context, Colors.grey[400]!),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[400]!,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No ${orderState.selectedFilter} orders',
+                            orderState.selectedFilter == 'all'
+                                ? 'No orders yet'
+                                : 'No ${orderState.selectedFilter} orders',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 16,
-                              color: AppColors.foreground(context, Colors.grey[600]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -151,7 +165,10 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 13,
-                              color: AppColors.foreground(context, Colors.grey[400]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[400]!,
+                              ),
                             ),
                           ),
                         ],
@@ -234,10 +251,14 @@ class _FilterChip extends StatelessWidget {
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Colors.grey[100]!),
+          color: isSelected
+              ? AppColors.accent(context, Color(0xFF5F2D82))
+              : AppColors.surface(context, Colors.grey[100]!),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.border(context, Colors.grey[300]!),
+            color: isSelected
+                ? AppColors.accent(context, Color(0xFF5F2D82))
+                : AppColors.border(context, Colors.grey[300]!),
           ),
         ),
         child: Text(
@@ -246,7 +267,9 @@ class _FilterChip extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected ? Colors.white : AppColors.foreground(context, Colors.grey[700]!),
+            color: isSelected
+                ? Colors.white
+                : AppColors.foreground(context, Colors.grey[700]!),
           ),
         ),
       ),

@@ -420,6 +420,9 @@ class OrderRemoteDataSource {
     try {
       final response = await dio.post(ApiConstants.orderReorder(orderId));
       return OrderResponseDto.fromJson(response.data);
+    } on DioException {
+      // Keep the DioException so ApiErrorMapper can show the server's message.
+      rethrow;
     } catch (e) {
       throw Exception('Failed to reorder: $e');
     }

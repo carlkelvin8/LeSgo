@@ -22,98 +22,107 @@ class ReferralDashboardScreen extends ConsumerWidget {
         title: const Text('Referral rewards'),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
+        titleTextStyle: const TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
       ),
       body: state.isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
             )
           : state.error != null &&
-                  state.referralCode.isEmpty &&
-                  state.invitesSent == 0
-              ? RetryWidget(
-                  message: state.error!,
-                  onRetry: () =>
-                      ref.read(referralDashboardProvider.notifier).loadDashboard(),
-                )
-              : RefreshIndicator(
-                  color: AppColors.accent(context, Color(0xFF5F2D82)),
-                  onRefresh: () =>
-                      ref.read(referralDashboardProvider.notifier).loadDashboard(),
-                  child: ListView(
-                    padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
-                    children: [
-                      if (state.error != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(
-                            state.error!,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 12),
-                              color: Colors.orange[800],
-                            ),
-                          ),
-                        ),
-                      _StatGrid(state: state),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-                      _ReferralCodeCard(code: state.referralCode),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                      FilledButton.icon(
-                        onPressed: () => InviteFriendsSheet.show(
-                          context,
-                          referralCode: state.referralCode,
-                        ),
-                        icon: const Icon(Icons.share),
-                        label: const Text('Invite more friends'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF5F2D82),
-                          minimumSize: const Size.fromHeight(48),
-                        ),
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                      Text(
-                        'Recent rewards',
+                state.referralCode.isEmpty &&
+                state.invitesSent == 0
+          ? RetryWidget(
+              message: state.error!,
+              onRetry: () =>
+                  ref.read(referralDashboardProvider.notifier).loadDashboard(),
+            )
+          : RefreshIndicator(
+              color: AppColors.accent(context, Color(0xFF5F2D82)),
+              onRefresh: () =>
+                  ref.read(referralDashboardProvider.notifier).loadDashboard(),
+              child: ListView(
+                padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
+                children: [
+                  if (state.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        state.error!,
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 18),
-                          fontWeight: FontWeight.w700,
+                          fontSize: ResponsiveUtils.fontSize(context, 12),
+                          color: Colors.orange[800],
                         ),
                       ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                      if (state.recentRewards.isEmpty)
-                        Text(
-                          'No referral rewards yet. Share your code to start earning.',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            color: AppColors.foreground(context, Colors.grey[600]!),
-                          ),
-                        )
-                      else
-                        ...state.recentRewards.map(
-                          (reward) => Card(
-                            child: ListTile(
-                              title: Text(reward.title),
-                              subtitle: Text(
-                                '${reward.status} • ${reward.points} pts',
-                              ),
-                              trailing: reward.date != null
-                                  ? Text(
-                                      reward.date!,
-                                      style: TextStyle(
-                                        fontSize: ResponsiveUtils.fontSize(
-                                          context,
-                                          11,
-                                        ),
-                                        color: AppColors.foreground(context, Colors.grey[600]!),
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
+                  _StatGrid(state: state),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+                  _ReferralCodeCard(code: state.referralCode),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                  FilledButton.icon(
+                    onPressed: () => InviteFriendsSheet.show(
+                      context,
+                      referralCode: state.referralCode,
+                    ),
+                    icon: const Icon(Icons.share),
+                    label: const Text('Invite more friends'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF5F2D82),
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                   ),
-                ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+                  Text(
+                    'Recent rewards',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 18),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                  if (state.recentRewards.isEmpty)
+                    Text(
+                      'No referral rewards yet. Share your code to start earning.',
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        color: AppColors.foreground(context, Colors.grey[600]!),
+                      ),
+                    )
+                  else
+                    ...state.recentRewards.map(
+                      (reward) => Card(
+                        child: ListTile(
+                          title: Text(reward.title),
+                          subtitle: Text(
+                            '${reward.status} • ${reward.points} pts',
+                          ),
+                          trailing: reward.date != null
+                              ? Text(
+                                  reward.date!,
+                                  style: TextStyle(
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      11,
+                                    ),
+                                    color: AppColors.foreground(
+                                      context,
+                                      Colors.grey[600]!,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
     );
   }
 }
@@ -156,10 +165,7 @@ class _StatTile extends StatelessWidget {
         color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8),
         ],
       ),
       child: Column(

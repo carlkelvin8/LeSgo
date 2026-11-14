@@ -31,6 +31,10 @@ class CreateOrderRequestDto {
   final double? discountAmount;
   @JsonKey(name: 'scheduled_delivery_time')
   final String? scheduledDeliveryTime;
+  @JsonKey(name: 'item_description', includeIfNull: false)
+  final String? itemDescription;
+  @JsonKey(name: 'estimated_weight_kg', includeIfNull: false)
+  final double? estimatedWeightKg;
 
   CreateOrderRequestDto({
     required this.serviceId,
@@ -48,6 +52,8 @@ class CreateOrderRequestDto {
     this.voucherCode,
     this.discountAmount,
     this.scheduledDeliveryTime,
+    this.itemDescription,
+    this.estimatedWeightKg,
   });
 
   factory CreateOrderRequestDto.fromJson(Map<String, dynamic> json) =>

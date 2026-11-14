@@ -107,6 +107,61 @@ class LiveTrackingState {
       orderStatus != 'failed';
 }
 
+/// Reads the pickup/dropoff coordinates of a tracking payload. The API nests
+/// them as `pickup: {latitude, longitude}`; flat `pickup_lat` style keys are
+/// also accepted. Missing values fall back to the default location (and the
+/// dropoff to the pickup).
+@visibleForTesting
+({LatLng pickup, LatLng dropoff}) parseTrackingLocations(
+  Map<String, dynamic> data,
+) {
+  double? read(List<dynamic> candidates) {
+    for (final c in candidates) {
+      final v = double.tryParse(c?.toString() ?? '');
+      if (v != null) return v;
+    }
+    return null;
+  }
+
+  final pickupMap = data['pickup'] is Map ? data['pickup'] as Map : const {};
+  final dropoffMap = data['dropoff'] is Map ? data['dropoff'] as Map : const {};
+
+  final pLat =
+      read([
+        data['pickup_lat'],
+        data['pickup_latitude'],
+        pickupMap['latitude'],
+        pickupMap['lat'],
+      ]) ??
+      BookingGeoUtils.defaultLat;
+  final pLng =
+      read([
+        data['pickup_lng'],
+        data['pickup_longitude'],
+        pickupMap['longitude'],
+        pickupMap['lng'],
+      ]) ??
+      BookingGeoUtils.defaultLng;
+  final dLat =
+      read([
+        data['dropoff_lat'],
+        data['dropoff_latitude'],
+        dropoffMap['latitude'],
+        dropoffMap['lat'],
+      ]) ??
+      pLat;
+  final dLng =
+      read([
+        data['dropoff_lng'],
+        data['dropoff_longitude'],
+        dropoffMap['longitude'],
+        dropoffMap['lng'],
+      ]) ??
+      pLng;
+
+  return (pickup: LatLng(pLat, pLng), dropoff: LatLng(dLat, dLng));
+}
+
 class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
   Timer? _etaTimer;
   final int orderId;
@@ -360,34 +415,11 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
             response['data']['data'] ??
             response['data']; // Handle nested data if present
 
-        // Extract real locations with fallback to mock data
-        final double pLat =
-            double.tryParse(trackingData['pickup_lat']?.toString() ?? '') ??
-            double.tryParse(
-              trackingData['pickup_latitude']?.toString() ?? '',
-            ) ??
-            BookingGeoUtils.defaultLat;
-        final double pLng =
-            double.tryParse(trackingData['pickup_lng']?.toString() ?? '') ??
-            double.tryParse(
-              trackingData['pickup_longitude']?.toString() ?? '',
-            ) ??
-            BookingGeoUtils.defaultLng;
-        final double dLat =
-            double.tryParse(trackingData['dropoff_lat']?.toString() ?? '') ??
-            double.tryParse(
-              trackingData['dropoff_latitude']?.toString() ?? '',
-            ) ??
-            pLat;
-        final double dLng =
-            double.tryParse(trackingData['dropoff_lng']?.toString() ?? '') ??
-            double.tryParse(
-              trackingData['dropoff_longitude']?.toString() ?? '',
-            ) ??
-            pLng;
-
-        final pickupLoc = LatLng(pLat, pLng);
-        final dropoffLoc = LatLng(dLat, dLng);
+        final locations = parseTrackingLocations(
+          Map<String, dynamic>.from(trackingData as Map),
+        );
+        final pickupLoc = locations.pickup;
+        final dropoffLoc = locations.dropoff;
 
         final driverInfo = DriverInfo.fromDriverProfileMap(
           trackingData['driver_profile'] is Map
@@ -402,6 +434,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
           driverInfo: driverInfo,
           isLoading: false,
         );
+        // Show pickup/dropoff even before a driver location is available.
+        _updateMarkers();
 
         // Load driver location and route
         await loadDriverLocation();

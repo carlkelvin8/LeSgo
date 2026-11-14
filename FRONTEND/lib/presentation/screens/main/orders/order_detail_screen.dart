@@ -1,3 +1,4 @@
+import '../../../../core/utils/order_status_mapper.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/map_styles.dart';
+import '../../../provider/main/orders/active_orders_provider.dart';
 import '../../../provider/main/orders/order_history_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/orders/cancel_order_dialog.dart';
@@ -169,6 +171,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         setState(() => _isCancelling = false);
 
         if (success) {
+          // The home "Track your order" banner must drop the cancelled order.
+          ref.read(activeOrdersProvider.notifier).loadActiveOrders();
+          // Refresh from the server: the screen otherwise keeps showing the
+          // previously fetched (pre-cancel) status and buttons.
+          await _loadOrderDetails();
+          if (!mounted) return;
           SnackBarUtils.showSuccess(context, 'Order cancelled successfully');
         } else {
           final error = ref.read(orderHistoryProvider).error;
@@ -179,6 +187,27 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   }
 
   Future<void> _handleReorder() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reorder?'),
+        content: const Text(
+          'This will place a new order with the same items and addresses.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Place order'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
     setState(() => _isReordering = true);
 
     final success = await ref
@@ -189,10 +218,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       setState(() => _isReordering = false);
 
       if (success) {
+        ref.read(activeOrdersProvider.notifier).loadActiveOrders();
         SnackBarUtils.showSuccess(context, 'Order placed successfully!');
         Navigator.pop(context);
       } else {
-        SnackBarUtils.showError(context, 'Failed to reorder');
+        final error = ref.read(orderHistoryProvider).error;
+        SnackBarUtils.showError(context, error ?? 'Failed to reorder');
       }
     }
   }
@@ -219,7 +250,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 color: AppColors.surface(context, Colors.white),
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                 child: Row(
-                  children: [const AuthHeader(title: 'Order Details')],
+                  children: [
+                    const Expanded(child: AuthHeader(title: 'Order Details')),
+                  ],
                 ),
               ),
               Expanded(
@@ -264,7 +297,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             Container(
               color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: Row(children: [const AuthHeader(title: 'Order Details')]),
+              child: Row(
+                children: [
+                  const Expanded(child: AuthHeader(title: 'Order Details')),
+                ],
+              ),
             ),
 
             Container(
@@ -461,7 +498,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   Widget _buildOrderInfo(OrderDto order) {
     final createdAt = DateTime.tryParse(
       order.createdAt ?? order.updatedAt ?? '',
-    );
+    )?.toLocal();
     final formattedDate = createdAt != null
         ? DateFormat('MMMM dd, yyyy • hh:mm a').format(createdAt)
         : 'Date unavailable';
@@ -775,7 +812,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       case 'failed':
         return 'Failed';
       default:
-        return status.toUpperCase();
+        // Never show a raw enum such as READY_FOR_PICKUP.
+        return OrderStatusMapper.toDisplayLabel(status);
     }
   }
 

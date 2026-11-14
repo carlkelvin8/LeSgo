@@ -85,10 +85,7 @@ class _OrderDigitalPaymentScreenState
 
     final invoice = await ref
         .read(paymentGatewayProvider.notifier)
-        .checkInvoiceStatus(
-          invoiceId: widget.invoiceId,
-          context: context,
-        );
+        .checkInvoiceStatus(invoiceId: widget.invoiceId, context: context);
 
     if (!mounted) return;
     setState(() => _isConfirming = false);
@@ -127,6 +124,12 @@ class _OrderDigitalPaymentScreenState
         ),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
+        titleTextStyle: const TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
       ),
       body: Column(
         children: [

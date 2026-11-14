@@ -21,6 +21,7 @@ class UserRepositoryImpl implements UserRepository {
     final requestDto = LoginRequestDto(
       email: entity.email,
       password: entity.password,
+      deviceName: await localStorageService.getOrCreateAuthDeviceName(),
       twoFactorCode: entity.twoFactorCode,
     );
 

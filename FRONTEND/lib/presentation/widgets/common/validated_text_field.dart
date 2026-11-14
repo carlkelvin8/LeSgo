@@ -22,6 +22,8 @@ class ValidatedTextField extends StatefulWidget {
   final Function(String)? onChanged;
   final List<TextInputFormatter>? inputFormatters;
   final TextCapitalization textCapitalization;
+  final bool autocorrect;
+  final bool enableSuggestions;
   final bool showLabel;
   final bool required;
 
@@ -44,6 +46,8 @@ class ValidatedTextField extends StatefulWidget {
     this.onChanged,
     this.inputFormatters,
     this.textCapitalization = TextCapitalization.none,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
     this.showLabel = true,
     this.required = false,
   });
@@ -61,7 +65,7 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
   @override
   void initState() {
     super.initState();
-    
+
     // Add listener for real-time validation
     if (widget.realTimeValidation) {
       widget.controller.addListener(_validateRealTime);
@@ -119,7 +123,7 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
             children: [
               Text(
                 widget.label,
-                style:  TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppColors.foreground(context, Colors.black87),
@@ -149,6 +153,8 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
           focusNode: _focusNode,
           obscureText: widget.obscureText,
           keyboardType: widget.keyboardType,
+          autocorrect: widget.autocorrect,
+          enableSuggestions: widget.enableSuggestions,
           maxLength: widget.maxLength,
           maxLines: widget.maxLines,
           enabled: widget.enabled,
@@ -156,16 +162,21 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
           onTap: widget.onTap,
           inputFormatters: widget.inputFormatters,
           textCapitalization: widget.textCapitalization,
-          style: const TextStyle(
-            fontSize: 14,
-            fontFamily: 'TT Fors',
-          ),
+          autovalidateMode: widget.realTimeValidation
+              ? AutovalidateMode.onUserInteraction
+              : AutovalidateMode.disabled,
+          style: const TextStyle(fontSize: 14, fontFamily: 'TT Fors'),
           onChanged: (value) {
             // Mark as interacted on first change
             if (!_hasInteracted) {
-              setState(() => _hasInteracted = true);
+              setState(() {
+                _hasInteracted = true;
+                _errorText = widget.realTimeValidation
+                    ? widget.validator?.call(value)
+                    : null;
+              });
             }
-            
+
             // Call external onChanged if provided
             widget.onChanged?.call(value);
           },
@@ -177,17 +188,14 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
               fontFamily: 'TT Fors',
             ),
             errorText: _errorText,
-            errorStyle: const TextStyle(
-              fontSize: 12,
-              fontFamily: 'TT Fors',
-            ),
+            errorStyle: const TextStyle(fontSize: 12, fontFamily: 'TT Fors'),
             errorMaxLines: 2,
             suffixIcon: widget.suffixIcon,
             prefixIcon: widget.prefixIcon,
-            
+
             // Counter text (for maxLength)
             counterText: widget.maxLength != null ? '' : null,
-            
+
             // Border styling
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -198,10 +206,7 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                color: _getBorderColor(),
-                width: 1,
-              ),
+              borderSide: BorderSide(color: _getBorderColor(), width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -212,17 +217,11 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 1.5,
-              ),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 2,
-              ),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -231,13 +230,15 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
                 width: 1,
               ),
             ),
-            
+
             // Fill color
             filled: true,
             fillColor: widget.enabled
-                ? (_isFocused ? AppColors.surface(context, Colors.white) : AppColors.surface(context, Colors.grey.shade50))
+                ? (_isFocused
+                      ? AppColors.surface(context, Colors.white)
+                      : AppColors.surface(context, Colors.grey.shade50))
                 : AppColors.surface(context, Colors.grey.shade100),
-            
+
             // Padding
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -255,11 +256,7 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
           const SizedBox(height: 6),
           Row(
             children: [
-              Icon(
-                Icons.check_circle,
-                size: 14,
-                color: Colors.green.shade600,
-              ),
+              Icon(Icons.check_circle, size: 14, color: Colors.green.shade600),
               const SizedBox(width: 4),
               Text(
                 'Looks good!',

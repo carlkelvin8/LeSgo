@@ -76,6 +76,12 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () =>
                     AppRouter.push(context, MainRoutes.deactivateAccount),
               ),
+              _SettingsItem(
+                icon: Icons.delete_forever_outlined,
+                title: tr(context, 'delete_account'),
+                subtitle: 'Permanently remove your data from LeSgo',
+                onTap: () => AppRouter.push(context, MainRoutes.deleteAccount),
+              ),
             ],
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -84,7 +90,7 @@ class SettingsScreen extends ConsumerWidget {
             items: [
               _SettingsItem(
                 icon: Icons.notifications_outlined,
-                title: 'Notification center',
+                title: tr(context, 'Notification center'),
                 subtitle: 'View order updates and offers',
                 onTap: () => AppRouter.push(context, MainRoutes.notifications),
               ),
@@ -266,7 +272,7 @@ class _SettingsItem extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          subtitle,
+          tr(context, subtitle),
           style: TextStyle(
             fontSize: ResponsiveUtils.fontSize(context, 13),
             color: AppColors.foreground(context, Colors.grey[600]!),

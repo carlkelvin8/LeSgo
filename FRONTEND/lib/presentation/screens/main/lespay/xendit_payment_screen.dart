@@ -28,8 +28,10 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('Payment checkout URL: ${widget.checkout.invoiceUrl} '
-        '(provider: ${widget.checkout.provider})');
+    debugPrint(
+      'Payment checkout URL: ${widget.checkout.invoiceUrl} '
+      '(provider: ${widget.checkout.provider})',
+    );
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -96,7 +98,10 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
           builder: (ctx) => AlertDialog(
             title: const Text(
               'Payment successful',
-              style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontWeight: FontWeight.w700,
+              ),
             ),
             content: const Text(
               'Download your LesPay receipt as PDF?',
@@ -173,7 +178,9 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: bold ? FontWeight.bold : FontWeight.w600,
-              color: bold ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
+              color: bold
+                  ? AppColors.accent(context, Color(0xFF5F2D82))
+                  : AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],
@@ -197,6 +204,12 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
         ),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
+        titleTextStyle: const TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
       ),
       body: Column(
         children: [
@@ -258,9 +271,9 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   OutlinedButton(
-                      onPressed: _openInBrowser,
-                      child: const Text('Open in browser'),
-                    ),
+                    onPressed: _openInBrowser,
+                    child: const Text('Open in browser'),
+                  ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                   ElevatedButton(
                     onPressed: lespayState.isProcessingTopUp || _isConfirming

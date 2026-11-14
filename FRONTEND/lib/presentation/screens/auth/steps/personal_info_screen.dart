@@ -70,13 +70,18 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                         child: Column(
                           children: [
                             Center(
-                              child: SvgPicture.asset(
-                                'assets/images/register/7.svg',
-                                height: ResponsiveUtils.imageHeight(
-                                  context,
-                                  250,
+                              // The artwork has a white backdrop; round it so it
+                              // looks intentional on a dark background.
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: SvgPicture.asset(
+                                  'assets/images/register/7.svg',
+                                  height: ResponsiveUtils.imageHeight(
+                                    context,
+                                    250,
+                                  ),
+                                  fit: BoxFit.contain,
                                 ),
-                                fit: BoxFit.contain,
                               ),
                             ),
                             SizedBox(
@@ -118,7 +123,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                                         context,
                                         12,
                                       ),
-                                      color: AppColors.foreground(context, Colors.grey[500]!),
+                                      color: AppColors.foreground(
+                                        context,
+                                        Colors.grey[500]!,
+                                      ),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -142,7 +150,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               textCapitalization: TextCapitalization.words,
                               prefixIcon: Icon(
                                 Icons.person_outline,
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                               required: true,
                             ),
@@ -162,7 +173,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               textCapitalization: TextCapitalization.words,
                               prefixIcon: Icon(
                                 Icons.person_outline,
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                               required: true,
                             ),
@@ -188,9 +202,14 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               controller: _controllers.emailController,
                               validator: Validators.email,
                               keyboardType: TextInputType.emailAddress,
+                              autocorrect: false,
+                              enableSuggestions: false,
                               prefixIcon: Icon(
                                 Icons.email_outlined,
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                               required: true,
                             ),
@@ -206,7 +225,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               keyboardType: TextInputType.phone,
                               prefixIcon: Icon(
                                 Icons.phone_outlined,
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                               required: true,
                             ),
@@ -248,7 +270,10 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                               validator: RegisterValidator.referralCode,
                               prefixIcon: Icon(
                                 Icons.card_giftcard_outlined,
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                               required: false,
                             ),

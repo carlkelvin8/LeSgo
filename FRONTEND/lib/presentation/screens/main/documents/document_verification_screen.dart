@@ -32,7 +32,7 @@ class DocumentVerificationScreen extends ConsumerWidget {
                   horizontal: ResponsiveUtils.spacing(context, 16),
                 ),
                 child: Text(
-                  'Status: ${state.status!.overallStatus} '
+                  'Status: ${_humanize(state.status!.overallStatus)} '
                   '(${state.status!.verifiedCount}/${state.status!.totalCount} verified)',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
@@ -44,60 +44,68 @@ class DocumentVerificationScreen extends ConsumerWidget {
             Expanded(
               child: state.isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF5F2D82),
+                      ),
                     )
                   : state.error != null && state.documents.isEmpty
-                      ? RetryWidget(
-                          message: state.error!,
-                          onRetry: notifier.loadAll,
-                        )
-                      : RefreshIndicator(
-                          color: AppColors.accent(context, Color(0xFF5F2D82)),
-                          onRefresh: notifier.loadAll,
-                          child: ListView(
-                            padding: EdgeInsets.all(
-                              ResponsiveUtils.spacing(context, 16),
-                            ),
-                            children: [
-                              ...state.documents.map(
-                                (doc) => ListTile(
-                                  tileColor: AppColors.surface(context, Colors.grey.shade50),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  title: Text(
-                                    doc.documentType.replaceAll('_', ' '),
-                                    style: const TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    '${doc.status} · ${doc.documentNumber}',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      color: AppColors.foreground(context, Colors.grey.shade600),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: ResponsiveUtils.spacing(context, 16),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: state.isSubmitting
-                                    ? null
-                                    : () => _showSubmitSheet(context, ref),
-                                icon: const Icon(Icons.upload_file),
-                                label: Text(
-                                  state.isSubmitting
-                                      ? 'Submitting...'
-                                      : 'Submit Document',
-                                ),
-                              ),
-                            ],
-                          ),
+                  ? RetryWidget(
+                      message: state.error!,
+                      onRetry: notifier.loadAll,
+                    )
+                  : RefreshIndicator(
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
+                      onRefresh: notifier.loadAll,
+                      child: ListView(
+                        padding: EdgeInsets.all(
+                          ResponsiveUtils.spacing(context, 16),
                         ),
+                        children: [
+                          ...state.documents.map(
+                            (doc) => ListTile(
+                              tileColor: AppColors.surface(
+                                context,
+                                Colors.grey.shade50,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              title: Text(
+                                doc.documentType.replaceAll('_', ' '),
+                                style: const TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${doc.status} · ${doc.documentNumber}',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 16),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: state.isSubmitting
+                                ? null
+                                : () => _showSubmitSheet(context, ref),
+                            icon: const Icon(Icons.upload_file),
+                            label: Text(
+                              state.isSubmitting
+                                  ? 'Submitting...'
+                                  : 'Submit Document',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
@@ -237,10 +245,7 @@ class _DocumentSubmitSheetState extends ConsumerState<_DocumentSubmitSheet> {
             initialValue: _selectedType,
             items: widget.types
                 .map(
-                  (t) => DropdownMenuItem(
-                    value: t.type,
-                    child: Text(t.label),
-                  ),
+                  (t) => DropdownMenuItem(value: t.type, child: Text(t.label)),
                 )
                 .toList(),
             onChanged: _submitting
@@ -292,4 +297,11 @@ class _DocumentSubmitSheetState extends ConsumerState<_DocumentSubmitSheet> {
       ),
     );
   }
+}
+
+/// `not_started` -> `Not started`, so raw API enums are never shown.
+String _humanize(String raw) {
+  final words = raw.replaceAll('_', ' ').trim();
+  if (words.isEmpty) return words;
+  return words[0].toUpperCase() + words.substring(1);
 }

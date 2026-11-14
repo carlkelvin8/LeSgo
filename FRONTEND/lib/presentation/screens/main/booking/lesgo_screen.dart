@@ -88,6 +88,8 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
           onCollapseSheet: _collapseSheet,
           itemLocationController: _itemLocationController,
           itemWeightController: _itemWeightController,
+          onItemLocationChanged: notifier.updateItemDescription,
+          onItemWeightChanged: notifier.updateItemWeight,
           pickupNotesController: _pickupNotesController,
           dropoffNotesController: _dropoffNotesController,
         ),

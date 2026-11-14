@@ -30,6 +30,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _amountController = TextEditingController();
   static const _quickAmounts = [100.0, 200.0, 500.0, 1000.0];
+  String? _submitError;
 
   double get _parsedAmount =>
       double.tryParse(_amountController.text.trim()) ?? 0;
@@ -45,18 +46,18 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
 
     final amount = double.parse(_amountController.text.trim());
     final rootNav = Navigator.of(context, rootNavigator: true);
+    setState(() => _submitError = null);
 
-    final checkout =
-        await ref.read(lespayProvider.notifier).startTopUp(amount);
+    final checkout = await ref.read(lespayProvider.notifier).startTopUp(amount);
 
     if (!mounted) return;
 
     if (checkout == null) {
+      // A snackbar would sit behind this dialog, so show the failure inside it.
       final error = ref.read(lespayProvider).error;
-      SnackBarUtils.showError(
-        context,
-        error ?? 'Could not start top-up. Please try again.',
-      );
+      setState(() {
+        _submitError = error ?? 'Could not start top-up. Please try again.';
+      });
       return;
     }
 
@@ -105,7 +106,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
             Text(
               widget.purpose == TopUpPurpose.qrPay
                   ? 'A 3% top-up fee applies. Pay the total below with QR Ph — '
-                      'scan the PayMongo QR code using GCash, Maya, or your banking app.'
+                        'scan the PayMongo QR code using GCash, Maya, or your banking app.'
                   : 'A 3% top-up fee applies. You pay the total below using your credit or debit card.',
               style: TextStyle(
                 fontFamily: 'TT Fors',
@@ -116,8 +117,10 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             TextFormField(
               controller: _amountController,
-              onChanged: (_) => setState(() {}),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => setState(() => _submitError = null),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Amount to add to wallet',
                 prefixText: '₱ ',
@@ -128,6 +131,18 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             TopUpFeeSummary(walletAmount: _parsedAmount),
+            if (_submitError != null) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+              Text(
+                _submitError!,
+                key: const Key('top_up_error'),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  color: Colors.red.shade400,
+                ),
+              ),
+            ],
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             Wrap(
               spacing: 8,
@@ -140,6 +155,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
                       ? null
                       : (_) {
                           setState(() {
+                            _submitError = null;
                             _amountController.text = value.toStringAsFixed(0);
                           });
                         },

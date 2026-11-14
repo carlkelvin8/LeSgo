@@ -20,6 +20,10 @@ import '../../../../core/utils/booking_checkout_payment.dart';
 import '../../../../core/utils/network_guard.dart';
 import '../../../../core/utils/active_order_limit_guard.dart';
 
+/// Null for blank text so `a ?? fallback` falls through to the fallback.
+String? _nonEmpty(String? value) =>
+    (value == null || value.trim().isEmpty) ? null : value;
+
 class LesgoState {
   final bool isFullscreen;
   final String paymentMethod;
@@ -447,6 +451,14 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     ]);
   }
 
+  void updateItemDescription(String value) {
+    state = state.copyWith(itemDescription: value);
+  }
+
+  void updateItemWeight(String value) {
+    state = state.copyWith(itemWeight: value);
+  }
+
   void updatePaymentMethod(String method) {
     state = state.copyWith(paymentMethod: method);
   }
@@ -736,7 +748,7 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
             estimatedDistanceM: estimatedDistanceM,
             pickup: OrderAddressDto(
               address:
-                  updatedLocationState.pickupAddress?.toString() ??
+                  _nonEmpty(updatedLocationState.pickupAddress?.toString()) ??
                   state.selectedPickupAddress?.addressLine1 ??
                   'Pickup Location',
               lat: pickup.latitude,
@@ -752,7 +764,9 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
             ),
             dropoff: OrderAddressDto(
               address:
-                  updatedLocationState.destinationAddress?.toString() ??
+                  _nonEmpty(
+                    updatedLocationState.destinationAddress?.toString(),
+                  ) ??
                   state.selectedDropoffAddress?.addressLine1 ??
                   'Destination',
               lat: dropoff.latitude,
@@ -767,6 +781,10 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
                   : (user?.phone ?? '+639123456789'),
             ),
             notes: 'LesGo delivery booking',
+            itemDescription: state.itemDescription.trim().isEmpty
+                ? null
+                : state.itemDescription.trim(),
+            estimatedWeightKg: double.tryParse(state.itemWeight.trim()),
             paymentMethod: state.paymentMethod,
             voucherCode: state.voucherCode,
             discountAmount: state.discount > 0 ? state.discount : null,

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
 /// Initializes Firebase Crashlytics and captures uncaught Flutter/Dart errors.
@@ -11,10 +12,12 @@ class CrashReporterService {
 
   static Future<void> initialize() async {
     if (_initialized || kIsWeb) return;
+    if (Firebase.apps.isEmpty) return;
 
     try {
-      await FirebaseCrashlytics.instance
-          .setCrashlyticsCollectionEnabled(!kDebugMode);
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+        !kDebugMode,
+      );
 
       FlutterError.onError = (details) {
         FlutterError.presentError(details);

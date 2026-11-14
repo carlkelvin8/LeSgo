@@ -81,8 +81,10 @@ void main() {
     test('maps client rate limit exception', () {
       final msg = ApiErrorMapper.message(const ClientRateLimitException(8));
       expect(msg, contains('8 second'));
-      expect(ApiErrorMapper.isRateLimited(const ClientRateLimitException(1)),
-          isTrue);
+      expect(
+        ApiErrorMapper.isRateLimited(const ClientRateLimitException(1)),
+        isTrue,
+      );
     });
 
     test('sanitizes raw technical strings', () {
@@ -91,6 +93,39 @@ void main() {
       );
       expect(msg, isNot(contains('DioException')));
       expect(msg, contains('Something went wrong'));
+    });
+
+    group('with a chosen app language', () {
+      tearDown(() => ApiErrorMapper.preferredLanguage = null);
+
+      DioException timeout() => DioException(
+        requestOptions: RequestOptions(path: '/v1/orders'),
+        type: DioExceptionType.connectionTimeout,
+      );
+
+      test('shows only English when the app language is English', () {
+        ApiErrorMapper.preferredLanguage = 'en';
+        final msg = ApiErrorMapper.message(timeout());
+        expect(msg, contains('timed out'));
+        expect(msg, isNot(contains('Nag-timeout')));
+      });
+
+      test('shows only Filipino when the app language is Filipino', () {
+        ApiErrorMapper.preferredLanguage = 'tl';
+        final msg = ApiErrorMapper.message(timeout());
+        expect(msg, contains('Nag-timeout'));
+        expect(msg, isNot(contains('timed out')));
+      });
+
+      test('custom fallbacks follow the chosen language too', () {
+        ApiErrorMapper.preferredLanguage = 'tl';
+        final msg = ApiErrorMapper.message(
+          null,
+          fallbackEn: 'English only',
+          fallbackTl: 'Tagalog lang',
+        );
+        expect(msg, 'Tagalog lang');
+      });
     });
   });
 }

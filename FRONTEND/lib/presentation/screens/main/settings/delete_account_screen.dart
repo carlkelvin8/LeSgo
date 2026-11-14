@@ -81,7 +81,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       if (password.isEmpty) {
         // Social-login accounts have no password; re-verify with the provider.
         final useApple =
-            AppleAuthService.isSupported && await AppleAuthHelper.promptProvider(context) == true;
+            AppleAuthService.isSupported &&
+            await AppleAuthHelper.promptProvider(context) == true;
         if (!mounted) return;
         if (useApple) {
           appleCredential =
@@ -135,9 +136,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.grey[50]!),
-      appBar: AppBar(
-        title: const Text('Delete Account'),
-      ),
+      appBar: AppBar(title: const Text('Delete Account')),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
         child: Form(
@@ -159,7 +158,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
-                    color: Colors.red[900],
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.red[200]
+                        : Colors.red[900],
                     height: 1.5,
                   ),
                 ),
@@ -176,6 +177,15 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   fillColor: AppColors.surface(context, Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -204,6 +214,15 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   fillColor: AppColors.surface(context, Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
                   ),
                 ),
               ),
@@ -217,6 +236,15 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   fillColor: AppColors.surface(context, Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
                   ),
                 ),
               ),
@@ -241,6 +269,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 onPressed: _isSubmitting ? null : _deleteAccount,
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: _isSubmitting

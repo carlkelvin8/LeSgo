@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/di/injection.dart';
+import '../../../core/utils/api_error_mapper.dart';
+import '../../../core/utils/phone_utils.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../data/data_source/auth_remote_datasource.dart';
@@ -41,19 +43,9 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
   bool _otpSent = false;
   bool _isLoading = false;
 
-  String _normalizePhone(String raw) {
-    final trimmed = raw.trim();
-    if (trimmed.startsWith('+')) return trimmed.replaceAll(' ', '');
+  String? _error;
 
-    final digits = trimmed.replaceAll(RegExp(r'\D'), '');
-    if (digits.startsWith('63') && digits.length >= 12) {
-      return '+$digits';
-    }
-    if (digits.startsWith('0') && digits.length >= 11) {
-      return '+63${digits.substring(1)}';
-    }
-    return '+63$digits';
-  }
+  String _normalizePhone(String raw) => PhoneUtils.normalizePh(raw);
 
   @override
   void dispose() {
@@ -64,12 +56,15 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
 
   Future<void> _sendOtp() async {
     final phone = _normalizePhone(_phoneController.text);
-    if (phone.length < 13) {
-      SnackBarUtils.showError(context, 'Enter a valid Philippine mobile number');
+    if (!RegExp(r'^\+63\d{10}$').hasMatch(phone)) {
+      setState(() => _error = 'Enter a valid Philippine mobile number');
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final response = await getIt<AuthRemoteDataSource>().sendOtp(phone);
       if (!mounted) return;
@@ -77,10 +72,24 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
         setState(() => _otpSent = true);
         SnackBarUtils.showSuccess(context, 'OTP sent to $phone');
       } else {
-        SnackBarUtils.showError(context, response.message);
+        setState(() {
+          final m = response.message;
+          _error = m.isEmpty
+              ? 'Could not send the verification code. Please try again.'
+              : ApiErrorMapper.message(m);
+        });
       }
     } catch (e) {
-      if (mounted) SnackBarUtils.showError(context, 'Failed to send OTP: $e');
+      if (mounted) {
+        setState(() {
+          _error = ApiErrorMapper.message(
+            e,
+            fallbackEn:
+                'Could not send the verification code. Please try again.',
+            fallbackTl: 'Hindi maipadala ang verification code. Subukan muli.',
+          );
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -91,38 +100,51 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
     final otp = _otpController.text.trim();
 
     if (!_otpSent) {
-      SnackBarUtils.showError(context, 'Send OTP first');
+      setState(() => _error = 'Send OTP first');
       return;
     }
     if (otp.length < 4) {
-      SnackBarUtils.showError(context, 'Enter the OTP code');
+      setState(() => _error = 'Enter the OTP code');
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
-      final verifyResponse =
-          await getIt<AuthRemoteDataSource>().verifyOtp(phone, otp);
+      final verifyResponse = await getIt<AuthRemoteDataSource>().verifyOtp(
+        phone,
+        otp,
+      );
       if (!verifyResponse.success || !(verifyResponse.verified ?? false)) {
         if (mounted) {
-          SnackBarUtils.showError(context, 'Invalid OTP. Please try again.');
+          setState(() => _error = 'Invalid OTP. Please try again.');
         }
         return;
       }
 
-      final updated = await ref.read(profileProvider.notifier).updateProfile(
-            phone: phone,
-          );
+      final updated = await ref
+          .read(profileProvider.notifier)
+          .updateProfile(phone: phone);
 
       if (!mounted) return;
       if (updated) {
         SnackBarUtils.showSuccess(context, 'Phone number updated');
         Navigator.pop(context);
       } else {
-        SnackBarUtils.showError(context, 'Could not update phone number');
+        setState(() => _error = 'Could not update phone number');
       }
     } catch (e) {
-      if (mounted) SnackBarUtils.showError(context, 'Verification failed: $e');
+      if (mounted) {
+        setState(() {
+          _error = ApiErrorMapper.message(
+            e,
+            fallbackEn: 'Verification failed. Please try again.',
+            fallbackTl: 'Hindi nagtagumpay ang verification. Subukan muli.',
+          );
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -131,7 +153,7 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -168,6 +190,7 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             TextField(
               controller: _phoneController,
+              readOnly: _otpSent,
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
                 labelText: 'New phone number',
@@ -186,6 +209,18 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
                   labelText: 'OTP code',
                   border: OutlineInputBorder(),
                   counterText: '',
+                ),
+              ),
+            ],
+            if (_error != null) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+              Text(
+                _error!,
+                key: const Key('change_phone_error'),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  color: Colors.red.shade400,
                 ),
               ),
             ],

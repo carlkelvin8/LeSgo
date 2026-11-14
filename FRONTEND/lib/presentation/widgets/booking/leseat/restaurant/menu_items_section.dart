@@ -32,7 +32,7 @@ class MenuItemsSection extends StatelessWidget {
                 color: AppColors.foreground(context, Colors.grey[300]!),
               ),
               const SizedBox(height: 16),
-               Text(
+              Text(
                 'No items in this category',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
@@ -52,7 +52,7 @@ class MenuItemsSection extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.62,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),

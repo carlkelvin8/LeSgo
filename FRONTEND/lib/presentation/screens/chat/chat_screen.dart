@@ -20,6 +20,12 @@ class ChatScreen extends ConsumerWidget {
         title: Text('Chat - Order #$orderId'),
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
+        titleTextStyle: const TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
       ),
       body: OrderChatWidget(
         orderId: orderId,

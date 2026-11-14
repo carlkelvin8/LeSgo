@@ -64,19 +64,31 @@ class _CustomerServiceChatScreenState
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(customerServiceChatProvider);
-    ref.listen(customerServiceChatProvider, (previous, next) => _scrollToBottom());
+    ref.listen(
+      customerServiceChatProvider,
+      (previous, next) => _scrollToBottom(),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.white),
       appBar: AppBar(
         backgroundColor: const Color(0xFF5F2D82),
         foregroundColor: Colors.white,
+        titleTextStyle: const TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
         elevation: 0,
         title: Row(
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.surface(context, Colors.white).withValues(alpha: 0.2),
+              backgroundColor: AppColors.surface(
+                context,
+                Colors.white,
+              ).withValues(alpha: 0.2),
               child: const Icon(Icons.support_agent, color: Colors.white),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 10)),
@@ -123,10 +135,7 @@ class _CustomerServiceChatScreenState
                 value: 'human',
                 child: Text('Talk to human support'),
               ),
-              PopupMenuItem(
-                value: 'clear',
-                child: Text('Clear chat'),
-              ),
+              PopupMenuItem(value: 'clear', child: Text('Clear chat')),
             ],
           ),
         ],

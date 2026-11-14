@@ -42,6 +42,14 @@ class AppDrawer extends ConsumerWidget {
               },
             ),
             DrawerMenuItem(
+              icon: Icons.history,
+              title: tr(context, 'order_history'),
+              onTap: () {
+                Navigator.pop(context);
+                AppRouter.push(context, MainRoutes.orderHistory);
+              },
+            ),
+            DrawerMenuItem(
               iconPath: 'assets/images/navbar/mission.svg',
               title: tr(context, 'missions'),
               onTap: () {
