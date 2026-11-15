@@ -8,6 +8,8 @@
 	<string>This app needs access to save and show your selfie.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to help you fill in your address.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>LeSgo uses your location to set pickup and drop-off addresses and to show your rider's live progress. We do not track you in the background.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to unlock LeSgo quickly and securely.</string>
 	<key>CFBundleDevelopmentRegion</key>
