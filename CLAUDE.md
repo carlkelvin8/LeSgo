@@ -8,7 +8,8 @@ Monorepo: `RIDERSIDE/` (Flutter, rider + merchant app, bundle `com.lesgo.rider`,
 - Deploys come from `carlkelvin8/Lesgo-API`, branch `feature/auth` (auto-deploys on Laravel Cloud, runs migrations).
 - That repo has diverged from `BACKEND/lesgo-api/`. Never copy the folder over it: clone it, apply only your
   changes as a patch, test there, then push. Use the `backend-push` skill. Push straight to `feature/auth`, no new branch.
-- About 14 tests already fail in Lesgo-API at baseline; compare before/after instead of expecting green.
+- Lesgo-API's suite is fully green (533 tests, 2026-11-15). Test it in a clone with a copied `vendor` + `composer
+  dump-autoload`, never a symlinked one (that runs the monorepo's code and fakes ~15 failures).
 - Pushing to production needs the user's explicit OK in the same turn; the harness blocks it otherwise.
 
 ## Commands

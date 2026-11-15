@@ -13,7 +13,10 @@ Production deploy. Only push when the user has said so in this turn.
 3. Fresh clone in the scratchpad: `gh repo clone carlkelvin8/Lesgo-API api -- --branch feature/auth`.
    Apply with `git apply -p3 $SCRATCH/x.patch`. If a file already contains part of your change (pushed earlier), exclude it
    with `--exclude` and copy the file by hand instead of forcing the patch.
-4. Test in the clone: symlink the monorepo `vendor`, copy `.env`, run `php artisan test`. About 14 tests fail at baseline;
-   compare the failure list before vs after (stash your change for the baseline). Remove the symlink and `.env` afterwards.
+4. Test in the clone: COPY the monorepo `vendor` (`cp -R`, ~180 MB), then `composer dump-autoload`, copy `.env`, run
+   `php artisan test`. Do NOT symlink `vendor`: Composer's autoloader resolves `App\` and `Database\` from the vendor's
+   real path, so a symlink silently runs the monorepo's code instead of the clone's (that produced a fake "~15 failing").
+   The suite is fully green at baseline (533 passed on 2026-11-15); any failure after your change is yours.
+   Delete the `vendor` copy and `.env` afterwards.
 5. Commit with the Co-Authored-By line, then `git push origin feature/auth`. No new branch.
 6. After the push: Laravel Cloud auto-deploys and runs `migrate --force`. Mention any new env vars or manual admin steps.
