@@ -112,6 +112,12 @@ return [
     // =========
     'apple' => [
         'client_id' => env('APPLE_CLIENT_ID', 'com.lesgo.app'),
+        // Every iOS bundle that signs in with Apple (comma-separated). Tokens
+        // are accepted when their audience is any of these or client_id.
+        'client_ids' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('APPLE_CLIENT_IDS', 'com.lesgo.app,com.lesgo.customer'))
+        ))),
         // Only needed to revoke Apple tokens when an account is deleted.
         // Leave unset to skip revocation (sign-in works without them).
         'team_id' => env('APPLE_TEAM_ID'),

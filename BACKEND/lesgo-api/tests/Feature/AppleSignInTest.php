@@ -92,6 +92,69 @@ class AppleSignInTest extends TestCase
         ])->assertOk()->assertJsonPath('user.id', $user->id);
     }
 
+    public function test_customer_app_bundle_is_an_accepted_audience(): void
+    {
+        $user = User::factory()->create(['email' => 'apple.user@example.com']);
+
+        $this->postJson('/api/v1/auth/apple', [
+            'id_token' => $this->appleToken(['aud' => 'com.lesgo.customer']),
+            'nonce' => self::NONCE, 'auth_mode' => 'login',
+        ])->assertOk()->assertJsonPath('user.id', $user->id);
+    }
+
+    public function test_extra_audiences_come_from_config_and_unlisted_bundles_are_rejected(): void
+    {
+        config(['services.apple.client_ids' => ['com.lesgo.rider']]);
+        $user = User::factory()->create(['email' => 'apple.user@example.com']);
+
+        $this->postJson('/api/v1/auth/apple', [
+            'id_token' => $this->appleToken(['aud' => 'com.lesgo.customer']),
+            'nonce' => self::NONCE, 'auth_mode' => 'login',
+        ])->assertUnauthorized();
+
+        Cache::flush();
+        $this->postJson('/api/v1/auth/apple', [
+            'id_token' => $this->appleToken(['aud' => 'com.lesgo.rider']),
+            'nonce' => self::NONCE, 'auth_mode' => 'login',
+        ])->assertOk()->assertJsonPath('user.id', $user->id);
+
+        Cache::flush();
+        // The primary APPLE_CLIENT_ID is always accepted.
+        $this->postJson('/api/v1/auth/apple', [
+            'id_token' => $this->appleToken(), 'nonce' => self::NONCE, 'auth_mode' => 'login',
+        ])->assertOk();
+    }
+
+    public function test_revocation_tries_each_bundle_until_apple_accepts_the_code(): void
+    {
+        $ec = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        openssl_pkey_export($ec, $ecPem);
+        config([
+            'services.apple.team_id' => 'TEAM123456',
+            'services.apple.key_id' => 'KEY1234567',
+            'services.apple.private_key' => $ecPem,
+            'services.apple.client_ids' => ['com.lesgo.app', 'com.lesgo.customer'],
+        ]);
+
+        Http::fake(function ($request) {
+            if (str_contains($request->url(), '/auth/token')) {
+                return $request['client_id'] === 'com.lesgo.customer'
+                    ? Http::response(['refresh_token' => 'rt-1'])
+                    : Http::response(['error' => 'invalid_client'], 400);
+            }
+            if (str_contains($request->url(), '/auth/revoke')) {
+                return Http::response('', 200);
+            }
+
+            return Http::response([], 404);
+        });
+
+        $this->assertTrue(app(\App\Services\AppleIdentityService::class)->revokeAuthorizationCode('code-1'));
+
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/auth/revoke')
+            && $r['client_id'] === 'com.lesgo.customer' && $r['token'] === 'rt-1');
+    }
+
     public function test_rejects_wrong_audience_issuer_nonce_signature_and_expiry(): void
     {
         $cases = [
