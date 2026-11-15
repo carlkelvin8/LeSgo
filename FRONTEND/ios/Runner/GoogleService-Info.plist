@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>937689509907-rhq516uvs4iqpj75jfh54glggjh52uth.apps.googleusercontent.com</string>
+	<string>937689509907-82ts4mo850m82ap8gl6q73vi5gu3gdqb.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.937689509907-rhq516uvs4iqpj75jfh54glggjh52uth</string>
+	<string>com.googleusercontent.apps.937689509907-82ts4mo850m82ap8gl6q73vi5gu3gdqb</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>937689509907-a1dauei2r8igjvmilpnlbohjn44vtco1.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.lesgo.app</string>
+	<string>com.lesgo.customer</string>
 	<key>PROJECT_ID</key>
 	<string>lesgo-a957c</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:937689509907:ios:aeeb640407f03bcba18fe6</string>
+	<string>1:937689509907:ios:7292906e6c5b474ca18fe6</string>
 </dict>
 </plist>

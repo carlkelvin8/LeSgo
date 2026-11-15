@@ -59,11 +59,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCeSN2E51i-aUEgmnBYsylhz0xuKpscqwI',
-    appId: '1:937689509907:ios:aeeb640407f03bcba18fe6',
+    appId: '1:937689509907:ios:7292906e6c5b474ca18fe6',
     messagingSenderId: '937689509907',
     projectId: 'lesgo-a957c',
     storageBucket: 'lesgo-a957c.firebasestorage.app',
-    iosBundleId: 'com.lesgo.app',
+    iosBundleId: 'com.lesgo.customer',
   );
 
   static bool get isConfigured =>
