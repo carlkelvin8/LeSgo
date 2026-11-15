@@ -148,9 +148,7 @@ class _CustomerServiceChatScreenState
               color: AppColors.surface(context, Color(0xFFFFF8E1)),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
               child: Text(
-                kDebugMode
-                    ? 'Add GEMINI_API_KEY to secrets.json and restart the app to enable AI replies.'
-                    : 'AI replies are temporarily unavailable. Please use "Talk to human support".',
+                'AI replies are temporarily unavailable. Please use "Talk to human support".',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),

@@ -21,6 +21,37 @@ void main() {
     expect(SslPinningService().validateCertificate(fingerprint), isTrue);
   });
 
+  test('a renewed certificate from the host CA is accepted by issuer', () {
+    // dart:io formats the DN with slashes; OpenSSL-style uses commas.
+    expect(
+      SslPinningService.isTrustedIssuer('/C=US/O=Google Trust Services/CN=WE1'),
+      isTrue,
+    );
+    expect(
+      SslPinningService.isTrustedIssuer("C=US, O=Let's Encrypt, CN=E6"),
+      isTrue,
+    );
+  });
+
+  test('other issuers and look-alike names are rejected', () {
+    expect(
+      SslPinningService.isTrustedIssuer('/C=US/O=mitmproxy/CN=mitmproxy'),
+      isFalse,
+    );
+    expect(
+      SslPinningService.isTrustedIssuer(
+        '/C=US/O=Not Google Trust Services Inc/CN=WE1',
+      ),
+      isFalse,
+    );
+    // The CA name appearing outside the organization field does not count.
+    expect(
+      SslPinningService.isTrustedIssuer('/C=US/O=Evil/CN=Google Trust Services'),
+      isFalse,
+    );
+    expect(SslPinningService.isTrustedIssuer(''), isFalse);
+  });
+
   test('unknown certificate fingerprint is rejected', () {
     const fingerprint =
         '00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00';
