@@ -290,7 +290,11 @@ class LespayNotifier extends StateNotifier<LespayState> {
     } catch (e) {
       state = state.copyWith(
         isLoadingTransactions: false,
-        transactionsError: e.toString(),
+        transactionsError: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not load transactions.',
+          fallbackTl: 'Hindi ma-load ang transactions.',
+        ),
       );
     }
   }

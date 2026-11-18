@@ -2,6 +2,7 @@ import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../domain/entities/missions/mission.dart';
 import '../../provider/missions/missions_provider.dart';
 
@@ -65,7 +66,11 @@ class _MissionCardState extends ConsumerState<MissionCard>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to claim: $e'),
+          content: Text(ApiErrorMapper.message(
+            e,
+            fallbackEn: 'Failed to claim reward.',
+            fallbackTl: 'Hindi ma-claim ang reward.',
+          )),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
         ));

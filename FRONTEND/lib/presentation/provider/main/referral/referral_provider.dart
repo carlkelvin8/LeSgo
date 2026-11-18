@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:lesgo/core/state/user_session_epoch.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/api_error_mapper.dart';
@@ -74,9 +76,7 @@ class ReferralDashboardNotifier extends StateNotifier<ReferralDashboardState> {
         invitesSent: dashboard.invitesSent,
         friendsJoined: dashboard.friendsJoined,
         pendingRewards: dashboard.pendingRewards,
-        pointsEarned: dashboard.pointsEarned > 0
-            ? dashboard.pointsEarned
-            : profile.points,
+        pointsEarned: dashboard.pointsEarned,
         recentRewards: dashboard.recentRewards,
         isLoading: false,
       );
@@ -95,5 +95,24 @@ class ReferralDashboardNotifier extends StateNotifier<ReferralDashboardState> {
 
 final referralDashboardProvider =
     StateNotifierProvider<ReferralDashboardNotifier, ReferralDashboardState>(
-  (ref) => ReferralDashboardNotifier(ref),
+  (ref) {
+    // Rebuild (and refetch) when the signed-in user changes.
+    ref.watch(userSessionEpochProvider);
+    return ReferralDashboardNotifier(ref);
+  },
 );
+
+/// Formats a raw ISO timestamp as a readable local date; falls back to the
+/// original text when it cannot be parsed.
+String formatReferralRewardDate(String raw) {
+  final parsed = DateTime.tryParse(raw);
+  if (parsed == null) return raw;
+  return DateFormat('MMM d, y').format(parsed.toLocal());
+}
+
+/// "pending" -> "Pending".
+String capitalizeReferralStatus(String status) {
+  final t = status.trim();
+  if (t.isEmpty) return t;
+  return t[0].toUpperCase() + t.substring(1).toLowerCase();
+}

@@ -128,7 +128,10 @@ class ProfileControllers {
       if (success) {
         SnackBarUtils.showSuccess(context, 'Profile updated successfully!');
       } else {
-        SnackBarUtils.showError(context, 'Failed to update profile');
+        SnackBarUtils.showError(
+          context,
+          ref.read(profileProvider).error ?? 'Failed to update profile',
+        );
       }
     }
   }
