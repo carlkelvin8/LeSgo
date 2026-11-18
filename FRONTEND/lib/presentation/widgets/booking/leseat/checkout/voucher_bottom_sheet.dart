@@ -8,10 +8,14 @@ import '../../../../../core/di/injection.dart';
 
 /// Shows a bottom sheet with available vouchers from the API.
 /// Returns the selected voucher code or null if dismissed.
+///
+/// [orderValue] is the amount the backend checks against a voucher's minimum
+/// order; vouchers above it are shown disabled with how much more to add.
 Future<String?> showVoucherBottomSheet(
   BuildContext context, {
   int? serviceId,
   String? title,
+  double? orderValue,
 }) {
   return showModalBottomSheet<String>(
     context: context,
@@ -23,6 +27,7 @@ Future<String?> showVoucherBottomSheet(
     builder: (_) => _VoucherBottomSheet(
       serviceId: serviceId,
       title: title,
+      orderValue: orderValue,
     ),
   );
 }
@@ -31,10 +36,12 @@ class _VoucherBottomSheet extends ConsumerStatefulWidget {
   const _VoucherBottomSheet({
     this.serviceId,
     this.title,
+    this.orderValue,
   });
 
   final int? serviceId;
   final String? title;
+  final double? orderValue;
 
   @override
   ConsumerState<_VoucherBottomSheet> createState() =>
@@ -228,9 +235,16 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
                                 const SizedBox(height: 12),
                             itemBuilder: (_, i) {
                               final v = _vouchers[i];
+                              final value = widget.orderValue;
+                              final shortfall = value != null && v.minOrder > value
+                                  ? v.minOrder - value
+                                  : null;
+                              final usable = v.eligible && shortfall == null;
                               return _VoucherCard(
                                 voucher: v,
-                                onTap: v.eligible
+                                usable: usable,
+                                shortfall: shortfall,
+                                onTap: usable
                                     ? () => Navigator.pop(context, v.code)
                                     : null,
                               );
@@ -247,11 +261,37 @@ class _VoucherCard extends StatelessWidget {
   final VoucherDto voucher;
   final VoidCallback? onTap;
 
-  const _VoucherCard({required this.voucher, this.onTap});
+  /// Eligible for this customer AND the order meets the minimum.
+  final bool usable;
+
+  /// How much more the order needs to reach the voucher's minimum, if short.
+  final double? shortfall;
+
+  const _VoucherCard({
+    required this.voucher,
+    required this.usable,
+    this.shortfall,
+    this.onTap,
+  });
+
+  /// Why a voucher cannot be tapped, so it never looks tappable for no reason.
+  String? get _hint {
+    if (!voucher.eligible) {
+      final reason = voucher.reason?.trim();
+      return reason == null || reason.isEmpty ? 'Not available' : reason;
+    }
+    final missing = shortfall;
+    if (missing == null) return null;
+    final amount = missing % 1 == 0
+        ? missing.toStringAsFixed(0)
+        : missing.toStringAsFixed(2);
+    return 'Add ₱$amount more to use this voucher';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isEligible = voucher.eligible;
+    final isEligible = usable;
+    final hint = _hint;
 
     return GestureDetector(
       onTap: onTap,
@@ -311,6 +351,19 @@ class _VoucherCard extends StatelessWidget {
                         color: AppColors.foreground(context, Colors.grey[600]!),
                       ),
                     ),
+                    if (hint != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        hint,
+                        key: ValueKey('voucher-hint-${voucher.code}'),
+                        style: const TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFD84315),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Row(
                       children: [

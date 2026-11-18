@@ -34,8 +34,10 @@ class VoucherController extends Controller
     public function getAvailableVouchers(Request $request, VoucherService $voucherService): JsonResponse
     {
         $user = $request->user();
-        $vouchers = $voucherService->getAvailableVouchers($user);
-        
+        // Optional: only vouchers that work for this service (1 LesGo, 2 LesRide, 3 LesEat, 4 LesBuy).
+        $serviceId = $request->filled('service_id') ? (int) $request->input('service_id') : null;
+        $vouchers = $voucherService->getAvailableVouchers($user, $serviceId);
+
         return $this->success($vouchers, 'Available vouchers retrieved successfully');
     }
     

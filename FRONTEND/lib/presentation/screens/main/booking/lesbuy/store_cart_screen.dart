@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/voucher_service_utils.dart';
 import 'package:lesgo/core/utils/lesbuy_pickup_selection.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -63,7 +64,11 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
   Future<void> _showVoucherPicker(BuildContext context) async {
     final storeState = ref.read(storeDetailProvider);
     final subtotal = storeState.cartTotal;
-    final code = await showVoucherBottomSheet(context);
+    final code = await showVoucherBottomSheet(
+      context,
+      serviceId: BookingServiceIds.lesbuy,
+      orderValue: subtotal,
+    );
     if (code == null || !mounted) return;
 
     final error = await ref

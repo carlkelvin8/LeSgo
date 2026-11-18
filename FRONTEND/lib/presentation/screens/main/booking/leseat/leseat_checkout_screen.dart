@@ -10,6 +10,7 @@ import '../../../../../domain/entities/booking/leseat/order.dart';
 import '../../../../../domain/entities/booking/leseat/order_item.dart';
 import '../../../../provider/auth/auth_provider.dart';
 import '../../../../provider/main/booking/checkout_provider.dart';
+import '../../../../../core/utils/voucher_service_utils.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
 import '../../../../widgets/booking/common/store_branch_selector.dart';
@@ -27,6 +28,7 @@ class LeseatCheckoutScreen extends ConsumerStatefulWidget {
 
 class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
   AddressDto? _selectedAddress;
+  bool _promptedForAddress = false;
 
   @override
   void initState() {
@@ -42,7 +44,11 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     }
 
     final deliveryAddr = ref.read(addressProvider).deliveryAddress;
-    if (deliveryAddr == null || !mounted) return;
+    if (!mounted) return;
+    if (deliveryAddr == null) {
+      _promptForAddressIfNeeded();
+      return;
+    }
 
     setState(() => _selectedAddress = deliveryAddr);
     ref.read(checkoutProvider.notifier).updateDeliveryAddress(
@@ -52,6 +58,20 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
           deliveryAddr.contactName ?? '',
           deliveryAddr.contactPhone ?? '',
         );
+  }
+
+  /// Opens the address sheet once when checkout has no usable delivery address,
+  /// so the customer is not left on a blocked checkout with no next step.
+  void _promptForAddressIfNeeded() {
+    if (_promptedForAddress || !mounted) return;
+    final checkout = ref.read(checkoutProvider);
+    if (checkout.order == null ||
+        checkout.hasValidDropoffLocation ||
+        checkout.isLoading) {
+      return;
+    }
+    _promptedForAddress = true;
+    _showAddressSelector(context, ref);
   }
 
   void _showAddressSelector(BuildContext context, WidgetRef ref) {
@@ -110,7 +130,13 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
   }
 
   Future<void> _showVoucherDialog(BuildContext context, WidgetRef ref) async {
-    final code = await showVoucherBottomSheet(context);
+    final order = ref.read(checkoutProvider).order;
+    final code = await showVoucherBottomSheet(
+      context,
+      serviceId: BookingServiceIds.leseat,
+      // The backend checks the minimum against subtotal + delivery fee.
+      orderValue: order == null ? null : order.subtotal + order.deliveryFee,
+    );
     if (code == null || !context.mounted) return;
 
     final error = await ref.read(checkoutProvider.notifier).applyVoucher(code);
@@ -134,9 +160,45 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     ref.listen<String?>(
       checkoutProvider.select((state) => state.fareError),
       (previous, next) {
-        if (next != null && next != previous && context.mounted) {
+        if (next != null &&
+            next != previous &&
+            next != kMissingDeliveryAddressMessage &&
+            context.mounted) {
           SnackBarUtils.showError(context, next);
         }
+      },
+    );
+    // The customer just added or picked an address while checkout still had
+    // none (e.g. via Manage > Add Address): use it now, so the "selected" tick
+    // in the address sheet matches what checkout actually delivers to.
+    ref.listen<AddressDto?>(
+      addressProvider.select((state) => state.deliveryAddress),
+      (previous, next) {
+        if (next == null || !mounted) return;
+        final checkout = ref.read(checkoutProvider);
+        if (checkout.order == null || checkout.hasValidDropoffLocation) return;
+        setState(() => _selectedAddress = next);
+        ref.read(checkoutProvider.notifier).updateDeliveryAddress(
+              next.addressLine1,
+              next.latitude,
+              next.longitude,
+              next.contactName ?? '',
+              next.contactPhone ?? '',
+            );
+      },
+    );
+    // No usable delivery address: open the address sheet once so the customer
+    // can pick or add one instead of landing on a silently blocked checkout.
+    ref.listen<bool>(
+      checkoutProvider.select(
+        (state) =>
+            state.order != null && !state.hasValidDropoffLocation && !state.isLoading,
+      ),
+      (previous, needsAddress) {
+        if (!needsAddress) return;
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _promptForAddressIfNeeded(),
+        );
       },
     );
     final checkoutState = ref.watch(checkoutProvider);
@@ -336,7 +398,29 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (checkoutState.fareError != null)
+              if (checkoutState.fareError != null &&
+                  !checkoutState.isLoadingFare)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    checkoutState.fareError!,
+                    key: const ValueKey('checkout-fare-error'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 12.5,
+                      color: Color(0xFFD32F2F),
+                    ),
+                  ),
+                ),
+              if (checkoutState.fareError == kMissingDeliveryAddressMessage)
+                TextButton.icon(
+                  key: const ValueKey('checkout-add-address'),
+                  onPressed: () => _showAddressSelector(context, ref),
+                  icon: const Icon(Icons.add_location_alt_outlined),
+                  label: const Text('Add delivery address'),
+                )
+              else if (checkoutState.fareError != null)
                 TextButton.icon(
                   onPressed: checkoutState.isLoadingFare
                       ? null

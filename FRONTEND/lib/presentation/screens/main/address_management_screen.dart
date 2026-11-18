@@ -866,6 +866,8 @@ class _Field extends StatelessWidget {
           maxLines: maxLines,
           keyboardType: keyboardType,
           validator: validator,
+          // Re-check as the customer types, so "Required" disappears once filled.
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           style: const TextStyle(fontFamily: 'TT Fors', fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,

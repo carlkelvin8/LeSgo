@@ -39,6 +39,10 @@ import '../address/address_provider.dart';
 
 import '../lespay/lespay_provider.dart';
 
+/// Shown inline (not as a snackbar) when the customer has no usable delivery address.
+const String kMissingDeliveryAddressMessage =
+    'Add a delivery address to see the delivery fee.';
+
 class CheckoutState {
   final Order? order;
 
@@ -237,8 +241,9 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     final subtotal = cartItems.fold<double>(0, (sum, item) => sum + item.total);
     var dropoffLat = BookingGeoUtils.defaultLat;
     var dropoffLng = BookingGeoUtils.defaultLng;
-    var deliveryAddress =
-        profileState.user?.addressLine1 ?? 'Brgy 6, Claveria, Cagayan';
+    // No saved address means no coordinates, so there is nothing valid to show
+    // as "deliver to" (a made-up fallback label hid why checkout was blocked).
+    var deliveryAddress = '';
     final deliveryAddr = addressState.deliveryAddress;
     if (deliveryAddr != null) {
       dropoffLat = deliveryAddr.latitude;
@@ -383,11 +388,15 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         !state.hasValidDropoffLocation ||
         !BookingGeoUtils.hasValidCoords(state.pickupLat, state.pickupLng) ||
         !BookingGeoUtils.hasValidCoords(state.dropoffLat, state.dropoffLng)) {
+      final missingDropoff =
+          !state.hasValidDropoffLocation ||
+          !BookingGeoUtils.hasValidCoords(state.dropoffLat, state.dropoffLng);
       state = state.copyWith(
         hasValidDeliveryFee: false,
         isLoadingFare: false,
-        fareError:
-            'Select a valid restaurant and delivery location before checkout.',
+        fareError: missingDropoff
+            ? kMissingDeliveryAddressMessage
+            : 'Select a valid restaurant and delivery location before checkout.',
       );
       return;
     }

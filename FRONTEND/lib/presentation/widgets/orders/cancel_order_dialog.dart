@@ -1,7 +1,6 @@
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
-import '../../../core/utils/snackbar_utils.dart';
 
 class CancelOrderDialog extends StatefulWidget {
   const CancelOrderDialog({super.key});
@@ -12,6 +11,8 @@ class CancelOrderDialog extends StatefulWidget {
 
 class _CancelOrderDialogState extends State<CancelOrderDialog> {
   String? _selectedReason;
+  // Shown inside the dialog: a SnackBar would render behind the modal barrier.
+  String? _errorText;
   final TextEditingController _otherReasonController = TextEditingController();
 
   final List<String> _cancellationReasons = [
@@ -32,14 +33,14 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
 
   void _handleConfirm() {
     if (_selectedReason == null) {
-      SnackBarUtils.showError(context, 'Please select a reason for cancellation');
+      setState(() => _errorText = 'Please select a reason for cancellation');
       return;
     }
 
     String reason = _selectedReason!;
     if (_selectedReason == 'Other') {
       if (_otherReasonController.text.trim().isEmpty) {
-        SnackBarUtils.showError(context, 'Please specify your reason');
+        setState(() => _errorText = 'Please specify your reason');
         return;
       }
       reason = _otherReasonController.text.trim();
@@ -85,7 +86,10 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             RadioGroup<String>(
               groupValue: _selectedReason,
-              onChanged: (value) => setState(() => _selectedReason = value),
+              onChanged: (value) => setState(() {
+                _selectedReason = value;
+                _errorText = null;
+              }),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,11 +112,23 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                 ],
               ),
             ),
+            if (_errorText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  _errorText!,
+                  key: const ValueKey('cancel-reason-error'),
+                  style: TextStyle(color: Colors.red[700], fontSize: 13),
+                ),
+              ),
             if (_selectedReason == 'Other') ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               TextField(
                 controller: _otherReasonController,
                 maxLines: 3,
+                onChanged: (_) {
+                  if (_errorText != null) setState(() => _errorText = null);
+                },
                 decoration: InputDecoration(
                   hintText: 'Please specify your reason...',
                   hintStyle: TextStyle(
