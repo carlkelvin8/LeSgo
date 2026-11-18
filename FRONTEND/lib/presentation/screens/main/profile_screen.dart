@@ -1,3 +1,4 @@
+import '../../../core/utils/date_display_utils.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import '../../../core/constants/routers/app_router.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
@@ -309,7 +310,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         _ProfileRow(
                           icon: Icons.cake_outlined,
                           title: 'Birthday',
-                          subtitle: state.birthdate,
+                          subtitle: formatDateOnly(state.birthdate),
                         ),
                       _ProfileRow(
                         icon: Icons.location_on_outlined,
