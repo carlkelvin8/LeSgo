@@ -3,7 +3,6 @@ import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/constants/routers/booking/booking_routes.dart';
-import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../core/constants/routers/app_router.dart';
 import 'service_card.dart';
 
@@ -45,22 +44,6 @@ class HomeServicesSection extends StatelessWidget {
         'gradientStart': const Color(0xFF4CAF50),
         'gradientEnd': const Color(0xFF66BB6A),
         'route': BookingRoutes.lesbuy,
-      },
-      {
-        'icon': Icons.account_balance_wallet,
-        'title': 'LesPay',
-        'description': 'Digital Wallet & Payments',
-        'gradientStart': const Color(0xFF2196F3),
-        'gradientEnd': const Color(0xFF42A5F5),
-        'route': MainRoutes.lespay,
-      },
-      {
-        'icon': Icons.person_add,
-        'title': 'Become Partner',
-        'description': 'Earn with LeSgo',
-        'gradientStart': const Color(0xFFFFB300),
-        'gradientEnd': const Color(0xFFFFC233),
-        'route': null,
       },
     ];
 
