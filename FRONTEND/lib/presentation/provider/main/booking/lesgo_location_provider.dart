@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../../../core/utils/address_text_utils.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
@@ -333,7 +334,9 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
   LocationAddress? _parseFormattedAddress(String formattedAddress) {
     // Parse formatted address like "Malolos, Bulacan, Philippines"
     // Split by comma and assign to appropriate fields
-    final parts = formattedAddress.split(',').map((e) => e.trim()).toList();
+    final parts = stripPlusCode(
+      formattedAddress,
+    ).split(',').map((e) => e.trim()).toList();
 
     if (parts.isEmpty) {
       return null; // No parts to parse
@@ -713,7 +716,11 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
 
           // Use the best result found
           if (bestResult != null) {
-            final formattedAddress = bestResult['formatted_address'] as String?;
+            final rawFormattedAddress = bestResult['formatted_address'] as String?;
+            // Never show a raw plus code ("J36M+FR5, ...") as the address.
+            final formattedAddress = rawFormattedAddress == null
+                ? null
+                : stripPlusCode(rawFormattedAddress);
             final addressComponents =
                 bestResult['address_components'] as List<dynamic>?;
 

@@ -1,3 +1,4 @@
+import '../../../../core/utils/address_text_utils.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
 
@@ -291,7 +292,9 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
       if (lat == null || lng == null) throw Exception('Invalid coordinates');
 
       final latLng = LatLng(lat, lng);
-      final formattedAddress = result['formatted_address']?.toString();
+      final rawFormattedAddress = result['formatted_address']?.toString();
+      final formattedAddress =
+          rawFormattedAddress == null ? null : stripPlusCode(rawFormattedAddress);
       final addressComponents =
           _parseAddressComponents(result['address_components']);
       final title = place['main_text']?.toString() ??

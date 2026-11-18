@@ -649,7 +649,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildPriceRow('Estimated Fare', order.estimatedFare),
+          if (_itemsSubtotal(order) != null) ...[
+            // Food / store orders: show what the money is made of instead of
+            // calling the delivery fee the "fare".
+            _buildPriceRow('Subtotal', _itemsSubtotal(order)!),
+            _buildPriceRow('Delivery fee', order.effectiveDeliveryFee),
+            if (order.discountAmount > 0)
+              _buildPriceRow('Discount', -order.discountAmount),
+          ] else
+            _buildPriceRow('Estimated Fare', order.estimatedFare),
           if (order.actualFare != null)
             _buildPriceRow('Actual Fare', order.actualFare!),
           const Divider(height: 24),
@@ -665,7 +673,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 ),
               ),
               Text(
-                '₱${(order.actualFare ?? order.estimatedFare).toStringAsFixed(2)}',
+                '₱${(order.actualFare ?? order.effectiveTotalAmount).toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
@@ -678,6 +686,14 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         ],
       ),
     );
+  }
+
+  /// Items subtotal recorded with the order (food/store), or null for rides
+  /// and parcels where the fare is the whole price.
+  double? _itemsSubtotal(OrderDto order) {
+    final raw = order.meta?['subtotal'];
+    final value = raw is num ? raw.toDouble() : double.tryParse('${raw ?? ''}');
+    return value != null && value > 0 ? value : null;
   }
 
   Widget _buildCancellationInfo(OrderDto order) {
@@ -765,7 +781,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           ),
           Text(
-            '₱${amount.toStringAsFixed(2)}',
+            '${amount < 0 ? '-' : ''}₱${amount.abs().toStringAsFixed(2)}',
             style: const TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,

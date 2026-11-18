@@ -514,7 +514,9 @@ class _OrderCardState extends State<OrderCard> {
                 ),
                 const Spacer(),
                 Text(
-                  '₱${widget.order.estimatedFare.toStringAsFixed(2)}',
+                  // estimatedFare is only the delivery fee for food/store orders;
+                  // effectiveTotalAmount is what the customer actually pays.
+                  '₱${widget.order.effectiveTotalAmount.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),

@@ -184,12 +184,12 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
     );
   }
 
-  Future<bool> cancelOrder(String orderId) async {
+  Future<bool> cancelOrder(
+    String orderId, {
+    String reason = 'Cancelled by customer',
+  }) async {
     try {
-      await _orderDataSource.cancelOrder(
-        int.parse(orderId),
-        'Cancelled by customer',
-      );
+      await _orderDataSource.cancelOrder(int.parse(orderId), reason);
       state = DriverFindingState();
       return true;
     } catch (e) {

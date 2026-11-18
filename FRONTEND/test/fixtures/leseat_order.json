@@ -1,0 +1,111 @@
+{
+ "id": 8,
+ "customer_id": 4,
+ "partner_id": 2,
+ "driver_id": null,
+ "service_id": 3,
+ "pickup_address_id": null,
+ "dropoff_address_id": null,
+ "status": "cancelled",
+ "scheduled_at": null,
+ "accepted_at": null,
+ "picked_up_at": null,
+ "completed_at": null,
+ "cancelled_at": "2026-11-18T11:29:03.000000Z",
+ "estimated_distance_m": 500,
+ "actual_distance_m": null,
+ "estimated_fare": "55.00",
+ "actual_fare": null,
+ "partner_share": "0.00",
+ "driver_share": "0.00",
+ "platform_fee": "0.00",
+ "payment_method": "cash",
+ "payment_status": "failed",
+ "cancel_reason": "Testing the cancel glow",
+ "meta": {
+  "restaurant_name": "Jollibee - Claveria",
+  "restaurants": [
+   "Jollibee - Claveria"
+  ],
+  "order_type": "leseat",
+  "items": [
+   {
+    "name": "1-pc Chickenjoy",
+    "estimated_price": 89,
+    "quantity": 2
+   }
+  ],
+  "branch": {
+   "id": 2,
+   "name": "Jollibee - Claveria (Main)",
+   "address": "Claveria, Cagayan, Claveria, Cagayan Valley",
+   "phone_number": null,
+   "lat": 18.6058,
+   "lng": 121.0779
+  },
+  "subtotal": 178,
+  "delivery_fee": 55,
+  "discount": 0,
+  "grand_total": 233,
+  "total": 233
+ },
+ "created_at": "2026-11-18T11:28:14.000000Z",
+ "updated_at": "2026-11-18T11:29:03.000000Z",
+ "pickup_address": "Claveria, Cagayan, Claveria, Cagayan Valley",
+ "pickup_lat": "18.6058000",
+ "pickup_lng": "121.0779000",
+ "pickup_contact_name": "Jollibee - Claveria (Main)",
+ "pickup_contact_phone": "+639123456789",
+ "dropoff_address": "Centro I, Claveria, Cagayan Valley",
+ "dropoff_lat": "18.6050882",
+ "dropoff_lng": "121.0785007",
+ "dropoff_contact_name": "Test Customer",
+ "dropoff_contact_phone": "+639171234567",
+ "notes": "LesEat order: 1 items",
+ "item_description": null,
+ "estimated_weight_kg": null,
+ "fare_breakdown": {
+  "base_fare": 40,
+  "distance_fare": 0,
+  "service_fee": 15,
+  "weight_surcharge": 0,
+  "subtotal": 55,
+  "total": 55,
+  "currency": "PHP"
+ },
+ "voucher_code": null,
+ "discount_amount": "0.00",
+ "vehicle_type": null,
+ "passenger_name": "Test Customer",
+ "proof_images": null,
+ "proof_uploaded_at": null,
+ "driver_arrived_at_pickup": null,
+ "in_progress_at": null,
+ "platform_share": 0,
+ "scheduled_delivery_time": null,
+ "partner_branch_id": 2,
+ "ready_for_pickup_at": null,
+ "proof_image_urls": [],
+ "service": {
+  "id": 3,
+  "name": "LesEat",
+  "code": "LESEAT",
+  "icon_url": null
+ },
+ "lesbuy_items": [
+  {
+   "id": 4,
+   "order_id": 8,
+   "menu_item_id": 2,
+   "name": "1-pc Chickenjoy",
+   "quantity": 2,
+   "unit": null,
+   "notes": null,
+   "selected_options": null,
+   "estimated_price": "89.00",
+   "actual_price": null,
+   "image_url": null
+  }
+ ],
+ "payments": []
+}

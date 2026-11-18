@@ -9,6 +9,7 @@ import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/tracking/driver_info_card.dart';
+import '../../../widgets/orders/cancel_order_dialog.dart';
 import '../../../provider/main/booking/driver_finding_provider.dart';
 import 'simple_order_tracking_screen.dart';
 
@@ -347,29 +348,17 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
   }
 
   Future<void> _handleCancelOrder() async {
-    final confirmed = await showDialog<bool>(
+    // Same reason-based dialog as every other order screen.
+    final reason = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Order'),
-        content: const Text('Are you sure you want to cancel this order?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      builder: (context) => const CancelOrderDialog(),
     );
 
-    if (confirmed != true || !mounted) return;
+    if (reason == null || !mounted) return;
 
     final success = await ref
         .read(driverFindingProvider.notifier)
-        .cancelOrder(widget.orderId);
+        .cancelOrder(widget.orderId, reason: reason);
 
     if (!mounted) return;
 
