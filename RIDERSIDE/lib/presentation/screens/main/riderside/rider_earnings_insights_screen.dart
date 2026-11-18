@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -105,7 +106,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$error',
+                      ApiErrorMapper.message(error),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.red.shade700),
                     ),

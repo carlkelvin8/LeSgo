@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -133,7 +134,7 @@ class _RiderRatingScreenState extends ConsumerState<RiderRatingScreen>
             child: CircularProgressIndicator(color: Color(0xFF6D3EA0)),
           ),
           error: (e, _) => _ErrorState(
-            error: '$e',
+            error: ApiErrorMapper.message(e),
             lang: lang,
             onRetry: () => ref.invalidate(riderRatingProvider),
           ),

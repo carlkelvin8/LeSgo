@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -709,7 +710,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalization.translate('failed_to_pick_images', lang).replaceAll('{{error}}', e.toString())),
+            content: Text(AppLocalization.translate('failed_to_pick_images', lang).replaceAll('{{error}}', ApiErrorMapper.message(e))),
             backgroundColor: Colors.red,
           ),
         );
@@ -769,7 +770,7 @@ Future<void> _handleStatusChange(BookingStatus newStatus) async {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalization.translate('failed_to_take_photo', lang).replaceAll('{{error}}', e.toString())),
+            content: Text(AppLocalization.translate('failed_to_take_photo', lang).replaceAll('{{error}}', ApiErrorMapper.message(e))),
             backgroundColor: Colors.red,
           ),
         );

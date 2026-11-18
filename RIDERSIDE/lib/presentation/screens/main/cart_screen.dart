@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lezgo_rider/core/utils/address_utils.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../core/services/api_service.dart';
@@ -290,7 +291,8 @@ class CartScreen extends ConsumerWidget {
         final response = await ApiService.dio.get(url);
         final results = response.data['results'] as List?;
         if (results != null && results.isNotEmpty) {
-          return results[0]['formatted_address'] as String?;
+          final fa = results[0]['formatted_address'] as String?;
+          return fa == null ? null : stripPlusCode(fa);
         }
       } catch (_) {}
       return null;

@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/di/injection.dart';
@@ -88,7 +89,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
-        error: 'Could not load chat: ${e.toString()}',
+        error: 'Could not load chat: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -137,7 +138,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (!silent) {
         state = state.copyWith(
           isLoading: false,
-          error: e.toString(),
+          error: ApiErrorMapper.message(e),
         );
       }
     }
@@ -167,7 +168,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       return true;
     } catch (e) {
       if (!mounted) return false;
-      state = state.copyWith(isSending: false, error: e.toString());
+      state = state.copyWith(isSending: false, error: ApiErrorMapper.message(e));
       return false;
     }
   }
@@ -210,7 +211,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       return true;
     } catch (e) {
       if (mounted) {
-        state = state.copyWith(error: e.toString());
+        state = state.copyWith(error: ApiErrorMapper.message(e));
       }
       return false;
     }

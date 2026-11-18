@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import '../register_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -208,7 +209,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isSelfieLoading: false,
-        errorMessage: 'Failed to capture selfie: ${e.toString()}',
+        errorMessage: 'Failed to capture selfie: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -236,7 +237,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isSelfieMotorcycleLoading: false,
-        errorMessage: 'Failed to upload selfie: ${e.toString()}',
+        errorMessage: 'Failed to upload selfie: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -263,7 +264,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isResumeLoading: false,
-        errorMessage: 'Failed to upload resume: ${e.toString()}',
+        errorMessage: 'Failed to upload resume: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -290,7 +291,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isClearanceLoading: false,
-        errorMessage: 'Failed to upload clearance: ${e.toString()}',
+        errorMessage: 'Failed to upload clearance: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -317,7 +318,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isLicenseLoading: false,
-        errorMessage: 'Failed to upload license: ${e.toString()}',
+        errorMessage: 'Failed to upload license: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -344,7 +345,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isMotorcycleImageLoading: false,
-        errorMessage: 'Failed to upload OR/CR image: ${e.toString()}',
+        errorMessage: 'Failed to upload OR/CR image: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -371,7 +372,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isScannedORCRLoading: false,
-        errorMessage: 'Failed to upload scanned OR/CR: ${e.toString()}',
+        errorMessage: 'Failed to upload scanned OR/CR: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -398,7 +399,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isSignatureLoading: false,
-        errorMessage: 'Failed to upload signature: ${e.toString()}',
+        errorMessage: 'Failed to upload signature: ${ApiErrorMapper.message(e)}',
       );
     }
   }
