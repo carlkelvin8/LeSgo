@@ -9,12 +9,16 @@ class LocationHeader extends StatelessWidget {
   final VoidCallback? onSupportTap;
   final VoidCallback? onLocationTap;
 
+  /// Shows an Inbox button at the top-right of the header when set.
+  final VoidCallback? onInboxTap;
+
   const LocationHeader({
     super.key,
     required this.location,
     this.onMenuTap,
     this.onSupportTap,
     this.onLocationTap,
+    this.onInboxTap,
   });
 
   @override
@@ -102,7 +106,54 @@ class LocationHeader extends StatelessWidget {
               ),
             ),
           ),
+          if (onInboxTap != null) ...[
+            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+            _InboxButton(onTap: onInboxTap!),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// Round Inbox shortcut for the top-right corner of the home header.
+class _InboxButton extends StatelessWidget {
+  const _InboxButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = ResponsiveUtils.fontSize(context, 44).clamp(44.0, 64.0);
+
+    return Semantics(
+      button: true,
+      label: 'Inbox',
+      child: GestureDetector(
+        key: const ValueKey('home-inbox-button'),
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: size,
+          height: size,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.surface(context, const Color(0xFFEEDDFD)),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFA930D0).withValues(alpha: 0.18),
+                blurRadius: 10,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: SvgPicture.asset(
+            'assets/images/homepage/Inbox.svg',
+            width: size * 0.55,
+            height: size * 0.55,
+          ),
+        ),
       ),
     );
   }

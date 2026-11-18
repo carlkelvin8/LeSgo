@@ -67,6 +67,7 @@ class _HomeHeaderSectionState extends ConsumerState<HomeHeaderSection> {
       onSupportTap: () {
         AppRouter.push(context, MainRoutes.customerServiceChat);
       },
+      onInboxTap: () => AppRouter.push(context, MainRoutes.inbox),
     );
   }
 }
