@@ -490,6 +490,11 @@ class OrderController extends Controller
         // Queue confirmation notification
         SendOrderConfirmationJob::dispatch($order)->onQueue('notifications');
 
+        // Alarm the merchant (cash orders now; online orders once payment is confirmed)
+        if ($order->partner_id && $order->isPaymentReadyForDriver()) {
+            \App\Jobs\NotifyMerchantNewOrderJob::dispatch($order)->onQueue('notifications');
+        }
+
         // Notify nearby drivers about new order
         if ($order->isDispatchableToDrivers()) {
             \App\Jobs\NotifyNearbyDriversNewOrderJob::dispatch($order)->onQueue('notifications');

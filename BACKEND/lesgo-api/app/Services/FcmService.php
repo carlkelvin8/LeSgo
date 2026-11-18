@@ -4,11 +4,19 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Messaging;
+use Kreait\Firebase\Messaging\AndroidConfig;
+use Kreait\Firebase\Messaging\ApnsConfig;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
 
 class FcmService
 {
+    /** Android channel created by the app (loud custom alarm) for order alerts. */
+    public const ORDER_CHANNEL_ID = 'lezgo_orders';
+
+    /** Notification types that must alarm the user instead of just showing a banner. */
+    private const ORDER_ALERT_TYPES = ['new_order_available', 'new_merchant_order', 'order.assigned'];
+
     public function __construct(private Messaging $messaging) {}
 
     /**
@@ -17,11 +25,9 @@ class FcmService
     public function sendToToken(string $token, string $title, string $body, array $data = []): bool
     {
         try {
-            $message = CloudMessage::withTarget('token', $token)
-                ->withNotification(Notification::create($title, $body))
-                ->withData(array_map('strval', $data));
-
-            $this->messaging->send($message);
+            $this->messaging->send(
+                $this->buildMessage($title, $body, $data)->toToken($token)
+            );
             return true;
         } catch (\Throwable $e) {
             Log::warning('FCM send failed', [
@@ -42,11 +48,10 @@ class FcmService
         }
 
         try {
-            $message = CloudMessage::new()
-                ->withNotification(Notification::create($title, $body))
-                ->withData(array_map('strval', $data));
-
-            $report = $this->messaging->sendMulticast($message, $tokens);
+            $report = $this->messaging->sendMulticast(
+                $this->buildMessage($title, $body, $data),
+                $tokens
+            );
 
             return [
                 'success' => $report->successes()->count(),
@@ -56,5 +61,33 @@ class FcmService
             Log::warning('FCM multicast failed', ['error' => $e->getMessage()]);
             return ['success' => 0, 'failure' => count($tokens)];
         }
+    }
+
+    /**
+     * Notification + data message that makes a sound and is delivered immediately.
+     * iOS plays no sound unless aps.sound is set; Android needs high priority to
+     * wake a sleeping device and an explicit sound on the notification.
+     */
+    private function buildMessage(string $title, string $body, array $data): CloudMessage
+    {
+        $isOrderAlert = in_array((string) ($data['type'] ?? ''), self::ORDER_ALERT_TYPES, true);
+
+        return CloudMessage::new()
+            ->withNotification(Notification::create($title, $body))
+            ->withData(array_map(
+                fn ($value) => is_scalar($value) || $value === null ? (string) $value : json_encode($value),
+                $data
+            ))
+            ->withAndroidConfig(AndroidConfig::fromArray([
+                'priority' => 'high',
+                // Android 8+ uses the channel's sound; installs without the channel fall back to default.
+                'notification' => $isOrderAlert
+                    ? ['sound' => 'order_bell', 'channel_id' => self::ORDER_CHANNEL_ID]
+                    : ['sound' => 'default'],
+            ]))
+            ->withApnsConfig(ApnsConfig::fromArray([
+                'headers' => ['apns-priority' => '10'],
+                'payload' => ['aps' => ['sound' => 'default']],
+            ]));
     }
 }

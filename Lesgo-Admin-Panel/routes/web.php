@@ -188,6 +188,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin', 'admin.audit'])->gr
         Route::get('/registration-fees/{registrationFee}', [\App\Http\Controllers\Admin\RegistrationFeeController::class, 'show'])->name('registration-fees.show');
         Route::post('/registration-fees/{registrationFee}/approve', [\App\Http\Controllers\Admin\RegistrationFeeController::class, 'approve'])->name('registration-fees.approve');
         Route::post('/registration-fees/{registrationFee}/waive', [\App\Http\Controllers\Admin\RegistrationFeeController::class, 'waive'])->name('registration-fees.waive');
+        Route::post('/registration-fees/{registrationFee}/exempt-renewal', [\App\Http\Controllers\Admin\RegistrationFeeController::class, 'exemptRenewal'])->name('registration-fees.exempt-renewal');
         Route::post('/registration-fees/{registrationFee}/reject', [\App\Http\Controllers\Admin\RegistrationFeeController::class, 'reject'])->name('registration-fees.reject');
     });
 

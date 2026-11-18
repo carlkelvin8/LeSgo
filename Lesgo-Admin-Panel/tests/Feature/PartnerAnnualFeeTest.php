@@ -41,6 +41,22 @@ class PartnerAnnualFeeTest extends TestCase
         ]);
     }
 
+    public function test_partner_page_offers_renewal_exemption_until_the_partner_is_exempted(): void
+    {
+        $this->withoutVite();
+        $partner = $this->partner();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->get(route('admin.partners.show', $partner))
+            ->assertOk()->assertSee('Exempt from Annual Renewal');
+
+        $fee = RegistrationFeePayment::where('user_id', $partner->user_id)->firstOrFail();
+        RegistrationFeeService::exemptFromAnnualRenewal($fee, $admin, 'Long-time partner');
+
+        $this->actingAs($admin)->get(route('admin.partners.show', $partner))
+            ->assertOk()->assertDontSee('Exempt from Annual Renewal');
+    }
+
     public function test_waiver_activates_partner_for_one_year_and_keeps_original_audit_on_retry(): void
     {
         config(['app.key' => 'base64:'.base64_encode(str_repeat('a', 32))]);

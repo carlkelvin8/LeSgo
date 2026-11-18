@@ -33,6 +33,11 @@ class UserFactory extends Factory
         ];
     }
 
+    public function driver(): static
+    {
+        return $this->state(['role' => 'driver']);
+    }
+
     /**
      * Indicate that the model's email address should be unverified.
      */

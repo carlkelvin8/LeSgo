@@ -1,6 +1,7 @@
 <?php
 
 \Illuminate\Support\Facades\Schedule::command('registration-fees:renew-partners')->hourly()->withoutOverlapping();
+\Illuminate\Support\Facades\Schedule::command('registration-fees:remind-renewals')->dailyAt('09:00')->withoutOverlapping();
 
 use App\Jobs\AutoCancelStaleOrdersJob;
 use App\Jobs\ExpireDriverTokensJob;

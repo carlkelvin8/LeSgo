@@ -17,6 +17,9 @@ import 'order_sound_alert_service.dart';
 import 'secure_storage_service.dart';
 
 class FcmService with WidgetsBindingObserver {
+  /// Android channel for new-order alarms; must match the backend's channel_id.
+  static const String orderChannelId = 'lezgo_orders';
+
   static final FcmService instance = FcmService._();
   FcmService._();
 
@@ -259,11 +262,25 @@ class FcmService with WidgetsBindingObserver {
     );
 
     if (!kIsWeb) {
-      await _localNotifications
+      final androidPlugin = _localNotifications
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
+          >();
+      await androidPlugin?.requestNotificationsPermission();
+      // Android 8+ takes the sound from the channel, so the loud order alarm
+      // has to exist before the first push arrives (the backend targets this
+      // id for new-order pushes; older installs fall back to the default).
+      await androidPlugin?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          orderChannelId,
+          'New Orders',
+          description: 'Loud alert for new orders and bookings',
+          importance: Importance.max,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('order_bell'),
+          enableVibration: true,
+        ),
+      );
 
       await _localNotifications
           .resolvePlatformSpecificImplementation<

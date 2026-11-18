@@ -110,6 +110,19 @@ class RegistrationFeeAdminController extends Controller
             : 'Registration fee waived by admin; account remains restricted pending approval.');
     }
 
+    public function exemptRenewal(Request $request, RegistrationFeePayment $registrationFee): JsonResponse
+    {
+        $validated = $request->validate(['reason' => 'nullable|string|max:1000']);
+
+        try {
+            $updated = RegistrationFeeService::exemptFromAnnualRenewal($registrationFee, $request->user(), $validated['reason'] ?? null);
+        } catch (\DomainException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        return $this->success($updated, 'Partner exempted from the annual renewal (long-time partner).');
+    }
+
     public function reject(Request $request, RegistrationFeePayment $registrationFee): JsonResponse
     {
         $validated = $request->validate(['reason' => 'nullable|string|max:1000']);

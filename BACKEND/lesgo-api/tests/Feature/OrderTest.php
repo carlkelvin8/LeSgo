@@ -45,6 +45,21 @@ class OrderTest extends TestCase
         $this->assertDatabaseHas('orders', ['service_id' => $service->id, 'status' => 'pending']);
     }
 
+    public function test_cash_order_for_a_partner_alerts_the_merchant_and_a_plain_order_does_not(): void
+    {
+        Queue::fake();
+        $service = Service::factory()->create(['code' => 'LESGO']);
+        $owner = User::factory()->create(['role' => 'partner_admin']);
+        $partner = \App\Models\Partner::factory()->create(['user_id' => $owner->id, 'status' => 'active', 'is_open' => true]);
+        $this->actingAsRole('customer');
+
+        $this->postJson('/api/v1/orders', $this->makeOrderPayload($service->id))->assertCreated();
+        Queue::assertNotPushed(\App\Jobs\NotifyMerchantNewOrderJob::class);
+
+        $this->postJson('/api/v1/orders', $this->makeOrderPayload($service->id) + ['partner_id' => $partner->id])->assertCreated();
+        Queue::assertPushed(\App\Jobs\NotifyMerchantNewOrderJob::class, 1);
+    }
+
     public function test_order_and_quote_apply_the_same_fare_safety_cap(): void
     {
         Queue::fake();

@@ -8,16 +8,18 @@ Monorepo: `RIDERSIDE/` (Flutter, rider + merchant app, bundle `com.lesgo.rider`,
 - Deploys come from `carlkelvin8/Lesgo-API`, branch `feature/auth` (auto-deploys on Laravel Cloud, runs migrations).
 - That repo has diverged from `BACKEND/lesgo-api/`. Never copy the folder over it: clone it, apply only your
   changes as a patch, test there, then push. Use the `backend-push` skill. Push straight to `feature/auth`, no new branch.
-- Lesgo-API's suite is fully green (533 tests, 2026-11-15). Test it in a clone with a copied `vendor` + `composer
+- Lesgo-API's suite is fully green (574 tests, 2026-11-18). Test it in a clone with a copied `vendor` + `composer
   dump-autoload`, never a symlinked one (that runs the monorepo's code and fakes ~15 failures).
 - Pushing to production needs the user's explicit OK in the same turn; the harness blocks it otherwise.
 
 ## Commands
 - Flutter (run inside `RIDERSIDE/` or `FRONTEND/`): `flutter analyze`, `flutter test`.
-  Known failing test since before 2026-11: `rider_auth_login_fixes_test.dart` "rejected refresh token (401)".
-- Laravel (inside `BACKEND/lesgo-api/`): `php artisan test` (sqlite in memory, ~10 s, 511 tests).
+  All 369 RIDERSIDE tests passed on 2026-11-18 (the old "rejected refresh token (401)" failure is gone).
+- Laravel (inside `BACKEND/lesgo-api/`): `php artisan test` (sqlite in memory, ~10 s, 534 tests).
 - `RIDERSIDE/build` is a symlink to a temp dir that can disappear: `mkdir -p "$(readlink build)"` before flutter test/build.
 - Never run two `flutter test` at once in one app. Local e2e/simulator setup: see memory `local-e2e-test-setup`.
+- `Lesgo-Admin-Panel/` tests need `composer install`, a `.env` (copy `.env.example`, quote `PAYMONGO_WALLET_ACCOUNT_NAME`),
+  `php artisan key:generate` and `npm ci && npm run build` (pages fail with a Vite manifest error otherwise). 97 tests, ~3 s.
 - A PostToolUse hook (`.claude/hooks/check-edit.sh`) runs `dart analyze` / `php -l` after every edit and reports errors.
 
 ## Releasing the rider app (TestFlight)
@@ -37,6 +39,15 @@ The App Store submission of 1.1.7 (34) was rejected (2.1.0) and is on hold; Test
 - Fares: always go through `FareCalculatorService` (admin per-km rate, no free km except LesRide's 3 km).
 - Money code (wallet debit/credit, refunds, withdrawals): inside a transaction with `lockForUpdate`, idempotent, and refund
   the recorded amount, never a recomputed one.
+
+## Push notifications
+- kreait/firebase-php is v8: build messages with `CloudMessage::new()->toToken($t)`. `withTarget()` does not exist; it threw
+  inside `FcmService::sendToToken`'s catch, so no push was ever sent until 2026-11-18. Watch the logs for `FCM send failed`.
+- iOS plays no sound unless `aps.sound` is set; `FcmService` sets it. Order alerts (`new_order_available`,
+  `new_merchant_order`, `order.assigned`) target the Android channel `lezgo_orders` (created in `FcmService._initLocalNotifications`
+  with `res/raw/order_bell.wav`). Channel sound is immutable once created: use a new channel id to change it.
+- `assets/sounds/*.wav` are generated tones (the old `.mp3` placeholders were 0 bytes, so the in-app alarm was silent).
+- Needs the queue worker for `notifications` and the scheduler (renewal reminder 09:00, renewals hourly) running in production.
 
 ## Accounts
 Demo/test logins live in the seeders (`database/seeders/TestMerchantSeeder.php`) and `RIDERSIDE/create_test_rider.sh`.

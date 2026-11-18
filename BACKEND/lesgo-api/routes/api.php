@@ -588,6 +588,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/{registrationFee}', [\App\Http\Controllers\Api\Admin\RegistrationFeeAdminController::class, 'show']);
             Route::post('/{registrationFee}/approve', [\App\Http\Controllers\Api\Admin\RegistrationFeeAdminController::class, 'approve']);
             Route::post('/{registrationFee}/waive', [\App\Http\Controllers\Api\Admin\RegistrationFeeAdminController::class, 'waive']);
+            Route::post('/{registrationFee}/exempt-renewal', [\App\Http\Controllers\Api\Admin\RegistrationFeeAdminController::class, 'exemptRenewal']);
             Route::post('/{registrationFee}/reject', [\App\Http\Controllers\Api\Admin\RegistrationFeeAdminController::class, 'reject']);
         });
 
