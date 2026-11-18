@@ -120,8 +120,30 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     }
   }
 
+  /// Keeps the local selection valid when saved addresses change (e.g. the
+  /// selected one was deleted): fall back to the delivery address or clear.
+  void _onAddressesChanged(List<AddressDto> addresses) {
+    final selected = _selectedAddress;
+    if (selected == null || addresses.any((a) => a.id == selected.id)) return;
+    final fallback = ref.read(addressProvider).deliveryAddress;
+    setState(() => _selectedAddress = fallback);
+    ref.read(checkoutProvider.notifier).updateDeliveryAddress(
+          fallback?.addressLine1 ?? '',
+          fallback?.latitude ?? 0,
+          fallback?.longitude ?? 0,
+          fallback?.contactName ?? '',
+          fallback?.contactPhone ?? '',
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<List<AddressDto>>(
+      addressProvider.select((state) => state.addresses),
+      (previous, next) {
+        if (mounted) _onAddressesChanged(next);
+      },
+    );
     ref.listen<String?>(
       checkoutProvider.select((state) => state.voucherError),
       (previous, next) {

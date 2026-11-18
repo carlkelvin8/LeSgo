@@ -7,6 +7,7 @@ import '../../../../data/data_source/dto/address/create_address_request_dto.dart
 import '../../../../data/data_source/dto/address/update_address_request_dto.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 class AddressState {
   final List<AddressDto> addresses;
@@ -35,10 +36,13 @@ class AddressState {
     bool? isUpdating,
     bool? isDeleting,
     String? error,
+    bool clearSelectedAddress = false,
   }) {
     return AddressState(
       addresses: addresses ?? this.addresses,
-      selectedAddress: selectedAddress ?? this.selectedAddress,
+      selectedAddress: clearSelectedAddress
+          ? null
+          : (selectedAddress ?? this.selectedAddress),
       isLoading: isLoading ?? this.isLoading,
       isCreating: isCreating ?? this.isCreating,
       isUpdating: isUpdating ?? this.isUpdating,
@@ -84,10 +88,16 @@ class AddressNotifier extends StateNotifier<AddressState> {
   AddressNotifier() : super(AddressState());
   int _loadGeneration = 0;
 
+  /// True only when the user picked [state.selectedAddress] via [selectAddress].
+  /// Otherwise the selection follows the default address on every reload.
+  bool _explicitSelection = false;
+
   /// Load all addresses for the current user
   Future<void> loadAddresses(int userId) async {
     final generation = ++_loadGeneration;
-    final selectedAddressId = state.selectedAddress?.id;
+    final selectedAddressId = _explicitSelection
+        ? state.selectedAddress?.id
+        : null;
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -109,10 +119,13 @@ class AddressNotifier extends StateNotifier<AddressState> {
                 (address) => address?.id == selectedAddressId,
                 orElse: () => null,
               );
+        final resolved = preservedSelection ?? defaultAddr;
+        _explicitSelection = preservedSelection != null;
         state = state.copyWith(
           addresses: response.data,
           isLoading: false,
-          selectedAddress: preservedSelection ?? defaultAddr,
+          selectedAddress: resolved,
+          clearSelectedAddress: resolved == null,
         );
       } else {
         state = state.copyWith(
@@ -122,7 +135,10 @@ class AddressNotifier extends StateNotifier<AddressState> {
       }
     } catch (e) {
       if (generation != _loadGeneration || !mounted) return;
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: ApiErrorMapper.message(e),
+      );
     }
   }
 
@@ -293,10 +309,12 @@ class AddressNotifier extends StateNotifier<AddressState> {
         '🔵 AddressProvider: Response - success: ${response.success}, error: ${response.error}',
       );
 
+      if (!mounted) return false;
       if (response.success && response.data != null) {
         print('🔵 AddressProvider: Address created successfully');
         // Reload addresses to get updated list
         await loadAddresses(userId);
+        if (!mounted) return true;
 
         state = state.copyWith(isCreating: false);
 
@@ -321,13 +339,11 @@ class AddressNotifier extends StateNotifier<AddressState> {
       }
     } catch (e) {
       print('🔴 AddressProvider: Exception - $e');
-      state = state.copyWith(isCreating: false, error: e.toString());
+      final message = ApiErrorMapper.message(e);
+      if (mounted) state = state.copyWith(isCreating: false, error: message);
 
       if (context != null && context.mounted) {
-        SnackBarUtils.showError(
-          context,
-          'Error creating address: ${e.toString()}',
-        );
+        SnackBarUtils.showError(context, message);
       }
       return false;
     }
@@ -378,9 +394,11 @@ class AddressNotifier extends StateNotifier<AddressState> {
         '🔵 AddressProvider: Update response - success: ${response.success}, error: ${response.error}',
       );
 
+      if (!mounted) return false;
       if (response.success && response.data != null) {
         // Reload addresses to get updated list
         await loadAddresses(userId);
+        if (!mounted) return true;
 
         state = state.copyWith(isUpdating: false);
 
@@ -400,13 +418,11 @@ class AddressNotifier extends StateNotifier<AddressState> {
       }
     } catch (e) {
       print('🔴 AddressProvider: Update exception - $e');
-      state = state.copyWith(isUpdating: false, error: e.toString());
+      final message = ApiErrorMapper.message(e);
+      if (mounted) state = state.copyWith(isUpdating: false, error: message);
 
       if (context != null && context.mounted) {
-        SnackBarUtils.showError(
-          context,
-          'Error updating address: ${e.toString()}',
-        );
+        SnackBarUtils.showError(context, message);
       }
       return false;
     }
@@ -418,15 +434,30 @@ class AddressNotifier extends StateNotifier<AddressState> {
     required int addressId,
     BuildContext? context,
   }) async {
+    final deleted = state.addresses.where((a) => a.id == addressId);
+    final deletedWasDefault =
+        deleted.isNotEmpty && deleted.first.isDefault;
     state = state.copyWith(isDeleting: true, error: null);
 
     try {
       final addressDataSource = getIt<AddressRemoteDataSource>();
       final response = await addressDataSource.deleteAddress(addressId);
+      if (!mounted) return false;
 
       if (response.success) {
         // Reload addresses to get updated list
         await loadAddresses(userId);
+        if (!mounted) return true;
+
+        // The default was removed: promote the client-side fallback once so
+        // the server and the app agree on which address is the default.
+        if (deletedWasDefault && state.addresses.isNotEmpty) {
+          final next = AddressState.resolveDefaultAddress(state.addresses);
+          if (next != null && !next.isDefault) {
+            await setAsDefault(userId: userId, addressId: next.id);
+            if (!mounted) return true;
+          }
+        }
 
         state = state.copyWith(isDeleting: false);
 
@@ -449,13 +480,11 @@ class AddressNotifier extends StateNotifier<AddressState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(isDeleting: false, error: e.toString());
+      final message = ApiErrorMapper.message(e);
+      if (mounted) state = state.copyWith(isDeleting: false, error: message);
 
       if (context != null && context.mounted) {
-        SnackBarUtils.showError(
-          context,
-          'Error deleting address: ${e.toString()}',
-        );
+        SnackBarUtils.showError(context, message);
       }
       return false;
     }
@@ -463,12 +492,14 @@ class AddressNotifier extends StateNotifier<AddressState> {
 
   /// Select an address
   void selectAddress(AddressDto address) {
+    _explicitSelection = true;
     state = state.copyWith(selectedAddress: address);
   }
 
   /// Clear selected address
   void clearSelectedAddress() {
-    state = state.copyWith(selectedAddress: null);
+    _explicitSelection = false;
+    state = state.copyWith(clearSelectedAddress: true);
   }
 
   /// Set an address as default
@@ -477,6 +508,8 @@ class AddressNotifier extends StateNotifier<AddressState> {
     required int addressId,
     BuildContext? context,
   }) async {
+    _explicitSelection = false;
+    state = state.copyWith(clearSelectedAddress: true);
     return await updateAddress(
       userId: userId,
       addressId: addressId,
