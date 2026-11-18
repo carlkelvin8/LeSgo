@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantEditInformationField extends StatelessWidget {
   const MerchantEditInformationField({
@@ -25,20 +26,19 @@ class MerchantEditInformationField extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label.toLowerCase().replaceFirstMapped(RegExp(r'^.'), (m) => m[0]!.toUpperCase()),
+            label,
             style: TextStyle(
               fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 12),
+              fontSize: ResponsiveUtils.fontSize(context, 11),
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF645B6D),
-              letterSpacing: 0,
+              color: context.acc(const Color(0xFF5A2E79)),
+              letterSpacing: 1,
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFE3DEE8)),
+              color: context.surf(const Color(0xFFE9E4EC)),
               borderRadius: BorderRadius.circular(
                 ResponsiveUtils.spacing(context, 14),
               ),
@@ -52,7 +52,7 @@ class MerchantEditInformationField extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 15),
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF2B2530),
+                color: context.txt(const Color(0xFF2B2530)),
               ),
               decoration: InputDecoration(
                 isDense: true,

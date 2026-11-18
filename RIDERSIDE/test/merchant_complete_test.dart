@@ -45,12 +45,16 @@ void main() {
       expect(MerchantOrderOpsUtils.canCancelAfterAccept('pending'), isFalse);
     });
 
-    test('canMarkReadyForPickup from searching/accepted only', () {
+    test('canMarkReadyForPickup while rider is waiting or at store', () {
       expect(
         MerchantOrderOpsUtils.canMarkReadyForPickup('searching_driver'),
         isTrue,
       );
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('accepted'), isTrue);
+      expect(
+        MerchantOrderOpsUtils.canMarkReadyForPickup('driver_arrived_at_pickup'),
+        isTrue,
+      );
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('pending'), isFalse);
       expect(
         MerchantOrderOpsUtils.canMarkReadyForPickup('ready_for_pickup'),
@@ -58,6 +62,26 @@ void main() {
       );
       expect(MerchantOrderOpsUtils.canMarkReadyForPickup('picked_up'), isFalse);
     });
+
+    test(
+      'assigned order is part of rider flow and cannot be cancelled by merchant',
+      () {
+        expect(
+          MerchantOrderOpsUtils.isRiderFlowStatus(
+            'accepted',
+            riderAssigned: true,
+          ),
+          isTrue,
+        );
+        expect(
+          MerchantOrderOpsUtils.canCancelAfterAccept(
+            'ready_for_pickup',
+            riderAssigned: true,
+          ),
+          isFalse,
+        );
+      },
+    );
 
     test('isRiderFlowStatus detects rider has taken over', () {
       expect(MerchantOrderOpsUtils.isRiderFlowStatus('picked_up'), isTrue);
@@ -90,6 +114,7 @@ void main() {
       _makeOrder(status: 'pending'),
       _makeOrder(status: 'searching_driver'),
       _makeOrder(status: 'accepted'),
+      _makeOrder(status: 'accepted', readyForPickupAt: '2026-11-09T12:00:00Z'),
       _makeOrder(status: 'ready_for_pickup'),
       _makeOrder(status: 'picked_up'),
       _makeOrder(status: 'completed'),
@@ -98,7 +123,7 @@ void main() {
 
     test('all filter returns all orders', () {
       final result = filterMerchantOrders(orders, MerchantOrderFilter.all);
-      expect(result.length, 7);
+      expect(result.length, 8);
     });
 
     test('pending filter returns only pending', () {
@@ -110,13 +135,46 @@ void main() {
     test('pickUp filter returns searching_driver + accepted', () {
       final result = filterMerchantOrders(orders, MerchantOrderFilter.pickUp);
       expect(result.length, 2);
+      expect(result.any((order) => order.readyForPickupAt != null), isFalse);
     });
 
-    test('ready filter returns ready_for_pickup', () {
+    test('ready filter includes status and readiness timestamp', () {
       final result = filterMerchantOrders(orders, MerchantOrderFilter.ready);
-      expect(result.length, 1);
-      expect(result.first.status, 'ready_for_pickup');
+      expect(result.length, 2);
+      expect(result.any((order) => order.status == 'ready_for_pickup'), isTrue);
+      expect(result.any((order) => order.status == 'accepted'), isTrue);
     });
+
+    test('ready timestamp keeps an arrived order visible in ready queue', () {
+      final arrived = _makeOrder(
+        status: 'driver_arrived_at_pickup',
+        readyForPickupAt: DateTime.now().toIso8601String(),
+      );
+      final result = filterMerchantOrders([arrived], MerchantOrderFilter.ready);
+      expect(result, hasLength(1));
+      expect(result.first.status, 'driver_arrived_at_pickup');
+    });
+
+    test(
+      'terminal statuses stay out of the ready filter after being ready',
+      () {
+        final completed = _makeOrder(
+          status: 'completed',
+          readyForPickupAt: '2026-11-09T12:00:00Z',
+        );
+        final cancelled = _makeOrder(
+          status: 'cancelled',
+          readyForPickupAt: '2026-11-09T12:00:00Z',
+        );
+        expect(
+          filterMerchantOrders([
+            completed,
+            cancelled,
+          ], MerchantOrderFilter.ready),
+          isEmpty,
+        );
+      },
+    );
 
     test('forDelivery filter returns picked_up', () {
       final result = filterMerchantOrders(
@@ -305,6 +363,7 @@ OrderDto _makeOrder({
   double? metaOrderValue,
   double? totalFare,
   double? estimatedFare,
+  String? readyForPickupAt,
 }) {
   return OrderDto(
     id: 1,
@@ -323,5 +382,6 @@ OrderDto _makeOrder({
     metaOrderValue: metaOrderValue,
     totalFare: totalFare,
     estimatedFare: estimatedFare,
+    readyForPickupAt: readyForPickupAt,
   );
 }

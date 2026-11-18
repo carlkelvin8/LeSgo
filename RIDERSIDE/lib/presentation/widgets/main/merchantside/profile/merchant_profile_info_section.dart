@@ -4,6 +4,8 @@ import '../../../../../../core/services/api_service.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantProfileInfoSection extends ConsumerWidget {
   const MerchantProfileInfoSection({super.key});
@@ -27,42 +29,40 @@ class MerchantProfileInfoSection extends ConsumerWidget {
         );
 
         // Fall back to user's registration data if partner profile fields are empty
-        final contact =
-            (profile.supportPhone != null && profile.supportPhone!.isNotEmpty)
+        final contact = (profile.supportPhone != null && profile.supportPhone!.isNotEmpty)
             ? profile.supportPhone!
             : (authState.user?.phone ?? 'Not set');
-        final email =
-            (profile.supportEmail != null && profile.supportEmail!.isNotEmpty)
+        final email = (profile.supportEmail != null && profile.supportEmail!.isNotEmpty)
             ? profile.supportEmail!
             : (authState.user?.email ?? 'Not set');
 
         final prepTime = profile.estimatedDeliveryMinutes;
         final hours = profile.openingHours;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _MerchantStoreStatusToggle(
-                initialIsOpen: profile.isOpen ?? false,
-              ),
-              const Divider(height: 24, color: Color(0xFFF0ECF3)),
-              _info(context, 'Contact', contact),
-              _info(context, 'Email', email),
-              if (prepTime != null && prepTime > 0)
-                _info(context, 'Preparation', '~$prepTime min'),
-              if (hours != null && hours.isNotEmpty)
-                _OperatingHoursSummary(hours: hours),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _info(context, 'Restaurant:', profile.name),
+            _info(context, 'Contact:', contact),
+            _info(context, 'Email:', email),
+            if (prepTime != null && prepTime > 0)
               _info(
                 context,
-                'Referral code',
-                referralLabel,
+                'Prep Time:',
+                '~$prepTime min',
                 valueColor: const Color(0xFF5F2D82),
               ),
-            ],
-          ),
+            if (ref.watch(riderAuthProvider).user?.isStaff != true)
+              _MerchantStoreStatusToggle(initialIsOpen: profile.isOpen ?? false),
+            if (hours != null && hours.isNotEmpty)
+              _OperatingHoursSummary(hours: hours),
+            _info(
+              context,
+              'Referral Code:',
+              referralLabel,
+              valueColor: const Color(0xFFC320D6),
+            ),
+          ],
         );
       },
     );
@@ -75,35 +75,30 @@ class MerchantProfileInfoSection extends ConsumerWidget {
     Color? valueColor,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 92,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: 12,
-                color: Color(0xFF8A8292),
+      padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
+      child: RichText(
+        text: TextSpan(
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 14),
+          ),
+          children: [
+            TextSpan(
+              text: '$label ',
+              style: TextStyle(
+                color: context.sub(Colors.grey.shade600),
+                fontWeight: FontWeight.w400,
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
+            TextSpan(
+              text: value,
               style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: 12,
-                height: 1.4,
-                color: valueColor ?? const Color(0xFF332A3B),
+                color: valueColor ?? Colors.black87,
                 fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -199,52 +194,25 @@ class _MerchantStoreStatusToggleState
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Row(
+          RichText(
+            text: TextSpan(
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 14),
+              ),
               children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: _isOpen
-                        ? const Color(0xFFEAF4EE)
-                        : const Color(0xFFF2EDF5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.storefront_outlined,
-                    size: 19,
-                    color: _isOpen
-                        ? const Color(0xFF35845A)
-                        : const Color(0xFF82788B),
+                TextSpan(
+                  text: 'Store Status: ',
+                  style: TextStyle(
+                    color: context.sub(Colors.grey.shade600),
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isOpen ? 'Store is open' : 'Store is closed',
-                        style: const TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF332A3B),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _isOpen
-                            ? 'Accepting customer orders'
-                            : 'Not accepting new orders',
-                        style: const TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: 10,
-                          color: Color(0xFF8A8292),
-                        ),
-                      ),
-                    ],
+                TextSpan(
+                  text: _isOpen ? 'OPEN' : 'CLOSED',
+                  style: TextStyle(
+                    color: _isOpen ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
@@ -268,13 +236,7 @@ class _OperatingHoursSummary extends StatelessWidget {
   const _OperatingHoursSummary({required this.hours});
 
   static const _dayOrder = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday',
+    'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
   ];
 
   static const _dayLabels = {
@@ -311,7 +273,7 @@ class _OperatingHoursSummary extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
               ),
@@ -338,11 +300,11 @@ class _OperatingHoursSummary extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Operating Hours:',
+            context.tr('Operating Hours:'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.grey.shade600,
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),

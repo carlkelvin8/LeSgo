@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/main/merchantside/merchant_orders_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantBottomNavBar extends ConsumerWidget {
   const MerchantBottomNavBar({super.key});
@@ -17,7 +19,7 @@ class MerchantBottomNavBar extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -37,18 +39,9 @@ class MerchantBottomNavBar extends ConsumerWidget {
         children: [
           _buildNavItem(
             context, ref,
-            type: MerchantNavType.book,
-            svgAsset: 'assets/images/navbar/merchant/booking.svg',
-            label: 'Book',
-            isSelected: currentNav == MerchantNavType.book,
-            selectedColor: selectedColor,
-            unselectedColor: unselectedColor,
-          ),
-          _buildNavItem(
-            context, ref,
             type: MerchantNavType.orders,
             svgAsset: 'assets/images/navbar/merchant/orders.svg',
-            label: 'Orders',
+            label: context.tr('Orders'),
             isSelected: currentNav == MerchantNavType.orders,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
@@ -56,19 +49,19 @@ class MerchantBottomNavBar extends ConsumerWidget {
           ),
           _buildNavItem(
             context, ref,
-            type: MerchantNavType.profile,
-            svgAsset: 'assets/images/navbar/merchant/profile.svg',
-            label: 'Profile',
-            isSelected: currentNav == MerchantNavType.profile,
+            type: MerchantNavType.menu,
+            svgAsset: 'assets/images/navbar/merchant/menu.svg',
+            label: context.tr('Menu'),
+            isSelected: currentNav == MerchantNavType.menu,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
           ),
           _buildNavItem(
             context, ref,
-            type: MerchantNavType.menu,
-            svgAsset: 'assets/images/navbar/merchant/menu.svg',
-            label: 'Menu',
-            isSelected: currentNav == MerchantNavType.menu,
+            type: MerchantNavType.book,
+            svgAsset: 'assets/images/navbar/merchant/booking.svg',
+            label: context.tr('Book'),
+            isSelected: currentNav == MerchantNavType.book,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
           ),
@@ -76,8 +69,17 @@ class MerchantBottomNavBar extends ConsumerWidget {
             context, ref,
             type: MerchantNavType.lespay,
             svgAsset: 'assets/images/navbar/merchant/star.svg',
-            label: 'LeSpay',
+            label: context.tr('LeSpay'),
             isSelected: currentNav == MerchantNavType.lespay,
+            selectedColor: selectedColor,
+            unselectedColor: unselectedColor,
+          ),
+          _buildNavItem(
+            context, ref,
+            type: MerchantNavType.profile,
+            svgAsset: 'assets/images/navbar/merchant/profile.svg',
+            label: context.tr('Profile'),
+            isSelected: currentNav == MerchantNavType.profile,
             selectedColor: selectedColor,
             unselectedColor: unselectedColor,
           ),

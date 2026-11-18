@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../widgets/main/riderside/earnings/earnings_design.dart';
-import '../../../widgets/main/riderside/profile/profile_panel.dart';
 
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/receipt_generator.dart';
@@ -10,22 +8,20 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/rider_earnings_utils.dart';
 import '../../../../core/utils/share_utils.dart';
 import '../../../provider/main/riderside/rider_earnings_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderEarningsScreen extends ConsumerWidget {
-  const RiderEarningsScreen({super.key, this.embedded = false});
-  final bool? embedded;
+  const RiderEarningsScreen({super.key});
 
-  static void shareEarnings(BuildContext context, RiderEarningsState state) {
+  void _shareEarnings(BuildContext context, RiderEarningsState state) {
     final periodLabel = RiderEarningsUtils.periodLabel(state.period);
     final entries = state.entries
-        .map(
-          (e) => {
-            'order_id': e.orderId,
-            'service_name': e.serviceName,
-            'earnings': e.earnings,
-            'completed_at': e.completedAt,
-          },
-        )
+        .map((e) => {
+              'order_id': e.orderId,
+              'service_name': e.serviceName,
+              'earnings': e.earnings,
+              'completed_at': e.completedAt,
+            })
         .toList();
 
     final receipt = ReceiptGenerator.generateEarningSummaryReceipt(
@@ -51,36 +47,31 @@ class RiderEarningsScreen extends ConsumerWidget {
     final lang = ref.watch(appLanguageProvider);
 
     return Scaffold(
-      backgroundColor: earningsCanvas(context),
-      appBar: embedded == true
-          ? null
-          : AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
-              title: Text(
-                AppLocalization.translate('earnings', lang),
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 18),
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF5F2D82),
-                ),
-              ),
-              centerTitle: true,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  onPressed: earningsAsync is AsyncData
-                      ? () => shareEarnings(context, earningsAsync.value!)
-                      : null,
-                  tooltip: AppLocalization.translate(
-                    'share_earnings_report',
-                    lang,
-                  ),
-                ),
-              ],
-            ),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
+      appBar: AppBar(
+        backgroundColor: context.surf(Colors.white),
+        elevation: 0,
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
+        title: Text(
+          AppLocalization.translate('earnings', lang),
+          style: TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: ResponsiveUtils.fontSize(context, 18),
+            fontWeight: FontWeight.w700,
+            color: context.acc(const Color(0xFF5F2D82)),
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            onPressed: earningsAsync is AsyncData
+                ? () => _shareEarnings(context, earningsAsync.value!)
+                : null,
+            tooltip: AppLocalization.translate('share_earnings_report', lang),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         color: const Color(0xFF5F2D82),
         onRefresh: () async {
@@ -96,42 +87,38 @@ class RiderEarningsScreen extends ConsumerWidget {
             ResponsiveUtils.scrollBottomPaddingForBottomNav(context),
           ),
           children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: RiderEarningsPeriod.values.map((p) {
-                final selected = p == period;
-                return ChoiceChip(
-                  label: Text(RiderEarningsUtils.periodLabel(p)),
-                  selected: selected,
-                  showCheckmark: false,
-                  onSelected: (_) =>
-                      ref.read(riderEarningsPeriodProvider.notifier).state = p,
-                  selectedColor: const Color(0xFF5F2D82),
-                  backgroundColor: Colors.white,
-                  side: BorderSide(
-                    color: selected
-                        ? const Color(0xFF5F2D82)
-                        : const Color(0xFFEAE3F0),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  labelStyle: TextStyle(
-                    fontFamily: 'TT Fors',
-                    color: selected ? Colors.white : const Color(0xFF63576D),
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  ),
-                );
-              }).toList(),
+            SizedBox(
+              height: ResponsiveUtils.spacing(context, 36),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const ClampingScrollPhysics(),
+                children: RiderEarningsPeriod.values.map((p) {
+                  final selected = p == period;
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      right: ResponsiveUtils.spacing(context, 8),
+                    ),
+                    child: ChoiceChip(
+                      label: Text(RiderEarningsUtils.periodLabel(p)),
+                      selected: selected,
+                      onSelected: (_) {
+                        ref.read(riderEarningsPeriodProvider.notifier).state =
+                            p;
+                      },
+                      selectedColor: const Color(0xFF5F2D82),
+                      labelStyle: TextStyle(
+                        fontFamily: 'TT Fors',
+                        color: selected ? Colors.white : Colors.black87,
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             earningsAsync.when(
-              skipLoadingOnRefresh: false,
               loading: () => const Padding(
                 padding: EdgeInsets.all(48),
                 child: Center(child: CircularProgressIndicator()),
@@ -141,7 +128,7 @@ class RiderEarningsScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Could not load earnings. Pull down to refresh or try again.',
+                      'Could not load earnings: $e',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.red.shade700),
                     ),
@@ -158,7 +145,7 @@ class RiderEarningsScreen extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _SummaryCard(summary: state.summary, period: state.period),
+                    _SummaryCard(summary: state.summary),
                     SizedBox(height: ResponsiveUtils.spacing(context, 20)),
                     Text(
                       'Completed Trips',
@@ -166,20 +153,27 @@ class RiderEarningsScreen extends ConsumerWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
                         fontWeight: FontWeight.w700,
-                        color: profileText(context),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                     if (state.entries.isEmpty)
-                      EarningsPanel(
-                        child: EarningsEmptyState(
-                          title: 'Ready for your next earning?',
-                          message:
-                              'No completed trips for ${RiderEarningsUtils.periodLabel(period).toLowerCase()}.\nYour completed trips will appear here.',
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          vertical: ResponsiveUtils.spacing(context, 32),
+                        ),
+                        child: Text(
+                          'No completed trips for ${RiderEarningsUtils.periodLabel(period).toLowerCase()}.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            color: context.sub(Colors.grey.shade600),
+                          ),
                         ),
                       )
                     else
-                      ...state.entries.map((entry) => _TripTile(entry: entry)),
+                      ...state.entries.map(
+                        (entry) => _TripTile(entry: entry),
+                      ),
                   ],
                 );
               },
@@ -193,17 +187,81 @@ class RiderEarningsScreen extends ConsumerWidget {
 
 class _SummaryCard extends StatelessWidget {
   final RiderEarningsSummary summary;
-  final RiderEarningsPeriod period;
 
-  const _SummaryCard({required this.summary, required this.period});
+  const _SummaryCard({required this.summary});
 
   @override
   Widget build(BuildContext context) {
-    return EarningsBalanceCard(
-      title: 'Net earnings · ${RiderEarningsUtils.periodLabel(period)}',
-      total: summary.totalEarnings,
-      trips: summary.completedTrips,
-      average: summary.averagePerTrip,
+    return Container(
+      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF5F2D82), Color(0xFF8E24AA)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Net Rider Earnings',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 13),
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+          Text(
+            'PHP ${summary.totalEarnings.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 28),
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          Row(
+            children: [
+              _StatChip(
+                label: '${summary.completedTrips} trips',
+              ),
+              SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+              _StatChip(
+                label:
+                    'Avg PHP ${summary.averagePerTrip.toStringAsFixed(2)}',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final String label;
+
+  const _StatChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: 12,
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -223,30 +281,12 @@ class _TripTile extends StatelessWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: profileDark(context) ? const Color(0xFF241D30) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: profileDark(context)
-              ? const Color(0xFF393044)
-              : const Color(0xFFEFEAF4),
-        ),
+        color: context.surf(Colors.white),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF8C5CB5).withValues(alpha: .08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.route_outlined,
-              size: 20,
-              color: Color(0xFF8C5CB5),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,22 +305,19 @@ class _TripTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: profileMuted(context),
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              'PHP ${entry.earnings.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontWeight: FontWeight.w700,
-                fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: const Color(0xFF5F2D82),
-              ),
+          Text(
+            'PHP ${entry.earnings.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontWeight: FontWeight.w700,
+              fontSize: ResponsiveUtils.fontSize(context, 14),
+              color: context.acc(const Color(0xFF5F2D82)),
             ),
           ),
         ],

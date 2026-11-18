@@ -119,18 +119,18 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
                 label,
                 style: TextStyle(
                   color: total ? colors.onSurface : colors.onSurfaceVariant,
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: total ? FontWeight.w700 : FontWeight.w400,
                 ),
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(
+            Flexible(
               child: Text(
-                '₱${amount.toStringAsFixed(2)}',
+                valid ? '₱${amount.toStringAsFixed(2)}' : '—',
                 textAlign: TextAlign.end,
                 style: TextStyle(
-                  fontSize: total ? 22 : 14,
+                  fontSize: total ? 18 : 13,
                   fontWeight: FontWeight.w700,
                   color: total ? purple : colors.onSurface,
                 ),
@@ -147,7 +147,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
         backgroundColor: dark ? colors.surface : Colors.white,
         surfaceTintColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         clipBehavior: Clip.antiAlias,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
@@ -244,7 +244,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
                       ],
                       style: TextStyle(
                         fontFamily: 'TT Fors',
-                        fontSize: 32,
+                        fontSize: 30,
                         fontWeight: FontWeight.w700,
                         color: purple,
                       ),
@@ -261,7 +261,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
                           minWidth: 48,
                         ),
                         filled: true,
-                        fillColor: dark ? tint : const Color(0xFFFAF9FC),
+                        fillColor: tint,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 18,
                           vertical: 18,
@@ -312,12 +312,10 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
                                       }),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: selected
-                                      ? (dark
-                                            ? const Color(0xFF241D2C)
-                                            : Colors.white)
+                                      ? purple
                                       : colors.onSurface,
                                   backgroundColor: selected
-                                      ? purple
+                                      ? tint
                                       : Colors.transparent,
                                   side: BorderSide(
                                     color: selected
@@ -347,22 +345,11 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
                         );
                       },
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Payment summary',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: colors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 20),
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: colors.outlineVariant.withValues(alpha: 0.6),
-                        ),
+                        color: tint,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
@@ -420,7 +407,7 @@ class _RiderTopUpDialogState extends ConsumerState<RiderTopUpDialog> {
                               style: const TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontWeight: FontWeight.w700,
-                                fontSize: 15,
+                                fontSize: 14,
                               ),
                             ),
                     ),

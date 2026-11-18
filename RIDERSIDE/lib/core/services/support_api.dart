@@ -10,6 +10,7 @@ class RiderSupportTicket {
   final String priority;
   final String status;
   final String createdAt;
+  final String? ticketNumber;
 
   const RiderSupportTicket({
     required this.id,
@@ -19,6 +20,7 @@ class RiderSupportTicket {
     required this.priority,
     required this.status,
     required this.createdAt,
+    this.ticketNumber,
   });
 
   factory RiderSupportTicket.fromJson(Map<String, dynamic> json) {
@@ -30,6 +32,7 @@ class RiderSupportTicket {
       priority: json['priority']?.toString() ?? 'medium',
       status: json['status']?.toString() ?? 'open',
       createdAt: json['created_at']?.toString() ?? '',
+      ticketNumber: json['ticket_number']?.toString(),
     );
   }
 }
@@ -63,14 +66,8 @@ class RiderSupportMessage {
       id: (json['id'] as num?)?.toInt() ?? 0,
       userId: (json['user_id'] as num?)?.toInt() ?? 0,
       message: json['message']?.toString() ?? '',
-      isStaff:
-          json['is_internal'] == true ||
-          (user is Map &&
-              const [
-                'admin',
-                'partner_admin',
-                'partner_staff',
-              ].contains(user['role']?.toString())),
+      isStaff: json['is_internal'] == true ||
+          (user is Map && user['role']?.toString() == 'admin'),
       createdAt: json['created_at']?.toString() ?? '',
       authorName: user is Map ? user['name']?.toString() : null,
       attachments: attachments,
@@ -134,7 +131,9 @@ class SupportApi {
   static Future<RiderSupportTicket> createTicket({
     required String subject,
     required String description,
-    String category = 'general',
+    // Must be one of the backend's ticket categories; 'general' is not one and
+    // made the server reject (and previously silently drop) every message.
+    String category = 'general_inquiry',
     String priority = 'medium',
     int? orderId,
   }) async {
@@ -160,9 +159,7 @@ class SupportApi {
       ticket: RiderSupportTicket.fromJson(data),
       messages: messagesRaw
           .whereType<Map>()
-          .map(
-            (e) => RiderSupportMessage.fromJson(Map<String, dynamic>.from(e)),
-          )
+          .map((e) => RiderSupportMessage.fromJson(Map<String, dynamic>.from(e)))
           .toList(),
       satisfactionRating: (data['satisfaction_rating'] as num?)?.toInt(),
     );
@@ -192,7 +189,9 @@ class SupportApi {
   static Future<void> requestClose(int ticketId, {String? reason}) async {
     await _dio.post(
       ApiConstants.supportTicketClose(ticketId),
-      data: {if (reason != null && reason.isNotEmpty) 'reason': reason},
+      data: {
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      },
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../global/home_header.dart';
 import 'merchant_sticky_action_bar.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 /// Reusable form layout wrapper that handles scaffold, safe area, header, and form structure
 /// Reduces boilerplate by ~25 lines per screen
@@ -24,7 +25,7 @@ class MerchantFormLayout extends StatelessWidget {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Column(
           children: [

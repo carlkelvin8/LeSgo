@@ -8,6 +8,7 @@ import '../../../../widgets/main/riderside/profile/rider_profile_info_section.da
 import '../../../../widgets/main/riderside/profile/rider_profile_summary_section.dart';
 import '../../../../widgets/main/riderside/profile/rider_profile_settings_section.dart';
 import '../../../../widgets/main/riderside/profile/profile_panel.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderProfileView extends ConsumerStatefulWidget {
   const RiderProfileView({super.key});
@@ -19,9 +20,18 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
     with TickerProviderStateMixin {
   late final AnimationController _entrance = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 620),
+    duration: const Duration(milliseconds: 900),
   );
   final ScrollController _scroll = ScrollController();
+  double _scrollOffset = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(() {
+      setState(() => _scrollOffset = _scroll.offset);
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -44,7 +54,7 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
     final fade = CurvedAnimation(
       parent: _entrance,
       curve: Interval(
-        (index * .10).clamp(0.0, .55),
+        (index * .08).clamp(0.0, .55),
         1.0,
         curve: Curves.easeOut,
       ),
@@ -52,7 +62,7 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
     final slide = _entrance.drive(
       CurveTween(
         curve: Interval(
-          (index * .10).clamp(0.0, .55),
+          (index * .08).clamp(0.0, .55),
           1.0,
           curve: Curves.easeOutCubic,
         ),
@@ -75,14 +85,16 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
     final profile = ref.watch(riderProfileProvider);
     final isDark = profileDark(context);
     String t(String key) => AppLocalization.translate(key, lang);
-    final width = MediaQuery.sizeOf(context).width;
-    final horizontal = width > 668
-        ? (width - 620) / 2
-        : (width < 360 ? 16.0 : 24.0);
     final bottomPad = MediaQuery.of(context).padding.bottom;
+    final safePadTop = MediaQuery.of(context).padding.top;
+
+    // Collapse title opacity — starts fading in after 160px scroll
+    const heroHeight = 260.0;
+    const collapseStart = heroHeight - kToolbarHeight - 60;
+    final titleOpacity = ((_scrollOffset - collapseStart) / 40).clamp(0.0, 1.0);
 
     return ColoredBox(
-      color: isDark ? const Color(0xFF171320) : const Color(0xFFF8F7FB),
+      color: isDark ? const Color(0xFF110E1A) : const Color(0xFFF4F2F8),
       child: Stack(
         children: [
           RefreshIndicator(
@@ -102,13 +114,7 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
               slivers: [
                 // ── Hero ──────────────────────────────────────────────
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(horizontal, 24, horizontal, 0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: _reveal(0, const RiderProfileHeader()),
-                    ),
-                  ),
+                  child: _reveal(0, const RiderProfileHeader()),
                 ),
 
                 // ── Loading bar ────────────────────────────────────────
@@ -123,12 +129,7 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
 
                 // ── Content ────────────────────────────────────────────
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontal,
-                    22,
-                    horizontal,
-                    bottomPad + 28,
-                  ),
+                  padding: EdgeInsets.fromLTRB(16, 20, 16, bottomPad + 32),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       // Error panel
@@ -162,10 +163,10 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
                                             .loadProfile(),
                                   child: Text(
                                     t('try_again'),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: 12,
-                                      color: Color(0xFF6D3EA0),
+                                      color: context.acc(Color(0xFF6D3EA0)),
                                     ),
                                   ),
                                 ),
@@ -185,6 +186,48 @@ class _RiderProfileViewState extends ConsumerState<RiderProfileView>
                   ),
                 ),
               ],
+            ),
+          ),
+
+          // ── Sticky collapsed toolbar ───────────────────────────────
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              height: safePadTop + kToolbarHeight,
+              decoration: BoxDecoration(
+                color: titleOpacity > 0
+                    ? const Color(
+                        0xFF3A0D60,
+                      ).withValues(alpha: titleOpacity * .96)
+                    : Colors.transparent,
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(top: safePadTop),
+                child: Row(
+                  children: [
+                    Expanded(child: Opacity(
+                      opacity: titleOpacity,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          profile.name.isNotEmpty ? profile.name : t('profile'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 17,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    )),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

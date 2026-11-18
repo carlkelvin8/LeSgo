@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,10 +30,10 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       // Stop persistent notification sound when rider views bookings
       OrderSoundAlertService().acknowledgeOrderAlert();
-      
+
       _ordersSub = ref.listenManual<RiderOrdersState>(riderOrdersProvider, (
         previous,
         next,
@@ -41,6 +43,10 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
           setState(() => _showMapView = true);
         }
       });
+      // Bookings is the rider's default tab. A tab-change listener in the
+      // parent cannot refresh it on first launch, so fetch orders when this
+      // view is first mounted as well.
+      unawaited(ref.read(riderOrdersProvider.notifier).loadOrders());
       if (ref.read(riderOrdersProvider).activeOrder != null) {
         setState(() => _showMapView = true);
       }
@@ -76,7 +82,7 @@ class _RiderBookingsViewState extends ConsumerState<RiderBookingsView> {
                 child: Column(
                   children: [
                     const LocationPermissionBanner(),
-                    const RiderBookingsHeader(),
+                    RiderBookingsHeader(compact: map),
                     if (!kIsWeb)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),

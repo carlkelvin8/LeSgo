@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/merchant_order_alert_service.dart';
+import '../../../../../core/utils/merchant_csv_export_utils.dart';
 import '../../../../../data/data_source/dto/merchant/order_dto.dart';
+import '../../../../provider/main/merchantside/merchant_branches_provider.dart';
 import '../../../../provider/main/merchantside/merchant_menu_image_lookup.dart';
 import '../../../../provider/main/merchantside/merchant_orders_provider.dart';
 import '../../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
@@ -10,6 +12,7 @@ import '../../../../widgets/main/merchantside/orders/merchant_order_action_handl
 import '../../../../widgets/main/merchantside/orders/merchant_order_dialogs.dart';
 import '../../../../widgets/main/merchantside/orders/merchant_order_queue_card.dart';
 import '../merchant_order_detail_screen.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 enum _QueueSort { attention, newest, oldest }
 
@@ -30,6 +33,9 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
     // Stop persistent notification sound when merchant views orders
     WidgetsBinding.instance.addPostFrameCallback((_) {
       MerchantOrderAlertService.acknowledgeOrderAlert();
+      if (ref.read(merchantBranchesProvider).branches.isEmpty) {
+        ref.read(merchantBranchesProvider.notifier).loadBranches();
+      }
     });
   }
 
@@ -67,23 +73,23 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
   Future<void> _ready(OrderDto order) async {
     final confirmed = await showMerchantConfirmDialog(
       context,
-      title: 'Ready for pickup?',
-      message: 'Let the rider know this order is packed and ready.',
-      confirmLabel: 'Mark ready',
+      title: context.tr('Ready for pickup?'),
+      message: context.tr('Let the rider know this order is packed and ready.'),
+      confirmLabel: context.tr('Mark ready'),
     );
     if (!confirmed || !mounted) return;
     try {
       await ref.read(merchantOrderActionProvider).markReadyForPickup(order.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order ready for pickup.')),
+          SnackBar(content: Text(context.tr('Order ready for pickup.'))),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not update the order. Please try again.'),
+          SnackBar(
+            content: Text(context.tr('Could not update the order. Please try again.')),
           ),
         );
       }
@@ -123,7 +129,12 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(merchantOrdersProvider);
-    final all = async.valueOrNull ?? [];
+    final branches = ref.watch(merchantBranchesProvider).branches;
+    final branchFilter = ref.watch(selectedMerchantBranchFilterProvider);
+    final allOrders = async.valueOrNull ?? [];
+    final all = branchFilter == null
+        ? allOrders
+        : allOrders.where((o) => o.branchId == branchFilter).toList();
     final selected = ref.watch(selectedMerchantOrderFilterProvider);
     final images = ref.watch(menuItemImageLookupProvider);
     final timers = ref.watch(merchantPrepTimerProvider);
@@ -217,7 +228,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(side, 16, side, 0),
+                  padding: EdgeInsets.fromLTRB(side, 24, side, 0),
                   sliver: SliverToBoxAdapter(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,7 +240,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'YOUR STORE, IN MOTION',
+                                    context.tr('YOUR STORE, IN MOTION'),
                                     style: TextStyle(
                                       fontSize: 9,
                                       letterSpacing: 1.7,
@@ -239,9 +250,9 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
-                                    'Orders',
+                                    context.tr('Orders'),
                                     style: TextStyle(
-                                      fontSize: 26,
+                                      fontSize: 32,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: -1.2,
                                       color: OrderQueuePalette.text(context),
@@ -250,14 +261,30 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                 ],
                               ),
                             ),
+                            IconButton.filledTonal(
+                              tooltip: context.tr('Refresh orders'),
+                              onPressed: async.isLoading ? null : _refresh,
+                              icon: const Icon(Icons.refresh_rounded),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton.filledTonal(
+                              tooltip: context.tr('Export orders'),
+                              onPressed: all.isEmpty
+                                  ? null
+                                  : () => MerchantCsvExportUtils.exportAndShare(
+                                      context,
+                                      all,
+                                    ),
+                              icon: const Icon(Icons.file_download_outlined),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 22),
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(26),
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -294,13 +321,13 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                               : 'Keep good food moving.',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 18,
+                                            fontSize: 22,
                                             height: 1.2,
                                             fontWeight: FontWeight.w800,
                                             letterSpacing: -.5,
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 8),
                                         Text(
                                           async.hasError
                                               ? 'Refresh to see the latest orders.'
@@ -318,7 +345,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   ),
                                   const SizedBox(width: 12),
                                   Container(
-                                    padding: const EdgeInsets.all(9),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
                                       color: Colors.white.withValues(
                                         alpha: .12,
@@ -328,18 +355,18 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                     child: const Icon(
                                       Icons.room_service_outlined,
                                       color: Color(0xFFE7D7FF),
-                                      size: 22,
+                                      size: 28,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 22),
                               Wrap(
                                 spacing: 10,
                                 runSpacing: 10,
                                 children: [
                                   _Metric(
-                                    label: 'NEW',
+                                    label: context.tr('NEW'),
                                     value:
                                         async.hasError ||
                                             (async.isLoading && all.isEmpty)
@@ -350,7 +377,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                     duration: duration,
                                   ),
                                   _Metric(
-                                    label: 'PREPARING',
+                                    label: context.tr('PREPARING'),
                                     value:
                                         async.hasError ||
                                             (async.isLoading && all.isEmpty)
@@ -361,7 +388,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                     duration: duration,
                                   ),
                                   _Metric(
-                                    label: 'READY',
+                                    label: context.tr('READY'),
                                     value:
                                         async.hasError ||
                                             (async.isLoading && all.isEmpty)
@@ -376,7 +403,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 22),
                         TextField(
                           controller: _search,
                           onChanged: (_) => setState(() {}),
@@ -385,7 +412,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             color: OrderQueuePalette.text(context),
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Search order, customer or item',
+                            hintText: context.tr('Search order, customer or item'),
                             prefixIcon: const Icon(
                               Icons.search_rounded,
                               size: 22,
@@ -393,13 +420,13 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             suffixIcon: _search.text.isEmpty
                                 ? null
                                 : IconButton(
-                                    tooltip: 'Clear search',
+                                    tooltip: context.tr('Clear search'),
                                     icon: const Icon(Icons.close_rounded),
                                     onPressed: () => setState(_search.clear),
                                   ),
                             filled: true,
                             fillColor: OrderQueuePalette.surface(context),
-                            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                            contentPadding: const EdgeInsets.all(16),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                               borderSide: BorderSide.none,
@@ -412,7 +439,35 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        if (branches.length > 1) ...[
+                          const SizedBox(height: 12),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                for (final option in [null, ...branches.map((b) => b.id)])
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: ChoiceChip(
+                                      avatar: const Icon(Icons.storefront_outlined, size: 16),
+                                      label: Text(
+                                        option == null
+                                            ? 'All branches'
+                                            : branches.firstWhere((b) => b.id == option).name,
+                                      ),
+                                      selected: branchFilter == option,
+                                      selectedColor: OrderQueuePalette.purple.withValues(alpha: 0.15),
+                                      onSelected: (_) {
+                                        HapticFeedback.selectionClick();
+                                        ref.read(selectedMerchantBranchFilterProvider.notifier).state = option;
+                                      },
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
@@ -443,8 +498,8 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                           onTap: () => _select(filter),
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 13,
-                                              vertical: 10,
+                                              horizontal: 14,
+                                              vertical: 14,
                                             ),
                                             child: Text(
                                               '${filter == MerchantOrderFilter.pickUp
@@ -471,7 +526,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 15),
                         Row(
                           children: [
                             Expanded(
@@ -489,26 +544,26 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                               ),
                             ),
                             PopupMenuButton<_QueueSort>(
-                              tooltip: 'Sort orders',
+                              tooltip: context.tr('Sort orders'),
                               initialValue: _sort,
                               onSelected: (v) => setState(() => _sort = v),
-                              itemBuilder: (_) => const [
+                              itemBuilder: (_) => [
                                 PopupMenuItem(
                                   value: _QueueSort.attention,
-                                  child: Text('Needs attention first'),
+                                  child: Text(context.tr('Needs attention first')),
                                 ),
                                 PopupMenuItem(
                                   value: _QueueSort.newest,
-                                  child: Text('Newest first'),
+                                  child: Text(context.tr('Newest first')),
                                 ),
                                 PopupMenuItem(
                                   value: _QueueSort.oldest,
-                                  child: Text('Oldest first'),
+                                  child: Text(context.tr('Oldest first')),
                                 ),
                               ],
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
+                                  vertical: 14,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -570,8 +625,8 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                 else if (async.hasError)
                   SliverToBoxAdapter(
                     child: _QueueEmpty(
-                      title: 'Couldn’t load your orders',
-                      message: 'Check your connection and try again.',
+                      title: context.tr('Couldn’t load your orders'),
+                      message: context.tr('Check your connection and try again.'),
                       icon: Icons.wifi_off_rounded,
                       action: 'Try again',
                       onAction: _refresh,
@@ -609,7 +664,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                           ? (visible.length / 2).ceil()
                           : visible.length,
                       itemBuilder: (_, index) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.only(bottom: 16),
                         child: wide
                             ? Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -617,7 +672,7 @@ class _MerchantOrdersViewState extends ConsumerState<MerchantOrdersView> {
                                   Expanded(
                                     child: card(visible[index * 2], index * 2),
                                   ),
-                                  const SizedBox(width: 10),
+                                  const SizedBox(width: 16),
                                   Expanded(
                                     child: index * 2 + 1 < visible.length
                                         ? card(
@@ -659,7 +714,7 @@ class _Metric extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 9, 14, 9),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -670,7 +725,7 @@ class _Metric extends StatelessWidget {
                 key: ValueKey(value),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 20,
+                  fontSize: 25,
                   fontWeight: FontWeight.w800,
                 ),
               ),

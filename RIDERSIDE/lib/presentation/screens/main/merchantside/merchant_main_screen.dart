@@ -5,6 +5,7 @@ import '../../../../core/utils/auth_navigation.dart';
 import '../../../../core/utils/screen_auto_refresh.dart';
 import '../../../../core/services/merchant_order_alert_service.dart';
 import '../../../mixins/auto_refresh_mixin.dart';
+import '../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
@@ -23,6 +24,8 @@ import 'views/merchant_profile_view.dart';
 import 'merchant_menu_add_item_screen.dart';
 import 'merchant_menu_add_category_screen.dart';
 import '../cart_screen.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantMainScreen extends ConsumerStatefulWidget {
   const MerchantMainScreen({super.key});
@@ -101,9 +104,9 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showConfirmDialog(
       context: context,
-      title: 'Logout',
-      message: 'Are you sure you want to logout?',
-      confirmLabel: 'Logout',
+      title: context.tr('Logout'),
+      message: context.tr('Are you sure you want to logout?'),
+      confirmLabel: context.tr('Logout'),
       onConfirm: () async {
         await ref.read(riderAuthProvider.notifier).logout(ref);
       },
@@ -130,7 +133,8 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final isLespay = currentNav == MerchantNavType.lespay;
-    final showMenuFab = currentNav == MerchantNavType.menu;
+    final showMenuFab = currentNav == MerchantNavType.menu &&
+        ref.watch(canEditMerchantMenuProvider);
 
     ref.listen<MerchantNavType>(merchantNavProvider, (previous, next) {
       if (!mounted) return;
@@ -141,7 +145,7 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
     return MerchantNewOrderWatcher(
       child: MerchantPrepTimerSync(
       child: Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: isLespay
           ? const MerchantLespayView()
           : SafeArea(
@@ -220,10 +224,10 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
     return Center(
       child: Text(
         _getTitle(type),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF5F2D82),
+          color: context.acc(Color(0xFF5F2D82)),
         ),
       ),
     );

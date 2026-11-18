@@ -17,6 +17,7 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../core/utils/rider_navigation_launcher.dart';
 import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 // Custom painter for map pattern
 class MapPatternPainter extends CustomPainter {
@@ -90,13 +91,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
   @override
   void initState() {
     super.initState();
-    AppLogger.debug('ðŸ—ºï¸ RiderMapScreen initState called - FIXED ZOOM CONTROLS v2');
+    AppLogger.debug('🗺️ RiderMapScreen initState called - FIXED ZOOM CONTROLS v2');
     _initializeMap();
   }
 
   @override
   void dispose() {
-    AppLogger.debug('ðŸ—ºï¸ RiderMapScreen dispose called');
+    AppLogger.debug('🗺️ RiderMapScreen dispose called');
     ref.read(riderLocationProvider.notifier).setActiveOrderId(null);
     
     // Properly dispose map controller
@@ -185,7 +186,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     try {
       final trackingData = await ApiService.getLiveOrderTracking(widget.orderId!);
       if (trackingData != null && mounted) {
-        AppLogger.debug('ðŸ“ Live tracking data received: $trackingData');
+        AppLogger.debug('📍 Live tracking data received: $trackingData');
         
         // Update markers with live driver location if available
         if (trackingData['driver_location'] != null) {
@@ -210,13 +211,13 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
               );
             });
             _updateMarkers();
-            AppLogger.debug('ðŸš— Updated driver position from live tracking: $driverLat, $driverLng');
+            AppLogger.debug('🚗 Updated driver position from live tracking: $driverLat, $driverLng');
           }
         }
         
         // Update ETA if available
         if (trackingData['eta'] != null) {
-          AppLogger.debug('â±ï¸ ETA: ${trackingData['eta']} minutes');
+          AppLogger.debug('⏱️ ETA: ${trackingData['eta']} minutes');
         }
       }
     } catch (e) {
@@ -251,7 +252,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             markerId: const MarkerId('pickup'),
             position: LatLng(order.pickupLat, order.pickupLng),
             icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-            infoWindow: InfoWindow(title: '${AppLocalization.translate('pickup', ref.read(appLanguageProvider))}: ${order.pickupAddress}'),
+            infoWindow: InfoWindow(title: '${AppLocalization.translate('pickup', ref.read(appLanguageProvider))}: ${order.pickupDisplay}'),
           ),
         );
         
@@ -305,7 +306,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     }
 
     try {
-      AppLogger.debug('ðŸ—ºï¸ Fetching route for order ${order.id}');
+      AppLogger.debug('🗺️ Fetching route for order ${order.id}');
 
       final polylines = await RiderRouteUtils.buildNavigationPolylines(
         order: order,
@@ -450,7 +451,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.surf(Colors.white),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             boxShadow: [
               BoxShadow(
@@ -470,7 +471,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: context.surf(Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -493,7 +494,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 18),
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF5F2D82),
+                              color: context.acc(const Color(0xFF5F2D82)),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -627,7 +628,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                             title: currentOrder.serviceId == 3 || currentOrder.serviceId == 4
                                 ? AppLocalization.translate('pick_up_from_merchant', ref.read(appLanguageProvider))
                                 : AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
-                            address: currentOrder.pickupAddress,
+                            address: currentOrder.pickupDisplay,
                             onNavigate: () => _openNavigation(
                               currentOrder.pickupLat,
                               currentOrder.pickupLng,
@@ -657,7 +658,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           Container(
                             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
+                              color: context.surf(Colors.grey.shade50),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -669,7 +670,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                     fontFamily: 'TT Fors',
                                     fontSize: ResponsiveUtils.fontSize(context, 14),
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF5F2D82),
+                                    color: context.acc(const Color(0xFF5F2D82)),
                                   ),
                                 ),
                                 SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -681,7 +682,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                                        color: Colors.grey.shade600,
+                                        color: context.sub(Colors.grey.shade600),
                                       ),
                                     ),
                                     Text(
@@ -690,7 +691,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 14),
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF5F2D82),
+                                        color: context.acc(const Color(0xFF5F2D82)),
                                       ),
                                     ),
                                   ],
@@ -704,7 +705,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                       style: TextStyle(
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                                        color: Colors.grey.shade600,
+                                        color: context.sub(Colors.grey.shade600),
                                       ),
                                     ),
                                     Text(
@@ -713,7 +714,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                         fontFamily: 'TT Fors',
                                         fontSize: ResponsiveUtils.fontSize(context, 14),
                                         fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF5F2D82),
+                                        color: context.acc(const Color(0xFF5F2D82)),
                                       ),
                                     ),
                                   ],
@@ -729,7 +730,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 18),
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF5F2D82),
+                              color: context.acc(const Color(0xFF5F2D82)),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -738,7 +739,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: Colors.grey.shade600,
+                              color: context.sub(Colors.grey.shade600),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -771,7 +772,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: ResponsiveUtils.fontSize(context, 12),
-                                          color: Colors.grey.shade700,
+                                          color: context.sub(Colors.grey.shade700),
                                         ),
                                       ),
                                     ),
@@ -802,15 +803,15 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Row(
         children: [
           Icon(
             icon,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
             size: ResponsiveUtils.fontSize(context, 20),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -824,7 +825,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -833,7 +834,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
-                    color: Colors.grey.shade600,
+                    color: context.sub(Colors.grey.shade600),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -896,15 +897,15 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
+          icon: Icon(Icons.arrow_back, color: context.acc(Color(0xFF5F2D82))),
           onPressed: () {
-            AppLogger.debug('ðŸ”™ Back button pressed');
+            AppLogger.debug('🔙 Back button pressed');
             Navigator.pop(context);
           },
         ),
@@ -960,9 +961,9 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                   });
                 });
                 
-                AppLogger.debug('ðŸ—ºï¸ REAL Google Maps created and ready with ${_markers.length} markers');
-                AppLogger.debug('ðŸ”‘ Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
-                AppLogger.debug('ðŸ“ Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+                AppLogger.debug('🗺️ REAL Google Maps created and ready with ${_markers.length} markers');
+                AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+                AppLogger.debug('📍 Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
                 
                 // Try to set a specific style to ensure map loads
                 try {
@@ -975,15 +976,15 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
             },
             
             onTap: (LatLng position) {
-              AppLogger.debug('ðŸ—ºï¸ Google Maps tapped at: ${position.latitude}, ${position.longitude}');
+              AppLogger.debug('🗺️ Google Maps tapped at: ${position.latitude}, ${position.longitude}');
             },
             
             onCameraMove: (CameraPosition position) {
-              AppLogger.debug('ðŸ“· Google Maps camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
+              AppLogger.debug('📷 Google Maps camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
             },
             
             onCameraIdle: () {
-              AppLogger.debug('ðŸ“· Google Maps camera idle');
+              AppLogger.debug('📷 Google Maps camera idle');
             },
           ),
           

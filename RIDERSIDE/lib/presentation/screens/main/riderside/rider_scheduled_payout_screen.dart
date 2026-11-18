@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/services/scheduled_payout_service.dart';
+import '../../../../core/services/api_service.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderScheduledPayoutScreen extends ConsumerStatefulWidget {
   const RiderScheduledPayoutScreen({super.key});
@@ -25,6 +28,8 @@ class _RiderScheduledPayoutScreenState
   String? _selectedAccount;
   bool _isLoading = false;
   bool _restored = false;
+  bool _enabled = false;
+  String? _error;
 
   @override
   void initState() {
@@ -39,17 +44,33 @@ class _RiderScheduledPayoutScreenState
   }
 
   Future<void> _restorePreferences() async {
-    final prefs = await ScheduledPayoutService.load();
-    if (!mounted) return;
     setState(() {
-      _frequency = prefs.frequency;
-      _weeklyDay = prefs.weeklyDay;
-      _monthlyDay = prefs.monthlyDay;
-      _scheduledTime = _fromHm(prefs.time);
-      _thresholdController.text = prefs.threshold.toStringAsFixed(0);
-      _selectedAccount = prefs.accountProvider;
-      _restored = true;
+      _restored = false;
+      _error = null;
     });
+    try {
+      final prefs = await ScheduledPayoutService.load();
+      if (!mounted) return;
+      setState(() {
+        _frequency = prefs.frequency;
+        _enabled = prefs.enabled;
+        _weeklyDay = prefs.weeklyDay;
+        _monthlyDay = prefs.monthlyDay;
+        _scheduledTime = _fromHm(prefs.time);
+        _thresholdController.text = prefs.threshold.toStringAsFixed(2);
+        _selectedAccount = prefs.accountProvider;
+        _restored = true;
+      });
+    } catch (error) {
+      if (mounted) setState(() => _error = _message(error));
+    }
+  }
+
+  String _message(Object error) {
+    if (error is DioException && error.response?.statusCode == 404) {
+      return 'Automatic payouts are not available on the server yet. Your settings could not be verified.';
+    }
+    return ApiService.extractError(error);
   }
 
   TimeOfDay _fromHm(String hm) {
@@ -63,31 +84,44 @@ class _RiderScheduledPayoutScreenState
   }
 
   Future<void> _savePayout() async {
+    final threshold = double.tryParse(_thresholdController.text.trim());
+    if (threshold == null ||
+        !threshold.isFinite ||
+        threshold < 10 ||
+        threshold > 100000 ||
+        (threshold * 100 - (threshold * 100).round()).abs() > 0.00001) {
+      setState(
+        () => _error =
+            'Enter a threshold from PHP 10 to PHP 100,000 with at most two decimal places.',
+      );
+      return;
+    }
+    if (_enabled && _selectedAccount == null) {
+      setState(() => _error = 'Select a linked GCash or Maya account.');
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       final prefs = ScheduledPayoutPreferences(
+        enabled: _enabled,
         frequency: _frequency,
         weeklyDay: _weeklyDay,
         monthlyDay: _monthlyDay,
         time: _timeCode(),
-        threshold:
-            double.tryParse(_thresholdController.text.trim()) ?? 0,
+        threshold: threshold,
         accountProvider: _selectedAccount,
       );
-      final synced = await ScheduledPayoutService.save(prefs);
+      await ScheduledPayoutService.save(prefs);
 
       if (!mounted) return;
       final lang = ref.read(appLanguageProvider);
-      final saved = AppLocalization.translate(
-        'scheduled_payout_saved',
-        lang,
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(synced ? saved : '$saved (${AppLocalization.translate('pending_sync', lang)})'),
-        ),
-      );
+      final saved = AppLocalization.translate('scheduled_payout_saved', lang);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(saved)));
       Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) setState(() => _error = _message(error));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -116,24 +150,26 @@ class _RiderScheduledPayoutScreenState
     final lang = ref.watch(appLanguageProvider);
     final wallet = ref.watch(riderWalletProvider);
     final linkedAccounts = wallet.linkedAccounts
-        .where((a) =>
-            a['provider']?.toString() == 'gcash' ||
-            a['provider']?.toString() == 'maya')
+        .where(
+          (a) =>
+              a['provider']?.toString() == 'gcash' ||
+              a['provider']?.toString() == 'maya',
+        )
         .toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(const Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('scheduled_payout', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -141,13 +177,37 @@ class _RiderScheduledPayoutScreenState
       body: ListView(
         padding: EdgeInsets.all(hp),
         children: [
+          if (_error != null) ...[
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            if (!_restored)
+              TextButton(
+                onPressed: _restorePreferences,
+                child: const Text('Retry'),
+              ),
+            const SizedBox(height: 12),
+          ],
+          if (!_restored && _error == null) const LinearProgressIndicator(),
+          SwitchListTile(
+            title: const Text('Enable automatic payouts'),
+            value: _enabled,
+            onChanged: _restored && !_isLoading
+                ? (value) => setState(() => _enabled = value)
+                : null,
+          ),
+          const Text(
+            'Times use Philippine time (Asia/Manila). At each scheduled time, the available wallet balance is withdrawn, up to PHP 100,000, when the threshold is met. Payouts are skipped during an active delivery or while another withdrawal is pending.',
+          ),
+          const SizedBox(height: 16),
           Text(
             'Auto-Payout Frequency',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade700,
+              color: context.sub(Colors.grey.shade700),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -157,51 +217,51 @@ class _RiderScheduledPayoutScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-          ...['daily', 'weekly', 'monthly'].map((f) {
-            final selected = _frequency == f;
-            return Card(
-              margin: EdgeInsets.only(
-                bottom: ResponsiveUtils.spacing(context, 8),
-              ),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: selected
-                      ? const Color(0xFF5F2D82)
-                      : Colors.grey.shade200,
-                  width: selected ? 2 : 1,
-                ),
-              ),
-              child: RadioListTile<String>(
-                title: Text(
-                  f == 'daily'
-                      ? 'Daily'
-                      : f == 'weekly'
-                          ? 'Weekly'
-                          : 'Monthly',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontWeight: FontWeight.w700,
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                  ),
-                ),
-                subtitle: Text(
-                  f == 'daily'
-                      ? 'Every day at ${_timeLabel()}'
-                      : f == 'weekly'
-                          ? 'Every ${_dayName(_weeklyDay)} at ${_timeLabel()}'
-                          : 'Day $_monthlyDay of every month at ${_timeLabel()}',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                  ),
-                ),
-                value: f,
-                activeColor: const Color(0xFF5F2D82),
-              ),
-            );
-          }),
+                ...['daily', 'weekly', 'monthly'].map((f) {
+                  final selected = _frequency == f;
+                  return Card(
+                    margin: EdgeInsets.only(
+                      bottom: ResponsiveUtils.spacing(context, 8),
+                    ),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: selected
+                            ? const Color(0xFF5F2D82)
+                            : Colors.grey.shade200,
+                        width: selected ? 2 : 1,
+                      ),
+                    ),
+                    child: RadioListTile<String>(
+                      title: Text(
+                        f == 'daily'
+                            ? 'Daily'
+                            : f == 'weekly'
+                            ? 'Weekly'
+                            : 'Monthly',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontWeight: FontWeight.w700,
+                          fontSize: ResponsiveUtils.fontSize(context, 14),
+                        ),
+                      ),
+                      subtitle: Text(
+                        f == 'daily'
+                            ? 'Every day at ${_timeLabel()}'
+                            : f == 'weekly'
+                            ? 'Every ${_dayName(_weeklyDay)} at ${_timeLabel()}'
+                            : 'Day $_monthlyDay of every month at ${_timeLabel()}',
+                        style: TextStyle(
+                          fontFamily: 'TT Fors',
+                          fontSize: ResponsiveUtils.fontSize(context, 12),
+                        ),
+                      ),
+                      value: f,
+                      activeColor: const Color(0xFF5F2D82),
+                    ),
+                  );
+                }),
               ],
             ),
           ),
@@ -229,8 +289,7 @@ class _RiderScheduledPayoutScreenState
                         child: Text(_dayName(i + 1)),
                       ),
                     ),
-                    onChanged: (v) =>
-                        setState(() => _weeklyDay = v!),
+                    onChanged: (v) => setState(() => _weeklyDay = v!),
                   ),
                 ],
               ),
@@ -259,8 +318,7 @@ class _RiderScheduledPayoutScreenState
                         child: Text('${i + 1}'),
                       ),
                     ),
-                    onChanged: (v) =>
-                        setState(() => _monthlyDay = v!),
+                    onChanged: (v) => setState(() => _monthlyDay = v!),
                   ),
                 ],
               ),
@@ -274,7 +332,7 @@ class _RiderScheduledPayoutScreenState
                 fontFamily: 'TT Fors',
                 fontWeight: FontWeight.w700,
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey.shade700,
+                color: context.sub(Colors.grey.shade700),
               ),
             ),
             subtitle: Text(
@@ -316,7 +374,7 @@ class _RiderScheduledPayoutScreenState
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey.shade600,
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -326,7 +384,7 @@ class _RiderScheduledPayoutScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade700,
+              color: context.sub(Colors.grey.shade700),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -336,7 +394,7 @@ class _RiderScheduledPayoutScreenState
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.grey.shade600,
+                color: context.sub(Colors.grey.shade600),
               ),
             )
           else
@@ -346,47 +404,50 @@ class _RiderScheduledPayoutScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-            ...linkedAccounts.map((account) {
-              final provider = account['provider']?.toString() ?? '';
-              final last4 = account['account_last4']?.toString() ?? '';
-              final isSelected = _selectedAccount == provider;
-              return Card(
-                margin: EdgeInsets.only(
-                  bottom: ResponsiveUtils.spacing(context, 8),
-                ),
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: isSelected
-                        ? const Color(0xFF5F2D82)
-                        : Colors.grey.shade200,
-                    width: isSelected ? 2 : 1,
-                  ),
-                ),
-                child: RadioListTile<String>(
-                  title: Text(
-                    provider.toUpperCase(),
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontWeight: FontWeight.w700,
-                      fontSize: ResponsiveUtils.fontSize(context, 14),
-                    ),
-                  ),
-                  subtitle: last4.isNotEmpty
-                      ? Text(
-                          '•••• $last4',
+                  ...linkedAccounts.map((account) {
+                    final provider = account['provider']?.toString() ?? '';
+                    final last4 = account['account_last4']?.toString() ?? '';
+                    final isSelected = _selectedAccount == provider;
+                    return Card(
+                      margin: EdgeInsets.only(
+                        bottom: ResponsiveUtils.spacing(context, 8),
+                      ),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: isSelected
+                              ? const Color(0xFF5F2D82)
+                              : Colors.grey.shade200,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      child: RadioListTile<String>(
+                        title: Text(
+                          provider.toUpperCase(),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 12),
+                            fontWeight: FontWeight.w700,
+                            fontSize: ResponsiveUtils.fontSize(context, 14),
                           ),
-                        )
-                      : null,
-                  value: provider,
-                  activeColor: const Color(0xFF5F2D82),
-                ),
-              );
-            }),
+                        ),
+                        subtitle: last4.isNotEmpty
+                            ? Text(
+                                '•••• $last4',
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    12,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        value: provider,
+                        activeColor: const Color(0xFF5F2D82),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -398,7 +459,10 @@ class _RiderScheduledPayoutScreenState
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
               ),
-              onPressed: _selectedAccount == null || _isLoading || !_restored
+              onPressed:
+                  (_enabled && _selectedAccount == null) ||
+                      _isLoading ||
+                      !_restored
                   ? null
                   : _savePayout,
               child: _isLoading

@@ -164,11 +164,12 @@ class MerchantRemoteDataSource {
           .whereType<Map>()
           .map((item) => ReviewDto.fromJson(Map<String, dynamic>.from(item)))
           .toList();
+      final meta = root['meta'] is Map ? root['meta'] as Map : const {};
       return MerchantReviewsPage(
         reviews: reviews,
-        currentPage: 1,
-        lastPage: 1,
-        total: reviews.length,
+        currentPage: int.tryParse('${meta['current_page']}') ?? 1,
+        lastPage: int.tryParse('${meta['last_page']}') ?? 1,
+        total: int.tryParse('${meta['total']}') ?? reviews.length,
       );
     }
 
@@ -211,12 +212,58 @@ class MerchantRemoteDataSource {
       throw Exception('Failed to update order status: ${ApiService.extractError(e)}');
     }
   }
+
+  /// Whether this store has blocked the customer of [orderId].
+  Future<bool> isCustomerBlocked(int orderId) async {
+    try {
+      final response = await _dio.get(
+        ApiConstants.orderCustomerSafety.replaceAll('{id}', '$orderId'),
+      );
+      return response.data['data']?['customer_blocked'] == true;
+    } catch (e) {
+      throw Exception('Could not load customer status: ${ApiService.extractError(e)}');
+    }
+  }
+
+  /// Reports the customer of [orderId] to LeSgo admins, optionally blocking
+  /// them from ordering at this store.
+  Future<void> reportCustomer(
+    int orderId, {
+    required String reason,
+    String? details,
+    bool block = false,
+  }) async {
+    try {
+      await _dio.post(
+        ApiConstants.orderReportCustomer.replaceAll('{id}', '$orderId'),
+        data: {
+          'reason': reason,
+          if (details != null && details.isNotEmpty) 'details': details,
+          'block': block,
+        },
+      );
+    } catch (e) {
+      throw Exception('Could not send report: ${ApiService.extractError(e)}');
+    }
+  }
+
+  /// Blocks or unblocks the customer of [orderId]. Returns the new state.
+  Future<bool> setCustomerBlocked(int orderId, bool block) async {
+    try {
+      final url = ApiConstants.orderBlockCustomer.replaceAll('{id}', '$orderId');
+      final response = block ? await _dio.post(url) : await _dio.delete(url);
+      return response.data['data']?['customer_blocked'] == true;
+    } catch (e) {
+      throw Exception(
+        'Could not ${block ? 'block' : 'unblock'} customer: ${ApiService.extractError(e)}',
+      );
+    }
+  }
   
   /// Upload image to media API and return public URL.
   Future<String> uploadMediaFile(
     String filePath, {
     String context = 'general',
-    bool resolveUrl = true,
   }) async {
     final formData = FormData.fromMap({'context': context});
     await appendDocumentFile(formData, 'file', filePath);
@@ -230,9 +277,6 @@ class MerchantRemoteDataSource {
     if (data is Map<String, dynamic>) {
       final raw = data['url']?.toString() ?? data['path']?.toString();
       if (raw != null && raw.isNotEmpty) {
-        // Profile updates should persist the storage key. Resolving a
-        // relative key on-device can point at a stale storage host.
-        if (!resolveUrl) return raw;
         final absolute = MediaUrlUtils.toAbsoluteUrl(raw);
         if (absolute != null && absolute.isNotEmpty) return absolute;
         if (MediaUrlUtils.isHttpUrl(raw)) return raw;
@@ -410,34 +454,17 @@ class MerchantRemoteDataSource {
       final payload = request.toJson();
       payload.remove('logo_url');
 
-      // Resolve a newly selected logo to a durable URL before updating the
-      // partner record so the profile endpoint only receives JSON fields.
-      dynamic requestData = payload;
-      if (request.logoPath != null &&
-          MediaUrlUtils.isLocalFilePath(request.logoPath)) {
-        // Upload first, then send the returned URL in the normal JSON PATCH.
-        // This avoids PHP multipart/PATCH parsing differences between hosting
-        // environments and matches the reliable menu-image upload flow.
-        final uploadedLogoUrl = await uploadMediaFile(
-          request.logoPath!,
-          context: 'profile',
-          resolveUrl: false,
-        );
+      final uploadedLogoUrl = await _resolvePartnerLogoUrl(
+        logoUrl: request.logoUrl,
+        logoPath: request.logoPath,
+      );
+      if (uploadedLogoUrl != null && uploadedLogoUrl.isNotEmpty) {
         payload['logo_url'] = uploadedLogoUrl;
-        requestData = payload;
-      } else {
-        final existingLogoUrl = await _resolvePartnerLogoUrl(
-          logoUrl: request.logoUrl,
-          logoPath: request.logoPath,
-        );
-        if (existingLogoUrl != null && existingLogoUrl.isNotEmpty) {
-          payload['logo_url'] = existingLogoUrl;
-        }
       }
 
       final response = await _dio.patch(
         '/v1/partners/$partnerId',
-        data: requestData,
+        data: payload,
       );
       final responseData = response.data['data'] ?? response.data;
       return PartnerDto.fromJson(responseData as Map<String, dynamic>);

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import 'merchant_menu_provider.dart';
 
@@ -8,10 +9,11 @@ final merchantLowStockItemsProvider = Provider<List<MenuItemDto>>((ref) {
 
   return menuItemsAsync.when(
     data: (items) {
-      return items
-          .where((item) =>
-              item.stockCount != null && item.stockCount! <= 5)
-          .toList();
+      return items.where((item) {
+        // Stock lives in options._inventory; the API does not send stock_count.
+        final inventory = MenuItemInventory.fromMenuItem(item);
+        return inventory.isLowStock || inventory.isSoldOut;
+      }).toList();
     },
     loading: () => [],
     error: (_, __) => [],

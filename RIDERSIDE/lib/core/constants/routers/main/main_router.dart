@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../presentation/screens/registration_fee_screen.dart';
-import '../../../../presentation/screens/main/riderside/rider_earnings_hub_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_earnings_screen.dart';
+import '../../../../presentation/screens/main/riderside/rider_earnings_insights_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_safety_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_schedule_screen.dart';
 import '../../../../presentation/screens/main/riderside/rider_scheduled_payout_screen.dart';
@@ -30,6 +31,8 @@ import '../../../../presentation/screens/main/merchantside/merchant_reviews_scre
 import '../../../../presentation/screens/main/merchantside/merchant_analytics_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_sales_report_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_staff_screen.dart';
+import '../../../../presentation/screens/main/merchantside/merchant_branches_screen.dart';
+import '../../../../presentation/screens/main/merchantside/printer_settings_screen.dart';
 import '../../../../presentation/screens/main/merchantside/merchant_missions_screen.dart';
 import '../../../../domain/entities/rider_booking.dart';
 import '../../../../data/data_source/dto/merchant/order_dto.dart';
@@ -54,13 +57,13 @@ class MainRouter {
     MainRoutes.riderReferral: (_) => const RiderReferralScreen(),
     MainRoutes.riderSecurity: (_) => const RiderSecurityScreen(),
     MainRoutes.riderDocuments: (_) => const RiderDocumentVerificationScreen(),
-    MainRoutes.riderEarnings: (_) => const RiderEarningsHubScreen(),
+    MainRoutes.riderEarnings: (_) => const RiderEarningsScreen(),
     MainRoutes.riderSafety: (_) => const RiderSafetyScreen(),
     MainRoutes.riderSchedule: (_) => const RiderScheduleScreen(),
     MainRoutes.riderScheduledPayout: (_) =>
         const RiderScheduledPayoutScreen(),
     MainRoutes.riderEarningsInsights: (_) =>
-        const RiderEarningsHubScreen(initialIndex: 1),
+        const RiderEarningsInsightsScreen(),
     MainRoutes.riderRating: (_) => const RiderRatingScreen(),
     MainRoutes.riderVehicleManagement: (_) =>
         const RiderVehicleManagementScreen(),
@@ -86,6 +89,8 @@ class MainRouter {
     MainRoutes.merchantAnalytics: (_) => const MerchantAnalyticsScreen(),
     MainRoutes.merchantSalesReport: (_) => const MerchantSalesReportScreen(),
     MainRoutes.merchantStaff: (_) => const MerchantStaffScreen(),
+    MainRoutes.merchantBranches: (_) => const MerchantBranchesScreen(),
+    MainRoutes.merchantPrinterSettings: (_) => const PrinterSettingsScreen(),
   };
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {

@@ -119,7 +119,7 @@ class PrinterSettingsNotifier extends StateNotifier<PrinterSettingsState> {
       state = state.copyWith(
         isConnecting: false,
         isLiveConnected: false,
-        lastError: silent ? null : 'Reconnection error: $e',
+        lastError: silent ? null : 'Could not reconnect to the printer. Make sure it is on and nearby.',
       );
       return false;
     }
@@ -142,7 +142,7 @@ class PrinterSettingsNotifier extends StateNotifier<PrinterSettingsState> {
     } catch (e) {
       state = state.copyWith(
         isScanning: false,
-        lastError: 'Failed to scan: $e',
+        lastError: 'Could not scan for printers. Check that Bluetooth is on.',
       );
     }
   }
@@ -173,7 +173,7 @@ class PrinterSettingsNotifier extends StateNotifier<PrinterSettingsState> {
       state = state.copyWith(
         isConnecting: false,
         isLiveConnected: false,
-        lastError: 'Connection error: $e',
+        lastError: 'Could not connect to the printer. Try again.',
       );
       return false;
     }
@@ -209,7 +209,7 @@ class PrinterSettingsNotifier extends StateNotifier<PrinterSettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLiveConnected: false,
-        lastError: 'Print error: $e',
+        lastError: 'Could not print. Check the printer and try again.',
       );
       return false;
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class RetryWidget extends StatelessWidget {
   final String message;
@@ -25,7 +26,7 @@ class RetryWidget extends StatelessWidget {
             Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.grey[400],
+              color: context.sub(Colors.grey[400]!),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             Text(
@@ -34,7 +35,7 @@ class RetryWidget extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 20),
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: context.sub(Colors.grey[800]!),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -44,7 +45,7 @@ class RetryWidget extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey[600],
+                color: context.sub(Colors.grey[600]!),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),

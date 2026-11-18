@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 // Guard to prevent duplicate dialogs
 final Set<String> _activeDialogs = {};
@@ -37,23 +39,23 @@ class _CancelReasonDialogContentState extends State<_CancelReasonDialogContent> 
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Select reason for rejection:',
+          Text(
+            context.tr('Select reason for rejection:'),
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: context.brd(Colors.grey.shade300)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 isExpanded: true,
                 value: _selectedReason,
-                hint: const Padding(
+                hint: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('Choose a reason'),
+                  child: Text(context.tr('Choose a reason')),
                 ),
                 items: _rejectionReasons.map((reason) {
                   return DropdownMenuItem<String>(
@@ -77,7 +79,7 @@ class _CancelReasonDialogContentState extends State<_CancelReasonDialogContent> 
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Back'),
+          child: Text(context.tr('Back')),
         ),
         ElevatedButton(
           onPressed: _selectedReason == null
@@ -85,7 +87,7 @@ class _CancelReasonDialogContentState extends State<_CancelReasonDialogContent> 
               : () {
                   Navigator.of(context).pop(_selectedReason);
                 },
-          child: const Text('Confirm'),
+          child: Text(context.tr('Confirm')),
         ),
       ],
     );
@@ -149,7 +151,7 @@ Future<bool> showMerchantConfirmDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(context.tr('Cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/services/order_sound_alert_service.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_sound_settings_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 /// A settings card for choosing notification sound.
 class MerchantSoundSettingsCard extends ConsumerWidget {
@@ -18,9 +20,9 @@ class MerchantSoundSettingsCard extends ConsumerWidget {
       width: double.infinity,
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,17 +31,17 @@ class MerchantSoundSettingsCard extends ConsumerWidget {
             children: [
               Icon(
                 Icons.volume_up_outlined,
-                color: const Color(0xFF5F2D82),
+                color: context.acc(const Color(0xFF5F2D82)),
                 size: ResponsiveUtils.fontSize(context, 20),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 8)),
               Text(
-                'Notification Sound',
+                context.tr('Notification Sound'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 15),
                   fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                  color: context.txt(Colors.black87),
                 ),
               ),
               const Spacer(),
@@ -55,11 +57,11 @@ class MerchantSoundSettingsCard extends ConsumerWidget {
           if (soundEnabled) ...[
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             Text(
-              'Choose a sound:',
+              context.tr('Choose a sound:'),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),
-                color: Colors.grey.shade600,
+                color: context.sub(Colors.grey.shade600),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -81,7 +83,7 @@ class MerchantSoundSettingsCard extends ConsumerWidget {
                   ),
                   selected: isSelected,
                   selectedColor: const Color(0xFF5F2D82),
-                  backgroundColor: Colors.grey.shade100,
+                  backgroundColor: context.surf(Colors.grey.shade100),
                   onSelected: (selected) {
                     if (selected) {
                       ref

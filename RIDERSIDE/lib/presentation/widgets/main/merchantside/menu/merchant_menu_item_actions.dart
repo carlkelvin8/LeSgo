@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../orders/merchant_order_dialogs.dart';
+import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 
 Future<bool> confirmAndDeleteMerchantMenuItem(
   BuildContext context,
@@ -13,9 +15,9 @@ Future<bool> confirmAndDeleteMerchantMenuItem(
 }) async {
   final confirmed = await showMerchantConfirmDialog(
     context,
-    title: 'Delete menu item',
+    title: context.tr('Delete menu item'),
     message: 'Delete "$itemName"? This cannot be undone.',
-    confirmLabel: 'Delete',
+    confirmLabel: context.tr('Delete'),
   );
   if (!confirmed || !context.mounted) return false;
 
@@ -26,7 +28,7 @@ Future<bool> confirmAndDeleteMerchantMenuItem(
     return true;
   } catch (e) {
     if (!context.mounted) return false;
-    SnackBarUtils.showError(context, e.toString().replaceFirst('Exception: ', ''));
+    SnackBarUtils.showError(context, ApiErrorMapper.message(e));
     return false;
   }
 }

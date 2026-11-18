@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 const _purple = Color(0xFF6D3EA0);
 
@@ -38,10 +39,8 @@ class _PressSurfaceState extends State<_PressSurface>
     vsync: this,
     duration: const Duration(milliseconds: 100),
   );
-  late final Animation<double> _scale = Tween<double>(
-    begin: 1,
-    end: .97,
-  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+  late final Animation<double> _scale = Tween<double>(begin: 1, end: .97)
+      .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
 
   @override
   void dispose() {
@@ -67,8 +66,10 @@ class _PressSurfaceState extends State<_PressSurface>
       onTapCancel: () => _ctrl.reverse(),
       child: AnimatedBuilder(
         animation: _scale,
-        builder: (_, child) =>
-            Transform.scale(scale: disabled ? 1 : _scale.value, child: child),
+        builder: (_, child) => Transform.scale(
+          scale: disabled ? 1 : _scale.value,
+          child: child,
+        ),
         child: Material(
           color: _surface(context),
           clipBehavior: Clip.antiAlias,
@@ -181,7 +182,9 @@ class _MoreWalletCardState extends State<MoreWalletCard>
                 final x = -0.4 + 1.8 * _shimmer.value;
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: CustomPaint(painter: _ShimmerPainter(x: x)),
+                  child: CustomPaint(
+                    painter: _ShimmerPainter(x: x),
+                  ),
                 );
               },
             ),
@@ -252,7 +255,7 @@ class _MoreWalletCardState extends State<MoreWalletCard>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE0F0B8),
+                        color: context.surf(const Color(0xFFE0F0B8)),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -262,10 +265,10 @@ class _MoreWalletCardState extends State<MoreWalletCard>
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_forward_rounded,
                         size: 17,
-                        color: Color(0xFF2A0850),
+                        color: context.acc(Color(0xFF2A0850)),
                       ),
                     ),
                   ],
@@ -288,41 +291,26 @@ class _ShimmerPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final beamX = size.width * x;
     canvas.save();
-    canvas.transform(
-      Matrix4(
-        math.cos(math.pi / 10),
-        math.sin(math.pi / 10),
-        0,
-        0,
-        -math.sin(math.pi / 10),
-        math.cos(math.pi / 10),
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        -size.height * .2,
-        0,
-        1,
-      ).storage,
-    );
+    canvas.transform(Matrix4(
+      math.cos(math.pi / 10), math.sin(math.pi / 10), 0, 0,
+      -math.sin(math.pi / 10), math.cos(math.pi / 10), 0, 0,
+      0, 0, 1, 0,
+      0, -size.height * .2, 0, 1,
+    ).storage);
     canvas.drawRect(
       Rect.fromLTWH(beamX, -20, size.width * .20, size.height * 1.6),
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.transparent,
-            Colors.white.withValues(alpha: .06),
-            Colors.white.withValues(alpha: .10),
-            Colors.white.withValues(alpha: .06),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
-        ).createShader(Rect.fromLTWH(beamX, 0, size.width * .20, size.height)),
+      Paint()..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Colors.transparent,
+          Colors.white.withValues(alpha: .06),
+          Colors.white.withValues(alpha: .10),
+          Colors.white.withValues(alpha: .06),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+      ).createShader(Rect.fromLTWH(beamX, 0, size.width * .20, size.height)),
     );
     canvas.restore();
   }
@@ -436,9 +424,8 @@ class MoreMenuGroup extends StatelessWidget {
       border: Border.all(color: _border(context)),
       boxShadow: [
         BoxShadow(
-          color: const Color(
-            0xFF5F2D82,
-          ).withValues(alpha: _isDark(context) ? .08 : .04),
+          color: const Color(0xFF5F2D82)
+              .withValues(alpha: _isDark(context) ? .08 : .04),
           blurRadius: 16,
           offset: const Offset(0, 4),
           spreadRadius: -4,
@@ -474,13 +461,11 @@ class MoreMenuRow extends StatefulWidget {
     this.accent = _purple,
     this.onTap,
     this.trailing,
-    this.titleColor,
   });
   final IconData icon;
   final String title;
   final String subtitle;
   final Color accent;
-  final Color? titleColor;
   final VoidCallback? onTap;
   final Widget? trailing;
 
@@ -494,10 +479,8 @@ class _MoreMenuRowState extends State<MoreMenuRow>
     vsync: this,
     duration: const Duration(milliseconds: 100),
   );
-  late final Animation<double> _scale = Tween<double>(
-    begin: 1,
-    end: .97,
-  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+  late final Animation<double> _scale = Tween<double>(begin: 1, end: .97)
+      .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
 
   @override
   void dispose() {
@@ -517,8 +500,10 @@ class _MoreMenuRowState extends State<MoreMenuRow>
     final disabled = MediaQuery.disableAnimationsOf(context);
     final content = AnimatedBuilder(
       animation: _scale,
-      builder: (_, child) =>
-          Transform.scale(scale: disabled ? 1.0 : _scale.value, child: child),
+      builder: (_, child) => Transform.scale(
+        scale: disabled ? 1.0 : _scale.value,
+        child: child,
+      ),
       child: InkWell(
         onTap: widget.trailing != null ? null : _onTap,
         onTapDown: widget.trailing != null
@@ -543,7 +528,7 @@ class _MoreMenuRowState extends State<MoreMenuRow>
                       widget.title,
                       style: TextStyle(
                         fontFamily: 'TT Fors',
-                        color: widget.titleColor ?? _text(context),
+                        color: _text(context),
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
                         height: 1.3,
@@ -581,23 +566,29 @@ class _MoreMenuRowState extends State<MoreMenuRow>
 
 // ─── Icon badge ───────────────────────────────────────────────────────────────
 class _IconBadge extends StatelessWidget {
-  const _IconBadge({required this.icon, required this.accent, this.size = 38});
+  const _IconBadge({
+    required this.icon,
+    required this.accent,
+    this.size = 38,
+  });
   final IconData icon;
   final Color accent;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final color = _isDark(context)
-        ? Color.lerp(accent, Colors.white, .40)!
-        : accent;
+    final color =
+        _isDark(context) ? Color.lerp(accent, Colors.white, .40)! : accent;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         color: color.withValues(alpha: .12),
         borderRadius: BorderRadius.circular(size * .30),
-        border: Border.all(color: color.withValues(alpha: .20), width: .8),
+        border: Border.all(
+          color: color.withValues(alpha: .20),
+          width: .8,
+        ),
       ),
       child: Icon(icon, color: color, size: size * .50),
     );

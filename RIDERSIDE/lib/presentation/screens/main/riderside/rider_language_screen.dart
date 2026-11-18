@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderLanguageView extends ConsumerWidget {
   const RiderLanguageView({super.key});
@@ -59,8 +60,8 @@ class _LangTile extends StatelessWidget {
           backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
           child: Text(
             title[0],
-            style: const TextStyle(
-              color: Color(0xFF5F2D82),
+            style: TextStyle(
+              color: context.acc(Color(0xFF5F2D82)),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -78,12 +79,12 @@ class _LangTile extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
-            color: Colors.grey.shade600,
+            color: context.sub(Colors.grey.shade600),
           ),
         ),
         trailing: selected
-            ? const Icon(Icons.check_circle, color: Color(0xFF5F2D82))
-            : const Icon(Icons.radio_button_unchecked, color: Colors.grey),
+            ? Icon(Icons.check_circle, color: context.acc(Color(0xFF5F2D82)))
+            : Icon(Icons.radio_button_unchecked, color: context.sub(Colors.grey)),
         onTap: onTap,
       ),
     );

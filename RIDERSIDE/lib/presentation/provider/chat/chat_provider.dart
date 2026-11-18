@@ -4,6 +4,7 @@ import '../../../core/di/injection.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/services/chat_realtime_service.dart';
 import '../../../core/services/chat_websocket_service.dart';
+import '../../../core/services/api_service.dart';
 import '../../../core/services/fcm_service.dart';
 import '../../../data/data_source/chat_remote_datasource.dart';
 import '../../../data/data_source/dto/chat/chat_dto.dart';
@@ -54,6 +55,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Timer? _pollTimer;
   Timer? _typingDebounce;
   void Function()? _realtimeListener;
+  bool _realtimeAcquired = false;
 
   ChatNotifier(this._chatDataSource) : super(ChatState());
 
@@ -64,8 +66,30 @@ class ChatNotifier extends StateNotifier<ChatState> {
     if (_realtimeListener != null) {
       ChatRealtimeService.instance.removeListener(_realtimeListener!);
     }
-    unawaited(ChatRealtimeService.instance.release());
+    _releaseRealtime();
     super.dispose();
+  }
+
+  /// Releases the shared realtime service exactly once per acquire, so a chat
+  /// that never loaded (or was already stopped) cannot drop another chat's hold.
+  void _releaseRealtime() {
+    if (!_realtimeAcquired) return;
+    _realtimeAcquired = false;
+    unawaited(ChatRealtimeService.instance.release());
+  }
+
+  /// Stops polling/realtime without touching state (safe to call from a
+  /// screen's dispose). The provider is not auto-disposed, so without this the
+  /// poll timer and websocket subscription outlive the chat screen.
+  void stopRealtime() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+    _typingDebounce?.cancel();
+    if (_realtimeListener != null) {
+      ChatRealtimeService.instance.removeListener(_realtimeListener!);
+      _realtimeListener = null;
+    }
+    _releaseRealtime();
   }
 
   Future<void> getOrCreateConversation(int orderId) async {
@@ -88,13 +112,14 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
-        error: 'Could not load chat: ${e.toString()}',
+        error: 'Could not load chat: ${ApiService.extractError(e)}',
       );
     }
   }
 
   Future<void> _startRealtime(int conversationId) async {
     _pollTimer?.cancel();
+    _releaseRealtime(); // never hold two acquires for one notifier
     if (_realtimeListener != null) {
       ChatRealtimeService.instance.removeListener(_realtimeListener!);
     }
@@ -103,7 +128,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (mounted) loadMessages(silent: true);
     };
     ChatRealtimeService.instance.addListener(_realtimeListener!);
+    _realtimeAcquired = true;
     await ChatRealtimeService.instance.acquire(conversationId: conversationId);
+    // Screen may have been closed (stopRealtime) while connecting.
+    if (!mounted || !_realtimeAcquired) return;
 
     final interval = FcmService.instance.isReady
         ? const Duration(seconds: 30)
@@ -137,7 +165,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (!silent) {
         state = state.copyWith(
           isLoading: false,
-          error: e.toString(),
+          error: ApiService.extractError(e),
         );
       }
     }
@@ -167,7 +195,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       return true;
     } catch (e) {
       if (!mounted) return false;
-      state = state.copyWith(isSending: false, error: e.toString());
+      state = state.copyWith(isSending: false, error: ApiService.extractError(e));
       return false;
     }
   }
@@ -216,14 +244,59 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
+  Future<bool> report({
+    required String reason,
+    String? details,
+    int? messageId,
+    bool block = false,
+  }) async {
+    final conversation = state.currentConversation;
+    if (!mounted || conversation == null) return false;
+    try {
+      await _chatDataSource.reportConversation(
+        conversation.id,
+        reason: reason,
+        details: details,
+        messageId: messageId,
+        block: block,
+      );
+      if (block && mounted) {
+        state = state.copyWith(
+          currentConversation: conversation.copyWithBlockState(
+            blockedByMe: true,
+            canMessage: false,
+          ),
+        );
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> setBlocked(bool blocked) async {
+    final conversation = state.currentConversation;
+    if (!mounted || conversation == null) return false;
+    try {
+      final canMessage = blocked
+          ? await _chatDataSource.blockUser(conversation.id)
+          : await _chatDataSource.unblockUser(conversation.id);
+      if (!mounted) return false;
+      state = state.copyWith(
+        currentConversation: conversation.copyWithBlockState(
+          blockedByMe: blocked,
+          canMessage: canMessage,
+        ),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void clearConversation() {
     _pollTimer?.cancel();
-    _typingDebounce?.cancel();
-    if (_realtimeListener != null) {
-      ChatRealtimeService.instance.removeListener(_realtimeListener!);
-      _realtimeListener = null;
-    }
-    unawaited(ChatRealtimeService.instance.release());
+    stopRealtime();
     state = ChatState();
   }
 }

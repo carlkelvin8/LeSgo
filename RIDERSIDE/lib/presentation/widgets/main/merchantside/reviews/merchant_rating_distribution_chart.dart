@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantRatingDistributionChart extends StatelessWidget {
   final Map<String, int> distribution;
@@ -31,7 +32,7 @@ class MerchantRatingDistributionChart extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: context.txt(Colors.black87),
                   ),
                 ),
               ),
@@ -55,7 +56,7 @@ class MerchantRatingDistributionChart extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.grey.shade700,
+                    color: context.sub(Colors.grey.shade700),
                   ),
                 ),
               ),

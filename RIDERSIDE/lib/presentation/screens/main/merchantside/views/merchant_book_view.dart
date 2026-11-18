@@ -1,13 +1,37 @@
+import '../../../../provider/main/merchantside/merchant_food_detail_provider.dart';
+import '../../../../../core/utils/menu_item_options.dart';
 import '../../../../widgets/main/merchantside/menu/merchant_menu_setup_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/merchant_grid_layout_utils.dart';
 import '../../../../widgets/common/menu_image_widget.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../food_detail_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
+
+/// Choices are stored as `{label, price}`; empty means the item has none.
+List<MerchantFoodSizeOption> _bookChoices(List<MenuOptionChoice> choices) =>
+    choices
+        .where((choice) => choice.label.isNotEmpty)
+        .map(
+          (choice) =>
+              MerchantFoodSizeOption(label: choice.label, price: choice.price),
+        )
+        .toList();
+
+List<MerchantFoodSizeOption> bookItemSizes(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).sizes);
+
+List<MerchantFoodSizeOption> bookItemFlavors(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).flavors);
+
+List<MerchantFoodSizeOption> bookItemAddons(Map<String, dynamic>? options) =>
+    _bookChoices(MenuItemOptionGroups.fromApiMap(options).addons);
 
 class MerchantBookView extends ConsumerStatefulWidget {
   const MerchantBookView({super.key});
@@ -58,10 +82,6 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
     final selectedCategory = ref.watch(selectedCategoryProvider);
     final filteredItems = ref.watch(filteredMenuItemsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasVisibleCategory = menuAsync.valueOrNull?.categories.any(
-          (category) => (category.availableItems?.length ?? 0) > 1,
-        ) ??
-        false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,12 +90,12 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
         _reveal(
           0,
           Padding(
-            padding: EdgeInsets.fromLTRB(hp, 22, hp, 0),
+            padding: EdgeInsets.fromLTRB(hp, 18, hp, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Menu',
+                  context.tr('Menu'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 26,
@@ -85,7 +105,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   ),
                 ),
                 Text(
-                  'Browse your menu categories',
+                  context.tr('Browse your menu categories'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 12.5,
@@ -112,11 +132,13 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                 1,
                 MerchantMenuSetupCard(
                   isDark: isDark,
-                  onAction: () {
-                    HapticFeedback.selectionClick();
-                    ref.read(merchantNavProvider.notifier).state =
-                        MerchantNavType.menu;
-                  },
+                  onAction: ref.watch(canEditMerchantMenuProvider)
+                      ? () {
+                          HapticFeedback.selectionClick();
+                          ref.read(merchantNavProvider.notifier).state =
+                              MerchantNavType.menu;
+                        }
+                      : null,
                 ),
               ),
             ),
@@ -126,7 +148,7 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
           _reveal(
             1,
             SizedBox(
-              height: hasVisibleCategory ? 108 : 0,
+              height: 92,
               child: menuAsync.when(
                 loading: () => const Center(
                   child: SizedBox(
@@ -142,19 +164,19 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.wifi_off_rounded,
                         size: 16,
-                        color: Color(0xFF9A85B8),
+                        color: context.sub(Color(0xFF9A85B8)),
                       ),
                       const SizedBox(width: 8),
                       TextButton(
                         onPressed: () => ref.invalidate(merchantMenuProvider),
-                        child: const Text(
-                          'Retry',
+                        child: Text(
+                          context.tr('Retry'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: Color(0xFF5F2D82),
+                            color: context.acc(Color(0xFF5F2D82)),
                           ),
                         ),
                       ),
@@ -165,20 +187,13 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                   if (menu == null || menu.categories.isEmpty) {
                     return const SizedBox.shrink();
                   }
-                  final visibleCategories = menu.categories
-                      .where((category) =>
-                          (category.availableItems?.length ?? 0) > 1)
-                      .toList();
-                  if (visibleCategories.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
                   return ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: EdgeInsets.symmetric(horizontal: hp),
-                    itemCount: visibleCategories.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 12),
+                    itemCount: menu.categories.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
                     itemBuilder: (context, i) {
-                      final cat = visibleCategories[i];
+                      final cat = menu.categories[i];
                       final sel = selectedCategory == cat.id;
                       return _AnimatedCategoryChip(
                         label: cat.name,
@@ -216,35 +231,6 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
             ),
           ),
 
-          Padding(
-            padding: EdgeInsets.fromLTRB(hp, 0, hp, 10),
-            child: Row(
-              children: [
-                Text(
-                  'Menu items',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1A0A2E),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${filteredItems.length} item${filteredItems.length == 1 ? '' : 's'}',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? const Color(0xFF9A85B8)
-                        : const Color(0xFFAA90C0),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // ── Items grid ──────────────────────────────────────────────────
           Expanded(
             child: filteredItems.isEmpty
@@ -263,13 +249,14 @@ class _MerchantBookViewState extends ConsumerState<MerchantBookView>
                         pageBuilder: (_, anim, _) => FadeTransition(
                           opacity: anim,
                           child: FoodDetailScreen(
+                            menuItemId: item.id as int?,
                             foodName: item.name,
                             foodImage: item.imageUrl,
                             price: 'PHP ${item.price.toStringAsFixed(2)}',
                             description: item.description ?? '',
-                            sizes: item.options?['sizes'] != null
-                                ? List<String>.from(item.options!['sizes'])
-                                : ['Regular'],
+                            sizes: bookItemSizes(item.options),
+                            flavors: bookItemFlavors(item.options),
+                            addons: bookItemAddons(item.options),
                           ),
                         ),
                         transitionDuration: const Duration(milliseconds: 300),
@@ -349,7 +336,7 @@ class _AnimatedCategoryChipState extends State<_AnimatedCategoryChip>
               onTap: widget.onTap,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
-                width: 92,
+                width: 72,
                 padding: const EdgeInsets.symmetric(
                   vertical: 10,
                   horizontal: 6,
@@ -382,8 +369,8 @@ class _AnimatedCategoryChipState extends State<_AnimatedCategoryChip>
                   children: [
                     // Avatar
                     Container(
-                      width: 52,
-                      height: 52,
+                      width: 42,
+                      height: 42,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: sel
@@ -409,14 +396,14 @@ class _AnimatedCategoryChipState extends State<_AnimatedCategoryChip>
                               placeholder: Center(
                                 child: Text(
                                   widget.icon,
-                                  style: const TextStyle(fontSize: 24),
+                                  style: const TextStyle(fontSize: 20),
                                 ),
                               ),
                             )
                           : Center(
                               child: Text(
                                 widget.icon,
-                                style: const TextStyle(fontSize: 24),
+                                style: const TextStyle(fontSize: 20),
                               ),
                             ),
                     ),
@@ -428,7 +415,7 @@ class _AnimatedCategoryChipState extends State<_AnimatedCategoryChip>
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontFamily: 'TT Fors',
-                        fontSize: 10.5,
+                        fontSize: 9.5,
                         fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                         color: sel ? Colors.white : const Color(0xFF4A3060),
                         height: 1.1,
@@ -463,9 +450,9 @@ class _AnimatedItemGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cols = constraints.maxWidth >= 720
+        final cols = constraints.maxWidth >= 600
             ? 4
-            : constraints.maxWidth >= 520
+            : constraints.maxWidth >= 360
             ? 3
             : 2;
         return GridView.builder(
@@ -475,7 +462,7 @@ class _AnimatedItemGrid extends StatelessWidget {
             crossAxisCount: cols,
             mainAxisSpacing: 12,
             crossAxisSpacing: 10,
-            childAspectRatio: .82,
+            childAspectRatio: merchantBookCardAspectRatio(constraints.maxWidth),
           ),
           itemBuilder: (context, i) {
             final item = items[i];
@@ -562,20 +549,31 @@ class _GridItemCardState extends State<_GridItemCard>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Image
-              AspectRatio(
-                aspectRatio: 1.35,
+              Expanded(
+                flex: 6,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(18),
                   ),
-                  child: widget.item.imageUrl != null &&
+                  child:
+                      widget.item.imageUrl != null &&
                           widget.item.imageUrl!.isNotEmpty
-                      ? MenuImageWidget(
-                          source: widget.item.imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: _buildImagePlaceholder(),
+                      ? MerchantFoodGridItem(
+                          name: widget.item.name,
+                          imagePath: widget.item.imageUrl,
+                          onTap: widget.onTap,
                         )
-                      : _buildImagePlaceholder(),
+                      : Container(
+                          width: double.infinity,
+                          color: context.surf(const Color(0xFFEDD9FF)),
+                          child: const Center(
+                            child: Icon(
+                              Icons.restaurant_rounded,
+                              size: 32,
+                              color: Color(0xFF9B70CC),
+                            ),
+                          ),
+                        ),
                 ),
               ),
               // Info
@@ -612,11 +610,11 @@ class _GridItemCardState extends State<_GridItemCard>
                         ),
                         child: Text(
                           '₱${widget.item.price.toStringAsFixed(2)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF5F2D82),
+                            color: context.acc(Color(0xFF5F2D82)),
                           ),
                         ),
                       ),
@@ -626,20 +624,6 @@ class _GridItemCardState extends State<_GridItemCard>
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePlaceholder() {
-    return Container(
-      width: double.infinity,
-      color: const Color(0xFFEDD9FF),
-      child: const Center(
-        child: Icon(
-          Icons.restaurant_rounded,
-          size: 32,
-          color: Color(0xFF9B70CC),
         ),
       ),
     );
@@ -694,10 +678,10 @@ class _EmptyItemsState extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.restaurant_menu_rounded,
                     size: 38,
-                    color: Color(0xFF6D3EA0),
+                    color: context.acc(Color(0xFF6D3EA0)),
                   ),
                 ),
               ),

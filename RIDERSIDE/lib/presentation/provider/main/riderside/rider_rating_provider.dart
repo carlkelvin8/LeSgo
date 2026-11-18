@@ -66,8 +66,7 @@ final riderRatingProvider =
     '/v1/reviews/statistics',
     queryParameters: {'driver_id': driverId},
   );
-  final statsBody =
-      (statsResponse.data['data'] ?? statsResponse.data) as Map<String, dynamic>;
+  final statsBody = _asMap(statsResponse.data['data'] ?? statsResponse.data);
 
   final reviewsResponse = await ApiService.dio.get(
     '/v1/reviews',
@@ -78,13 +77,7 @@ final riderRatingProvider =
   );
   final reviewsRaw = _extractReviewList(reviewsResponse.data);
 
-  final distributionRaw =
-      (statsBody['rating_distribution'] as Map<String, dynamic>?) ?? {};
-  final ratingBreakdown = <int, int>{};
-  for (int star = 1; star <= 5; star++) {
-    ratingBreakdown[star] =
-        (distributionRaw[star.toString()] as num?)?.toInt() ?? 0;
-  }
+  final ratingBreakdown = parseRatingDistribution(statsBody['rating_distribution']);
 
   final reviews = reviewsRaw
       .map(_parseReview)
@@ -92,9 +85,9 @@ final riderRatingProvider =
       .toList();
 
   final summary = RiderRatingSummary(
-    overallRating: (statsBody['average_rating'] as num?)?.toDouble() ??
+    overallRating: _numOrNull(statsBody['average_rating']) ??
         _averageFromReviews(reviews),
-    totalReviews: (statsBody['total_reviews'] as num?)?.toInt() ??
+    totalReviews: _numOrNull(statsBody['total_reviews'])?.toInt() ??
         reviews.length,
     ratingBreakdown: ratingBreakdown.values.every((count) => count == 0)
         ? _breakdownFromReviews(reviews)
@@ -140,8 +133,8 @@ RiderReview _parseReview(Map<String, dynamic> map) {
     customerName = 'Anonymous';
   }
 
-  final rating = (map['driver_rating'] as num?)?.toInt() ??
-      (map['overall_rating'] as num?)?.toInt() ??
+  final rating = _numOrNull(map['driver_rating'])?.toInt() ??
+      _numOrNull(map['overall_rating'])?.toInt() ??
       0;
 
   return RiderReview(
@@ -195,4 +188,30 @@ List<double> _computeWeeklyScores(List<RiderReview> reviews) {
   }
 
   return scores;
+}
+
+double? _numOrNull(dynamic v) {
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v);
+  return null;
+}
+
+Map<String, dynamic> _asMap(dynamic v) =>
+    v is Map ? Map<String, dynamic>.from(v) : <String, dynamic>{};
+
+/// Star histogram from `rating_distribution`. PHP serialises `[1=>..,..5=>..]`
+/// as an object, but an empty/zero-indexed array arrives as a JSON list and
+/// numbers may be strings, so accept every shape instead of hard-casting.
+Map<int, int> parseRatingDistribution(dynamic raw) {
+  final out = <int, int>{for (int star = 1; star <= 5; star++) star: 0};
+  if (raw is Map) {
+    for (int star = 1; star <= 5; star++) {
+      out[star] = _numOrNull(raw[star.toString()] ?? raw[star])?.toInt() ?? 0;
+    }
+  } else if (raw is List && raw.length >= 5) {
+    for (int star = 1; star <= 5; star++) {
+      out[star] = _numOrNull(raw[star - 1])?.toInt() ?? 0;
+    }
+  }
+  return out;
 }

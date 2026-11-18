@@ -82,6 +82,9 @@ class RiderOrder {
   final double? commissionRate;
   final List<String> parsedItems;
 
+  /// Store branch the rider picks up from (from `meta.branch`), if any.
+  final String? pickupBranchName;
+
   RiderOrder({
     required this.id,
     required this.serviceId,
@@ -108,7 +111,20 @@ class RiderOrder {
     this.shippingFee = 0.0,
     this.commissionRate,
     this.parsedItems = const [],
+    this.pickupBranchName,
   });
+
+  /// Pickup line for the UI: "Store – Branch · address" for store orders.
+  String get pickupDisplay {
+    final label = pickupStoreLabel;
+    return label == null ? pickupAddress : '$label · $pickupAddress';
+  }
+
+  /// "Store – Branch" label for store orders; null for non-store orders.
+  String? get pickupStoreLabel {
+    if (pickupBranchName == null) return null;
+    return pickupContactName.isNotEmpty ? pickupContactName : pickupBranchName;
+  }
 
   double get displayShippingFee =>
       shippingFee > 0 ? shippingFee : estimatedFare;
@@ -158,47 +174,40 @@ class RiderOrder {
   }
 
   factory RiderOrder.fromJson(Map<String, dynamic> j) {
-    Map<String, dynamic> endpoint(String prefix) {
-      final direct = j['${prefix}_address'];
-      if (direct is Map) return Map<String, dynamic>.from(direct);
-      final meta = j['meta'];
-      final nested = j[prefix] ?? (meta is Map ? meta[prefix] : null);
-      return nested is Map ? Map<String, dynamic>.from(nested) : {};
+    String extractAddress(dynamic addressData, String fallback) {
+      if (addressData == null) return fallback;
+      if (addressData is String) {
+        if (addressData.startsWith('Instance of ')) return fallback;
+        return addressData;
+      }
+      if (addressData is Map<String, dynamic>) {
+        return addressData['address_line1'] as String? ??
+            addressData['address'] as String? ??
+            addressData['name'] as String? ??
+            fallback;
+      }
+      final stringValue = addressData.toString();
+      return stringValue.startsWith('Instance of ') ? fallback : stringValue;
     }
 
-    double coordinate(String prefix, bool latitude) {
-      final data = endpoint(prefix);
-      return parseDouble(
-        j['${prefix}_${latitude ? 'lat' : 'lng'}'] ??
-            data[latitude ? 'latitude' : 'longitude'] ??
-            data[latitude ? 'lat' : 'lng'],
-      );
+    double extractLat(Map<String, dynamic> json, String prefix) {
+      final directLat = json['${prefix}_lat'];
+      if (directLat != null) return parseDouble(directLat);
+      final addressObj = json['${prefix}_address'];
+      if (addressObj is Map<String, dynamic>) {
+        return parseDouble(addressObj['latitude']);
+      }
+      return 0.0;
     }
 
-    String extractAddress(String prefix) {
-      final data = endpoint(prefix);
-      final values = [
-        j['${prefix}_address'],
-        data['address_line1'],
-        data['formatted_address'],
-        data['address'],
-        data['name'],
-      ];
-      for (final value in values) {
-        if (value is! String) continue;
-        final address = value.trim();
-        if (address.isNotEmpty && !address.startsWith('Instance of '))
-          return address;
+    double extractLng(Map<String, dynamic> json, String prefix) {
+      final directLng = json['${prefix}_lng'];
+      if (directLng != null) return parseDouble(directLng);
+      final addressObj = json['${prefix}_address'];
+      if (addressObj is Map<String, dynamic>) {
+        return parseDouble(addressObj['longitude']);
       }
-      final lat = coordinate(prefix, true), lng = coordinate(prefix, false);
-      if (lat.isFinite &&
-          lng.isFinite &&
-          lat.abs() <= 90 &&
-          lng.abs() <= 180 &&
-          (lat != 0 || lng != 0)) {
-        return 'Map pin: ${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
-      }
-      return 'Address unavailable';
+      return 0.0;
     }
 
     final extractedItems = <String>[];
@@ -272,8 +281,8 @@ class RiderOrder {
     final user = j['user'] is Map<String, dynamic>
         ? j['user'] as Map<String, dynamic>
         : (j['customer'] is Map<String, dynamic>
-              ? j['customer'] as Map<String, dynamic>
-              : null);
+            ? j['customer'] as Map<String, dynamic>
+            : null);
 
     var dropoffName = j['dropoff_contact_name']?.toString().trim() ?? '';
     var dropoffPhone = j['dropoff_contact_phone']?.toString().trim() ?? '';
@@ -282,8 +291,7 @@ class RiderOrder {
         dropoffName = user['name']?.toString().trim() ?? '';
       }
       if (dropoffPhone.isEmpty) {
-        dropoffPhone =
-            user['phone_number']?.toString().trim() ??
+        dropoffPhone = user['phone_number']?.toString().trim() ??
             user['phone']?.toString().trim() ??
             '';
       }
@@ -293,26 +301,25 @@ class RiderOrder {
       id: j['id'] as int,
       serviceId: j['service_id'] as int? ?? 1,
       status: j['status'] as String? ?? 'pending',
-      pickupAddress: extractAddress('pickup'),
-      pickupLat: coordinate('pickup', true),
-      pickupLng: coordinate('pickup', false),
+      pickupAddress: extractAddress(j['pickup_address'], 'Pickup location'),
+      pickupLat: extractLat(j, 'pickup'),
+      pickupLng: extractLng(j, 'pickup'),
       pickupContactName: j['pickup_contact_name'] as String? ?? '',
       pickupContactPhone: j['pickup_contact_phone'] as String? ?? '',
-      dropoffAddress: extractAddress('dropoff'),
-      dropoffLat: coordinate('dropoff', true),
-      dropoffLng: coordinate('dropoff', false),
+      pickupBranchName: _branchName(j['meta']),
+      dropoffAddress: extractAddress(j['dropoff_address'], 'Dropoff location'),
+      dropoffLat: extractLat(j, 'dropoff'),
+      dropoffLng: extractLng(j, 'dropoff'),
       dropoffContactName: dropoffName,
       dropoffContactPhone: dropoffPhone,
       estimatedFare: parseDouble(j['estimated_fare']),
-      driverShare: j['driver_share'] != null
-          ? parseDouble(j['driver_share'])
-          : null,
+      driverShare:
+          j['driver_share'] != null ? parseDouble(j['driver_share']) : null,
       estimatedDistanceM: j['estimated_distance_m'] as int? ?? 0,
       paymentMethod: j['payment_method'] as String? ?? 'cash',
       notes: j['notes'] as String?,
       driverId: extractDriverId(j),
-      totalAmount:
-          extractedTotal ??
+      totalAmount: extractedTotal ??
           (j['total_amount'] != null ? parseDouble(j['total_amount']) : null),
       itemsTotal: calculatedItemsTotal,
       discount: extractedDiscount,
@@ -324,8 +331,7 @@ class RiderOrder {
 
   double earningsFor({String? packageTier, double? riderCommissionRate}) {
     if (driverShare != null && driverShare! > 0) return driverShare!;
-    final rate =
-        commissionRate ??
+    final rate = commissionRate ??
         riderCommissionRate ??
         RiderCommissionUtils.rateForPackage(packageTier);
     return displayShippingFee * rate;
@@ -336,10 +342,11 @@ class RiderOrder {
   double driverEarningsFor(
     String? packageTier, {
     double? riderCommissionRate,
-  }) => earningsFor(
-    packageTier: packageTier,
-    riderCommissionRate: riderCommissionRate,
-  );
+  }) =>
+      earningsFor(
+        packageTier: packageTier,
+        riderCommissionRate: riderCommissionRate,
+      );
 
   RiderOrder copyWith({String? status, int? driverId}) {
     return RiderOrder(
@@ -368,6 +375,15 @@ class RiderOrder {
       shippingFee: shippingFee,
       commissionRate: commissionRate,
       parsedItems: parsedItems,
+      pickupBranchName: pickupBranchName,
     );
+  }
+
+  static String? _branchName(dynamic meta) {
+    if (meta is! Map) return null;
+    final branch = meta['branch'];
+    if (branch is! Map) return null;
+    final name = branch['name']?.toString().trim() ?? '';
+    return name.isEmpty ? null : name;
   }
 }

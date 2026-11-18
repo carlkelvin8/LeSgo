@@ -68,6 +68,17 @@ class RiderPackageNotifier extends StateNotifier<RiderPackageState> {
       return next > current && target != 'employee' && target != 'basic';
     }
 
+    final prices = {
+      'basic': RiderCommissionUtils.basicOneTimePrice,
+      'advance': RiderCommissionUtils.advanceOneTimePrice,
+      'pro': RiderCommissionUtils.proOneTimePrice,
+    };
+    double? upgradePriceFor(String target) => canUpgrade(target)
+        ? ((prices[target] ?? 0) - (prices[currentTier] ?? 0))
+            .clamp(0, double.infinity)
+            .toDouble()
+        : null;
+
     return RiderPackageCatalog(
       currentTier: currentTier,
       currentLabel: RiderCommissionUtils.labelForPackage(currentTier),
@@ -90,6 +101,7 @@ class RiderPackageNotifier extends StateNotifier<RiderPackageState> {
           profitShareLabel: RiderCommissionUtils.profitShareLabel('advance'),
           oneTimePrice: RiderCommissionUtils.advanceOneTimePrice,
           isCurrent: currentTier == 'advance',
+          upgradePrice: upgradePriceFor('advance'),
           isUpgradeable: canUpgrade('advance'),
         ),
         RiderPackageOption(
@@ -100,6 +112,7 @@ class RiderPackageNotifier extends StateNotifier<RiderPackageState> {
           profitShareLabel: RiderCommissionUtils.profitShareLabel('pro'),
           oneTimePrice: RiderCommissionUtils.proOneTimePrice,
           isCurrent: currentTier == 'pro',
+          upgradePrice: upgradePriceFor('pro'),
           isUpgradeable: canUpgrade('pro'),
         ),
         RiderPackageOption(

@@ -1,3 +1,4 @@
+import '../../../../provider/auth/rider_auth_provider.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,8 @@ import '../../../../../core/services/merchant_wallet_api.dart';
 import '../../../../provider/main/merchantside/merchant_wallet_provider.dart';
 import '../../../../widgets/widgets.dart';
 import '../merchant_withdrawal_history_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 
 class MerchantLespayView extends ConsumerStatefulWidget {
@@ -101,7 +104,7 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'LesPay',
+                                context.tr('LesPay'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 28,
@@ -113,7 +116,7 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                                 ),
                               ),
                               Text(
-                                'Merchant wallet',
+                                context.tr('Merchant wallet'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 13,
@@ -186,9 +189,16 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                             2,
                             _QuickActions(
                               isDark: isDark,
-                              onTopUp: () => _showTopUpSheet(context, ref),
-                              onPayRider: () =>
-                                  _showPayRiderSheet(context, ref),
+                              onTopUp: () {
+                                // Staff top-ups are refused: they would not reach the store wallet.
+                                if (ref.read(riderAuthProvider).user?.isStaff == true) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(context.tr('Only the store owner can top up LesPay.'))),
+                                  );
+                                  return;
+                                }
+                                _showTopUpSheet(context, ref);
+                              },
                               onWithdraw: () =>
                                   _showWithdrawSheet(context, ref),
                             ),
@@ -203,7 +213,7 @@ class _MerchantLespayViewState extends ConsumerState<MerchantLespayView>
                         child: _reveal(
                           3,
                           Text(
-                            'TRANSACTION HISTORY',
+                            context.tr('TRANSACTION HISTORY'),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 10,
@@ -327,8 +337,6 @@ class _BalanceCard extends StatefulWidget {
 
 class _BalanceCardState extends State<_BalanceCard>
     with TickerProviderStateMixin {
-  bool _hideBalance = false;
-
   late final AnimationController _bg = AnimationController(
     vsync: this, duration: const Duration(seconds: 5),
   )..repeat(reverse: true);
@@ -403,8 +411,8 @@ class _BalanceCardState extends State<_BalanceCard>
                               ),
                             ),
                             const SizedBox(width: 6),
-                            const Text(
-                              'Merchant Wallet',
+                            Text(
+                              context.tr('Merchant Wallet'),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 10.5,
@@ -416,25 +424,6 @@ class _BalanceCardState extends State<_BalanceCard>
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        tooltip: _hideBalance ? 'Show balance' : 'Hide balance',
-                        onPressed: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _hideBalance = !_hideBalance);
-                        },
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 30,
-                          minHeight: 30,
-                        ),
-                        icon: Icon(
-                          _hideBalance
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: Colors.white.withValues(alpha: .75),
-                          size: 18,
-                        ),
-                      ),
                       Icon(
                         Icons.refresh_rounded,
                         color: Colors.white.withValues(alpha: .45),
@@ -478,9 +467,7 @@ class _BalanceCardState extends State<_BalanceCard>
                                         ),
                                       ),
                                       TextSpan(
-                                        text: _hideBalance
-                                            ? '••••••'
-                                            : bal.toStringAsFixed(2),
+                                        text: bal.toStringAsFixed(2),
                                         style: const TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: 42,
@@ -515,7 +502,7 @@ class _BalanceCardState extends State<_BalanceCard>
                                 Row(
                                   children: [
                                     _CardStat(
-                                      label: 'Transactions',
+                                      label: context.tr('Transactions'),
                                       value: '${widget.wallet.transactions.length}',
                                       icon: Icons.receipt_outlined,
                                     ),
@@ -526,7 +513,7 @@ class _BalanceCardState extends State<_BalanceCard>
                                       color: Colors.white.withValues(alpha: .15),
                                     ),
                                     _CardStat(
-                                      label: 'Last activity',
+                                      label: context.tr('Last activity'),
                                       value: widget.wallet.transactions.isNotEmpty
                                           ? _shortDate(widget.wallet.transactions.first['created_at']?.toString())
                                           : 'None yet',
@@ -538,13 +525,15 @@ class _BalanceCardState extends State<_BalanceCard>
                                 // View withdrawals link
                                 GestureDetector(
                                   onTap: () {
+                                    final refresh = ProviderScope.containerOf(context, listen: false)
+                                        .read(merchantWalletProvider.notifier);
                                     HapticFeedback.lightImpact();
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => const MerchantWithdrawalHistoryScreen(),
                                       ),
-                                    );
+                                    ).then((_) => refresh.loadWallet(silent: true));
                                   },
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -556,7 +545,7 @@ class _BalanceCardState extends State<_BalanceCard>
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'View Withdrawal History',
+                                        context.tr('View Withdrawal History'),
                                         style: TextStyle(
                                           fontFamily: 'TT Fors',
                                           fontSize: 11,
@@ -735,13 +724,11 @@ class _CardBgPainter extends CustomPainter {
 class _QuickActions extends StatelessWidget {
   final bool isDark;
   final VoidCallback onTopUp;
-  final VoidCallback onPayRider;
   final VoidCallback onWithdraw;
 
   const _QuickActions({
     required this.isDark,
     required this.onTopUp,
-    required this.onPayRider,
     required this.onWithdraw,
   });
 
@@ -751,7 +738,7 @@ class _QuickActions extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ACTIONS',
+          context.tr('ACTIONS'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: 10,
@@ -787,8 +774,8 @@ class _QuickActions extends StatelessWidget {
               _ActionRow(
                 icon: Icons.add_rounded,
                 iconBg: const Color(0xFF5F2D82),
-                title: 'Top up',
-                subtitle: 'Add funds via QR PH',
+                title: context.tr('Top up'),
+                subtitle: context.tr('Add funds via QR PH'),
                 isDark: isDark,
                 isFirst: true,
                 onTap: onTopUp,
@@ -801,25 +788,10 @@ class _QuickActions extends StatelessWidget {
                     : const Color(0xFFF0EBF6),
               ),
               _ActionRow(
-                icon: Icons.send_rounded,
-                iconBg: const Color(0xFF5F2D82),
-                title: 'Pay Rider',
-                subtitle: 'Send payment to a rider',
-                isDark: isDark,
-                onTap: onPayRider,
-              ),
-              Container(
-                height: 1,
-                margin: const EdgeInsets.only(left: 68),
-                color: isDark
-                    ? const Color(0xFF2E2540)
-                    : const Color(0xFFF0EBF6),
-              ),
-              _ActionRow(
                 icon: Icons.account_balance_wallet_rounded,
                 iconBg: const Color(0xFF2ECC71),
-                title: 'Withdraw',
-                subtitle: 'Request earnings withdrawal',
+                title: context.tr('Withdraw'),
+                subtitle: context.tr('Request earnings withdrawal'),
                 isDark: isDark,
                 isLast: true,
                 onTap: onWithdraw,
@@ -1078,12 +1050,12 @@ class _EmptyTransactions extends StatelessWidget {
                 width: 8,
               ),
             ),
-            child: const Icon(Icons.receipt_long_rounded,
-                size: 26, color: Color(0xFF6D3EA0)),
+            child: Icon(Icons.receipt_long_rounded,
+                size: 26, color: context.acc(Color(0xFF6D3EA0))),
           ),
           const SizedBox(height: 14),
           Text(
-            'No transactions yet',
+            context.tr('No transactions yet'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 15,
@@ -1093,7 +1065,7 @@ class _EmptyTransactions extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            'Your wallet activity will appear here.',
+            context.tr('Your wallet activity will appear here.'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 12,
@@ -1130,7 +1102,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
   }
 
   double get _amount => double.tryParse(_ctrl.text.trim()) ?? 0;
-  double get _fee => _amount * 0.015;
+  double get _fee => _amount * 0.03;
   double get _total => _amount + _fee;
 
   Future<void> _submit() async {
@@ -1229,7 +1201,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Top up wallet',
+                    context.tr('Top up wallet'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 18,
@@ -1239,7 +1211,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                     ),
                   ),
                   Text(
-                    '1.5% processing fee applies',
+                    context.tr('3% processing fee applies'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 11.5,
@@ -1267,7 +1239,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
               color: isDark ? Colors.white : const Color(0xFF1A0A2E),
             ),
             decoration: InputDecoration(
-              labelText: 'Amount to add',
+              labelText: context.tr('Amount to add'),
               prefixText: '₱ ',
               labelStyle: TextStyle(
                 fontFamily: 'TT Fors',
@@ -1283,7 +1255,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                   horizontal: 16, vertical: 16),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFFEAE0F2)),
+                borderSide: BorderSide(color: context.brd(Color(0xFFEAE0F2))),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -1365,16 +1337,16 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
               child: Column(
                 children: [
                   _SummaryRow(
-                      label: 'To wallet', value: '₱${_amount.toStringAsFixed(2)}'),
+                      label: context.tr('To wallet'), value: '₱${_amount.toStringAsFixed(2)}'),
                   const SizedBox(height: 4),
                   _SummaryRow(
-                      label: 'Fee (1.5%)', value: '₱${_fee.toStringAsFixed(2)}'),
-                  const Padding(
+                      label: context.tr('Fee (3%)'), value: '₱${_fee.toStringAsFixed(2)}'),
+                  Padding(
                     padding: EdgeInsets.symmetric(vertical: 6),
-                    child: Divider(height: 1, color: Color(0xFFE8E0F0)),
+                    child: Divider(height: 1, color: context.brd(Color(0xFFE8E0F0))),
                   ),
                   _SummaryRow(
-                    label: 'Total to pay',
+                    label: context.tr('Total to pay'),
                     value: '₱${_total.toStringAsFixed(2)}',
                     bold: true,
                   ),
@@ -1436,14 +1408,14 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
                         height: 20,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.qr_code_rounded,
                               color: Colors.white, size: 18),
                           SizedBox(width: 8),
                           Text(
-                            'Continue to payment',
+                            context.tr('Continue to payment'),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 14.5,
@@ -1485,71 +1457,20 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
   }
 
   Future<void> _submit() async {
-    final email = _emailCtrl.text.trim();
     final amount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
-    final emailIsValid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
-    if (!emailIsValid) {
-      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-        SnackBar(
-          content: const Text('Enter the rider\'s registered email address.'),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
     if (amount <= 0) {
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: const Text('Enter a valid amount.'),
+          content: Text(context.tr('Enter a valid amount.')),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
-    final wallet = ref.read(merchantWalletProvider);
-    if (amount > wallet.availableBalance) {
-      ScaffoldMessenger.of(widget.parentContext).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Amount exceeds your available balance of PHP ${wallet.availableBalance.toStringAsFixed(2)}.',
-          ),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Confirm rider payment'),
-        content: Text(
-          'Send PHP ${amount.toStringAsFixed(2)} to\n$email?\n\n'
-          'This will be deducted from your LesPay wallet. Check the email carefully before confirming.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Review again'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
-            ),
-            child: const Text('Confirm payment'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
     final notifier = ref.read(merchantWalletProvider.notifier);
     final success = await notifier.transferToRider(
-      recipientEmail: email,
+      recipientEmail: _emailCtrl.text.trim(),
       amount: amount,
       note: _noteCtrl.text.trim(),
     );
@@ -1634,7 +1555,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Pay Rider',
+                    context.tr('Pay Rider'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 18,
@@ -1644,7 +1565,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
                     ),
                   ),
                   Text(
-                    'Transfer from your LesPay wallet',
+                    context.tr('Transfer from your LesPay wallet'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 11.5,
@@ -1658,45 +1579,9 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
             ],
           ),
           const SizedBox(height: 20),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF2A1D3D)
-                  : const Color(0xFFF7F0FC),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isDark
-                    ? const Color(0xFF493260)
-                    : const Color(0xFFE7D7F1),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.verified_user_outlined,
-                    size: 18, color: const Color(0xFF7B3FAA)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Use the rider\'s registered email. Available balance: PHP ${wallet.availableBalance.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 11.5,
-                      height: 1.3,
-                      color: isDark
-                          ? const Color(0xFFC5B1D8)
-                          : const Color(0xFF765986),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
           _SheetField(
             ctrl: _emailCtrl,
-            label: 'Rider email',
+            label: context.tr('Rider email'),
             icon: Icons.person_outline_rounded,
             keyboard: TextInputType.emailAddress,
             isDark: isDark,
@@ -1704,7 +1589,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
           const SizedBox(height: 12),
           _SheetField(
             ctrl: _amountCtrl,
-            label: 'Amount (PHP)',
+            label: context.tr('Amount (PHP)'),
             prefix: '₱ ',
             icon: Icons.payments_outlined,
             keyboard: const TextInputType.numberWithOptions(decimal: true),
@@ -1713,7 +1598,7 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
           const SizedBox(height: 12),
           _SheetField(
             ctrl: _noteCtrl,
-            label: 'Note (optional)',
+            label: context.tr('Note (optional)'),
             icon: Icons.note_outlined,
             isDark: isDark,
           ),
@@ -1751,8 +1636,8 @@ class _PayRiderSheetState extends ConsumerState<_PayRiderSheet> {
                         height: 20,
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
-                    : const Text(
-                        'Send payment',
+                    : Text(
+                        context.tr('Send payment'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 14.5,
@@ -1858,7 +1743,7 @@ class _SummaryRow extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: 12.5,
             fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-            color: const Color(0xFF9A85B8),
+            color: context.sub(const Color(0xFF9A85B8)),
           ),
         ),
         const Spacer(),
@@ -1947,8 +1832,8 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
       if (!widget.parentContext.mounted) return;
       ScaffoldMessenger.of(widget.parentContext).showSnackBar(
         SnackBar(
-          content: const Text(
-            'Withdrawal request submitted successfully!',
+          content: Text(
+            context.tr('Withdrawal request submitted successfully!'),
             style: TextStyle(fontFamily: 'TT Fors'),
           ),
           backgroundColor: const Color(0xFF2ECC71),
@@ -2021,7 +1906,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'Withdraw Earnings',
+                    context.tr('Withdraw Earnings'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 20,
@@ -2049,7 +1934,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                     Row(
                       children: [
                         Text(
-                          'Available Balance',
+                          context.tr('Available Balance'),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 12,
@@ -2102,7 +1987,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
               // Amount field
               _SheetField(
                 ctrl: _amountCtrl,
-                label: 'Withdrawal Amount',
+                label: context.tr('Withdrawal Amount'),
                 icon: Icons.payments_rounded,
                 prefix: 'PHP ',
                 keyboard: const TextInputType.numberWithOptions(decimal: true),
@@ -2112,7 +1997,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
 
               // Payout method selector
               Text(
-                'Payout Method',
+                context.tr('Payout Method'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12,
@@ -2127,7 +2012,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                 children: [
                   Expanded(
                     child: _PayoutMethodChip(
-                      label: 'GCash',
+                      label: context.tr('GCash'),
                       icon: Icons.smartphone_rounded,
                       value: 'gcash',
                       groupValue: _selectedMethod,
@@ -2138,7 +2023,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _PayoutMethodChip(
-                      label: 'Maya',
+                      label: context.tr('Maya'),
                       icon: Icons.credit_card_rounded,
                       value: 'maya',
                       groupValue: _selectedMethod,
@@ -2149,7 +2034,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _PayoutMethodChip(
-                      label: 'Bank',
+                      label: context.tr('Bank'),
                       icon: Icons.account_balance_rounded,
                       value: 'bank_transfer',
                       groupValue: _selectedMethod,
@@ -2176,7 +2061,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
               // Account name field
               _SheetField(
                 ctrl: _accountNameCtrl,
-                label: 'Account Name',
+                label: context.tr('Account Name'),
                 icon: Icons.person_rounded,
                 isDark: isDark,
               ),
@@ -2184,7 +2069,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                 const SizedBox(height: 16),
                 _SheetField(
                   ctrl: _bankNameCtrl,
-                  label: 'Bank Name',
+                  label: context.tr('Bank Name'),
                   icon: Icons.account_balance_rounded,
                   isDark: isDark,
                 ),
@@ -2224,7 +2109,7 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        context.tr('Cancel'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 14,
@@ -2256,8 +2141,8 @@ class _WithdrawSheetState extends ConsumerState<_WithdrawSheet> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              'Submit Request',
+                          : Text(
+                              context.tr('Submit Request'),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 14,

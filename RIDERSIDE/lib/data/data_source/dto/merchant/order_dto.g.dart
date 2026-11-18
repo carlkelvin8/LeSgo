@@ -32,11 +32,15 @@ OrderDto _$OrderDtoFromJson(Map<String, dynamic> json) => OrderDto(
       paymentStatus: json['payment_status'] as String? ?? 'pending',
       specialInstructions: json['notes'] as String?,
       completedAt: json['completed_at'] as String?,
+      cancelledAt: json['cancelled_at'] as String?,
       partnerShare: json['partner_share'] != null ? double.tryParse(json['partner_share'].toString()) : null,
       fareBreakdownSubtotal: _parseFareBreakdownSubtotal(json['fare_breakdown']),
       metaOrderValue: _parseMetaOrderValue(json['meta']),
+      branchId: _readBranchId(json, 'branch_id') as int?,
+      branchName: _readBranchName(json, 'branch_name') as String?,
       createdAt: json['created_at'] as String? ?? '',
       updatedAt: json['updated_at'] as String? ?? '',
+      readyForPickupAt: json['ready_for_pickup_at'] as String?,
       user: json['customer'] == null
           ? null
           : UserDto.fromJson(json['customer'] as Map<String, dynamic>),
@@ -80,6 +84,7 @@ Map<String, dynamic> _$OrderDtoToJson(OrderDto instance) => <String, dynamic>{
       'special_instructions': instance.specialInstructions,
       'created_at': instance.createdAt,
       'updated_at': instance.updatedAt,
+      'ready_for_pickup_at': instance.readyForPickupAt,
       'user': instance.user,
       'driver': instance.driver,
       'partner': instance.partner,

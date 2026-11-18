@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/utils/merchant_staff_permissions.dart';
 import '../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../auth/rider_auth_provider.dart';
@@ -19,6 +20,18 @@ Future<void> deleteMerchantMenuItem(WidgetRef ref, int itemId) async {
 }
 
 /// Provider for menu categories with items
+/// Owners and staff with manage_menu edit the menu; other staff only see it.
+final canEditMerchantMenuProvider = Provider<bool>((ref) {
+  final user = ref.watch(riderAuthProvider).user;
+  if (user == null) return false;
+  return MerchantStaffPermissions.userCan(
+    isMerchantOwner: user.isMerchant,
+    staffRole: user.staffInfo?.role,
+    explicitPermissions: user.staffInfo?.permissions,
+    permission: MerchantStaffPermissions.manageMenu,
+  );
+});
+
 final merchantMenuProvider = FutureProvider.autoDispose<MenuResponse?>((ref) async {
   // Get partner_id from auth state
   final authState = ref.watch(riderAuthProvider);

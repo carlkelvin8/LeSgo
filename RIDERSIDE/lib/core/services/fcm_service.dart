@@ -1,12 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../firebase_options.dart';
-import '../config/secrets_config.dart';
 import '../utils/app_logger.dart';
 import 'api_service.dart';
 import 'fcm_background_handler.dart';
@@ -15,7 +16,7 @@ import 'notification_payload.dart';
 import 'order_sound_alert_service.dart';
 import 'secure_storage_service.dart';
 
-class FcmService {
+class FcmService with WidgetsBindingObserver {
   static final FcmService instance = FcmService._();
   FcmService._();
 
@@ -25,6 +26,9 @@ class FcmService {
   bool _localNotificationsReady = false;
   bool _fcmReady = false;
   bool _openedListenersReady = false;
+  bool _messagingListenersReady = false;
+  bool _tokenRequestInProgress = false;
+  FirebaseMessaging? _messaging;
 
   String? get token => _token;
   bool get isReady => _fcmReady;
@@ -63,82 +67,119 @@ class FcmService {
 
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
       final messaging = FirebaseMessaging.instance;
+      _messaging = messaging;
+      WidgetsBinding.instance.addObserver(this);
 
-      await messaging.requestPermission();
-
-      _token = await messaging.getToken();
-      _fcmReady = _token != null;
-      AppLogger.debug(
-        'FCM initialized: token ${_token != null ? "received" : "missing"}',
-      );
-
-      if (_token == null || _token!.isEmpty) {
-        AppLogger.warn(
-          'FCM token is empty. Push notifications will not work. '
-          'This may be a Firebase configuration or Google Play Services issue.',
-        );
+      try {
+        await messaging.requestPermission();
+      } catch (e) {
+        AppLogger.warn('Could not request push notification permission: $e');
       }
 
-      messaging.onTokenRefresh.listen((token) async {
-        _token = token;
-        _fcmReady = true;
-        await registerWithBackend();
-      });
+      _setupMessagingListeners(messaging);
+      await _refreshFcmToken();
 
-      FirebaseMessaging.onMessage.listen(_showForegroundNotification);
       _setupOpenedNotificationHandlers(messaging);
 
-      final initialMessage = await messaging.getInitialMessage();
-      if (initialMessage != null) {
-        _queueOpenedMessage(initialMessage);
-      }
+      unawaited(_handleInitialMessage(messaging));
     } catch (e) {
       AppLogger.error('FCM initialization error', e);
       _fcmReady = false;
     }
   }
 
-  /// Validates that Firebase configuration is complete and not using placeholder values.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && !_fcmReady) {
+      unawaited(_refreshFcmToken());
+    }
+  }
+
+  void _setupMessagingListeners(FirebaseMessaging messaging) {
+    if (_messagingListenersReady) return;
+    _messagingListenersReady = true;
+
+    messaging.onTokenRefresh.listen((token) async {
+      _token = token;
+      _fcmReady = token.isNotEmpty;
+      if (_fcmReady) await registerWithBackend();
+    });
+    FirebaseMessaging.onMessage.listen(_showForegroundNotification);
+  }
+
+  Future<void> _refreshFcmToken() async {
+    final messaging = _messaging;
+    if (messaging == null || _tokenRequestInProgress) return;
+
+    _tokenRequestInProgress = true;
+    try {
+      if (Platform.isIOS) {
+        String? apnsToken;
+        for (var attempt = 0; attempt < 5; attempt++) {
+          apnsToken = await messaging.getAPNSToken();
+          if (apnsToken != null && apnsToken.isNotEmpty) break;
+          if (attempt < 4) {
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+          }
+        }
+
+        if (apnsToken == null || apnsToken.isEmpty) {
+          _token = null;
+          _fcmReady = false;
+          AppLogger.warn(
+            'APNs token is not available yet. FCM token retrieval will retry '
+            'when the app returns to the foreground.',
+          );
+          return;
+        }
+      }
+
+      _token = await messaging.getToken();
+      _fcmReady = _token != null && _token!.isNotEmpty;
+      AppLogger.debug(
+        'FCM initialized: token ${_fcmReady ? "received" : "missing"}',
+      );
+    } catch (e) {
+      _token = null;
+      _fcmReady = false;
+      AppLogger.warn('Could not retrieve FCM token yet: $e');
+    } finally {
+      _tokenRequestInProgress = false;
+    }
+  }
+
+  Future<void> _handleInitialMessage(FirebaseMessaging messaging) async {
+    try {
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _queueOpenedMessage(initialMessage);
+      }
+    } catch (e) {
+      AppLogger.debug('Could not read initial push message: $e');
+    }
+  }
+
+  /// Validates the platform options compiled into the app.
   bool _validateFirebaseConfiguration() {
-    if (SecretsConfig.firebaseProjectId.isEmpty) {
+    final options = DefaultFirebaseOptions.currentPlatform;
+    if (!DefaultFirebaseOptions.isConfigured ||
+        options.projectId.isEmpty ||
+        options.messagingSenderId.isEmpty ||
+        options.apiKey.isEmpty ||
+        options.appId.isEmpty) {
       AppLogger.error(
-        'Firebase validation failed: FIREBASE_PROJECT_ID is missing',
+        'Firebase validation failed: platform Firebase options are incomplete',
         null,
       );
       return false;
     }
 
-    if (SecretsConfig.firebaseMessagingSenderId.isEmpty) {
+    if (options.projectId.startsWith('your-') ||
+        options.projectId.startsWith('YOUR_') ||
+        options.apiKey.startsWith('your-') ||
+        options.apiKey.startsWith('YOUR_')) {
       AppLogger.error(
-        'Firebase validation failed: FIREBASE_MESSAGING_SENDER_ID is missing',
-        null,
-      );
-      return false;
-    }
-
-    if (SecretsConfig.firebaseAndroidApiKey.isEmpty) {
-      AppLogger.error(
-        'Firebase validation failed: FIREBASE_API_KEY_ANDROID is missing',
-        null,
-      );
-      return false;
-    }
-
-    if (SecretsConfig.firebaseAndroidAppId.isEmpty) {
-      AppLogger.error(
-        'Firebase validation failed: FIREBASE_APP_ID_ANDROID is missing',
-        null,
-      );
-      return false;
-    }
-
-    // Check for placeholder values
-    if (SecretsConfig.firebaseProjectId.startsWith('your-') ||
-        SecretsConfig.firebaseMessagingSenderId.startsWith('your-') ||
-        SecretsConfig.firebaseAndroidApiKey.startsWith('your-')) {
-      AppLogger.error(
-        'Firebase validation failed: Configuration contains placeholder values. '
-        'Update secrets.json with actual Firebase credentials.',
+        'Firebase validation failed: platform Firebase options contain placeholders',
         null,
       );
       return false;

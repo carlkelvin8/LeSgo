@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/constants/routers/app_router.dart';
-import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../provider/main/riderside/rider_main_nav_provider.dart';
 import '../../../../provider/main/riderside/rider_mission_provider.dart';
@@ -10,7 +8,6 @@ import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../screens/main/riderside/views/rider_mission_view.dart';
 import '../more/rider_more_components.dart';
 import 'profile_panel.dart';
-import 'profile_action_tile.dart';
 
 class RiderProfileSummarySection extends ConsumerWidget {
   const RiderProfileSummarySection({super.key});
@@ -54,14 +51,13 @@ class RiderProfileSummarySection extends ConsumerWidget {
             icon: claimable > 0
                 ? Icons.card_giftcard_rounded
                 : Icons.flag_rounded,
-            title: t(
-              claimable > 0 ? 'mission_reward_ready' : 'missions_in_progress',
-            ),
-            message: t(claimable > 0 ? 'rp_rewards_count' : 'rp_missions_count')
-                .replaceAll(
-                  '{count}',
-                  '${claimable > 0 ? claimable : inProgress}',
-                ),
+            title: t(claimable > 0
+                ? 'mission_reward_ready'
+                : 'missions_in_progress'),
+            message: t(claimable > 0
+                ? 'rp_rewards_count'
+                : 'rp_missions_count').replaceAll(
+              '{count}', '${claimable > 0 ? claimable : inProgress}'),
             color: claimable > 0
                 ? const Color(0xFF16A34A)
                 : const Color(0xFF5F2D82),
@@ -71,25 +67,12 @@ class RiderProfileSummarySection extends ConsumerWidget {
             pulse: claimable > 0,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) =>
-                    const RiderMissionView(includeBottomNavPadding: false),
-              ),
+                  builder: (_) =>
+                      const RiderMissionView(includeBottomNavPadding: false)),
             ),
           ),
           const SizedBox(height: 10),
         ],
-
-        // Document verification quick link
-        MoreMenuGroup(
-          children: [
-            ProfileActionTile(
-              icon: Icons.verified_user_outlined,
-              title: t('document_verification'),
-              subtitle: t('rp_documents_hint'),
-              onTap: () => AppRouter.push(context, MainRoutes.riderDocuments),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -167,15 +150,15 @@ class _PulsingStatusCardState extends State<_PulsingStatusCard>
               color: widget.bg,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: widget.color.withValues(alpha: .25 + .12 * _anim.value),
+                color: widget.color.withValues(
+                    alpha: .25 + .12 * _anim.value),
                 width: widget.pulse ? 1.5 : 1,
               ),
               boxShadow: [
                 if (widget.pulse)
                   BoxShadow(
                     color: widget.color.withValues(
-                      alpha: .12 + .10 * _anim.value,
-                    ),
+                        alpha: .12 + .10 * _anim.value),
                     blurRadius: 16 + 8 * _anim.value,
                     spreadRadius: -2,
                   ),
@@ -190,8 +173,7 @@ class _PulsingStatusCardState extends State<_PulsingStatusCard>
                   height: 42,
                   decoration: BoxDecoration(
                     color: widget.color.withValues(
-                      alpha: .12 + .06 * _anim.value,
-                    ),
+                        alpha: .12 + .06 * _anim.value),
                     borderRadius: BorderRadius.circular(13),
                   ),
                   child: Icon(widget.icon, color: widget.color, size: 21),
@@ -236,3 +218,4 @@ class _PulsingStatusCardState extends State<_PulsingStatusCard>
     );
   }
 }
+

@@ -9,43 +9,25 @@ final riderPerformanceProvider = StateNotifierProvider.autoDispose<RiderPerforma
 );
 
 class RiderPerformanceNotifier extends StateNotifier<RiderPerformanceState> {
-  RiderPerformanceNotifier() : super(const RiderPerformanceState());
+  RiderPerformanceNotifier() : super(const RiderPerformanceState()) {
+    // The screen's ref.listen never fires for the initial state, so load here.
+    Future.microtask(() {
+      if (mounted) loadPerformanceMetrics();
+    });
+  }
 
   Future<void> loadPerformanceMetrics() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final response = await ApiService.dio.get('/v1/drivers/me/performance');
-      final data = response.data['data'] ?? response.data;
-
-      final acceptanceRate = (data['acceptance_rate'] as num?)?.toDouble() ?? 0.0;
-      final completionRate = (data['completion_rate'] as num?)?.toDouble() ?? 0.0;
-      final onTimeRate = (data['on_time_rate'] as num?)?.toDouble() ?? 0.0;
-      final customerRating = (data['customer_rating'] as num?)?.toDouble() ?? 0.0;
-      final totalReviews = data['total_reviews'] as int? ?? 0;
-      final cancellations = data['cancellations'] as int? ?? 0;
-      final lateArrivals = data['late_arrivals'] as int? ?? 0;
-      final acceptedOrders = data['accepted_orders'] as int? ?? 0;
-
-      // Performance trend data
-      final performanceTrendList = (data['performance_trend'] as List?)
-          ?.whereType<Map>()
-          .map((e) => PerformanceTrendData.fromJson(Map<String, dynamic>.from(e)))
-          .toList() ?? [];
-
-      state = state.copyWith(
-        acceptanceRate: acceptanceRate,
-        completionRate: completionRate,
-        onTimeRate: onTimeRate,
-        customerRating: customerRating,
-        totalReviews: totalReviews,
-        cancellations: cancellations,
-        lateArrivals: lateArrivals,
-        acceptedOrders: acceptedOrders,
-        performanceTrend: performanceTrendList,
-        isLoading: false,
-      );
+      // /v1/drivers/me/performance does not exist (404). The analytics route
+      // returns the signed-in driver's own row as a list.
+      final response = await ApiService.dio.get('/v1/analytics/drivers/performance');
+      if (!mounted) return;
+      state = parsePerformanceResponse(response.data, state)
+          .copyWith(isLoading: false);
     } catch (e) {
       AppLogger.error('Failed to load performance metrics', e);
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to load performance data',
@@ -161,4 +143,31 @@ class PerformanceTrendData {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
     );
   }
+}
+
+double _perfNum(dynamic v) {
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v) ?? 0.0;
+  return 0.0;
+}
+
+/// Maps the `/v1/analytics/drivers/performance` payload (a list holding the
+/// driver's own row; may also arrive as a single object or an empty `[]`).
+@visibleForTesting
+RiderPerformanceState parsePerformanceResponse(
+  dynamic body,
+  RiderPerformanceState base,
+) {
+  dynamic data = body is Map ? (body['data'] ?? body) : body;
+  if (data is List) data = data.whereType<Map>().firstOrNull;
+  if (data is! Map) return base;
+
+  final total = _perfNum(data['total_orders']).toInt();
+  final completed = _perfNum(data['completed_orders']).toInt();
+  return base.copyWith(
+    completionRate: _perfNum(data['completion_rate']),
+    customerRating: _perfNum(data['rating'] ?? data['customer_rating']),
+    acceptedOrders: total,
+    cancellations: total > completed ? total - completed : 0,
+  );
 }

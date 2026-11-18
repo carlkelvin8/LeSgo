@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/di/injection.dart';
-import '../../../core/utils/api_error_mapper.dart';
 import '../../../data/data_source/auth_remote_datasource.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import 'auth_provider.dart';
 
 enum ForgotPasswordStep { enterEmail, verifyOtp, resetPassword }

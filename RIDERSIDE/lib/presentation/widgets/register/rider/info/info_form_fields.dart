@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/utils.dart';
 import '../../../widgets.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class InfoFormFields extends ConsumerWidget {
   final TextEditingController firstNameController;
@@ -168,7 +169,7 @@ class InfoFormFields extends ConsumerWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 14),
         fontWeight: FontWeight.w600,
-        color: Colors.black87,
+        color: context.txt(Colors.black87),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 import 'primary_button.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class DualActionButtons extends StatelessWidget {
   const DualActionButtons({
@@ -49,7 +50,7 @@ class DualActionButtons extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: labelFontSize,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
               ),

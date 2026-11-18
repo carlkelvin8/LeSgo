@@ -4,6 +4,7 @@ import '../../../core/utils/utils.dart';
 import '../../../core/constants/routers/app_router.dart';
 import '../../../core/constants/routers/register/register_routes.dart';
 import '../widgets.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class RegisterContent extends ConsumerWidget {
   const RegisterContent({super.key});
@@ -49,7 +50,7 @@ class RegisterText extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 24),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
           textAlign: TextAlign.center,
         ),

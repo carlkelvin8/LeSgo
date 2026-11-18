@@ -3,12 +3,6 @@ import '../../../../core/utils/menu_item_options.dart';
 
 part 'order_dto.g.dart';
 
-Map<String, dynamic>? _parseSelectedOptions(dynamic value) {
-  if (value == null || (value is List && value.isEmpty)) return null;
-  if (value is Map) return Map<String, dynamic>.from(value);
-  throw const FormatException('Invalid order item selected options');
-}
-
 double? _parseDouble(dynamic value) {
   if (value == null) return null;
   if (value is double) return value;
@@ -30,6 +24,11 @@ String? _parseOrderItemImageUrl(dynamic value) {
   return null;
 }
 
+/// The API encodes an item with no options as `[]`, not an object.
+Map<String, dynamic>? _parseSelectedOptions(dynamic value) {
+  return value is Map ? Map<String, dynamic>.from(value) : null;
+}
+
 double? _parseFareBreakdownSubtotal(dynamic value) {
   if (value is! Map) return null;
   return _parseDouble(value['subtotal']) ??
@@ -37,11 +36,28 @@ double? _parseFareBreakdownSubtotal(dynamic value) {
       _parseDouble(value['items_total']);
 }
 
+Map? _metaBranch(Map json) {
+  final meta = json['meta'];
+  if (meta is! Map) return null;
+  final branch = meta['branch'];
+  return branch is Map ? branch : null;
+}
+
+Object? _readBranchId(Map json, String _) =>
+    int.tryParse(_metaBranch(json)?['id']?.toString() ?? '') ??
+    int.tryParse(json['partner_branch_id']?.toString() ?? '');
+
+Object? _readBranchName(Map json, String _) {
+  final name = _metaBranch(json)?['name']?.toString().trim();
+  return (name == null || name.isEmpty) ? null : name;
+}
+
+/// Food value of the order from `meta`. Never `grand_total`: it includes the
+/// delivery fee, which is not the store's money.
 double? _parseMetaOrderValue(dynamic value) {
   if (value is! Map) return null;
   return _parseDouble(value['order_value']) ??
-      _parseDouble(value['subtotal']) ??
-      _parseDouble(value['grand_total']);
+      _parseDouble(value['subtotal']);
 }
 
 @JsonSerializable()
@@ -92,16 +108,25 @@ class OrderDto {
   final String? specialInstructions;
   @JsonKey(name: 'completed_at')
   final String? completedAt;
+  @JsonKey(name: 'cancelled_at')
+  final String? cancelledAt;
   @JsonKey(name: 'partner_share', fromJson: _parseDouble)
   final double? partnerShare;
   @JsonKey(name: 'fare_breakdown', fromJson: _parseFareBreakdownSubtotal)
   final double? fareBreakdownSubtotal;
   @JsonKey(name: 'meta', fromJson: _parseMetaOrderValue)
   final double? metaOrderValue;
+  // Fulfilling branch, read from `meta.branch` (multi-branch stores).
+  @JsonKey(name: 'branch_id', readValue: _readBranchId, includeToJson: false)
+  final int? branchId;
+  @JsonKey(name: 'branch_name', readValue: _readBranchName, includeToJson: false)
+  final String? branchName;
   @JsonKey(name: 'created_at')
   final String createdAt;
   @JsonKey(name: 'updated_at')
   final String updatedAt;
+  @JsonKey(name: 'ready_for_pickup_at')
+  final String? readyForPickupAt;
   
   // Relationships
   @JsonKey(name: 'customer')
@@ -138,11 +163,15 @@ class OrderDto {
     required this.paymentStatus,
     this.specialInstructions,
     this.completedAt,
+    this.cancelledAt,
     this.partnerShare,
     this.fareBreakdownSubtotal,
     this.metaOrderValue,
+    this.branchId,
+    this.branchName,
     required this.createdAt,
     required this.updatedAt,
+    this.readyForPickupAt,
     this.user,
     this.driver,
     this.partner,
@@ -228,11 +257,9 @@ class UserDto {
   });
 
   String? get resolvedProfilePhotoUrl {
-    // Either column may hold an empty string, so take the first non-empty one.
-    for (final photo in [profilePhotoUrl, profilePicture]) {
-      if (photo != null && photo.trim().isNotEmpty) return photo.trim();
-    }
-    return null;
+    final photo = profilePhotoUrl ?? profilePicture;
+    if (photo == null || photo.trim().isEmpty) return null;
+    return photo;
   }
   
   factory UserDto.fromJson(Map<String, dynamic> json) => 

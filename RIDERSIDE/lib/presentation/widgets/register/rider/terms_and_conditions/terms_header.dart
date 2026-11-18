@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class TermsHeader extends StatelessWidget {
   const TermsHeader({super.key});
@@ -12,7 +13,7 @@ class TermsHeader extends StatelessWidget {
         fontFamily: 'TT Fors',
         fontSize: ResponsiveUtils.fontSize(context, 20),
         fontWeight: FontWeight.w700,
-        color: Colors.black87,
+        color: context.txt(Colors.black87),
       ),
     );
   }

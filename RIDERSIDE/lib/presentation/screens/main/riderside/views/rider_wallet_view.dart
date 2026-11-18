@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../../core/constants/routers/main/main_routes.dart';
+import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/rider_wallet_policy.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_card.dart';
 import '../../../../widgets/main/riderside/wallet/rider_wallet_actions_section.dart';
+import '../../../../widgets/main/riderside/more/rider_more_components.dart';
 
 class RiderWalletScreen extends ConsumerWidget {
   const RiderWalletScreen({super.key});
@@ -107,6 +111,22 @@ class _RiderWalletViewState extends ConsumerState<RiderWalletView>
                           setState(() => _balanceVisible = !_balanceVisible),
                     ),
                   ),
+                  if (wallet.showLowBalanceWarning &&
+                      !wallet.isLoading &&
+                      wallet.error == null) ...[
+                    const SizedBox(height: 18),
+                    _reveal(
+                      1,
+                      _WalletNotice(
+                        title: t('wallet_topup_notice'),
+                        message: t('wallet_minimum_notice').replaceAll(
+                          '{amount}',
+                          RiderWalletPolicy.minimumBalanceToAccept
+                              .toStringAsFixed(0),
+                        ),
+                      ),
+                    ),
+                  ],
                   if (wallet.error != null) ...[
                     const SizedBox(height: 18),
                     _WalletNotice(
@@ -125,6 +145,29 @@ class _RiderWalletViewState extends ConsumerState<RiderWalletView>
                   ],
                   const SizedBox(height: 26),
                   _reveal(2, const RiderWalletActionsSection()),
+                  const SizedBox(height: 26),
+                  _reveal(
+                    3,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        MoreSectionHeading(title: t('wallet_payouts')),
+                        MoreMenuGroup(
+                          children: [
+                            MoreMenuRow(
+                              icon: Icons.event_repeat_rounded,
+                              title: t('scheduled_payout'),
+                              subtitle: t('wallet_payout_subtitle'),
+                              onTap: () => AppRouter.push(
+                                context,
+                                MainRoutes.riderScheduledPayout,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 22),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -172,35 +215,23 @@ class _WalletNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final color = dark ? const Color(0xFFFFD397) : const Color(0xFF94601C);
+    final color = dark ? const Color(0xFFFFD397) : const Color(0xFF88551A);
     return Semantics(
       liveRegion: true,
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 18, 18, 8),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: dark ? const Color(0xFF241F2D) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: dark ? const Color(0xFF32291F) : const Color(0xFFFFF7E9),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: dark ? const Color(0xFF443A50) : const Color(0xFFE8E1ED),
+            color: dark ? const Color(0xFF58412A) : const Color(0xFFF1DFBF),
           ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: dark ? const Color(0xFF3D3020) : const Color(0xFFFFF2DC),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                Icons.account_balance_wallet_outlined,
-                color: color,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
+            Icon(Icons.info_outline_rounded, color: color, size: 21),
+            const SizedBox(width: 11),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,26 +239,16 @@ class _WalletNotice extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 15,
-                      height: 1.35,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: dark
-                          ? const Color(0xFFF5EFFA)
-                          : const Color(0xFF302638),
+                      color: color,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
                     message,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      height: 1.5,
-                      color: dark
-                          ? const Color(0xFFCAC0D3)
-                          : const Color(0xFF6A6073),
-                    ),
+                    style: TextStyle(fontSize: 12, height: 1.45, color: color),
                   ),
-                  if (action == null) const SizedBox(height: 10),
                   ?action,
                 ],
               ),

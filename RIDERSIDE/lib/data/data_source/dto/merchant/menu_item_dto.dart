@@ -2,6 +2,11 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'menu_item_dto.g.dart';
 
+/// The API encodes empty options as `[]`, not an object.
+Map<String, dynamic>? _parseItemOptions(dynamic value) {
+  return value is Map ? Map<String, dynamic>.from(value) : null;
+}
+
 int _parseInt(dynamic value, [int fallback = 0]) {
   if (value == null) return fallback;
   if (value is int) return value;
@@ -108,6 +113,7 @@ class MenuItemDto {
   @JsonKey(name: 'stock_count', fromJson: _parseIntNullable)
   final int? stockCount;
   final List<String>? tags;
+  @JsonKey(fromJson: _parseItemOptions)
   final Map<String, dynamic>? options;
   
   // From relationship

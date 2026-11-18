@@ -1,159 +1,122 @@
+import '../../../../provider/auth/rider_auth_provider.dart';
 import 'package:flutter/material.dart';
-import '../../../../screens/main/merchantside/merchant_pickup_location_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../common/menu_image_widget.dart';
+import '../../../../../../core/utils/media_url_utils.dart';
+import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../screens/main/merchantside/merchant_edit_information_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantProfileHeader extends ConsumerWidget {
   const MerchantProfileHeader({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(merchantProfileProvider).valueOrNull;
-    if (profile == null) return const SizedBox.shrink();
-    void edit() => Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const MerchantEditInformationScreen()),
-    );
-    final initials = profile.name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((word) => word.isNotEmpty)
-        .take(2)
-        .map((word) => word[0])
-        .join()
-        .toUpperCase();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'YOUR BUSINESS',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: 10,
-            letterSpacing: 1.8,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF82788B),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Row(
+    final profileAsync = ref.watch(merchantProfileProvider);
+
+    return profileAsync.when(
+      loading: () => const SizedBox(height: 126),
+      error: (_, __) => const SizedBox(height: 126),
+      data: (profile) {
+        if (profile == null) return const SizedBox(height: 126);
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Semantics(
-              button: true,
-              label: 'Edit store photo',
-              child: InkWell(
-                onTap: edit,
-                borderRadius: BorderRadius.circular(22),
-                child: Stack(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEDE5F3),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: MenuImageWidget(
-                        source: profile.logoUrl,
-                        fit: BoxFit.cover,
-                        placeholder: Center(
-                          child: Text(
-                            initials,
-                            style: const TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 27,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF5F2D82),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5F2D82),
-                          borderRadius: BorderRadius.circular(9),
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt_outlined,
-                          size: 13,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
+            Expanded(
+              child: Text(
+                'LeSgo,\nPartner!',
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 40),
+                  fontWeight: FontWeight.w800,
+                  color: context.acc(const Color(0xFF5F2D82)),
+                  height: 0.95,
                 ),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'LeSgo Partner',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF7B568F),
-                    ),
+            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+            GestureDetector(
+              onTap: ref.watch(riderAuthProvider).user?.isStaff == true ? null : () {
+                // Navigate to edit screen where they can change the logo
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const MerchantEditInformationScreen(),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    profile.name,
-                    style: const TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 25,
-                      height: 1.15,
-                      letterSpacing: -.7,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF28212E),
+                );
+              },
+              child: Stack(
+                children: [
+                  Container(
+                    width: ResponsiveUtils.spacing(context, 126),
+                    height: ResponsiveUtils.spacing(context, 126),
+                    decoration: BoxDecoration(
+                      color: context.surf(Colors.white),
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveUtils.spacing(context, 16),
+                      ),
+                      border: Border.all(color: Colors.black12),
+                    ),
+                    child: MediaUrlUtils.resolve(profile.logoUrl) != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              ResponsiveUtils.spacing(context, 16),
+                            ),
+                            child: Image.network(
+                              MediaUrlUtils.resolve(profile.logoUrl)!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildDefaultLogo(context, profile.name);
+                              },
+                            ),
+                          )
+                        : _buildDefaultLogo(context, profile.name),
+                  ),
+                  // Camera edit overlay
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF5F2D82),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: context.brd(Colors.white), width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDefaultLogo(BuildContext context, String name) {
+    // Extract first letters of each word (max 2 words)
+    final words = name.split(' ').take(2).toList();
+    final initials = words.map((w) => w.isNotEmpty ? w[0] : '').join('');
+
+    return Center(
+      child: Text(
+        initials.toUpperCase(),
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontFamily: 'TT Fors',
+          fontSize: ResponsiveUtils.fontSize(context, 32),
+          fontWeight: FontWeight.w900,
+          color: context.acc(const Color(0xFF5F2D82)),
+          height: 0.9,
         ),
-        const SizedBox(height: 12),
-        TextButton.icon(
-          onPressed: () => Navigator.push(context, MaterialPageRoute(
-            builder: (_) => const MerchantPickupLocationScreen())),
-          icon: const Icon(Icons.location_on_outlined, size: 17),
-          label: const Text('Store pickup location'),
-        ),
-        const SizedBox(height: 18),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: edit,
-            icon: const Icon(Icons.tune_rounded, size: 17),
-            label: const Text('Edit business profile'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF5F2D82),
-              side: const BorderSide(color: Color(0xFFDFD5E6)),
-              minimumSize: const Size(0, 44),
-              textStyle: const TextStyle(
-                fontFamily: 'TT Fors',
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

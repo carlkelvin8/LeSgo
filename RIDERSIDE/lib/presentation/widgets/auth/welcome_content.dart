@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/utils.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../widgets.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class WelcomeContent extends ConsumerWidget {
   const WelcomeContent({super.key});
@@ -45,7 +46,7 @@ class WelcomeText extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 30),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
               height: 1.3,
             ),
             children: const [

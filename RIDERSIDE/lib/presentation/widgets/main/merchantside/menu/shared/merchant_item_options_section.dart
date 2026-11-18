@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/menu_item_options.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantItemOptionsSection extends StatelessWidget {
   final MenuItemOptionGroups optionGroups;
@@ -32,38 +34,38 @@ class MerchantItemOptionsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Sizes, Flavors & Add-ons',
+          context.tr('Sizes, Flavors & Add-ons'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
         Text(
-          'Let customers pick size, flavor, and add-ons when ordering.',
+          context.tr('Let customers pick size, flavor, and add-ons when ordering.'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
-            color: Colors.grey.shade600,
+            color: context.sub(Colors.grey.shade600),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
         _OptionEditor(
-          title: 'Sizes',
+          title: context.tr('Sizes'),
           choices: optionGroups.sizes,
           onChanged: (choices) => _update(sizes: choices),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
         _OptionEditor(
-          title: 'Flavors',
+          title: context.tr('Flavors'),
           choices: optionGroups.flavors,
           onChanged: (choices) => _update(flavors: choices),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
         _OptionEditor(
-          title: 'Add-ons',
+          title: context.tr('Add-ons'),
           choices: optionGroups.addons,
           onChanged: (choices) => _update(addons: choices),
         ),
@@ -168,7 +170,7 @@ class _OptionEditorState extends State<_OptionEditor> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey.shade500,
+              color: context.sub(Colors.grey.shade500),
             ),
           ),
         ...List.generate(_entries.length, (index) {
@@ -186,7 +188,7 @@ class _OptionEditorState extends State<_OptionEditor> {
                     onChanged: (_) => _emit(),
                     onEditingComplete: _emit,
                     decoration: InputDecoration(
-                      hintText: 'Name',
+                      hintText: context.tr('Name'),
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: ResponsiveUtils.spacing(context, 10),
@@ -212,7 +214,7 @@ class _OptionEditorState extends State<_OptionEditor> {
                     onChanged: (_) => _emit(),
                     onEditingComplete: _emit,
                     decoration: InputDecoration(
-                      hintText: 'Extra ₱',
+                      hintText: context.tr('Extra ₱'),
                       isDense: true,
                       contentPadding: EdgeInsets.symmetric(
                         horizontal: ResponsiveUtils.spacing(context, 10),

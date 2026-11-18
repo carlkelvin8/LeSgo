@@ -10,7 +10,6 @@ import '../../../provider/main/riderside/rider_mission_provider.dart';
 import '../../../provider/main/riderside/rider_history_provider.dart';
 import '../../../provider/main/riderside/rider_profile_provider.dart';
 import '../../../provider/main/riderside/rider_duty_provider.dart';
-import '../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
 import '../../../provider/main/riderside/rider_inbox_provider.dart';
 import '../../../provider/main/riderside/rider_inbox_refresh_provider.dart';
@@ -28,6 +27,7 @@ import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../core/services/notification_navigation_service.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 // Actually, RegisterScaffold is specific to registration. Standard Scaffold is better for Main Screen.
 
@@ -60,10 +60,10 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
         ref.read(riderNavProvider.notifier).navigateTo(tab);
       };
       NotificationNavigationService.onAppReady();
-      
+
       // Stop persistent notification sound when rider opens app
       OrderSoundAlertService().acknowledgeOrderAlert();
-      
+
       _checkAuthentication();
       ref.read(riderDutyProvider.notifier);
       ref.read(riderWalletProvider.notifier).loadWallet();
@@ -142,7 +142,6 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
 
       switch (newTab) {
         case RiderNavType.bookings:
-          ref.read(riderOrdersProvider.notifier).loadOrders();
           ref.read(riderWalletProvider.notifier).loadWallet();
           break;
         case RiderNavType.more:
@@ -236,10 +235,10 @@ class _RiderMainScreenState extends ConsumerState<RiderMainScreen>
     return Center(
       child: Text(
         _getTitle(type),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF5F2D82),
+          color: context.acc(const Color(0xFF5F2D82)),
         ),
       ),
     );

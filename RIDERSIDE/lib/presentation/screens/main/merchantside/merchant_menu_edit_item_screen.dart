@@ -9,11 +9,15 @@ import '../../../widgets/main/merchantside/menu/shared/merchant_item_options_sec
 import '../../../widgets/main/merchantside/menu/shared/merchant_item_inventory_section.dart';
 import '../../../widgets/main/merchantside/menu/merchant_menu_item_actions.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantMenuEditItemScreen extends ConsumerStatefulWidget {
   final Map<String, String>? initialItem;
 
-  const MerchantMenuEditItemScreen({super.key, this.initialItem});
+  const MerchantMenuEditItemScreen({
+    super.key,
+    this.initialItem,
+  });
 
   @override
   ConsumerState<MerchantMenuEditItemScreen> createState() =>
@@ -31,12 +35,13 @@ class _MerchantMenuEditItemScreenState
     super.initState();
     _formInput = MerchantMenuItemFormInput.edit(widget.initialItem);
     _controller = MerchantMenuItemFormController(
-      initialItemName:
-          widget.initialItem?['itemName'] ?? widget.initialItem?['name'] ?? '',
+      initialItemName: widget.initialItem?['itemName'] ??
+          widget.initialItem?['name'] ??
+          '',
       initialPrice: widget.initialItem?['price'] ?? '0.00',
       initialDescription: widget.initialItem?['description'] ?? '',
     );
-
+    
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final formProvider = merchantMenuItemFormProvider(_formInput);
       final notifier = ref.read(formProvider.notifier);
@@ -70,12 +75,8 @@ class _MerchantMenuEditItemScreenState
         maxHeight: 1024,
         imageQuality: 85,
       );
-
+      
       if (image != null) {
-        // Keep the edit flow on the stable native picker path. The cropper
-        // plugin can terminate the Android activity on some merchant devices
-        // when editing an existing item. The backend accepts the original
-        // image and the item preview handles any aspect ratio safely.
         notifier.updateLocalImage(image.path);
       }
     } catch (e) {
@@ -96,17 +97,14 @@ class _MerchantMenuEditItemScreenState
         SnackBarUtils.showError(context, next.errorMessage!);
       }
       // Handle success - navigate when form state shows success
-      if (next.isSubmitting == false &&
-          previous?.isSubmitting == true &&
-          next.errorMessage == null) {
-        SnackBarUtils.showSuccess(context, 'Item updated successfully');
+      if (next.isSubmitting == false && previous?.isSubmitting == true && next.errorMessage == null) {
+        // The form closes immediately; keep the menu actions unobstructed.
         Navigator.pop(context);
       }
     });
 
     final itemId = int.tryParse(widget.initialItem?['id'] ?? '');
-    final itemName =
-        widget.initialItem?['name'] ??
+    final itemName = widget.initialItem?['name'] ??
         widget.initialItem?['itemName'] ??
         'this item';
 
@@ -134,7 +132,7 @@ class _MerchantMenuEditItemScreenState
                         }
                       },
                 child: Text(
-                  'Delete Item',
+                  context.tr('Delete Item'),
                   style: TextStyle(
                     color: Colors.red.shade700,
                     fontWeight: FontWeight.w600,

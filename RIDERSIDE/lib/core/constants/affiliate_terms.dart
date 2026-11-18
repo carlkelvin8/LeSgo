@@ -110,6 +110,10 @@ LOYALTY PROGRAM
 
 The Rider may be eligible to enjoy the loyalty program benefits once consistent duty is met with a straight 4 or 5 star rating and no records of warnings within the 3 consecutive months time frame. The management still holds the final decision for the approval of the loyalty benefits for each Rider.
 
+IN-APP COMMUNICATIONS
+
+There is zero tolerance for objectionable content or abusive users. The Rider shall not send messages that are harassing, hateful, sexually explicit, threatening, fraudulent, or otherwise offensive through the in-app chat or any other LeSgo channel. Riders and customers can report messages and block other users from the chat screen. The Company reviews reports within 24 hours and may remove offending content and suspend or permanently deactivate the account responsible.
+
 By accepting these Terms, the Rider acknowledges that they have read, understood, and agree to abide by all provisions outlined herein.''';
 
   static const partner = MerchantTerms.content;

@@ -1,5 +1,5 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'wallet_light_painter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +7,7 @@ import '../../../../../core/utils/rider_commission_utils.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderWalletCard extends ConsumerStatefulWidget {
   const RiderWalletCard({
@@ -73,7 +74,7 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
           children: [
             Positioned.fill(
               child: RepaintBoundary(
-                child: CustomPaint(painter: WalletLightPainter(_light)),
+                child: CustomPaint(painter: _WalletLightPainter(_light)),
               ),
             ),
             Container(
@@ -129,8 +130,8 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
                   const SizedBox(height: 22),
                   Text(
                     t('wallet_available_balance'),
-                    style: const TextStyle(
-                      color: Color(0xFFC5ADDF),
+                    style: TextStyle(
+                      color: context.sub(Color(0xFFC5ADDF)),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       letterSpacing: .6,
@@ -171,10 +172,10 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
                       Expanded(
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.workspace_premium_outlined,
                               size: 20,
-                              color: Color(0xFFD5B5F4),
+                              color: context.sub(Color(0xFFD5B5F4)),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -183,9 +184,9 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
                                 children: [
                                   Text(
                                     t('rider_package_type'),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 10,
-                                      color: Color(0xFFC5ADDF),
+                                      color: context.sub(Color(0xFFC5ADDF)),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -228,9 +229,9 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
                                         color: Colors.white70,
                                       ),
                               )
-                            : const Icon(
+                            : Icon(
                                 Icons.refresh_rounded,
-                                color: Color(0xFFD8C3ED),
+                                color: context.sub(Color(0xFFD8C3ED)),
                                 size: 22,
                               ),
                       ),
@@ -244,4 +245,72 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
       ),
     );
   }
+}
+
+/// Repaints the decorative layer only; the balance and controls stay static.
+class _WalletLightPainter extends CustomPainter {
+  _WalletLightPainter(this.motion) : super(repaint: motion);
+  final Animation<double> motion;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0E0520), Color(0xFF2A0D55), Color(0xFF5B2A90)],
+        ).createShader(rect),
+    );
+    final shift = math.sin(motion.value * math.pi * 2);
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = RadialGradient(
+          center: Alignment(.75 + shift * .2, -.35),
+          radius: 1.15,
+          colors: [
+            const Color(0xFF9F62CD).withValues(alpha: .22),
+            Colors.transparent,
+          ],
+        ).createShader(rect),
+    );
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .8
+      ..color = const Color(0xFFD5A5FA).withValues(alpha: .08);
+    for (var i = 0; i < 5; i++) {
+      canvas.drawCircle(
+        Offset(size.width * 1.04, size.height * .08),
+        size.width * (.25 + i * .12),
+        ring,
+      );
+    }
+    final beam = Rect.fromLTWH(
+      -size.width * .6 + size.width * 2 * motion.value,
+      -size.height,
+      size.width * .4,
+      size.height * 3,
+    );
+    canvas.save();
+    canvas.rotate(-.22);
+    canvas.drawRect(
+      beam,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            Colors.transparent,
+            Colors.white.withValues(alpha: .055),
+            Colors.transparent,
+          ],
+        ).createShader(beam),
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _WalletLightPainter oldDelegate) =>
+      oldDelegate.motion != motion;
 }

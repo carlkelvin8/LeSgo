@@ -12,24 +12,20 @@ class ProfilePanel extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(18),
-    this.showBorder = true,
   });
   final Widget child;
   final EdgeInsets padding;
-  final bool showBorder;
   @override
   Widget build(BuildContext context) => Container(
     padding: padding,
     decoration: BoxDecoration(
       color: profileDark(context) ? const Color(0xFF241D30) : Colors.white,
       borderRadius: BorderRadius.circular(22),
-      border: showBorder
-          ? Border.all(
-              color: profileDark(context)
-                  ? const Color(0xFF393044)
-                  : const Color(0xFFEDE9F2),
-            )
-          : null,
+      border: Border.all(
+        color: profileDark(context)
+            ? const Color(0xFF393044)
+            : const Color(0xFFEDE9F2),
+      ),
     ),
     child: child,
   );
