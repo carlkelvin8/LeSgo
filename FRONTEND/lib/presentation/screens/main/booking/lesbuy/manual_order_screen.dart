@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../core/utils/booking_geo_utils.dart';
@@ -34,6 +35,7 @@ class ManualOrderScreen extends ConsumerStatefulWidget {
 
 class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
   String _paymentMethod = 'cash';
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -73,9 +75,20 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
       );
       return;
     }
+    if (_submitting) return;
+    if (isDigitalPaymentMethod(_paymentMethod)) {
+      // Order value is unknown for manual orders, so nothing can be invoiced.
+      setState(() => _paymentMethod = 'cash');
+      SnackBarUtils.showError(
+        context,
+        'Online payment is not available while the order value is still to be confirmed. Switched to Cash on Delivery.',
+      );
+      return;
+    }
     if (!await NetworkGuard.ensureOnline(context) || !context.mounted) return;
     if (!await ActiveOrderLimitGuard.ensureCanBook(context)) return;
 
+    setState(() => _submitting = true);
     try {
       final orderDataSource = getIt<OrderRemoteDataSource>();
       final profileState = ref.read(profileProvider);
@@ -193,11 +206,19 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to place order: $e'),
+            content: Text(
+              ApiErrorMapper.message(
+                e,
+                fallbackEn: 'Failed to place order. Please try again.',
+                fallbackTl: 'Hindi mailagay ang order. Subukan muli.',
+              ),
+            ),
             backgroundColor: Colors.red,
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
   }
 
@@ -498,6 +519,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                         },
                         enabled: !isEmpty,
                         minimumAmount: isEmpty ? null : 0,
+                        allowDigitalPayments: false,
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(
@@ -652,10 +674,11 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                   Expanded(
                     child: PrimaryButton(
                       text: 'Checkout Now',
+                      isLoading: _submitting,
                       backgroundColor: isEmpty
                           ? AppColors.surface(context, Colors.grey[300]!)
                           : const Color(0xFF5F2D82),
-                      onPressed: isEmpty
+                      onPressed: isEmpty || _submitting
                           ? null
                           : () async {
                               await _directCheckout(context, manualOrderState);
