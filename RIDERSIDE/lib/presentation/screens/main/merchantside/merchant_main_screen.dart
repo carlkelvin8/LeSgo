@@ -10,6 +10,7 @@ import '../../../provider/main/merchantside/merchant_nav_provider.dart';
 import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../widgets/main/merchantside/merchant_new_order_watcher.dart';
+import '../../../widgets/main/merchantside/merchant_renewal_banner.dart';
 import '../../../widgets/main/merchantside/merchant_prep_timer_sync.dart';
 import '../../../widgets/widgets.dart';
 import '../../../../core/constants/routers/app_router.dart';
@@ -172,6 +173,7 @@ class _MerchantMainScreenState extends ConsumerState<MerchantMainScreen>
                             },
                           ),
                   ),
+                  const MerchantRenewalBanner(),
                   Expanded(
                     child: _buildBody(currentNav),
                   ),

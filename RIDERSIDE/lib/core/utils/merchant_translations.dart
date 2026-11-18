@@ -2,6 +2,14 @@
 /// (see `context.tr`), so English screens stay unchanged and any string that is
 /// not listed here simply shows in English.
 const Map<String, String> merchantFilipinoLiterals = {
+  'Annual renewal due': 'Due na ang taunang renewal',
+  'Your annual renewal is due on': 'Ang taunang renewal mo ay due sa',
+  'Please prepare the payment so your shop stays open.':
+      'Ihanda ang bayad para manatiling bukas ang tindahan mo.',
+  'today': 'ngayon',
+  'tomorrow': 'bukas',
+  'in': 'sa loob ng',
+  'days': 'araw',
   '3% processing fee applies': 'May 3% processing fee',
   'ACTIONS': 'MGA AKSYON',
   'Accept': 'Tanggapin',

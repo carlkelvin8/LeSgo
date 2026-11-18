@@ -48,6 +48,12 @@ class PartnerRenewalReminderTest extends TestCase
         $this->artisan('registration-fees:remind-renewals')->assertSuccessful();
 
         $this->assertSame(1, $this->reminderCount($fee->user_id));
+
+        // Early payment is not possible (the fee reads "already paid" until it opens),
+        // so the text must not tell merchants to renew beforehand.
+        $body = Notification::where('user_id', $fee->user_id)->where('type', 'partner_renewal_reminder')->value('body');
+        $this->assertStringContainsString('prepare the payment', $body);
+        $this->assertStringNotContainsString('Renew before', $body);
     }
 
     public function test_no_reminder_when_renewal_is_more_than_thirty_days_away(): void

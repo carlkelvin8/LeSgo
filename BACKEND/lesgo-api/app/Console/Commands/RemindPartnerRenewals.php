@@ -62,7 +62,7 @@ class RemindPartnerRenewals extends Command
                 'partner_renewal_reminder',
                 'Annual partner renewal due soon',
                 'Your annual LeSgo partner renewal of ₱'.number_format(RegistrationFeePayment::PARTNER_ANNUAL_FEE, 2)
-                    .' is due on '.$expiresAt->format('M d, Y').'. Renew before then to keep your shop open.',
+                    .' is due on '.$expiresAt->format('M d, Y').'. Please prepare the payment so your shop stays open.',
                 ['type' => 'partner_renewal_reminder', 'due_at' => $cycle],
                 'all'
             );

@@ -83,6 +83,54 @@ class PushDeliveryTest extends TestCase
         $this->assertFalse((new FcmService($messaging))->sendToToken('tok', 't', 'b'));
     }
 
+    public function test_unregistered_token_is_cleared_so_it_is_not_retried(): void
+    {
+        $user = User::factory()->create(['fcm_token' => 'dead-token']);
+        $other = User::factory()->create(['fcm_token' => 'live-token']);
+        $messaging = Mockery::mock(Messaging::class);
+        $messaging->shouldReceive('send')->once()->andThrow(
+            \Kreait\Firebase\Exception\Messaging\NotFound::becauseTokenNotFound('dead-token')
+        );
+
+        $this->assertFalse((new FcmService($messaging))->sendToToken('dead-token', 't', 'b'));
+
+        $this->assertNull($user->fresh()->fcm_token);
+        $this->assertSame('live-token', $other->fresh()->fcm_token);
+    }
+
+    public function test_transient_failures_keep_the_token(): void
+    {
+        $user = User::factory()->create(['fcm_token' => 'good-token']);
+        $messaging = Mockery::mock(Messaging::class);
+        $messaging->shouldReceive('send')->once()->andThrow(new \RuntimeException('network down'));
+
+        $this->assertFalse((new FcmService($messaging))->sendToToken('good-token', 't', 'b'));
+
+        $this->assertSame('good-token', $user->fresh()->fcm_token);
+    }
+
+    public function test_multicast_clears_unknown_tokens(): void
+    {
+        $dead = User::factory()->create(['fcm_token' => 'dead']);
+        $live = User::factory()->create(['fcm_token' => 'live']);
+        $messaging = Mockery::mock(Messaging::class);
+        $messaging->shouldReceive('sendMulticast')->once()->andReturnUsing(function () {
+            return \Kreait\Firebase\Messaging\MulticastSendReport::withItems([
+                \Kreait\Firebase\Messaging\SendReport::failure(
+                    \Kreait\Firebase\Messaging\MessageTarget::with('token', 'dead'),
+                    \Kreait\Firebase\Exception\Messaging\NotFound::becauseTokenNotFound('dead')
+                ),
+                \Kreait\Firebase\Messaging\SendReport::success(\Kreait\Firebase\Messaging\MessageTarget::with('token', 'live'), []),
+            ]);
+        });
+
+        $result = (new FcmService($messaging))->sendToMultiple(['dead', 'live'], 't', 'b');
+
+        $this->assertSame(['success' => 1, 'failure' => 1], $result);
+        $this->assertNull($dead->fresh()->fcm_token);
+        $this->assertSame('live', $live->fresh()->fcm_token);
+    }
+
     public function test_multicast_message_has_sound_and_no_single_target(): void
     {
         $sent = null;

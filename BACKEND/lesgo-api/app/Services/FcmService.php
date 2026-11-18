@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Messaging\AndroidConfig;
 use Kreait\Firebase\Messaging\ApnsConfig;
@@ -29,6 +31,11 @@ class FcmService
                 $this->buildMessage($title, $body, $data)->toToken($token)
             );
             return true;
+        } catch (NotFound $e) {
+            // Firebase says this token is unregistered (app uninstalled / token rotated).
+            $this->forgetTokens([$token]);
+            Log::info('FCM token is unregistered; cleared it', ['token' => substr($token, 0, 20) . '...']);
+            return false;
         } catch (\Throwable $e) {
             Log::warning('FCM send failed', [
                 'token' => substr($token, 0, 20) . '...',
@@ -53,6 +60,8 @@ class FcmService
                 $tokens
             );
 
+            $this->forgetTokens(array_merge($report->unknownTokens(), $report->invalidTokens()));
+
             return [
                 'success' => $report->successes()->count(),
                 'failure' => $report->failures()->count(),
@@ -60,6 +69,14 @@ class FcmService
         } catch (\Throwable $e) {
             Log::warning('FCM multicast failed', ['error' => $e->getMessage()]);
             return ['success' => 0, 'failure' => count($tokens)];
+        }
+    }
+
+    /** Stop pushing to tokens Firebase will never deliver to again. */
+    private function forgetTokens(array $tokens): void
+    {
+        if ($tokens !== []) {
+            User::whereIn('fcm_token', $tokens)->update(['fcm_token' => null]);
         }
     }
 
