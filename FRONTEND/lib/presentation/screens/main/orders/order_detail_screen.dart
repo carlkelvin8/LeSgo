@@ -11,6 +11,7 @@ import '../../../widgets/orders/cancel_order_dialog.dart';
 import '../../../widgets/orders/proof_of_delivery_section.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../core/utils/order_cancel_utils.dart';
+import '../../../../core/utils/order_payment_label.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
@@ -488,12 +489,21 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           _buildInfoRow('Order ID', '#${order.id}'),
           _buildInfoRow('Date', formattedDate),
           _buildInfoRow('Payment Method', order.paymentMethod.toUpperCase()),
-          _buildInfoRow(
-            'Payment Status',
-            order.paymentStatus.toUpperCase(),
-            valueColor: order.paymentStatus == 'paid'
-                ? Colors.green
-                : Colors.orange,
+          Builder(
+            builder: (context) {
+              final label = orderPaymentLabel(
+                status: order.status,
+                paymentStatus: order.paymentStatus,
+                paymentMethod: order.paymentMethod,
+              );
+              return _buildInfoRow(
+                'Payment Status',
+                label.text,
+                valueColor: label.color(
+                  AppColors.foreground(context, Colors.grey[600]!),
+                ),
+              );
+            },
           ),
         ],
       ),
