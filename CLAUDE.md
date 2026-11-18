@@ -30,6 +30,16 @@ closed (altool error 90186), so TestFlight builds are 1.1.8+ (43 uploaded 2026-1
 ExportOptions.plist is manual: `signingStyle manual`, `signingCertificate "Apple Distribution"`,
 `provisioningProfiles {com.lesgo.rider: "LeSgo Rider App Store"}` (installed locally, includes aps-environment production).
 
+## Releasing the customer app (TestFlight)
+Bump `FRONTEND/pubspec.yaml` `version: 1.1.8+N` (28 uploaded 2026-11-18, delivery f81c3909; 1.1.8 is "Waiting for Review").
+From `FRONTEND/`: `mkdir -p "$(readlink build)"` then `flutter build ipa --release --dart-define-from-file=secrets.json`
+(production values; never build with a define file that sets `API_BASE_URL`: that is the local-sandbox override).
+It signs automatically and also writes `build/ios/ipa/LeSgo.ipa`; upload with
+`xcrun altool --upload-app --type ios -f build/ios/ipa/LeSgo.ipa --apiKey Z346X95BXU --apiIssuer c83c8489-37ab-49af-a0e6-5d1c09aa5f32`.
+A release archive needs about 8 GB free; with less it dies with "No space left on device". After "Processing" finishes
+(10-30 min), assign the build to TestFlight groups "LeSgo Team" (internal) and "LeSgo Customer Public" (external, needs Beta App Review).
+Simulator testing of the customer app: see memory `local-e2e-test-setup` (the prebuilt simulator app points at production unless built with the local define).
+
 ## Conventions that bit us
 - Dark mode: never hardcode `Colors.white` / dark text in screens. Use `context.surf/bg/txt/sub/acc/brd(<light colour>)`
   from `lib/core/utils/dark_aware_colors.dart` (returns the light colour unchanged in light mode).
