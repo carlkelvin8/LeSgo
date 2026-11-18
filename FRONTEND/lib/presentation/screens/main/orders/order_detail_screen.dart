@@ -1000,10 +1000,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         points: points,
         color: AppColors.accent(context, Color(0xFF5F2D82)),
         width: 4,
-        // Use solid line for actual route, dashed for straight line
-        patterns: _routePolyline.isEmpty
-            ? [PatternItem.dash(20), PatternItem.gap(10)]
-            : [],
+        // Always solid: dashed polylines on long routes crash iOS.
       ),
     );
 

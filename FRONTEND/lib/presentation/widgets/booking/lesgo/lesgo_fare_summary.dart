@@ -17,8 +17,10 @@ class LesgoFareSummary extends ConsumerWidget {
     final fare = ref.watch(lesgoProvider.select((s) => s.fareEstimate));
     final discount = ref.watch(lesgoProvider.select((s) => s.discount));
 
-    // Don't render anything if we haven't fetched yet
-    if (fare == null && !isLoading) return const SizedBox.shrink();
+    final hasError = ref.watch(lesgoProvider.select((s) => s.fareError));
+
+    // Don't render anything if we haven't fetched yet (and nothing failed)
+    if (fare == null && !isLoading && !hasError) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +45,36 @@ class LesgoFareSummary extends ConsumerWidget {
           ),
           child: isLoading
               ? _buildLoadingState(context)
-              : _buildFareDetails(context, fare!, discount),
+              : fare == null
+              ? _buildErrorState(context, ref)
+              : _buildFareDetails(context, fare, discount),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, WidgetRef ref) {
+    return Row(
+      children: [
+        Icon(
+          Icons.error_outline,
+          size: 18,
+          color: AppColors.foreground(context, Colors.red.shade400),
+        ),
+        SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+        Expanded(
+          child: Text(
+            "Couldn't estimate the fare.",
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 13),
+              color: AppColors.foreground(context, Colors.grey.shade700),
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: () => ref.read(lesgoProvider.notifier).fetchFareEstimate(),
+          child: const Text('Retry'),
         ),
       ],
     );

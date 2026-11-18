@@ -196,10 +196,7 @@ class _OrderCardState extends State<OrderCard> {
         points: points,
         color: AppColors.accent(context, Color(0xFF5F2D82)),
         width: 3,
-        // Use solid line for actual route, dashed for straight line
-        patterns: _routePolyline.isEmpty
-            ? [PatternItem.dash(15), PatternItem.gap(8)]
-            : [],
+        // Always solid: dashed polylines on long routes crash iOS.
       ),
     );
 

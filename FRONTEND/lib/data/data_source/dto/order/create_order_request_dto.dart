@@ -13,6 +13,8 @@ class CreateOrderRequestDto {
   final OrderAddressDto pickup;
   final OrderAddressDto dropoff;
   final String? notes;
+  @JsonKey(name: 'estimated_weight_kg')
+  final double? estimatedWeightKg;
   @JsonKey(name: 'payment_method')
   final String paymentMethod;
   @JsonKey(name: 'vehicle_type')
@@ -37,6 +39,7 @@ class CreateOrderRequestDto {
     required this.pickup,
     required this.dropoff,
     this.notes,
+    this.estimatedWeightKg,
     this.paymentMethod = 'cash',
     this.vehicleType,
     this.passengerName,

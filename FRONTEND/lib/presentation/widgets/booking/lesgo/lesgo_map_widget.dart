@@ -198,7 +198,12 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
                 CameraUpdate.zoomOut(),
               ),
               onMyLocation: widget.onUseCurrentLocation,
-              onFitRoute: () => _fitMarkersInView(pickup!, destination!),
+              onFitRoute: () {
+                final p = pickup;
+                final d = destination;
+                if (p == null || d == null) return;
+                _fitMarkersInView(p, d);
+              },
             ),
           ),
         ],
