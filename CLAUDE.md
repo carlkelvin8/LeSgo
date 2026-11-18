@@ -23,8 +23,12 @@ Monorepo: `RIDERSIDE/` (Flutter, rider + merchant app, bundle `com.lesgo.rider`,
 - A PostToolUse hook (`.claude/hooks/check-edit.sh`) runs `dart analyze` / `php -l` after every edit and reports errors.
 
 ## Releasing the rider app (TestFlight)
-Use the `ship-testflight` skill. Bump `RIDERSIDE/pubspec.yaml` `version: 1.1.7+N` first; TestFlight rejects a repeated build number.
-The App Store submission of 1.1.7 (34) was rejected (2.1.0) and is on hold; TestFlight only for now.
+Use the `ship-testflight` skill. Bump `RIDERSIDE/pubspec.yaml` `version: 1.1.8+N` first; TestFlight rejects a repeated build number.
+The App Store submission of 1.1.7 (34) was rejected (2.1.0) and is on hold; TestFlight only for now. The 1.1.7 train is
+closed (altool error 90186), so TestFlight builds are 1.1.8+ (43 uploaded 2026-11-18, delivery dbb93c8e).
+`xcodebuild -exportArchive` fails with "requires a provisioning profile with the Push Notifications feature" unless the
+ExportOptions.plist is manual: `signingStyle manual`, `signingCertificate "Apple Distribution"`,
+`provisioningProfiles {com.lesgo.rider: "LeSgo Rider App Store"}` (installed locally, includes aps-environment production).
 
 ## Conventions that bit us
 - Dark mode: never hardcode `Colors.white` / dark text in screens. Use `context.surf/bg/txt/sub/acc/brd(<light colour>)`
