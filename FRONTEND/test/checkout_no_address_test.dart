@@ -21,6 +21,7 @@ class _Orders implements OrderRemoteDataSource {
     required double dropoffLat,
     required double dropoffLng,
     String? vehicleType,
+    double? estimatedWeightKg,
   }) async {
     estimateCalls++;
     return 55;
