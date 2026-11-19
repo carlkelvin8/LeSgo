@@ -8,6 +8,7 @@ import '../../../data/data_source/tracking_remote_datasource.dart';
 import '../../../data/data_source/dto/tracking/tracking_dto.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/di/local_storage_service.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/booking_geo_utils.dart';
 import '../../../core/utils/driver_display_utils.dart';
 import '../../../core/utils/directions_route_service.dart';
@@ -298,6 +299,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
       if (location != null) {
         final lat = (location['latitude'] as num).toDouble();
         final lng = (location['longitude'] as num).toDouble();
+        if (!BookingGeoUtils.hasValidCoords(lat, lng)) {
+          debugPrint('⚠️ Ignoring invalid driver coordinates: $lat, $lng');
+          return;
+        }
 
         final newLocation = LatLng(lat, lng);
         state = state.copyWith(driverLocation: newLocation);
@@ -447,7 +452,14 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         );
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not load tracking information.',
+          fallbackTl: 'Hindi ma-load ang tracking.',
+        ),
+      );
     }
   }
 
@@ -463,8 +475,8 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
         if (driverResponse.success) {
           final lat = driverResponse.data.currentLat;
           final lng = driverResponse.data.currentLng;
-          if (lat != null && lng != null) {
-            location = LatLng(lat, lng);
+          if (BookingGeoUtils.hasValidCoords(lat, lng)) {
+            location = LatLng(lat!, lng!);
           }
         }
       } catch (_) {}
@@ -475,7 +487,10 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
           final parsed = TrackingRemoteDataSource.parseEtaPayload(
             etaResponse['data'] as Map<String, dynamic>?,
           );
-          if (parsed.driverLat != null && parsed.driverLng != null) {
+          if (BookingGeoUtils.hasValidCoords(
+            parsed.driverLat,
+            parsed.driverLng,
+          )) {
             location = LatLng(parsed.driverLat!, parsed.driverLng!);
           }
           if (parsed.eta != null || parsed.distance != null) {

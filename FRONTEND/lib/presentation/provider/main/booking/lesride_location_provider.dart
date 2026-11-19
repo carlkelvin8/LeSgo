@@ -628,7 +628,6 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
           color: const Color(0xFF1976D2),
           width: 6,
           geodesic: true,
-          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         );
 
         state = state.copyWith(
@@ -661,10 +660,6 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         color: const Color(0xFF1976D2), // Blue color
         width: 6, // Medium thickness
         geodesic: true, // Enable geodesic
-        patterns: [
-          PatternItem.dash(20),
-          PatternItem.gap(10),
-        ], // Dashed for error
       );
 
       state = state.copyWith(

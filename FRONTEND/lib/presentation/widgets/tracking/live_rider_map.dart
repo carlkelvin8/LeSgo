@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/constants/map_styles.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/utils/booking_geo_utils.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
 
 /// A compact, self-contained map widget that polls the rider's live location
@@ -93,7 +94,7 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
       setState(() {
         _isLoading = false;
         _status = data['status']?.toString();
-        if (driverLat != null && driverLng != null) {
+        if (BookingGeoUtils.hasValidCoords(driverLat, driverLng)) {
           _hasDriverLocation = true;
           _driverLat = driverLat;
           _driverLng = driverLng;
@@ -139,17 +140,20 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
     }
 
     // Destination (dropoff) marker
-    markers.add(
-      Marker(
-        markerId: const MarkerId('dropoff'),
-        position: LatLng(widget.dropoffLat, widget.dropoffLng),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: const InfoWindow(title: 'Delivery Location'),
-      ),
-    );
+    if (BookingGeoUtils.hasValidCoords(widget.dropoffLat, widget.dropoffLng)) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('dropoff'),
+          position: LatLng(widget.dropoffLat, widget.dropoffLng),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          infoWindow: const InfoWindow(title: 'Delivery Location'),
+        ),
+      );
+    }
 
     // Optional pickup marker
-    if (widget.pickupLat != null && widget.pickupLng != null) {
+    if (BookingGeoUtils.hasValidCoords(widget.pickupLat, widget.pickupLng)) {
       markers.add(
         Marker(
           markerId: const MarkerId('pickup'),
@@ -168,10 +172,13 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
     if (_hasDriverLocation && _driverLat != null && _driverLng != null) {
       return LatLng(_driverLat!, _driverLng!);
     }
-    if (widget.pickupLat != null && widget.pickupLng != null) {
+    if (BookingGeoUtils.hasValidCoords(widget.pickupLat, widget.pickupLng)) {
       return LatLng(widget.pickupLat!, widget.pickupLng!);
     }
-    return LatLng(widget.dropoffLat, widget.dropoffLng);
+    if (BookingGeoUtils.hasValidCoords(widget.dropoffLat, widget.dropoffLng)) {
+      return LatLng(widget.dropoffLat, widget.dropoffLng);
+    }
+    return BookingGeoUtils.defaultLatLng;
   }
 
   static double? _parseDouble(dynamic value) {
@@ -244,7 +251,13 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
   Widget _buildStatusLabel() {
     final bool driverAssigned = _hasDriverLocation ||
         (_status != null &&
-            ['accepted', 'picked_up', 'in_progress', 'in_transit']
+            [
+              'accepted',
+              'driver_arrived_at_pickup',
+              'picked_up',
+              'in_progress',
+              'in_transit',
+            ]
                 .contains(_status!.toLowerCase()));
 
     final String label =

@@ -45,7 +45,14 @@ class LesgoMainContent extends ConsumerWidget {
     final paymentMethod = ref.watch(
       lesgoProvider.select((s) => s.paymentMethod),
     );
-    final isBooking = ref.watch(lesgoProvider.select((s) => s.isBooking));
+    // Book is disabled (spinner) while booking, or while the route/fare is
+    // still being calculated.
+    final isBooking = ref.watch(
+      lesgoProvider.select((s) => s.isBooking || s.isLoadingFare),
+    );
+    final isRouteLoading = ref.watch(
+      lesgoLocationProvider.select((s) => s.isLoadingRoute),
+    );
     final voucherCode = ref.watch(lesgoProvider.select((s) => s.voucherCode));
     final canApplyVoucher = ref.watch(
       lesgoLocationProvider.select(
@@ -119,7 +126,7 @@ class LesgoMainContent extends ConsumerWidget {
                 onChangeCurrent: () => notifier.openPickupSelection(),
                 onChangeDestination: () => notifier.openDestinationSelection(),
                 paymentMethod: paymentMethod,
-                isBooking: isBooking,
+                isBooking: isBooking || isRouteLoading,
                 onPaymentChanged: (val) {
                   if (val != null) {
                     notifier.updatePaymentMethod(val);

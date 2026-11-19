@@ -1,3 +1,4 @@
+import '../../../../../core/utils/lesgo_status_text.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -173,51 +174,10 @@ class _LesgoOrderTrackingScreenState
     );
   }
 
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Finding Driver';
-      case 'accepted':
-        return 'Driver Accepted';
-      case 'driver_arrived':
-        return 'Driver Arrived';
-      case 'picked_up':
-        return 'Package Picked Up';
-      case 'in_transit':
-        return 'On The Way';
-      case 'completed':
-        return 'Delivered';
-      case 'cancelled':
-        return 'Cancelled';
-      case 'failed':
-        return 'Failed';
-      default:
-        return status.toUpperCase();
-    }
-  }
+  String _getStatusText(String status) => LesgoStatusText.title(status);
 
-  String _getStatusDescription(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Looking for available driver';
-      case 'accepted':
-        return 'Driver is on the way to pickup location';
-      case 'driver_arrived':
-        return 'Driver has arrived at pickup location';
-      case 'picked_up':
-        return 'Package has been picked up';
-      case 'in_transit':
-        return 'Package is being delivered';
-      case 'completed':
-        return 'Package has been delivered successfully';
-      case 'cancelled':
-        return 'Order has been cancelled';
-      case 'failed':
-        return 'Delivery failed';
-      default:
-        return 'Order status: $status';
-    }
-  }
+  String _getStatusDescription(String status) =>
+      LesgoStatusText.description(status);
 
   @override
   Widget build(BuildContext context) {

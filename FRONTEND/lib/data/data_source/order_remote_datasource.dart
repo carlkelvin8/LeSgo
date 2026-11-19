@@ -62,30 +62,29 @@ class OrderRemoteDataSource {
     required double pickupLng,
     required double dropoffLat,
     required double dropoffLng,
+    double? estimatedWeightKg,
     String? vehicleType,
   }) async {
     final dio = _dioClient.dio;
-    try {
-      final response = await dio.post(
-        ApiConstants.orderEstimate,
-        data: {
-          'service_id': serviceId,
-          'estimated_distance_m': estimatedDistanceM,
-          'pickup': {'lat': pickupLat, 'lng': pickupLng},
-          'dropoff': {'lat': dropoffLat, 'lng': dropoffLng},
-          if (vehicleType != null) 'vehicle_type': vehicleType,
-        },
-      );
-      final data = response.data['data'];
-      if (data != null) {
-        final fare = data['estimated_fare'];
-        if (fare is num) return fare.toDouble();
-        if (fare is String) return double.tryParse(fare);
-      }
-      return null;
-    } catch (e) {
-      throw Exception('Failed to get fare estimate: $e');
+    // Errors propagate untouched so ApiErrorMapper can read the DioException.
+    final response = await dio.post(
+      ApiConstants.orderEstimate,
+      data: {
+        'service_id': serviceId,
+        'estimated_distance_m': estimatedDistanceM,
+        'pickup': {'lat': pickupLat, 'lng': pickupLng},
+        'dropoff': {'lat': dropoffLat, 'lng': dropoffLng},
+        if (estimatedWeightKg != null) 'estimated_weight_kg': estimatedWeightKg,
+        if (vehicleType != null) 'vehicle_type': vehicleType,
+      },
+    );
+    final data = response.data['data'];
+    if (data != null) {
+      final fare = data['estimated_fare'];
+      if (fare is num) return fare.toDouble();
+      if (fare is String) return double.tryParse(fare);
     }
+    return null;
   }
 
   /// Get full fare breakdown including base fare, distance fee, service fee, etc.
