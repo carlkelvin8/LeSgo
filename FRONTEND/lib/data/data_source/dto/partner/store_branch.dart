@@ -1,3 +1,4 @@
+import '../../../../core/utils/address_text_utils.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 
 /// A store branch the customer can order from. Each branch is its own
@@ -45,14 +46,12 @@ class StoreBranch {
   }
 
   factory StoreBranch.fromJson(Map<String, dynamic> json) {
-    final address = [
+    final address = joinAddressParts([
       json['address_line1'],
       json['address_line2'],
       json['city'],
       json['region'],
-    ]
-        .where((p) => p != null && p.toString().trim().isNotEmpty)
-        .join(', ');
+    ]);
     return StoreBranch(
       id: int.parse(json['id'].toString()),
       name: (json['name'] ?? 'Branch').toString(),
