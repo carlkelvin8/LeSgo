@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -38,7 +39,7 @@ class _RiderShiftSummarySheetState extends ConsumerState<RiderShiftSummarySheet>
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _error = ApiErrorMapper.message(e);
           _loading = false;
         });
       }

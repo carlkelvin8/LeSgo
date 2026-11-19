@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -141,7 +142,7 @@ class RiderCustomerServiceChatNotifier
       state = state.copyWith(
         isSending: false,
         isConfigured: false,
-        error: e.toString(),
+        error: ApiErrorMapper.message(e),
       );
     } on GeminiServiceException catch (e) {
       state = state.copyWith(

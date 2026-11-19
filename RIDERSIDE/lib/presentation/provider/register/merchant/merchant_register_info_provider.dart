@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -178,7 +179,7 @@ class MerchantRegisterInfoNotifier
         );
       }
     } catch (e) {
-      state = state.copyWith(errorMessage: 'Failed to capture selfie: $e');
+      state = state.copyWith(errorMessage: 'Failed to capture selfie: ${ApiErrorMapper.message(e)}');
     } finally {
       state = state.copyWith(isSelfieLoading: false);
     }
@@ -198,7 +199,7 @@ class MerchantRegisterInfoNotifier
         );
       }
     } catch (e) {
-      state = state.copyWith(errorMessage: 'Failed to upload valid ID: $e');
+      state = state.copyWith(errorMessage: 'Failed to upload valid ID: ${ApiErrorMapper.message(e)}');
     } finally {
       state = state.copyWith(isValidIdLoading: false);
     }
@@ -220,7 +221,7 @@ class MerchantRegisterInfoNotifier
       }
     } catch (e) {
       state = state.copyWith(
-        errorMessage: 'Failed to upload digital signature: $e',
+        errorMessage: 'Failed to upload digital signature: ${ApiErrorMapper.message(e)}',
       );
     } finally {
       state = state.copyWith(isSignatureLoading: false);
@@ -243,7 +244,7 @@ class MerchantRegisterInfoNotifier
       }
     } catch (e) {
       state = state.copyWith(
-        errorMessage: 'Failed to upload barangay permit: $e',
+        errorMessage: 'Failed to upload barangay permit: ${ApiErrorMapper.message(e)}',
       );
     } finally {
       state = state.copyWith(isBarangayPermitLoading: false);
@@ -266,7 +267,7 @@ class MerchantRegisterInfoNotifier
       }
     } catch (e) {
       state = state.copyWith(
-        errorMessage: 'Failed to upload mayor\'s permit: $e',
+        errorMessage: 'Failed to upload mayor\'s permit: ${ApiErrorMapper.message(e)}',
       );
     } finally {
       state = state.copyWith(isMayorsPermitLoading: false);
@@ -288,7 +289,7 @@ class MerchantRegisterInfoNotifier
         );
       }
     } catch (e) {
-      state = state.copyWith(errorMessage: 'Failed to upload DTI permit: $e');
+      state = state.copyWith(errorMessage: 'Failed to upload DTI permit: ${ApiErrorMapper.message(e)}');
     } finally {
       state = state.copyWith(isDtiPermitLoading: false);
     }

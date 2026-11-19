@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/di/injection.dart';
@@ -238,7 +239,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       return true;
     } catch (e) {
       if (mounted) {
-        state = state.copyWith(error: e.toString());
+        state = state.copyWith(error: ApiErrorMapper.message(e));
       }
       return false;
     }

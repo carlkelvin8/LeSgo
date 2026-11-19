@@ -124,9 +124,6 @@ class MerchantWithdrawalDataSource {
       }
       throw Exception(
           'Failed to create withdrawal: ${ApiService.extractError(e)}');
-    } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('Failed to create withdrawal: $e');
     }
   }
 

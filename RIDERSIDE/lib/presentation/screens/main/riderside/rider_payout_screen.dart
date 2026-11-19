@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math';
 import 'package:intl/intl.dart';
@@ -431,9 +432,7 @@ class RiderPayoutScreen extends ConsumerWidget {
             if (ctx.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    e.toString().replaceFirst('Exception: ', ''),
-                  ),
+                  content: Text('Error: ${ApiErrorMapper.message(e)}'),
                   backgroundColor: Colors.red.shade600,
                 ),
               );

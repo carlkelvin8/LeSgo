@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -212,7 +213,7 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to get location: $e',
+        error: 'Failed to get location: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -273,7 +274,7 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
     } catch (e) {
       state = state.copyWith(
         isUpdating: false,
-        error: 'Failed to update location: $e',
+        error: 'Failed to update location: ${ApiErrorMapper.message(e)}',
       );
     }
   }
