@@ -43,6 +43,22 @@ import '../lespay/lespay_provider.dart';
 const String kMissingDeliveryAddressMessage =
     'Add a delivery address to see the delivery fee.';
 
+/// Deliveries are limited to this distance from the pickup branch (the server
+/// enforces the same limit on /orders/estimate and when placing the order).
+const double kMaxDeliveryDistanceKm = 30;
+
+/// Prefix of the out-of-range message, so the UI can offer "change address"
+/// instead of a retry that can never succeed.
+const String kOutOfRangeMessagePrefix = 'The delivery address is too far';
+
+String outOfRangeDeliveryMessage(double distanceKm) =>
+    '$kOutOfRangeMessagePrefix (${distanceKm.toStringAsFixed(1)} km from the '
+    'pickup branch). Deliveries are limited to ${kMaxDeliveryDistanceKm.toStringAsFixed(0)} km. '
+    'Choose a closer branch or a different delivery address.';
+
+bool isOutOfRangeDeliveryMessage(String? message) =>
+    message != null && message.startsWith(kOutOfRangeMessagePrefix);
+
 class CheckoutState {
   final Order? order;
 
@@ -402,12 +418,24 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     }
     final requestId = ++_fareRequestId;
     ++_voucherRequestId;
-    final distanceM = BookingGeoUtils.distanceMeters(
+    final rawDistanceM = BookingGeoUtils.distanceMeters(
       lat1: state.pickupLat,
       lng1: state.pickupLng,
       lat2: state.dropoffLat,
       lng2: state.dropoffLng,
-    ).clamp(500, 25000);
+    );
+    if (rawDistanceM > kMaxDeliveryDistanceKm * 1000) {
+      // Say so right away instead of asking the server and showing a generic
+      // "could not calculate" error.
+      state = state.copyWith(
+        hasValidDeliveryFee: false,
+        isLoadingFare: false,
+        isValidatingVoucher: false,
+        fareError: outOfRangeDeliveryMessage(rawDistanceM / 1000),
+      );
+      return;
+    }
+    final distanceM = rawDistanceM.clamp(500, 25000);
     state = state.copyWith(
       isLoadingFare: true,
       hasValidDeliveryFee: false,

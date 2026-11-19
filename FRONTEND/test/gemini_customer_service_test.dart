@@ -2,14 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lesgo/core/services/gemini_customer_service.dart';
 
 void main() {
-  group('LeSGo customer service fallback', () {
+  group('LeSgo customer service fallback', () {
     final service = GeminiCustomerService();
 
     test('answers greetings without requiring the remote model', () async {
       final reply = await service.sendMessage('hi');
 
       expect(reply, contains('How can I help'));
-      expect(reply, contains('LeSGo'));
+      expect(reply, contains('LeSgo'));
     });
 
     test('answers common account questions locally', () async {

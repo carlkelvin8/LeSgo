@@ -442,6 +442,13 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                   icon: const Icon(Icons.add_location_alt_outlined),
                   label: const Text('Add delivery address'),
                 )
+              else if (isOutOfRangeDeliveryMessage(checkoutState.fareError))
+                TextButton.icon(
+                  key: const ValueKey('checkout-change-address'),
+                  onPressed: () => _showAddressSelector(context, ref),
+                  icon: const Icon(Icons.edit_location_alt_outlined),
+                  label: const Text('Change delivery address'),
+                )
               else if (checkoutState.fareError != null)
                 TextButton.icon(
                   onPressed: checkoutState.isLoadingFare

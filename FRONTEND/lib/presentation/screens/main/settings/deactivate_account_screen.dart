@@ -144,7 +144,7 @@ class _DeactivateAccountScreenState
                 ),
                 child: Text(
                   'Deactivating your account signs you out and limits access to '
-                  'LeSGo services. You can contact support to request reactivation.',
+                  'LeSgo services. You can contact support to request reactivation.',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),

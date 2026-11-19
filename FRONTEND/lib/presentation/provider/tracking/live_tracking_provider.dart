@@ -732,7 +732,7 @@ class LiveTrackingNotifier extends StateNotifier<LiveTrackingState> {
     final dropoff = state.dropoffLocation;
     final driverName = state.driverInfo?.name ?? 'Driver';
     final lines = <String>[
-      'LeSGo live tracking — Order #$orderId',
+      'LeSgo live tracking — Order #$orderId',
       if (driver != null)
         'Driver ($driverName): https://maps.google.com/?q=${driver.latitude},${driver.longitude}',
       if (pickup != null)

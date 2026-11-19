@@ -267,7 +267,7 @@ class _CustomerServiceChatScreenState
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
                 decoration: InputDecoration(
-                  hintText: 'LeSGo app help: orders, LesPay, vouchers...',
+                  hintText: 'LeSgo app help: orders, LesPay, vouchers...',
                   hintStyle: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),

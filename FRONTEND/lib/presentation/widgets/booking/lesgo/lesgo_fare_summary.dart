@@ -105,6 +105,15 @@ class LesgoFareSummary extends ConsumerWidget {
     );
   }
 
+  double _minimumFareAdjustment(FareBreakdownResult fare) {
+    final parts = fare.baseFare +
+        fare.distanceFare +
+        fare.serviceFee +
+        fare.weightSurcharge;
+    final gap = fare.total - parts;
+    return gap > 0.01 ? double.parse(gap.toStringAsFixed(2)) : 0;
+  }
+
   Widget _buildFareDetails(
     BuildContext context,
     FareBreakdownResult fare,
@@ -122,6 +131,10 @@ class LesgoFareSummary extends ConsumerWidget {
           _row(context, 'Service Fee', fare.serviceFee),
         if (fare.weightSurcharge > 0)
           _row(context, 'Weight Surcharge', fare.weightSurcharge),
+        // The server raises the fare to the service's minimum fare; without
+        // this row the lines above would not add up to the Total.
+        if (_minimumFareAdjustment(fare) > 0)
+          _row(context, 'Minimum fare adjustment', _minimumFareAdjustment(fare)),
         if (discount > 0) ...[
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
           _row(context, 'Voucher Discount', -discount, isDiscount: true),
