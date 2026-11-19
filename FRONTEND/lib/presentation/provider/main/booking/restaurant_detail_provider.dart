@@ -125,33 +125,47 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     );
   }
 
+  /// All cache writes run one at a time, in call order. Without this, a slow
+  /// persist from a quantity tap can land after (and overwrite) a later write
+  /// or the clear that follows a successful order.
+  Future<void> _cacheQueue = Future<void>.value();
+  int _persistSeq = 0;
+
+  Future<void> _enqueueCacheOp(Future<void> Function() op) {
+    final next = _cacheQueue.then((_) => op()).catchError((_) {});
+    _cacheQueue = next;
+    return next;
+  }
+
   void _persistCart() {
     unawaited(_persistCartAsync());
   }
 
   Future<void> _persistCartAsync() async {
     final epoch = _cartEpoch;
+    final seq = ++_persistSeq;
     final items = List<OrderItem>.from(state.cartItems);
     final restaurantId = state.activeRestaurantId;
     final restaurantName = state.activeRestaurantName;
+    final branchId = state.activeBranchId;
 
-    if (items.isEmpty ||
-        restaurantId == null ||
-        restaurantId.isEmpty) {
-      await LeseatCartCache.clear();
-      return;
-    }
+    await _enqueueCacheOp(() async {
+      // Re-check right before touching storage: a newer persist supersedes
+      // this one and clearCart() invalidates it.
+      if (epoch != _cartEpoch || seq != _persistSeq) return;
 
-    await LeseatCartCache.save(
-      restaurantId: restaurantId,
-      restaurantName: restaurantName,
-      branchId: state.activeBranchId,
-      items: items,
-    );
+      if (items.isEmpty || restaurantId == null || restaurantId.isEmpty) {
+        await LeseatCartCache.clear();
+        return;
+      }
 
-    if (epoch != _cartEpoch) {
-      await LeseatCartCache.clear();
-    }
+      await LeseatCartCache.save(
+        restaurantId: restaurantId,
+        restaurantName: restaurantName,
+        branchId: branchId,
+        items: items,
+      );
+    });
   }
 
   Future<void> loadRestaurantDetails(
@@ -348,7 +362,7 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
   Future<void> clearCart() async {
     _cartEpoch++;
     state = state.copyWith(cartItems: []);
-    await LeseatCartCache.clear();
+    await _enqueueCacheOp(LeseatCartCache.clear);
   }
 }
 
