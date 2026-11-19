@@ -8,6 +8,12 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/payment_gateway/payment_gateway_provider.dart';
 
+/// Whether a gateway invoice status means the customer has paid.
+bool isInvoicePaidStatus(String? status) {
+  final s = status?.toLowerCase();
+  return s == 'paid' || s == 'completed';
+}
+
 /// Xendit / gateway checkout for order payments (GCash, PayMaya, card).
 class OrderDigitalPaymentScreen extends ConsumerStatefulWidget {
   const OrderDigitalPaymentScreen({
@@ -90,9 +96,7 @@ class _OrderDigitalPaymentScreenState
     if (!mounted) return;
     setState(() => _isConfirming = false);
 
-    if (invoice != null &&
-        (invoice.status.toLowerCase() == 'paid' ||
-            invoice.status.toLowerCase() == 'completed')) {
+    if (invoice != null && isInvoicePaidStatus(invoice.status)) {
       SnackBarUtils.showSuccess(
         context,
         'Payment successful! Your ${widget.serviceLabel} order is confirmed.',
@@ -108,11 +112,65 @@ class _OrderDigitalPaymentScreenState
     );
   }
 
+  /// Back press: the customer may have paid already, so verify before the
+  /// caller cancels the order. Pops true when paid, false only when the invoice
+  /// is confirmed unpaid and the user agrees to leave, and null when the status
+  /// could not be verified (the caller must not cancel in that case).
+  Future<void> _handleBack() async {
+    if (_isConfirming) return;
+    setState(() => _isConfirming = true);
+    final invoice = await ref
+        .read(paymentGatewayProvider.notifier)
+        .checkInvoiceStatus(invoiceId: widget.invoiceId, context: context);
+    if (!mounted) return;
+    setState(() => _isConfirming = false);
+
+    if (invoice != null && isInvoicePaidStatus(invoice.status)) {
+      SnackBarUtils.showSuccess(
+        context,
+        'Payment successful! Your ${widget.serviceLabel} order is confirmed.',
+      );
+      Navigator.of(context).pop(true);
+      return;
+    }
+
+    final verified = invoice != null;
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(verified ? 'Leave payment?' : 'Could not verify payment'),
+        content: Text(
+          verified
+              ? 'Your payment has not been received. If you leave, this order will be cancelled.'
+              : 'We could not check whether your payment went through. If you already paid, stay here and tap Confirm.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Stay'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(verified ? 'Leave and cancel' : 'Leave anyway'),
+          ),
+        ],
+      ),
+    );
+    if (leave == true && mounted) {
+      Navigator.of(context).pop(verified ? false : null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final gatewayState = ref.watch(paymentGatewayProvider);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleBack();
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(
           'Pay for ${widget.serviceLabel}',
@@ -212,6 +270,7 @@ class _OrderDigitalPaymentScreenState
           ),
         ],
       ),
+    ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 import '../../../../../core/utils/booking_geo_utils.dart';
 import '../../../../../data/data_source/dto/voucher/validate_voucher_request_dto.dart';
 import '../../../../../data/data_source/dto/partner/store_branch.dart';
@@ -32,9 +33,12 @@ class LesbuyCheckoutState {
     }
     return null;
   }
+  /// True only once a real fare estimate has been received for the current
+  /// drop-off. Store checkouts must not proceed while this is false.
+  final bool deliveryFeeKnown;
 
   const LesbuyCheckoutState({
-    this.deliveryFee = 50,
+    this.deliveryFee = 0,
     this.discount = 0,
     this.voucherCode,
     this.voucherError,
@@ -47,6 +51,7 @@ class LesbuyCheckoutState {
     this.deliveryFeeUncertain = false,
     this.branches = const [],
     this.selectedBranchId,
+    this.deliveryFeeKnown = false,
   });
 
   LesbuyCheckoutState copyWith({
@@ -61,6 +66,7 @@ class LesbuyCheckoutState {
     int? partnerId,
     int? estimatedDistanceM,
     bool? deliveryFeeUncertain,
+    bool? deliveryFeeKnown,
     bool clearVoucher = false,
     bool clearVoucherError = false,
     List<StoreBranch>? branches,
@@ -70,18 +76,19 @@ class LesbuyCheckoutState {
       deliveryFee: deliveryFee ?? this.deliveryFee,
       discount: discount ?? this.discount,
       voucherCode: clearVoucher ? null : (voucherCode ?? this.voucherCode),
-      voucherError:
-          clearVoucherError ? null : (voucherError ?? this.voucherError),
+      voucherError: clearVoucherError
+          ? null
+          : (voucherError ?? this.voucherError),
       isLoadingFare: isLoadingFare ?? this.isLoadingFare,
       isValidatingVoucher: isValidatingVoucher ?? this.isValidatingVoucher,
       pickupLat: pickupLat ?? this.pickupLat,
       pickupLng: pickupLng ?? this.pickupLng,
       partnerId: partnerId ?? this.partnerId,
       estimatedDistanceM: estimatedDistanceM ?? this.estimatedDistanceM,
-      deliveryFeeUncertain:
-          deliveryFeeUncertain ?? this.deliveryFeeUncertain,
+      deliveryFeeUncertain: deliveryFeeUncertain ?? this.deliveryFeeUncertain,
       branches: branches ?? this.branches,
       selectedBranchId: selectedBranchId ?? this.selectedBranchId,
+      deliveryFeeKnown: deliveryFeeKnown ?? this.deliveryFeeKnown,
     );
   }
 }
@@ -100,10 +107,7 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
     if (id != null) {
       await _loadPartnerPickup(id);
     }
-    await refreshDeliveryFee(
-      dropoffLat: null,
-      dropoffLng: null,
-    );
+    await refreshDeliveryFee(dropoffLat: null, dropoffLng: null);
   }
 
   Future<void> _loadPartnerPickup(int partnerId) async {
@@ -213,34 +217,59 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
         dropoffLng: lng,
       );
       final normalizedFee = _normalizeDeliveryFee(fee);
+      if (normalizedFee == null) {
+        _markFeeUnavailable();
+        return;
+      }
+      final feeChanged = normalizedFee != state.deliveryFee;
       state = state.copyWith(
-        deliveryFee: normalizedFee ?? 50,
+        deliveryFee: normalizedFee,
         isLoadingFare: false,
         deliveryFeeUncertain: false,
+        deliveryFeeKnown: true,
       );
+      if (feeChanged && state.voucherCode != null) {
+        invalidateVoucher();
+      }
     } catch (_) {
-      state = state.copyWith(
-        deliveryFee: 50,
-        isLoadingFare: false,
-        deliveryFeeUncertain: false,
-      );
+      _markFeeUnavailable();
     }
+  }
+
+  /// Never show an invented price: flag the fee as unknown so the UI can block
+  /// checkout and offer a retry.
+  void _markFeeUnavailable() {
+    state = state.copyWith(
+      deliveryFee: 0,
+      isLoadingFare: false,
+      deliveryFeeUncertain: true,
+      deliveryFeeKnown: false,
+    );
+  }
+
+  /// Drops an applied voucher whose discount was computed for an order total
+  /// that has since changed (cart or delivery fee).
+  void invalidateVoucher() {
+    if (state.voucherCode == null && state.discount == 0) return;
+    state = state.copyWith(
+      clearVoucher: true,
+      discount: 0,
+      voucherError: 'Your order total changed, so the voucher was removed. Apply it again.',
+    );
   }
 
   Future<String?> applyVoucher(String code, double orderSubtotal) async {
     final trimmed = code.trim();
     if (trimmed.isEmpty) return 'Enter a voucher code';
 
-    state = state.copyWith(
-      isValidatingVoucher: true,
-      clearVoucherError: true,
-    );
+    state = state.copyWith(isValidatingVoucher: true, clearVoucherError: true);
 
     try {
       final response = await _vouchers.validateVoucher(
         ValidateVoucherRequestDto(
           voucherCode: trimmed,
           orderValue: orderSubtotal + state.deliveryFee,
+          serviceId: 4,
         ),
       );
 
@@ -265,11 +294,12 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
       );
       return null;
     } catch (e) {
-      final msg = e.toString().replaceFirst('Exception: ', '');
-      state = state.copyWith(
-        isValidatingVoucher: false,
-        voucherError: msg,
+      final msg = ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not validate the voucher. Please try again.',
+        fallbackTl: 'Hindi ma-validate ang voucher. Subukan muli.',
       );
+      state = state.copyWith(isValidatingVoucher: false, voucherError: msg);
       return msg;
     }
   }
@@ -282,11 +312,11 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
     );
   }
 
-  /// Cap unreasonable fees (e.g. due to wrong coordinates or extreme distance).
+  /// Rejects unreasonable fees (wrong coordinates, extreme distance) as unknown.
   double? _normalizeDeliveryFee(double? fee) {
     if (fee == null) return null;
     if (fee.isNaN || fee.isInfinite || fee < 0 || fee > 500) {
-      return 49.0;
+      return null;
     }
     return fee;
   }
@@ -294,5 +324,5 @@ class LesbuyCheckoutNotifier extends StateNotifier<LesbuyCheckoutState> {
 
 final lesbuyCheckoutProvider =
     StateNotifierProvider<LesbuyCheckoutNotifier, LesbuyCheckoutState>((ref) {
-  return LesbuyCheckoutNotifier(ref);
-});
+      return LesbuyCheckoutNotifier(ref);
+    });

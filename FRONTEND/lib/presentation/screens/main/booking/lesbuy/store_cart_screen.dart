@@ -1,6 +1,8 @@
 import 'package:lesgo/core/utils/voucher_service_utils.dart';
 import 'package:lesgo/core/utils/lesbuy_pickup_selection.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
+import 'dart:math' show max;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
@@ -8,6 +10,7 @@ import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 import '../../../../../core/utils/booking_checkout_payment.dart';
 import '../../../../../core/utils/network_guard.dart';
 import '../../../../../core/utils/active_order_limit_guard.dart';
@@ -41,6 +44,7 @@ class StoreCartScreen extends ConsumerStatefulWidget {
 class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
   AddressDto? _selectedAddress;
   String _paymentMethod = 'cash';
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -184,6 +188,12 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
       }
     });
 
+    ref.listen(storeDetailProvider.select((s) => s.cartTotal), (prev, next) {
+      if (prev != null && prev != next) {
+        ref.read(lesbuyCheckoutProvider.notifier).invalidateVoucher();
+      }
+    });
+
     final storeState = ref.watch(storeDetailProvider);
     final storeNotifier = ref.read(storeDetailProvider.notifier);
     final manualOrderState = ref.watch(manualOrderProvider);
@@ -197,7 +207,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
     final double dropoffLat;
     final double dropoffLng;
     final String contactName;
-    final String contactPhone;
+    final String? contactPhone;
 
     if (_selectedAddress != null) {
       userAddress = _selectedAddress!.addressLine1;
@@ -208,7 +218,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
           : (profileState.user?.name ?? 'Customer');
       contactPhone = _selectedAddress!.contactPhone?.isNotEmpty == true
           ? _selectedAddress!.contactPhone!
-          : (profileState.user?.phone ?? '+639123456789');
+          : profileState.user?.phone;
     } else if (addressState.deliveryAddress != null) {
       final addr = addressState.deliveryAddress!;
       userAddress = addr.addressLine1;
@@ -219,7 +229,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
           : (profileState.user?.name ?? 'Customer');
       contactPhone = addr.contactPhone?.isNotEmpty == true
           ? addr.contactPhone!
-          : (profileState.user?.phone ?? '+639123456789');
+          : profileState.user?.phone;
     } else {
       userAddress = profileState.address1.isNotEmpty
           ? profileState.address1
@@ -227,7 +237,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
       dropoffLat = BookingGeoUtils.defaultLat;
       dropoffLng = BookingGeoUtils.defaultLng;
       contactName = profileState.user?.name ?? 'Customer';
-      contactPhone = profileState.user?.phone ?? '+639123456789';
+      contactPhone = profileState.user?.phone;
     }
 
     // Calculate totals
@@ -247,7 +257,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
     final discount = isCartEmpty ? 0.0 : lesbuyCheckout.discount;
     final total = manualOnly
         ? 0.0
-        : subtotal + deliveryFee - discount;
+        : max(0.0, subtotal + deliveryFee - discount);
     final orderValueUncertain = manualOnly;
     final deliveryNote = manualOnly
         ? LesbuyManualDeliveryUtils.pendingHint
@@ -420,6 +430,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       },
                       enabled: !isCartEmpty,
                       minimumAmount: isCartEmpty ? null : walletMinimum,
+                      allowDigitalPayments: !orderValueUncertain,
                     ),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -470,25 +481,55 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
         child: SafeArea(
           child: PrimaryButton(
             text: 'Checkout',
-            // isLoading: storeState.isLoading,
+            isLoading: _submitting,
             backgroundColor: isCartEmpty
                 ? Theme.of(context).disabledColor
                 : null,
-            onPressed: isCartEmpty
+            onPressed: isCartEmpty || _submitting
                 ? null
                 : () async {
+                    if (_submitting) return;
                     if (!isStoreCartEmpty && !isManualOrderEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text(LesbuyPickupSelection.mixedCartMessage),
                       ));
                       return;
                     }
-                    if (isStoreCartEmpty && !isManualOrderEmpty &&
+                    if (!isCartEmpty &&
                         !LesbuyManualDeliveryUtils.hasDeliveryLocation(
                           _selectedAddress ?? ref.read(addressProvider).deliveryAddress,
                         )) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text(LesbuyManualDeliveryUtils.missingDeliveryMessage),
+                      ));
+                      return;
+                    }
+                    if (!isStoreCartEmpty &&
+                        !ref.read(lesbuyCheckoutProvider).deliveryFeeKnown) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'Could not get the delivery fee. Please retry.',
+                          ),
+                          action: SnackBarAction(
+                            label: 'Retry',
+                            onPressed: () => _syncDeliveryFeeQuote(
+                              ref,
+                              _selectedAddress ??
+                                  ref.read(addressProvider).deliveryAddress,
+                            ),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    if (isStoreCartEmpty &&
+                        isDigitalPaymentMethod(_paymentMethod)) {
+                      setState(() => _paymentMethod = 'cash');
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text(
+                          'Online payment is not available while the order value is still to be confirmed. Switched to Cash on Delivery.',
+                        ),
                       ));
                       return;
                     }
@@ -533,6 +574,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                     }
 
                     // Create LesBuy order using API
+                    setState(() => _submitting = true);
                     try {
                       final orderDataSource = getIt<OrderRemoteDataSource>();
                       final dropoffAddress = userAddress;
@@ -701,10 +743,11 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                         print('🔴 DioException data: ${e.response?.data}');
                       }
                       if (context.mounted) {
-                        final raw = e.toString();
-                        final msg = raw.startsWith('Exception: ')
-                            ? raw.substring(11)
-                            : raw;
+                        final msg = ApiErrorMapper.message(
+                          e,
+                          fallbackEn: 'Could not place your order. Please try again.',
+                          fallbackTl: 'Hindi mailagay ang order. Subukan muli.',
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(msg),
@@ -713,6 +756,8 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                           ),
                         );
                       }
+                    } finally {
+                      if (mounted) setState(() => _submitting = false);
                     }
                   },
           ),
