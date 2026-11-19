@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/map_styles.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/order_status_utils.dart';
+import '../../../../core/utils/order_payment_label.dart';
 import '../../../../core/services/order_polling_service.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
@@ -587,7 +588,14 @@ class _SimpleOrderTrackingScreenState
           const SizedBox(height: 12),
           _buildInfoRow('Service', _getServiceName(order!.serviceId)),
           _buildInfoRow('Payment Method', order!.paymentMethod.toUpperCase()),
-          _buildInfoRow('Payment Status', order!.paymentStatus.toUpperCase()),
+          _buildInfoRow(
+            'Payment Status',
+            orderPaymentLabel(
+              status: order!.status,
+              paymentStatus: order!.paymentStatus,
+              paymentMethod: order!.paymentMethod,
+            ).text,
+          ),
           if (order!.notes != null && order!.notes!.isNotEmpty)
             _buildInfoRow('Notes', order!.notes!),
         ],
