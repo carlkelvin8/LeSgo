@@ -135,6 +135,14 @@ class _AddressManagementScreenState
                         color: Color(0xFF5F2D82),
                       ),
                     )
+                  : addressState.addresses.isEmpty &&
+                        addressState.error != null
+                  ? _LoadError(
+                      message: addressState.error!,
+                      onRetry: () => ref
+                          .read(addressProvider.notifier)
+                          .loadAddresses(_userId),
+                    )
                   : addressState.addresses.isEmpty
                   ? _EmptyState(onAdd: () => _showAddEditSheet())
                   : RefreshIndicator(
@@ -155,7 +163,9 @@ class _AddressManagementScreenState
                           return _AddressTile(
                             address: addr,
                             onEdit: () => _showAddEditSheet(existing: addr),
-                            onDelete: () => _deleteAddress(addr),
+                            onDelete: addressState.isDeleting
+                                ? null
+                                : () => _deleteAddress(addr),
                             onSetDefault: () => _setDefault(addr),
                             isSettingDefault: addressState.isUpdating,
                           );
@@ -183,6 +193,48 @@ class _AddressManagementScreenState
   }
 }
 
+class _LoadError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _LoadError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                color: AppColors.foreground(context, Colors.grey.shade700),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF5F2D82),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(fontFamily: 'TT Fors', color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Address Tile
 // ─────────────────────────────────────────────────────────────────────────────
@@ -190,7 +242,7 @@ class _AddressManagementScreenState
 class _AddressTile extends StatelessWidget {
   final AddressDto address;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
   final VoidCallback onSetDefault;
   final bool isSettingDefault;
 

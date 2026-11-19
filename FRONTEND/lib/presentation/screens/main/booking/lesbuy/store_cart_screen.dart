@@ -160,6 +160,18 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Drop the local selection if that saved address was deleted; the build
+    // below then falls back to deliveryAddress or the "add address" prompt.
+    ref.listen<List<AddressDto>>(
+      addressProvider.select((state) => state.addresses),
+      (previous, next) {
+        final selected = _selectedAddress;
+        if (selected != null && !next.any((a) => a.id == selected.id)) {
+          setState(() => _selectedAddress = null);
+          _syncDeliveryFeeQuote(ref, ref.read(addressProvider).deliveryAddress);
+        }
+      },
+    );
     ref.listen(manualOrderProvider, (previous, next) {
       if (previous?.confirmedItems.length != next.confirmedItems.length) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
