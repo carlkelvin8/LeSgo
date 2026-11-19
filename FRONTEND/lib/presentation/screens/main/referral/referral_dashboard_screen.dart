@@ -100,11 +100,11 @@ class ReferralDashboardScreen extends ConsumerWidget {
                         child: ListTile(
                           title: Text(reward.title),
                           subtitle: Text(
-                            '${reward.status} • ${reward.points} pts',
+                            '${capitalizeReferralStatus(reward.status)} • ${reward.points} pts',
                           ),
                           trailing: reward.date != null
                               ? Text(
-                                  reward.date!,
+                                  formatReferralRewardDate(reward.date!),
                                   style: TextStyle(
                                     fontSize: ResponsiveUtils.fontSize(
                                       context,

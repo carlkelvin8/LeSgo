@@ -7,6 +7,7 @@ import '../../widgets/common/payment_status_badge.dart';
 import '../../widgets/transactions/order_transaction_detail_sheet.dart';
 import '../../../core/constants/order_status_constants.dart';
 import '../../../core/services/order_receipt_service.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../domain/entities/transactions/transaction.dart';
@@ -73,7 +74,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
 
     // Active orders go to tracking screen; completed/cancelled show a summary
-    final isActive = transaction.status == TransactionStatus.pending;
+    final isActive = OrderStatusConstants.isActive(transaction.rawStatus);
     final orderId = transaction.id;
     double itemsTotal = 0.0;
     List<Map<String, dynamic>> items = [];
@@ -104,14 +105,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ? transaction.pickupLocation
           : null,
       // Fare breakdown for LesGo/LesRide tracking screen
-      'baseFee': transaction.amount > 0 ? 40.0 : 0.0,
-      'distanceFee': transaction.amount > 40.0
-          ? transaction.amount - 40.0
-          : 0.0,
+      // No fare breakdown is stored on a history row: show the total as the
+      // base fare rather than inventing a split.
+      'baseFee': transaction.amount,
+      'distanceFee': 0.0,
       'total': transaction.amount,
       'subtotal': itemsTotal,
       'deliveryFee': deliveryFee,
-      'paymentMethod': 'Cash',
+      'paymentMethod': transaction.paymentMethod ?? 'Cash',
       'items': items,
     };
 
@@ -538,22 +539,56 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         padding: EdgeInsets.all(
                           ResponsiveUtils.spacing(context, 16),
                         ),
-                        itemCount: transactions.length,
+                        itemCount: transactions.length +
+                            (transactionsState.partialLoadFailed ? 1 : 0),
                         itemBuilder: (context, index) {
+                          if (transactionsState.partialLoadFailed) {
+                            if (index == 0) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Text(
+                                  "Some history couldn't load. Pull down to retry.",
+                                  key: const Key('transactions_partial_note'),
+                                  style: TextStyle(
+                                    fontFamily: 'TT Fors',
+                                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                                    color: AppColors.foreground(
+                                      context,
+                                      Colors.grey[600]!,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                            index -= 1;
+                          }
                           final transaction = transactions[index];
                           return TransactionListItem(
                             transaction: transaction,
                             index: index + 1,
                             onTap: () => _openOrderDetail(context, transaction),
                             onReorder: () async {
-                              await ref
-                                  .read(transactionsProvider.notifier)
-                                  .reorderTransaction(transaction.id);
-                              if (context.mounted) {
-                                SnackBarUtils.showSuccess(
-                                  context,
-                                  'Order placed successfully!',
-                                );
+                              try {
+                                final placed = await ref
+                                    .read(transactionsProvider.notifier)
+                                    .reorderTransaction(transaction.id);
+                                if (placed && context.mounted) {
+                                  SnackBarUtils.showSuccess(
+                                    context,
+                                    'Order placed successfully!',
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  SnackBarUtils.showError(
+                                    context,
+                                    ApiErrorMapper.message(
+                                      e,
+                                      fallbackEn:
+                                          'Could not place the order again.',
+                                    ),
+                                  );
+                                }
                               }
                             },
                           );

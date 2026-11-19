@@ -3,6 +3,7 @@ import 'package:lesgo/core/state/user_session_epoch.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/constants/order_status_constants.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/payment_status_utils.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
 import '../../../../data/data_source/dto/wallet/wallet_dto.dart';
@@ -21,6 +22,9 @@ class TransactionsState {
   final List<Transaction> filteredTransactions;
   final bool isLoading;
   final String? error;
+
+  /// True when only one of the orders / wallet sources failed to load.
+  final bool partialLoadFailed;
   final String? selectedService;
   final String? selectedStatus;
   final TransactionKindFilter selectedKind;
@@ -32,6 +36,7 @@ class TransactionsState {
     required this.filteredTransactions,
     this.isLoading = false,
     this.error,
+    this.partialLoadFailed = false,
     this.selectedService,
     this.selectedStatus,
     this.selectedKind,
@@ -44,6 +49,7 @@ class TransactionsState {
     List<Transaction>? filteredTransactions,
     bool? isLoading,
     String? error,
+    bool? partialLoadFailed,
     String? selectedService,
     String? selectedStatus,
     TransactionKindFilter? selectedKind,
@@ -60,6 +66,7 @@ class TransactionsState {
       filteredTransactions: filteredTransactions ?? this.filteredTransactions,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : error,
+      partialLoadFailed: partialLoadFailed ?? this.partialLoadFailed,
       selectedService: clearService
           ? null
           : (selectedService ?? this.selectedService),
@@ -80,6 +87,8 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
   final WalletRemoteDataSource _walletDataSource =
       getIt<WalletRemoteDataSource>();
 
+  bool _reordering = false;
+
   TransactionsNotifier({TransactionKindFilter initialKindFilter})
     : super(
         TransactionsState(
@@ -98,27 +107,53 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 
       List<WalletTransactionDto> walletTxs = [];
       var orderTransactions = <Transaction>[];
+      var ordersFailed = false;
+      var walletFailed = false;
+      Object? firstError;
 
       try {
         final ordersResponse = await _orderDataSource.getOrders(perPage: 50);
         orderTransactions = ordersResponse.data.map(_mapOrder).toList();
-      } catch (_) {}
+      } catch (e) {
+        ordersFailed = true;
+        firstError = e;
+      }
 
       try {
         walletTxs = await _walletDataSource.getMyTransactions();
-      } catch (_) {}
+      } catch (e) {
+        walletFailed = true;
+        firstError ??= e;
+      }
+
+      if (ordersFailed && walletFailed) {
+        state = state.copyWith(
+          isLoading: false,
+          partialLoadFailed: false,
+          error: ApiErrorMapper.message(firstError),
+          transactions: [],
+          filteredTransactions: [],
+        );
+        return;
+      }
+
       final walletTransactions = walletTxs.map(_mapWallet).toList();
 
       final merged = [...orderTransactions, ...walletTransactions]
         ..sort((a, b) => _parseDate(b.date).compareTo(_parseDate(a.date)));
 
       state = _withFiltered(
-        state.copyWith(transactions: merged, isLoading: false),
+        state.copyWith(
+          transactions: merged,
+          isLoading: false,
+          partialLoadFailed: ordersFailed || walletFailed,
+        ),
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        error: ApiErrorMapper.message(e),
+        partialLoadFailed: false,
         transactions: [],
         filteredTransactions: [],
       );
@@ -151,7 +186,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       pickupLocation: orderDto.pickupAddress,
       dropoffLocation: orderDto.dropoffAddress,
       amount: orderDto.effectiveTotalAmount,
-      status: _mapOrderStatus(orderDto.status),
+      status: mapOrderStatus(orderDto.status),
       rawStatus: orderDto.status,
       paymentStatus: PaymentStatusUtils.fromOrderPaymentStatus(
         orderDto.paymentStatus,
@@ -317,14 +352,25 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     return filtered;
   }
 
-  Future<void> reorderTransaction(String orderId) async {
-    if (orderId.startsWith('w-')) return;
+  /// Re-places an order. Returns true on success. Throws on failure so the
+  /// caller can show the message without wiping the list via `state.error`.
+  /// Returns false when ignored (wallet row or a reorder already in flight).
+  Future<bool> reorderTransaction(String orderId) async {
+    if (orderId.startsWith('w-')) return false;
+    if (_reordering) return false;
+    final id = int.tryParse(orderId);
+    if (id == null) return false;
+    _reordering = true;
     try {
-      await _orderDataSource.reorderOrder(int.parse(orderId));
-      await _loadTransactions();
-    } catch (e) {
-      state = state.copyWith(error: 'Failed to reorder: $e');
+      await _orderDataSource.reorderOrder(id);
+    } finally {
+      _reordering = false;
     }
+    // The order exists now; a failed refresh must not report a failed reorder.
+    try {
+      await _loadTransactions();
+    } catch (_) {}
+    return true;
   }
 
   Future<void> refreshTransactions() async {
@@ -348,16 +394,17 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     }
   }
 
-  TransactionStatus _mapOrderStatus(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return TransactionStatus.completed;
-      case 'cancelled':
-      case 'failed':
-        return TransactionStatus.cancelled;
-      default:
-        return TransactionStatus.pending;
+  /// Active statuses -> pending (live); completed -> completed; every other
+  /// status (cancelled, failed, rejected, expired, unknown...) -> cancelled so
+  /// an unrecognised status is never shown as a live order.
+  static TransactionStatus mapOrderStatus(String status) {
+    if (status.toLowerCase() == OrderStatusConstants.completed) {
+      return TransactionStatus.completed;
     }
+    if (OrderStatusConstants.isActive(status)) {
+      return TransactionStatus.pending;
+    }
+    return TransactionStatus.cancelled;
   }
 
   DateTime _parseDate(String iso) {
