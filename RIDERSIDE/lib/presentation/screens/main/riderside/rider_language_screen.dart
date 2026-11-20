@@ -53,7 +53,7 @@ class _LangTile extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: selected ? const Color(0xFF5F2D82) : Colors.grey.shade200, width: selected ? 2 : 1),
+        side: BorderSide(color: selected ? context.acc(const Color(0xFF5F2D82)) : context.brd(Colors.grey.shade200), width: selected ? 2 : 1),
       ),
       child: ListTile(
         leading: CircleAvatar(

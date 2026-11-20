@@ -367,10 +367,13 @@ class _OrderCardState extends State<OrderCard> {
                         if (_isLoadingRoute)
                           Container(
                             color: Colors.black.withValues(alpha: 0.1),
-                            child: const Center(
+                            child: Center(
                               child: CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF5F2D82),
+                                  AppColors.accent(
+                                    context,
+                                    const Color(0xFF5F2D82),
+                                  ),
                                 ),
                               ),
                             ),

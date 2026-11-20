@@ -35,7 +35,7 @@ class MerchantStoreToggleCard extends ConsumerWidget {
         vertical: ResponsiveUtils.spacing(context, 14),
       ),
       decoration: BoxDecoration(
-        color: open ? const Color(0xFFE8F5E9) : const Color(0xFFFBE9E7),
+        color: context.surf(open ? const Color(0xFFE8F5E9) : const Color(0xFFFBE9E7)),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: open ? const Color(0xFF66BB6A) : const Color(0xFFEF5350),

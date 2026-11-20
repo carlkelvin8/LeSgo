@@ -130,7 +130,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
                       vertical: ResponsiveUtils.spacing(context, 10),
                     ),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF5F2D82) : Colors.white,
+                      color: isSelected ? const Color(0xFF5F2D82) : context.surf(Colors.white),
                       border: Border.all(
                         color: const Color(0xFF5F2D82),
                         width: 2,
@@ -148,7 +148,7 @@ class MerchantFoodDetailContent extends StatelessWidget {
                         fontSize: ResponsiveUtils.fontSize(context, 14),
                         fontWeight: FontWeight.w600,
                         color:
-                            isSelected ? Colors.white : const Color(0xFF5F2D82),
+                            isSelected ? Colors.white : context.acc(const Color(0xFF5F2D82)),
                       ),
                     ),
                   ),
@@ -228,7 +228,7 @@ class _OptionChips extends StatelessWidget {
               vertical: ResponsiveUtils.spacing(context, 10),
             ),
             decoration: BoxDecoration(
-              color: selected ? const Color(0xFF5F2D82) : Colors.white,
+              color: selected ? const Color(0xFF5F2D82) : context.surf(Colors.white),
               border: Border.all(color: const Color(0xFF5F2D82), width: 2),
               borderRadius: BorderRadius.circular(ResponsiveUtils.spacing(context, 8)),
             ),
@@ -238,7 +238,7 @@ class _OptionChips extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : const Color(0xFF5F2D82),
+                color: selected ? Colors.white : context.acc(const Color(0xFF5F2D82)),
               ),
             ),
           ),

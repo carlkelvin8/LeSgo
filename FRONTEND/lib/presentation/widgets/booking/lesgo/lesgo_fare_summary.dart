@@ -41,7 +41,9 @@ class LesgoFareSummary extends ConsumerWidget {
           decoration: BoxDecoration(
             color: AppColors.surface(context, Colors.grey.shade50),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border(context, Colors.grey.shade200)),
+            border: Border.all(
+              color: AppColors.border(context, Colors.grey.shade200),
+            ),
           ),
           child: isLoading
               ? _buildLoadingState(context)
@@ -84,12 +86,14 @@ class LesgoFareSummary extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(
+        SizedBox(
           width: 16,
           height: 16,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              AppColors.accent(context, const Color(0xFF5F2D82)),
+            ),
           ),
         ),
         SizedBox(width: ResponsiveUtils.spacing(context, 10)),
@@ -106,7 +110,8 @@ class LesgoFareSummary extends ConsumerWidget {
   }
 
   double _minimumFareAdjustment(FareBreakdownResult fare) {
-    final parts = fare.baseFare +
+    final parts =
+        fare.baseFare +
         fare.distanceFare +
         fare.serviceFee +
         fare.weightSurcharge;
@@ -127,14 +132,17 @@ class LesgoFareSummary extends ConsumerWidget {
         _row(context, 'Base Fee', fare.baseFare),
         if (fare.distanceFare > 0)
           _row(context, 'Distance Fee', fare.distanceFare),
-        if (fare.serviceFee > 0)
-          _row(context, 'Service Fee', fare.serviceFee),
+        if (fare.serviceFee > 0) _row(context, 'Service Fee', fare.serviceFee),
         if (fare.weightSurcharge > 0)
           _row(context, 'Weight Surcharge', fare.weightSurcharge),
         // The server raises the fare to the service's minimum fare; without
         // this row the lines above would not add up to the Total.
         if (_minimumFareAdjustment(fare) > 0)
-          _row(context, 'Minimum fare adjustment', _minimumFareAdjustment(fare)),
+          _row(
+            context,
+            'Minimum fare adjustment',
+            _minimumFareAdjustment(fare),
+          ),
         if (discount > 0) ...[
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
           _row(context, 'Voucher Discount', -discount, isDiscount: true),
@@ -143,14 +151,21 @@ class LesgoFareSummary extends ConsumerWidget {
           padding: EdgeInsets.symmetric(
             vertical: ResponsiveUtils.spacing(context, 8),
           ),
-          child: Divider(color: AppColors.border(context, Colors.grey.shade300), height: 1),
+          child: Divider(
+            color: AppColors.border(context, Colors.grey.shade300),
+            height: 1,
+          ),
         ),
         _row(context, 'Total', displayTotal, isTotal: true),
         if (fare.estimatedDurationMinutes > 0) ...[
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           Row(
             children: [
-              Icon(Icons.access_time, size: 14, color: AppColors.foreground(context, Colors.grey.shade500)),
+              Icon(
+                Icons.access_time,
+                size: 14,
+                color: AppColors.foreground(context, Colors.grey.shade500),
+              ),
               SizedBox(width: ResponsiveUtils.spacing(context, 4)),
               Text(
                 'Est. ${fare.estimatedDurationMinutes.round()} min  •  ${fare.distanceKm.toStringAsFixed(1)} km',
@@ -176,11 +191,11 @@ class LesgoFareSummary extends ConsumerWidget {
   }) {
     final color = isDiscount
         ? (Theme.of(context).brightness == Brightness.dark
-            ? Colors.green.shade300
-            : Colors.green.shade700)
+              ? Colors.green.shade300
+              : Colors.green.shade700)
         : isTotal
-            ? AppColors.accent(context, const Color(0xFF5F2D82))
-            : AppColors.foreground(context, Colors.black87);
+        ? AppColors.accent(context, const Color(0xFF5F2D82))
+        : AppColors.foreground(context, Colors.black87);
 
     return Padding(
       padding: EdgeInsets.symmetric(

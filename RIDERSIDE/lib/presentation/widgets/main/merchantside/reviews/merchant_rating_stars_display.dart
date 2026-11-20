@@ -27,7 +27,7 @@ class MerchantRatingStarsDisplay extends StatelessWidget {
             size: size,
             color: (isActive || isHalf)
                 ? const Color(0xFFFFA000)
-                : const Color(0xFFE0E0E0),
+                : context.brd(const Color(0xFFE0E0E0)),
           );
         }),
         if (showRatingText) ...[

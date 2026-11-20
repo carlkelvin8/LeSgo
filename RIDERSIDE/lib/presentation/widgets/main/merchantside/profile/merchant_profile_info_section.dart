@@ -93,7 +93,7 @@ class MerchantProfileInfoSection extends ConsumerWidget {
             TextSpan(
               text: value,
               style: TextStyle(
-                color: valueColor ?? Colors.black87,
+                color: valueColor ?? context.txt(Colors.black87),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -284,7 +284,7 @@ class _OperatingHoursSummary extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),
                     fontWeight: FontWeight.w500,
-                    color: isClosed ? Colors.red.shade400 : Colors.black87,
+                    color: isClosed ? Colors.red.shade400 : context.txt(Colors.black87),
                   ),
                 ),
               ),

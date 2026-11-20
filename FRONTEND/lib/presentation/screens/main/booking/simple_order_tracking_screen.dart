@@ -374,7 +374,10 @@ class _SimpleOrderTrackingScreenState
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.my_location, color: Color(0xFF5F2D82)),
+              icon: Icon(
+                Icons.my_location,
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
               onPressed: _fitBounds,
             ),
           ),
@@ -734,11 +737,11 @@ class _SimpleOrderTrackingScreenState
               ),
               Text(
                 '₱${(order!.actualFare ?? order!.estimatedFare).toStringAsFixed(2)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF5F2D82),
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
                 ),
               ),
             ],

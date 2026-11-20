@@ -192,7 +192,7 @@ class _RiderCustomerServiceChatScreenState
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: Color(0xFFE8D9F5),
+            backgroundColor: context.surf(const Color(0xFFE8D9F5)),
             child: Icon(Icons.support_agent, size: 16, color: context.acc(Color(0xFF5F2D82))),
           ),
           const SizedBox(width: 8),
@@ -284,7 +284,7 @@ class _MessageBubble extends StatelessWidget {
           maxWidth: MediaQuery.sizeOf(context).width * 0.78,
         ),
         decoration: BoxDecoration(
-          color: isUser ? const Color(0xFF5F2D82) : Colors.grey.shade100,
+          color: isUser ? const Color(0xFF5F2D82) : context.surf(Colors.grey.shade100),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Text(
@@ -292,7 +292,7 @@ class _MessageBubble extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 14),
-            color: isUser ? Colors.white : Colors.black87,
+            color: isUser ? Colors.white : context.txt(Colors.black87),
           ),
         ),
       ),

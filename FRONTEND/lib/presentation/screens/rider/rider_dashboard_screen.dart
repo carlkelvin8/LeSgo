@@ -34,17 +34,18 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
     ref.listen<RiderOrderState>(riderOrderProvider, (prev, next) {
       if (next.successMessage != null &&
           next.successMessage != prev?.successMessage) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(next.successMessage!),
-          backgroundColor: Colors.green,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.successMessage!),
+            backgroundColor: Colors.green,
+          ),
+        );
         notifier.clearMessages();
       }
       if (next.error != null && next.error != prev?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(next.error!),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
+        );
         notifier.clearMessages();
       }
     });
@@ -101,8 +102,10 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
         ],
       ),
       body: riderState.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+          ? Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
             )
           : RefreshIndicator(
               color: AppColors.accent(context, Color(0xFF5F2D82)),
@@ -151,7 +154,8 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                           ),
                           child: _AvailableOrderCard(
                             order: order,
-                            isAccepting: riderState.action ==
+                            isAccepting:
+                                riderState.action ==
                                     RiderOrderAction.accepting &&
                                 riderState.isActionInProgress,
                             hasActiveOrder: riderState.hasActiveOrder,
@@ -266,8 +270,9 @@ class _ActiveOrderCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: isPickedUp ? Colors.orange : Colors.green,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
             ),
             child: Row(
               children: [
@@ -357,8 +362,9 @@ class _ActiveOrderCard extends StatelessWidget {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isAccepted ? Colors.orange : Colors.green,
+                      backgroundColor: isAccepted
+                          ? Colors.orange
+                          : Colors.green,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -395,23 +401,35 @@ class _AvailableOrderCard extends StatelessWidget {
 
   String _serviceLabel(int serviceId) {
     switch (serviceId) {
-      case 1: return 'LesGo';
-      case 2: return 'LesRide';
-      case 3: return 'LesEat';
-      case 4: return 'LesBuy';
-      case 5: return 'LesTransport';
-      default: return 'Service #$serviceId';
+      case 1:
+        return 'LesGo';
+      case 2:
+        return 'LesRide';
+      case 3:
+        return 'LesEat';
+      case 4:
+        return 'LesBuy';
+      case 5:
+        return 'LesTransport';
+      default:
+        return 'Service #$serviceId';
     }
   }
 
   Color _serviceColor(int serviceId) {
     switch (serviceId) {
-      case 1: return const Color(0xFF5F2D82);
-      case 2: return Colors.blue;
-      case 3: return Colors.orange;
-      case 4: return Colors.teal;
-      case 5: return Colors.brown;
-      default: return Colors.grey;
+      case 1:
+        return const Color(0xFF5F2D82);
+      case 2:
+        return Colors.blue;
+      case 3:
+        return Colors.orange;
+      case 4:
+        return Colors.teal;
+      case 5:
+        return Colors.brown;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -423,7 +441,9 @@ class _AvailableOrderCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border(context, Colors.grey.shade200)),
+        border: Border.all(
+          color: AppColors.border(context, Colors.grey.shade200),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -439,14 +459,17 @@ class _AvailableOrderCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: svcColor.withValues(alpha: 0.06),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: svcColor,
                     borderRadius: BorderRadius.circular(6),
@@ -525,7 +548,9 @@ class _AvailableOrderCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: (isAccepting || hasActiveOrder) ? null : onAccept,
+                    onPressed: (isAccepting || hasActiveOrder)
+                        ? null
+                        : onAccept,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: svcColor,
                       foregroundColor: Colors.white,
@@ -617,7 +642,7 @@ class _AddressRow extends StatelessWidget {
               ),
               Text(
                 address,
-                style:  TextStyle(
+                style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -662,10 +687,7 @@ class _OrderMeta extends StatelessWidget {
           color: Colors.green,
         ),
         const SizedBox(width: 8),
-        _Chip(
-          icon: Icons.payment,
-          label: order.paymentMethod.toUpperCase(),
-        ),
+        _Chip(icon: Icons.payment, label: order.paymentMethod.toUpperCase()),
       ],
     );
   }
@@ -718,7 +740,9 @@ class _DashedDivider extends StatelessWidget {
           (i) => Expanded(
             child: Container(
               height: 1,
-              color: i.isEven ? AppColors.foreground(context, Colors.grey.shade300) : Colors.transparent,
+              color: i.isEven
+                  ? AppColors.foreground(context, Colors.grey.shade300)
+                  : Colors.transparent,
             ),
           ),
         ),
@@ -738,7 +762,11 @@ class _EmptyAvailable extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 48),
       child: Column(
         children: [
-          Icon(Icons.inbox_outlined, size: 56, color: AppColors.foreground(context, Colors.grey.shade300)),
+          Icon(
+            Icons.inbox_outlined,
+            size: 56,
+            color: AppColors.foreground(context, Colors.grey.shade300),
+          ),
           const SizedBox(height: 12),
           Text(
             hasActive

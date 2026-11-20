@@ -349,8 +349,11 @@ class _LeseatOrderCompleteScreenState
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF5F2D82),
+                          borderSide: BorderSide(
+                            color: AppColors.accent(
+                              context,
+                              const Color(0xFF5F2D82),
+                            ),
                           ),
                         ),
                         contentPadding: EdgeInsets.all(
@@ -442,7 +445,7 @@ class _LeseatOrderCompleteScreenState
                 child: ElevatedButton(
                   onPressed: _orderAgain,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
+                    backgroundColor: Color(0xFF5F2D82),
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveUtils.spacing(context, 18),
                     ),
@@ -472,7 +475,9 @@ class _LeseatOrderCompleteScreenState
                     context,
                   ).pushNamedAndRemoveUntil('/', (route) => false),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF5F2D82)),
+                    side: BorderSide(
+                      color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                    ),
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveUtils.spacing(context, 18),
                     ),

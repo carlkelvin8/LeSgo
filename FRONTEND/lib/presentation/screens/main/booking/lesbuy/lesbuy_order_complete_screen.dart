@@ -344,8 +344,11 @@ class _LesbuyOrderCompleteScreenState
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF5F2D82),
+                          borderSide: BorderSide(
+                            color: AppColors.accent(
+                              context,
+                              const Color(0xFF5F2D82),
+                            ),
                           ),
                         ),
                         contentPadding: EdgeInsets.all(
@@ -419,7 +422,7 @@ class _LesbuyOrderCompleteScreenState
                 child: ElevatedButton(
                   onPressed: _bookAnotherOrder,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
+                    backgroundColor: Color(0xFF5F2D82),
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveUtils.spacing(context, 18),
                     ),
@@ -449,7 +452,9 @@ class _LesbuyOrderCompleteScreenState
                     context,
                   ).pushNamedAndRemoveUntil('/', (route) => false),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF5F2D82)),
+                    side: BorderSide(
+                      color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                    ),
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveUtils.spacing(context, 18),
                     ),

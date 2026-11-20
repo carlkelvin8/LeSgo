@@ -259,7 +259,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               label: const Text('Download receipt (PDF)'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.accent(context, Color(0xFF5F2D82)),
-                side: const BorderSide(color: Color(0xFF5F2D82)),
+                side: BorderSide(
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
+                ),
               ),
             ),
           ],
@@ -539,7 +541,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         padding: EdgeInsets.all(
                           ResponsiveUtils.spacing(context, 16),
                         ),
-                        itemCount: transactions.length +
+                        itemCount:
+                            transactions.length +
                             (transactionsState.partialLoadFailed ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (transactionsState.partialLoadFailed) {
@@ -551,7 +554,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                   key: const Key('transactions_partial_note'),
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
-                                    fontSize: ResponsiveUtils.fontSize(context, 12),
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      12,
+                                    ),
                                     color: AppColors.foreground(
                                       context,
                                       Colors.grey[600]!,

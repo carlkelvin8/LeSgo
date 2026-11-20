@@ -262,9 +262,9 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 backgroundColor: const Color(
                   0xFF5F2D82,
                 ).withValues(alpha: 0.15),
-                child: const Icon(
+                child: Icon(
                   Icons.support_agent,
-                  color: Color(0xFF5F2D82),
+                  color: AppColors.accent(context, Color(0xFF5F2D82)),
                   size: 28,
                 ),
               ),
@@ -294,10 +294,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: Color(0xFF5F2D82),
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
               ),
             ],
           ),
@@ -337,11 +337,14 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                     child: driverName != null
                         ? Text(
                             driverName.substring(0, 1).toUpperCase(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF5F2D82),
+                              color: AppColors.accent(
+                                context,
+                                Color(0xFF5F2D82),
+                              ),
                             ),
                           )
                         : Icon(

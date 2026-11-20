@@ -108,7 +108,7 @@ class RiderEarningsScreen extends ConsumerWidget {
                       selectedColor: const Color(0xFF5F2D82),
                       labelStyle: TextStyle(
                         fontFamily: 'TT Fors',
-                        color: selected ? Colors.white : Colors.black87,
+                        color: selected ? Colors.white : context.txt(Colors.black87),
                         fontWeight:
                             selected ? FontWeight.w700 : FontWeight.w500,
                       ),

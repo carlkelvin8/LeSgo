@@ -453,7 +453,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
+              color: selected ? Colors.white : context.txt(Colors.black87),
             ),
           ),
           selected: selected,
@@ -461,7 +461,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
           selectedColor: const Color(0xFF5F2D82),
           backgroundColor: context.surf(Colors.white),
           side: BorderSide(
-            color: selected ? const Color(0xFF5F2D82) : Colors.grey.shade300,
+            color: selected ? const Color(0xFF5F2D82) : context.brd(Colors.grey.shade300),
           ),
           onSelected: (_) {
             ref.read(merchantAnalyticsPeriodProvider.notifier).state = value;
@@ -669,7 +669,7 @@ class _MerchantAnalyticsScreenState extends ConsumerState<MerchantAnalyticsScree
             drawVerticalLine: false,
             horizontalInterval: maxY > 4 ? (maxY / 4).ceilToDouble() : 1,
             getDrawingHorizontalLine: (value) => FlLine(
-              color: Colors.grey.shade200,
+              color: context.brd(Colors.grey.shade200),
               strokeWidth: 1,
             ),
           ),

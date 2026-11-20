@@ -267,13 +267,13 @@ class _MerchantReviewsScreenState extends ConsumerState<MerchantReviewsScreen>
               onSelected: (_) {
                 ref.read(merchantReviewFilterProvider.notifier).state = filter;
               },
-              selectedColor: const Color(0xFFE8D9F5),
-              checkmarkColor: const Color(0xFF5F2D82),
-              backgroundColor: Colors.white,
+              selectedColor: context.surf(const Color(0xFFE8D9F5)),
+              checkmarkColor: context.acc(const Color(0xFF5F2D82)),
+              backgroundColor: context.surf(Colors.white),
               side: BorderSide(
                 color: isSelected
-                    ? const Color(0xFF5F2D82)
-                    : Colors.grey.shade300,
+                    ? context.acc(const Color(0xFF5F2D82))
+                    : context.brd(Colors.grey.shade300),
               ),
             ),
           );

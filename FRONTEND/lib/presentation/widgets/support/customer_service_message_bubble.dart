@@ -26,7 +26,7 @@ class CustomerServiceMessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
-            _avatar(isUser),
+            _avatar(context, isUser),
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
           ],
           Flexible(
@@ -80,23 +80,25 @@ class CustomerServiceMessageBubble extends StatelessWidget {
           ),
           if (isUser) ...[
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-            _avatar(isUser),
+            _avatar(context, isUser),
           ],
         ],
       ),
     );
   }
 
-  Widget _avatar(bool isUser) {
+  Widget _avatar(BuildContext context, bool isUser) {
     return CircleAvatar(
       radius: 16,
       backgroundColor: isUser
-          ? const Color(0xFF5F2D82)
-          : const Color(0xFFE8D9F5),
+          ? AppColors.accent(context, const Color(0xFF5F2D82))
+          : AppColors.surface(context, const Color(0xFFE8D9F5)),
       child: Icon(
         isUser ? Icons.person : Icons.support_agent,
         size: 16,
-        color: isUser ? Colors.white : const Color(0xFF5F2D82),
+        color: isUser
+            ? AppColors.onAccent(context)
+            : AppColors.accent(context, const Color(0xFF5F2D82)),
       ),
     );
   }

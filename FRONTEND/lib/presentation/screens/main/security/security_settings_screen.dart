@@ -29,8 +29,10 @@ class SecuritySettingsScreen extends ConsumerWidget {
         ),
       ),
       body: state.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+          ? Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
             )
           : RefreshIndicator(
               color: AppColors.accent(context, Color(0xFF5F2D82)),
@@ -61,7 +63,10 @@ class SecuritySettingsScreen extends ConsumerWidget {
                           : 'Add an extra layer of protection',
                     ),
                     value: state.twoFactorEnabled,
-                    activeThumbColor: const Color(0xFF5F2D82),
+                    activeThumbColor: AppColors.accent(
+                      context,
+                      const Color(0xFF5F2D82),
+                    ),
                     onChanged: state.isProcessing || state.dashboard == null
                         ? null
                         : (enabled) async {
@@ -308,7 +313,10 @@ class SecuritySettingsScreen extends ConsumerWidget {
                         'Use fingerprint or Face ID to open the app',
                       ),
                       value: state.localBiometricEnabled,
-                      activeThumbColor: const Color(0xFF5F2D82),
+                      activeThumbColor: AppColors.accent(
+                        context,
+                        const Color(0xFF5F2D82),
+                      ),
                       onChanged: state.isProcessing
                           ? null
                           : (enabled) async {

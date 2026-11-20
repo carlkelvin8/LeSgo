@@ -40,7 +40,7 @@ class ChatReportSheet extends StatefulWidget {
     return showModalBottomSheet<ChatReportResult>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.surf(Colors.white),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -115,7 +115,7 @@ class _ChatReportSheetState extends State<ChatReportSheet> {
                             title: Text(e.value),
                             dense: true,
                             contentPadding: EdgeInsets.zero,
-                            activeColor: const Color(0xFF5F2D82),
+                            activeColor: context.acc(const Color(0xFF5F2D82)),
                           ))
                       .toList(),
                 ),
@@ -127,7 +127,7 @@ class _ChatReportSheetState extends State<ChatReportSheet> {
                 decoration: InputDecoration(
                   hintText: 'Add details (optional)',
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: context.surf(Colors.grey[100]!),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -141,7 +141,7 @@ class _ChatReportSheetState extends State<ChatReportSheet> {
                 subtitle: Text(widget.blockSubtitle),
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
-                activeColor: const Color(0xFF5F2D82),
+                activeColor: context.acc(const Color(0xFF5F2D82)),
               ),
               const SizedBox(height: 8),
               SizedBox(

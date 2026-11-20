@@ -94,7 +94,7 @@ class _RiderDeactivateAccountScreenState
   Widget build(BuildContext context) {
     final lang = ref.watch(appLanguageProvider);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: context.bg(Colors.grey[50]!),
       appBar: AppBar(
         title: Text(AppLocalization.translate('deactivate_account', lang)),
         backgroundColor: const Color(0xFF5F2D82),

@@ -65,7 +65,7 @@ class CartScreen extends ConsumerWidget {
     final proceed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.surf(Colors.white),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -200,7 +200,7 @@ class CartScreen extends ConsumerWidget {
                       border: Border.all(
                         color: pinLocation != null
                             ? const Color(0xFF5F2D82)
-                            : Colors.grey.shade300,
+                            : context.brd(Colors.grey.shade300),
                         width: pinLocation != null ? 2 : 1,
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -215,8 +215,8 @@ class CartScreen extends ConsumerWidget {
                               ? Icons.check_circle
                               : Icons.location_on_outlined,
                           color: pinLocation != null
-                              ? const Color(0xFF5F2D82)
-                              : Colors.grey,
+                              ? context.acc(const Color(0xFF5F2D82))
+                              : context.sub(Colors.grey),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -232,8 +232,8 @@ class CartScreen extends ConsumerWidget {
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                   color: pinLocation != null
-                                      ? const Color(0xFF5F2D82)
-                                      : Colors.black87,
+                                      ? context.acc(const Color(0xFF5F2D82))
+                                      : context.txt(Colors.black87),
                                 ),
                               ),
                               if (pinAddress != null)
@@ -647,10 +647,10 @@ class CartScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const HomeHeader(
+            HomeHeader(
               showBackButton: true,
-              backgroundColor: Colors.white,
-              borderColor: Color(0xFFE8E8E8),
+              backgroundColor: context.surf(Colors.white),
+              borderColor: context.brd(const Color(0xFFE8E8E8)),
             ),
             if (cartItems.isEmpty)
               const Expanded(child: CartEmptyState())

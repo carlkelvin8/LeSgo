@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
 import '../../../core/constants/routers/app_router.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
 import '../../../data/data_source/dto/notification/notification_dto.dart';
@@ -63,9 +64,13 @@ class NotificationCenterScreen extends ConsumerWidget {
               )
             : state.notifications.isEmpty
             ? ListView(
-                children: const [
-                  SizedBox(height: 160),
-                  Icon(Icons.notifications_none, size: 52, color: Colors.grey),
+                children: [
+                  const SizedBox(height: 160),
+                  Icon(
+                    Icons.notifications_none,
+                    size: 52,
+                    color: AppColors.foreground(context, Colors.grey),
+                  ),
                   SizedBox(height: 12),
                   Center(child: Text('You’re all caught up')),
                 ],
@@ -78,11 +83,11 @@ class NotificationCenterScreen extends ConsumerWidget {
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: notification.isRead
-                          ? Colors.grey.shade100
-                          : const Color(0xFFEDE5F4),
+                          ? AppColors.surface(context, Colors.grey.shade100)
+                          : AppColors.surface(context, Color(0xFFEDE5F4)),
                       child: Icon(
                         _iconFor(notification.type),
-                        color: const Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                       ),
                     ),
                     title: Text(
@@ -96,10 +101,10 @@ class NotificationCenterScreen extends ConsumerWidget {
                     subtitle: Text(notification.message),
                     trailing: notification.isRead
                         ? null
-                        : const Icon(
+                        : Icon(
                             Icons.circle,
                             size: 9,
-                            color: Color(0xFF5F2D82),
+                            color: AppColors.accent(context, Color(0xFF5F2D82)),
                           ),
                     onTap: () => _openNotification(context, ref, notification),
                   );

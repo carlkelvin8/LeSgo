@@ -114,7 +114,10 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: isDark ? 'Dark theme enabled' : 'Light theme',
                 trailing: Switch(
                   value: isDark,
-                  activeThumbColor: const Color(0xFF5F2D82),
+                  activeThumbColor: AppColors.accent(
+                    context,
+                    Color(0xFF5F2D82),
+                  ),
                   onChanged: (value) =>
                       ref.read(themeModeProvider.notifier).setDarkMode(value),
                 ),

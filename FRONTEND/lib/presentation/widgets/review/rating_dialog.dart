@@ -61,9 +61,7 @@ class _RatingDialogState extends ConsumerState<RatingDialog> {
     final reviewState = ref.watch(reviewProvider);
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 24)),
         child: Column(
@@ -120,11 +118,15 @@ class _RatingDialogState extends ConsumerState<RatingDialog> {
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.border(context, Colors.grey.shade300)),
+                  borderSide: BorderSide(
+                    color: AppColors.border(context, Colors.grey.shade300),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF5F2D82)),
+                  borderSide: BorderSide(
+                    color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                  ),
                 ),
                 contentPadding: EdgeInsets.all(
                   ResponsiveUtils.spacing(context, 16),
@@ -146,7 +148,12 @@ class _RatingDialogState extends ConsumerState<RatingDialog> {
                         ? null
                         : () => Navigator.of(context).pop(false),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF5F2D82)),
+                      side: BorderSide(
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 14),
                       ),

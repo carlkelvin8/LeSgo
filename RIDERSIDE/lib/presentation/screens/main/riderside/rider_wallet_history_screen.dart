@@ -77,10 +77,10 @@ class _RiderWalletHistoryScreenState
       body: SafeArea(
         child: Column(
           children: [
-            const HomeHeader(
+            HomeHeader(
               showBackButton: true,
-              backgroundColor: Colors.white,
-              borderColor: Color(0xFFE5E5E5),
+              backgroundColor: context.surf(Colors.white),
+              borderColor: context.brd(const Color(0xFFE5E5E5)),
             ),
             Padding(
               padding: EdgeInsets.symmetric(
@@ -128,7 +128,7 @@ class _RiderWalletHistoryScreenState
                                         fontFamily: 'TT Fors',
                                         color: _loadError != null
                                             ? Colors.red.shade700
-                                            : Colors.grey.shade600,
+                                            : context.sub(Colors.grey.shade600),
                                       ),
                                     ),
                                   ),

@@ -101,8 +101,10 @@ class _ValidatedTextFieldState extends State<ValidatedTextField> {
   /// Get border color based on state
   Color _getBorderColor() {
     if (_errorText != null) return Colors.red;
-    if (_isFocused) return const Color(0xFF5F2D82);
-    return Colors.grey.shade300;
+    if (_isFocused) {
+      return AppColors.accent(context, const Color(0xFF5F2D82));
+    }
+    return AppColors.border(context, Colors.grey.shade300);
   }
 
   /// Get border width based on state

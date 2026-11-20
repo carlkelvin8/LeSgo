@@ -188,7 +188,9 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: notification.isRead ? Colors.white : const Color(0xFFF1E8F8),
+      color: notification.isRead
+          ? context.surf(Colors.white)
+          : context.surf(const Color(0xFFF1E8F8)),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),

@@ -173,10 +173,16 @@ class LesgoMainContent extends ConsumerWidget {
                   child: InkWell(
                     onTap: () => notifier.toggleFullscreen(),
                     borderRadius: BorderRadius.circular(8),
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 40,
                       height: 40,
-                      child: Icon(Icons.close, color: Color(0xFF5F2D82)),
+                      child: Icon(
+                        Icons.close,
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                     ),
                   ),
                 ),

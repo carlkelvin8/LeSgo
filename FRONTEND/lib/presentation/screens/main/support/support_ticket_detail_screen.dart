@@ -236,9 +236,12 @@ class _SupportTicketDetailScreenState
         toolbarHeight: 78,
         title: Row(
           children: [
-             CircleAvatar(
+            CircleAvatar(
               backgroundColor: AppColors.surface(context, Color(0xFFF0E7F6)),
-              child: Icon(Icons.support_agent_rounded, color: AppColors.accent(context, _purple)),
+              child: Icon(
+                Icons.support_agent_rounded,
+                color: AppColors.accent(context, _purple),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -254,7 +257,10 @@ class _SupportTicketDetailScreenState
                     _ticketId == null
                         ? 'LeSgo customer support'
                         : 'Conversation #$_ticketId',
-                    style:  TextStyle(fontSize: 12, color: AppColors.foreground(context, Colors.black54)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.foreground(context, Colors.black54),
+                    ),
                   ),
                 ],
               ),
@@ -265,7 +271,10 @@ class _SupportTicketDetailScreenState
           IconButton(
             tooltip: 'Conversation history',
             onPressed: _history,
-            icon:  Icon(Icons.history_rounded, color: AppColors.accent(context, _purple)),
+            icon: Icon(
+              Icons.history_rounded,
+              color: AppColors.accent(context, _purple),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -280,14 +289,21 @@ class _SupportTicketDetailScreenState
               color: AppColors.surface(context, Color(0xFFF0EAF5)),
               child: Row(
                 children: [
-                   Icon(Icons.shield_outlined, size: 16, color: AppColors.accent(context, _purple)),
+                  Icon(
+                    Icons.shield_outlined,
+                    size: 16,
+                    color: AppColors.accent(context, _purple),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _ticketId == null
                           ? 'A little help, whenever you need it.'
                           : 'Status: ${status ?? 'Loading'} · Replies appear here',
-                      style:  TextStyle(color: AppColors.accent(context, _purple), fontSize: 12),
+                      style: TextStyle(
+                        color: AppColors.accent(context, _purple),
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -317,8 +333,10 @@ class _SupportTicketDetailScreenState
               ),
             Expanded(
               child: _loading && _detail == null
-                  ?  Center(
-                      child: CircularProgressIndicator(color: AppColors.accent(context, _purple)),
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.accent(context, _purple),
+                      ),
                     )
                   : ListView(
                       controller: _scroll,
@@ -331,8 +349,11 @@ class _SupportTicketDetailScreenState
                               padding: const EdgeInsets.only(bottom: 24),
                               child: Text(
                                 _date(_detail!.ticket.createdAt),
-                                style:  TextStyle(
-                                  color: AppColors.foreground(context, Colors.black45),
+                                style: TextStyle(
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.black45,
+                                  ),
                                   fontSize: 11,
                                 ),
                               ),
@@ -389,11 +410,15 @@ class _SupportTicketDetailScreenState
 
   List<Widget> _welcome() => [
     const SizedBox(height: 12),
-     Center(
+    Center(
       child: CircleAvatar(
         radius: 36,
         backgroundColor: AppColors.surface(context, Color(0xFFEDE2F5)),
-        child: Icon(Icons.waving_hand_rounded, color: AppColors.accent(context, _purple), size: 32),
+        child: Icon(
+          Icons.waving_hand_rounded,
+          color: AppColors.accent(context, _purple),
+          size: 32,
+        ),
       ),
     ),
     const SizedBox(height: 18),
@@ -407,10 +432,14 @@ class _SupportTicketDetailScreenState
       ),
     ),
     const SizedBox(height: 8),
-     Text(
+    Text(
       'Tell us what happened. Our support team\nwill reply in this conversation.',
       textAlign: TextAlign.center,
-      style: TextStyle(color: AppColors.foreground(context, Colors.black54), fontSize: 13, height: 1.6),
+      style: TextStyle(
+        color: AppColors.foreground(context, Colors.black54),
+        fontSize: 13,
+        height: 1.6,
+      ),
     ),
     const SizedBox(height: 30),
     Container(
@@ -420,7 +449,7 @@ class _SupportTicketDetailScreenState
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border(context, Color(0xFFECE6F0))),
       ),
-      child:  Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -440,15 +469,22 @@ class _SupportTicketDetailScreenState
           SizedBox(height: 6),
           Text(
             'You can include an order number or add a screenshot to help us understand.',
-            style: TextStyle(color: AppColors.foreground(context, Colors.black54), fontSize: 12, height: 1.6),
+            style: TextStyle(
+              color: AppColors.foreground(context, Colors.black54),
+              fontSize: 12,
+              height: 1.6,
+            ),
           ),
         ],
       ),
     ),
     const SizedBox(height: 22),
-     Text(
+    Text(
       'What is this about?',
-      style: TextStyle(fontSize: 12, color: AppColors.foreground(context, Colors.black54)),
+      style: TextStyle(
+        fontSize: 12,
+        color: AppColors.foreground(context, Colors.black54),
+      ),
     ),
     const SizedBox(height: 8),
     Wrap(
@@ -460,9 +496,14 @@ class _SupportTicketDetailScreenState
                 (topic) => ChoiceChip(
                   label: Text(topic, style: const TextStyle(fontSize: 12)),
                   selected: _topic == topic,
-                  selectedColor: const Color(0xFFEDE2F5),
+                  selectedColor: AppColors.surface(
+                    context,
+                    const Color(0xFFEDE2F5),
+                  ),
                   backgroundColor: AppColors.surface(context, Colors.white),
-                  side:  BorderSide(color: AppColors.border(context, Color(0xFFE3DAEB))),
+                  side: BorderSide(
+                    color: AppColors.border(context, Color(0xFFE3DAEB)),
+                  ),
                   onSelected: _sending
                       ? null
                       : (_) => setState(() => _topic = topic),
@@ -474,10 +515,12 @@ class _SupportTicketDetailScreenState
 
   Widget _composer() => Container(
     padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-      decoration:  BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        border: Border(top: BorderSide(color: AppColors.border(context, Color(0xFFECE6F0)))),
+    decoration: BoxDecoration(
+      color: AppColors.surface(context, Colors.white),
+      border: Border(
+        top: BorderSide(color: AppColors.border(context, Color(0xFFECE6F0))),
       ),
+    ),
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -514,7 +557,7 @@ class _SupportTicketDetailScreenState
             IconButton(
               tooltip: 'Attach images (up to 3)',
               onPressed: _sending || _attachments.length == 3 ? null : _pick,
-              icon:  Icon(
+              icon: Icon(
                 Icons.add_photo_alternate_outlined,
                 color: AppColors.accent(context, _purple),
               ),
@@ -530,7 +573,7 @@ class _SupportTicketDetailScreenState
                 decoration: InputDecoration(
                   hintText: 'Type your message…',
                   counterText: '',
-                  hintStyle:  TextStyle(
+                  hintStyle: TextStyle(
                     fontSize: 13,
                     color: AppColors.foreground(context, Colors.black45),
                   ),
@@ -573,9 +616,12 @@ class _SupportTicketDetailScreenState
           ],
         ),
         const SizedBox(height: 8),
-         Text(
+        Text(
           'Messages go to the LeSgo support team',
-          style: TextStyle(fontSize: 10, color: AppColors.foreground(context, Colors.black45)),
+          style: TextStyle(
+            fontSize: 10,
+            color: AppColors.foreground(context, Colors.black45),
+          ),
         ),
       ],
     ),
@@ -611,16 +657,23 @@ class _MessageBubble extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 5, left: 4, right: 4),
                 child: Text(
                   staff ? 'LeSgo Support' : 'You',
-                  style:  TextStyle(fontSize: 10, color: AppColors.foreground(context, Colors.black54)),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.foreground(context, Colors.black54),
+                  ),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: staff ? AppColors.surface(context, Colors.white) : AppColors.accent(context, _purple),
-                    border: staff
-                        ? Border.all(color: AppColors.border(context, Color(0xFFECE6F0)))
-                        : null,
+                decoration: BoxDecoration(
+                  color: staff
+                      ? AppColors.surface(context, Colors.white)
+                      : AppColors.accent(context, _purple),
+                  border: staff
+                      ? Border.all(
+                          color: AppColors.border(context, Color(0xFFECE6F0)),
+                        )
+                      : null,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
@@ -634,7 +687,9 @@ class _MessageBubble extends StatelessWidget {
                     Text(
                       message.message,
                       style: TextStyle(
-                        color: staff ? AppColors.foreground(context, Colors.black87) : Colors.white,
+                        color: staff
+                            ? AppColors.foreground(context, Colors.black87)
+                            : Colors.white,
                         fontSize: 14,
                         height: 1.5,
                       ),
@@ -649,9 +704,14 @@ class _MessageBubble extends StatelessWidget {
                             width: 220,
                             height: 150,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, error, stack) =>  Text(
+                            errorBuilder: (_, error, stack) => Text(
                               'Image unavailable',
-                              style: TextStyle(color: AppColors.foreground(context, Colors.grey)),
+                              style: TextStyle(
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -665,7 +725,10 @@ class _MessageBubble extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 5, left: 4, right: 4),
                   child: Text(
                     DateFormat('MMM d · h:mm a').format(date),
-                    style:  TextStyle(fontSize: 10, color: AppColors.foreground(context, Colors.black45)),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.foreground(context, Colors.black45),
+                    ),
                   ),
                 ),
             ],
@@ -720,8 +783,10 @@ class _ConversationHistoryState extends State<_ConversationHistory> {
               );
             }
             if (!snapshot.hasData) {
-              return  Center(
-                child: CircularProgressIndicator(color: AppColors.accent(context, _purple)),
+              return Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.accent(context, _purple),
+                ),
               );
             }
             if (snapshot.data!.isEmpty) {
@@ -740,8 +805,11 @@ class _ConversationHistoryState extends State<_ConversationHistory> {
                     horizontal: 20,
                     vertical: 8,
                   ),
-                  leading:  CircleAvatar(
-                    backgroundColor: AppColors.surface(context, Color(0xFFF0E7F6)),
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.surface(
+                      context,
+                      Color(0xFFF0E7F6),
+                    ),
                     child: Icon(
                       Icons.chat_bubble_outline_rounded,
                       color: AppColors.accent(context, _purple),

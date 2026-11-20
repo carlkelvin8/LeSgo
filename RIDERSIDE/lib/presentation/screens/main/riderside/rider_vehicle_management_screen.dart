@@ -573,7 +573,7 @@ class _VehicleFormScreenState
                     backgroundColor:
                         const Color(0xFF5F2D82),
                     disabledBackgroundColor:
-                        Colors.grey.shade300,
+                        context.surf(Colors.grey.shade300),
                     shape: RoundedRectangleBorder(
                       borderRadius:
                           BorderRadius.circular(12),

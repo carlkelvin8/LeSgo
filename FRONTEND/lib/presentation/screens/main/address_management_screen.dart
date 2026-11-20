@@ -130,13 +130,12 @@ class _AddressManagementScreenState
 
             Expanded(
               child: addressState.isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                       ),
                     )
-                  : addressState.addresses.isEmpty &&
-                        addressState.error != null
+                  : addressState.addresses.isEmpty && addressState.error != null
                   ? _LoadError(
                       message: addressState.error!,
                       onRetry: () => ref
@@ -953,8 +952,8 @@ class _Field extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFF5F2D82),
+              borderSide: BorderSide(
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
                 width: 1.5,
               ),
             ),

@@ -54,11 +54,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(
-            Icons.cancel_outlined,
-            color: Colors.red[700],
-            size: 28,
-          ),
+          Icon(Icons.cancel_outlined, color: Colors.red[700], size: 28),
           const SizedBox(width: 12),
           Text(
             'Cancel Order',
@@ -104,7 +100,10 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                         ),
                       ),
                       value: reason,
-                      activeColor: const Color(0xFF5F2D82),
+                      activeColor: AppColors.accent(
+                        context,
+                        const Color(0xFF5F2D82),
+                      ),
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                     );
@@ -158,11 +157,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Colors.orange[700],
-                    size: 20,
-                  ),
+                  Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

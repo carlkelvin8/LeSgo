@@ -38,7 +38,9 @@ class LesrideFareSummary extends ConsumerWidget {
             color: AppColors.surface(context, Colors.grey.shade50),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: error == null ? AppColors.foreground(context, Colors.grey.shade200) : Colors.red.shade200,
+              color: error == null
+                  ? AppColors.foreground(context, Colors.grey.shade200)
+                  : Colors.red.shade200,
             ),
           ),
           child: isLoading
@@ -74,7 +76,10 @@ class LesrideFareSummary extends ConsumerWidget {
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 8),
                       ),
-                      child: Divider(color: AppColors.border(context, Colors.grey.shade300), height: 1),
+                      child: Divider(
+                        color: AppColors.border(context, Colors.grey.shade300),
+                        height: 1,
+                      ),
                     ),
                     _row(context, 'Total', fare.total, isTotal: true),
                     SizedBox(height: ResponsiveUtils.spacing(context, 7)),
@@ -85,7 +90,10 @@ class LesrideFareSummary extends ConsumerWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 11),
-                          color: AppColors.foreground(context, Colors.grey.shade600),
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey.shade600,
+                          ),
                         ),
                       ),
                     ),
@@ -100,12 +108,14 @@ class LesrideFareSummary extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(
+        SizedBox(
           width: 16,
           height: 16,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              AppColors.accent(context, const Color(0xFF5F2D82)),
+            ),
           ),
         ),
         SizedBox(width: ResponsiveUtils.spacing(context, 10)),
@@ -141,7 +151,9 @@ class LesrideFareSummary extends ConsumerWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
                 fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
-                color: isTotal ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
+                color: isTotal
+                    ? AppColors.accent(context, Color(0xFF5F2D82))
+                    : AppColors.foreground(context, Colors.black87),
               ),
             ),
           ),
@@ -151,7 +163,9 @@ class LesrideFareSummary extends ConsumerWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
               fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-              color: isTotal ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
+              color: isTotal
+                  ? AppColors.accent(context, Color(0xFF5F2D82))
+                  : AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],

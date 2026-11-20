@@ -65,7 +65,7 @@ class HomeServicesSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-        
+
         // Horizontal scrolling services
         SizedBox(
           height: 180,
@@ -112,15 +112,10 @@ class HomeServicesSection extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Become a Partner',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -131,13 +126,28 @@ class HomeServicesSection extends StatelessWidget {
               style: TextStyle(fontSize: 14, height: 1.5),
             ),
             const SizedBox(height: 16),
-            _buildPartnerBenefit('🏍️', 'Become a Rider', 'Earn by delivering'),
+            _buildPartnerBenefit(
+              context,
+              '🏍️',
+              'Become a Rider',
+              'Earn by delivering',
+            ),
             const SizedBox(height: 8),
-            _buildPartnerBenefit('🍽️', 'Restaurant Partner', 'Expand your reach'),
+            _buildPartnerBenefit(
+              context,
+              '🍽️',
+              'Restaurant Partner',
+              'Expand your reach',
+            ),
             const SizedBox(height: 8),
-            _buildPartnerBenefit('🛒', 'Store Partner', 'Sell more online'),
+            _buildPartnerBenefit(
+              context,
+              '🛒',
+              'Store Partner',
+              'Sell more online',
+            ),
             const SizedBox(height: 16),
-             Text(
+            Text(
               'Download the LeSgo Affiliate app to get started.',
               style: TextStyle(
                 fontSize: 13,
@@ -150,9 +160,11 @@ class HomeServicesSection extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:  Text(
+            child: Text(
               'Maybe Later',
-              style: TextStyle(color: AppColors.foreground(context, Colors.grey)),
+              style: TextStyle(
+                color: AppColors.foreground(context, Colors.grey),
+              ),
             ),
           ),
           ElevatedButton(
@@ -174,7 +186,12 @@ class HomeServicesSection extends StatelessWidget {
     );
   }
 
-  Widget _buildPartnerBenefit(String emoji, String title, String subtitle) {
+  Widget _buildPartnerBenefit(
+    BuildContext context,
+    String emoji,
+    String title,
+    String subtitle,
+  ) {
     return Row(
       children: [
         Text(emoji, style: const TextStyle(fontSize: 20)),
@@ -194,7 +211,7 @@ class HomeServicesSection extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: AppColors.foreground(context, Colors.grey[600]!),
                 ),
               ),
             ],
@@ -211,7 +228,7 @@ class HomeServicesSection extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.75,
-        decoration:  BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -249,7 +266,7 @@ class HomeServicesSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     _buildPartnerCard(
                       context,
                       '🏍️ Rider Partner',
@@ -262,7 +279,7 @@ class HomeServicesSection extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     _buildPartnerCard(
                       context,
                       '🍽️ Restaurant Partner',
@@ -275,7 +292,7 @@ class HomeServicesSection extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     _buildPartnerCard(
                       context,
                       '🛒 Store Partner',
@@ -288,7 +305,7 @@ class HomeServicesSection extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     const Text(
                       'How to Get Started',
                       style: TextStyle(
@@ -302,7 +319,7 @@ class HomeServicesSection extends StatelessWidget {
                     _buildStep('3', 'Submit requirements'),
                     _buildStep('4', 'Start earning!'),
                     const SizedBox(height: 24),
-                    
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -312,9 +329,13 @@ class HomeServicesSection extends StatelessWidget {
                           if (opened) {
                             Navigator.pop(context);
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              content: Text('Could not open LeSgo Affiliate. Check that a browser is available and try again.'),
-                            ));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Could not open LeSgo Affiliate. Check that a browser is available and try again.',
+                                ),
+                              ),
+                            );
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -344,7 +365,12 @@ class HomeServicesSection extends StatelessWidget {
     );
   }
 
-  Widget _buildPartnerCard(BuildContext context, String title, String description, List<String> benefits) {
+  Widget _buildPartnerCard(
+    BuildContext context,
+    String title,
+    String description,
+    List<String> benefits,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -357,27 +383,23 @@ class HomeServicesSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
             description,
             style: TextStyle(
               fontSize: 13,
-            color: AppColors.foreground(context, Colors.grey[600]!),
+              color: AppColors.foreground(context, Colors.grey[600]!),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        ...benefits.map((benefit) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  benefit,
-                  style: const TextStyle(fontSize: 13),
-                ),
-              )),
+          const SizedBox(height: 12),
+          ...benefits.map(
+            (benefit) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(benefit, style: const TextStyle(fontSize: 13)),
+            ),
+          ),
         ],
       ),
     );
@@ -406,12 +428,7 @@ class HomeServicesSection extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
     );

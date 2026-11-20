@@ -174,8 +174,14 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.surface(context, Colors.grey.shade200),
-                  foregroundColor: AppColors.foreground(context, Colors.black87),
+                  backgroundColor: AppColors.surface(
+                    context,
+                    Colors.grey.shade200,
+                  ),
+                  foregroundColor: AppColors.foreground(
+                    context,
+                    Colors.black87,
+                  ),
                   minimumSize: const Size.fromHeight(48),
                 ),
                 child: Text(
@@ -216,7 +222,9 @@ class _PaymentMethodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border(context, Colors.grey.shade300)),
+        border: Border.all(
+          color: AppColors.border(context, Colors.grey.shade300),
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
@@ -226,7 +234,11 @@ class _PaymentMethodCard extends StatelessWidget {
         ),
         leading: icon is String
             ? SvgPicture.asset(icon, width: 32, height: 32)
-            : Icon(icon as IconData, size: 32, color: AppColors.accent(context, Color(0xFF5F2D82))),
+            : Icon(
+                icon as IconData,
+                size: 32,
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
+              ),
         title: Text(
           title,
           style: TextStyle(
@@ -251,7 +263,9 @@ class _PaymentMethodCard extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
               fontWeight: FontWeight.w600,
-              color: isLinked ? Colors.green : AppColors.accent(context, Color(0xFF5F2D82)),
+              color: isLinked
+                  ? Colors.green
+                  : AppColors.accent(context, Color(0xFF5F2D82)),
             ),
           ),
         ),
@@ -410,7 +424,7 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
       ),
       leading: Radio<String>(
         value: value,
-        activeColor: const Color(0xFF5F2D82),
+        activeColor: AppColors.accent(context, const Color(0xFF5F2D82)),
       ),
       onTap: () => setState(() => _selectedMethod = value),
     );

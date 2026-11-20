@@ -43,9 +43,12 @@ class DocumentVerificationScreen extends ConsumerWidget {
               ),
             Expanded(
               child: state.isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF5F2D82),
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
                       ),
                     )
                   : state.error != null && state.documents.isEmpty

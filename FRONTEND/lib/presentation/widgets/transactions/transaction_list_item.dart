@@ -45,10 +45,11 @@ class TransactionListItem extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: (transaction.isWallet
-                            ? AppColors.accent(context, Color(0xFF5F2D82))
-                            : _getServiceColor(transaction.serviceName))
-                        .withValues(alpha: 0.1),
+                    color:
+                        (transaction.isWallet
+                                ? AppColors.accent(context, Color(0xFF5F2D82))
+                                : _getServiceColor(transaction.serviceName))
+                            .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -62,7 +63,7 @@ class TransactionListItem extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-                
+
                 // Transaction details
                 Expanded(
                   child: Column(
@@ -77,7 +78,10 @@ class TransactionListItem extends StatelessWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.foreground(context, Colors.black87),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.black87,
+                                ),
                               ),
                             ),
                           ),
@@ -103,7 +107,10 @@ class TransactionListItem extends StatelessWidget {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 12),
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                             ),
                           ),
@@ -115,7 +122,10 @@ class TransactionListItem extends StatelessWidget {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                                color: AppColors.foreground(context, Colors.grey[500]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[500]!,
+                                ),
                               ),
                             ),
                         ],
@@ -124,15 +134,30 @@ class TransactionListItem extends StatelessWidget {
                         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                         Row(
                           children: [
-                            const Icon(Icons.circle, size: 8, color: Colors.green),
-                            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                            const Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: Colors.green,
+                            ),
+                            SizedBox(
+                              width: ResponsiveUtils.spacing(context, 8),
+                            ),
                             Expanded(
                               child: Text(
-                                _getDisplayLocation(transaction, isPickup: true),
+                                _getDisplayLocation(
+                                  transaction,
+                                  isPickup: true,
+                                ),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                                  color: AppColors.foreground(context, Colors.grey[700]!),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    12,
+                                  ),
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.grey[700]!,
+                                  ),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -143,15 +168,30 @@ class TransactionListItem extends StatelessWidget {
                         SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                         Row(
                           children: [
-                            const Icon(Icons.circle, size: 8, color: Colors.red),
-                            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                            const Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: Colors.red,
+                            ),
+                            SizedBox(
+                              width: ResponsiveUtils.spacing(context, 8),
+                            ),
                             Expanded(
                               child: Text(
-                                _getDisplayLocation(transaction, isPickup: false),
+                                _getDisplayLocation(
+                                  transaction,
+                                  isPickup: false,
+                                ),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                                  color: AppColors.foreground(context, Colors.grey[700]!),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    12,
+                                  ),
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.grey[700]!,
+                                  ),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -159,14 +199,18 @@ class TransactionListItem extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ] else if (transaction.walletReference?.isNotEmpty == true) ...[
+                      ] else if (transaction.walletReference?.isNotEmpty ==
+                          true) ...[
                         SizedBox(height: ResponsiveUtils.spacing(context, 6)),
                         Text(
                           transaction.walletReference!,
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 12),
-                            color: AppColors.foreground(context, Colors.grey[600]!),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[600]!,
+                            ),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -185,13 +229,18 @@ class TransactionListItem extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             // Divider
             Padding(
-              padding: EdgeInsets.symmetric(vertical: ResponsiveUtils.spacing(context, 12)),
-              child: Divider(height: 1, color: AppColors.border(context, Colors.grey[200]!)),
+              padding: EdgeInsets.symmetric(
+                vertical: ResponsiveUtils.spacing(context, 12),
+              ),
+              child: Divider(
+                height: 1,
+                color: AppColors.border(context, Colors.grey[200]!),
+              ),
             ),
-            
+
             // Amount and reorder button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -206,12 +255,12 @@ class TransactionListItem extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     color: transaction.isWallet
                         ? ((transaction.isWalletCredit ?? true)
-                            ? Colors.green.shade700
-                            : Colors.red.shade700)
+                              ? Colors.green.shade700
+                              : Colors.red.shade700)
                         : AppColors.accent(context, Color(0xFF5F2D82)),
                   ),
                 ),
-                
+
                 if (transaction.isOrder &&
                     transaction.status == TransactionStatus.completed &&
                     transaction.paymentStatus != PaymentStatus.failed &&
@@ -221,8 +270,16 @@ class TransactionListItem extends StatelessWidget {
                     icon: const Icon(Icons.refresh, size: 16),
                     label: const Text('Reorder'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accent(context, Color(0xFF5F2D82)),
-                      side: const BorderSide(color: Color(0xFF5F2D82)),
+                      foregroundColor: AppColors.accent(
+                        context,
+                        Color(0xFF5F2D82),
+                      ),
+                      side: BorderSide(
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                       padding: EdgeInsets.symmetric(
                         horizontal: ResponsiveUtils.spacing(context, 12),
                         vertical: ResponsiveUtils.spacing(context, 8),
@@ -240,7 +297,11 @@ class TransactionListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(BuildContext context, TransactionStatus status, String rawStatus) {
+  Widget _buildStatusBadge(
+    BuildContext context,
+    TransactionStatus status,
+    String rawStatus,
+  ) {
     Color backgroundColor;
     Color textColor;
     String text;
@@ -313,21 +374,29 @@ class TransactionListItem extends StatelessWidget {
     );
   }
 
-  String _getDisplayLocation(Transaction transaction, {required bool isPickup}) {
+  String _getDisplayLocation(
+    Transaction transaction, {
+    required bool isPickup,
+  }) {
     // For LesBuy and LesEat orders with items, show item information
-    if ((transaction.serviceName == 'LesBuy' || transaction.serviceName == 'LesEat') && 
-        transaction.items != null && transaction.items!.isNotEmpty) {
+    if ((transaction.serviceName == 'LesBuy' ||
+            transaction.serviceName == 'LesEat') &&
+        transaction.items != null &&
+        transaction.items!.isNotEmpty) {
       if (isPickup) {
         // Show first item name for pickup
         final firstItem = transaction.items!.first;
         return '${firstItem.name} ${firstItem.quantity > 1 ? '(${firstItem.quantity}x)' : ''}';
       } else {
         // Show total items count for dropoff
-        final totalItems = transaction.items!.fold<int>(0, (sum, item) => sum + item.quantity);
+        final totalItems = transaction.items!.fold<int>(
+          0,
+          (sum, item) => sum + item.quantity,
+        );
         return '${transaction.items!.length} item${transaction.items!.length > 1 ? 's' : ''} ($totalItems total)';
       }
     }
-    
+
     // For other services or orders without items, show regular locations
     return isPickup ? transaction.pickupLocation : transaction.dropoffLocation;
   }
@@ -366,4 +435,3 @@ class TransactionListItem extends StatelessWidget {
     }
   }
 }
-

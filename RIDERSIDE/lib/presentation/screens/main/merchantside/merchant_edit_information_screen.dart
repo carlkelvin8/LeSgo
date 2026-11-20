@@ -395,7 +395,7 @@ class _MerchantEditInformationScreenState
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: hasHours ? Colors.black87 : Colors.grey.shade500,
+                      color: hasHours ? context.txt(Colors.black87) : context.sub(Colors.grey.shade500),
                     ),
                   ),
                 ],

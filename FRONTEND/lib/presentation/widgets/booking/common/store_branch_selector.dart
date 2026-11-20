@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../data/data_source/dto/partner/store_branch.dart';
 
@@ -58,7 +59,10 @@ class StoreBranchSelector extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                 child: Text(
                   'Delivery fee depends on how far the branch is from you.',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.foreground(context, Colors.grey[600]!),
+                  ),
                 ),
               ),
               Flexible(
@@ -71,13 +75,14 @@ class StoreBranchSelector extends StatelessWidget {
                             b.id == selected?.id
                                 ? Icons.radio_button_checked
                                 : Icons.radio_button_unchecked,
-                            color: _purple,
+                            color: AppColors.accent(context, _purple),
                           ),
                           title: Text(b.name),
                           subtitle: Text(
-                            [b.address, _distanceLabel(b)]
-                                .where((s) => s.isNotEmpty)
-                                .join('\n'),
+                            [
+                              b.address,
+                              _distanceLabel(b),
+                            ].where((s) => s.isNotEmpty).join('\n'),
                           ),
                           isThreeLine: b.address.isNotEmpty,
                           onTap: () => Navigator.pop(ctx, b.id),
@@ -114,7 +119,10 @@ class StoreBranchSelector extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                const Icon(Icons.storefront_outlined, color: _purple),
+                Icon(
+                  Icons.storefront_outlined,
+                  color: AppColors.accent(context, _purple),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -122,25 +130,43 @@ class StoreBranchSelector extends StatelessWidget {
                     children: [
                       Text(
                         'Pickup branch',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[600]!,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         branch.name,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       if (_distanceLabel(branch).isNotEmpty)
                         Text(
                           _distanceLabel(branch),
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[600]!,
+                            ),
+                          ),
                         ),
                     ],
                   ),
                 ),
                 if (canSwitch)
-                  const Text(
+                  Text(
                     'Change',
-                    style: TextStyle(color: _purple, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: AppColors.accent(context, _purple),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
               ],
             ),

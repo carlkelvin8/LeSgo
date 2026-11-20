@@ -75,7 +75,10 @@ class _Avatar extends StatelessWidget {
               border: Border.all(color: Colors.white, width: 2.5),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: .10),
+                  color: AppColors.accent(
+                    context,
+                    Color(0xFF5F2D82),
+                  ).withValues(alpha: .10),
                   blurRadius: 14,
                   spreadRadius: 1,
                 ),
@@ -94,10 +97,10 @@ class _Avatar extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: const Color(0xFF8B3FC8), width: 2),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.camera_alt_rounded,
                 size: 11,
-                color: Color(0xFF5F2D82),
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
               ),
             ),
           ),
@@ -115,14 +118,14 @@ class _Avatar extends StatelessWidget {
           fit: BoxFit.cover,
           width: size,
           height: size,
-          loadingBuilder: (_, child, prog) => prog == null
+          loadingBuilder: (ctx, child, prog) => prog == null
               ? child
-              : const ColoredBox(
-                  color: Color(0xFFEDD9FF),
+              : ColoredBox(
+                  color: AppColors.surface(ctx, const Color(0xFFEDD9FF)),
                   child: Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(0xFF5F2D82),
+                      color: AppColors.accent(ctx, const Color(0xFF5F2D82)),
                     ),
                   ),
                 ),

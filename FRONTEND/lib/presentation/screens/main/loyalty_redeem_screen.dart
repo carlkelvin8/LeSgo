@@ -135,8 +135,10 @@ class _LoyaltyRedeemScreenState extends ConsumerState<LoyaltyRedeemScreen> {
         ),
       ),
       body: loyaltyState.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+          ? Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
+              ),
             )
           : loyaltyState.error != null && loyaltyState.rewards.isEmpty
           ? RetryWidget(
@@ -187,7 +189,9 @@ class _LoyaltyRedeemScreenState extends ConsumerState<LoyaltyRedeemScreen> {
                   SizedBox(height: ResponsiveUtils.spacing(context, 28)),
                   _sectionTitle(
                     'Rewards',
-                    trailing: rewards.isEmpty ? null : '${rewards.length} available',
+                    trailing: rewards.isEmpty
+                        ? null
+                        : '${rewards.length} available',
                   ),
                   if (rewards.isEmpty)
                     const RewardsEmptyState()

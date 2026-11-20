@@ -26,7 +26,8 @@ class DriverFindingScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<DriverFindingScreen> createState() => _DriverFindingScreenState();
+  ConsumerState<DriverFindingScreen> createState() =>
+      _DriverFindingScreenState();
 }
 
 class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
@@ -35,21 +36,23 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     super.initState();
     // Start finding driver
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(driverFindingProvider.notifier).startFindingDriver(
-        widget.orderId,
-        widget.orderType,
-      );
+      ref
+          .read(driverFindingProvider.notifier)
+          .startFindingDriver(widget.orderId, widget.orderType);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final findingState = ref.watch(driverFindingProvider);
-    
+
     // Listen for driver found state and auto-navigate
     ref.listen<DriverFindingState>(driverFindingProvider, (previous, next) {
-      if (next.driverFound && !next.isSearching && previous?.driverFound != true) {
-        if (kDebugMode) debugPrint('Driver found! Auto-navigating to tracking screen...');
+      if (next.driverFound &&
+          !next.isSearching &&
+          previous?.driverFound != true) {
+        if (kDebugMode)
+          debugPrint('Driver found! Auto-navigating to tracking screen...');
         // Show driver assigned notification
         if (next.driverName != null) {
           NotificationHelper.showDriverAssigned(
@@ -66,7 +69,6 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           }
         });
       }
-
     });
 
     return Scaffold(
@@ -76,7 +78,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           children: [
             // Header
             _buildHeader(context),
-            
+
             // Main Content
             Expanded(
               child: Center(
@@ -161,7 +163,10 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
     );
   }
 
-  Widget _buildDriverFoundWidget(BuildContext context, DriverFindingState state) {
+  Widget _buildDriverFoundWidget(
+    BuildContext context,
+    DriverFindingState state,
+  ) {
     return Column(
       children: [
         // Success animation
@@ -178,7 +183,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
             size: ResponsiveUtils.fontSize(context, 60),
           ),
         ),
-        
+
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
 
         Text(
@@ -219,11 +224,11 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
         ],
 
         SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-        
+
         ElevatedButton(
           onPressed: () => _navigateToTracking(),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5F2D82),
+            backgroundColor: Color(0xFF5F2D82),
             padding: EdgeInsets.symmetric(
               horizontal: ResponsiveUtils.spacing(context, 32),
               vertical: ResponsiveUtils.spacing(context, 16),
@@ -254,7 +259,9 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
             );
           },
           style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFF5F2D82)),
+            side: BorderSide(
+              color: AppColors.accent(context, const Color(0xFF5F2D82)),
+            ),
             padding: EdgeInsets.symmetric(
               horizontal: ResponsiveUtils.spacing(context, 32),
               vertical: ResponsiveUtils.spacing(context, 16),
@@ -285,9 +292,9 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           color: Colors.red,
           size: ResponsiveUtils.fontSize(context, 60),
         ),
-        
+
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-        
+
         Text(
           'Unable to find driver',
           style: TextStyle(
@@ -297,9 +304,9 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
             color: AppColors.foreground(context, Colors.black87),
           ),
         ),
-        
+
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        
+
         Text(
           error,
           style: TextStyle(
@@ -309,9 +316,9 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-        
+
         SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-        
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -376,10 +383,9 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
   }
 
   void _retryFindingDriver() {
-    ref.read(driverFindingProvider.notifier).startFindingDriver(
-      widget.orderId,
-      widget.orderType,
-    );
+    ref
+        .read(driverFindingProvider.notifier)
+        .startFindingDriver(widget.orderId, widget.orderType);
   }
 
   void _navigateToTracking() {
@@ -420,9 +426,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => SimpleOrderTrackingScreen(
-              orderId: orderId,
-            ),
+            builder: (_) => SimpleOrderTrackingScreen(orderId: orderId),
           ),
         );
       }

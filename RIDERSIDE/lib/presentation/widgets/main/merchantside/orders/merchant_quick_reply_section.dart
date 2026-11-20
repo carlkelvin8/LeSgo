@@ -141,10 +141,11 @@ class _MerchantQuickReplySectionState
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
                     fontWeight: FontWeight.w500,
+                    color: context.txt(Colors.black87),
                   ),
                 ),
-                backgroundColor: const Color(0xFFF3E5F5),
-                side: const BorderSide(color: Color(0xFFCE93D8)),
+                backgroundColor: context.surf(const Color(0xFFF3E5F5)),
+                side: BorderSide(color: context.brd(const Color(0xFFCE93D8))),
                 onPressed: _sending ? null : () => _sendQuickReply(template),
               );
             }).toList(),

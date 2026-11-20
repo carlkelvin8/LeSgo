@@ -398,8 +398,8 @@ class PrinterSettingsScreen extends ConsumerWidget {
       leading: Icon(
         isConnected ? Icons.print : Icons.print_outlined,
         color: isConnected
-            ? const Color(0xFF5F2D82)
-            : Colors.grey.shade600,
+            ? context.acc(const Color(0xFF5F2D82))
+            : context.sub(Colors.grey.shade600),
       ),
       title: Text(
         device.name,

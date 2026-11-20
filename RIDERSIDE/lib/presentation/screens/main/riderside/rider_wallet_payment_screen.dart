@@ -162,7 +162,9 @@ class _RiderWalletPaymentScreenState
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontWeight: bold ? FontWeight.bold : FontWeight.w600,
-              color: bold ? const Color(0xFF5F2D82) : Colors.black87,
+              color: bold
+                  ? context.acc(const Color(0xFF5F2D82))
+                  : context.txt(Colors.black87),
             ),
           ),
         ],

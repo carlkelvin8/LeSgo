@@ -3,6 +3,7 @@ import '../../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/menu_item_dto.dart';
 import '../../../../../core/utils/app_localization.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantMenuInventoryBadge extends StatelessWidget {
   final MenuItemDto item;
@@ -67,7 +68,7 @@ class MerchantMenuInventoryBadge extends StatelessWidget {
         vertical: ResponsiveUtils.spacing(context, 4),
       ),
       decoration: BoxDecoration(
-        color: background,
+        color: context.surf(background),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),

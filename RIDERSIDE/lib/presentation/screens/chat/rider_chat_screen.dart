@@ -184,7 +184,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: context.bg(Colors.grey[50]!),
       appBar: AppBar(
         backgroundColor: context.surf(Colors.white),
         elevation: 0,
@@ -376,7 +376,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                   hintText: 'Type a message...',
                   hintStyle: TextStyle(color: context.sub(Colors.grey[400]!)),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: context.surf(Colors.grey[100]!),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -400,7 +400,7 @@ class _RiderChatScreenState extends ConsumerState<RiderChatScreen> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: isSending
-                      ? Colors.grey[300]
+                      ? context.surf(Colors.grey[300]!)
                       : const Color(0xFF5F2D82),
                   shape: BoxShape.circle,
                 ),
@@ -440,7 +440,7 @@ class _MessageBubble extends StatelessWidget {
           if (!isMe) ...[
             CircleAvatar(
               radius: 16,
-              backgroundColor: Colors.grey[300],
+              backgroundColor: context.surf(Colors.grey[300]!),
               child: Text(
                 (message.sender?.name.isNotEmpty == true)
                     ? message.sender!.name[0].toUpperCase()
@@ -459,7 +459,7 @@ class _MessageBubble extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isMe ? const Color(0xFF5F2D82) : Colors.white,
+                color: isMe ? const Color(0xFF5F2D82) : context.surf(Colors.white),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -493,7 +493,7 @@ class _MessageBubble extends StatelessWidget {
                     message.content,
                     style: TextStyle(
                       fontSize: 14,
-                      color: isMe ? Colors.white : Colors.black87,
+                      color: isMe ? Colors.white : context.txt(Colors.black87),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -503,7 +503,7 @@ class _MessageBubble extends StatelessWidget {
                       fontSize: 10,
                       color: isMe
                           ? Colors.white.withValues(alpha: 0.7)
-                          : Colors.grey[400],
+                          : context.sub(Colors.grey[400]!),
                     ),
                   ),
                 ],

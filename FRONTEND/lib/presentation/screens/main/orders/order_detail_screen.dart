@@ -684,11 +684,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               ),
               Text(
                 '₱${(order.actualFare ?? order.effectiveTotalAmount).toStringAsFixed(2)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF5F2D82),
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
                 ),
               ),
             ],
@@ -934,10 +934,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               if (_isLoadingRoute)
                 Container(
                   color: Colors.black.withValues(alpha: 0.1),
-                  child: const Center(
+                  child: Center(
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFF5F2D82),
+                        AppColors.accent(context, const Color(0xFF5F2D82)),
                       ),
                     ),
                   ),

@@ -97,8 +97,10 @@ class _AddressBottomSheetState extends ConsumerState<_AddressBottomSheet> {
           // Address list
           Expanded(
             child: addressState.isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                    ),
                   )
                 : addressState.addresses.isEmpty
                 ? Center(
@@ -108,7 +110,10 @@ class _AddressBottomSheetState extends ConsumerState<_AddressBottomSheet> {
                         Icon(
                           Icons.location_off_outlined,
                           size: 48,
-                          color: AppColors.foreground(context, Colors.grey[300]!),
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[300]!,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -116,7 +121,10 @@ class _AddressBottomSheetState extends ConsumerState<_AddressBottomSheet> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            color: AppColors.foreground(context, Colors.grey[500]!),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[500]!,
+                            ),
                             fontSize: 14,
                           ),
                         ),
@@ -165,11 +173,16 @@ class _AddressTile extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.05)
+              ? AppColors.accent(
+                  context,
+                  Color(0xFF5F2D82),
+                ).withValues(alpha: 0.05)
               : AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey[200]!),
+            color: isSelected
+                ? AppColors.accent(context, Color(0xFF5F2D82))
+                : AppColors.foreground(context, Colors.grey[200]!),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -179,13 +192,18 @@ class _AddressTile extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1)
+                    ? AppColors.accent(
+                        context,
+                        Color(0xFF5F2D82),
+                      ).withValues(alpha: 0.1)
                     : AppColors.foreground(context, Colors.grey[100]!),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 address.isDefault ? Icons.home : Icons.location_on_outlined,
-                color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey[600]!),
+                color: isSelected
+                    ? AppColors.accent(context, Color(0xFF5F2D82))
+                    : AppColors.foreground(context, Colors.grey[600]!),
                 size: 20,
               ),
             ),
@@ -255,9 +273,9 @@ class _AddressTile extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(
+              Icon(
                 Icons.check_circle,
-                color: Color(0xFF5F2D82),
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
                 size: 20,
               ),
           ],

@@ -13,7 +13,8 @@ class NotificationSettingsScreen extends StatefulWidget {
       _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends State<NotificationSettingsScreen> {
   late bool _promotions;
   late bool _orderUpdates;
   late bool _missionReminders;
@@ -43,9 +44,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-      ),
+      appBar: AppBar(title: const Text('Notifications')),
       body: ListView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         children: [
@@ -53,21 +52,18 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             title: const Text('Promotions & offers'),
             subtitle: const Text('Daily promos and voucher alerts'),
             value: _promotions,
-            activeThumbColor: Theme.of(context).colorScheme.primary,
             onChanged: (v) => setState(() => _promotions = v),
           ),
           SwitchListTile(
             title: const Text('Order updates'),
             subtitle: const Text('Driver assigned, picked up, delivered'),
             value: _orderUpdates,
-            activeThumbColor: Theme.of(context).colorScheme.primary,
             onChanged: (v) => setState(() => _orderUpdates = v),
           ),
           SwitchListTile(
             title: const Text('Mission reminders'),
             subtitle: const Text('Referral and mission reward alerts'),
             value: _missionReminders,
-            activeThumbColor: Theme.of(context).colorScheme.primary,
             onChanged: (v) => setState(() => _missionReminders = v),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),

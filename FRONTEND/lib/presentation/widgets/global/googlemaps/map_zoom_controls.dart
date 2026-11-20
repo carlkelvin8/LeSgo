@@ -44,7 +44,7 @@ class MapZoomControls extends StatelessWidget {
             child: Icon(
               icon,
               size: iconSize,
-              color: const Color(0xFF5F2D82),
+              color: AppColors.accent(context, const Color(0xFF5F2D82)),
             ),
           ),
         ),

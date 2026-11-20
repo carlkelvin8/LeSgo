@@ -135,13 +135,13 @@ class _MerchantDietaryPreferencesSectionState
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
                   fontWeight: FontWeight.w500,
-                  color: isSelected ? Colors.white : const Color(0xFF5F2D82),
+                  color: isSelected ? Colors.white : context.acc(const Color(0xFF5F2D82)),
                 ),
               ),
               backgroundColor: context.surf(Colors.white),
               selectedColor: const Color(0xFF5F2D82),
               side: BorderSide(
-                color: isSelected ? const Color(0xFF5F2D82) : Colors.grey.shade300,
+                color: isSelected ? const Color(0xFF5F2D82) : context.brd(Colors.grey.shade300),
               ),
             );
           }).toList(),

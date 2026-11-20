@@ -343,8 +343,8 @@ class _CategoryChip extends StatelessWidget {
         label: Text(label, style: const TextStyle(fontFamily: 'TT Fors')),
         selected: selected,
         onSelected: (_) => onTap(),
-        selectedColor: const Color(0xFFE8D9F5),
-        checkmarkColor: const Color(0xFF5F2D82),
+        selectedColor: context.surf(const Color(0xFFE8D9F5)),
+        checkmarkColor: context.acc(const Color(0xFF5F2D82)),
       ),
     );
   }

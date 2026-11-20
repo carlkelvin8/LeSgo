@@ -451,14 +451,14 @@ class _MerchantOrderDetailScreenState
                                             item.notes != null &&
                                                 item.notes!.trim().isNotEmpty
                                             ? const Color(0xFFFFF8E1)
-                                            : Colors.grey.shade100,
+                                            : context.surf(Colors.grey.shade100),
                                         borderRadius: BorderRadius.circular(6),
                                         border: Border.all(
                                           color:
                                               item.notes != null &&
                                                   item.notes!.trim().isNotEmpty
                                               ? const Color(0xFFFFB300)
-                                              : Colors.grey.shade300,
+                                              : context.brd(Colors.grey.shade300),
                                         ),
                                       ),
                                       child: Text(
@@ -473,7 +473,7 @@ class _MerchantOrderDetailScreenState
                                               item.notes != null &&
                                                   item.notes!.trim().isNotEmpty
                                               ? Colors.orange.shade900
-                                              : Colors.black54,
+                                              : context.sub(Colors.black54),
                                           fontWeight:
                                               item.notes != null &&
                                                   item.notes!.trim().isNotEmpty

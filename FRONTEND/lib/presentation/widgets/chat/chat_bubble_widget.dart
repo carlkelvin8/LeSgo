@@ -31,7 +31,7 @@ class ChatBubbleWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isCurrentUser) ...[
-            _buildAvatar(),
+            _buildAvatar(context),
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
           ],
           Flexible(
@@ -48,19 +48,19 @@ class ChatBubbleWidget extends StatelessWidget {
           ),
           if (isCurrentUser) ...[
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-            _buildAvatar(),
+            _buildAvatar(context),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(BuildContext context) {
     return CircleAvatar(
       radius: 16,
       backgroundColor: isCurrentUser
           ? const Color(0xFF5F2D82)
-          : Colors.grey[400],
+          : AppColors.surface(context, Colors.grey[400]!),
       child: Icon(
         message.senderType == 'driver' ? Icons.directions_car : Icons.person,
         size: 16,

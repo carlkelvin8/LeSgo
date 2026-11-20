@@ -170,7 +170,7 @@ class _RiderScheduledPayoutScreenState
                 side: BorderSide(
                   color: selected
                       ? const Color(0xFF5F2D82)
-                      : Colors.grey.shade200,
+                      : context.brd(Colors.grey.shade200),
                   width: selected ? 2 : 1,
                 ),
               ),
@@ -361,7 +361,7 @@ class _RiderScheduledPayoutScreenState
                   side: BorderSide(
                     color: isSelected
                         ? const Color(0xFF5F2D82)
-                        : Colors.grey.shade200,
+                        : context.brd(Colors.grey.shade200),
                     width: isSelected ? 2 : 1,
                   ),
                 ),

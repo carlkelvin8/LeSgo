@@ -335,7 +335,9 @@ class RiderQuickStatsScreen extends ConsumerWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 10),
-                color: isToday ? const Color(0xFF5F2D82) : Colors.grey.shade500,
+                color: isToday
+                    ? context.acc(const Color(0xFF5F2D82))
+                    : context.sub(Colors.grey.shade500),
                 fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
@@ -344,7 +346,9 @@ class RiderQuickStatsScreen extends ConsumerWidget {
               width: 24,
               height: height.toDouble(),
               decoration: BoxDecoration(
-                color: isToday ? const Color(0xFF5F2D82) : Colors.grey.shade300,
+                color: isToday
+                    ? const Color(0xFF5F2D82)
+                    : context.surf(Colors.grey.shade300),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),

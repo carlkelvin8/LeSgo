@@ -34,7 +34,7 @@ class MerchantLowStockBanner extends ConsumerWidget {
         children: [
           Icon(
             Icons.warning_amber_rounded,
-            color: Colors.orange.shade800,
+            color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade800,
             size: ResponsiveUtils.fontSize(context, 20),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 8)),
@@ -48,7 +48,7 @@ class MerchantLowStockBanner extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                     fontWeight: FontWeight.w700,
-                    color: Colors.orange.shade900,
+                    color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade900,
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -57,7 +57,7 @@ class MerchantLowStockBanner extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.orange.shade800,
+                    color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade800,
                   ),
                 ),
               ],

@@ -233,7 +233,7 @@ class _MerchantSalesReportScreenState
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
-                  color: isSelected ? Colors.white : const Color(0xFF5F2D82),
+                  color: isSelected ? Colors.white : context.acc(const Color(0xFF5F2D82)),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -244,7 +244,7 @@ class _MerchantSalesReportScreenState
               side: BorderSide(
                 color: isSelected
                     ? const Color(0xFF5F2D82)
-                    : Colors.grey.shade300,
+                    : context.brd(Colors.grey.shade300),
               ),
               onSelected: (_) {
                 setState(() {
@@ -412,7 +412,7 @@ class _MerchantSalesReportScreenState
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
               fontWeight: FontWeight.w700,
-              color: valueColor ?? Colors.black87,
+              color: valueColor ?? context.txt(Colors.black87),
             ),
           ),
         ],

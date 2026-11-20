@@ -250,9 +250,11 @@ class _LesgoOrderTrackingScreenState
                 context,
                 Colors.black,
               ).withValues(alpha: 0.3),
-              child: const Center(
+              child: Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.accent(context, const Color(0xFF5F2D82)),
+                  ),
                 ),
               ),
             ),
@@ -347,7 +349,10 @@ class _LesgoOrderTrackingScreenState
                 ],
               ),
               child: IconButton(
-                icon: const Icon(Icons.my_location, color: Color(0xFF5F2D82)),
+                icon: Icon(
+                  Icons.my_location,
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                ),
                 onPressed: _fitBounds,
               ),
             ),
@@ -572,7 +577,10 @@ class _LesgoOrderTrackingScreenState
                                             16,
                                           ),
                                           fontWeight: FontWeight.w700,
-                                          color: const Color(0xFF856404),
+                                          color: AppColors.foreground(
+                                            context,
+                                            const Color(0xFF856404),
+                                          ),
                                         ),
                                       ),
                                       Text(
@@ -585,7 +593,10 @@ class _LesgoOrderTrackingScreenState
                                             context,
                                             12,
                                           ),
-                                          color: const Color(0xFF856404),
+                                          color: AppColors.foreground(
+                                            context,
+                                            const Color(0xFF856404),
+                                          ),
                                         ),
                                       ),
                                     ],

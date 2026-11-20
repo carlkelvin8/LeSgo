@@ -42,7 +42,10 @@ class MapPlacePreviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.place, color: Color(0xFF5F2D82)),
+              Icon(
+                Icons.place,
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

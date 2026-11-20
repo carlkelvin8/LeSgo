@@ -101,7 +101,7 @@ class _BarChart extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: point.revenue > 0
                         ? const Color(0xFF8054A2)
-                        : const Color(0xFFE0DDE5),
+                        : context.brd(const Color(0xFFE0DDE5)),
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(3)),
                   ),

@@ -767,7 +767,12 @@ class _LeseatOrderStatusScreenState
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF5F2D82)),
+                      borderSide: BorderSide(
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                     ),
                     contentPadding: EdgeInsets.all(
                       ResponsiveUtils.spacing(context, 16),

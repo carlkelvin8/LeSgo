@@ -66,20 +66,20 @@ class MerchantMenuStockControls extends StatelessWidget {
         width: ResponsiveUtils.spacing(context, 28),
         height: ResponsiveUtils.spacing(context, 28),
         decoration: BoxDecoration(
-          color: onTap == null ? Colors.grey.shade200 : const Color(0xFFF7F2FB),
+          color: context.surf(onTap == null ? Colors.grey.shade200 : const Color(0xFFF7F2FB)),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: onTap == null
+            color: context.brd(onTap == null
                 ? Colors.grey.shade300
-                : const Color(0xFFE8D9F5),
+                : const Color(0xFFE8D9F5)),
           ),
         ),
         child: Icon(
           icon,
           size: ResponsiveUtils.fontSize(context, 16),
           color: onTap == null
-              ? Colors.grey.shade500
-              : const Color(0xFF5F2D82),
+              ? context.sub(Colors.grey.shade500)
+              : context.acc(const Color(0xFF5F2D82)),
         ),
       ),
     );

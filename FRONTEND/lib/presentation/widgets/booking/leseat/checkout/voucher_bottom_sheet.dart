@@ -33,11 +33,7 @@ Future<String?> showVoucherBottomSheet(
 }
 
 class _VoucherBottomSheet extends ConsumerStatefulWidget {
-  const _VoucherBottomSheet({
-    this.serviceId,
-    this.title,
-    this.orderValue,
-  });
+  const _VoucherBottomSheet({this.serviceId, this.title, this.orderValue});
 
   final int? serviceId;
   final String? title;
@@ -192,64 +188,72 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
           // Voucher list
           Expanded(
             child: _isLoading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
-                      color: Color(0xFF5F2D82),
+                      color: AppColors.accent(context, const Color(0xFF5F2D82)),
                     ),
                   )
                 : _error != null
-                    ? Center(
-                        child: Text(
-                          _error!,
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            color: AppColors.foreground(context, Colors.grey[500]!),
+                ? Center(
+                    child: Text(
+                      _error!,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        color: AppColors.foreground(context, Colors.grey[500]!),
+                      ),
+                    ),
+                  )
+                : _vouchers.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.local_offer_outlined,
+                          size: 48,
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[300]!,
                           ),
                         ),
-                      )
-                    : _vouchers.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.local_offer_outlined,
-                                    size: 48, color: AppColors.foreground(context, Colors.grey[300]!)),
-                                const SizedBox(height: 12),
-                                Text(
-                                  widget.serviceId == null
-                                      ? 'No vouchers available'
-                                      : 'No LesGo vouchers available',
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    color: AppColors.foreground(context, Colors.grey[500]!),
-                                  ),
-                                ),
-                              ],
+                        const SizedBox(height: 12),
+                        Text(
+                          widget.serviceId == null
+                              ? 'No vouchers available'
+                              : 'No LesGo vouchers available',
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[500]!,
                             ),
-                          )
-                        : ListView.separated(
-                            controller: scrollController,
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _vouchers.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (_, i) {
-                              final v = _vouchers[i];
-                              final value = widget.orderValue;
-                              final shortfall = value != null && v.minOrder > value
-                                  ? v.minOrder - value
-                                  : null;
-                              final usable = v.eligible && shortfall == null;
-                              return _VoucherCard(
-                                voucher: v,
-                                usable: usable,
-                                shortfall: shortfall,
-                                onTap: usable
-                                    ? () => Navigator.pop(context, v.code)
-                                    : null,
-                              );
-                            },
                           ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _vouchers.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (_, i) {
+                      final v = _vouchers[i];
+                      final value = widget.orderValue;
+                      final shortfall = value != null && v.minOrder > value
+                          ? v.minOrder - value
+                          : null;
+                      final usable = v.eligible && shortfall == null;
+                      return _VoucherCard(
+                        voucher: v,
+                        usable: usable,
+                        shortfall: shortfall,
+                        onTap: usable
+                            ? () => Navigator.pop(context, v.code)
+                            : null,
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -304,7 +308,10 @@ class _VoucherCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isEligible
-                  ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.3)
+                  ? AppColors.accent(
+                      context,
+                      Color(0xFF5F2D82),
+                    ).withValues(alpha: 0.3)
                   : AppColors.foreground(context, Colors.grey[300]!),
             ),
             boxShadow: [
@@ -320,12 +327,15 @@ class _VoucherCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
+                  color: AppColors.accent(
+                    context,
+                    Color(0xFF5F2D82),
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.local_offer,
-                  color: Color(0xFF5F2D82),
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
                   size: 20,
                 ),
               ),
@@ -390,10 +400,13 @@ class _VoucherCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           voucher.discountText ?? '',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 12,
-                            color: Color(0xFF5F2D82),
+                            color: AppColors.accent(
+                              context,
+                              const Color(0xFF5F2D82),
+                            ),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -403,9 +416,9 @@ class _VoucherCard extends StatelessWidget {
                 ),
               ),
               if (isEligible)
-                const Icon(
+                Icon(
                   Icons.chevron_right,
-                  color: Color(0xFF5F2D82),
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
                 ),
             ],
           ),

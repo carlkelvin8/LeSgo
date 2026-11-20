@@ -56,7 +56,7 @@ class MerchantProfileHeader extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(
                         ResponsiveUtils.spacing(context, 16),
                       ),
-                      border: Border.all(color: Colors.black12),
+                      border: Border.all(color: context.brd(Colors.black12)),
                     ),
                     child: MediaUrlUtils.resolve(profile.logoUrl) != null
                         ? ClipRRect(

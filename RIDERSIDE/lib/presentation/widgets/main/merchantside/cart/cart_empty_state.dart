@@ -15,7 +15,7 @@ class CartEmptyState extends StatelessWidget {
           Icon(
             Icons.shopping_cart_outlined,
             size: 80,
-            color: Colors.grey.shade300,
+            color: context.brd(Colors.grey.shade300),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           Text(

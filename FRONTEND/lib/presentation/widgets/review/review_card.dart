@@ -34,7 +34,10 @@ class ReviewCard extends StatelessWidget {
               // User Avatar
               CircleAvatar(
                 radius: 20,
-                backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                backgroundColor: AppColors.accent(
+                  context,
+                  const Color(0xFF5F2D82),
+                ).withValues(alpha: 0.1),
                 backgroundImage: review.userPhoto != null
                     ? NetworkImage(review.userPhoto!)
                     : null,

@@ -65,7 +65,11 @@ class QuickAccessCard extends StatelessWidget {
                   ),
                 ],
               ),
-              child: SvgPicture.asset(iconPath, width: iconSize, height: iconSize),
+              child: SvgPicture.asset(
+                iconPath,
+                width: iconSize,
+                height: iconSize,
+              ),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 16)),
             Expanded(
@@ -102,7 +106,10 @@ class QuickAccessCard extends StatelessWidget {
               'assets/images/homepage/Arrow.svg',
               width: ResponsiveUtils.fontSize(context, 14),
               height: ResponsiveUtils.fontSize(context, 14),
-              colorFilter: ColorFilter.mode(Colors.grey[400]!, BlendMode.srcIn),
+              colorFilter: ColorFilter.mode(
+                AppColors.foreground(context, Colors.grey[400]!),
+                BlendMode.srcIn,
+              ),
             ),
           ],
         ),
@@ -152,7 +159,7 @@ class QuickAccessCard extends StatelessWidget {
                 width: ResponsiveUtils.fontSize(context, 12),
                 height: ResponsiveUtils.fontSize(context, 12),
                 colorFilter: ColorFilter.mode(
-                  Colors.grey[400]!,
+                  AppColors.foreground(context, Colors.grey[400]!),
                   BlendMode.srcIn,
                 ),
               ),
@@ -168,7 +175,10 @@ class QuickAccessCard extends StatelessWidget {
                   height: ResponsiveUtils.fontSize(context, 60),
                   padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                   decoration: BoxDecoration(
-                    color: AppColors.surface(context, Color(0xFFEEDDFD)), // Light purple background
+                    color: AppColors.surface(
+                      context,
+                      Color(0xFFEEDDFD),
+                    ), // Light purple background
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(

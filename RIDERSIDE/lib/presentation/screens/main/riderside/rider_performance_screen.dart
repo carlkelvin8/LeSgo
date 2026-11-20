@@ -412,7 +412,7 @@ class RiderPerformanceScreen extends ConsumerWidget {
             child: LinearProgressIndicator(
               value: percentage / 100,
               minHeight: 8,
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: context.brd(Colors.grey.shade200),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),

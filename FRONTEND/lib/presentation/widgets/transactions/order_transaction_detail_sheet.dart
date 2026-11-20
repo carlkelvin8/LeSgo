@@ -78,7 +78,7 @@ class _OrderTransactionDetailSheetState
     final transaction = widget.transaction;
 
     return Container(
-      decoration:  BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -153,10 +153,13 @@ class _OrderTransactionDetailSheetState
                           Expanded(
                             child: Text(
                               '${item.name}${item.unit != null ? ' (${item.unit})' : ''}',
-                              style:  TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 14,
-                                color: AppColors.foreground(context, Colors.black87),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.black87,
+                                ),
                               ),
                             ),
                           ),
@@ -165,18 +168,24 @@ class _OrderTransactionDetailSheetState
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 14,
-                              color: AppColors.foreground(context, Colors.grey[600]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
                             ),
                           ),
                           if (item.price != null) ...[
                             const SizedBox(width: 8),
                             Text(
                               'PHP ${(item.price! * item.quantity).toStringAsFixed(2)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF5F2D82),
+                                color: AppColors.accent(
+                                  context,
+                                  const Color(0xFF5F2D82),
+                                ),
                               ),
                             ),
                           ],
@@ -209,7 +218,10 @@ class _OrderTransactionDetailSheetState
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 14,
-                                  color: AppColors.foreground(context, Colors.grey[600]!),
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.grey[600]!,
+                                  ),
                                 ),
                               ),
                               Text(
@@ -217,7 +229,10 @@ class _OrderTransactionDetailSheetState
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 14,
-                                  color: AppColors.foreground(context, Colors.grey[600]!),
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.grey[600]!,
+                                  ),
                                 ),
                               ),
                             ],
@@ -232,7 +247,10 @@ class _OrderTransactionDetailSheetState
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: 14,
-                                    color: AppColors.foreground(context, Colors.grey[600]!),
+                                    color: AppColors.foreground(
+                                      context,
+                                      Colors.grey[600]!,
+                                    ),
                                   ),
                                 ),
                                 Text(
@@ -240,7 +258,10 @@ class _OrderTransactionDetailSheetState
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: 14,
-                                    color: AppColors.foreground(context, Colors.grey[600]!),
+                                    color: AppColors.foreground(
+                                      context,
+                                      Colors.grey[600]!,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -262,11 +283,14 @@ class _OrderTransactionDetailSheetState
                               ),
                               Text(
                                 'PHP ${transaction.amount.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF5F2D82),
+                                  color: AppColors.accent(
+                                    context,
+                                    const Color(0xFF5F2D82),
+                                  ),
                                 ),
                               ),
                             ],
@@ -292,11 +316,14 @@ class _OrderTransactionDetailSheetState
                       ),
                       Text(
                         'PHP ${transaction.amount.toStringAsFixed(2)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF5F2D82),
+                          color: AppColors.accent(
+                            context,
+                            const Color(0xFF5F2D82),
+                          ),
                         ),
                       ),
                     ],
@@ -306,7 +333,7 @@ class _OrderTransactionDetailSheetState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                     Text(
+                    Text(
                       'Order status',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
@@ -331,7 +358,7 @@ class _OrderTransactionDetailSheetState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                     Text(
+                    Text(
                       'Payment',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
@@ -347,7 +374,7 @@ class _OrderTransactionDetailSheetState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                       Text(
+                      Text(
                         'Method',
                         style: TextStyle(
                           fontFamily: 'TT Fors',
@@ -382,8 +409,9 @@ class _OrderTransactionDetailSheetState
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed:
-                        widget.sharingReceipt ? null : widget.onDownloadReceipt,
+                    onPressed: widget.sharingReceipt
+                        ? null
+                        : widget.onDownloadReceipt,
                     icon: widget.sharingReceipt
                         ? const SizedBox(
                             width: 18,
@@ -393,8 +421,16 @@ class _OrderTransactionDetailSheetState
                         : const Icon(Icons.picture_as_pdf_outlined),
                     label: const Text('Download receipt (PDF)'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accent(context, Color(0xFF5F2D82)),
-                      side: const BorderSide(color: Color(0xFF5F2D82)),
+                      foregroundColor: AppColors.accent(
+                        context,
+                        Color(0xFF5F2D82),
+                      ),
+                      side: BorderSide(
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -406,12 +442,7 @@ class _OrderTransactionDetailSheetState
     );
   }
 
-  Widget _detailRow(
-    IconData icon,
-    Color color,
-    String label,
-    String value,
-  ) {
+  Widget _detailRow(IconData icon, Color color, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -432,7 +463,7 @@ class _OrderTransactionDetailSheetState
               const SizedBox(height: 2),
               Text(
                 value,
-                style:  TextStyle(
+                style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 14,
                   color: AppColors.foreground(context, Colors.black87),

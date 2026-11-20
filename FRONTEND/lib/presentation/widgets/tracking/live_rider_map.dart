@@ -145,8 +145,9 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
         Marker(
           markerId: const MarkerId('dropoff'),
           position: LatLng(widget.dropoffLat, widget.dropoffLng),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
           infoWindow: const InfoWindow(title: 'Delivery Location'),
         ),
       );
@@ -158,8 +159,9 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
         Marker(
           markerId: const MarkerId('pickup'),
           position: LatLng(widget.pickupLat!, widget.pickupLng!),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueOrange,
+          ),
           infoWindow: const InfoWindow(title: 'Pickup Location'),
         ),
       );
@@ -206,10 +208,10 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
             child: _isLoading
                 ? Container(
                     color: AppColors.surface(context, Colors.grey[200]!),
-                    child: const Center(
+                    child: Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFF5F2D82),
+                          AppColors.accent(context, const Color(0xFF5F2D82)),
                         ),
                       ),
                     ),
@@ -249,7 +251,8 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
   }
 
   Widget _buildStatusLabel() {
-    final bool driverAssigned = _hasDriverLocation ||
+    final bool driverAssigned =
+        _hasDriverLocation ||
         (_status != null &&
             [
               'accepted',
@@ -257,15 +260,17 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
               'picked_up',
               'in_progress',
               'in_transit',
-            ]
-                .contains(_status!.toLowerCase()));
+            ].contains(_status!.toLowerCase()));
 
-    final String label =
-        driverAssigned ? 'Rider is on the way' : 'Waiting for rider...';
-    final IconData icon =
-        driverAssigned ? Icons.two_wheeler : Icons.hourglass_top;
-    final Color color =
-        driverAssigned ? const Color(0xFF5F2D82) : Colors.orange[700]!;
+    final String label = driverAssigned
+        ? 'Rider is on the way'
+        : 'Waiting for rider...';
+    final IconData icon = driverAssigned
+        ? Icons.two_wheeler
+        : Icons.hourglass_top;
+    final Color color = driverAssigned
+        ? AppColors.accent(context, const Color(0xFF5F2D82))
+        : Colors.orange[700]!;
 
     return Row(
       children: [
@@ -289,37 +294,47 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.08),
+        color: AppColors.accent(
+          context,
+          Color(0xFF5F2D82),
+        ).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (_eta != null) ...[
-            const Icon(Icons.access_time, size: 16, color: Color(0xFF5F2D82)),
+            Icon(
+              Icons.access_time,
+              size: 16,
+              color: AppColors.accent(context, const Color(0xFF5F2D82)),
+            ),
             const SizedBox(width: 4),
             Text(
               'ETA: $_eta',
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF5F2D82),
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
               ),
             ),
           ],
-          if (_eta != null && _distance != null)
-            const SizedBox(width: 16),
+          if (_eta != null && _distance != null) const SizedBox(width: 16),
           if (_distance != null) ...[
-            const Icon(Icons.straighten, size: 16, color: Color(0xFF5F2D82)),
+            Icon(
+              Icons.straighten,
+              size: 16,
+              color: AppColors.accent(context, const Color(0xFF5F2D82)),
+            ),
             const SizedBox(width: 4),
             Text(
               _distance!,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF5F2D82),
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
               ),
             ),
           ],

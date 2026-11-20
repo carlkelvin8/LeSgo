@@ -206,10 +206,10 @@ class _CustomerServiceChatScreenState
           CircleAvatar(
             radius: 16,
             backgroundColor: AppColors.surface(context, Color(0xFFE8D9F5)),
-            child: const Icon(
+            child: Icon(
               Icons.support_agent,
               size: 16,
-              color: Color(0xFF5F2D82),
+              color: AppColors.accent(context, const Color(0xFF5F2D82)),
             ),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 8)),
@@ -225,9 +225,9 @@ class _CustomerServiceChatScreenState
             child: SizedBox(
               width: ResponsiveUtils.spacing(context, 20),
               height: ResponsiveUtils.spacing(context, 20),
-              child: const CircularProgressIndicator(
+              child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Color(0xFF5F2D82),
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
               ),
             ),
           ),

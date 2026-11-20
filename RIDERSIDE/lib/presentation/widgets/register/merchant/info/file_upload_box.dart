@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 import '../../../../../core/utils/utils.dart';
 
 class MerchantFileUploadBox extends StatelessWidget {
@@ -30,7 +31,7 @@ class MerchantFileUploadBox extends StatelessWidget {
               ? Colors.red.withValues(alpha: 0.05)
               : (filePath != null
                     ? const Color(0xFF9B6BB8).withValues(alpha: 0.05)
-                    : Colors.white),
+                    : context.surf(Colors.white)),
           borderRadius: BorderRadius.circular(
             ResponsiveUtils.spacing(context, 12),
           ),
@@ -39,7 +40,7 @@ class MerchantFileUploadBox extends StatelessWidget {
                 ? Colors.red
                 : (filePath != null
                       ? const Color(0xFF9B6BB8)
-                      : Colors.grey.shade400),
+                      : context.brd(Colors.grey.shade400)),
             width: 1.5,
             style: BorderStyle
                 .solid, // Fallback to solid border to avoid dependency issues
@@ -69,7 +70,7 @@ class MerchantFileUploadBox extends StatelessWidget {
                         ? Colors.red
                         : (filePath != null
                               ? const Color(0xFF9B6BB8)
-                              : Colors.grey.shade600),
+                              : context.sub(Colors.grey.shade600)),
                     size: 24,
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 8)),
@@ -85,7 +86,7 @@ class MerchantFileUploadBox extends StatelessWidget {
                             ? Colors.red
                             : (filePath != null
                                   ? const Color(0xFF9B6BB8)
-                                  : Colors.grey.shade600),
+                                  : context.sub(Colors.grey.shade600)),
                         fontWeight: filePath != null
                             ? FontWeight.w600
                             : FontWeight.w400,

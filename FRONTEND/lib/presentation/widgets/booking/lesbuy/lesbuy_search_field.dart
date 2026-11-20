@@ -56,8 +56,8 @@ class LesbuySearchField extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(borderRadius),
-            borderSide: const BorderSide(
-              color: Color(0xFF5F2D82),
+            borderSide: BorderSide(
+              color: AppColors.accent(context, const Color(0xFF5F2D82)),
               width: 1,
             ),
           ),

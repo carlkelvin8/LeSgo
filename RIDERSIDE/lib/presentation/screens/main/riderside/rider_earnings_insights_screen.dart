@@ -306,7 +306,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                   drawVerticalLine: false,
                   horizontalInterval: ceiling / 4,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
+                    color: context.brd(Colors.grey.shade200),
                     strokeWidth: 1,
                   ),
                 ),

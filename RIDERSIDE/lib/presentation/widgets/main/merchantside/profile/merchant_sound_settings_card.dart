@@ -78,7 +78,7 @@ class MerchantSoundSettingsCard extends ConsumerWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : Colors.black87,
+                      color: isSelected ? Colors.white : context.txt(Colors.black87),
                     ),
                   ),
                   selected: isSelected,

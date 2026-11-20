@@ -228,14 +228,14 @@ class _ConversationTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isActive
                       ? const Color(0xFF5F2D82).withValues(alpha: 0.1)
-                      : Colors.grey[200],
+                      : context.surf(Colors.grey[200]!),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   'Order #$orderId',
                   style: TextStyle(
                     fontSize: 11,
-                    color: isActive ? const Color(0xFF5F2D82) : Colors.grey[600],
+                    color: isActive ? context.acc(const Color(0xFF5F2D82)) : context.sub(Colors.grey[600]!),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

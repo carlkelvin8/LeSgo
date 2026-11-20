@@ -105,10 +105,12 @@ class _AddressSelectorWidgetState extends ConsumerState<AddressSelectorWidget> {
 
           // Content
           if (addressState.isLoading)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(24),
               child: Center(
-                child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+                child: CircularProgressIndicator(
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                ),
               ),
             )
           else if (addressState.addresses.isEmpty)
@@ -262,7 +264,7 @@ class _AddressItem extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: address.isDefault
                               ? AppColors.accent(context, Color(0xFF5F2D82))
-                              : AppColors.foreground(
+                              : AppColors.surface(
                                   context,
                                   Colors.grey.shade100,
                                 ),

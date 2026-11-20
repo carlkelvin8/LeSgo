@@ -116,9 +116,12 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
             ),
             Expanded(
               child: orderState.isLoading && orderState.orders.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF5F2D82),
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
                       ),
                     )
                   : orderState.error != null && orderState.orders.isEmpty
@@ -192,8 +195,11 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Center(
                                 child: orderState.isLoadingMore
-                                    ? const CircularProgressIndicator(
-                                        color: Color(0xFF5F2D82),
+                                    ? CircularProgressIndicator(
+                                        color: AppColors.accent(
+                                          context,
+                                          const Color(0xFF5F2D82),
+                                        ),
                                       )
                                     : TextButton(
                                         onPressed: () => ref

@@ -37,7 +37,7 @@ class MerchantSpecialInstructionsBanner extends StatelessWidget {
             children: [
               Icon(
                 Icons.campaign_rounded,
-                color: Colors.orange.shade800,
+                color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade800,
                 size: ResponsiveUtils.fontSize(context, 20),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 8)),
@@ -47,7 +47,7 @@ class MerchantSpecialInstructionsBanner extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: FontWeight.w800,
-                  color: Colors.orange.shade900,
+                  color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade900,
                 ),
               ),
             ],
@@ -79,7 +79,7 @@ class MerchantSpecialInstructionsBanner extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
                       fontWeight: FontWeight.w700,
-                      color: Colors.orange.shade900,
+                      color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade900,
                     ),
                   ),
                   Expanded(

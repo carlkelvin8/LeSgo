@@ -30,8 +30,10 @@ class ReferralDashboardScreen extends ConsumerWidget {
         ),
       ),
       body: state.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+          ? Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
             )
           : state.error != null &&
                 state.referralCode.isEmpty &&

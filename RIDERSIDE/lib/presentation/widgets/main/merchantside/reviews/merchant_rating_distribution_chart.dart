@@ -42,7 +42,7 @@ class MerchantRatingDistributionChart extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: ResponsiveUtils.spacing(context, 8),
-                    backgroundColor: Colors.grey.shade200,
+                    backgroundColor: context.brd(Colors.grey.shade200),
                     color: const Color(0xFFFFA000),
                   ),
                 ),

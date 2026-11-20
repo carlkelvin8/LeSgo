@@ -59,10 +59,7 @@ class MapWidget extends ConsumerWidget {
 class LocationButton extends StatelessWidget {
   final VoidCallback onUseCurrentLocation;
 
-  const LocationButton({
-    super.key,
-    required this.onUseCurrentLocation,
-  });
+  const LocationButton({super.key, required this.onUseCurrentLocation});
 
   @override
   Widget build(BuildContext context) {
@@ -80,10 +77,10 @@ class LocationButton extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.my_location,
                   size: 18,
-                  color: Color(0xFF5F2D82),
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
                 ),
                 const SizedBox(width: 6),
                 Text(

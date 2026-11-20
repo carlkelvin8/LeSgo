@@ -239,7 +239,9 @@ class _ConversationTile extends StatelessWidget {
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
           margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 4)),
           decoration: BoxDecoration(
-            color: hasUnread ? Colors.white : const Color(0xFFF8F9FA),
+            color: hasUnread
+                ? context.surf(Colors.white)
+                : context.surf(const Color(0xFFF8F9FA)),
             borderRadius: BorderRadius.circular(12),
             border: hasUnread
                 ? Border.all(color: const Color(0xFF5F2D82).withValues(alpha: 0.2))
@@ -291,8 +293,8 @@ class _ConversationTile extends StatelessWidget {
                               fontSize:
                                   ResponsiveUtils.fontSize(context, 11),
                               color: hasUnread
-                                  ? const Color(0xFF5F2D82)
-                                  : Colors.grey.shade600,
+                                  ? context.acc(const Color(0xFF5F2D82))
+                                  : context.sub(Colors.grey.shade600),
                             ),
                           ),
                       ],
@@ -310,8 +312,8 @@ class _ConversationTile extends StatelessWidget {
                               fontSize:
                                   ResponsiveUtils.fontSize(context, 12),
                               color: hasUnread
-                                  ? Colors.black87
-                                  : Colors.grey.shade600,
+                                  ? context.txt(Colors.black87)
+                                  : context.sub(Colors.grey.shade600),
                             ),
                           ),
                         ),
@@ -324,7 +326,7 @@ class _ConversationTile extends StatelessWidget {
                                   ResponsiveUtils.fontSize(context, 10),
                               color: isActive
                                   ? Colors.green.shade700
-                                  : Colors.grey.shade500,
+                                  : context.sub(Colors.grey.shade500),
                             ),
                           ),
                       ],
