@@ -231,6 +231,7 @@ class _ChangePhoneSheetState extends ConsumerState<ChangePhoneSheet> {
                   : (_otpSent ? _verifyAndSave : _sendOtp),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
+                foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(48),
               ),
               child: _isLoading

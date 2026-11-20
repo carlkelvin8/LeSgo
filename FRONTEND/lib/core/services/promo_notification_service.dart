@@ -98,9 +98,9 @@ class PromoNotificationService {
   }) async {
     if (!context.mounted || !_appPrefs.pushPromotionsEnabled) return;
 
-    final promoTitle =
-        _pendingPromoTitle ?? title ?? 'New promo for you!';
-    final promoMessage = _pendingPromoBody ??
+    final promoTitle = _pendingPromoTitle ?? title ?? 'New promo for you!';
+    final promoMessage =
+        _pendingPromoBody ??
         message ??
         'Tap to view exclusive offers on LesGo, LesEat, LesPay & more.';
 
@@ -117,7 +117,7 @@ class PromoNotificationService {
     _notificationService.showNotificationByType(
       context,
       type: NotificationType.promotional,
-      message: '$promoTitle — $promoMessage',
+      message: '$promoTitle: $promoMessage',
       data: const {'route': 'offers'},
       onTap: () => AppRouter.push(context, MainRoutes.offers),
     );
@@ -140,7 +140,7 @@ class PromoNotificationService {
     await deliverPromoToOffers(
       context,
       title: featuredTitle,
-      message: '$featuredDiscount — open Offers to claim your code.',
+      message: '$featuredDiscount. Open Offers to claim your code.',
     );
   }
 

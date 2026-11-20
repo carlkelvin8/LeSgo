@@ -19,7 +19,7 @@ class LesbuyManualDeliveryUtils {
   static const pendingHint =
       'Delivery fee will be calculated after your rider finds the items and uploads a photo at the store.';
   static const orderValuePendingHint =
-      'No minimum order — item prices and total are confirmed after your rider finds the products.';
+      'No minimum order. Item prices and total are confirmed after your rider finds the products.';
 
   static bool isManualOnlyCart({
     required bool hasStoreItems,

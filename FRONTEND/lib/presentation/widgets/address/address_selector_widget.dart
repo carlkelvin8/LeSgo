@@ -293,7 +293,10 @@ class _AddressItem extends StatelessWidget {
                             vertical: 1,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.shade50,
+                            color: AppColors.surface(
+                              context,
+                              Colors.green.shade50,
+                            ),
                             borderRadius: BorderRadius.circular(3),
                             border: Border.all(
                               color: Colors.green.shade200,
@@ -305,7 +308,10 @@ class _AddressItem extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 8,
-                              color: Colors.green.shade700,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.green.shade700,
+                              ),
                               fontWeight: FontWeight.w600,
                             ),
                           ),

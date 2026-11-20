@@ -105,7 +105,8 @@ class StoreBranchSelector extends StatelessWidget {
     final branch = selected;
     if (branch == null) return const SizedBox.shrink();
     final canSwitch = enabled && branches.length > 1;
-    final hp = ResponsiveUtils.horizontalPadding(context);
+    // Match the 16 pt side margin of the address and order cards around it.
+    final hp = ResponsiveUtils.spacing(context, 16);
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: hp),

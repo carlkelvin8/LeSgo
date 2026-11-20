@@ -174,7 +174,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   helperText:
                       'Leave blank to verify with your linked Google account.',
                   filled: true,
-                  fillColor: AppColors.surface(context, Colors.white),
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? null
+                      : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
@@ -211,7 +213,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 decoration: InputDecoration(
                   labelText: 'Type DELETE to confirm',
                   filled: true,
-                  fillColor: AppColors.surface(context, Colors.white),
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? null
+                      : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
@@ -233,7 +237,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 decoration: InputDecoration(
                   labelText: 'Reason (optional)',
                   filled: true,
-                  fillColor: AppColors.surface(context, Colors.white),
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? null
+                      : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(

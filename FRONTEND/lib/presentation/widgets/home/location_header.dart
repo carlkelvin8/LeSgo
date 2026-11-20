@@ -27,8 +27,16 @@ class LocationHeader extends StatelessWidget {
     final fontSize12 = ResponsiveUtils.fontSize(context, 12);
     final fontSize14 = ResponsiveUtils.fontSize(context, 14);
     final iconSize = ResponsiveUtils.fontSize(context, 24);
-    
+
     final editIconSize = ResponsiveUtils.fontSize(context, 14);
+    // These SVGs are dark purple, which disappears on the dark background.
+    // Light mode keeps the artwork's own colours.
+    final iconTint = Theme.of(context).brightness == Brightness.dark
+        ? ColorFilter.mode(
+            AppColors.accent(context, const Color(0xFF5F2D82)),
+            BlendMode.srcIn,
+          )
+        : null;
 
     return Padding(
       padding: EdgeInsets.all(spacing),
@@ -39,11 +47,14 @@ class LocationHeader extends StatelessWidget {
             onTap: onMenuTap,
             behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding: EdgeInsets.only(top: ResponsiveUtils.spacing(context, 12)),
+              padding: EdgeInsets.only(
+                top: ResponsiveUtils.spacing(context, 12),
+              ),
               child: SvgPicture.asset(
                 'assets/images/homepage/Nav.svg',
                 width: iconSize,
                 height: iconSize,
+                colorFilter: iconTint,
               ),
             ),
           ),
@@ -53,7 +64,9 @@ class LocationHeader extends StatelessWidget {
               onTap: onLocationTap,
               behavior: HitTestBehavior.opaque,
               child: Padding(
-                padding: EdgeInsets.only(top: ResponsiveUtils.spacing(context, 6)),
+                padding: EdgeInsets.only(
+                  top: ResponsiveUtils.spacing(context, 6),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -64,6 +77,7 @@ class LocationHeader extends StatelessWidget {
                           'assets/images/homepage/Location.svg',
                           width: ResponsiveUtils.fontSize(context, 14),
                           height: ResponsiveUtils.fontSize(context, 14),
+                          colorFilter: iconTint,
                         ),
                         SizedBox(width: ResponsiveUtils.spacing(context, 4)),
                         Text(
@@ -89,7 +103,10 @@ class LocationHeader extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: fontSize14,
-                              color: AppColors.foreground(context, Colors.black87),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.black87,
+                              ),
                             ),
                           ),
                         ),
@@ -98,6 +115,7 @@ class LocationHeader extends StatelessWidget {
                           'assets/images/homepage/Edit.svg',
                           width: editIconSize,
                           height: editIconSize,
+                          colorFilter: iconTint,
                         ),
                       ],
                     ),

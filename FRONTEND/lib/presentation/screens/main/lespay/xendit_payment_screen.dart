@@ -116,6 +116,7 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
                 onPressed: () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF5F2D82),
+                  foregroundColor: Colors.white,
                 ),
                 child: const Text('Download PDF'),
               ),

@@ -69,6 +69,7 @@ class ProfileAddressSection extends ConsumerWidget {
               onPressed: () => controllers.updateProfile(context, ref),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
+                foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(
                   vertical: ResponsiveUtils.spacing(context, 16),
                 ),

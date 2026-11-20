@@ -91,15 +91,19 @@ class OpeningHoursFormatter {
 
     if (value is Map) {
       final dayMap = Map<String, dynamic>.from(value);
-      final closed = dayMap['closed'] == true ||
+      final closed =
+          dayMap['closed'] == true ||
           dayMap['is_closed'] == true ||
           dayMap['isClosed'] == true;
       if (closed) return 'Closed';
 
-      final open = _time(dayMap['open'] ?? dayMap['opens_at'] ?? dayMap['open_time']);
-      final close =
-          _time(dayMap['close'] ?? dayMap['closes_at'] ?? dayMap['close_time']);
-      if (open != null && close != null) return '$open – $close';
+      final open = _time(
+        dayMap['open'] ?? dayMap['opens_at'] ?? dayMap['open_time'],
+      );
+      final close = _time(
+        dayMap['close'] ?? dayMap['closes_at'] ?? dayMap['close_time'],
+      );
+      if (open != null && close != null) return '$open - $close';
       if (open != null) return 'Opens $open';
       if (close != null) return 'Closes $close';
     }

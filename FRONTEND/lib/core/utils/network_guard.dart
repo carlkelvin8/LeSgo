@@ -29,6 +29,7 @@ class NetworkGuard {
           FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF5F2D82),
+              foregroundColor: Colors.white,
             ),
             onPressed: () async {
               await service.checkConnection();

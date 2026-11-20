@@ -302,6 +302,7 @@ class _LeseatWaitingConfirmationScreenState
                   onPressed: _isCancelling ? null : _showCancelDialog,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5F2D82),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

@@ -129,14 +129,20 @@ class WalletTransactionsSection extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface(context, Colors.grey).withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border(context, Colors.grey).withValues(alpha: 0.1), width: 1),
+        border: Border.all(
+          color: AppColors.border(context, Colors.grey).withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
           Container(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
             decoration: BoxDecoration(
-              color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
+              color: AppColors.accent(
+                context,
+                Color(0xFF5F2D82),
+              ).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -181,15 +187,17 @@ class WalletTransactionsSection extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
+        color: AppColors.surface(context, Colors.orange.shade50),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.shade200),
+        border: Border.all(
+          color: AppColors.border(context, Colors.orange.shade200),
+        ),
       ),
       child: Row(
         children: [
           Icon(
             Icons.warning_amber_rounded,
-            color: Colors.orange.shade700,
+            color: AppColors.foreground(context, Colors.orange.shade700),
             size: ResponsiveUtils.fontSize(context, 20),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -199,7 +207,7 @@ class WalletTransactionsSection extends ConsumerWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
-                color: Colors.orange.shade800,
+                color: AppColors.foreground(context, Colors.orange.shade800),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -278,7 +286,10 @@ class _TransactionTile extends StatelessWidget {
           ),
         ],
         border: Border.all(
-          color: AppColors.foreground(context, Colors.grey).withValues(alpha: 0.06),
+          color: AppColors.foreground(
+            context,
+            Colors.grey,
+          ).withValues(alpha: 0.06),
           width: 1,
         ),
       ),
@@ -343,7 +354,10 @@ class _TransactionTile extends StatelessWidget {
                               context,
                               subtitleSize,
                             ),
-                            color: AppColors.foreground(context, Colors.grey[500]!),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[500]!,
+                            ),
                             fontWeight: FontWeight.w500,
                           ),
                           maxLines: 1,
@@ -373,7 +387,10 @@ class _TransactionTile extends StatelessWidget {
                               context,
                               subtitleSize - 1,
                             ),
-                            color: AppColors.foreground(context, Colors.grey[400]!),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[400]!,
+                            ),
                             fontWeight: FontWeight.w500,
                           ),
                           maxLines: 1,
@@ -511,7 +528,10 @@ class _TransactionSkeleton extends StatelessWidget {
         color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: AppColors.foreground(context, Colors.grey).withValues(alpha: 0.06),
+          color: AppColors.foreground(
+            context,
+            Colors.grey,
+          ).withValues(alpha: 0.06),
           width: 1,
         ),
       ),
@@ -521,10 +541,16 @@ class _TransactionSkeleton extends StatelessWidget {
             width: avatarSize,
             height: avatarSize,
             decoration: BoxDecoration(
-              color: AppColors.surface(context, Colors.grey).withValues(alpha: 0.1),
+              color: AppColors.surface(
+                context,
+                Colors.grey,
+              ).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-          ).animate().shimmer(duration: 1200.ms, color: AppColors.foreground(context, Colors.grey[200]!)),
+          ).animate().shimmer(
+            duration: 1200.ms,
+            color: AppColors.foreground(context, Colors.grey[200]!),
+          ),
           SizedBox(width: ResponsiveUtils.spacing(context, 12)),
           Expanded(
             child: Column(
@@ -535,7 +561,10 @@ class _TransactionSkeleton extends StatelessWidget {
                   width: double.infinity,
                   height: 16,
                   decoration: BoxDecoration(
-                    color: AppColors.surface(context, Colors.grey).withValues(alpha: 0.1),
+                    color: AppColors.surface(
+                      context,
+                      Colors.grey,
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ).animate().shimmer(
@@ -547,7 +576,10 @@ class _TransactionSkeleton extends StatelessWidget {
                   width: isDesktop ? 140 : 100,
                   height: 12,
                   decoration: BoxDecoration(
-                    color: AppColors.surface(context, Colors.grey).withValues(alpha: 0.1),
+                    color: AppColors.surface(
+                      context,
+                      Colors.grey,
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ).animate().shimmer(
@@ -561,10 +593,16 @@ class _TransactionSkeleton extends StatelessWidget {
             width: isDesktop ? 80 : 60,
             height: 20,
             decoration: BoxDecoration(
-              color: AppColors.surface(context, Colors.grey).withValues(alpha: 0.1),
+              color: AppColors.surface(
+                context,
+                Colors.grey,
+              ).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-          ).animate().shimmer(duration: 1200.ms, color: AppColors.foreground(context, Colors.grey[200]!)),
+          ).animate().shimmer(
+            duration: 1200.ms,
+            color: AppColors.foreground(context, Colors.grey[200]!),
+          ),
         ],
       ),
     );

@@ -75,6 +75,7 @@ class ReferralDashboardScreen extends ConsumerWidget {
                     label: const Text('Invite more friends'),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF5F2D82),
+                      foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(48),
                     ),
                   ),

@@ -35,7 +35,7 @@ class ProfileReferralCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Row(
+          Row(
             children: [
               Expanded(
                 child: Text(
@@ -46,7 +46,10 @@ class ProfileReferralCard extends StatelessWidget {
                     height: 1.15,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.7,
-                    color: Color(0xFF422759),
+                    color: AppColors.foreground(
+                      context,
+                      const Color(0xFF422759),
+                    ),
                   ),
                 ),
               ),
@@ -63,7 +66,7 @@ class ProfileReferralCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-           Text(
+          Text(
             'Invite your friends and earn points\nwhen they join LeSgo.',
             style: TextStyle(
               fontFamily: 'TT Fors',
@@ -90,14 +93,17 @@ class ProfileReferralCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           Text(
+                          Text(
                             'YOUR INVITE CODE',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 8,
                               letterSpacing: 1.4,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.foreground(context, Color(0xFF92819F)),
+                              color: AppColors.foreground(
+                                context,
+                                Color(0xFF92819F),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -105,21 +111,24 @@ class ProfileReferralCard extends StatelessWidget {
                             referralCode.isEmpty
                                 ? 'Not available yet'
                                 : referralCode,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 16,
                               letterSpacing: 1.5,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF422759),
+                              color: AppColors.foreground(
+                                context,
+                                const Color(0xFF422759),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.copy_rounded,
                       size: 20,
-                      color: Color(0xFF8052A6),
+                      color: AppColors.accent(context, const Color(0xFF8052A6)),
                     ),
                   ],
                 ),
@@ -165,7 +174,7 @@ class ProfileReferralCard extends StatelessWidget {
             child: TextButton(
               onPressed: () =>
                   AppRouter.push(context, MainRoutes.referralDashboard),
-              child:  Text(
+              child: Text(
                 'View referral rewards',
                 style: TextStyle(
                   fontFamily: 'TT Fors',

@@ -47,7 +47,7 @@ class PaymentMethodSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
+        horizontal: ResponsiveUtils.spacing(context, 16),
       ),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(

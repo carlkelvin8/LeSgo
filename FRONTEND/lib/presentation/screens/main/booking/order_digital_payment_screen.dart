@@ -171,106 +171,107 @@ class _OrderDigitalPaymentScreenState
         if (!didPop) _handleBack();
       },
       child: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Pay for ${widget.serviceLabel}',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 16),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Order #${widget.orderId}',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 13),
-                    color: AppColors.foreground(context, Colors.grey[700]!),
-                  ),
-                ),
-                Text(
-                  '₱${widget.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 18),
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.accent(context, Color(0xFF5F2D82)),
-                  ),
-                ),
-              ],
+        appBar: AppBar(
+          title: Text(
+            'Pay for ${widget.serviceLabel}',
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 16),
+              fontWeight: FontWeight.w600,
             ),
           ),
-          Expanded(
-            child: _webViewFailed
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.open_in_browser, size: 48),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Could not load payment page in app.',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: _openInBrowser,
-                            child: const Text('Open in browser'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : WebViewWidget(controller: _webViewController),
+          backgroundColor: const Color(0xFF5F2D82),
+          foregroundColor: Colors.white,
+          titleTextStyle: const TextStyle(
+            fontFamily: 'TT Fors',
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
-          Padding(
-            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: gatewayState.isCheckingStatus || _isConfirming
-                    ? null
-                    : _confirmPayment,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5F2D82),
-                  padding: EdgeInsets.symmetric(
-                    vertical: ResponsiveUtils.spacing(context, 14),
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Order #${widget.orderId}',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 13),
+                      color: AppColors.foreground(context, Colors.grey[700]!),
+                    ),
                   ),
-                ),
-                child: gatewayState.isCheckingStatus || _isConfirming
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text('I finished paying — Confirm'),
+                  Text(
+                    '₱${widget.amount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 18),
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: _webViewFailed
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.open_in_browser, size: 48),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Could not load payment page in app.',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton(
+                              onPressed: _openInBrowser,
+                              child: const Text('Open in browser'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : WebViewWidget(controller: _webViewController),
+            ),
+            Padding(
+              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: gatewayState.isCheckingStatus || _isConfirming
+                      ? null
+                      : _confirmPayment,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF5F2D82),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveUtils.spacing(context, 14),
+                    ),
+                  ),
+                  child: gatewayState.isCheckingStatus || _isConfirming
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Confirm payment'),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

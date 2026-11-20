@@ -25,21 +25,23 @@ class ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasSvg = svgPath != null;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: hasSvg ? AppColors.surface(context, Colors.white) : null,
-          gradient: hasSvg ? null : LinearGradient(
-            colors: [gradientStart, gradientEnd],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: hasSvg
+              ? null
+              : LinearGradient(
+                  colors: [gradientStart, gradientEnd],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
           borderRadius: BorderRadius.circular(16),
-              boxShadow: [
+          boxShadow: [
             BoxShadow(
-              color: hasSvg 
+              color: hasSvg
                   ? Colors.black.withValues(alpha: 0.1)
                   : gradientEnd.withValues(alpha: 0.3),
               blurRadius: 8,
@@ -63,17 +65,10 @@ class ServiceCard extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.all(12),
                 child: svgPath != null
-                    ? SvgPicture.asset(
-                        svgPath!,
-                        fit: BoxFit.contain,
-                      )
-                    : Icon(
-                        icon ?? Icons.star,
-                        size: 40,
-                        color: gradientStart,
-                      ),
+                    ? SvgPicture.asset(svgPath!, fit: BoxFit.contain)
+                    : Icon(icon ?? Icons.star, size: 40, color: gradientStart),
               ),
-              
+
               // Text content
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,21 +78,28 @@ class ServiceCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: hasSvg ? AppColors.foreground(context, Colors.black87) : Colors.white,
+                      color: hasSvg
+                          ? AppColors.foreground(context, Colors.black87)
+                          : Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: hasSvg 
-                          ? AppColors.foreground(context, Colors.grey[600]!)
-                          : Colors.white.withValues(alpha: 0.9),
-                      height: 1.2,
+                  // Reserve two lines so one-line descriptions don't push their
+                  // card's title lower than its neighbours'.
+                  SizedBox(
+                    height: 12 * 1.2 * 2,
+                    child: Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: hasSvg
+                            ? AppColors.foreground(context, Colors.grey[600]!)
+                            : Colors.white.withValues(alpha: 0.9),
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

@@ -363,7 +363,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
       latLng: latLng,
       formattedAddress: addressLine,
       addressComponents: {},
-      description: '$label — $addressLine',
+      description: '$label, $addressLine',
     );
   }
 

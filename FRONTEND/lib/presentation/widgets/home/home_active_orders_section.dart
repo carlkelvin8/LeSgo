@@ -19,7 +19,8 @@ class HomeActiveOrdersSection extends ConsumerStatefulWidget {
       _HomeActiveOrdersSectionState();
 }
 
-class _HomeActiveOrdersSectionState extends ConsumerState<HomeActiveOrdersSection> 
+class _HomeActiveOrdersSectionState
+    extends ConsumerState<HomeActiveOrdersSection>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -31,11 +32,12 @@ class _HomeActiveOrdersSectionState extends ConsumerState<HomeActiveOrdersSectio
       vsync: this,
       duration: const Duration(milliseconds: 1400), // Faster
     )..repeat(reverse: true);
-    
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.12).animate( // BIGGER pulse
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.12).animate(
+      // BIGGER pulse
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) ref.read(activeOrdersProvider.notifier).loadActiveOrders();
     });
@@ -55,9 +57,9 @@ class _HomeActiveOrdersSectionState extends ConsumerState<HomeActiveOrdersSectio
     if (state.isLoading && order == null) {
       return Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: ResponsiveUtils.horizontalPadding(context),
+          horizontal: ResponsiveUtils.spacing(context, 16),
         ),
-        child:  LinearProgressIndicator(
+        child: LinearProgressIndicator(
           color: Color(0xFF5F2D82),
           backgroundColor: AppColors.surface(context, Color(0xFFE8D5F2)),
         ),
@@ -66,9 +68,14 @@ class _HomeActiveOrdersSectionState extends ConsumerState<HomeActiveOrdersSectio
 
     if (order == null) return const SizedBox.shrink();
 
+    // Same 16 pt side margin as the hero banner below, with a gap so the two
+    // cards no longer touch.
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
+      padding: EdgeInsets.fromLTRB(
+        ResponsiveUtils.spacing(context, 16),
+        0,
+        ResponsiveUtils.spacing(context, 16),
+        ResponsiveUtils.spacing(context, 12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -143,7 +150,8 @@ class _ActiveOrderCardState extends State<_ActiveOrderCard> {
         child: Material(
           elevation: 2,
           borderRadius: BorderRadius.circular(14),
-          color: AppColors.accent(context, Color(0xFF5F2D82)),
+          // White text sits on top, so keep the brand purple in dark mode too.
+          color: const Color(0xFF5F2D82),
           child: Padding(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
             child: Row(
@@ -192,7 +200,8 @@ class _ActiveOrderCardState extends State<_ActiveOrderCard> {
                           color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
-                      if (destination.isNotEmpty && !destination.startsWith('Instance of ')) ...[
+                      if (destination.isNotEmpty &&
+                          !destination.startsWith('Instance of ')) ...[
                         const SizedBox(height: 2),
                         Text(
                           destination,

@@ -84,6 +84,7 @@ class MapPlacePreviewCard extends StatelessWidget {
                 child: FilledButton(
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF5F2D82),
+                    foregroundColor: Colors.white,
                   ),
                   onPressed: isLoading ? null : onConfirm,
                   child: isLoading

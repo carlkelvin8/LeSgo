@@ -69,8 +69,9 @@ class LestransportState {
       standardDeliveryFee: standardDeliveryFee ?? this.standardDeliveryFee,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
-      createdOrderId:
-          clearOrderId ? null : (createdOrderId ?? this.createdOrderId),
+      createdOrderId: clearOrderId
+          ? null
+          : (createdOrderId ?? this.createdOrderId),
     );
   }
 
@@ -136,7 +137,11 @@ class LestransportNotifier extends StateNotifier<LestransportState> {
       return false;
     }
 
-    state = state.copyWith(isLoading: true, clearError: true, clearOrderId: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      clearOrderId: true,
+    );
 
     try {
       final amount = state.totalOrder;
@@ -152,12 +157,12 @@ class LestransportNotifier extends StateNotifier<LestransportState> {
       }
 
       final pickupCoords = await _geocode(state.senderAddress);
-      final dropoffAddress = state.deliveryMethod ==
-              DeliveryMethod.padalaToBranch
+      final dropoffAddress =
+          state.deliveryMethod == DeliveryMethod.padalaToBranch
           ? state.branchAddress
           : state.senderAddress;
-      final dropoffCoords = state.deliveryMethod ==
-              DeliveryMethod.padalaToBranch
+      final dropoffCoords =
+          state.deliveryMethod == DeliveryMethod.padalaToBranch
           ? await _geocode(state.branchAddress)
           : pickupCoords;
 
@@ -178,7 +183,7 @@ class LestransportNotifier extends StateNotifier<LestransportState> {
           contactName: state.senderName,
           contactPhone: state.senderContactNumber,
         ),
-        notes: 'LesTransport — ${state.deliveryMethod.displayName}',
+        notes: 'LesTransport: ${state.deliveryMethod.displayName}',
         paymentMethod: state.paymentMethod,
         meta: {
           'order_type': 'lestransport',
@@ -191,8 +196,9 @@ class LestransportNotifier extends StateNotifier<LestransportState> {
         },
       );
 
-      final response =
-          await getIt<OrderRemoteDataSource>().createOrder(request);
+      final response = await getIt<OrderRemoteDataSource>().createOrder(
+        request,
+      );
       final order = response.data;
       final orderId = order.id;
       final payAmount = order.effectiveTotalAmount > 0
@@ -263,5 +269,5 @@ class LestransportNotifier extends StateNotifier<LestransportState> {
 
 final lestransportProvider =
     StateNotifierProvider<LestransportNotifier, LestransportState>((ref) {
-  return LestransportNotifier(ref);
-});
+      return LestransportNotifier(ref);
+    });

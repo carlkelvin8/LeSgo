@@ -41,6 +41,7 @@ class ActiveOrderLimitGuard {
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
+                foregroundColor: Colors.white,
               ),
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('OK'),

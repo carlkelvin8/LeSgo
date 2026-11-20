@@ -48,6 +48,7 @@ class MenuItemsSection extends StatelessWidget {
     }
 
     return GridView.builder(
+      padding: const EdgeInsets.only(top: 12),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

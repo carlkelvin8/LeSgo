@@ -53,6 +53,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF5F2D82),
+              foregroundColor: Colors.white,
             ),
             child: const Text('Go to LesPay'),
           ),
@@ -133,9 +134,14 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                         ResponsiveUtils.spacing(context, 12),
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: AppColors.surface(context, Colors.blue.shade50),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
+                        border: Border.all(
+                          color: AppColors.border(
+                            context,
+                            Colors.blue.shade200,
+                          ),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,19 +152,25 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12),
                               fontWeight: FontWeight.w600,
-                              color: Colors.blue.shade900,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.blue.shade900,
+                              ),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                           Text(
                             'GCash and PayMaya can be linked to your LesPay wallet. '
                             'Credit and debit cards are charged securely through PayMongo '
-                            'at checkout or top-up — your card details are never stored '
+                            'at checkout or top-up, and your card details are never stored '
                             'on our servers.',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: Colors.blue.shade800,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.blue.shade800,
+                              ),
                               height: 1.4,
                             ),
                           ),

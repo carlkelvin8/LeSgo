@@ -161,7 +161,7 @@ class _LesbuyOrderCompleteScreenState
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
-                      color: Colors.green[50],
+                      color: AppColors.surface(context, Colors.green[50]!),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -221,9 +221,11 @@ class _LesbuyOrderCompleteScreenState
               Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
                 decoration: BoxDecoration(
-                  color: Colors.green[50],
+                  color: AppColors.surface(context, Colors.green[50]!),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.green[200]!),
+                  border: Border.all(
+                    color: AppColors.border(context, Colors.green[200]!),
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -239,7 +241,10 @@ class _LesbuyOrderCompleteScreenState
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 18),
                         fontWeight: FontWeight.w700,
-                        color: Colors.green[700],
+                        color: AppColors.foreground(
+                          context,
+                          Colors.green[700]!,
+                        ),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -423,6 +428,7 @@ class _LesbuyOrderCompleteScreenState
                   onPressed: _bookAnotherOrder,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF5F2D82),
+                    foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveUtils.spacing(context, 18),
                     ),

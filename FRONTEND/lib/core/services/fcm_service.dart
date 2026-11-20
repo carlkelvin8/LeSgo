@@ -371,7 +371,7 @@ class FcmService {
 
   Future<void> subscribeToTopic(String topic) async {
     if (!_firebaseReady) {
-      debugPrint('⚠️ Cannot subscribe to $topic — Firebase not ready');
+      debugPrint('⚠️ Cannot subscribe to $topic - Firebase not ready');
       return;
     }
     await FirebaseMessaging.instance.subscribeToTopic(topic);
@@ -380,7 +380,7 @@ class FcmService {
 
   Future<void> unsubscribeFromTopic(String topic) async {
     if (!_firebaseReady) {
-      debugPrint('⚠️ Cannot unsubscribe from $topic — Firebase not ready');
+      debugPrint('⚠️ Cannot unsubscribe from $topic - Firebase not ready');
       return;
     }
     await FirebaseMessaging.instance.unsubscribeFromTopic(topic);

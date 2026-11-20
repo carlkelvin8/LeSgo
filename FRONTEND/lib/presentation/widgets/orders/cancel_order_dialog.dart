@@ -151,13 +151,19 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange[50],
+                color: AppColors.surface(context, Colors.orange[50]!),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange[200]!),
+                border: Border.all(
+                  color: AppColors.border(context, Colors.orange[200]!),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
+                  Icon(
+                    Icons.info_outline,
+                    color: AppColors.foreground(context, Colors.orange[700]!),
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -165,7 +171,10 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.orange[900],
+                        color: AppColors.foreground(
+                          context,
+                          Colors.orange[900]!,
+                        ),
                       ),
                     ),
                   ),

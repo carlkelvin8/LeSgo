@@ -99,7 +99,7 @@ class _OrderTransactionDetailSheetState
               padding: const EdgeInsets.all(20),
               children: [
                 Text(
-                  '${transaction.serviceName} — Order #${transaction.id}',
+                  '${transaction.serviceName} • Order #${transaction.id}',
                   style: const TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 18,

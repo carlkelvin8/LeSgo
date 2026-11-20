@@ -524,6 +524,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF5F2D82),
+                              foregroundColor: Colors.white,
                             ),
                             child: const Text('Retry'),
                           ),
@@ -1004,6 +1005,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
+                foregroundColor: Colors.white,
               ),
               child: const Text('Clear filters'),
             ),

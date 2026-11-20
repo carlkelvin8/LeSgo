@@ -25,7 +25,8 @@ class CustomerSatisfactionDialog extends StatefulWidget {
       _CustomerSatisfactionDialogState();
 }
 
-class _CustomerSatisfactionDialogState extends State<CustomerSatisfactionDialog> {
+class _CustomerSatisfactionDialogState
+    extends State<CustomerSatisfactionDialog> {
   int _rating = 4;
   final _feedbackController = TextEditingController();
   bool _submitting = false;
@@ -90,7 +91,9 @@ class _CustomerSatisfactionDialogState extends State<CustomerSatisfactionDialog>
                   onPressed: () => setState(() => _rating = star),
                   icon: Icon(
                     Icons.star,
-                    color: star <= _rating ? Colors.amber[700] : AppColors.foreground(context, Colors.grey[300]!),
+                    color: star <= _rating
+                        ? Colors.amber[700]
+                        : AppColors.foreground(context, Colors.grey[300]!),
                     size: 32,
                   ),
                 );
@@ -118,6 +121,7 @@ class _CustomerSatisfactionDialogState extends State<CustomerSatisfactionDialog>
           onPressed: _submitting ? null : _submit,
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF5F2D82),
+            foregroundColor: Colors.white,
           ),
           child: _submitting
               ? const SizedBox(

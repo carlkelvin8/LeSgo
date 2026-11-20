@@ -77,6 +77,7 @@ class _AddressManagementScreenState
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -221,6 +222,7 @@ class _LoadError extends StatelessWidget {
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
+                foregroundColor: Colors.white,
               ),
               child: const Text(
                 'Retry',
@@ -304,16 +306,21 @@ class _AddressTile extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: AppColors.surface(context, Colors.green.shade50),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.green.shade200),
+                    border: Border.all(
+                      color: AppColors.border(context, Colors.green.shade200),
+                    ),
                   ),
                   child: Text(
                     'Default',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 10,
-                      color: Colors.green.shade700,
+                      color: AppColors.foreground(
+                        context,
+                        Colors.green.shade700,
+                      ),
                       fontWeight: FontWeight.w600,
                     ),
                   ),

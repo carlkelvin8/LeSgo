@@ -80,6 +80,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         if (snapshot.hasError) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
+            theme: _loaderTheme(),
             home: Scaffold(
               body: Center(
                 child: Padding(
@@ -106,6 +107,7 @@ class _AppBootstrapState extends State<_AppBootstrap> {
         if (snapshot.connectionState != ConnectionState.done) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
+            theme: _loaderTheme(),
             home: Scaffold(
               body: Center(
                 child: Column(
@@ -194,4 +196,13 @@ class LesgoApp extends ConsumerWidget {
       },
     );
   }
+}
+
+/// Theme for the pre-app loader, which runs before the app theme is ready.
+/// Follows the system brightness so dark mode doesn't flash white.
+ThemeData _loaderTheme() {
+  final dark =
+      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+      Brightness.dark;
+  return ThemeData(brightness: dark ? Brightness.dark : Brightness.light);
 }

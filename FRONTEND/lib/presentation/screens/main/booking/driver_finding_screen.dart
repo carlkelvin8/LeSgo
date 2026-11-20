@@ -229,6 +229,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           onPressed: () => _navigateToTracking(),
           style: ElevatedButton.styleFrom(
             backgroundColor: Color(0xFF5F2D82),
+            foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(
               horizontal: ResponsiveUtils.spacing(context, 32),
               vertical: ResponsiveUtils.spacing(context, 16),
@@ -337,6 +338,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
               onPressed: () => _retryFindingDriver(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5F2D82),
+                foregroundColor: Colors.white,
               ),
               child: Text(
                 'Try Again',
