@@ -1,3 +1,5 @@
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,29 +66,43 @@ class DocumentVerificationScreen extends ConsumerWidget {
                           ResponsiveUtils.spacing(context, 16),
                         ),
                         children: [
+                          if (state.documents.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.only(top: AppSpace.xl),
+                              child: EmptyStateView(
+                                icon: Icons.badge_outlined,
+                                title: 'No documents yet',
+                                message:
+                                    'Submit a valid ID to get your account verified.',
+                              ),
+                            ),
                           ...state.documents.map(
-                            (doc) => ListTile(
-                              tileColor: AppColors.surface(
-                                context,
-                                Colors.grey.shade50,
+                            (doc) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpace.sm,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              title: Text(
-                                doc.documentType.replaceAll('_', ' '),
-                                style: const TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              subtitle: Text(
-                                '${doc.status} · ${doc.documentNumber}',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  color: AppColors.foreground(
-                                    context,
-                                    Colors.grey.shade600,
+                              child: AppCard(
+                                padding: EdgeInsets.zero,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpace.lg,
+                                    vertical: 4,
+                                  ),
+                                  title: Text(
+                                    doc.documentType.replaceAll('_', ' '),
+                                    style: const TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    '${doc.status} · ${doc.documentNumber}',
+                                    style: TextStyle(
+                                      fontFamily: 'TT Fors',
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -95,7 +111,12 @@ class DocumentVerificationScreen extends ConsumerWidget {
                           SizedBox(
                             height: ResponsiveUtils.spacing(context, 16),
                           ),
-                          OutlinedButton.icon(
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.buttonFill(context),
+                              foregroundColor: AppColors.onButton(context),
+                              minimumSize: const Size.fromHeight(52),
+                            ),
                             onPressed: state.isSubmitting
                                 ? null
                                 : () => _showSubmitSheet(context, ref),

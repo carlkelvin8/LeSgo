@@ -60,7 +60,7 @@ class _PersonalInfoScreenState extends ConsumerState<PersonalInfoScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const AuthHeader(title: 'SIGN UP'),
+                    const AuthHeader(title: 'Sign up'),
 
                     Expanded(
                       child: SingleChildScrollView(

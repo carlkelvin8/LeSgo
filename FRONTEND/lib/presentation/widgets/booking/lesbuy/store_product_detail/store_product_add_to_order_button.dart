@@ -17,15 +17,11 @@ class StoreProductAddToOrderButton extends StatelessWidget {
     return Container(
       height: ResponsiveUtils.buttonHeight(context),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF5F2D82), Color(0xFF6B4EFF)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.buttonFill(context),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.3),
+            color: AppColors.buttonFill(context).withValues(alpha: 0.28),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -35,7 +31,7 @@ class StoreProductAddToOrderButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           child: Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -46,7 +42,7 @@ class StoreProductAddToOrderButton extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: AppColors.onButton(context),
                   ),
                 ),
               ],

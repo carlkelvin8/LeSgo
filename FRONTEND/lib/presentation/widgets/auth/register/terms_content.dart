@@ -27,7 +27,7 @@ class TermsContent extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AuthHeader(title: 'SIGN UP'),
+          const AuthHeader(title: 'Sign up'),
           SizedBox(height: ResponsiveUtils.spacing(context, 40)),
           Expanded(
             child: Scrollbar(

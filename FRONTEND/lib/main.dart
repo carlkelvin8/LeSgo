@@ -170,27 +170,38 @@ class LesgoApp extends ConsumerWidget {
       initialRoute: LoginRoutes.startup,
       onGenerateRoute: AppRouter.onGenerateRoute,
       builder: (context, child) {
-        return BiometricUnlockGate(
-          service: ref.watch(biometricUnlockServiceProvider),
-          storage: getIt<LocalStorageService>(),
-          onSignInAgain: () async {
-            // Explicit recovery: full logout including biometric unlock.
-            await ref.read(authProvider.notifier).clearLocalSession();
-            AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
-              LoginRoutes.login,
-              (_) => false,
-            );
-          },
-          child: Stack(
-            children: [
-              if (child != null) child,
-              const Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: OfflineBanner(),
-              ),
-            ],
+        // Keep the app's own scale up to 130%. Past that, the fixed-height
+        // cards (hero banner, order cards, headers) start to overflow.
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(
+            textScaler: media.textScaler.clamp(
+              minScaleFactor: 1.0,
+              maxScaleFactor: 1.3,
+            ),
+          ),
+          child: BiometricUnlockGate(
+            service: ref.watch(biometricUnlockServiceProvider),
+            storage: getIt<LocalStorageService>(),
+            onSignInAgain: () async {
+              // Explicit recovery: full logout including biometric unlock.
+              await ref.read(authProvider.notifier).clearLocalSession();
+              AppRouter.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+                LoginRoutes.login,
+                (_) => false,
+              );
+            },
+            child: Stack(
+              children: [
+                if (child != null) child,
+                const Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: OfflineBanner(),
+                ),
+              ],
+            ),
           ),
         );
       },

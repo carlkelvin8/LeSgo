@@ -57,7 +57,7 @@ class VerificationContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AuthHeader(title: 'SIGN UP'),
+          const AuthHeader(title: 'Sign up'),
           SizedBox(height: spacing),
           Expanded(
             child: SingleChildScrollView(

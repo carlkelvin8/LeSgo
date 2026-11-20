@@ -81,7 +81,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           'Welcome Back!',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 22),
+                            fontSize: ResponsiveUtils.fontSize(context, 24),
+                            fontWeight: FontWeight.w700,
                             color: AppColors.foreground(
                               context,
                               Colors.black87,

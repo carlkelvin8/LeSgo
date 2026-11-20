@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -50,8 +52,10 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface(context, Colors.white),
         surfaceTintColor: AppColors.surface(context, Colors.white),
-        iconTheme:  IconThemeData(color: AppColors.foreground(context, Colors.black87)),
-        title:  Text(
+        iconTheme: IconThemeData(
+          color: AppColors.foreground(context, Colors.black87),
+        ),
+        title: Text(
           'Support',
           style: TextStyle(
             fontFamily: 'TT Fors',
@@ -64,7 +68,10 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
         actions: [
           IconButton(
             tooltip: 'LeSgo help',
-            icon:  Icon(Icons.help_outline, color: AppColors.accent(context, _purple)),
+            icon: Icon(
+              Icons.help_outline,
+              color: AppColors.accent(context, _purple),
+            ),
             onPressed: () =>
                 AppRouter.push(context, MainRoutes.customerServiceChat),
           ),
@@ -101,57 +108,72 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                   );
                 }
                 if (!snapshot.hasData) {
-                  return  Center(
-                    child: CircularProgressIndicator(color: AppColors.accent(context, _purple)),
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.accent(context, _purple),
+                    ),
                   );
                 }
                 final tickets = snapshot.data!;
                 if (tickets.isEmpty) {
-                  return  Center(
-                    child: Text(
-                      'Your conversations will appear here.',
-                      style: TextStyle(color: AppColors.foreground(context, Colors.black54)),
-                    ),
+                  return const EmptyStateView(
+                    icon: Icons.forum_outlined,
+                    title: 'No conversations yet',
+                    message:
+                        'Start a chat and our support team will get back to you.',
                   );
                 }
                 return ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                    hp,
+                    AppSpace.sm,
+                    hp,
+                    AppSpace.lg,
+                  ),
                   itemCount: tickets.length,
-                  separatorBuilder: (_, index) => const Divider(height: 1),
+                  separatorBuilder: (_, index) =>
+                      const SizedBox(height: AppSpace.sm),
                   itemBuilder: (_, index) {
                     final ticket = tickets[index];
-                    return ListTile(
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: hp + 4,
-                        vertical: 6,
-                      ),
-                      leading:  CircleAvatar(
-                        backgroundColor: AppColors.surface(context, Color(0xFFF0E7F6)),
-                        child: Icon(
-                          Icons.chat_bubble_outline_rounded,
-                          color: AppColors.accent(context, _purple),
+                    return AppCard(
+                      padding: EdgeInsets.zero,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.lg,
+                          vertical: 6,
                         ),
-                      ),
-                      title: Text(
-                        ticket.subject,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontWeight: FontWeight.w600,
+                        leading: CircleAvatar(
+                          backgroundColor: AppColors.surface(
+                            context,
+                            Color(0xFFF0E7F6),
+                          ),
+                          child: Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: AppColors.accent(context, _purple),
+                          ),
                         ),
+                        title: Text(
+                          ticket.subject,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${ticket.status.replaceAll('_', ' ')} · ${_date(ticket.updatedAt)}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          AppRouter.push(
+                            context,
+                            MainRoutes.supportTicketDetail,
+                            arguments: ticket.id,
+                          );
+                        },
                       ),
-                      subtitle: Text(
-                        '${ticket.status.replaceAll('_', ' ')} · ${_date(ticket.updatedAt)}',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        AppRouter.push(
-                          context,
-                          MainRoutes.supportTicketDetail,
-                          arguments: ticket.id,
-                        );
-                      },
                     );
                   },
                 );

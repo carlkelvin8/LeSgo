@@ -89,7 +89,7 @@ class _HeroBannerState extends State<HeroBanner>
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        stops: isDark ? const [0.0, 0.5, 1.0] : null,
+                        stops: const [0.0, 0.5, 1.0],
                         colors: isDark
                             ? [
                                 surface.withValues(alpha: 0.88),
@@ -97,8 +97,11 @@ class _HeroBannerState extends State<HeroBanner>
                                 surface.withValues(alpha: 0.25),
                               ]
                             : [
-                                Colors.white.withValues(alpha: 0.85),
-                                const Color(0xFFF5EEFF).withValues(alpha: 0.7),
+                                // Fade out toward the right so the artwork keeps
+                                // its colour instead of looking washed out.
+                                Colors.white.withValues(alpha: 0.92),
+                                const Color(0xFFF5EEFF).withValues(alpha: 0.6),
+                                const Color(0xFFF5EEFF).withValues(alpha: 0.0),
                               ],
                       ),
                     ),

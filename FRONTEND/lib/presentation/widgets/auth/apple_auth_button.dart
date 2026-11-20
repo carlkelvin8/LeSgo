@@ -29,7 +29,7 @@ class AppleAuthButton extends ConsumerWidget {
         style: isDark
             ? SignInWithAppleButtonStyle.white
             : SignInWithAppleButtonStyle.black,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         onPressed: () => AppleAuthHelper.signIn(context, ref, mode: mode),
       ),
     );
