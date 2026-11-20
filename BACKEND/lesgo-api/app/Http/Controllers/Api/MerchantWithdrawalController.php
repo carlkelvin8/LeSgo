@@ -8,6 +8,7 @@ use App\Models\Partner;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\MerchantWithdrawalService;
+use App\Services\WalletValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -26,7 +27,7 @@ class MerchantWithdrawalController extends Controller
             return $user->partner;
         }
 
-        if ($user->isPartnerStaff()) {
+        if ($user->isPartnerStaff() && $this->canManageWallet($user)) {
             return $user->partnerStaff?->partner;
         }
 
@@ -320,14 +321,8 @@ class MerchantWithdrawalController extends Controller
                 return $this->partnerMissing();
             }
 
-            $wallet = Wallet::where('user_id', $partner->user_id)->first();
-
-            if (! $wallet) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Wallet not found.',
-                ], 404);
-            }
+            // A new store has no wallet until first use; it starts at zero, not a 404.
+            $wallet = WalletValidationService::ensureWalletExists($partner->user);
 
             $totalBalance = (float) $wallet->balance;
             $pendingWithdrawals = $wallet->pendingWithdrawalAmount();

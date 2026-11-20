@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantSpecialInstructionsBanner extends StatelessWidget {
   final String? orderInstructions;
@@ -24,7 +26,7 @@ class MerchantSpecialInstructionsBanner extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8E1),
+        color: context.surf(const Color(0xFFFFF8E1)),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFFB300), width: 1.5),
       ),
@@ -35,17 +37,17 @@ class MerchantSpecialInstructionsBanner extends StatelessWidget {
             children: [
               Icon(
                 Icons.campaign_rounded,
-                color: Colors.orange.shade800,
+                color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade800,
                 size: ResponsiveUtils.fontSize(context, 20),
               ),
               SizedBox(width: ResponsiveUtils.spacing(context, 8)),
               Text(
-                'Special Instructions',
+                context.tr('Special Instructions'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                   fontWeight: FontWeight.w800,
-                  color: Colors.orange.shade900,
+                  color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade900,
                 ),
               ),
             ],
@@ -58,7 +60,7 @@ class MerchantSpecialInstructionsBanner extends StatelessWidget {
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: context.txt(Colors.black87),
                 height: 1.35,
               ),
             ),
@@ -77,7 +79,7 @@ class MerchantSpecialInstructionsBanner extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
                       fontWeight: FontWeight.w700,
-                      color: Colors.orange.shade900,
+                      color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade900,
                     ),
                   ),
                   Expanded(
@@ -87,7 +89,7 @@ class MerchantSpecialInstructionsBanner extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 13),
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                         height: 1.35,
                       ),
                     ),

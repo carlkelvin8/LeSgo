@@ -1,7 +1,6 @@
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
-import '../../../core/utils/snackbar_utils.dart';
 
 class CancelOrderDialog extends StatefulWidget {
   const CancelOrderDialog({super.key});
@@ -12,6 +11,8 @@ class CancelOrderDialog extends StatefulWidget {
 
 class _CancelOrderDialogState extends State<CancelOrderDialog> {
   String? _selectedReason;
+  // Shown inside the dialog: a SnackBar would render behind the modal barrier.
+  String? _errorText;
   final TextEditingController _otherReasonController = TextEditingController();
 
   final List<String> _cancellationReasons = [
@@ -32,14 +33,14 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
 
   void _handleConfirm() {
     if (_selectedReason == null) {
-      SnackBarUtils.showError(context, 'Please select a reason for cancellation');
+      setState(() => _errorText = 'Please select a reason for cancellation');
       return;
     }
 
     String reason = _selectedReason!;
     if (_selectedReason == 'Other') {
       if (_otherReasonController.text.trim().isEmpty) {
-        SnackBarUtils.showError(context, 'Please specify your reason');
+        setState(() => _errorText = 'Please specify your reason');
         return;
       }
       reason = _otherReasonController.text.trim();
@@ -53,11 +54,7 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          Icon(
-            Icons.cancel_outlined,
-            color: Colors.red[700],
-            size: 28,
-          ),
+          Icon(Icons.cancel_outlined, color: Colors.red[700], size: 28),
           const SizedBox(width: 12),
           Text(
             'Cancel Order',
@@ -85,7 +82,10 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             RadioGroup<String>(
               groupValue: _selectedReason,
-              onChanged: (value) => setState(() => _selectedReason = value),
+              onChanged: (value) => setState(() {
+                _selectedReason = value;
+                _errorText = null;
+              }),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +100,10 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                         ),
                       ),
                       value: reason,
-                      activeColor: const Color(0xFF5F2D82),
+                      activeColor: AppColors.accent(
+                        context,
+                        const Color(0xFF5F2D82),
+                      ),
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                     );
@@ -108,11 +111,23 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                 ],
               ),
             ),
+            if (_errorText != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  _errorText!,
+                  key: const ValueKey('cancel-reason-error'),
+                  style: TextStyle(color: Colors.red[700], fontSize: 13),
+                ),
+              ),
             if (_selectedReason == 'Other') ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               TextField(
                 controller: _otherReasonController,
                 maxLines: 3,
+                onChanged: (_) {
+                  if (_errorText != null) setState(() => _errorText = null);
+                },
                 decoration: InputDecoration(
                   hintText: 'Please specify your reason...',
                   hintStyle: TextStyle(
@@ -136,15 +151,17 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange[50],
+                color: AppColors.surface(context, Colors.orange[50]!),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange[200]!),
+                border: Border.all(
+                  color: AppColors.border(context, Colors.orange[200]!),
+                ),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.info_outline,
-                    color: Colors.orange[700],
+                    color: AppColors.foreground(context, Colors.orange[700]!),
                     size: 20,
                   ),
                   const SizedBox(width: 8),
@@ -154,7 +171,10 @@ class _CancelOrderDialogState extends State<CancelOrderDialog> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.orange[900],
+                        color: AppColors.foreground(
+                          context,
+                          Colors.orange[900]!,
+                        ),
                       ),
                     ),
                   ),

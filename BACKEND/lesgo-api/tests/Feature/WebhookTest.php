@@ -112,6 +112,32 @@ class WebhookTest extends TestCase
         Queue::assertPushed(AutoAssignDriverJob::class, 1);
     }
 
+    public function test_paid_webhook_alerts_the_merchant_once_for_a_partner_order(): void
+    {
+        Queue::fake();
+        $payment = $this->createPendingPayment();
+        $owner = \App\Models\User::factory()->create(['role' => 'partner_admin']);
+        $partner = \App\Models\Partner::factory()->create(['user_id' => $owner->id]);
+        $payment->order()->update(['payment_method' => 'xendit', 'payment_status' => 'pending', 'partner_id' => $partner->id]);
+        $event = ['id' => 'inv_test_123', 'status' => 'PAID', 'amount' => 100, 'currency' => 'PHP'];
+
+        (new ProcessPaymentWebhookJob('xendit', $event))->handle();
+        (new ProcessPaymentWebhookJob('xendit', $event))->handle(); // replayed callback
+
+        Queue::assertPushed(\App\Jobs\NotifyMerchantNewOrderJob::class, 1);
+    }
+
+    public function test_paid_webhook_does_not_alert_a_merchant_for_a_non_partner_order(): void
+    {
+        Queue::fake();
+        $payment = $this->createPendingPayment();
+        $payment->order()->update(['payment_method' => 'xendit', 'payment_status' => 'pending', 'partner_id' => null]);
+
+        (new ProcessPaymentWebhookJob('xendit', ['id' => 'inv_test_123', 'status' => 'PAID', 'amount' => 100, 'currency' => 'PHP']))->handle();
+
+        Queue::assertNotPushed(\App\Jobs\NotifyMerchantNewOrderJob::class);
+    }
+
     public function test_paid_webhook_with_mismatched_amount_is_rejected(): void
     {
         $payment = $this->createPendingPayment();

@@ -50,7 +50,7 @@ class _AddressScreenState extends ConsumerState<AddressScreen> {
                   padding: EdgeInsets.all(
                     ResponsiveUtils.horizontalPadding(context),
                   ),
-                  child: const AuthHeader(title: 'SIGN UP'),
+                  child: const AuthHeader(title: 'Sign up'),
                 ),
                 AddressMapPanel(
                   controllers: _controllers,

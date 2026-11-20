@@ -28,17 +28,16 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final fontSize = ResponsiveUtils.fontSize(context, 16);
     final padding = ResponsiveUtils.spacing(context, 16);
-    
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      autocorrect: keyboardType != TextInputType.emailAddress,
+      enableSuggestions: keyboardType != TextInputType.emailAddress,
       obscureText: obscureText,
       enabled: enabled,
       maxLength: maxLength,
-      style: TextStyle(
-        fontFamily: 'TT Fors',
-        fontSize: fontSize,
-      ),
+      style: TextStyle(fontFamily: 'TT Fors', fontSize: fontSize),
       decoration: InputDecoration(
         labelText: labelText,
         labelStyle: TextStyle(
@@ -50,11 +49,15 @@ class CustomTextField extends StatelessWidget {
         counterText: maxLength != null ? null : '',
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.border(context, Colors.grey[300]!)),
+          borderSide: BorderSide(
+            color: AppColors.border(context, Colors.grey[300]!),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.border(context, Colors.grey[300]!)),
+          borderSide: BorderSide(
+            color: AppColors.border(context, Colors.grey[300]!),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -62,10 +65,14 @@ class CustomTextField extends StatelessWidget {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.border(context, Colors.grey[200]!)),
+          borderSide: BorderSide(
+            color: AppColors.border(context, Colors.grey[200]!),
+          ),
         ),
         filled: true,
-        fillColor: enabled ? AppColors.surface(context, Colors.white) : AppColors.surface(context, Colors.grey[100]!),
+        fillColor: enabled
+            ? AppColors.surface(context, Colors.white)
+            : AppColors.surface(context, Colors.grey[100]!),
         contentPadding: EdgeInsets.symmetric(
           horizontal: padding,
           vertical: padding,

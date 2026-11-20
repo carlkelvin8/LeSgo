@@ -39,7 +39,7 @@ class DirectionsRouteService {
 
       if (status != 'OK') {
         if (travelMode != RiderTravelMode.driving) {
-          return fetchRoute(
+          return await fetchRoute(
             originLat: originLat,
             originLng: originLng,
             destLat: destLat,

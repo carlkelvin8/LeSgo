@@ -11,11 +11,7 @@ class ReviewCard extends StatelessWidget {
   final ReviewDto review;
   final VoidCallback? onHelpful;
 
-  const ReviewCard({
-    super.key,
-    required this.review,
-    this.onHelpful,
-  });
+  const ReviewCard({super.key, required this.review, this.onHelpful});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +21,9 @@ class ReviewCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border(context, Colors.grey.shade200)),
+        border: Border.all(
+          color: AppColors.border(context, Colors.grey.shade200),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +34,10 @@ class ReviewCard extends StatelessWidget {
               // User Avatar
               CircleAvatar(
                 radius: 20,
-                backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                backgroundColor: AppColors.accent(
+                  context,
+                  const Color(0xFF5F2D82),
+                ).withValues(alpha: 0.1),
                 backgroundImage: review.userPhoto != null
                     ? NetworkImage(review.userPhoto!)
                     : null,
@@ -74,7 +75,10 @@ class ReviewCard extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: AppColors.foreground(context, Colors.grey.shade600),
+                        color: AppColors.foreground(
+                          context,
+                          Colors.grey.shade600,
+                        ),
                       ),
                     ),
                   ],
@@ -82,10 +86,7 @@ class ReviewCard extends StatelessWidget {
               ),
 
               // Rating Stars
-              RatingStarsDisplay(
-                rating: review.rating.toDouble(),
-                size: 16,
-              ),
+              RatingStarsDisplay(rating: review.rating.toDouble(), size: 16),
             ],
           ),
 
@@ -125,7 +126,10 @@ class ReviewCard extends StatelessWidget {
                       Icon(
                         Icons.thumb_up_outlined,
                         size: 14,
-                        color: AppColors.foreground(context, Colors.grey.shade700),
+                        color: AppColors.foreground(
+                          context,
+                          Colors.grey.shade700,
+                        ),
                       ),
                       SizedBox(width: ResponsiveUtils.spacing(context, 6)),
                       Text(
@@ -134,7 +138,10 @@ class ReviewCard extends StatelessWidget {
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 12),
                           fontWeight: FontWeight.w500,
-                          color: AppColors.foreground(context, Colors.grey.shade700),
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey.shade700,
+                          ),
                         ),
                       ),
                     ],
@@ -157,7 +164,7 @@ class ReviewCard extends StatelessWidget {
 
   String _formatDate(String dateStr) {
     try {
-      final date = DateTime.parse(dateStr);
+      final date = DateTime.parse(dateStr).toLocal();
       return timeago.format(date, locale: 'en_short');
     } catch (e) {
       return dateStr;

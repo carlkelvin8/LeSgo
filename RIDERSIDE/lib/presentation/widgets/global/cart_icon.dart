@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/cart/cart_provider.dart';
 import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class CartIcon extends ConsumerWidget {
   final VoidCallback? onTap;
@@ -26,7 +27,7 @@ class CartIcon extends ConsumerWidget {
           Icon(
             Icons.shopping_cart_outlined,
             size: ResponsiveUtils.imageHeight(context, 26),
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
           // Badge with item count
           if (itemCount > 0)

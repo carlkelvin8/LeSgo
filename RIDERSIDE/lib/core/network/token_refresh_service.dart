@@ -2,13 +2,14 @@ import '../constants/api_constants.dart';
 import '../services/remember_me_service.dart';
 import '../services/secure_storage_service.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 /// Exchanges refresh tokens for new access tokens (Rider/Merchant app).
 class TokenRefreshService {
   TokenRefreshService._();
   static final TokenRefreshService instance = TokenRefreshService._();
 
-  late final Dio _refreshDio = Dio(
+  Dio _refreshDio = Dio(
     BaseOptions(
       baseUrl: ApiConstants.baseUrl,
       connectTimeout: const Duration(seconds: 30),
@@ -20,7 +21,21 @@ class TokenRefreshService {
     ),
   );
 
+  @visibleForTesting
+  set refreshDioForTest(Dio dio) => _refreshDio = dio;
+
   Future<String?>? _ongoingRefresh;
+
+  /// True when the last refresh failed for a reason that says nothing about
+  /// the session itself (offline, timeout, 429 auth throttle, 5xx). Callers
+  /// must NOT wipe stored tokens in that case.
+  bool lastFailureWasTransient = false;
+
+  static bool _isTransient(Object error) {
+    if (error is! DioException) return true;
+    final code = error.response?.statusCode;
+    return code == null || code == 429 || code >= 500;
+  }
 
   Future<String?> refreshAccessToken() {
     final inFlight = _ongoingRefresh;
@@ -36,6 +51,7 @@ class TokenRefreshService {
   }
 
   Future<String?> _performRefresh() async {
+    lastFailureWasTransient = false;
     final refreshToken = await SecureStorageService.getRefreshToken();
     if (refreshToken != null && refreshToken.isNotEmpty) {
       try {
@@ -43,9 +59,15 @@ class TokenRefreshService {
           ApiConstants.authRefresh,
           data: {'refresh_token': refreshToken},
         );
-        return _persistTokens(response.data);
-      } catch (_) {
-        // fall through to bearer refresh
+        return await _persistTokens(response.data);
+      } catch (e) {
+        if (_isTransient(e)) {
+          // Throttled/offline: the refresh token may still be valid, and a
+          // second request would only burn more of the 10/min auth quota.
+          lastFailureWasTransient = true;
+          return null;
+        }
+        // Rejected (401/403/422): fall through to bearer refresh
       }
     }
 
@@ -57,8 +79,9 @@ class TokenRefreshService {
         ApiConstants.authRefresh,
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
-      return _persistTokens(response.data);
-    } catch (_) {
+      return await _persistTokens(response.data);
+    } catch (e) {
+      lastFailureWasTransient = _isTransient(e);
       return null;
     }
   }

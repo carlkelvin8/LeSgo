@@ -6,6 +6,7 @@ import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderWalletPaymentScreen extends ConsumerStatefulWidget {
   final RiderTopUpCheckout checkout;
@@ -161,7 +162,9 @@ class _RiderWalletPaymentScreenState
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontWeight: bold ? FontWeight.bold : FontWeight.w600,
-              color: bold ? const Color(0xFF5F2D82) : Colors.black87,
+              color: bold
+                  ? context.acc(const Color(0xFF5F2D82))
+                  : context.txt(Colors.black87),
             ),
           ),
         ],
@@ -182,12 +185,12 @@ class _RiderWalletPaymentScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         centerTitle: true,
       ),
       body: Padding(
@@ -203,7 +206,7 @@ class _RiderWalletPaymentScreenState
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                color: Colors.grey.shade800,
+                color: context.txt(Colors.grey.shade800),
               ),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),

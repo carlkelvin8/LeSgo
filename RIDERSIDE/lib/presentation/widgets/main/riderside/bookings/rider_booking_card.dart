@@ -4,6 +4,7 @@ import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../domain/entities/rider_booking.dart';
 import '../../../../../../core/utils/app_localization.dart';
 import 'rider_swipe_accept_button.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderBookingCard extends ConsumerWidget {
   final RiderBooking booking;
@@ -55,7 +56,7 @@ class RiderBookingCard extends ConsumerWidget {
                     width: ResponsiveUtils.spacing(context, 60),
                     height: ResponsiveUtils.spacing(context, 60),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade200),
+                      border: Border.all(color: context.brd(Colors.grey.shade200)),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     clipBehavior: Clip.antiAlias,
@@ -63,7 +64,7 @@ class RiderBookingCard extends ConsumerWidget {
                       booking.logoPath,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.store, color: Colors.grey),
+                          Icon(Icons.store, color: context.sub(Colors.grey)),
                     ),
                   ),
                   SizedBox(width: ResponsiveUtils.spacing(context, 12)),

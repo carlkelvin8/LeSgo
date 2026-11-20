@@ -36,6 +36,7 @@ class _RestaurantDetailScreenState
               widget.restaurant.id,
               widget.restaurant.categories,
               restaurantName: widget.restaurant.name,
+              branchId: widget.restaurant.branchId,
             );
         ref
             .read(favoritesProvider.notifier)
@@ -190,8 +191,10 @@ class _RestaurantDetailScreenState
         ],
       ),
       body: detailState.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+          ? Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

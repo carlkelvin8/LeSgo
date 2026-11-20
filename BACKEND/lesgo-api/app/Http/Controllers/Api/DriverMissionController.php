@@ -27,7 +27,9 @@ class DriverMissionController extends Controller
         }
 
         $driverProfileId = $user->driverProfile->id;
-        $today = now()->toDateString();
+        // Daily missions run on the Philippine day, not UTC (UTC would reset them
+        // at 08:00 PHT and split late-night orders across two days).
+        $today = now('Asia/Manila')->toDateString();
 
         // Get all active mission templates for drivers
         $templates = MissionTemplate::where('is_active', true)
@@ -38,7 +40,10 @@ class DriverMissionController extends Controller
         // Get or create driver missions for today
         $missions = [];
         foreach ($templates as $template) {
-            $driverMission = DriverMission::firstOrCreate(
+            // createOrFirst: the app calls this endpoint from several places at once,
+            // so two requests can race to insert today's row; the loser must read
+            // the winner's row instead of failing with a unique-constraint 500.
+            $driverMission = DriverMission::createOrFirst(
                 [
                     'driver_profile_id' => $driverProfileId,
                     'mission_template_id' => $template->id,
@@ -168,7 +173,7 @@ class DriverMissionController extends Controller
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
-            return response()->json(['success' => false, 'message' => 'Failed to claim reward: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to claim reward. Please try again.'], 500);
         }
     }
 
@@ -197,6 +202,10 @@ class DriverMissionController extends Controller
     {
         $progress = 0;
 
+        // Philippine-day window, expressed in the app timezone for the queries.
+        $dayStart = \Illuminate\Support\Carbon::parse($date, 'Asia/Manila')->startOfDay()->setTimezone(config('app.timezone'));
+        $dayEnd = $dayStart->copy()->addDay();
+
         switch ($template->goal_type) {
             case 'complete_orders':
                 // Count completed orders for today
@@ -204,7 +213,8 @@ class DriverMissionController extends Controller
                     $q->where('id', $driverProfileId);
                 })
                 ->where('status', 'completed')
-                ->whereDate('updated_at', $date)
+                ->where('completed_at', '>=', $dayStart)
+                ->where('completed_at', '<', $dayEnd)
                 ->count();
                 break;
 
@@ -217,7 +227,8 @@ class DriverMissionController extends Controller
                     $q->where('code', $template->service_code);
                 })
                 ->where('status', 'completed')
-                ->whereDate('updated_at', $date)
+                ->where('completed_at', '>=', $dayStart)
+                ->where('completed_at', '<', $dayEnd)
                 ->count();
                 break;
 
@@ -225,7 +236,8 @@ class DriverMissionController extends Controller
                 // Check if driver got a 5-star rating today
                 $hasRating = \App\Models\RatingReview::where('driver_id', $driverProfileId)
                     ->where('overall_rating', '>=', $template->goal_target)
-                    ->whereDate('created_at', $date)
+                    ->where('created_at', '>=', $dayStart)
+                    ->where('created_at', '<', $dayEnd)
                     ->exists();
                 $progress = $hasRating ? 1 : 0;
                 break;
@@ -238,7 +250,8 @@ class DriverMissionController extends Controller
                 
                 if ($user) {
                     $progress = \App\Models\User::where('referred_by', $user->referral_code)
-                        ->whereDate('created_at', $date)
+                        ->where('created_at', '>=', $dayStart)
+                        ->where('created_at', '<', $dayEnd)
                         ->count();
                 }
                 break;

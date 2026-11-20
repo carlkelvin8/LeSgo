@@ -8,10 +8,7 @@ import '../../provider/main/support/customer_service_chat_provider.dart';
 class CustomerServiceMessageBubble extends StatelessWidget {
   final CustomerServiceMessage message;
 
-  const CustomerServiceMessageBubble({
-    super.key,
-    required this.message,
-  });
+  const CustomerServiceMessageBubble({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -23,18 +20,20 @@ class CustomerServiceMessageBubble extends StatelessWidget {
         vertical: ResponsiveUtils.spacing(context, 4),
       ),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
-            _avatar(isUser),
+            _avatar(context, isUser),
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment:
-                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Container(
                   constraints: BoxConstraints(
@@ -47,7 +46,7 @@ class CustomerServiceMessageBubble extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isUser
                         ? AppColors.accent(context, Color(0xFF5F2D82))
-                        : AppColors.foreground(context, Colors.grey.shade100),
+                        : AppColors.surface(context, Colors.grey.shade100),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -60,7 +59,9 @@ class CustomerServiceMessageBubble extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: isUser ? Colors.white : AppColors.foreground(context, Colors.black87),
+                      color: isUser
+                          ? Colors.white
+                          : AppColors.foreground(context, Colors.black87),
                       height: 1.45,
                     ),
                   ),
@@ -79,22 +80,25 @@ class CustomerServiceMessageBubble extends StatelessWidget {
           ),
           if (isUser) ...[
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-            _avatar(isUser),
+            _avatar(context, isUser),
           ],
         ],
       ),
     );
   }
 
-  Widget _avatar(bool isUser) {
+  Widget _avatar(BuildContext context, bool isUser) {
     return CircleAvatar(
       radius: 16,
-      backgroundColor:
-          isUser ? const Color(0xFF5F2D82) : const Color(0xFFE8D9F5),
+      backgroundColor: isUser
+          ? AppColors.accent(context, const Color(0xFF5F2D82))
+          : AppColors.surface(context, const Color(0xFFE8D9F5)),
       child: Icon(
         isUser ? Icons.person : Icons.support_agent,
         size: 16,
-        color: isUser ? Colors.white : const Color(0xFF5F2D82),
+        color: isUser
+            ? AppColors.onAccent(context)
+            : AppColors.accent(context, const Color(0xFF5F2D82)),
       ),
     );
   }

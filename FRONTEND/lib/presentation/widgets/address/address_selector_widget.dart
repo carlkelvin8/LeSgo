@@ -105,10 +105,12 @@ class _AddressSelectorWidgetState extends ConsumerState<AddressSelectorWidget> {
 
           // Content
           if (addressState.isLoading)
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(24),
               child: Center(
-                child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+                child: CircularProgressIndicator(
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                ),
               ),
             )
           else if (addressState.addresses.isEmpty)
@@ -262,7 +264,7 @@ class _AddressItem extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: address.isDefault
                               ? AppColors.accent(context, Color(0xFF5F2D82))
-                              : AppColors.foreground(
+                              : AppColors.surface(
                                   context,
                                   Colors.grey.shade100,
                                 ),
@@ -291,7 +293,10 @@ class _AddressItem extends StatelessWidget {
                             vertical: 1,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.shade50,
+                            color: AppColors.surface(
+                              context,
+                              Colors.green.shade50,
+                            ),
                             borderRadius: BorderRadius.circular(3),
                             border: Border.all(
                               color: Colors.green.shade200,
@@ -303,7 +308,10 @@ class _AddressItem extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 8,
-                              color: Colors.green.shade700,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.green.shade700,
+                              ),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -391,8 +399,8 @@ class _EmptyAddressState extends StatelessWidget {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

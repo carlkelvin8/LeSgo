@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -17,17 +18,7 @@ class RestaurantInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: AppCard.decoration(context, radius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

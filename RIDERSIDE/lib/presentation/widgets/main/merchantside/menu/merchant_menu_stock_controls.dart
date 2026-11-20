@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/utils/merchant_item_inventory_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../data/data_source/dto/merchant/menu_item_dto.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantMenuStockControls extends StatelessWidget {
   final MenuItemDto item;
@@ -40,7 +41,7 @@ class MerchantMenuStockControls extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF5F2D82),
+              color: context.acc(const Color(0xFF5F2D82)),
             ),
           ),
         ),
@@ -65,20 +66,20 @@ class MerchantMenuStockControls extends StatelessWidget {
         width: ResponsiveUtils.spacing(context, 28),
         height: ResponsiveUtils.spacing(context, 28),
         decoration: BoxDecoration(
-          color: onTap == null ? Colors.grey.shade200 : const Color(0xFFF7F2FB),
+          color: context.surf(onTap == null ? Colors.grey.shade200 : const Color(0xFFF7F2FB)),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: onTap == null
+            color: context.brd(onTap == null
                 ? Colors.grey.shade300
-                : const Color(0xFFE8D9F5),
+                : const Color(0xFFE8D9F5)),
           ),
         ),
         child: Icon(
           icon,
           size: ResponsiveUtils.fontSize(context, 16),
           color: onTap == null
-              ? Colors.grey.shade500
-              : const Color(0xFF5F2D82),
+              ? context.sub(Colors.grey.shade500)
+              : context.acc(const Color(0xFF5F2D82)),
         ),
       ),
     );

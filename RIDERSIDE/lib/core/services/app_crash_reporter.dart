@@ -15,7 +15,10 @@ class AppCrashReporter {
   static bool _initialized = false;
 
   static Future<void> initialize() async {
-    if (_initialized || kIsWeb) return;
+    // Crashlytics collection is disabled in debug builds. Installing its global
+    // error handlers there also replaces Flutter test's error handler, which
+    // hides the original widget/test failure and makes integration tests hang.
+    if (_initialized || kIsWeb || kDebugMode) return;
 
     if (!SecretsConfig.isFirebaseConfigured &&
         !DefaultFirebaseOptions.isConfigured) {
@@ -24,10 +27,12 @@ class AppCrashReporter {
     }
 
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
     }
 
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(!kDebugMode);
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
 
     FlutterError.onError = (details) {
       FlutterError.presentError(details);

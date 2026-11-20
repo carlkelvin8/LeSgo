@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/utils.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/auth/forgot_password_provider.dart';
 import '../widgets.dart';
@@ -23,6 +24,12 @@ class AuthTopBar extends ConsumerWidget {
             'assets/images/Logo.svg',
             height: ResponsiveUtils.imageHeight(context, 40),
             fit: BoxFit.contain,
+            colorFilter: context.isDarkUI
+                ? const ColorFilter.mode(
+                    DarkAwareColors.darkAccent,
+                    BlendMode.srcIn,
+                  )
+                : null,
           ),
       AuthView.register => const RegisterText(),
       AuthView.welcome => const WelcomeText(),

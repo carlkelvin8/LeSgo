@@ -27,6 +27,20 @@ int? _parseIntNullable(dynamic value) {
   return null;
 }
 
+/// null = the API did not say (older backend); [] = no service restriction.
+List<int>? _parseIntList(dynamic value) {
+  if (value == null) return null;
+  if (value is List) {
+    return value.map(_parseIntNullable).whereType<int>().toList(growable: false);
+  }
+  return null;
+}
+
+/// `applicable_services: null` from the API means "all services", which must
+/// stay different from the key being absent (then we fall back to heuristics).
+Object? _readApplicableServices(Map<dynamic, dynamic> json, String key) =>
+    json.containsKey(key) ? (json[key] ?? const <int>[]) : null;
+
 bool _parseBool(dynamic value, [bool fallback = false]) {
   if (value == null) return fallback;
   if (value is bool) return value;
@@ -57,6 +71,17 @@ class VoucherDto {
   @JsonKey(fromJson: _parseBool)
   final bool claimed;
 
+  /// Service ids this voucher works for. Empty = all services; null = unknown.
+  @JsonKey(
+    name: 'applicable_services',
+    readValue: _readApplicableServices,
+    fromJson: _parseIntList,
+  )
+  final List<int>? applicableServices;
+
+  /// Why the voucher is not usable (e.g. "Expired"), when [eligible] is false.
+  final String? reason;
+
   VoucherDto({
     required this.code,
     required this.title,
@@ -67,6 +92,8 @@ class VoucherDto {
     this.serviceId,
     required this.eligible,
     this.claimed = false,
+    this.applicableServices,
+    this.reason,
   });
 
   factory VoucherDto.fromJson(Map<String, dynamic> json) =>

@@ -10,6 +10,7 @@ import '../../provider/auth/rider_auth_provider.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/auth/forgot_password_provider.dart';
 import '../widgets.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class RiderLoginContent extends ConsumerStatefulWidget {
   const RiderLoginContent({super.key});
@@ -71,12 +72,27 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    final success = await ref.read(riderAuthProvider.notifier).login(
+    var success = await ref.read(riderAuthProvider.notifier).login(
           email,
           password,
           rememberMe: isRememberMe,
           accountType: 'rider',
         );
+
+    // Accounts with two-factor auth need an authenticator/backup code.
+    while (!success && mounted && ref.read(riderAuthProvider).twoFactorRequired) {
+      final code = await _askTwoFactorCode(
+        ref.read(riderAuthProvider).error,
+      );
+      if (code == null || !mounted) return;
+      success = await ref.read(riderAuthProvider.notifier).login(
+            email,
+            password,
+            rememberMe: isRememberMe,
+            accountType: 'rider',
+            twoFactorCode: code,
+          );
+    }
 
     if (!mounted) return;
 
@@ -103,6 +119,45 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
     }
   }
 
+  Future<String?> _askTwoFactorCode(String? message) {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Two-factor authentication'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message ?? 'Enter the code from your authenticator app.'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: const InputDecoration(
+                hintText: '6-digit or backup code',
+              ),
+              onSubmitted: (value) =>
+                  Navigator.of(dialogContext).pop(value.trim()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: const Text('Verify'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(riderAuthProvider);
@@ -115,10 +170,12 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           CustomTextField(
-            hintText: 'Email/Phone',
+            // The API signs in by email only; accepting a phone number here
+            // just produced a confusing server-side "invalid email" error.
+            hintText: 'Email',
             keyboardType: TextInputType.emailAddress,
             controller: _emailController,
-            validator: LoginValidator.emailOrPhone,
+            validator: LoginValidator.email,
             readOnly: authState.isLoading,
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 14)),
@@ -126,7 +183,7 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
             hintText: 'Password',
             isPassword: true,
             controller: _passwordController,
-            validator: LoginValidator.password,
+            validator: LoginValidator.loginPassword,
             readOnly: authState.isLoading,
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
@@ -150,7 +207,7 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      side: BorderSide(color: Colors.grey.shade400),
+                      side: BorderSide(color: context.brd(Colors.grey.shade400)),
                       activeColor: const Color(0xFF5F2D82),
                     ),
                   ),
@@ -161,7 +218,7 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.black87,
+                        color: context.txt(Colors.black87),
                       ),
                     ),
                   ),
@@ -191,7 +248,7 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: Colors.grey.shade500,
+                      color: context.sub(Colors.grey.shade500),
                     ),
                   ),
                 ),
@@ -214,7 +271,7 @@ class _RiderLoginContentState extends ConsumerState<RiderLoginContent> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 10),
-                color: Colors.grey.shade500,
+                color: context.sub(Colors.grey.shade500),
                 height: 1.3,
               ),
             ),

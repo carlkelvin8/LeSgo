@@ -6,6 +6,11 @@ import '../exceptions/client_rate_limit_exception.dart';
 class ApiErrorMapper {
   ApiErrorMapper._();
 
+  /// The user's chosen app language (`'en'` or `'tl'`), kept in sync by the
+  /// language setting. While null (not chosen / unknown) messages are shown in
+  /// both languages.
+  static String? preferredLanguage;
+
   static bool isRateLimited(Object? error) {
     if (error is ClientRateLimitException) return true;
     if (error is DioException && error.response?.statusCode == 429) {
@@ -45,12 +50,20 @@ class ApiErrorMapper {
   static String _rateLimitMessage(int retryAfterSeconds) {
     final wait = retryAfterSeconds.clamp(1, 300);
     if (wait <= 60) {
-      return 'Too many requests. Please wait $wait second${wait == 1 ? '' : 's'}.\n'
-          'Masyadong maraming request. Maghintay ng $wait segundo.';
+      return _pick(
+        null,
+        null,
+        'Too many requests. Please wait $wait second${wait == 1 ? '' : 's'}.',
+        'Masyadong maraming request. Maghintay ng $wait segundo.',
+      );
     }
     final minutes = (wait / 60).ceil();
-    return 'Too many requests. Please wait about $minutes minute${minutes == 1 ? '' : 's'}.\n'
-        'Masyadong maraming request. Maghintay ng mga $minutes minuto.';
+    return _pick(
+      null,
+      null,
+      'Too many requests. Please wait about $minutes minute${minutes == 1 ? '' : 's'}.',
+      'Masyadong maraming request. Maghintay ng mga $minutes minuto.',
+    );
   }
 
   static bool _isTechnical(String text) {
@@ -235,7 +248,7 @@ class ApiErrorMapper {
     return text;
   }
 
-  /// Prefer English; append Tagalog when both provided.
+  /// Shows the user's language when known, otherwise English then Tagalog.
   static String _pick(
     String? en,
     String? tl,
@@ -244,6 +257,8 @@ class ApiErrorMapper {
   ) {
     final english = (en != null && en.isNotEmpty) ? en : defaultEn;
     final tagalog = (tl != null && tl.isNotEmpty) ? tl : defaultTl;
+    if (preferredLanguage == 'tl') return tagalog;
+    if (preferredLanguage == 'en') return english;
     if (english == tagalog) return english;
     return '$english\n$tagalog';
   }

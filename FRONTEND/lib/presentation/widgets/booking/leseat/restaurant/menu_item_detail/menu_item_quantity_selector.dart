@@ -22,7 +22,10 @@ class MenuItemQuantitySelector extends StatelessWidget {
       height: buttonHeight,
       decoration: BoxDecoration(
         color: AppColors.surface(context, Colors.white),
-        border: Border.all(color: AppColors.accent(context, Color(0xFF5F2D82)), width: 1.5),
+        border: Border.all(
+          color: AppColors.accent(context, Color(0xFF5F2D82)),
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -59,7 +62,10 @@ class MenuItemQuantitySelector extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border.symmetric(
-                vertical: BorderSide(color: AppColors.foreground(context, Colors.grey[200]!), width: 1),
+                vertical: BorderSide(
+                  color: AppColors.foreground(context, Colors.grey[200]!),
+                  width: 1,
+                ),
               ),
             ),
             child: Text(
@@ -86,10 +92,10 @@ class MenuItemQuantitySelector extends StatelessWidget {
                 ),
                 child: Container(
                   alignment: Alignment.center,
-                  child: const Icon(
+                  child: Icon(
                     Icons.add,
                     size: 20,
-                    color: Color(0xFF5F2D82),
+                    color: AppColors.accent(context, const Color(0xFF5F2D82)),
                   ),
                 ),
               ),

@@ -290,7 +290,11 @@ class LespayNotifier extends StateNotifier<LespayState> {
     } catch (e) {
       state = state.copyWith(
         isLoadingTransactions: false,
-        transactionsError: e.toString(),
+        transactionsError: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not load transactions.',
+          fallbackTl: 'Hindi ma-load ang transactions.',
+        ),
       );
     }
   }
@@ -315,7 +319,7 @@ class LespayNotifier extends StateNotifier<LespayState> {
     final pricing = LespayTopupFee.calculate(walletAmount);
     final description =
         'LesPay Top-up ₱${pricing.walletAmount.toStringAsFixed(2)} '
-        '+ 1.5% fee (₱${pricing.feeAmount.toStringAsFixed(2)})';
+        '+ 3% fee (₱${pricing.feeAmount.toStringAsFixed(2)})';
 
     try {
       final invoiceData = await getIt<WalletRemoteDataSource>()

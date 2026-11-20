@@ -79,25 +79,28 @@ class DriverEarningsService
 
     private function resolvePeriodRange(string $period): array
     {
-        $now = Carbon::now();
+        // Riders work on the Philippine calendar: "today" starts at 00:00 PHT,
+        // not 00:00 UTC (08:00 PHT). Build the range in Manila time and convert
+        // it to the app timezone the timestamps are stored in.
+        $now = Carbon::now('Asia/Manila');
 
         return match ($period) {
             'today' => [
-                'start' => $now->copy()->startOfDay(),
-                'end' => $now->copy()->endOfDay(),
+                'start' => $now->copy()->startOfDay()->setTimezone(config('app.timezone')),
+                'end' => $now->copy()->endOfDay()->setTimezone(config('app.timezone')),
             ],
             'week' => [
-                'start' => $now->copy()->startOfWeek(),
-                'end' => $now->copy()->endOfWeek(),
+                'start' => $now->copy()->startOfWeek()->setTimezone(config('app.timezone')),
+                'end' => $now->copy()->endOfWeek()->setTimezone(config('app.timezone')),
             ],
             'month' => [
-                'start' => $now->copy()->startOfMonth(),
-                'end' => $now->copy()->endOfMonth(),
+                'start' => $now->copy()->startOfMonth()->setTimezone(config('app.timezone')),
+                'end' => $now->copy()->endOfMonth()->setTimezone(config('app.timezone')),
             ],
             'all' => ['start' => null, 'end' => null],
             default => [
-                'start' => $now->copy()->startOfDay(),
-                'end' => $now->copy()->endOfDay(),
+                'start' => $now->copy()->startOfDay()->setTimezone(config('app.timezone')),
+                'end' => $now->copy()->endOfDay()->setTimezone(config('app.timezone')),
             ],
         };
     }

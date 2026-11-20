@@ -6,11 +6,10 @@ class DeliveryAddressSection extends StatelessWidget {
   final String address;
   final VoidCallback? onTap;
 
-  const DeliveryAddressSection({
-    super.key,
-    required this.address,
-    this.onTap,
-  });
+  const DeliveryAddressSection({super.key, required this.address, this.onTap});
+
+  /// True when there is no usable delivery address to show.
+  bool get isMissing => address.trim().isEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -36,23 +35,56 @@ class DeliveryAddressSection extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                Text(
-                  address,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.foreground(context, Colors.black87),
-                    decoration: onTap != null ? TextDecoration.underline : null,
+                if (isMissing)
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.add_location_alt_outlined,
+                        size: ResponsiveUtils.fontSize(context, 18),
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
+                      SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+                      Flexible(
+                        child: Text(
+                          'Add a delivery address',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 14),
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.accent(
+                              context,
+                              const Color(0xFF5F2D82),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Text(
+                    address,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 14),
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.foreground(context, Colors.black87),
+                      decoration: onTap != null
+                          ? TextDecoration.underline
+                          : null,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
           if (onTap != null) ...[
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
             Text(
-              'Edit',
+              isMissing ? 'Add' : 'Edit',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),

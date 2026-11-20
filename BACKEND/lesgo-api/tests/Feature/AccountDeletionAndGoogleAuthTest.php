@@ -51,7 +51,7 @@ class AccountDeletionAndGoogleAuthTest extends TestCase
     public function test_google_token_with_wrong_audience_cannot_login_or_delete(): void
     {
         $user = User::factory()->create(['google_id' => 'original-subject']);
-        Http::fake(['oauth2.googleapis.com/tokeninfo*' => Http::response([
+        Http::fake(['https://oauth2.googleapis.com/tokeninfo*' => Http::response([
             'aud' => 'another-app', 'sub' => $user->google_id,
             'email' => $user->email, 'email_verified' => 'true',
         ])]);
@@ -349,7 +349,7 @@ class AccountDeletionAndGoogleAuthTest extends TestCase
     private function fakeGoogleIdentity(User $user): void
     {
         Http::fake([
-            'oauth2.googleapis.com/tokeninfo*' => Http::response([
+            'https://oauth2.googleapis.com/tokeninfo*' => Http::response([
                 'aud' => self::GOOGLE_CLIENT_ID,
                 'sub' => $user->google_id,
                 'email' => $user->email,

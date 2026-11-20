@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../common/media_image.dart';
@@ -28,14 +29,19 @@ class MenuItemCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surface(context, Colors.white),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border(context, Color(0xFFECEAF0)), width: 1),
+            border: Border.all(
+              color: AppColors.border(context, Color(0xFFECEAF0)),
+              width: 1,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Product Image
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
                 child: AspectRatio(
                   aspectRatio: 1,
                   child: Container(
@@ -45,10 +51,13 @@ class MenuItemCard extends StatelessWidget {
                       fit: BoxFit.cover,
                       placeholder: Container(
                         color: AppColors.surface(context, Color(0xFFF5F4F7)),
-                        child:  Center(
+                        child: Center(
                           child: Icon(
                             Icons.restaurant_menu,
-                            color: AppColors.foreground(context, Color(0xFFA49BAE)),
+                            color: AppColors.foreground(
+                              context,
+                              Color(0xFFA49BAE),
+                            ),
                             size: 40,
                           ),
                         ),
@@ -57,7 +66,7 @@ class MenuItemCard extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // Content
               Expanded(
                 child: Padding(
@@ -68,34 +77,40 @@ class MenuItemCard extends StatelessWidget {
                       // Product Name
                       Text(
                         item.name,
-                        style:  TextStyle(
+                        style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.foreground(context, Color(0xFF302B36)),
+                          color: AppColors.foreground(
+                            context,
+                            Color(0xFF302B36),
+                          ),
                           height: 1.3,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      
+
                       if (item.description.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
                           item.description,
-                          style:  TextStyle(
+                          style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 11,
-                            color: AppColors.foreground(context, Color(0xFF918A98)),
+                            color: AppColors.foreground(
+                              context,
+                              Color(0xFF918A98),
+                            ),
                             height: 1.3,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
-                      
+
                       const Spacer(),
-                      
+
                       // Price and Add Button
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -103,18 +118,24 @@ class MenuItemCard extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              '₱${item.price.toStringAsFixed(0)}',
-                              style: const TextStyle(
+                              Money.format(item.price, decimals: 0),
+                              style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF5F2D82),
+                                color: AppColors.accent(
+                                  context,
+                                  const Color(0xFF5F2D82),
+                                ),
                               ),
                             ),
                           ),
                           if (onAddToCart != null)
                             Material(
-                              color: AppColors.accent(context, Color(0xFF5F2D82)),
+                              color: AppColors.accent(
+                                context,
+                                Color(0xFF5F2D82),
+                              ),
                               borderRadius: BorderRadius.circular(8),
                               child: InkWell(
                                 onTap: onAddToCart,

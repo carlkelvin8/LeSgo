@@ -5,10 +5,20 @@ import '../../../../core/utils/app_logger.dart';
 import '../../../../core/utils/app_localization.dart';
 
 import '../../../../core/services/api_service.dart';
+import '../../../../core/utils/validators/profile_validator.dart';
 import '../../../provider/main/riderside/rider_profile_provider.dart';
 
 class RiderEditProfileScreen extends ConsumerStatefulWidget {
   const RiderEditProfileScreen({super.key});
+
+  /// Reads `driver_profile.id` from a `/auth/me` payload. PHP encodes an empty
+  /// array as `[]`, so never hard-cast `driver_profile` to a Map.
+  static Object? driverProfileIdFrom(Map<String, dynamic> meData) {
+    final user = meData['user'] ?? meData['data'] ?? meData;
+    if (user is! Map) return null;
+    final dp = user['driver_profile'];
+    return dp is Map ? dp['id'] : null;
+  }
 
   @override
   ConsumerState<RiderEditProfileScreen> createState() =>
@@ -27,6 +37,8 @@ class _RiderEditProfileScreenState
 
   bool _isSaving = false;
   bool _hydrated = false;
+  bool _loadAttempted = false;
+  String _loadedName = '';
 
   @override
   void initState() {
@@ -38,15 +50,23 @@ class _RiderEditProfileScreenState
     _plateController = TextEditingController();
     _referralController = TextEditingController();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(riderProfileProvider.notifier).loadProfile();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await ref.read(riderProfileProvider.notifier).loadProfile();
+      } finally {
+        if (mounted) setState(() => _loadAttempted = true);
+      }
     });
   }
 
   void _hydrateFromProfile(RiderProfileState profile) {
     if (_hydrated || profile.isLoading) return;
+    // Don't freeze empty fields before the first load finishes: saving them
+    // would wipe the stored phone/address.
+    if (!_loadAttempted && profile.name.isEmpty) return;
     _hydrated = true;
     _nameController.text = profile.name;
+    _loadedName = profile.name.trim();
     _phoneController.text = profile.contact;
     _addressController.text = profile.address;
     _vehicleController.text = profile.vehicle;
@@ -85,10 +105,14 @@ class _RiderEditProfileScreenState
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
+    String? driverError;
 
     try {
+      final newName = _nameController.text.trim();
       await ApiService.updateProfile({
-        'name': _nameController.text.trim(),
+        // The API only accepts letters in names; leaving an untouched name out
+        // keeps phone/address edits from failing on it.
+        if (newName != _loadedName) 'name': newName,
         'phone_number': _phoneController.text.trim(),
         'address_line1': _addressController.text.trim(),
       });
@@ -98,11 +122,7 @@ class _RiderEditProfileScreenState
       if (vehicleText.isNotEmpty || plateText.isNotEmpty) {
         try {
           final meData = await ApiService.getMe();
-          final user = meData['user'] ?? meData['data'] ?? meData;
-          final dp = user is Map
-              ? user['driver_profile'] as Map<String, dynamic>?
-              : null;
-          final driverProfileId = dp?['id'];
+          final driverProfileId = RiderEditProfileScreen.driverProfileIdFrom(meData);
           if (driverProfileId != null) {
             await ApiService.dio.patch(
               '/v1/drivers/$driverProfileId',
@@ -114,12 +134,24 @@ class _RiderEditProfileScreenState
           }
         } catch (e) {
           AppLogger.error('Driver profile update error', e);
+          driverError = ApiService.extractError(e);
         }
       }
 
       await ref.read(riderProfileProvider.notifier).loadProfile();
 
-      if (mounted) {
+      if (mounted && driverError != null) {
+        // Name/phone/address saved but vehicle details were rejected: tell the
+        // rider instead of claiming full success, and keep the form open.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Profile saved, but vehicle details were not updated: $driverError',
+            ),
+            backgroundColor: Colors.orange.shade800,
+          ),
+        );
+      } else if (mounted) {
         final lang = ref.read(appLanguageProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -240,7 +272,7 @@ class _RiderEditProfileScreenState
             ),
           ),
         ),
-        body: profile.isLoading && !_hydrated
+        body: (profile.isLoading || !_loadAttempted) && !_hydrated
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
                 keyboardDismissBehavior:
@@ -346,6 +378,7 @@ class _RiderEditProfileScreenState
                                 hint: '+639XXXXXXXXX',
                                 icon: Icons.phone_outlined,
                                 keyboardType: TextInputType.phone,
+                                validator: ProfileValidator.phone,
                                 autofillHints: const [
                                   AutofillHints.telephoneNumber,
                                 ],
@@ -360,6 +393,8 @@ class _RiderEditProfileScreenState
                                   AutofillHints.fullStreetAddress,
                                 ],
                                 maxLines: 2,
+                                validator: (v) =>
+                                    ProfileValidator.maxLength(v, 255, 'Address'),
                               ),
                             ],
                           ),
@@ -381,6 +416,11 @@ class _RiderEditProfileScreenState
                                   'Hal. Motorsiklo, Bisikleta',
                                 ),
                                 icon: Icons.two_wheeler_outlined,
+                                validator: (v) => ProfileValidator.maxLength(
+                                  v,
+                                  100,
+                                  'Vehicle type',
+                                ),
                               ),
                               _buildField(
                                 context,
@@ -390,6 +430,11 @@ class _RiderEditProfileScreenState
                                 icon: Icons.confirmation_number_outlined,
                                 textCapitalization:
                                     TextCapitalization.characters,
+                                validator: (v) => ProfileValidator.maxLength(
+                                  v,
+                                  20,
+                                  'Plate number',
+                                ),
                               ),
                             ],
                           ),

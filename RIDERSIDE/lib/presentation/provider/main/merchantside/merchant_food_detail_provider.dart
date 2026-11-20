@@ -1,82 +1,35 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum MerchantFoodSizeOption {
-  nineInches,
-  twelveInches,
-  regular,
-  large,
-  solo,
-  sharing,
-  boxOf6,
-  boxOf12,
-  oz12,
-  oz16,
-}
+/// A size from the item's own options; `price` is added to the base price.
+class MerchantFoodSizeOption {
+  final String label;
+  final double price;
 
-extension MerchantFoodSizeOptionX on MerchantFoodSizeOption {
-  String get label {
-    switch (this) {
-      case MerchantFoodSizeOption.nineInches:
-        return '9 INCHES';
-      case MerchantFoodSizeOption.twelveInches:
-        return '12 INCHES';
-      case MerchantFoodSizeOption.regular:
-        return 'Regular';
-      case MerchantFoodSizeOption.large:
-        return 'Large';
-      case MerchantFoodSizeOption.solo:
-        return 'Solo';
-      case MerchantFoodSizeOption.sharing:
-        return 'Sharing';
-      case MerchantFoodSizeOption.boxOf6:
-        return 'Box of 6';
-      case MerchantFoodSizeOption.boxOf12:
-        return 'Box of 12';
-      case MerchantFoodSizeOption.oz12:
-        return '12 OZ';
-      case MerchantFoodSizeOption.oz16:
-        return '16 OZ';
-    }
-  }
+  const MerchantFoodSizeOption({required this.label, this.price = 0});
 
-  static MerchantFoodSizeOption? fromLabel(String raw) {
-    final normalized = raw.trim().toUpperCase();
-    switch (normalized) {
-      case '9 INCHES':
-        return MerchantFoodSizeOption.nineInches;
-      case '12 INCHES':
-        return MerchantFoodSizeOption.twelveInches;
-      case 'REGULAR':
-        return MerchantFoodSizeOption.regular;
-      case 'LARGE':
-        return MerchantFoodSizeOption.large;
-      case 'SOLO':
-        return MerchantFoodSizeOption.solo;
-      case 'SHARING':
-        return MerchantFoodSizeOption.sharing;
-      case 'BOX OF 6':
-        return MerchantFoodSizeOption.boxOf6;
-      case 'BOX OF 12':
-        return MerchantFoodSizeOption.boxOf12;
-      case '12 OZ':
-        return MerchantFoodSizeOption.oz12;
-      case '16 OZ':
-        return MerchantFoodSizeOption.oz16;
-      default:
-        return null;
-    }
-  }
+  static const regular = MerchantFoodSizeOption(label: 'Regular');
+
+  @override
+  bool operator ==(Object other) =>
+      other is MerchantFoodSizeOption && other.label == label && other.price == price;
+
+  @override
+  int get hashCode => Object.hash(label, price);
 }
 
 class MerchantFoodDetailInput {
   final String foodName;
   final String price;
-  final List<String> sizes;
+  final List<MerchantFoodSizeOption> sizes;
+  final List<MerchantFoodSizeOption> flavors;
+  final List<MerchantFoodSizeOption> addons;
 
   const MerchantFoodDetailInput({
     required this.foodName,
     required this.price,
     required this.sizes,
+    this.flavors = const [],
+    this.addons = const [],
   });
 
   @override
@@ -85,7 +38,9 @@ class MerchantFoodDetailInput {
     return other is MerchantFoodDetailInput &&
         other.foodName == foodName &&
         other.price == price &&
-        _listEquals(other.sizes, sizes);
+        _listEquals(other.sizes, sizes) &&
+        _listEquals(other.flavors, flavors) &&
+        _listEquals(other.addons, addons);
   }
 
   @override
@@ -93,9 +48,11 @@ class MerchantFoodDetailInput {
         foodName,
         price,
         Object.hashAll(sizes),
+        Object.hashAll(flavors),
+        Object.hashAll(addons),
       );
 
-  static bool _listEquals(List<String> a, List<String> b) {
+  static bool _listEquals<T>(List<T> a, List<T> b) {
     if (a.length != b.length) return false;
     for (var i = 0; i < a.length; i++) {
       if (a[i] != b[i]) return false;
@@ -107,29 +64,76 @@ class MerchantFoodDetailInput {
 class MerchantFoodDetailState {
   final List<MerchantFoodSizeOption> sizes;
   final MerchantFoodSizeOption selectedSize;
+
+  /// False when the menu item has no sizes of its own and `sizes` is just Regular.
+  final bool hasSizeChoices;
+  final List<MerchantFoodSizeOption> flavors;
+  final MerchantFoodSizeOption? selectedFlavor;
+  final List<MerchantFoodSizeOption> addons;
+  final List<MerchantFoodSizeOption> selectedAddons;
   final int quantity;
-  final double unitPrice;
+  final double basePrice;
 
   const MerchantFoodDetailState({
     required this.sizes,
     required this.selectedSize,
     required this.quantity,
-    required this.unitPrice,
+    required this.basePrice,
+    this.hasSizeChoices = true,
+    this.flavors = const [],
+    this.selectedFlavor,
+    this.addons = const [],
+    this.selectedAddons = const [],
   });
+
+  double get unitPrice =>
+      basePrice +
+      selectedSize.price +
+      (selectedFlavor?.price ?? 0) +
+      selectedAddons.fold<double>(0, (sum, addon) => sum + addon.price);
 
   double get subtotal => unitPrice * quantity;
 
+  /// Shown on the cart line and sent as the order note.
+  String get optionsLabel => [
+        selectedSize.label,
+        if (selectedFlavor != null) selectedFlavor!.label,
+        ...selectedAddons.map((addon) => '+ ${addon.label}'),
+      ].join(', ');
+
+  /// The choices as the API expects them; the server re-prices from these.
+  Map<String, dynamic>? get selectedOptions {
+    final options = <String, dynamic>{
+      if (hasSizeChoices)
+        'size': {'label': selectedSize.label, 'price': selectedSize.price},
+      if (selectedFlavor != null)
+        'flavor': {'label': selectedFlavor!.label, 'price': selectedFlavor!.price},
+      if (selectedAddons.isNotEmpty)
+        'addons': [
+          for (final addon in selectedAddons)
+            {'label': addon.label, 'price': addon.price, 'quantity': 1},
+        ],
+    };
+    return options.isEmpty ? null : options;
+  }
+
   MerchantFoodDetailState copyWith({
-    List<MerchantFoodSizeOption>? sizes,
     MerchantFoodSizeOption? selectedSize,
+    MerchantFoodSizeOption? selectedFlavor,
+    List<MerchantFoodSizeOption>? selectedAddons,
     int? quantity,
-    double? unitPrice,
+    double? basePrice,
   }) {
     return MerchantFoodDetailState(
-      sizes: sizes ?? this.sizes,
+      sizes: sizes,
       selectedSize: selectedSize ?? this.selectedSize,
       quantity: quantity ?? this.quantity,
-      unitPrice: unitPrice ?? this.unitPrice,
+      basePrice: basePrice ?? this.basePrice,
+      hasSizeChoices: hasSizeChoices,
+      flavors: flavors,
+      selectedFlavor: selectedFlavor ?? this.selectedFlavor,
+      addons: addons,
+      selectedAddons: selectedAddons ?? this.selectedAddons,
     );
   }
 }
@@ -138,10 +142,14 @@ class MerchantFoodDetailNotifier extends StateNotifier<MerchantFoodDetailState> 
   MerchantFoodDetailNotifier({required MerchantFoodDetailInput input})
       : super(
           MerchantFoodDetailState(
-            sizes: _parseSizeOptions(input.sizes),
-            selectedSize: _parseSizeOptions(input.sizes).first,
+            sizes: _sizesOrRegular(input.sizes),
+            selectedSize: _sizesOrRegular(input.sizes).first,
+            hasSizeChoices: input.sizes.isNotEmpty,
+            flavors: input.flavors,
+            selectedFlavor: input.flavors.isEmpty ? null : input.flavors.first,
+            addons: input.addons,
             quantity: 1,
-            unitPrice: _parseDisplayPrice(input.price),
+            basePrice: _parseDisplayPrice(input.price),
           ),
         );
 
@@ -149,21 +157,22 @@ class MerchantFoodDetailNotifier extends StateNotifier<MerchantFoodDetailState> 
     return double.parse(rawPrice.replaceAll('PHP ', '').replaceAll(',', ''));
   }
 
-  static List<MerchantFoodSizeOption> _parseSizeOptions(List<String> labels) {
-    final options = labels
-        .map(MerchantFoodSizeOptionX.fromLabel)
-        .whereType<MerchantFoodSizeOption>()
-        .toList();
-
-    if (options.isEmpty) {
-      return const [MerchantFoodSizeOption.regular];
-    }
-
-    return options;
+  static List<MerchantFoodSizeOption> _sizesOrRegular(List<MerchantFoodSizeOption> sizes) {
+    return sizes.isEmpty ? const [MerchantFoodSizeOption.regular] : sizes;
   }
 
   void selectSize(MerchantFoodSizeOption size) {
     state = state.copyWith(selectedSize: size);
+  }
+
+  void selectFlavor(MerchantFoodSizeOption flavor) {
+    state = state.copyWith(selectedFlavor: flavor);
+  }
+
+  void toggleAddon(MerchantFoodSizeOption addon) {
+    final selected = [...state.selectedAddons];
+    selected.contains(addon) ? selected.remove(addon) : selected.add(addon);
+    state = state.copyWith(selectedAddons: selected);
   }
 
   void incrementQuantity() {

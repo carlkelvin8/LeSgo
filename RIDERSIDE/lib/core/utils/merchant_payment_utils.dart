@@ -42,9 +42,10 @@ class MerchantPaymentUtils {
         normalized == 'wallet';
   }
 
+  /// Mirrors OrderSettlementService::isOnlinePaid on the backend: the store
+  /// wallet is credited only for online methods with payment_status 'paid'.
   static bool creditsMerchantWallet(String? method, String? status) {
     if (!isOnlinePayment(method)) return false;
-    final normalizedStatus = (status ?? '').toLowerCase();
-    return normalizedStatus == 'paid' || normalizedStatus == 'completed';
+    return (status ?? '').toLowerCase() == 'paid';
   }
 }

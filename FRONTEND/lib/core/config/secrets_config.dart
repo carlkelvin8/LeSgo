@@ -50,10 +50,10 @@ class SecretsConfig {
     defaultValue: 'com.lesgo.app',
   );
 
-  static const String geminiApiKey = String.fromEnvironment(
-    'GEMINI_API_KEY',
-    defaultValue: '',
-  );
+  /// Never compiled into the app: anything shipped in the binary can be
+  /// extracted and abused on our bill. AI replies must go through the backend;
+  /// until then the support chat uses its built-in answers.
+  static const String geminiApiKey = '';
 
   /// Comma-separated leaf certificate SHA-256 pins. Keep the current and next
   /// certificate pins together during planned rotations.

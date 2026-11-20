@@ -29,7 +29,15 @@ class OrderCancellationService
                 $customer = $order->customer ?? User::find($order->customer_id);
 
                 if ($customer) {
-                    $amount = OrderWalletPaymentService::resolvePayableAmount($order);
+                    // Refund what was actually charged. Recomputing it from the
+                    // current fare could differ if the fare changed after payment.
+                    $paid = (float) Payment::where('order_id', $order->id)
+                        ->where('status', 'paid')
+                        ->where('method', 'wallet')
+                        ->sum('amount');
+                    $amount = $paid > 0
+                        ? round($paid, 2)
+                        : OrderWalletPaymentService::resolvePayableAmount($order);
 
                     if ($amount > 0) {
                         WalletService::credit(

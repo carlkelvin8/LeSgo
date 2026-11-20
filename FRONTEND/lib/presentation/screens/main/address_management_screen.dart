@@ -1,6 +1,8 @@
+import 'package:lesgo/core/constants/map_styles.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/booking_geo_utils.dart';
@@ -76,6 +78,7 @@ class _AddressManagementScreenState
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -129,10 +132,17 @@ class _AddressManagementScreenState
 
             Expanded(
               child: addressState.isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                       ),
+                    )
+                  : addressState.addresses.isEmpty && addressState.error != null
+                  ? _LoadError(
+                      message: addressState.error!,
+                      onRetry: () => ref
+                          .read(addressProvider.notifier)
+                          .loadAddresses(_userId),
                     )
                   : addressState.addresses.isEmpty
                   ? _EmptyState(onAdd: () => _showAddEditSheet())
@@ -154,7 +164,9 @@ class _AddressManagementScreenState
                           return _AddressTile(
                             address: addr,
                             onEdit: () => _showAddEditSheet(existing: addr),
-                            onDelete: () => _deleteAddress(addr),
+                            onDelete: addressState.isDeleting
+                                ? null
+                                : () => _deleteAddress(addr),
                             onSetDefault: () => _setDefault(addr),
                             isSettingDefault: addressState.isUpdating,
                           );
@@ -182,6 +194,49 @@ class _AddressManagementScreenState
   }
 }
 
+class _LoadError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _LoadError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                color: AppColors.foreground(context, Colors.grey.shade700),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.buttonFill(context),
+                foregroundColor: AppColors.onButton(context),
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(fontFamily: 'TT Fors', color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Address Tile
 // ─────────────────────────────────────────────────────────────────────────────
@@ -189,7 +244,7 @@ class _AddressManagementScreenState
 class _AddressTile extends StatelessWidget {
   final AddressDto address;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
   final VoidCallback onSetDefault;
   final bool isSettingDefault;
 
@@ -252,16 +307,21 @@ class _AddressTile extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: AppColors.surface(context, Colors.green.shade50),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.green.shade200),
+                    border: Border.all(
+                      color: AppColors.border(context, Colors.green.shade200),
+                    ),
                   ),
                   child: Text(
                     'Default',
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 10,
-                      color: Colors.green.shade700,
+                      color: AppColors.foreground(
+                        context,
+                        Colors.green.shade700,
+                      ),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -410,8 +470,8 @@ class _EmptyState extends StatelessWidget {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -464,6 +524,33 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
     _isDefault = e?.isDefault ?? false;
     if (BookingGeoUtils.hasValidCoords(e?.latitude, e?.longitude)) {
       _selectedLocation = LatLng(e!.latitude, e.longitude);
+    }
+  }
+
+  /// Fills the address field from the dropped pin, but never overwrites what
+  /// the user already typed.
+  Future<void> _fillAddressFromPin(LatLng location) async {
+    if (_addressLine1Ctrl.text.trim().isNotEmpty) return;
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        location.latitude,
+        location.longitude,
+      ).timeout(const Duration(seconds: 8));
+      if (!mounted || placemarks.isEmpty) return;
+      final place = placemarks.first;
+      final parts = <String>[
+        for (final part in [
+          place.street,
+          place.subLocality,
+          place.locality,
+          place.administrativeArea,
+        ])
+          if (part != null && part.trim().isNotEmpty) part.trim(),
+      ];
+      if (parts.isEmpty || _addressLine1Ctrl.text.trim().isNotEmpty) return;
+      setState(() => _addressLine1Ctrl.text = parts.toSet().join(', '));
+    } catch (_) {
+      // Geocoding is a convenience; the user can still type the address.
     }
   }
 
@@ -604,6 +691,7 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: GoogleMap(
+                            style: MapStyles.darkIfDark(context),
                             initialCameraPosition: CameraPosition(
                               target:
                                   _selectedLocation ??
@@ -612,8 +700,10 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
                             ),
                             myLocationButtonEnabled: false,
                             myLocationEnabled: false,
-                            onTap: (location) =>
-                                setState(() => _selectedLocation = location),
+                            onTap: (location) {
+                              setState(() => _selectedLocation = location);
+                              _fillAddressFromPin(location);
+                            },
                             markers: _selectedLocation == null
                                 ? const <Marker>{}
                                 : {
@@ -755,8 +845,8 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
                         child: ElevatedButton(
                           onPressed: _isSaving ? null : _save,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.buttonFill(context),
+                            foregroundColor: AppColors.onButton(context),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -836,6 +926,8 @@ class _Field extends StatelessWidget {
           maxLines: maxLines,
           keyboardType: keyboardType,
           validator: validator,
+          // Re-check as the customer types, so "Required" disappears once filled.
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           style: const TextStyle(fontFamily: 'TT Fors', fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
@@ -869,8 +961,8 @@ class _Field extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFF5F2D82),
+              borderSide: BorderSide(
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
                 width: 1.5,
               ),
             ),

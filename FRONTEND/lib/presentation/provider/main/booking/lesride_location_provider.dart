@@ -1,3 +1,4 @@
+import '../../../../core/utils/address_text_utils.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -379,7 +380,9 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
   LocationAddress? _parseFormattedAddress(String formattedAddress) {
     // Parse formatted address like "Malolos, Bulacan, Philippines"
     // Split by comma and assign to appropriate fields
-    final parts = formattedAddress.split(',').map((e) => e.trim()).toList();
+    final parts = stripPlusCode(
+      formattedAddress,
+    ).split(',').map((e) => e.trim()).toList();
 
     if (parts.isEmpty) return null;
 
@@ -625,7 +628,6 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
           color: const Color(0xFF1976D2),
           width: 6,
           geodesic: true,
-          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         );
 
         state = state.copyWith(
@@ -658,10 +660,6 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         color: const Color(0xFF1976D2), // Blue color
         width: 6, // Medium thickness
         geodesic: true, // Enable geodesic
-        patterns: [
-          PatternItem.dash(20),
-          PatternItem.gap(10),
-        ], // Dashed for error
       );
 
       state = state.copyWith(
@@ -806,7 +804,11 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
 
           // Use the best result found
           if (bestResult != null) {
-            final formattedAddress = bestResult['formatted_address'] as String?;
+            final rawFormattedAddress = bestResult['formatted_address'] as String?;
+            // Never show a raw plus code ("J36M+FR5, ...") as the address.
+            final formattedAddress = rawFormattedAddress == null
+                ? null
+                : stripPlusCode(rawFormattedAddress);
 
             print(
               '🔍 LesrideLocation: Using best result with score $bestScore: $formattedAddress',

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
@@ -37,7 +38,7 @@ class MenuItemDetailInfoSection extends StatelessWidget {
           children: [
             // Price
             Text(
-              '₱${adjustedPrice.toStringAsFixed(2)}',
+              Money.format(adjustedPrice),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 20),
@@ -52,7 +53,7 @@ class MenuItemDetailInfoSection extends StatelessWidget {
             Container(
               width: 4,
               height: 4,
-              decoration:  BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.surface(context, Colors.grey),
                 shape: BoxShape.circle,
               ),

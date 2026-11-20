@@ -8,8 +8,8 @@
 	<string>This app needs access to save and show your selfie.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to help you fill in your address.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This app needs access to your location to help you fill in your address.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>LeSgo uses your location to set pickup and drop-off addresses and to show your rider's live progress. We do not track you in the background.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to unlock LeSgo quickly and securely.</string>
 	<key>CFBundleDevelopmentRegion</key>
@@ -34,6 +34,27 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -64,5 +85,20 @@
 	</array>
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>GIDClientID</key>
+	<string>937689509907-82ts4mo850m82ap8gl6q73vi5gu3gdqb.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

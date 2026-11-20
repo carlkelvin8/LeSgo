@@ -1,3 +1,5 @@
+import 'package:lesgo/core/utils/money.dart';
+import '../../../../core/utils/order_status_mapper.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -5,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/map_styles.dart';
+import '../../../provider/main/orders/active_orders_provider.dart';
 import '../../../provider/main/orders/order_history_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/orders/cancel_order_dialog.dart';
 import '../../../widgets/orders/proof_of_delivery_section.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../core/utils/order_cancel_utils.dart';
+import '../../../../core/utils/order_payment_label.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
@@ -169,6 +173,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         setState(() => _isCancelling = false);
 
         if (success) {
+          // The home "Track your order" banner must drop the cancelled order.
+          ref.read(activeOrdersProvider.notifier).loadActiveOrders();
+          // Refresh from the server: the screen otherwise keeps showing the
+          // previously fetched (pre-cancel) status and buttons.
+          await _loadOrderDetails();
+          if (!mounted) return;
           SnackBarUtils.showSuccess(context, 'Order cancelled successfully');
         } else {
           final error = ref.read(orderHistoryProvider).error;
@@ -179,6 +189,27 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   }
 
   Future<void> _handleReorder() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reorder?'),
+        content: const Text(
+          'This will place a new order with the same items and addresses.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Place order'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
     setState(() => _isReordering = true);
 
     final success = await ref
@@ -189,10 +220,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       setState(() => _isReordering = false);
 
       if (success) {
+        ref.read(activeOrdersProvider.notifier).loadActiveOrders();
         SnackBarUtils.showSuccess(context, 'Order placed successfully!');
         Navigator.pop(context);
       } else {
-        SnackBarUtils.showError(context, 'Failed to reorder');
+        final error = ref.read(orderHistoryProvider).error;
+        SnackBarUtils.showError(context, error ?? 'Failed to reorder');
       }
     }
   }
@@ -219,7 +252,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 color: AppColors.surface(context, Colors.white),
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                 child: Row(
-                  children: [const AuthHeader(title: 'Order Details')],
+                  children: [
+                    const Expanded(child: AuthHeader(title: 'Order Details')),
+                  ],
                 ),
               ),
               Expanded(
@@ -264,7 +299,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             Container(
               color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: Row(children: [const AuthHeader(title: 'Order Details')]),
+              child: Row(
+                children: [
+                  const Expanded(child: AuthHeader(title: 'Order Details')),
+                ],
+              ),
             ),
 
             Container(
@@ -325,8 +364,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                         child: ElevatedButton(
                           onPressed: _handleTrackOrder,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.buttonFill(context),
+                            foregroundColor: AppColors.onButton(context),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -378,8 +417,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                         child: ElevatedButton(
                           onPressed: _isReordering ? null : _handleReorder,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.buttonFill(context),
+                            foregroundColor: AppColors.onButton(context),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -461,7 +500,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   Widget _buildOrderInfo(OrderDto order) {
     final createdAt = DateTime.tryParse(
       order.createdAt ?? order.updatedAt ?? '',
-    );
+    )?.toLocal();
     final formattedDate = createdAt != null
         ? DateFormat('MMMM dd, yyyy • hh:mm a').format(createdAt)
         : 'Date unavailable';
@@ -488,12 +527,21 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           _buildInfoRow('Order ID', '#${order.id}'),
           _buildInfoRow('Date', formattedDate),
           _buildInfoRow('Payment Method', order.paymentMethod.toUpperCase()),
-          _buildInfoRow(
-            'Payment Status',
-            order.paymentStatus.toUpperCase(),
-            valueColor: order.paymentStatus == 'paid'
-                ? Colors.green
-                : Colors.orange,
+          Builder(
+            builder: (context) {
+              final label = orderPaymentLabel(
+                status: order.status,
+                paymentStatus: order.paymentStatus,
+                paymentMethod: order.paymentMethod,
+              );
+              return _buildInfoRow(
+                'Payment Status',
+                label.text,
+                valueColor: label.color(
+                  AppColors.foreground(context, Colors.grey[600]!),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -612,7 +660,15 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildPriceRow('Estimated Fare', order.estimatedFare),
+          if (_itemsSubtotal(order) != null) ...[
+            // Food / store orders: show what the money is made of instead of
+            // calling the delivery fee the "fare".
+            _buildPriceRow('Subtotal', _itemsSubtotal(order)!),
+            _buildPriceRow('Delivery fee', order.effectiveDeliveryFee),
+            if (order.discountAmount > 0)
+              _buildPriceRow('Discount', -order.discountAmount),
+          ] else
+            _buildPriceRow('Estimated Fare', order.estimatedFare),
           if (order.actualFare != null)
             _buildPriceRow('Actual Fare', order.actualFare!),
           const Divider(height: 24),
@@ -628,12 +684,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 ),
               ),
               Text(
-                '₱${(order.actualFare ?? order.estimatedFare).toStringAsFixed(2)}',
-                style: const TextStyle(
+                Money.format(order.actualFare ?? order.effectiveTotalAmount),
+                style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF5F2D82),
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
                 ),
               ),
             ],
@@ -641,6 +697,14 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         ],
       ),
     );
+  }
+
+  /// Items subtotal recorded with the order (food/store), or null for rides
+  /// and parcels where the fare is the whole price.
+  double? _itemsSubtotal(OrderDto order) {
+    final raw = order.meta?['subtotal'];
+    final value = raw is num ? raw.toDouble() : double.tryParse('${raw ?? ''}');
+    return value != null && value > 0 ? value : null;
   }
 
   Widget _buildCancellationInfo(OrderDto order) {
@@ -728,7 +792,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           ),
           Text(
-            '₱${amount.toStringAsFixed(2)}',
+            '${amount < 0 ? '-' : ''}${Money.format(amount.abs())}',
             style: const TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,
@@ -775,7 +839,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       case 'failed':
         return 'Failed';
       default:
-        return status.toUpperCase();
+        // Never show a raw enum such as READY_FOR_PICKUP.
+        return OrderStatusMapper.toDisplayLabel(status);
     }
   }
 
@@ -870,10 +935,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               if (_isLoadingRoute)
                 Container(
                   color: Colors.black.withValues(alpha: 0.1),
-                  child: const Center(
+                  child: Center(
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFF5F2D82),
+                        AppColors.accent(context, const Color(0xFF5F2D82)),
                       ),
                     ),
                   ),
@@ -1000,10 +1065,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         points: points,
         color: AppColors.accent(context, Color(0xFF5F2D82)),
         width: 4,
-        // Use solid line for actual route, dashed for straight line
-        patterns: _routePolyline.isEmpty
-            ? [PatternItem.dash(20), PatternItem.gap(10)]
-            : [],
+        // Always solid: dashed polylines on long routes crash iOS.
       ),
     );
 

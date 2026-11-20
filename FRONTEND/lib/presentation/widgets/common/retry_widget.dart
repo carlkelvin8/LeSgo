@@ -27,14 +27,14 @@ class RetryWidget extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration:  BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppColors.surface(context, Color(0xFFF0E7F6)),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.cloud_off_rounded,
                     size: 32,
-                    color: Color(0xFF5F2D82),
+                    color: AppColors.accent(context, const Color(0xFF5F2D82)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -62,7 +62,8 @@ class RetryWidget extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: isLoading ? null : onRetry,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
+                    backgroundColor: AppColors.buttonFill(context),
+                    foregroundColor: AppColors.onButton(context),
                     minimumSize: const Size(160, 48),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),

@@ -7,6 +7,7 @@ import '../../../../../core/utils/rider_commission_utils.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
 import '../../../../provider/main/riderside/rider_wallet_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderWalletCard extends ConsumerStatefulWidget {
   const RiderWalletCard({
@@ -129,8 +130,8 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
                   const SizedBox(height: 22),
                   Text(
                     t('wallet_available_balance'),
-                    style: const TextStyle(
-                      color: Color(0xFFC5ADDF),
+                    style: TextStyle(
+                      color: context.sub(Color(0xFFC5ADDF)),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                       letterSpacing: .6,
@@ -171,10 +172,10 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
                       Expanded(
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.workspace_premium_outlined,
                               size: 20,
-                              color: Color(0xFFD5B5F4),
+                              color: context.sub(Color(0xFFD5B5F4)),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -183,9 +184,9 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
                                 children: [
                                   Text(
                                     t('rider_package_type'),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 10,
-                                      color: Color(0xFFC5ADDF),
+                                      color: context.sub(Color(0xFFC5ADDF)),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -228,9 +229,9 @@ class _RiderWalletCardState extends ConsumerState<RiderWalletCard>
                                         color: Colors.white70,
                                       ),
                               )
-                            : const Icon(
+                            : Icon(
                                 Icons.refresh_rounded,
-                                color: Color(0xFFD8C3ED),
+                                color: context.sub(Color(0xFFD8C3ED)),
                                 size: 22,
                               ),
                       ),

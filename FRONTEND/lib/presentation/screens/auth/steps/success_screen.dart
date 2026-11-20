@@ -63,7 +63,7 @@ class CongratulationsScreen extends ConsumerWidget {
                   const Spacer(),
 
                   PrimaryButton(
-                    text: 'Continue to LeSGo',
+                    text: 'Continue to LeSgo',
                     onPressed: () async {
                       final token = registerState.registeredUser?.token ?? '';
                       if (token.isEmpty) {

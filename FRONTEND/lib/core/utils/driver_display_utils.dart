@@ -9,6 +9,9 @@ class DriverInfo {
   final String? photoUrl;
   final double? rating;
 
+  /// Driver profile id, used to open this driver's reviews.
+  final int? driverId;
+
   const DriverInfo({
     required this.name,
     this.phone,
@@ -16,6 +19,7 @@ class DriverInfo {
     this.vehicleType,
     this.photoUrl,
     this.rating,
+    this.driverId,
   });
 
   static DriverInfo? fromOrder(OrderDto order) {
@@ -35,6 +39,8 @@ class DriverInfo {
   }) {
     if (profile == null) {
       if (fallbackDriverId == null) return null;
+      // order.driver_id is a driver_profiles id, but reviews are keyed by the
+      // driver's user id, so there is nothing to look reviews up with here.
       return DriverInfo(name: 'Driver #$fallbackDriverId');
     }
 
@@ -54,6 +60,8 @@ class DriverInfo {
       vehicleType: vehicleType,
       photoUrl: _resolvePhotoUrl(user?.profilePhotoUrl, user?.profilePicture),
       rating: profile.rating,
+      // Reviews are stored against the driver's user id, not the profile id.
+      driverId: profile.userId,
     );
   }
 
@@ -61,12 +69,11 @@ class DriverInfo {
     if (profile == null) return null;
 
     final userRaw = profile['user'];
-    final user = userRaw is Map
-        ? Map<String, dynamic>.from(userRaw)
-        : null;
+    final user = userRaw is Map ? Map<String, dynamic>.from(userRaw) : null;
 
     final name = user?['name']?.toString().trim();
     final profileId = profile['id'];
+    final userIdRaw = profile['user_id'] ?? user?['id'];
     final resolvedName = (name != null && name.isNotEmpty)
         ? name
         : 'Driver #${profileId ?? ''}';
@@ -86,10 +93,17 @@ class DriverInfo {
         user?['avatar']?.toString(),
       ),
       rating: _parseRating(profile['rating']),
+      driverId: userIdRaw is num
+          ? userIdRaw.toInt()
+          : int.tryParse('${userIdRaw ?? ''}'),
     );
   }
 
-  static String? _resolvePhotoUrl(String? primary, String? secondary, [String? tertiary]) {
+  static String? _resolvePhotoUrl(
+    String? primary,
+    String? secondary, [
+    String? tertiary,
+  ]) {
     for (final candidate in [primary, secondary, tertiary]) {
       final resolved = MediaUrlUtils.resolve(candidate);
       if (resolved != null && resolved.isNotEmpty) {

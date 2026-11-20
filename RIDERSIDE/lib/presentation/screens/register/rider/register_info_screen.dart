@@ -11,6 +11,7 @@ import '../../../../core/services/api_service.dart';
 import '../../../provider/register/riderside/rider_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/register/rider/package/rider_package_selection_step.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RegisterInfoScreen extends ConsumerStatefulWidget {
   const RegisterInfoScreen({super.key});
@@ -413,7 +414,7 @@ class _RiderOtpBottomSheetState extends State<_RiderOtpBottomSheet> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 14,
-              color: Colors.grey[600],
+              color: context.sub(Colors.grey[600]!),
             ),
           ),
           if (widget.fallbackOtp != null && AppConfig.isDevMode) ...[

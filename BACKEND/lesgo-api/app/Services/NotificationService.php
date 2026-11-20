@@ -33,7 +33,8 @@ class NotificationService
 
         // Push notification hook — swap in FCM/APNs when ready
         if (in_array($channel, ['push', 'all'])) {
-            static::dispatchPush($userId, $title, $body, $data);
+            // The app and FcmService key off data.type (order alarms, navigation).
+            static::dispatchPush($userId, $title, $body, $data + ['type' => $type]);
         }
 
         return $notification;

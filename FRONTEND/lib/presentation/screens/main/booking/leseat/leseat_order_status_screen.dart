@@ -388,7 +388,8 @@ class _LeseatOrderStatusScreenState
             child: ElevatedButton(
               onPressed: _contactRestaurant,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5F2D82),
+                backgroundColor: AppColors.buttonFill(context),
+                foregroundColor: AppColors.onButton(context),
                 padding: EdgeInsets.symmetric(
                   vertical: ResponsiveUtils.spacing(context, 18),
                 ),
@@ -578,7 +579,8 @@ class _LeseatOrderStatusScreenState
                   child: ElevatedButton(
                     onPressed: _contactRestaurant,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5F2D82),
+                      backgroundColor: AppColors.buttonFill(context),
+                      foregroundColor: AppColors.onButton(context),
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 18),
                       ),
@@ -767,7 +769,12 @@ class _LeseatOrderStatusScreenState
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF5F2D82)),
+                      borderSide: BorderSide(
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                     ),
                     contentPadding: EdgeInsets.all(
                       ResponsiveUtils.spacing(context, 16),
@@ -832,7 +839,8 @@ class _LeseatOrderStatusScreenState
                 AppRouter.pushReplacement(context, BookingRoutes.leseat);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5F2D82),
+                backgroundColor: AppColors.buttonFill(context),
+                foregroundColor: AppColors.onButton(context),
                 padding: EdgeInsets.symmetric(
                   vertical: ResponsiveUtils.spacing(context, 18),
                 ),

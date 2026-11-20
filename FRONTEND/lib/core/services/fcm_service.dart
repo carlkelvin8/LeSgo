@@ -117,7 +117,6 @@ class FcmService {
       );
     }
 
-    _firebaseReady = true;
     final messaging = FirebaseMessaging.instance;
 
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -125,7 +124,10 @@ class FcmService {
     await _requestNotificationPermissions(messaging);
     await _configurePlatformSettings(messaging);
 
+    // iOS simulators may not receive an APNs token. Treat messaging as
+    // unavailable there so topic subscriptions cannot abort app startup.
     _fcmToken = await messaging.getToken();
+    _firebaseReady = _fcmToken?.isNotEmpty == true;
     debugPrint('✅ FCM token: $_fcmToken');
 
     messaging.onTokenRefresh.listen((token) {
@@ -369,7 +371,7 @@ class FcmService {
 
   Future<void> subscribeToTopic(String topic) async {
     if (!_firebaseReady) {
-      debugPrint('⚠️ Cannot subscribe to $topic — Firebase not ready');
+      debugPrint('⚠️ Cannot subscribe to $topic - Firebase not ready');
       return;
     }
     await FirebaseMessaging.instance.subscribeToTopic(topic);
@@ -378,7 +380,7 @@ class FcmService {
 
   Future<void> unsubscribeFromTopic(String topic) async {
     if (!_firebaseReady) {
-      debugPrint('⚠️ Cannot unsubscribe from $topic — Firebase not ready');
+      debugPrint('⚠️ Cannot unsubscribe from $topic - Firebase not ready');
       return;
     }
     await FirebaseMessaging.instance.unsubscribeFromTopic(topic);

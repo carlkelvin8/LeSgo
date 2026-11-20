@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**", "release/**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rider-app:
+    name: Rider/Merchant app (analyze + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: RIDERSIDE
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # Only real errors fail the build; the project has many style infos.
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+
+  customer-app:
+    name: Customer app (tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: FRONTEND
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+
+  backend:
+    name: Backend API (tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BACKEND/lesgo-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, gd, zip
+          coverage: none
+      - run: cp .env.example .env
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: php artisan key:generate
+      - run: php artisan test

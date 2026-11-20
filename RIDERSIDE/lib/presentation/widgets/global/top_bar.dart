@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/utils.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class TopBar extends StatelessWidget {
   final String? title;
@@ -36,7 +37,7 @@ class TopBar extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 18),
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: context.txt(Colors.black87),
                     ),
                   ),
             ),
@@ -53,7 +54,7 @@ class TopBar extends StatelessWidget {
                   child: Icon(
                     Icons.chevron_left_rounded,
                     size: ResponsiveUtils.imageHeight(context, 32),
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
               ),

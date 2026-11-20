@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -153,10 +154,13 @@ class _BiometricUnlockGateState extends State<BiometricUnlockGate>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.lock_outline,
                         size: 56,
-                        color: Color(0xFF5F2D82),
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       const Text(

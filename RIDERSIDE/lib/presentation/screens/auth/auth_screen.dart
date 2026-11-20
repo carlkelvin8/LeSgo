@@ -7,6 +7,7 @@ import '../../widgets/auth/forgot_password_content.dart';
 import '../../widgets/widgets.dart';
 
 import 'package:flutter/services.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 class AuthScreen extends ConsumerWidget {
   const AuthScreen({super.key});
@@ -36,7 +37,7 @@ class AuthScreen extends ConsumerWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: context.bg(Colors.white),
         resizeToAvoidBottomInset: true,
         body: SafeArea(
           child: LayoutBuilder(

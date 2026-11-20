@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -79,7 +80,7 @@ class OrderItemCard extends StatelessWidget {
                 ],
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                 Text(
-                  'PHP ${item.price.toStringAsFixed(2)}',
+                  Money.format(item.price),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -103,11 +104,16 @@ class OrderItemCard extends StatelessWidget {
                   ),
                   onPressed: onRemove,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                 ),
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border(context, Colors.grey[300]!)),
+                  border: Border.all(
+                    color: AppColors.border(context, Colors.grey[300]!),
+                  ),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -122,8 +128,9 @@ class OrderItemCard extends StatelessWidget {
                           onRemove?.call();
                         }
                       },
-                      padding:
-                          EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.spacing(context, 4),
+                      ),
                       constraints: const BoxConstraints(),
                     ),
                     Padding(
@@ -143,8 +150,9 @@ class OrderItemCard extends StatelessWidget {
                       icon: const Icon(Icons.add, size: 16),
                       onPressed: () =>
                           onQuantityChanged?.call(item.quantity + 1),
-                      padding:
-                          EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.spacing(context, 4),
+                      ),
                       constraints: const BoxConstraints(),
                     ),
                   ],

@@ -33,13 +33,22 @@ class MobileConfigService {
       googleWebClientId.contains('.apps.googleusercontent.com');
 
   bool get isFirebaseConfigured {
-    final projectId = _pick(_firebaseProjectId, SecretsConfig.firebaseProjectId);
-    final senderId =
-        _pick(_firebaseMessagingSenderId, SecretsConfig.firebaseMessagingSenderId);
-    final androidKey =
-        _pick(_firebaseAndroidApiKey, SecretsConfig.firebaseAndroidApiKey);
-    final androidAppId =
-        _pick(_firebaseAndroidAppId, SecretsConfig.firebaseAndroidAppId);
+    final projectId = _pick(
+      _firebaseProjectId,
+      SecretsConfig.firebaseProjectId,
+    );
+    final senderId = _pick(
+      _firebaseMessagingSenderId,
+      SecretsConfig.firebaseMessagingSenderId,
+    );
+    final androidKey = _pick(
+      _firebaseAndroidApiKey,
+      SecretsConfig.firebaseAndroidApiKey,
+    );
+    final androidAppId = _pick(
+      _firebaseAndroidAppId,
+      SecretsConfig.firebaseAndroidAppId,
+    );
 
     return projectId.isNotEmpty &&
         !projectId.startsWith('YOUR_') &&
@@ -50,26 +59,29 @@ class MobileConfigService {
   }
 
   FirebaseOptions get androidFirebaseOptions => FirebaseOptions(
-        apiKey: _pick(_firebaseAndroidApiKey, SecretsConfig.firebaseAndroidApiKey),
-        appId: _pick(_firebaseAndroidAppId, SecretsConfig.firebaseAndroidAppId),
-        messagingSenderId:
-            _pick(_firebaseMessagingSenderId, SecretsConfig.firebaseMessagingSenderId),
-        projectId: _pick(_firebaseProjectId, SecretsConfig.firebaseProjectId),
-        storageBucket:
-            '${_pick(_firebaseProjectId, SecretsConfig.firebaseProjectId)}.firebasestorage.app',
-      );
+    apiKey: _pick(_firebaseAndroidApiKey, SecretsConfig.firebaseAndroidApiKey),
+    appId: _pick(_firebaseAndroidAppId, SecretsConfig.firebaseAndroidAppId),
+    messagingSenderId: _pick(
+      _firebaseMessagingSenderId,
+      SecretsConfig.firebaseMessagingSenderId,
+    ),
+    projectId: _pick(_firebaseProjectId, SecretsConfig.firebaseProjectId),
+    storageBucket:
+        '${_pick(_firebaseProjectId, SecretsConfig.firebaseProjectId)}.firebasestorage.app',
+  );
 
   FirebaseOptions get iosFirebaseOptions => FirebaseOptions(
-        apiKey: _pick(_firebaseIosApiKey, SecretsConfig.firebaseIosApiKey),
-        appId: _pick(_firebaseIosAppId, SecretsConfig.firebaseIosAppId),
-        messagingSenderId:
-            _pick(_firebaseMessagingSenderId, SecretsConfig.firebaseMessagingSenderId),
-        projectId: _pick(_firebaseProjectId, SecretsConfig.firebaseProjectId),
-        storageBucket:
-            '${_pick(_firebaseProjectId, SecretsConfig.firebaseProjectId)}.firebasestorage.app',
-        iosBundleId:
-            _pick(_firebaseIosBundleId, SecretsConfig.firebaseIosBundleId),
-      );
+    apiKey: _pick(_firebaseIosApiKey, SecretsConfig.firebaseIosApiKey),
+    appId: _pick(_firebaseIosAppId, SecretsConfig.firebaseIosAppId),
+    messagingSenderId: _pick(
+      _firebaseMessagingSenderId,
+      SecretsConfig.firebaseMessagingSenderId,
+    ),
+    projectId: _pick(_firebaseProjectId, SecretsConfig.firebaseProjectId),
+    storageBucket:
+        '${_pick(_firebaseProjectId, SecretsConfig.firebaseProjectId)}.firebasestorage.app',
+    iosBundleId: _pick(_firebaseIosBundleId, SecretsConfig.firebaseIosBundleId),
+  );
 
   FirebaseOptions get currentFirebaseOptions {
     if (kIsWeb) return androidFirebaseOptions;
@@ -83,7 +95,9 @@ class MobileConfigService {
   }
 
   Future<void> loadFromApi() async {
-    if (SecretsConfig.isGoogleSignInConfigured && SecretsConfig.isFirebaseConfigured) {
+    if (SecretsConfig.isGoogleSignInConfigured &&
+        SecretsConfig.isFirebaseConfigured &&
+        SecretsConfig.isGoogleMapsConfigured) {
       return;
     }
 
@@ -96,7 +110,9 @@ class MobileConfigService {
           headers: {'Accept': 'application/json'},
         ),
       );
-      final response = await dio.get('/v1/config/mobile');
+      final response = await dio
+          .get('/v1/config/mobile')
+          .timeout(const Duration(seconds: 20));
       final root = response.data;
       final data = root is Map && root['data'] is Map
           ? Map<String, dynamic>.from(root['data'] as Map)

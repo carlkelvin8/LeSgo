@@ -23,6 +23,7 @@ class StoreOrderRequest extends FormRequest
             // Core
             'service_id' => ['required', 'integer', 'exists:services,id'],
             'partner_id' => ['nullable', 'integer', 'exists:partners,id'],
+            'partner_branch_id' => ['nullable', 'integer'],
             'scheduled_at' => ['nullable', 'date'],
             'scheduled_delivery_time' => ['nullable', 'date', 'after:now'],
             'estimated_distance_m' => ['nullable', 'integer', 'min:0', 'max:30000'],
@@ -96,6 +97,11 @@ class StoreOrderRequest extends FormRequest
                 ->pluck('partner_id')->unique();
             if ($sources->count() > 1 || $partners->count() > 1) {
                 $validator->errors()->add('items', 'Place manual purchases and purchases from different stores in separate orders. Each order supports one pickup.');
+            }
+            // Store items must come from the store whose branch is the pickup.
+            if ($this->filled('partner_id') && $partners->isNotEmpty()
+                && (int) $partners->first() !== (int) $this->input('partner_id')) {
+                $validator->errors()->add('items', 'These items belong to a different store. Refresh the cart and try again.');
             }
         });
     }

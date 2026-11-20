@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../../../core/utils/address_text_utils.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
@@ -55,6 +56,10 @@ class LesgoLocationState {
     bool? isLoading,
     bool? isLoadingRoute,
     String? error,
+    // `distanceInKm ?? this.distanceInKm` can never clear the value, so
+    // callers that invalidate the route pass this flag (clears distance and
+    // duration together, they always belong to the same route).
+    bool clearDistance = false,
   }) {
     return LesgoLocationState(
       currentLocation: currentLocation ?? this.currentLocation,
@@ -65,8 +70,10 @@ class LesgoLocationState {
       pickupAddress: pickupAddress ?? this.pickupAddress,
       destinationAddress: destinationAddress ?? this.destinationAddress,
       routePolylines: routePolylines ?? this.routePolylines,
-      distanceInKm: distanceInKm ?? this.distanceInKm,
-      durationInSeconds: durationInSeconds ?? this.durationInSeconds,
+      distanceInKm: clearDistance ? null : (distanceInKm ?? this.distanceInKm),
+      durationInSeconds: clearDistance
+          ? null
+          : (durationInSeconds ?? this.durationInSeconds),
       isLoading: isLoading ?? this.isLoading,
       isLoadingRoute: isLoadingRoute ?? this.isLoadingRoute,
       error: error,
@@ -77,7 +84,12 @@ class LesgoLocationState {
 class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
   LesgoLocationNotifier() : super(LesgoLocationState());
 
+  /// Incremented whenever the route is invalidated or a new fetch starts, so
+  /// an older directions response cannot overwrite a newer one.
+  int _routeSeq = 0;
+
   void reset() {
+    _routeSeq++;
     state = LesgoLocationState(
       routePolylines: {},
       distanceInKm: null,
@@ -142,7 +154,11 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         pickupAddress: address,
         address: address,
         isLoading: false,
+        routePolylines: {},
+        clearDistance: true,
+        isLoadingRoute: false,
       );
+      _routeSeq++;
 
       // DON'T fetch route here - only fetch when user confirms location
     } catch (e) {
@@ -158,6 +174,9 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         pickupAddress: address,
         address: address,
         isLoading: false,
+        routePolylines: {},
+        clearDistance: true,
+        isLoadingRoute: false,
         error: null, // Clear error to allow user to continue
       );
     }
@@ -186,10 +205,11 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
     );
     // DON'T fetch route here - only fetch when user confirms location
     // Clear route since pickup changed
+    _routeSeq++;
     state = state.copyWith(
       routePolylines: {},
-      distanceInKm: null,
-      durationInSeconds: null,
+      clearDistance: true,
+      isLoadingRoute: false,
     );
   }
 
@@ -201,6 +221,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
     print(
       '🔍 LesgoLocation: Destination address fetched: ${address?.toString()}',
     );
+    _routeSeq++;
     state = state.copyWith(
       destinationLocation: location,
       destinationAddress: address,
@@ -208,8 +229,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       isLoading: false,
       // IMPORTANT: Clear route data when destination changes
       routePolylines: {},
-      distanceInKm: null,
-      durationInSeconds: null,
+      clearDistance: true,
       isLoadingRoute: false,
     );
     print(
@@ -247,11 +267,15 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
       address = await _getAddressFromLocation(location);
     }
 
+    _routeSeq++;
     state = state.copyWith(
       destinationLocation: location,
       destinationAddress: address,
       address: address,
       isLoading: false,
+      routePolylines: {},
+      clearDistance: true,
+      isLoadingRoute: false,
     );
     print(
       '🔍 LesgoLocation: After setting state, destinationLocation: ${state.destinationLocation}',
@@ -292,10 +316,11 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
     );
     // DON'T fetch route here - only fetch when user confirms location
     // Clear route since pickup changed
+    _routeSeq++;
     state = state.copyWith(
       routePolylines: {},
-      distanceInKm: null,
-      durationInSeconds: null,
+      clearDistance: true,
+      isLoadingRoute: false,
     );
   }
 
@@ -333,7 +358,9 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
   LocationAddress? _parseFormattedAddress(String formattedAddress) {
     // Parse formatted address like "Malolos, Bulacan, Philippines"
     // Split by comma and assign to appropriate fields
-    final parts = formattedAddress.split(',').map((e) => e.trim()).toList();
+    final parts = stripPlusCode(
+      formattedAddress,
+    ).split(',').map((e) => e.trim()).toList();
 
     if (parts.isEmpty) {
       return null; // No parts to parse
@@ -420,8 +447,14 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
 
     print('✅ Lesgo: Route fetch ALLOWED - forceAllow=$forceAllow');
 
+    final seq = ++_routeSeq;
+
     if (origin == destination) {
-      state = state.copyWith(routePolylines: {}, isLoadingRoute: false);
+      state = state.copyWith(
+        routePolylines: {},
+        clearDistance: true,
+        isLoadingRoute: false,
+      );
       return;
     }
 
@@ -443,6 +476,8 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         destLat: destination.latitude,
         destLng: destination.longitude,
       );
+      // A newer route request (or an invalidation) superseded this one.
+      if (seq != _routeSeq) return;
 
       if (directions != null && directions.points.isNotEmpty) {
         final polyline = Polyline(
@@ -475,7 +510,6 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
           points: [origin, destination],
           color: const Color(0xFF5F2D82),
           width: 8,
-          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
           geodesic: true,
         );
 
@@ -488,6 +522,7 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         );
       }
     } catch (e) {
+      if (seq != _routeSeq) return;
       print('🔴 Lesgo: Error fetching route: $e');
 
       // Fallback to straight line on error
@@ -505,7 +540,6 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
         points: [origin, destination],
         color: const Color(0xFF5F2D82),
         width: 8, // Thicker line
-        patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         geodesic: true,
       );
 
@@ -713,7 +747,11 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
 
           // Use the best result found
           if (bestResult != null) {
-            final formattedAddress = bestResult['formatted_address'] as String?;
+            final rawFormattedAddress = bestResult['formatted_address'] as String?;
+            // Never show a raw plus code ("J36M+FR5, ...") as the address.
+            final formattedAddress = rawFormattedAddress == null
+                ? null
+                : stripPlusCode(rawFormattedAddress);
             final addressComponents =
                 bestResult['address_components'] as List<dynamic>?;
 

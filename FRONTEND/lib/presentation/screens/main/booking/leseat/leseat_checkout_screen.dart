@@ -10,8 +10,10 @@ import '../../../../../domain/entities/booking/leseat/order.dart';
 import '../../../../../domain/entities/booking/leseat/order_item.dart';
 import '../../../../provider/auth/auth_provider.dart';
 import '../../../../provider/main/booking/checkout_provider.dart';
+import '../../../../../core/utils/voucher_service_utils.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/address/address_selector_widget.dart';
+import '../../../../widgets/booking/common/store_branch_selector.dart';
 import '../../../../widgets/payment/booking_payment_method_section.dart';
 import '../../../../widgets/booking/leseat/checkout/voucher_bottom_sheet.dart';
 import '../../../../widgets/widgets.dart';
@@ -26,6 +28,7 @@ class LeseatCheckoutScreen extends ConsumerStatefulWidget {
 
 class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
   AddressDto? _selectedAddress;
+  bool _promptedForAddress = false;
 
   @override
   void initState() {
@@ -41,16 +44,36 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     }
 
     final deliveryAddr = ref.read(addressProvider).deliveryAddress;
-    if (deliveryAddr == null || !mounted) return;
+    if (!mounted) return;
+    if (deliveryAddr == null) {
+      _promptForAddressIfNeeded();
+      return;
+    }
 
     setState(() => _selectedAddress = deliveryAddr);
-    ref.read(checkoutProvider.notifier).updateDeliveryAddress(
+    ref
+        .read(checkoutProvider.notifier)
+        .updateDeliveryAddress(
           deliveryAddr.addressLine1,
           deliveryAddr.latitude,
           deliveryAddr.longitude,
           deliveryAddr.contactName ?? '',
           deliveryAddr.contactPhone ?? '',
         );
+  }
+
+  /// Opens the address sheet once when checkout has no usable delivery address,
+  /// so the customer is not left on a blocked checkout with no next step.
+  void _promptForAddressIfNeeded() {
+    if (_promptedForAddress || !mounted) return;
+    final checkout = ref.read(checkoutProvider);
+    if (checkout.order == null ||
+        checkout.hasValidDropoffLocation ||
+        checkout.isLoading) {
+      return;
+    }
+    _promptedForAddress = true;
+    _showAddressSelector(context, ref);
   }
 
   void _showAddressSelector(BuildContext context, WidgetRef ref) {
@@ -60,7 +83,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.7,
-        decoration:  BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface(context, Colors.white),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -109,7 +132,13 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
   }
 
   Future<void> _showVoucherDialog(BuildContext context, WidgetRef ref) async {
-    final code = await showVoucherBottomSheet(context);
+    final order = ref.read(checkoutProvider).order;
+    final code = await showVoucherBottomSheet(
+      context,
+      serviceId: BookingServiceIds.leseat,
+      // The backend checks the minimum against subtotal + delivery fee.
+      orderValue: order == null ? null : order.subtotal + order.deliveryFee,
+    );
     if (code == null || !context.mounted) return;
 
     final error = await ref.read(checkoutProvider.notifier).applyVoucher(code);
@@ -120,8 +149,32 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     }
   }
 
+  /// Keeps the local selection valid when saved addresses change (e.g. the
+  /// selected one was deleted): fall back to the delivery address or clear.
+  void _onAddressesChanged(List<AddressDto> addresses) {
+    final selected = _selectedAddress;
+    if (selected == null || addresses.any((a) => a.id == selected.id)) return;
+    final fallback = ref.read(addressProvider).deliveryAddress;
+    setState(() => _selectedAddress = fallback);
+    ref
+        .read(checkoutProvider.notifier)
+        .updateDeliveryAddress(
+          fallback?.addressLine1 ?? '',
+          fallback?.latitude ?? 0,
+          fallback?.longitude ?? 0,
+          fallback?.contactName ?? '',
+          fallback?.contactPhone ?? '',
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<List<AddressDto>>(
+      addressProvider.select((state) => state.addresses),
+      (previous, next) {
+        if (mounted) _onAddressesChanged(next);
+      },
+    );
     ref.listen<String?>(
       checkoutProvider.select((state) => state.voucherError),
       (previous, next) {
@@ -130,12 +183,52 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
         }
       },
     );
-    ref.listen<String?>(
-      checkoutProvider.select((state) => state.fareError),
+    ref.listen<String?>(checkoutProvider.select((state) => state.fareError), (
+      previous,
+      next,
+    ) {
+      if (next != null &&
+          next != previous &&
+          next != kMissingDeliveryAddressMessage &&
+          context.mounted) {
+        SnackBarUtils.showError(context, next);
+      }
+    });
+    // The customer just added or picked an address while checkout still had
+    // none (e.g. via Manage > Add Address): use it now, so the "selected" tick
+    // in the address sheet matches what checkout actually delivers to.
+    ref.listen<AddressDto?>(
+      addressProvider.select((state) => state.deliveryAddress),
       (previous, next) {
-        if (next != null && next != previous && context.mounted) {
-          SnackBarUtils.showError(context, next);
-        }
+        if (next == null || !mounted) return;
+        final checkout = ref.read(checkoutProvider);
+        if (checkout.order == null || checkout.hasValidDropoffLocation) return;
+        setState(() => _selectedAddress = next);
+        ref
+            .read(checkoutProvider.notifier)
+            .updateDeliveryAddress(
+              next.addressLine1,
+              next.latitude,
+              next.longitude,
+              next.contactName ?? '',
+              next.contactPhone ?? '',
+            );
+      },
+    );
+    // No usable delivery address: open the address sheet once so the customer
+    // can pick or add one instead of landing on a silently blocked checkout.
+    ref.listen<bool>(
+      checkoutProvider.select(
+        (state) =>
+            state.order != null &&
+            !state.hasValidDropoffLocation &&
+            !state.isLoading,
+      ),
+      (previous, needsAddress) {
+        if (!needsAddress) return;
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _promptForAddressIfNeeded(),
+        );
       },
     );
     final checkoutState = ref.watch(checkoutProvider);
@@ -196,6 +289,19 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
+                    // Pickup branch (multi-branch stores)
+                    if (checkoutState.selectedBranch != null) ...[
+                      StoreBranchSelector(
+                        branches: checkoutState.branches,
+                        selected: checkoutState.selectedBranch,
+                        dropoffLat: checkoutState.dropoffLat,
+                        dropoffLng: checkoutState.dropoffLng,
+                        enabled: !checkoutState.isLoading,
+                        onSelected: checkoutNotifier.selectBranch,
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    ],
+
                     // Restaurant Section or Empty State
                     if (isCartEmpty)
                       Container(
@@ -208,7 +314,10 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                             Icon(
                               Icons.shopping_cart_outlined,
                               size: 48,
-                              color: AppColors.foreground(context, Colors.grey[400]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[400]!,
+                              ),
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 16),
@@ -218,7 +327,10 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                             ),
                             TextButton(
@@ -232,7 +344,10 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                                     14,
                                   ),
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.accent(context, Color(0xFF5F2D82)),
+                                  color: AppColors.accent(
+                                    context,
+                                    Color(0xFF5F2D82),
+                                  ),
                                 ),
                               ),
                             ),
@@ -276,30 +391,32 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                     ),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+                    // Voucher (scrolls with the page so small screens keep the items visible)
+                    VoucherSection(
+                      enabled: !isCartEmpty,
+                      appliedVoucher: order.voucherCode,
+                      onApplyTap: () {
+                        _showVoucherDialog(context, ref);
+                      },
+                      onRemoveTap: () {
+                        checkoutNotifier.removeVoucher();
+                      },
+                    ),
+
+                    // Order summary
+                    OrderSummarySection(
+                      subtotal: subtotal,
+                      delivery: deliveryFee,
+                      discount: order.discount,
+                      total: total,
+                      itemCount: isCartEmpty ? 0 : order.totalItems,
+                    ),
+
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                   ],
                 ),
               ),
-            ),
-
-            // Fixed Voucher Section
-            VoucherSection(
-              enabled: !isCartEmpty,
-              appliedVoucher: order.voucherCode,
-              onApplyTap: () {
-                _showVoucherDialog(context, ref);
-              },
-              onRemoveTap: () {
-                checkoutNotifier.removeVoucher();
-              },
-            ),
-
-            // Fixed Order Summary
-            OrderSummarySection(
-              subtotal: subtotal,
-              delivery: deliveryFee,
-              discount: order.discount,
-              total: total,
-              itemCount: isCartEmpty ? 0 : order.totalItems,
             ),
           ],
         ),
@@ -322,7 +439,36 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (checkoutState.fareError != null)
+              if (checkoutState.fareError != null &&
+                  !checkoutState.isLoadingFare)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    checkoutState.fareError!,
+                    key: const ValueKey('checkout-fare-error'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 12.5,
+                      color: Color(0xFFD32F2F),
+                    ),
+                  ),
+                ),
+              if (checkoutState.fareError == kMissingDeliveryAddressMessage)
+                TextButton.icon(
+                  key: const ValueKey('checkout-add-address'),
+                  onPressed: () => _showAddressSelector(context, ref),
+                  icon: const Icon(Icons.add_location_alt_outlined),
+                  label: const Text('Add delivery address'),
+                )
+              else if (isOutOfRangeDeliveryMessage(checkoutState.fareError))
+                TextButton.icon(
+                  key: const ValueKey('checkout-change-address'),
+                  onPressed: () => _showAddressSelector(context, ref),
+                  icon: const Icon(Icons.edit_location_alt_outlined),
+                  label: const Text('Change delivery address'),
+                )
+              else if (checkoutState.fareError != null)
                 TextButton.icon(
                   onPressed: checkoutState.isLoadingFare
                       ? null
@@ -331,60 +477,66 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                   label: const Text('Retry delivery fee'),
                 ),
               PrimaryButton(
-            text: 'Checkout',
-            isLoading: checkoutState.isLoading,
-            backgroundColor: isCartEmpty
-                ? Colors.grey
-                : const Color(0xFF5F2D82),
-            onPressed: isCartEmpty || checkoutState.isLoading ||
-                    checkoutState.isLoadingFare ||
-                    checkoutState.isValidatingVoucher ||
-                    !checkoutState.hasValidDeliveryFee
-                ? null
-                : () async {
-                    final success = await checkoutNotifier.placeOrder(context);
-                    if (!context.mounted) return;
-                    if (success) {
-                      final checkoutState = ref.read(checkoutProvider);
-                      final createdId = checkoutState.createdOrderId;
-                      if (createdId == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Order was not created. Please try again.'),
-                            backgroundColor: Colors.red,
-                          ),
+                text: 'Checkout',
+                isLoading: checkoutState.isLoading,
+                backgroundColor: isCartEmpty
+                    ? Colors.grey
+                    : const Color(0xFF5F2D82),
+                onPressed:
+                    isCartEmpty ||
+                        checkoutState.isLoading ||
+                        checkoutState.isLoadingFare ||
+                        checkoutState.isValidatingVoucher ||
+                        !checkoutState.hasValidDeliveryFee
+                    ? null
+                    : () async {
+                        final success = await checkoutNotifier.placeOrder(
+                          context,
                         );
-                        return;
-                      }
+                        if (!context.mounted) return;
+                        if (success) {
+                          final checkoutState = ref.read(checkoutProvider);
+                          final createdId = checkoutState.createdOrderId;
+                          if (createdId == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Order was not created. Please try again.',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
 
-                      AppRouter.pushReplacement(
-                        context,
-                        BookingRoutes.leseatWaitingConfirmation,
-                        arguments: {
-                          'orderId': createdId,
-                          'address': order.deliveryAddress,
-                          'orderItems': order.items
-                              .map(
-                                (item) => {
-                                  'name': item.name,
-                                  'price': item.price,
-                                  'quantity': item.quantity,
-                                  'restaurantName': item.restaurantName,
-                                },
-                              )
-                              .toList(),
-                        },
-                      );
-                    } else {
-                      final raw =
-                          ref.read(checkoutProvider).error ??
-                          'Failed to place order. Please try again.';
-                      final errorMsg = raw.startsWith('Exception: ')
-                          ? raw.substring(11)
-                          : raw;
-                      SnackBarUtils.showError(context, errorMsg);
-                    }
-                  },
+                          AppRouter.pushReplacement(
+                            context,
+                            BookingRoutes.leseatWaitingConfirmation,
+                            arguments: {
+                              'orderId': createdId,
+                              'address': order.deliveryAddress,
+                              'orderItems': order.items
+                                  .map(
+                                    (item) => {
+                                      'name': item.name,
+                                      'price': item.price,
+                                      'quantity': item.quantity,
+                                      'restaurantName': item.restaurantName,
+                                    },
+                                  )
+                                  .toList(),
+                            },
+                          );
+                        } else {
+                          final raw =
+                              ref.read(checkoutProvider).error ??
+                              'Failed to place order. Please try again.';
+                          final errorMsg = raw.startsWith('Exception: ')
+                              ? raw.substring(11)
+                              : raw;
+                          SnackBarUtils.showError(context, errorMsg);
+                        }
+                      },
               ),
             ],
           ),

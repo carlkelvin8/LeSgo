@@ -159,6 +159,17 @@ class Partner extends Model
         return $this->hasManyThrough(MenuItem::class, MenuCategory::class, 'partner_id', 'menu_category_id');
     }
 
+    /**
+     * Empty hours must read as null: PHP encodes an empty array as `[]`, and
+     * released apps expect an object here and fail the merchant's whole profile.
+     */
+    public function getOpeningHoursAttribute($value): ?array
+    {
+        $hours = is_string($value) ? json_decode($value, true) : $value;
+
+        return is_array($hours) && $hours !== [] ? $hours : null;
+    }
+
     protected function logoUrl(): Attribute
     {
         return Attribute::make(

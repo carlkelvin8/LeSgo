@@ -168,12 +168,11 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                   ? const Center(
                       child: CircularProgressIndicator(color: Colors.white),
                     )
-                  : Center(
-                      child: AspectRatio(
-                        aspectRatio: controller.value.aspectRatio,
-                        child: CameraPreview(controller),
-                      ),
-                    ),
+                  // CameraPreview already sizes itself with the correct (portrait
+                  // aware) aspect ratio. Wrapping it in another AspectRatio with
+                  // the sensor's landscape ratio squashed the image sideways, so
+                  // faces looked stretched / fisheye.
+                  : Center(child: CameraPreview(controller)),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),

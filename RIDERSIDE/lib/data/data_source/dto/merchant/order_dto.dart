@@ -24,6 +24,11 @@ String? _parseOrderItemImageUrl(dynamic value) {
   return null;
 }
 
+/// The API encodes an item with no options as `[]`, not an object.
+Map<String, dynamic>? _parseSelectedOptions(dynamic value) {
+  return value is Map ? Map<String, dynamic>.from(value) : null;
+}
+
 double? _parseFareBreakdownSubtotal(dynamic value) {
   if (value is! Map) return null;
   return _parseDouble(value['subtotal']) ??
@@ -31,11 +36,28 @@ double? _parseFareBreakdownSubtotal(dynamic value) {
       _parseDouble(value['items_total']);
 }
 
+Map? _metaBranch(Map json) {
+  final meta = json['meta'];
+  if (meta is! Map) return null;
+  final branch = meta['branch'];
+  return branch is Map ? branch : null;
+}
+
+Object? _readBranchId(Map json, String _) =>
+    int.tryParse(_metaBranch(json)?['id']?.toString() ?? '') ??
+    int.tryParse(json['partner_branch_id']?.toString() ?? '');
+
+Object? _readBranchName(Map json, String _) {
+  final name = _metaBranch(json)?['name']?.toString().trim();
+  return (name == null || name.isEmpty) ? null : name;
+}
+
+/// Food value of the order from `meta`. Never `grand_total`: it includes the
+/// delivery fee, which is not the store's money.
 double? _parseMetaOrderValue(dynamic value) {
   if (value is! Map) return null;
   return _parseDouble(value['order_value']) ??
-      _parseDouble(value['subtotal']) ??
-      _parseDouble(value['grand_total']);
+      _parseDouble(value['subtotal']);
 }
 
 @JsonSerializable()
@@ -86,16 +108,25 @@ class OrderDto {
   final String? specialInstructions;
   @JsonKey(name: 'completed_at')
   final String? completedAt;
+  @JsonKey(name: 'cancelled_at')
+  final String? cancelledAt;
   @JsonKey(name: 'partner_share', fromJson: _parseDouble)
   final double? partnerShare;
   @JsonKey(name: 'fare_breakdown', fromJson: _parseFareBreakdownSubtotal)
   final double? fareBreakdownSubtotal;
   @JsonKey(name: 'meta', fromJson: _parseMetaOrderValue)
   final double? metaOrderValue;
+  // Fulfilling branch, read from `meta.branch` (multi-branch stores).
+  @JsonKey(name: 'branch_id', readValue: _readBranchId, includeToJson: false)
+  final int? branchId;
+  @JsonKey(name: 'branch_name', readValue: _readBranchName, includeToJson: false)
+  final String? branchName;
   @JsonKey(name: 'created_at')
   final String createdAt;
   @JsonKey(name: 'updated_at')
   final String updatedAt;
+  @JsonKey(name: 'ready_for_pickup_at')
+  final String? readyForPickupAt;
   
   // Relationships
   @JsonKey(name: 'customer')
@@ -132,11 +163,15 @@ class OrderDto {
     required this.paymentStatus,
     this.specialInstructions,
     this.completedAt,
+    this.cancelledAt,
     this.partnerShare,
     this.fareBreakdownSubtotal,
     this.metaOrderValue,
+    this.branchId,
+    this.branchName,
     required this.createdAt,
     required this.updatedAt,
+    this.readyForPickupAt,
     this.user,
     this.driver,
     this.partner,
@@ -167,7 +202,7 @@ class OrderItemDto {
   final double? totalPrice;
   @JsonKey(name: 'notes')
   final String? notes;
-  @JsonKey(name: 'selected_options')
+  @JsonKey(name: 'selected_options', fromJson: _parseSelectedOptions)
   final Map<String, dynamic>? selectedOptionsRaw;
   @JsonKey(name: 'image_url', fromJson: _parseOrderItemImageUrl)
   final String? imageUrl;

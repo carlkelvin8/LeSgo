@@ -99,6 +99,45 @@ class User extends Authenticatable
         return $this->hasOne(PartnerStaff::class, 'user_id');
     }
 
+    /**
+     * The store this account works for: the one it owns (partner_admin) or the
+     * one it is an active staff member of (partner_staff). Null for everyone else.
+     */
+    public function workingPartnerId(): ?int
+    {
+        if ($this->isPartnerAdmin()) {
+            return optional($this->partner)->id;
+        }
+
+        if ($this->role === 'partner_staff') {
+            $partnerId = $this->partnerStaff()
+                ->where(fn ($q) => $q->where('is_active', true)->orWhereNull('is_active'))
+                ->value('partner_id');
+
+            return $partnerId ? (int) $partnerId : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether this account is active staff of the store with the manage_menu
+     * permission (a staff admin, or staff granted it explicitly).
+     */
+    public function canEditStoreMenu(int $partnerId): bool
+    {
+        if ($this->role !== 'partner_staff') {
+            return false;
+        }
+
+        $staff = $this->partnerStaff()
+            ->where('partner_id', $partnerId)
+            ->where(fn ($q) => $q->where('is_active', true)->orWhereNull('is_active'))
+            ->first();
+
+        return $staff !== null && $staff->hasPermission('manage_menu');
+    }
+
     public function addresses()
     {
         return $this->hasMany(Address::class, 'user_id');

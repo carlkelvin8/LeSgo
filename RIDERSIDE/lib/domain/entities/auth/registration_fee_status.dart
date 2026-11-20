@@ -23,6 +23,13 @@ class RegistrationFeeStatus {
   final String? activatedAt;
   final String? failureReason;
 
+  /// When the current annual fee period ends (null for riders, exempt partners
+  /// and fees that are not yet paid or waived).
+  final String? registrationExpiresAt;
+
+  /// Long-time partners exempt from the annual renewal.
+  final bool isGrandfathered;
+
   const RegistrationFeeStatus({
     required this.requiresFee,
     required this.paymentWaived,
@@ -45,6 +52,8 @@ class RegistrationFeeStatus {
     this.approvedAt,
     this.activatedAt,
     this.failureReason,
+    this.registrationExpiresAt,
+    this.isGrandfathered = false,
   });
 
   bool get isPaid => paymentStatus == 'paid';
@@ -70,6 +79,34 @@ class RegistrationFeeStatus {
       isFeeSatisfied && !isApproved;
 
   double get amountValue => amount ?? 0;
+
+  /// Renewal reminder window, matching the backend's 30-day push.
+  static const int renewalReminderDays = 30;
+
+  DateTime? get renewalDate {
+    final raw = registrationExpiresAt;
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw)?.toLocal();
+  }
+
+  /// Whole days until the annual renewal falls due (0 = today), or null.
+  int? daysUntilRenewal({DateTime? now}) {
+    final due = renewalDate;
+    if (due == null) return null;
+    final today = now ?? DateTime.now();
+    final a = DateTime(today.year, today.month, today.day);
+    final b = DateTime(due.year, due.month, due.day);
+    return b.difference(a).inDays;
+  }
+
+  /// True when an annual partner is within the reminder window and still active.
+  bool renewalDueSoon({DateTime? now}) {
+    if (billingPeriod != 'annual' || isGrandfathered || !isFeeSatisfied) {
+      return false;
+    }
+    final days = daysUntilRenewal(now: now);
+    return days != null && days >= 0 && days <= renewalReminderDays;
+  }
 
   String get amountLabel =>
       '${currency.isEmpty ? 'PHP' : currency} ${amountValue.toStringAsFixed(2)}';
@@ -112,6 +149,8 @@ class RegistrationFeeStatus {
       approvedAt: map['approved_at']?.toString(),
       activatedAt: map['activated_at']?.toString(),
       failureReason: map['failure_reason']?.toString(),
+      registrationExpiresAt: map['registration_expires_at']?.toString(),
+      isGrandfathered: _asBool(map['is_grandfathered'], false),
     );
   }
 

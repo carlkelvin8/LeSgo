@@ -104,7 +104,7 @@ class WalletService
             self::credit(
                 $locked->user,
                 (float) $locked->amount,
-                'LesPay top-up via Xendit',
+                'LesPay top-up via '.self::providerLabel($locked->provider ?? null),
                 WalletTopUp::class,
                 $locked->id,
             );
@@ -122,6 +122,15 @@ class WalletService
         }
 
         return true;
+    }
+
+    private static function providerLabel(?string $provider): string
+    {
+        return match (strtolower((string) $provider)) {
+            'paymongo' => 'PayMongo',
+            'xendit', '' => 'Xendit',
+            default => ucfirst(strtolower((string) $provider)),
+        };
     }
 
     private static function lockWalletForUser(User $user): Wallet

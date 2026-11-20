@@ -62,14 +62,30 @@ class NotificationNavigationService {
 
       if (!context.mounted) return;
       final handled = await _navigate(context, parsed);
-      if (handled) {
-        _pendingPayload = null;
-      }
+      _pendingPayload = pendingAfterHandling(_pendingPayload, payload, handled);
     } catch (e, stack) {
       AppLogger.error('Notification navigation failed', e, stack);
     } finally {
       _processing = false;
+      // A newer notification was tapped while this one (e.g. an open chat) was
+      // still on screen; process it now instead of dropping it.
+      final next = _pendingPayload;
+      if (next != null && next != payload) {
+        unawaited(processPending());
+      }
     }
+  }
+
+  /// Pending payload to keep after trying to open [handledPayload]. A newer tap
+  /// that arrived meanwhile must never be cleared by the older one finishing.
+  @visibleForTesting
+  static String? pendingAfterHandling(
+    String? current,
+    String handledPayload,
+    bool handled,
+  ) {
+    if (current != handledPayload) return current;
+    return handled ? null : current;
   }
 
   static Future<bool> _navigate(

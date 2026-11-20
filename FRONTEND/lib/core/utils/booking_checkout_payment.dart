@@ -131,7 +131,12 @@ Future<bool> completeBookingPayment({
     return true;
   }
 
-  await _markPaymentFailed(orderId);
+  // `null` means the payment screen could not verify the invoice (back press
+  // with no network). Do not cancel an order that may have been paid; the
+  // backend stale-payment sweep resolves it.
+  if (paid == false) {
+    await _markPaymentFailed(orderId);
+  }
   return false;
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../widgets/widgets.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderHistoryDetailScreen extends StatelessWidget {
   final Map<String, String> bookingData;
@@ -17,7 +18,7 @@ class RiderHistoryDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Column(
           children: [

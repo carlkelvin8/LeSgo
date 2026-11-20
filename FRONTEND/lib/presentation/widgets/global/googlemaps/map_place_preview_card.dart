@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -25,24 +26,17 @@ class MapPlacePreviewCard extends StatelessWidget {
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: AppCard.decoration(context, radius: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              const Icon(Icons.place, color: Color(0xFF5F2D82)),
+              Icon(
+                Icons.place,
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -80,7 +74,8 @@ class MapPlacePreviewCard extends StatelessWidget {
               Expanded(
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
+                    backgroundColor: AppColors.buttonFill(context),
+                    foregroundColor: AppColors.onButton(context),
                   ),
                   onPressed: isLoading ? null : onConfirm,
                   child: isLoading

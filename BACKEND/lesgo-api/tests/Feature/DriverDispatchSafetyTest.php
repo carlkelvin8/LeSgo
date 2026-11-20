@@ -113,6 +113,12 @@ class DriverDispatchSafetyTest extends TestCase
             longitude: 124.6325,
             rating: 4.0
         );
+        $offDutyDriver = $this->createAvailableDriver(
+            latitude: 8.4542,
+            longitude: 124.6319,
+            rating: 5.0,
+            available: false,
+        );
 
         Order::factory()->create([
             'customer_id' => $customer->id,
@@ -135,9 +141,11 @@ class DriverDispatchSafetyTest extends TestCase
 
         $this->assertNotNull($assigned);
         $this->assertSame($freeDriver->id, $assigned->id);
+        $this->assertNotSame($offDutyDriver->id, $assigned->id);
         $this->assertSame($freeDriver->driverProfile->id, $target->fresh()->driver_id);
         $this->assertSame('accepted', $target->fresh()->status);
-        $this->assertSame(980.0, (float) $freeDriver->wallet()->first()->balance);
+        // Basic tier platform cut: 30% of the PHP 100 estimate.
+        $this->assertSame(970.0, (float) $freeDriver->wallet()->first()->balance);
         $this->assertDatabaseCount('wallet_transactions', 1);
         Queue::assertPushed(NotifyDriverAssignedJob::class, 1);
     }
@@ -157,6 +165,20 @@ class DriverDispatchSafetyTest extends TestCase
         $this->assertDatabaseMissing('notifications', [
             'user_id' => $driver->id,
         ]);
+    }
+
+    public function test_notification_job_does_not_notify_off_duty_drivers(): void
+    {
+        $driver = $this->createAvailableDriver(latitude: 8.4542, longitude: 124.6319, available: false);
+        $order = Order::factory()->create([
+            'pickup_lat' => 8.4542,
+            'pickup_lng' => 124.6319,
+            'vehicle_type' => 'tricycle',
+        ]);
+
+        (new NotifyNearbyDriversNewOrderJob($order))->handle();
+
+        $this->assertDatabaseMissing('notifications', ['user_id' => $driver->id]);
     }
 
     public function test_incompatible_driver_cannot_discover_or_accept_order(): void
@@ -295,7 +317,7 @@ class DriverDispatchSafetyTest extends TestCase
 
         OrderDriverWalletService::chargeDriverOnAccept($firstDriver, $order);
         $order->save();
-        $this->assertSame(80.0, (float) $firstWallet->fresh()->balance);
+        $this->assertSame(70.0, (float) $firstWallet->fresh()->balance);
 
         OrderDriverWalletService::refundDriverOnCancel($order);
         $this->assertSame(100.0, (float) $firstWallet->fresh()->balance);
@@ -303,7 +325,7 @@ class DriverDispatchSafetyTest extends TestCase
         $order = $order->fresh();
         OrderDriverWalletService::chargeDriverOnAccept($secondDriver, $order);
         $order->save();
-        $this->assertSame(80.0, (float) $secondWallet->fresh()->balance);
+        $this->assertSame(70.0, (float) $secondWallet->fresh()->balance);
 
         OrderDriverWalletService::refundDriverOnCancel($order);
         $this->assertSame(100.0, (float) $secondWallet->fresh()->balance);
@@ -313,6 +335,7 @@ class DriverDispatchSafetyTest extends TestCase
         float $latitude,
         float $longitude,
         float $rating = 4.5,
+        bool $available = true,
     ): User {
         $driver = User::factory()->driver()->create();
         DriverProfile::factory()->create([
@@ -320,6 +343,7 @@ class DriverDispatchSafetyTest extends TestCase
             'status' => 'active',
             'rating' => $rating,
             'vehicle_type' => 'tricycle',
+            'is_available' => $available,
         ]);
         $driver->wallet()->create(['balance' => 1000, 'currency' => 'PHP']);
         DriverLocation::create([

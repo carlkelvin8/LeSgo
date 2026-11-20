@@ -184,7 +184,12 @@ class LesgoDetailsPanel extends ConsumerWidget {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF5F2D82)),
+                      borderSide: BorderSide(
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -254,7 +259,12 @@ class LesgoDetailsPanel extends ConsumerWidget {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Color(0xFF5F2D82)),
+                      borderSide: BorderSide(
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                     ),
                   ),
                 ),

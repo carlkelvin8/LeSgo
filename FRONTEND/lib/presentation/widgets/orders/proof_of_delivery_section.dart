@@ -7,10 +7,7 @@ import '../../../core/utils/responsive_utils.dart';
 class ProofOfDeliverySection extends StatelessWidget {
   final List<String> imageUrls;
 
-  const ProofOfDeliverySection({
-    super.key,
-    required this.imageUrls,
-  });
+  const ProofOfDeliverySection({super.key, required this.imageUrls});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +24,11 @@ class ProofOfDeliverySection extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.photo_camera_outlined, color: AppColors.foreground(context, Colors.grey[700]!), size: 20),
+              Icon(
+                Icons.photo_camera_outlined,
+                color: AppColors.foreground(context, Colors.grey[700]!),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Proof of Delivery',
@@ -41,6 +42,7 @@ class ProofOfDeliverySection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           GridView.builder(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -82,10 +84,7 @@ class _ProofNetworkImage extends StatefulWidget {
   final String url;
   final BoxFit fit;
 
-  const _ProofNetworkImage({
-    required this.url,
-    this.fit = BoxFit.cover,
-  });
+  const _ProofNetworkImage({required this.url, this.fit = BoxFit.cover});
 
   @override
   State<_ProofNetworkImage> createState() => _ProofNetworkImageState();
@@ -122,9 +121,7 @@ class _ProofNetworkImageState extends State<_ProofNetworkImage> {
         if (progress == null) return child;
         return Container(
           color: AppColors.surface(context, Colors.grey[200]!),
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         );
       },
       errorBuilder: (_, __, ___) {
@@ -146,7 +143,10 @@ class _ProofNetworkImageState extends State<_ProofNetworkImage> {
         }
         return Container(
           color: AppColors.surface(context, Colors.grey[200]!),
-          child:  Icon(Icons.broken_image, color: AppColors.foreground(context, Colors.grey)),
+          child: Icon(
+            Icons.broken_image,
+            color: AppColors.foreground(context, Colors.grey),
+          ),
         );
       },
     );

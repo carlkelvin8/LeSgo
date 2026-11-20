@@ -117,7 +117,7 @@ class _RiderPackageTierViewState extends ConsumerState<RiderPackageTierView>
   Future<void> _handleUpgrade(RiderPackageOption option) async {
     final lang = ref.read(appLanguageProvider);
     final wallet = ref.read(riderWalletProvider);
-    final price = option.oneTimePrice ?? 0;
+    final price = option.payablePrice ?? 0;
     final canUseLesPay = wallet.balance >= price;
 
     final method = await showModalBottomSheet<String>(
@@ -1208,7 +1208,7 @@ class _StickyUpgradeCTAState extends State<_StickyUpgradeCTA>
                           ),
                         ),
                         const SizedBox(width: 8),
-                        if (widget.option.oneTimePrice != null)
+                        if (widget.option.payablePrice != null)
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
@@ -1217,7 +1217,7 @@ class _StickyUpgradeCTAState extends State<_StickyUpgradeCTA>
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              '₱${widget.option.oneTimePrice!.toStringAsFixed(0)}',
+                              '₱${widget.option.payablePrice!.toStringAsFixed(0)}',
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 11,
@@ -1288,7 +1288,11 @@ class _PaymentSheet extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            '${option.priceLabel} · ${option.profitShareLabel}',
+            option.upgradePrice != null
+                ? 'Pay ₱${option.upgradePrice!.toStringAsFixed(0)} more '
+                    '(₱${option.oneTimePrice?.toStringAsFixed(0) ?? '-'} total, '
+                    'minus your current package) · ${option.profitShareLabel}'
+                : '${option.priceLabel} · ${option.profitShareLabel}',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'TT Fors',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../../core/utils/menu_image_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../common/menu_image_widget.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantMenuItemCard extends StatelessWidget {
   final String name;
@@ -34,7 +35,7 @@ class MerchantMenuItemCard extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       child: Material(
-        color: const Color(0xFFF5F4F7),
+        color: context.surf(const Color(0xFFF5F4F7)),
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onEditTap,
@@ -48,7 +49,7 @@ class MerchantMenuItemCard extends StatelessWidget {
                   width: ResponsiveUtils.spacing(context, 60),
                   height: ResponsiveUtils.spacing(context, 60),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: context.surf(Colors.white),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   clipBehavior: Clip.antiAlias,
@@ -69,7 +70,7 @@ class MerchantMenuItemCard extends StatelessWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 13),
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF302B36),
+                                color: context.txt(const Color(0xFF302B36)),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -95,7 +96,7 @@ class MerchantMenuItemCard extends StatelessWidget {
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 10.5),
                             height: 1.4,
-                            color: const Color(0xFF918A98),
+                            color: context.sub(const Color(0xFF918A98)),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -109,7 +110,7 @@ class MerchantMenuItemCard extends StatelessWidget {
                             vertical: ResponsiveUtils.spacing(context, 3),
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.surf(Colors.white),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -138,7 +139,7 @@ class MerchantMenuItemCard extends StatelessWidget {
                 Icon(
                   Icons.chevron_right_rounded,
                   size: ResponsiveUtils.fontSize(context, 18),
-                  color: const Color(0xFF8F8798),
+                  color: context.sub(const Color(0xFF8F8798)),
                 ),
               ],
             ),
@@ -191,7 +192,7 @@ class MerchantMenuItemCard extends StatelessWidget {
       child: Icon(
         Icons.restaurant_menu,
         size: ResponsiveUtils.spacing(context, 24),
-        color: const Color(0xFFA49BAE),
+        color: context.sub(const Color(0xFFA49BAE)),
       ),
     );
   }

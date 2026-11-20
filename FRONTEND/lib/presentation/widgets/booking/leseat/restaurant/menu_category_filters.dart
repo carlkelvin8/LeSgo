@@ -17,26 +17,38 @@ class MenuCategoryFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 50,
+      height: 56,
       color: AppColors.surface(context, const Color(0xFFFEFDFE)),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        // Vertical padding keeps the pills off the row's edges; they were
+        // stretched to the full row height before.
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final category = categories[index];
-          final isSelected = selectedCategoryId == category.id ||
+          final isSelected =
+              selectedCategoryId == category.id ||
               (selectedCategoryId == null && category.id == 'popular');
 
           return Material(
-            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Color(0xFFF5F4F7)),
-            borderRadius: BorderRadius.circular(24),
+            color: isSelected
+                ? AppColors.accent(context, Color(0xFF5F2D82))
+                : AppColors.surface(context, Color(0xFFF5F4F7)),
+            shape: StadiumBorder(
+              side: isSelected
+                  ? BorderSide.none
+                  : BorderSide(
+                      color: AppColors.border(context, const Color(0xFFECEAF0)),
+                    ),
+            ),
             child: InkWell(
               onTap: () => onCategorySelected(category.id),
-              borderRadius: BorderRadius.circular(24),
+              customBorder: const StadiumBorder(),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -46,7 +58,9 @@ class MenuCategoryFilters extends StatelessWidget {
                         child: Icon(
                           Icons.local_fire_department,
                           size: 16,
-                          color: isSelected ? AppColors.onAccent(context) : const Color(0xFFFF6D00),
+                          color: isSelected
+                              ? AppColors.onAccent(context)
+                              : const Color(0xFFFF6D00),
                         ),
                       ),
                     Text(
@@ -55,7 +69,9 @@ class MenuCategoryFilters extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? AppColors.onAccent(context) : AppColors.foreground(context, Color(0xFF302B36)),
+                        color: isSelected
+                            ? AppColors.onAccent(context)
+                            : AppColors.foreground(context, Color(0xFF302B36)),
                       ),
                     ),
                   ],

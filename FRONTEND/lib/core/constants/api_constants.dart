@@ -9,6 +9,9 @@ class ApiConstants {
 
   // API Base URL - Force Production for testing
   static String get baseUrl {
+    // Local/e2e override: --dart-define=API_BASE_URL=http://127.0.0.1:<port>/api
+    const override = String.fromEnvironment('API_BASE_URL');
+    if (override.isNotEmpty) return override;
     // Force production API for testing
     return 'https://lesgo-api-feature-auth-fhlrsy.laravel.cloud/api';
 
@@ -33,6 +36,7 @@ class ApiConstants {
   // Auth endpoints
   static const String authMe = '/v1/auth/me';
   static const String googleSignIn = '/v1/auth/google';
+  static const String appleSignIn = '/v1/auth/apple';
 
   // User endpoints
   static String userById(int userId) => '/v1/users/$userId';

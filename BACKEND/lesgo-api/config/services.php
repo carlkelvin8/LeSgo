@@ -112,6 +112,12 @@ return [
     // =========
     'apple' => [
         'client_id' => env('APPLE_CLIENT_ID', 'com.lesgo.app'),
+        // Every iOS bundle that signs in with Apple (comma-separated). Tokens
+        // are accepted when their audience is any of these or client_id.
+        'client_ids' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('APPLE_CLIENT_IDS', 'com.lesgo.app,com.lesgo.customer'))
+        ))),
         // Only needed to revoke Apple tokens when an account is deleted.
         // Leave unset to skip revocation (sign-in works without them).
         'team_id' => env('APPLE_TEAM_ID'),
@@ -131,6 +137,14 @@ return [
         'ios_app_id' => env('FIREBASE_APP_ID_IOS'),
         'ios_bundle_id' => env('FIREBASE_IOS_BUNDLE_ID', 'com.lesgo.app'),
         'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
+    // =========
+    // Phone OTP: local/testing-only fallback that returns the code in the API
+    // response when Twilio is not configured (ignored in production).
+    // =========
+    'otp' => [
+        'allow_local_fallback' => (bool) env('OTP_ALLOW_LOCAL_FALLBACK', false),
     ],
 
 ];

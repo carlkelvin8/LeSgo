@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -15,9 +16,9 @@ Future<String?> showTwoFactorCodeDialog(
     barrierDismissible: false,
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        icon: const Icon(
+        icon: Icon(
           Icons.security_outlined,
-          color: Color(0xFF5F2D82),
+          color: AppColors.accent(context, const Color(0xFF5F2D82)),
           size: 36,
         ),
         title: Text(title),
@@ -74,7 +75,8 @@ Future<String?> showTwoFactorCodeDialog(
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
             ),
             child: const Text('Verify'),
           ),

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,55 +37,75 @@ class _LanguageSettingsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(tr(context, 'language')),
-      ),
+      appBar: AppBar(title: Text(tr(context, 'language'))),
       body: RadioGroup<AppLanguage>(
         groupValue: _selected,
         onChanged: (v) {
           if (v != null) _select(v);
         },
         child: ListView(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+          padding: EdgeInsets.all(ResponsiveUtils.screenPadding(context)),
           children: [
-            RadioListTile<AppLanguage>(
-              title: Text(tr(context, 'english')),
-              subtitle: const Text('Default app language'),
-              value: AppLanguage.english,
-              activeColor: const Color(0xFF5F2D82),
-            ),
-            RadioListTile<AppLanguage>(
-              title: Text(tr(context, 'filipino')),
-              subtitle: const Text('Mas madaling maintindihan para sa mga user sa PH'),
-              value: AppLanguage.filipino,
-              activeColor: const Color(0xFF5F2D82),
-            ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-          Container(
-            padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-            decoration: BoxDecoration(
-              color: AppColors.surface(context, Color(0xFFF8F4FF)),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border(context, Color(0xFFE1D4F7))),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.language, color: Color(0xFF5F2D82), size: 20),
-                SizedBox(width: ResponsiveUtils.spacing(context, 10)),
-                Expanded(
-                  child: Text(
-                    tr(context, 'language_changed_immediately'),
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: AppColors.accent(context, Color(0xFF5F2D82)),
+            AppCard(
+              padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+              child: Column(
+                children: [
+                  RadioListTile<AppLanguage>(
+                    title: Text(tr(context, 'english')),
+                    subtitle: const Text('Default app language'),
+                    value: AppLanguage.english,
+                    activeColor: AppColors.accent(
+                      context,
+                      const Color(0xFF5F2D82),
                     ),
                   ),
-                ),
-              ],
+                  const Divider(height: 1, indent: AppSpace.lg),
+                  RadioListTile<AppLanguage>(
+                    title: Text(tr(context, 'filipino')),
+                    subtitle: const Text(
+                      'Mas madaling maintindihan para sa mga user sa PH',
+                    ),
+                    value: AppLanguage.filipino,
+                    activeColor: AppColors.accent(
+                      context,
+                      const Color(0xFF5F2D82),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+            Container(
+              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
+              decoration: BoxDecoration(
+                color: AppColors.surface(context, Color(0xFFF8F4FF)),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.border(context, Color(0xFFE1D4F7)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.language,
+                    color: Color(0xFF5F2D82),
+                    size: 20,
+                  ),
+                  SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+                  Expanded(
+                    child: Text(
+                      tr(context, 'language_changed_immediately'),
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 13),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

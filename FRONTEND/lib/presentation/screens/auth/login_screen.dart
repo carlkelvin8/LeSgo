@@ -1,3 +1,5 @@
+import '../../widgets/auth/apple_auth_button.dart';
+import '../../../core/utils/google_auth_helper.dart' show GoogleAuthMode;
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,8 +81,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           'Welcome Back!',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 22),
-                            color: AppColors.foreground(context, Colors.black87),
+                            fontSize: ResponsiveUtils.fontSize(context, 24),
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.foreground(
+                              context,
+                              Colors.black87,
+                            ),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -90,7 +96,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 13),
-                            color: AppColors.foreground(context, Colors.grey[500]!),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[500]!,
+                            ),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -103,7 +112,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           controller: _controllers.emailController,
                           validator: Validators.emailOrPhone,
                           keyboardType: TextInputType.emailAddress,
-                          prefixIcon: Icon(Icons.person_outline, color: AppColors.foreground(context, Colors.grey[600]!)),
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[600]!,
+                            ),
+                          ),
                           required: true,
                           enabled: !authState.isLoading,
                         ),
@@ -136,7 +153,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     .toggleRememberMe(value ?? false);
                               },
                             ),
-                            SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 8),
+                            ),
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
@@ -159,8 +178,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   'Forgot Password?',
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
-                                    fontSize: ResponsiveUtils.fontSize(context, 12),
-                                    color: AppColors.accent(context, Color(0xFF5F2D82)),
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      12,
+                                    ),
+                                    color: AppColors.accent(
+                                      context,
+                                      Color(0xFF5F2D82),
+                                    ),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -173,10 +198,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           text: 'Log In',
                           isLoading: authState.isLoading,
                           onPressed: () async {
-                            final success = await _controllers.handleLogin(context, ref);
+                            final success = await _controllers.handleLogin(
+                              context,
+                              ref,
+                            );
                             if (success) {
                               if (!context.mounted) return;
-                              AppRouter.pushReplacement(context, MainRoutes.home);
+                              AppRouter.pushReplacement(
+                                context,
+                                MainRoutes.home,
+                              );
                             }
                           },
                           backgroundColor: const Color(0xFF5F2D82),
@@ -186,8 +217,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           text: 'Log in with Google',
                           iconUrl: 'https://www.google.com/favicon.ico',
                           iconData: Icons.g_mobiledata,
-                          onPressed: () => _controllers.handleGoogleSignIn(context, ref),
+                          onPressed: () =>
+                              _controllers.handleGoogleSignIn(context, ref),
                         ),
+                        const AppleAuthButton(mode: GoogleAuthMode.login),
                         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
 
                         Row(
@@ -198,12 +231,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: AppColors.foreground(context, Colors.grey[700]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[700]!,
+                                ),
                               ),
                             ),
                             TextButton(
                               onPressed: () {
-                                AppRouter.push(context, RegisterRoutes.register);
+                                AppRouter.push(
+                                  context,
+                                  RegisterRoutes.register,
+                                );
                               },
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
@@ -215,8 +254,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 'Sign Up',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 14),
-                                  color: AppColors.accent(context, Color(0xFF5F2D82)),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    14,
+                                  ),
+                                  color: AppColors.accent(
+                                    context,
+                                    Color(0xFF5F2D82),
+                                  ),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -226,14 +271,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         SizedBox(height: ResponsiveUtils.spacing(context, 84)),
                       ],
                     ),
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-      )
     );
-    
   }
 }

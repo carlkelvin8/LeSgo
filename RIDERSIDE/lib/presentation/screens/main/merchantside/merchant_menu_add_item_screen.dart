@@ -67,7 +67,8 @@ class _MerchantMenuAddItemScreenState extends ConsumerState<MerchantMenuAddItemS
         }
         // Handle success - navigate when form state shows success
         if (next.isSubmitting == false && previous?.isSubmitting == true && next.errorMessage == null) {
-          SnackBarUtils.showSuccess(context, 'Item added successfully');
+          // The form closes immediately; a snackbar here would overlay the
+          // menu's bottom actions after the route is popped.
           Navigator.pop(context);
         }
       },

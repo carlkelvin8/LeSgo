@@ -215,6 +215,27 @@ class DriverProfileController extends Controller
 
         $validated = $request->validate($rules);
 
+        if (array_key_exists('is_available', $validated) && $validated['is_available'] && ! $isAdmin) {
+            // "Today" is the rider's Philippine calendar day, not the UTC day
+            // (which would roll over at 08:00 PHT). captured_at is stored in
+            // the app timezone, so convert the PHT day bounds back to it.
+            $phtToday = now('Asia/Manila');
+            $appTz = config('app.timezone');
+
+            $hasAttendanceToday = \App\Models\DriverDutyAttendance::query()
+                ->where('driver_profile_id', $driverProfile->id)
+                ->where('on_duty', true)
+                ->whereBetween('captured_at', [
+                    $phtToday->copy()->startOfDay()->setTimezone($appTz),
+                    $phtToday->copy()->endOfDay()->setTimezone($appTz),
+                ])
+                ->exists();
+
+            if (! $hasAttendanceToday) {
+                return $this->error('Submit an attendance photo before going on duty.', 422);
+            }
+        }
+
         $driverProfile->update($validated);
 
         return $this->success($driverProfile->fresh(), 'Driver profile updated successfully');

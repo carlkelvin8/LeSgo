@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import '../../../widgets/common/refreshable_empty_state.dart';
 import 'package:flutter/material.dart';
@@ -56,11 +57,14 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               child: Row(
                 children: [
-                  const AuthHeader(title: 'Order History'),
+                  const Expanded(child: AuthHeader(title: 'Order History')),
                 ],
               ),
             ),
-            Container(height: 1, color: AppColors.surface(context, Colors.grey[300]!)),
+            Container(
+              height: 1,
+              color: AppColors.surface(context, Colors.grey[300]!),
+            ),
             Container(
               color: AppColors.surface(context, Colors.white),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -107,12 +111,18 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                 ),
               ),
             ),
-            Container(height: 1, color: AppColors.surface(context, Colors.grey[200]!)),
+            Container(
+              height: 1,
+              color: AppColors.surface(context, Colors.grey[200]!),
+            ),
             Expanded(
               child: orderState.isLoading && orderState.orders.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF5F2D82),
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
                       ),
                     )
                   : orderState.error != null && orderState.orders.isEmpty
@@ -128,33 +138,12 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                       onRefresh: () => ref
                           .read(orderHistoryProvider.notifier)
                           .refreshOrders(),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.receipt_long_outlined,
-                            size: 64,
-                            color: AppColors.foreground(context, Colors.grey[400]!),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No ${orderState.selectedFilter} orders',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 16,
-                              color: AppColors.foreground(context, Colors.grey[600]!),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Pull down to refresh',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 13,
-                              color: AppColors.foreground(context, Colors.grey[400]!),
-                            ),
-                          ),
-                        ],
+                      child: EmptyStateView(
+                        icon: Icons.receipt_long_outlined,
+                        title: orderState.selectedFilter == 'all'
+                            ? 'No orders yet'
+                            : 'No ${orderState.selectedFilter} orders',
+                        message: 'Pull down to refresh.',
                       ),
                     )
                   : RefreshIndicator(
@@ -175,8 +164,11 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               child: Center(
                                 child: orderState.isLoadingMore
-                                    ? const CircularProgressIndicator(
-                                        color: Color(0xFF5F2D82),
+                                    ? CircularProgressIndicator(
+                                        color: AppColors.accent(
+                                          context,
+                                          const Color(0xFF5F2D82),
+                                        ),
                                       )
                                     : TextButton(
                                         onPressed: () => ref
@@ -234,10 +226,14 @@ class _FilterChip extends StatelessWidget {
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Colors.grey[100]!),
+          color: isSelected
+              ? AppColors.accent(context, Color(0xFF5F2D82))
+              : AppColors.surface(context, Colors.grey[100]!),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.border(context, Colors.grey[300]!),
+            color: isSelected
+                ? AppColors.accent(context, Color(0xFF5F2D82))
+                : AppColors.border(context, Colors.grey[300]!),
           ),
         ),
         child: Text(
@@ -246,7 +242,9 @@ class _FilterChip extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected ? Colors.white : AppColors.foreground(context, Colors.grey[700]!),
+            color: isSelected
+                ? Colors.white
+                : AppColors.foreground(context, Colors.grey[700]!),
           ),
         ),
       ),

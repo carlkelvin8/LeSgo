@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,6 +77,12 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () =>
                     AppRouter.push(context, MainRoutes.deactivateAccount),
               ),
+              _SettingsItem(
+                icon: Icons.delete_forever_outlined,
+                title: tr(context, 'delete_account'),
+                subtitle: 'Permanently remove your data from LeSgo',
+                onTap: () => AppRouter.push(context, MainRoutes.deleteAccount),
+              ),
             ],
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -84,7 +91,7 @@ class SettingsScreen extends ConsumerWidget {
             items: [
               _SettingsItem(
                 icon: Icons.notifications_outlined,
-                title: 'Notification center',
+                title: tr(context, 'Notification center'),
                 subtitle: 'View order updates and offers',
                 onTap: () => AppRouter.push(context, MainRoutes.notifications),
               ),
@@ -108,7 +115,10 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: isDark ? 'Dark theme enabled' : 'Light theme',
                 trailing: Switch(
                   value: isDark,
-                  activeThumbColor: const Color(0xFF5F2D82),
+                  activeThumbColor: AppColors.accent(
+                    context,
+                    Color(0xFF5F2D82),
+                  ),
                   onChanged: (value) =>
                       ref.read(themeModeProvider.notifier).setDarkMode(value),
                 ),
@@ -183,17 +193,7 @@ class _SettingsSection extends StatelessWidget {
           ),
         ),
         Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.white),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
+          decoration: AppCard.decoration(context, radius: 12),
           child: Column(
             children: items.asMap().entries.map((entry) {
               final index = entry.key;
@@ -236,49 +236,53 @@ class _SettingsItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.accent(
-            context,
-            Color(0xFF5F2D82),
-          ).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          icon,
-          color: AppColors.accent(context, Color(0xFF5F2D82)),
-          size: 20,
-        ),
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: ResponsiveUtils.fontSize(context, 15),
-          fontWeight: FontWeight.w600,
-          color: AppColors.foreground(context, Colors.black87),
-          fontFamily: 'TT Fors',
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(
-          fontSize: ResponsiveUtils.fontSize(context, 13),
-          color: AppColors.foreground(context, Colors.grey[600]!),
-          fontFamily: 'TT Fors',
-        ),
-      ),
-      trailing:
-          trailing ??
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: AppColors.foreground(context, Colors.grey[400]!),
+    // Material ancestor so ListTile ink is painted above the card's DecoratedBox.
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.accent(
+              context,
+              Color(0xFF5F2D82),
+            ).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
           ),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Icon(
+            icon,
+            color: AppColors.accent(context, Color(0xFF5F2D82)),
+            size: 20,
+          ),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: ResponsiveUtils.fontSize(context, 15),
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground(context, Colors.black87),
+            fontFamily: 'TT Fors',
+          ),
+        ),
+        subtitle: Text(
+          tr(context, subtitle),
+          style: TextStyle(
+            fontSize: ResponsiveUtils.fontSize(context, 13),
+            color: AppColors.foreground(context, Colors.grey[600]!),
+            fontFamily: 'TT Fors',
+          ),
+        ),
+        trailing:
+            trailing ??
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: AppColors.foreground(context, Colors.grey[400]!),
+            ),
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
     );
   }
 }

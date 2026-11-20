@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../../data/data_source/auth_remote_datasource.dart';
 
@@ -99,11 +100,7 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
     } on DioException catch (e) {
       String errorMessage = 'Failed to send OTP. Please try again.';
       
-      if (e.response?.data != null && e.response?.data['message'] != null) {
-        errorMessage = e.response?.data['message'];
-      } else if (e.message != null) {
-        errorMessage = e.message!;
-      }
+      errorMessage = ApiErrorMapper.message(e);
       
       AppLogger.error(
         'OTP Send DioError: ${e.type} - ${e.message}',
@@ -118,7 +115,7 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
       AppLogger.error('OTP Send Error', e);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Failed to send OTP: ${e.toString()}',
+        errorMessage: ApiErrorMapper.message(e),
       );
     }
   }
@@ -153,11 +150,7 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
     } on DioException catch (e) {
       String errorMessage = 'Failed to resend OTP. Please try again.';
       
-      if (e.response?.data != null && e.response?.data['message'] != null) {
-        errorMessage = e.response?.data['message'];
-      } else if (e.message != null) {
-        errorMessage = e.message!;
-      }
+      errorMessage = ApiErrorMapper.message(e);
       
       state = state.copyWith(
         isLoading: false,
@@ -166,7 +159,7 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Failed to resend OTP: ${e.toString()}',
+        errorMessage: ApiErrorMapper.message(e),
       );
     }
   }
@@ -203,11 +196,7 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
     } on DioException catch (e) {
       String errorMessage = 'Invalid OTP. Please try again.';
       
-      if (e.response?.data != null && e.response?.data['message'] != null) {
-        errorMessage = e.response?.data['message'];
-      } else if (e.message != null) {
-        errorMessage = e.message!;
-      }
+      errorMessage = ApiErrorMapper.message(e);
       
       state = state.copyWith(
         isLoading: false,
@@ -217,7 +206,7 @@ class PhoneVerificationNotifier extends StateNotifier<PhoneVerificationState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'OTP verification failed: ${e.toString()}',
+        errorMessage: ApiErrorMapper.message(e),
       );
       return false;
     }

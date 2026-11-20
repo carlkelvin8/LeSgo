@@ -78,7 +78,8 @@ class SalesReportService {
         'Date,Reference,Items,Status,Payment Method,Item Total,Partner Share,Order Value');
 
     for (final order in orders) {
-      final date = _formatDateCsv(order.createdAt);
+      // Same date the report range filters on (completed_at for completed).
+      final date = _formatDateCsv(_reportDate(order));
       final ref = order.referenceNumber ?? '#${order.id}';
       final items = order.orderItems
               ?.map((i) => '${i.itemName} x${i.quantity}')
@@ -239,7 +240,7 @@ class SalesReportService {
   static pw.Widget _orderTable(List<OrderDto> orders) {
     final headers = ['Date', 'Reference', 'Items', 'Status', 'Amount'];
     final rows = orders.map((order) {
-      final date = _formatDatePdf(order.createdAt);
+      final date = _formatDatePdf(_reportDate(order));
       final ref = order.referenceNumber ?? '#${order.id}';
       final items = order.orderItems
               ?.map((i) => '${i.itemName} x${i.quantity}')
@@ -279,6 +280,12 @@ class SalesReportService {
       data: rows,
     );
   }
+
+  /// Row date = [MerchantOrderAmountUtils.earningsDate] (local, ISO), falling
+  /// back to the raw created_at string.
+  static String _reportDate(OrderDto order) =>
+      MerchantOrderAmountUtils.earningsDate(order)?.toIso8601String() ??
+      order.createdAt;
 
   static String _formatDateCsv(String? raw) {
     if (raw == null || raw.isEmpty) return '';

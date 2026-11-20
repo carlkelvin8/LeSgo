@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,8 +29,10 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('Payment checkout URL: ${widget.checkout.invoiceUrl} '
-        '(provider: ${widget.checkout.provider})');
+    debugPrint(
+      'Payment checkout URL: ${widget.checkout.invoiceUrl} '
+      '(provider: ${widget.checkout.provider})',
+    );
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -88,7 +91,7 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
     if (success) {
       SnackBarUtils.showSuccess(
         context,
-        '₱${widget.checkout.walletAmount.toStringAsFixed(2)} added to your wallet!',
+        '${Money.format(widget.checkout.walletAmount)} added to your wallet!',
       );
       if (mounted) {
         final download = await showDialog<bool>(
@@ -96,7 +99,10 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
           builder: (ctx) => AlertDialog(
             title: const Text(
               'Payment successful',
-              style: TextStyle(fontFamily: 'TT Fors', fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontWeight: FontWeight.w700,
+              ),
             ),
             content: const Text(
               'Download your LesPay receipt as PDF?',
@@ -110,7 +116,8 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5F2D82),
+                  backgroundColor: AppColors.buttonFill(context),
+                  foregroundColor: AppColors.onButton(context),
                 ),
                 child: const Text('Download PDF'),
               ),
@@ -168,12 +175,14 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
             ),
           ),
           Text(
-            '₱${value.toStringAsFixed(2)}',
+            Money.format(value),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: bold ? FontWeight.bold : FontWeight.w600,
-              color: bold ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
+              color: bold
+                  ? AppColors.accent(context, Color(0xFF5F2D82))
+                  : AppColors.foreground(context, Colors.black87),
             ),
           ),
         ],
@@ -195,8 +204,6 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
@@ -214,7 +221,7 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
                 ),
                 _summaryRow(
                   context,
-                  'Top-up fee (1.5%)',
+                  'Top-up fee (3%)',
                   widget.checkout.feeAmount,
                 ),
                 Divider(height: ResponsiveUtils.spacing(context, 12)),
@@ -258,17 +265,17 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   OutlinedButton(
-                      onPressed: _openInBrowser,
-                      child: const Text('Open in browser'),
-                    ),
+                    onPressed: _openInBrowser,
+                    child: const Text('Open in browser'),
+                  ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                   ElevatedButton(
                     onPressed: lespayState.isProcessingTopUp || _isConfirming
                         ? null
                         : _confirmPayment,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5F2D82),
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.buttonFill(context),
+                      foregroundColor: AppColors.onButton(context),
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 14),
                       ),

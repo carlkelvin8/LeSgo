@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../di/injection.dart';
@@ -28,7 +29,8 @@ class NetworkGuard {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
             ),
             onPressed: () async {
               await service.checkConnection();

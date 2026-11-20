@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantRatingStarsDisplay extends StatelessWidget {
   final double rating;
@@ -26,7 +27,7 @@ class MerchantRatingStarsDisplay extends StatelessWidget {
             size: size,
             color: (isActive || isHalf)
                 ? const Color(0xFFFFA000)
-                : const Color(0xFFE0E0E0),
+                : context.brd(const Color(0xFFE0E0E0)),
           );
         }),
         if (showRatingText) ...[
@@ -37,7 +38,7 @@ class MerchantRatingStarsDisplay extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
             ),
           ),
         ],

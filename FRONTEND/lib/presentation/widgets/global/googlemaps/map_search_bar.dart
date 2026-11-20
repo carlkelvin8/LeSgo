@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
+import '../../../../core/utils/address_text_utils.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
 
@@ -178,8 +180,9 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
             ..clear()
             ..addAll(results);
           _isSearching = false;
-          _searchError =
-              results.isEmpty ? 'No places found. Try a different search.' : null;
+          _searchError = results.isEmpty
+              ? 'No places found. Try a different search.'
+              : null;
         });
         return;
       }
@@ -291,10 +294,15 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
       if (lat == null || lng == null) throw Exception('Invalid coordinates');
 
       final latLng = LatLng(lat, lng);
-      final formattedAddress = result['formatted_address']?.toString();
-      final addressComponents =
-          _parseAddressComponents(result['address_components']);
-      final title = place['main_text']?.toString() ??
+      final rawFormattedAddress = result['formatted_address']?.toString();
+      final formattedAddress = rawFormattedAddress == null
+          ? null
+          : stripPlusCode(rawFormattedAddress);
+      final addressComponents = _parseAddressComponents(
+        result['address_components'],
+      );
+      final title =
+          place['main_text']?.toString() ??
           formattedAddress ??
           'Selected place';
 
@@ -356,7 +364,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
       latLng: latLng,
       formattedAddress: addressLine,
       addressComponents: {},
-      description: '$label — $addressLine',
+      description: '$label, $addressLine',
     );
   }
 
@@ -457,35 +465,42 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
     final items = <Widget>[];
     final addressState = ref.watch(addressProvider);
     final saved = addressState.addresses
-        .where((a) => widget.showSavedAddresses && a.latitude != 0 && a.longitude != 0)
+        .where(
+          (a) =>
+              widget.showSavedAddresses && a.latitude != 0 && a.longitude != 0,
+        )
         .take(5)
         .toList();
 
     if (_recentPlaces.isNotEmpty) {
       items.add(_sectionHeader('Recent searches'));
       for (final place in _recentPlaces) {
-        items.add(_quickTile(
-          icon: Icons.history,
-          title: place.description,
-          onTap: () => _selectRecent(place),
-        ));
+        items.add(
+          _quickTile(
+            icon: Icons.history,
+            title: place.description,
+            onTap: () => _selectRecent(place),
+          ),
+        );
       }
     }
 
     if (saved.isNotEmpty) {
       items.add(_sectionHeader('Saved addresses'));
       for (final addr in saved) {
-        items.add(_quickTile(
-          icon: Icons.bookmark,
-          title: addr.label,
-          subtitle: addr.addressLine1,
-          onTap: () => _selectSavedAddress(
-            label: addr.label,
-            addressLine: addr.addressLine1,
-            lat: addr.latitude,
-            lng: addr.longitude,
+        items.add(
+          _quickTile(
+            icon: Icons.bookmark,
+            title: addr.label,
+            subtitle: addr.addressLine1,
+            onTap: () => _selectSavedAddress(
+              label: addr.label,
+              addressLine: addr.addressLine1,
+              lat: addr.latitude,
+              lng: addr.longitude,
+            ),
           ),
-        ));
+        );
       }
     }
 
@@ -566,7 +581,9 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
   @override
   Widget build(BuildContext context) {
     final showQuickPicks =
-        _showResults && _searchResults.isEmpty && _lastQuery.length < _minQueryLength;
+        _showResults &&
+        _searchResults.isEmpty &&
+        _lastQuery.length < _minQueryLength;
 
     return Material(
       type: MaterialType.transparency,
@@ -580,17 +597,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
               right: ResponsiveUtils.spacing(context, 80),
             ),
             height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.surface(context, Colors.white),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+            decoration: AppCard.decoration(context, radius: 12),
             alignment: Alignment.center,
             child: TextField(
               controller: _searchController,
@@ -604,10 +611,16 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                   fontSize: ResponsiveUtils.fontSize(context, 16),
                   color: AppColors.foreground(context, Colors.grey[600]!),
                 ),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF5F2D82)),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon:  Icon(Icons.clear, color: AppColors.foreground(context, Colors.grey)),
+                        icon: Icon(
+                          Icons.clear,
+                          color: AppColors.foreground(context, Colors.grey),
+                        ),
                         onPressed: () {
                           _debounce?.cancel();
                           _searchController.clear();
@@ -623,18 +636,18 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                         },
                       )
                     : _isSearching
-                        ? const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Color(0xFF5F2D82),
-                              ),
-                            ),
-                          )
-                        : null,
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF5F2D82),
+                          ),
+                        ),
+                      )
+                    : null,
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: ResponsiveUtils.spacing(context, 16),
@@ -655,17 +668,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 right: ResponsiveUtils.spacing(context, 80),
                 top: ResponsiveUtils.spacing(context, 4),
               ),
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.white),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
+              decoration: AppCard.decoration(context, radius: 12),
               constraints: BoxConstraints(
                 maxHeight: ResponsiveUtils.screenHeight(context) * 0.4,
               ),
@@ -682,17 +685,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 right: ResponsiveUtils.spacing(context, 80),
                 top: ResponsiveUtils.spacing(context, 4),
               ),
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.white),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
+              decoration: AppCard.decoration(context, radius: 12),
               constraints: BoxConstraints(
                 maxHeight: ResponsiveUtils.screenHeight(context) * 0.4,
               ),
@@ -700,14 +693,16 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 itemCount: _searchResults.length,
-                separatorBuilder: (context, index) =>
-                    Divider(height: 1, color: AppColors.border(context, Colors.grey[200]!)),
+                separatorBuilder: (context, index) => Divider(
+                  height: 1,
+                  color: AppColors.border(context, Colors.grey[200]!),
+                ),
                 itemBuilder: (context, index) {
                   final place = _searchResults[index];
                   return ListTile(
-                    leading: const Icon(
+                    leading: Icon(
                       Icons.location_on,
-                      color: Color(0xFF5F2D82),
+                      color: AppColors.accent(context, const Color(0xFF5F2D82)),
                     ),
                     title: Text(
                       place['main_text']?.toString() ?? '',
@@ -742,17 +737,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 top: ResponsiveUtils.spacing(context, 4),
               ),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.white),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+              decoration: AppCard.decoration(context, radius: 12),
               child: Text(
                 _searchError!,
                 style: TextStyle(

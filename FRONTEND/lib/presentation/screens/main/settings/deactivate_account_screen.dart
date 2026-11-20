@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/routers/app_router.dart';
 import '../../../../core/constants/routers/auth/auth_routes.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/apple_auth_service.dart';
 import '../../../../core/services/google_auth_service.dart';
+import '../../../../core/utils/apple_auth_helper.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/auth_remote_datasource.dart';
@@ -72,16 +74,34 @@ class _DeactivateAccountScreenState
 
     try {
       final password = _passwordController.text;
-      final googleIdToken = password.isEmpty
-          ? await GoogleAuthService.getIdTokenForSensitiveAction()
-          : null;
-      if (password.isEmpty && googleIdToken == null) {
-        throw StateError('Google account verification was cancelled.');
+      String? googleIdToken;
+      AppleSensitiveCredential? appleCredential;
+      if (password.isEmpty) {
+        // Social-login accounts have no password; re-verify with the provider.
+        final useApple =
+            AppleAuthService.isSupported &&
+            await AppleAuthHelper.promptProvider(context) == true;
+        if (!mounted) return;
+        if (useApple) {
+          appleCredential =
+              await AppleAuthService.getCredentialForSensitiveAction();
+          if (appleCredential == null) {
+            throw StateError('Apple account verification was cancelled.');
+          }
+        } else {
+          googleIdToken =
+              await GoogleAuthService.getIdTokenForSensitiveAction();
+          if (googleIdToken == null) {
+            throw StateError('Google account verification was cancelled.');
+          }
+        }
       }
 
       await getIt<AuthRemoteDataSource>().deactivateAccount(
         password: password,
         googleIdToken: googleIdToken,
+        appleIdToken: appleCredential?.idToken,
+        appleNonce: appleCredential?.nonce,
         reason: _reasonController.text,
       );
 
@@ -107,9 +127,7 @@ class _DeactivateAccountScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.grey[50]!),
-      appBar: AppBar(
-        title: const Text('Deactivate Account'),
-      ),
+      appBar: AppBar(title: const Text('Deactivate Account')),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
         child: Form(
@@ -126,11 +144,13 @@ class _DeactivateAccountScreenState
                 ),
                 child: Text(
                   'Deactivating your account signs you out and limits access to '
-                  'LeSGo services. You can contact support to request reactivation.',
+                  'LeSgo services. You can contact support to request reactivation.',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
-                    color: Colors.red[900],
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.red[200]
+                        : Colors.red[900],
                     height: 1.5,
                   ),
                 ),
@@ -144,9 +164,20 @@ class _DeactivateAccountScreenState
                   helperText:
                       'Leave blank to verify with your linked Google account.',
                   filled: true,
-                  fillColor: AppColors.surface(context, Colors.white),
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? null
+                      : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -166,9 +197,20 @@ class _DeactivateAccountScreenState
                 decoration: InputDecoration(
                   labelText: 'Reason (optional)',
                   filled: true,
-                  fillColor: AppColors.surface(context, Colors.white),
+                  fillColor: Theme.of(context).brightness == Brightness.dark
+                      ? null
+                      : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.border(context, Colors.grey[400]!),
+                    ),
                   ),
                 ),
               ),
@@ -193,6 +235,7 @@ class _DeactivateAccountScreenState
                 onPressed: _isSubmitting ? null : _deactivate,
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: _isSubmitting

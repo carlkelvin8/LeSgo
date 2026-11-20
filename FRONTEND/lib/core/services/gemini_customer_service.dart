@@ -12,14 +12,14 @@ class GeminiCustomerService {
   ];
 
   static const _offTopicReply =
-      'I can only help with LeSGo app customer service — orders, deliveries, LesPay, vouchers, missions, account settings, and app issues. For anything else, please open Settings > Support Tickets to reach our team.';
+      'I can only help with LeSgo app customer service: orders, deliveries, LesPay, vouchers, missions, account settings, and app issues. For anything else, please open Settings > Support Tickets to reach our team.';
 
   static const _systemInstruction =
       '''
-You are LeSGo Assistant, a customer service bot ONLY for the LeSGo mobile app in the Philippines.
+You are LeSgo Assistant, a customer service bot ONLY for the LeSgo mobile app in the Philippines.
 
-STRICT SCOPE — you may ONLY answer questions about:
-- LeSGo app usage, navigation, and features
+STRICT SCOPE: you may ONLY answer questions about:
+- LeSgo app usage, navigation, and features
 - Orders: ride booking, LeSeat food delivery, LesBuy shopping
 - Order tracking, cancellations, delays, missing/wrong items
 - LesPay wallet, top-ups, payments, refunds (process guidance only)
@@ -28,10 +28,10 @@ STRICT SCOPE — you may ONLY answer questions about:
 - Account: login, password, profile, addresses, notifications, settings
 - Support tickets, FAQs, and how to contact ${AppInfo.supportEmail}
 
-You must REFUSE all off-topic requests including: general knowledge, homework, coding, jokes, news, politics, health, legal advice, other apps/companies, recipes, travel unrelated to LeSGo, or personal opinions.
-When refusing, use this style: "I can only help with LeSGo app customer service." Then suggest Support Tickets if they need more help.
+You must REFUSE all off-topic requests including: general knowledge, homework, coding, jokes, news, politics, health, legal advice, other apps/companies, recipes, travel unrelated to LeSgo, or personal opinions.
+When refusing, use this style: "I can only help with LeSgo app customer service." Then suggest Support Tickets if they need more help.
 
-About LeSGo:
+About LeSgo:
 - ${AppInfo.tagline}
 - Website: ${AppInfo.website}
 
@@ -41,8 +41,9 @@ Rules:
 - For rates/pricing, always say the app shows the estimate before booking or checkout.
 - For order status, direct users to Transactions or active order tracking.
 - For complex issues (refunds, disputes, payment failures, driver complaints), suggest Settings > Support Tickets.
-- Keep replies short: 1–4 sentences, or brief numbered steps when needed.
-- Greetings like "hi" or "hello" are in scope — respond briefly and ask how you can help with their LeSGo app concern.
+- Keep replies short: 1 to 4 sentences, or brief numbered steps when needed.
+- Write like a friendly human agent. Never use em dashes, en dashes, or double hyphens; use commas, periods, or colons instead.
+- Greetings like "hi" or "hello" are in scope, so respond briefly and ask how you can help with their LeSgo app concern.
 ''';
 
   GenerativeModel? _model;
@@ -84,8 +85,8 @@ Rules:
 
         final response = await _session!.sendMessage(
           Content.text(
-            'LeSGo app customer support question: $trimmed\n'
-            'Answer only if this is about LeSGo app customer service. Otherwise refuse briefly.',
+            'LeSgo app customer support question: $trimmed\n'
+            'Answer only if this is about LeSgo app customer service. Otherwise refuse briefly.',
           ),
         );
 
@@ -180,7 +181,7 @@ Rules:
     final normalized = message.toLowerCase();
 
     if (_isInScopeGreeting(normalized)) {
-      return 'Hi! How can I help you with the LeSGo app today — orders, deliveries, LesPay, vouchers, or account settings?';
+      return 'Hi! How can I help you with the LeSgo app today? I can assist with orders, deliveries, LesPay, vouchers, or account settings.';
     }
 
     if (_containsAny(normalized, [
@@ -194,8 +195,8 @@ Rules:
       'presyo',
       'bayad',
     ])) {
-      return 'LeSGo rates depend on the service (ride, LeSeat food delivery, or LesBuy), distance, and current demand. '
-          'Open the app, enter your destination or pick a restaurant/store, and you\'ll see the estimated fare or delivery fee before you confirm — no surprise charges. '
+      return 'LeSgo rates depend on the service (ride, LeSeat food delivery, or LesBuy), distance, and current demand. '
+          'Open the app, enter your destination or pick a restaurant/store, and you\'ll see the estimated fare or delivery fee before you confirm, with no surprise charges. '
           'For a specific trip, check the estimate shown at checkout or booking.';
     }
 
@@ -234,7 +235,7 @@ Rules:
       'reward',
       'referral',
     ])) {
-      return 'Open the LeSGo app menu to view your vouchers, missions, loyalty rewards, or referral progress. '
+      return 'Open the LeSgo app menu to view your vouchers, missions, loyalty rewards, or referral progress. '
           'Check the item details for eligibility and expiry. If a valid reward is not applying, send its name or code through Settings > Support Tickets.';
     }
 
@@ -269,11 +270,11 @@ Rules:
       'contact',
       'help center',
     ])) {
-      return 'Go to Settings > Support Tickets to create or review a request. Include your order reference and a short description so the LeSGo support team can assist faster.';
+      return 'Go to Settings > Support Tickets to create or review a request. Include your order reference and a short description so the LeSgo support team can assist faster.';
     }
 
     if (force) {
-      return 'I can help with LeSGo orders, deliveries, LesPay, vouchers, missions, and account settings. '
+      return 'I can help with LeSgo orders, deliveries, LesPay, vouchers, missions, and account settings. '
           'Please describe the app issue or open Settings > Support Tickets for help from the support team.';
     }
 

@@ -1,3 +1,4 @@
+import '../../../core/utils/date_display_utils.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import '../../../core/constants/routers/app_router.dart';
 import '../../../core/constants/routers/main/main_routes.dart';
@@ -29,6 +30,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       address1: state.address1,
       address2: state.address2,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(profileProvider.notifier).refreshPoints();
+    });
   }
 
   @override
@@ -198,7 +202,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             if (state.error != null)
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 sliver: SliverToBoxAdapter(
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -238,9 +242,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             // ── Content ───────────────────────────────────────────────
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
-                24,
+                16,
                 0,
-                24,
+                16,
                 MediaQuery.of(context).padding.bottom + 36,
               ),
               sliver: SliverList(
@@ -306,7 +310,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         _ProfileRow(
                           icon: Icons.cake_outlined,
                           title: 'Birthday',
-                          subtitle: state.birthdate,
+                          subtitle: formatDateOnly(state.birthdate),
                         ),
                       _ProfileRow(
                         icon: Icons.location_on_outlined,
@@ -501,7 +505,11 @@ class _Shortcut extends StatelessWidget {
                     color: AppColors.surface(context, Colors.white),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, size: 17, color: Theme.of(context).colorScheme.primary),
+                  child: Icon(
+                    icon,
+                    size: 17,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 const Spacer(),
                 Icon(

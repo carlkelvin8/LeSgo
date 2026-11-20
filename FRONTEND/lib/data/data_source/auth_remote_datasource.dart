@@ -256,6 +256,8 @@ class AuthRemoteDataSource {
   Future<Map<String, dynamic>> deactivateAccount({
     String? password,
     String? googleIdToken,
+    String? appleIdToken,
+    String? appleNonce,
     String? reason,
   }) async {
     final response = await _dioClient.dio.post(
@@ -264,6 +266,10 @@ class AuthRemoteDataSource {
         if (password != null && password.isNotEmpty) 'password': password,
         if (googleIdToken != null && googleIdToken.isNotEmpty)
           'google_id_token': googleIdToken,
+        if (appleIdToken != null && appleIdToken.isNotEmpty)
+          'apple_id_token': appleIdToken,
+        if (appleNonce != null && appleNonce.isNotEmpty)
+          'apple_nonce': appleNonce,
         if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
       },
     );
@@ -274,6 +280,9 @@ class AuthRemoteDataSource {
   Future<Map<String, dynamic>> deleteAccountPermanently({
     String? password,
     String? googleIdToken,
+    String? appleIdToken,
+    String? appleNonce,
+    String? appleAuthorizationCode,
     required String confirmation,
     String? reason,
   }) async {
@@ -283,6 +292,12 @@ class AuthRemoteDataSource {
         if (password != null && password.isNotEmpty) 'password': password,
         if (googleIdToken != null && googleIdToken.isNotEmpty)
           'google_id_token': googleIdToken,
+        if (appleIdToken != null && appleIdToken.isNotEmpty)
+          'apple_id_token': appleIdToken,
+        if (appleNonce != null && appleNonce.isNotEmpty)
+          'apple_nonce': appleNonce,
+        if (appleAuthorizationCode != null && appleAuthorizationCode.isNotEmpty)
+          'apple_authorization_code': appleAuthorizationCode,
         'confirmation': confirmation.trim().toUpperCase(),
         if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
       },

@@ -11,6 +11,7 @@ CreateOrderRequestDto _$CreateOrderRequestDtoFromJson(
 ) => CreateOrderRequestDto(
   serviceId: (json['service_id'] as num).toInt(),
   partnerId: (json['partner_id'] as num?)?.toInt(),
+  partnerBranchId: (json['partner_branch_id'] as num?)?.toInt(),
   estimatedDistanceM: (json['estimated_distance_m'] as num).toInt(),
   pickup: OrderAddressDto.fromJson(json['pickup'] as Map<String, dynamic>),
   dropoff: OrderAddressDto.fromJson(json['dropoff'] as Map<String, dynamic>),
@@ -25,6 +26,8 @@ CreateOrderRequestDto _$CreateOrderRequestDtoFromJson(
   voucherCode: json['voucher_code'] as String?,
   discountAmount: (json['discount_amount'] as num?)?.toDouble(),
   scheduledDeliveryTime: json['scheduled_delivery_time'] as String?,
+  itemDescription: json['item_description'] as String?,
+  estimatedWeightKg: (json['estimated_weight_kg'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$CreateOrderRequestDtoToJson(
@@ -32,6 +35,7 @@ Map<String, dynamic> _$CreateOrderRequestDtoToJson(
 ) => <String, dynamic>{
   'service_id': instance.serviceId,
   'partner_id': instance.partnerId,
+  'partner_branch_id': ?instance.partnerBranchId,
   'estimated_distance_m': instance.estimatedDistanceM,
   'pickup': instance.pickup,
   'dropoff': instance.dropoff,
@@ -44,6 +48,8 @@ Map<String, dynamic> _$CreateOrderRequestDtoToJson(
   'voucher_code': instance.voucherCode,
   'discount_amount': instance.discountAmount,
   'scheduled_delivery_time': instance.scheduledDeliveryTime,
+  'item_description': ?instance.itemDescription,
+  'estimated_weight_kg': ?instance.estimatedWeightKg,
 };
 
 OrderAddressDto _$OrderAddressDtoFromJson(Map<String, dynamic> json) =>

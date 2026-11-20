@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +34,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   }
 
   void _openConversation(ConversationDto conversation, {String? driverName}) {
-    final orderType = conversation.serviceType ??
+    final orderType =
+        conversation.serviceType ??
         conversation.serviceName ??
         OrderServiceLabels.fromServiceId(conversation.serviceId);
 
@@ -50,7 +53,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
 
   String _formatMessageTime(String dateString) {
     try {
-      final dateTime = DateTime.parse(dateString);
+      final dateTime = DateTime.parse(dateString).toLocal();
       return DateFormat('HH:mm').format(dateTime);
     } catch (e) {
       return 'Now';
@@ -61,16 +64,20 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     return OrderServiceLabels.conversationTitle(
       serviceName: conversation.serviceName,
       serviceId: conversation.serviceId,
-      serviceType: conversation.serviceType ??
+      serviceType:
+          conversation.serviceType ??
           conversation.order?['service_type']?.toString(),
       orderId: conversation.orderId,
     );
   }
 
   IconData _getOrderIcon(ConversationDto conversation) {
-    final label = conversation.serviceName ??
-        OrderServiceLabels.fromServiceType(conversation.serviceType ??
-            OrderServiceLabels.fromServiceId(conversation.serviceId));
+    final label =
+        conversation.serviceName ??
+        OrderServiceLabels.fromServiceType(
+          conversation.serviceType ??
+              OrderServiceLabels.fromServiceId(conversation.serviceId),
+        );
 
     switch (label.toLowerCase()) {
       case 'lesride':
@@ -102,11 +109,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
               child: Row(
                 children: [
-                  const Expanded(
-                    child: AuthHeader(
-                      title: 'Messages',
-                    ),
-                  ),
+                  const Expanded(child: AuthHeader(title: 'Messages')),
                   if (chatState.unreadCount > 0)
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -134,99 +137,71 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               child: chatState.isLoading && conversations.isEmpty
                   ? const Center(
                       child: CircularProgressIndicator(
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF5F2D82),
+                        ),
                       ),
                     )
                   : chatState.error != null && conversations.isEmpty
-                      ? ListView(
-                          padding: EdgeInsets.symmetric(
-                            vertical: ResponsiveUtils.spacing(context, 8),
+                  ? ListView(
+                      padding: EdgeInsets.symmetric(
+                        vertical: ResponsiveUtils.spacing(context, 8),
+                      ),
+                      children: [
+                        _buildAdminSupportItem(context),
+                        Padding(
+                          padding: EdgeInsets.all(
+                            ResponsiveUtils.spacing(context, 24),
                           ),
-                          children: [
-                            _buildAdminSupportItem(context),
-                            Padding(
-                              padding: EdgeInsets.all(
-                                ResponsiveUtils.spacing(context, 24),
-                              ),
-                              child: RetryWidget(
-                                message: chatState.error!,
-                                isLoading: chatState.isLoading,
-                                onRetry: () => ref
-                                    .read(chatProviderGlobal.notifier)
-                                    .loadConversations(),
-                              ),
-                            ),
-                          ],
-                        )
-                      : conversations.isEmpty
-                      ? ListView(
-                          padding: EdgeInsets.symmetric(
-                            vertical: ResponsiveUtils.spacing(context, 8),
-                          ),
-                          children: [
-                            _buildAdminSupportItem(context),
-                            Padding(
-                              padding: EdgeInsets.all(
-                                ResponsiveUtils.spacing(context, 32),
-                              ),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.chat_bubble_outline,
-                                    size: 48,
-                                    color: AppColors.foreground(context, Colors.grey[400]!),
-                                  ),
-                                  SizedBox(
-                                    height: ResponsiveUtils.spacing(context, 12),
-                                  ),
-                                  Text(
-                                    'No order chats yet',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize:
-                                          ResponsiveUtils.fontSize(context, 15),
-                                      color: AppColors.foreground(context, Colors.grey[600]!),
-                                    ),
-                                  ),
-                                  Text(
-                                    'Driver conversations appear here when you have active orders',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize:
-                                          ResponsiveUtils.fontSize(context, 13),
-                                      color: AppColors.foreground(context, Colors.grey[500]!),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        )
-                      : RefreshIndicator(
-                          onRefresh: () => ref
-                              .read(chatProviderGlobal.notifier)
-                              .loadConversations(),
-                          color: AppColors.accent(context, Color(0xFF5F2D82)),
-                          child: ListView.separated(
-                            padding: EdgeInsets.symmetric(
-                              vertical: ResponsiveUtils.spacing(context, 8),
-                            ),
-                            itemCount: conversations.length + 1,
-                            separatorBuilder: (context, index) =>
-                                const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              if (index == 0) {
-                                return _buildAdminSupportItem(context);
-                              }
-                              final conversation = conversations[index - 1];
-                              return _buildConversationItem(
-                                  context, conversation);
-                            },
+                          child: RetryWidget(
+                            message: chatState.error!,
+                            isLoading: chatState.isLoading,
+                            onRetry: () => ref
+                                .read(chatProviderGlobal.notifier)
+                                .loadConversations(),
                           ),
                         ),
+                      ],
+                    )
+                  : conversations.isEmpty
+                  ? ListView(
+                      padding: EdgeInsets.symmetric(
+                        vertical: ResponsiveUtils.spacing(context, 8),
+                      ),
+                      children: [
+                        _buildAdminSupportItem(context),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 48),
+                          child: EmptyStateView(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            title: 'No order chats yet',
+                            message:
+                                'Driver conversations appear here when you have active orders.',
+                          ),
+                        ),
+                      ],
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () => ref
+                          .read(chatProviderGlobal.notifier)
+                          .loadConversations(),
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
+                      child: ListView.separated(
+                        padding: EdgeInsets.symmetric(
+                          vertical: ResponsiveUtils.spacing(context, 8),
+                        ),
+                        itemCount: conversations.length + 1,
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return _buildAdminSupportItem(context);
+                          }
+                          final conversation = conversations[index - 1];
+                          return _buildConversationItem(context, conversation);
+                        },
+                      ),
+                    ),
             ),
           ],
         ),
@@ -235,73 +210,72 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   }
 
   Widget _buildAdminSupportItem(BuildContext context) {
-    return Container(
-      color: AppColors.surface(context, Color(0xFFF3E8FF)),
-      child: InkWell(
-        onTap: _openCustomerService,
-        child: Padding(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: const Color(0xFF5F2D82).withValues(alpha: 0.15),
-                child: const Icon(
-                  Icons.support_agent,
-                  color: Color(0xFF5F2D82),
-                  size: 28,
-                ),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'LeSgo Customer Service',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 16),
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.accent(context, Color(0xFF5F2D82)),
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    Text(
-                      'Chat with our support team anytime',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: AppColors.foreground(context, Colors.grey[700]!),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF5F2D82)),
-            ],
+    final accent = AppColors.accent(context, const Color(0xFF5F2D82));
+    final scheme = Theme.of(context).colorScheme;
+    return AppCard(
+      margin: EdgeInsets.fromLTRB(
+        ResponsiveUtils.screenPadding(context),
+        AppSpace.sm,
+        ResponsiveUtils.screenPadding(context),
+        AppSpace.sm,
+      ),
+      padding: const EdgeInsets.all(AppSpace.lg),
+      onTap: _openCustomerService,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: accent.withValues(alpha: 0.14),
+            child: Icon(Icons.support_agent, color: accent, size: 26),
           ),
-        ),
+          const SizedBox(width: AppSpace.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'LeSgo Customer Service',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 16),
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppSpace.xs),
+                Text(
+                  'Chat with our support team anytime',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+        ],
       ),
     );
   }
 
   Widget _buildConversationItem(
-      BuildContext context, ConversationDto conversation) {
+    BuildContext context,
+    ConversationDto conversation,
+  ) {
     final lastMessage = conversation.lastMessage;
     final hasUnread = conversation.unreadCount > 0;
     final orderName = _getOrderDisplayName(conversation);
     final driverName = conversation.driver?.name;
-    final displayTitle =
-        driverName != null ? 'Chat with $driverName' : orderName;
+    final displayTitle = driverName != null
+        ? 'Chat with $driverName'
+        : orderName;
 
     return Container(
       color: AppColors.surface(context, Colors.white),
       child: InkWell(
-        onTap: () => _openConversation(
-          conversation,
-          driverName: driverName,
-        ),
+        onTap: () => _openConversation(conversation, driverName: driverName),
         child: Padding(
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
           child: Row(
@@ -311,16 +285,20 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor:
-                        const Color(0xFF5F2D82).withValues(alpha: 0.1),
+                    backgroundColor: const Color(
+                      0xFF5F2D82,
+                    ).withValues(alpha: 0.1),
                     child: driverName != null
                         ? Text(
                             driverName.substring(0, 1).toUpperCase(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF5F2D82),
+                              color: AppColors.accent(
+                                context,
+                                Color(0xFF5F2D82),
+                              ),
                             ),
                           )
                         : Icon(
@@ -361,8 +339,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                 displayTitle,
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize:
-                                      ResponsiveUtils.fontSize(context, 16),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    16,
+                                  ),
                                   fontWeight: hasUnread
                                       ? FontWeight.w600
                                       : FontWeight.w500,
@@ -373,9 +353,14 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                                   orderName,
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
-                                    fontSize:
-                                        ResponsiveUtils.fontSize(context, 12),
-                                    color: AppColors.foreground(context, Colors.grey[600]!),
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      12,
+                                    ),
+                                    color: AppColors.foreground(
+                                      context,
+                                      Colors.grey[600]!,
+                                    ),
                                   ),
                                 ),
                             ],
@@ -386,9 +371,11 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                             _formatMessageTime(lastMessage.createdAt),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
-                              fontSize:
-                                  ResponsiveUtils.fontSize(context, 12),
-                              color: AppColors.foreground(context, Colors.grey[600]!),
+                              fontSize: ResponsiveUtils.fontSize(context, 12),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
                             ),
                           ),
                       ],
@@ -403,11 +390,16 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontFamily: 'TT Fors',
-                              fontSize:
-                                  ResponsiveUtils.fontSize(context, 14),
+                              fontSize: ResponsiveUtils.fontSize(context, 14),
                               color: hasUnread
-                                  ? AppColors.foreground(context, Colors.black87)
-                                  : AppColors.foreground(context, Colors.grey[600]!),
+                                  ? AppColors.foreground(
+                                      context,
+                                      Colors.black87,
+                                    )
+                                  : AppColors.foreground(
+                                      context,
+                                      Colors.grey[600]!,
+                                    ),
                               fontWeight: hasUnread
                                   ? FontWeight.w500
                                   : FontWeight.normal,
@@ -424,7 +416,10 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.accent(context, Color(0xFF5F2D82)),
+                              color: AppColors.accent(
+                                context,
+                                Color(0xFF5F2D82),
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(

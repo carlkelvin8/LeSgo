@@ -8,6 +8,7 @@ import '../../../provider/auth/auth_provider.dart';
 import '../../../provider/auth/rider_auth_provider.dart';
 import '../../../provider/register/merchant/merchant_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantRegisterCompleteScreen extends ConsumerWidget {
   const MerchantRegisterCompleteScreen({super.key});
@@ -31,7 +32,7 @@ class MerchantRegisterCompleteScreen extends ConsumerWidget {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(

@@ -1,4 +1,4 @@
-# LeSGo Flutter Architecture
+# LeSgo Flutter Architecture
 
 ## Repository Pattern
 

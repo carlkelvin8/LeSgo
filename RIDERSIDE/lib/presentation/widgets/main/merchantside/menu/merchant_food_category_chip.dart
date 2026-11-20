@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../common/menu_image_widget.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantFoodCategoryChip extends StatefulWidget {
   final String label;
@@ -67,7 +68,7 @@ class _MerchantFoodCategoryChipState extends State<MerchantFoodCategoryChip>
                     end: Alignment.bottomRight,
                   )
                 : null,
-            color: sel ? null : const Color(0xFFF4F0FA),
+            color: sel ? null : context.surf(const Color(0xFFF4F0FA)),
             borderRadius: BorderRadius.circular(18),
             boxShadow: sel
                 ? [
@@ -91,7 +92,7 @@ class _MerchantFoodCategoryChipState extends State<MerchantFoodCategoryChip>
                   shape: BoxShape.circle,
                   color: sel
                       ? Colors.white.withValues(alpha: .22)
-                      : Colors.white,
+                      : context.surf(Colors.white),
                   boxShadow: sel
                       ? []
                       : [
@@ -129,7 +130,7 @@ class _MerchantFoodCategoryChipState extends State<MerchantFoodCategoryChip>
                   fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                   color: sel
                       ? Colors.white
-                      : const Color(0xFF4A3060),
+                      : context.txt(const Color(0xFF4A3060)),
                   height: 1.1,
                 ),
               ),

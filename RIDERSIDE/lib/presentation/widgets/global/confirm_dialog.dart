@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 /// A reusable confirmation dialog.
 ///
@@ -28,21 +29,21 @@ Future<void> showConfirmDialog({
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: Color(0xFF1A1A1A),
+          color: context.txt(Color(0xFF1A1A1A)),
         ),
       ),
       content: Text(
         message,
-        style: const TextStyle(color: Color(0xFF6B6B6B)),
+        style: TextStyle(color: context.sub(Color(0xFF6B6B6B))),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
           child: Text(
             cancelLabel,
-            style: const TextStyle(color: Color(0xFF6B6B6B)),
+            style: TextStyle(color: context.sub(Color(0xFF6B6B6B))),
           ),
         ),
         TextButton(

@@ -5,6 +5,7 @@ import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/media_url_utils.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantEditInformationHeaderSection extends StatelessWidget {
   const MerchantEditInformationHeaderSection({
@@ -39,7 +40,7 @@ class MerchantEditInformationHeaderSection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 22),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF4D1E6D),
+            color: context.acc(const Color(0xFF4D1E6D)),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -75,7 +76,7 @@ class _MerchantLogoBadge extends StatelessWidget {
             child: Container(
               width: size,
               height: size,
-              color: const Color(0xFFFFCB63),
+              color: context.surf(const Color(0xFFFFCB63)),
               child: _buildLogoContent(context),
             ),
           ),
@@ -156,7 +157,7 @@ class _MerchantLogoBadge extends StatelessWidget {
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 32),
           fontWeight: FontWeight.w900,
-          color: const Color(0xFF5F2D82),
+          color: context.acc(const Color(0xFF5F2D82)),
         ),
       ),
     );

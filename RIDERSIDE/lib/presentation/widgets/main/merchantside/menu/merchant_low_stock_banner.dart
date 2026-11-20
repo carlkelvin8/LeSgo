@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_low_stock_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Warning banner shown at the top of the menu view when items are low stock.
 class MerchantLowStockBanner extends ConsumerWidget {
@@ -24,7 +25,7 @@ class MerchantLowStockBanner extends ConsumerWidget {
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
+        color: context.surf(const Color(0xFFFFF3E0)),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFFFB74D)),
       ),
@@ -33,7 +34,7 @@ class MerchantLowStockBanner extends ConsumerWidget {
         children: [
           Icon(
             Icons.warning_amber_rounded,
-            color: Colors.orange.shade800,
+            color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade800,
             size: ResponsiveUtils.fontSize(context, 20),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 8)),
@@ -47,7 +48,7 @@ class MerchantLowStockBanner extends ConsumerWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                     fontWeight: FontWeight.w700,
-                    color: Colors.orange.shade900,
+                    color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade900,
                   ),
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -56,7 +57,7 @@ class MerchantLowStockBanner extends ConsumerWidget {
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.orange.shade800,
+                    color: context.isDarkUI ? Colors.orange.shade200 : Colors.orange.shade800,
                   ),
                 ),
               ],

@@ -66,10 +66,10 @@ class _LestransportCoverageMapState
     }
     final lat =
         _geofences.map((g) => g.latitude).reduce((a, b) => a + b) /
-            _geofences.length;
+        _geofences.length;
     final lng =
         _geofences.map((g) => g.longitude).reduce((a, b) => a + b) /
-            _geofences.length;
+        _geofences.length;
     return LatLng(lat, lng);
   }
 
@@ -101,30 +101,33 @@ class _LestransportCoverageMapState
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: _loading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF5F2D82),
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
                       ),
                     )
                   : _error != null
-                      ? Center(
-                          child: TextButton(
-                            onPressed: _loadGeofences,
-                            child: const Text('Retry loading coverage'),
-                          ),
-                        )
-                      : kIsWeb
-                          ? _CoverageList(geofences: _geofences)
-                          : GoogleMap(
-                              style: MapStyles.darkIfDark(context),
-                              initialCameraPosition: CameraPosition(
-                                target: _mapCenter(),
-                                zoom: 10,
-                              ),
-                              circles: _buildCircles(),
-                              myLocationButtonEnabled: false,
-                              zoomControlsEnabled: false,
-                            ),
+                  ? Center(
+                      child: TextButton(
+                        onPressed: _loadGeofences,
+                        child: const Text('Retry loading coverage'),
+                      ),
+                    )
+                  : kIsWeb
+                  ? _CoverageList(geofences: _geofences)
+                  : GoogleMap(
+                      style: MapStyles.darkIfDark(context),
+                      initialCameraPosition: CameraPosition(
+                        target: _mapCenter(),
+                        zoom: 10,
+                      ),
+                      circles: _buildCircles(),
+                      myLocationButtonEnabled: false,
+                      zoomControlsEnabled: false,
+                    ),
             ),
           ),
           if (_geofences.isNotEmpty)
@@ -160,7 +163,10 @@ class _CoverageList extends StatelessWidget {
         final g = geofences[index];
         return ListTile(
           dense: true,
-          leading: const Icon(Icons.place, color: Color(0xFF5F2D82)),
+          leading: Icon(
+            Icons.place,
+            color: AppColors.accent(context, const Color(0xFF5F2D82)),
+          ),
           title: Text(
             g.name,
             style: const TextStyle(fontFamily: 'TT Fors', fontSize: 13),

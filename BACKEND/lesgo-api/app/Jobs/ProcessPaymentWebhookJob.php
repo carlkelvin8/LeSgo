@@ -227,6 +227,10 @@ class ProcessPaymentWebhookJob implements ShouldQueue
                     app(\App\Services\OrderDispatchService::class)->publish($order);
                 }
 
+                if ($order && !$wasPaymentReady && $order->partner_id) {
+                    NotifyMerchantNewOrderJob::dispatch($order)->onQueue('notifications');
+                }
+
                 // Notify customer of successful payment
                 if ($payment->customer_id) {
                     try {

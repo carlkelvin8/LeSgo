@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lesgo/core/state/user_session_epoch.dart';
@@ -13,6 +14,7 @@ import '../../../../data/data_source/order_remote_datasource.dart';
 
 import '../../../../data/data_source/wallet_remote_datasource.dart';
 
+import '../../../../data/data_source/dto/partner/store_branch.dart';
 import '../../../../data/data_source/partner_remote_datasource.dart';
 
 import '../../../../data/data_source/dto/order/create_order_request_dto.dart';
@@ -37,6 +39,26 @@ import '../profile/profile_provider.dart';
 import '../address/address_provider.dart';
 
 import '../lespay/lespay_provider.dart';
+
+/// Shown inline (not as a snackbar) when the customer has no usable delivery address.
+const String kMissingDeliveryAddressMessage =
+    'Add a delivery address to see the delivery fee.';
+
+/// Deliveries are limited to this distance from the pickup branch (the server
+/// enforces the same limit on /orders/estimate and when placing the order).
+const double kMaxDeliveryDistanceKm = 30;
+
+/// Prefix of the out-of-range message, so the UI can offer "change address"
+/// instead of a retry that can never succeed.
+const String kOutOfRangeMessagePrefix = 'The delivery address is too far';
+
+String outOfRangeDeliveryMessage(double distanceKm) =>
+    '$kOutOfRangeMessagePrefix (${distanceKm.toStringAsFixed(1)} km from the '
+    'pickup branch). Deliveries are limited to ${kMaxDeliveryDistanceKm.toStringAsFixed(0)} km. '
+    'Choose a closer branch or a different delivery address.';
+
+bool isOutOfRangeDeliveryMessage(String? message) =>
+    message != null && message.startsWith(kOutOfRangeMessagePrefix);
 
 class CheckoutState {
   final Order? order;
@@ -69,6 +91,17 @@ class CheckoutState {
   final bool hasValidPickupLocation;
   final bool hasValidDropoffLocation;
 
+  /// Open branches of the store, nearest to the delivery address first.
+  final List<StoreBranch> branches;
+  final int? selectedBranchId;
+
+  StoreBranch? get selectedBranch {
+    for (final b in branches) {
+      if (b.id == selectedBranchId) return b;
+    }
+    return null;
+  }
+
   CheckoutState({
     this.order,
 
@@ -99,6 +132,8 @@ class CheckoutState {
     this.fareError,
     this.hasValidPickupLocation = false,
     this.hasValidDropoffLocation = false,
+    this.branches = const [],
+    this.selectedBranchId,
   });
 
   CheckoutState copyWith({
@@ -134,6 +169,9 @@ class CheckoutState {
     bool clearFareError = false,
     bool? hasValidPickupLocation,
     bool? hasValidDropoffLocation,
+    List<StoreBranch>? branches,
+    int? selectedBranchId,
+    bool clearSelectedBranch = false,
   }) {
     return CheckoutState(
       order: order ?? this.order,
@@ -170,6 +208,10 @@ class CheckoutState {
           hasValidPickupLocation ?? this.hasValidPickupLocation,
       hasValidDropoffLocation:
           hasValidDropoffLocation ?? this.hasValidDropoffLocation,
+      branches: branches ?? this.branches,
+      selectedBranchId: clearSelectedBranch
+          ? null
+          : (selectedBranchId ?? this.selectedBranchId),
     );
   }
 }
@@ -216,8 +258,9 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     final subtotal = cartItems.fold<double>(0, (sum, item) => sum + item.total);
     var dropoffLat = BookingGeoUtils.defaultLat;
     var dropoffLng = BookingGeoUtils.defaultLng;
-    var deliveryAddress =
-        profileState.user?.addressLine1 ?? 'Brgy 6, Claveria, Cagayan';
+    // No saved address means no coordinates, so there is nothing valid to show
+    // as "deliver to" (a made-up fallback label hid why checkout was blocked).
+    var deliveryAddress = '';
     final deliveryAddr = addressState.deliveryAddress;
     if (deliveryAddr != null) {
       dropoffLat = deliveryAddr.latitude;
@@ -250,6 +293,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     await _resolvePickupCoordinates(
       restaurantState.activeRestaurantId,
       requestId,
+      preferredBranchId: restaurantState.activeBranchId,
     );
     if (!mounted || requestId != _initializeRequestId) return;
     await refreshDeliveryFee();
@@ -257,8 +301,11 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
   Future<void> _resolvePickupCoordinates(
     String? partnerIdStr,
-    int requestId,
-  ) async {
+    int requestId, {
+    // The branch card the customer opened; it wins over "nearest" so ordering
+    // from "Store – Branch" picks up at that branch.
+    int? preferredBranchId,
+  }) async {
     if (!mounted || requestId != _initializeRequestId) return;
     if (partnerIdStr == null || partnerIdStr.isEmpty) {
       state = state.copyWith(
@@ -270,9 +317,49 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     }
     try {
       final partnerId = int.parse(partnerIdStr);
-      final partner = await getIt<PartnerRemoteDataSource>().getPartner(
-        partnerId,
-      );
+      final partners = getIt<PartnerRemoteDataSource>();
+
+      // Multi-branch stores: default to the open branch nearest the customer.
+      List<StoreBranch> allBranches = const [];
+      try {
+        allBranches = await partners.getBranches(partnerId);
+      } catch (_) {
+        // Older stores without branches fall back to the store location.
+      }
+      if (!mounted || requestId != _initializeRequestId) return;
+      if (allBranches.isNotEmpty) {
+        final orderable = StoreBranch.orderableNearest(
+          allBranches,
+          state.dropoffLat,
+          state.dropoffLng,
+        );
+        if (orderable.isNotEmpty) {
+          final wantedId = preferredBranchId ?? state.selectedBranchId;
+          final keep = orderable.where((b) => b.id == wantedId);
+          final branch = keep.isNotEmpty ? keep.first : orderable.first;
+          state = state.copyWith(
+            branches: orderable,
+            selectedBranchId: branch.id,
+            pickupLat: branch.latitude!,
+            pickupLng: branch.longitude!,
+            hasValidPickupLocation: true,
+            clearFareError: true,
+          );
+          return;
+        }
+        if (!allBranches.any((b) => b.isOpen)) {
+          state = state.copyWith(
+            branches: const [],
+            clearSelectedBranch: true,
+            hasValidPickupLocation: false,
+            fareError: 'All branches of this store are closed right now.',
+          );
+          return;
+        }
+        // Open branches without a map pin fall back to the store location.
+      }
+
+      final partner = await partners.getPartner(partnerId);
       if (!mounted || requestId != _initializeRequestId) return;
       if (BookingGeoUtils.hasValidCoords(partner.latitude, partner.longitude)) {
         state = state.copyWith(
@@ -295,6 +382,22 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
     }
   }
 
+  /// Switch the pickup branch and re-price delivery from it.
+  Future<void> selectBranch(int branchId) async {
+    if (state.isLoading || branchId == state.selectedBranchId) return;
+    final match = state.branches.where((b) => b.id == branchId);
+    if (match.isEmpty) return;
+    final branch = match.first;
+    state = state.copyWith(
+      selectedBranchId: branch.id,
+      pickupLat: branch.latitude!,
+      pickupLng: branch.longitude!,
+      hasValidPickupLocation: true,
+      clearFareError: true,
+    );
+    await refreshDeliveryFee();
+  }
+
   Future<void> refreshDeliveryFee() async {
     final current = state.order;
     if (current == null) return;
@@ -302,22 +405,38 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         !state.hasValidDropoffLocation ||
         !BookingGeoUtils.hasValidCoords(state.pickupLat, state.pickupLng) ||
         !BookingGeoUtils.hasValidCoords(state.dropoffLat, state.dropoffLng)) {
+      final missingDropoff =
+          !state.hasValidDropoffLocation ||
+          !BookingGeoUtils.hasValidCoords(state.dropoffLat, state.dropoffLng);
       state = state.copyWith(
         hasValidDeliveryFee: false,
         isLoadingFare: false,
-        fareError:
-            'Select a valid restaurant and delivery location before checkout.',
+        fareError: missingDropoff
+            ? kMissingDeliveryAddressMessage
+            : 'Select a valid restaurant and delivery location before checkout.',
       );
       return;
     }
     final requestId = ++_fareRequestId;
     ++_voucherRequestId;
-    final distanceM = BookingGeoUtils.distanceMeters(
+    final rawDistanceM = BookingGeoUtils.distanceMeters(
       lat1: state.pickupLat,
       lng1: state.pickupLng,
       lat2: state.dropoffLat,
       lng2: state.dropoffLng,
-    ).clamp(500, 25000);
+    );
+    if (rawDistanceM > kMaxDeliveryDistanceKm * 1000) {
+      // Say so right away instead of asking the server and showing a generic
+      // "could not calculate" error.
+      state = state.copyWith(
+        hasValidDeliveryFee: false,
+        isLoadingFare: false,
+        isValidatingVoucher: false,
+        fareError: outOfRangeDeliveryMessage(rawDistanceM / 1000),
+      );
+      return;
+    }
+    final distanceM = rawDistanceM.clamp(500, 25000);
     state = state.copyWith(
       isLoadingFare: true,
       hasValidDeliveryFee: false,
@@ -627,6 +746,12 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       hasValidDeliveryFee: false,
       hasValidDropoffLocation: BookingGeoUtils.hasValidCoords(lat, lng),
     );
+    if (state.branches.isNotEmpty) {
+      // Keep the chosen branch, but list the others by the new distance.
+      state = state.copyWith(
+        branches: StoreBranch.orderableNearest(state.branches, lat, lng),
+      );
+    }
 
     refreshDeliveryFee();
   }
@@ -750,10 +875,14 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
         partnerId: partnerId,
 
+        partnerBranchId: state.selectedBranchId,
+
         estimatedDistanceM: state.estimatedDistanceM,
 
         pickup: OrderAddressDto(
-          address: restaurantLabel,
+          address: state.selectedBranch?.address.isNotEmpty == true
+              ? state.selectedBranch!.address
+              : restaurantLabel,
 
           lat: state.pickupLat,
 
@@ -851,8 +980,8 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
               isLoading: false,
               error:
                   'Insufficient LesPay balance. '
-                  'Balance: ₱${wallet.balance.toStringAsFixed(2)}, '
-                  'required: ₱${order.total.toStringAsFixed(2)}. '
+                  'Balance: ${Money.format(wallet.balance)}, '
+                  'required: ${Money.format(order.total)}. '
                   'Please top up your wallet first.',
             );
             return false;

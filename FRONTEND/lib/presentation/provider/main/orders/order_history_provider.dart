@@ -188,9 +188,16 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
       final response = await dataSource.cancelOrder(orderId, reason);
 
       if (response.success) {
+        // The cancel response is a bare order (no addresses), so load the full
+        // order to keep the list card complete; fall back to the response.
+        var updated = response.data;
+        try {
+          final full = await dataSource.getOrder(orderId);
+          if (full.success) updated = full.data;
+        } catch (_) {}
         final updatedOrders = state.orders.map((order) {
           if (order.id == orderId) {
-            return response.data;
+            return updated;
           }
           return order;
         }).toList();
@@ -212,6 +219,7 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
   }
 
   Future<bool> reorder(int orderId) async {
+    state = state.copyWith(clearError: true);
     try {
       final dataSource = getIt<OrderRemoteDataSource>();
       final response = await dataSource.reorderOrder(orderId);
@@ -220,9 +228,16 @@ class OrderHistoryNotifier extends StateNotifier<OrderHistoryState> {
         state = state.copyWith(orders: [response.data, ...state.orders]);
         return true;
       }
+      state = state.copyWith(error: 'Could not place the order again.');
       return false;
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not place the order again.',
+          fallbackTl: 'Hindi maulit ang order.',
+        ),
+      );
       return false;
     }
   }

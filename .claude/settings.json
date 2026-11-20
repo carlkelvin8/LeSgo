@@ -1,0 +1,34 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-edit.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze)",
+      "Bash(flutter analyze *)",
+      "Bash(flutter test)",
+      "Bash(flutter test *)",
+      "Bash(php artisan test)",
+      "Bash(php artisan test *)",
+      "Bash(php -l *)",
+      "Bash(php artisan route:list *)",
+      "Bash(dart analyze *)",
+      "Bash(git fetch *)",
+      "mcp__claude-in-chrome__get_page_text",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__Claude_Browser__read_console_messages",
+      "mcp__ccd_session_mgmt__search_session_transcripts"
+    ]
+  }
+}

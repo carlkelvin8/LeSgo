@@ -406,6 +406,48 @@ class RiderRouteUtils {
     );
   }
 
+  /// Longest route that still gets dashed/dotted styling. The Google Maps iOS
+  /// SDK builds a segment per dash, so a dashed polyline hundreds of km long
+  /// (e.g. a test order across provinces) exhausts memory and iOS kills the app
+  /// with no crash report. Longer routes are drawn solid.
+  static const double _maxPatternedRouteMeters = 15000;
+  static const int _maxPolylinePoints = 600;
+
+  static double _routeLengthMeters(List<LatLng> points) {
+    var total = 0.0;
+    for (var i = 1; i < points.length; i++) {
+      total += Geolocator.distanceBetween(
+        points[i - 1].latitude,
+        points[i - 1].longitude,
+        points[i].latitude,
+        points[i].longitude,
+      );
+    }
+    return total;
+  }
+
+  /// Dash/dot pattern only for short routes; solid line otherwise.
+  static List<PatternItem> _safePatterns(
+    List<LatLng> points,
+    List<PatternItem> patterns,
+  ) {
+    if (patterns.isEmpty) return patterns;
+    return _routeLengthMeters(points) <= _maxPatternedRouteMeters
+        ? patterns
+        : const <PatternItem>[];
+  }
+
+  /// Keep the shape but cap the vertex count so huge routes stay cheap to draw.
+  static List<LatLng> _thinPoints(List<LatLng> points) {
+    if (points.length <= _maxPolylinePoints) return points;
+    final step = (points.length / _maxPolylinePoints).ceil();
+    final thinned = <LatLng>[
+      for (var i = 0; i < points.length; i += step) points[i],
+    ];
+    if (thinned.last != points.last) thinned.add(points.last);
+    return thinned;
+  }
+
   static Future<Set<Polyline>> _assemblePolylines({
     RiderOrder? order,
     required String routeType,
@@ -418,13 +460,16 @@ class RiderRouteUtils {
     final polylines = <Polyline>{
       Polyline(
         polylineId: PolylineId('route_$routeType'),
-        points: mainPoints,
+        points: _thinPoints(mainPoints),
         color: routeType == 'to_pickup' ? Colors.blue : Colors.orange,
         width: 5,
         geodesic: false,
-        patterns: routeType == 'to_pickup'
-            ? const []
-            : [PatternItem.dash(10), PatternItem.gap(5)],
+        patterns: _safePatterns(
+          mainPoints,
+          routeType == 'to_pickup'
+              ? const <PatternItem>[]
+              : [PatternItem.dash(10), PatternItem.gap(5)],
+        ),
       ),
     };
 
@@ -446,15 +491,18 @@ class RiderRouteUtils {
         polylines.add(
           Polyline(
             polylineId: const PolylineId('pickup_to_dropoff'),
-            points: segmentPoints,
+            points: _thinPoints(segmentPoints),
             color: routeType == 'to_dropoff'
                 ? Colors.grey
                 : const Color(0xFF5F2D82).withValues(alpha: 0.45),
             width: routeType == 'to_dropoff' ? 2 : 3,
             geodesic: false,
-            patterns: routeType == 'to_dropoff'
-                ? [PatternItem.dot, PatternItem.gap(5)]
-                : [PatternItem.dash(8), PatternItem.gap(8)],
+            patterns: _safePatterns(
+              segmentPoints,
+              routeType == 'to_dropoff'
+                  ? [PatternItem.dot, PatternItem.gap(5)]
+                  : [PatternItem.dash(8), PatternItem.gap(8)],
+            ),
           ),
         );
       }
@@ -470,13 +518,16 @@ class RiderRouteUtils {
     return {
       Polyline(
         polylineId: PolylineId('route_$routeType'),
-        points: List<LatLng>.from(_cachedActivePoints!),
+        points: _thinPoints(List<LatLng>.from(_cachedActivePoints!)),
         color: routeType == 'to_pickup' ? Colors.blue : Colors.orange,
         width: 5,
         geodesic: false,
-        patterns: routeType == 'to_pickup'
-            ? const []
-            : [PatternItem.dash(10), PatternItem.gap(5)],
+        patterns: _safePatterns(
+          _cachedActivePoints!,
+          routeType == 'to_pickup'
+              ? const <PatternItem>[]
+              : [PatternItem.dash(10), PatternItem.gap(5)],
+        ),
       ),
     };
   }

@@ -69,31 +69,82 @@ class DriverFindingState {
   }
 }
 
-class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
-  final OrderRemoteDataSource _orderDataSource = getIt<OrderRemoteDataSource>();
+/// Pure status rules for the driver search (unit-testable).
+class DriverFindingRules {
+  DriverFindingRules._();
 
-  DriverFindingNotifier() : super(DriverFindingState());
+  /// Statuses where no driver is working the order yet.
+  static const _waiting = {
+    '',
+    'pending',
+    'scheduled',
+    'searching_driver',
+    'searching',
+    'finding_driver',
+  };
+
+  static const _dead = {'cancelled', 'canceled', 'failed', 'expired', 'rejected'};
+
+  static bool isCancelled(String? status) =>
+      _dead.contains((status ?? '').toLowerCase());
+
+  /// A driver is considered found for any non-waiting, non-dead status
+  /// (accepted, assigned, driver_arrived_at_pickup, in_progress, picked_up...)
+  /// as long as the order carries a driver.
+  static bool isDriverFound(String? status, int? driverId) {
+    if (driverId == null) return false;
+    final s = (status ?? '').toLowerCase();
+    return !_waiting.contains(s) && !_dead.contains(s);
+  }
+}
+
+class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
+  final OrderRemoteDataSource _orderDataSource;
+  final Duration _pollInterval;
+
+  /// Bumped on every start/cancel/reset; a poll loop only keeps writing state
+  /// while its own token is still current.
+  int _pollToken = 0;
+
+  DriverFindingNotifier({
+    OrderRemoteDataSource? orderDataSource,
+    Duration pollInterval = const Duration(seconds: 3),
+  })  : _orderDataSource = orderDataSource ?? getIt<OrderRemoteDataSource>(),
+        _pollInterval = pollInterval,
+        super(DriverFindingState());
+
+  bool _isCurrent(int token) => mounted && token == _pollToken;
+
+  @override
+  void dispose() {
+    _pollToken++;
+    super.dispose();
+  }
 
   Future<void> startFindingDriver(String orderId, String orderType) async {
-    state = state.copyWith(
-      isSearching: true,
-      driverFound: false,
-      clearError: true,
-      orderId: orderId,
-    );
+    final token = ++_pollToken;
+    // Fresh state: nothing from a previous order may leak through.
+    state = DriverFindingState(isSearching: true, orderId: orderId);
 
     try {
       final parsedId = int.parse(orderId);
       final orderResponse = await _orderDataSource.getOrder(parsedId);
+      if (!_isCurrent(token)) return;
       final order = orderResponse.data;
 
-      if (order.driverId != null) {
+      if (DriverFindingRules.isCancelled(order.status)) {
+        _markCancelled();
+        return;
+      }
+
+      if (DriverFindingRules.isDriverFound(order.status, order.driverId)) {
         _markDriverFound(orderId, order.driverId!, order);
         return;
       }
 
-      await _pollForDriverAssignment(orderId);
+      await _pollForDriverAssignment(orderId, token);
     } catch (e) {
+      if (!_isCurrent(token)) return;
       state = state.copyWith(
         isSearching: false,
         driverFound: false,
@@ -110,6 +161,13 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
     return startFindingDriver(orderId, orderType);
   }
 
+  void _markCancelled() {
+    state = DriverFindingState(
+      orderId: state.orderId,
+      error: 'Order was cancelled.',
+    );
+  }
+
   void _markDriverFound(
     String orderId,
     int driverId,
@@ -118,7 +176,9 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
     final driver = DriverInfo.fromOrder(order) ??
         DriverInfo(name: 'Driver #$driverId');
 
-    state = state.copyWith(
+    // Build a new state rather than copyWith so no field of a previous
+    // order's driver survives when this one has none.
+    state = DriverFindingState(
       isSearching: false,
       driverFound: true,
       driverName: driver.name,
@@ -127,40 +187,39 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
       driverPlateNumber: driver.vehicleNumber,
       driverPhone: driver.phone,
       driverRating: driver.rating,
+      orderId: orderId,
     );
   }
 
-  Future<void> _pollForDriverAssignment(String orderId) async {
+  Future<void> _pollForDriverAssignment(String orderId, int token) async {
     const maxAttempts = 20;
     var attempts = 0;
     var pollErrors = 0;
 
     while (attempts < maxAttempts) {
-      await Future.delayed(const Duration(seconds: 3));
+      await Future.delayed(_pollInterval);
+      if (!_isCurrent(token)) return;
       attempts++;
 
       try {
         final orderResponse =
             await _orderDataSource.getOrder(int.parse(orderId));
+        if (!_isCurrent(token)) return;
         final order = orderResponse.data;
 
-        if (order.driverId != null &&
-            (order.status == 'accepted' || order.status == 'assigned')) {
-          _markDriverFound(orderId, order.driverId!, order);
+        if (DriverFindingRules.isCancelled(order.status)) {
+          _markCancelled();
           return;
         }
 
-        if (order.status == 'cancelled') {
-          state = state.copyWith(
-            isSearching: false,
-            driverFound: false,
-            error: 'Order was cancelled.',
-          );
+        if (DriverFindingRules.isDriverFound(order.status, order.driverId)) {
+          _markDriverFound(orderId, order.driverId!, order);
           return;
         }
 
         pollErrors = 0;
       } catch (e) {
+        if (!_isCurrent(token)) return;
         pollErrors++;
         if (pollErrors >= 3) {
           state = state.copyWith(
@@ -177,6 +236,7 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
       }
     }
 
+    if (!_isCurrent(token)) return;
     state = state.copyWith(
       isSearching: false,
       driverFound: false,
@@ -184,27 +244,34 @@ class DriverFindingNotifier extends StateNotifier<DriverFindingState> {
     );
   }
 
-  Future<bool> cancelOrder(String orderId) async {
+  Future<bool> cancelOrder(
+    String orderId, {
+    String reason = 'Cancelled by customer',
+  }) async {
+    // Stop any running poll loop first so it cannot rewrite state.
+    _pollToken++;
     try {
-      await _orderDataSource.cancelOrder(
-        int.parse(orderId),
-        'Cancelled by customer',
-      );
+      await _orderDataSource.cancelOrder(int.parse(orderId), reason);
+      if (!mounted) return true;
       state = DriverFindingState();
       return true;
     } catch (e) {
-      state = state.copyWith(
-        error: ApiErrorMapper.message(
-          e,
-          fallbackEn: 'Failed to cancel order. Please try again.',
-          fallbackTl: 'Hindi makansela ang order.',
-        ),
-      );
+      if (mounted) {
+        state = state.copyWith(
+          isSearching: false,
+          error: ApiErrorMapper.message(
+            e,
+            fallbackEn: 'Failed to cancel order. Please try again.',
+            fallbackTl: 'Hindi makansela ang order.',
+          ),
+        );
+      }
       return false;
     }
   }
 
   void reset() {
+    _pollToken++;
     state = DriverFindingState();
   }
 }

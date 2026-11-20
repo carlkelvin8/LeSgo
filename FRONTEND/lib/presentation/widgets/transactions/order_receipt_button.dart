@@ -90,7 +90,9 @@ class _OrderReceiptButtonState extends State<OrderReceiptButton> {
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.accent(context, Color(0xFF5F2D82)),
-          side: const BorderSide(color: Color(0xFF5F2D82)),
+          side: BorderSide(
+            color: AppColors.accent(context, const Color(0xFF5F2D82)),
+          ),
           padding: EdgeInsets.symmetric(
             vertical: ResponsiveUtils.spacing(context, 14),
           ),

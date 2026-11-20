@@ -32,4 +32,15 @@ class LocationAddress {
       isDefault: isDefault ?? this.isDefault,
     );
   }
+
+  /// Human-readable address. Used wherever an address is sent to the API or
+  /// shown as text, so it must never fall back to "Instance of ...".
+  @override
+  String toString() {
+    final parts = <String>[
+      for (final p in [houseNumberStreet, subdivisionBarangay, cityProvince])
+        if (p != null && p.trim().isNotEmpty) p.trim(),
+    ];
+    return parts.join(', ');
+  }
 }

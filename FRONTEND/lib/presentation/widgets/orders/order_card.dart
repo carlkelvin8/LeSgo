@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -5,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../data/data_source/dto/order/order_dto.dart';
 import '../../../core/constants/map_styles.dart';
 import '../../../core/constants/order_status_constants.dart';
+import '../../../core/utils/order_status_mapper.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../screens/tracking/live_tracking_screen.dart';
 import '../../../data/data_source/tracking_remote_datasource.dart';
@@ -80,7 +83,10 @@ class _OrderCardState extends State<OrderCard> {
       return Colors.orange;
     } else if (lowercaseStatus == OrderStatusConstants.accepted ||
         lowercaseStatus == OrderStatusConstants.pickedUp ||
-        lowercaseStatus == OrderStatusConstants.inProgress) {
+        lowercaseStatus == OrderStatusConstants.inProgress ||
+        lowercaseStatus == 'in_transit' ||
+        lowercaseStatus == 'driver_arrived_at_pickup' ||
+        lowercaseStatus == 'ready_for_pickup') {
       return Colors.blue;
     } else if (lowercaseStatus == OrderStatusConstants.completed) {
       return Colors.green;
@@ -107,8 +113,14 @@ class _OrderCardState extends State<OrderCard> {
       return 'Cancelled';
     } else if (lowercaseStatus == OrderStatusConstants.failed) {
       return 'Failed';
+    } else if (lowercaseStatus == 'in_transit') {
+      return 'On The Way';
+    } else if (lowercaseStatus == 'driver_arrived_at_pickup') {
+      return 'Rider Arrived';
+    } else if (lowercaseStatus == 'ready_for_pickup') {
+      return 'Ready For Pickup';
     }
-    return status.toUpperCase();
+    return OrderStatusMapper.toDisplayLabel(status);
   }
 
   IconData _getStatusIcon(String status) {
@@ -196,10 +208,7 @@ class _OrderCardState extends State<OrderCard> {
         points: points,
         color: AppColors.accent(context, Color(0xFF5F2D82)),
         width: 3,
-        // Use solid line for actual route, dashed for straight line
-        patterns: _routePolyline.isEmpty
-            ? [PatternItem.dash(15), PatternItem.gap(8)]
-            : [],
+        // Always solid: dashed polylines on long routes crash iOS.
       ),
     );
 
@@ -211,7 +220,7 @@ class _OrderCardState extends State<OrderCard> {
     final statusColor = _getStatusColor(widget.order.status);
     final createdAt = DateTime.tryParse(
       widget.order.createdAt ?? widget.order.updatedAt ?? '',
-    );
+    )?.toLocal();
     final formattedDate = createdAt != null
         ? DateFormat('MMM dd, yyyy • hh:mm a').format(createdAt)
         : 'Date unavailable';
@@ -221,17 +230,7 @@ class _OrderCardState extends State<OrderCard> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+        decoration: AppCard.decoration(context, radius: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -245,7 +244,10 @@ class _OrderCardState extends State<OrderCard> {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
+                    color: AppColors.accent(
+                      context,
+                      Color(0xFF5F2D82),
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -357,10 +359,13 @@ class _OrderCardState extends State<OrderCard> {
                         if (_isLoadingRoute)
                           Container(
                             color: Colors.black.withValues(alpha: 0.1),
-                            child: const Center(
+                            child: Center(
                               child: CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF5F2D82),
+                                  AppColors.accent(
+                                    context,
+                                    const Color(0xFF5F2D82),
+                                  ),
                                 ),
                               ),
                             ),
@@ -375,7 +380,10 @@ class _OrderCardState extends State<OrderCard> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.surface(context, Colors.black).withValues(alpha: 0.6),
+                              color: AppColors.surface(
+                                context,
+                                Colors.black,
+                              ).withValues(alpha: 0.6),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -424,7 +432,11 @@ class _OrderCardState extends State<OrderCard> {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    Container(width: 2, height: 20, color: AppColors.surface(context, Colors.grey[300]!)),
+                    Container(
+                      width: 2,
+                      height: 20,
+                      color: AppColors.surface(context, Colors.grey[300]!),
+                    ),
                     Container(
                       width: 8,
                       height: 8,
@@ -445,7 +457,10 @@ class _OrderCardState extends State<OrderCard> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: AppColors.foreground(context, Colors.grey[800]!),
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[800]!,
+                          ),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -456,7 +471,10 @@ class _OrderCardState extends State<OrderCard> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 13),
-                          color: AppColors.foreground(context, Colors.grey[800]!),
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[800]!,
+                          ),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -472,7 +490,11 @@ class _OrderCardState extends State<OrderCard> {
             // Footer row
             Row(
               children: [
-                Icon(Icons.access_time, size: 14, color: AppColors.foreground(context, Colors.grey[500]!)),
+                Icon(
+                  Icons.access_time,
+                  size: 14,
+                  color: AppColors.foreground(context, Colors.grey[500]!),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   formattedDate,
@@ -484,7 +506,9 @@ class _OrderCardState extends State<OrderCard> {
                 ),
                 const Spacer(),
                 Text(
-                  '₱${widget.order.estimatedFare.toStringAsFixed(2)}',
+                  // estimatedFare is only the delivery fee for food/store orders;
+                  // effectiveTotalAmount is what the customer actually pays.
+                  Money.format(widget.order.effectiveTotalAmount),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),

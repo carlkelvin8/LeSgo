@@ -4,6 +4,7 @@ import '../../core/constants/api_constants.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/utils/menu_image_utils.dart';
 import 'dto/partner/partner_dto.dart';
+import 'dto/partner/store_branch.dart';
 
 @lazySingleton
 class PartnerRemoteDataSource {
@@ -19,6 +20,9 @@ class PartnerRemoteDataSource {
     bool? isFeatured,
     int page = 1,
     int perPage = 20,
+    // List every open branch of a store as its own card (same menu, own
+    // name/location). Older servers ignore the flag and return one card.
+    bool expandBranches = false,
   }) async {
     final dio = _dioClient.dio;
     
@@ -32,6 +36,7 @@ class PartnerRemoteDataSource {
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (isOpen != null) queryParams['is_open'] = isOpen ? '1' : '0';
       if (isFeatured != null) queryParams['is_featured'] = isFeatured ? '1' : '0';
+      if (expandBranches) queryParams['expand_branches'] = '1';
       
       print('🔵 PartnerDataSource: Fetching partners with params: $queryParams');
       
@@ -79,6 +84,19 @@ class PartnerRemoteDataSource {
       print('🔴 PartnerDataSource: Unexpected error - $e');
       throw Exception('Failed to fetch partner: $e');
     }
+  }
+
+  /// Get a store's branches (pickup points).
+  Future<List<StoreBranch>> getBranches(int partnerId) async {
+    final response = await _dioClient.dio.get(
+      ApiConstants.partnerBranches(partnerId),
+    );
+    final data = response.data;
+    final raw = data is Map ? data['data'] : data;
+    return (raw is List ? raw : const [])
+        .whereType<Map>()
+        .map((e) => StoreBranch.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
   }
 
   /// Get partner menu (categories and items)

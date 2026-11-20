@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePartnerBranchRequest;
 use App\Models\Partner;
 use App\Models\PartnerBranch;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class PartnerBranchController extends Controller
 {
@@ -31,7 +32,9 @@ class PartnerBranchController extends Controller
     {
         $partner = Partner::findOrFail($partnerId);
 
-        return $this->success($partner->branches()->orderBy('id', 'desc')->get());
+        return $this->success(
+            $partner->branches()->orderByDesc('is_primary')->orderBy('name')->get()
+        );
     }
 
     /**
@@ -56,9 +59,21 @@ class PartnerBranchController extends Controller
     public function store(StorePartnerBranchRequest $request, int $partnerId): JsonResponse
     {
         $partner = Partner::findOrFail($partnerId);
-        $branch  = $partner->branches()->create($request->validated());
+        $this->authorize('update', $partner);
 
-        return $this->created($branch, 'Branch created successfully');
+        $branch = DB::transaction(function () use ($partner, $request) {
+            $data = $request->validated();
+            // The first branch is always the primary one.
+            $data['is_primary'] = ($data['is_primary'] ?? false) || ! $partner->branches()->exists();
+            $branch = $partner->branches()->create($data);
+            if ($branch->is_primary) {
+                $this->demoteOtherPrimaries($branch);
+            }
+
+            return $branch;
+        });
+
+        return $this->created($branch->fresh(), 'Branch created successfully');
     }
 
     /**
@@ -81,9 +96,21 @@ class PartnerBranchController extends Controller
      */
     public function update(UpdatePartnerBranchRequest $request, PartnerBranch $branch): JsonResponse
     {
-        $branch->update($request->validated());
+        $this->authorize('update', $branch->partner);
 
-        return $this->success($branch, 'Branch updated successfully');
+        $data = $request->validated();
+        if (array_key_exists('is_primary', $data) && ! $data['is_primary'] && $branch->is_primary) {
+            return $this->error('Choose another branch as primary instead of unsetting this one.', 422);
+        }
+
+        DB::transaction(function () use ($branch, $data) {
+            $branch->update($data);
+            if ($branch->is_primary) {
+                $this->demoteOtherPrimaries($branch);
+            }
+        });
+
+        return $this->success($branch->fresh(), 'Branch updated successfully');
     }
 
     /**
@@ -105,8 +132,37 @@ class PartnerBranchController extends Controller
      */
     public function destroy(PartnerBranch $branch): JsonResponse
     {
-        $branch->delete();
+        $partner = $branch->partner;
+        $this->authorize('update', $partner);
+
+        if ($partner->branches()->count() <= 1) {
+            return $this->error('A store needs at least one branch. Edit this branch instead.', 422);
+        }
+
+        $hasActiveOrders = $branch->orders()
+            ->whereNotIn('status', ['completed', 'cancelled', 'rejected', 'failed'])
+            ->exists();
+        if ($hasActiveOrders) {
+            return $this->error('This branch still has active orders. Finish them before deleting it.', 422);
+        }
+
+        DB::transaction(function () use ($branch, $partner) {
+            $wasPrimary = $branch->is_primary;
+            $branch->delete();
+            if ($wasPrimary) {
+                $partner->branches()->orderBy('id')->first()?->update(['is_primary' => true]);
+            }
+        });
 
         return $this->message('Branch deleted successfully');
+    }
+
+    private function demoteOtherPrimaries(PartnerBranch $branch): void
+    {
+        PartnerBranch::query()
+            ->where('partner_id', $branch->partner_id)
+            ->whereKeyNot($branch->id)
+            ->where('is_primary', true)
+            ->update(['is_primary' => false]);
     }
 }

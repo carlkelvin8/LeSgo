@@ -166,7 +166,7 @@ class LiveTrackingController extends Controller
     /**
      * Get live order tracking information.
      */
-    public function getOrderTracking($orderId): JsonResponse
+    public function getOrderTracking(Request $request, $orderId): JsonResponse
     {
         $order = Order::with([
             'driverProfile.user:id,name,phone_number',
@@ -176,6 +176,10 @@ class LiveTrackingController extends Controller
 
         if (!$order) {
             return $this->error('Order not found.', 404);
+        }
+
+        if (! $this->canTrackOrder($request->user(), $order)) {
+            return $this->error('Forbidden', 403);
         }
 
         $trackingData = [
@@ -349,12 +353,16 @@ class LiveTrackingController extends Controller
     /**
      * Get ETA for an order.
      */
-    public function getEta($orderId): JsonResponse
+    public function getEta(Request $request, $orderId): JsonResponse
     {
         $order = Order::with('driverProfile.user')->find($orderId);
 
         if (!$order) {
             return $this->error('Order not found.', 404);
+        }
+
+        if (! $this->canTrackOrder($request->user(), $order)) {
+            return $this->error('Forbidden', 403);
         }
 
         if (!$order->driverProfile) {
@@ -683,5 +691,21 @@ class LiveTrackingController extends Controller
         }
 
         return $points;
+    }
+
+    private function canTrackOrder($user, Order $order): bool
+    {
+        if ($user->isAdmin() || (int) $user->id === (int) $order->customer_id) {
+            return true;
+        }
+
+        $driverId = $user->driverProfile?->id;
+        if ($driverId !== null && (int) $driverId === (int) $order->driver_id) {
+            return true;
+        }
+
+        $partnerId = $user->workingPartnerId();
+
+        return $partnerId !== null && $partnerId === (int) $order->partner_id;
     }
 }

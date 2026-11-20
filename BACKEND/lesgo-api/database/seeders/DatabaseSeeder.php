@@ -17,18 +17,26 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // Admin user for management tasks
-        User::firstOrCreate(
-            ['email' => 'admin@lesgo.test'],
-            [
-                'name'              => 'Admin User',
-                'email_verified_at' => now(),
-                'password'          => \Illuminate\Support\Facades\Hash::make('admin123'),
-                'remember_token'    => \Illuminate\Support\Str::random(10),
-                'role'              => 'admin',
-                'phone_number'      => '+639000000001',
-            ]
-        );
+        // Known-password development admin: never create it on a deployed
+        // environment (matches Lesgo-API, which is what production runs).
+        if (app()->environment('local', 'testing')) {
+            User::firstOrCreate(
+                ['email' => 'admin@lesgo.test'],
+                [
+                    'name'              => 'Admin User',
+                    'email_verified_at' => now(),
+                    'password'          => \Illuminate\Support\Facades\Hash::make('admin123'),
+                    'remember_token'    => \Illuminate\Support\Str::random(10),
+                    'role'              => 'admin',
+                    'phone_number'      => '+639000000001',
+                ]
+            );
+        }
+
+        // Known-password test merchant/rider: never create them outside local/testing.
+        if (app()->environment('local', 'testing')) {
+            $this->call(E2ETestAccountsSeeder::class);
+        }
 
         // Other seeders disabled per request — retain admin account only
         // $this->call([

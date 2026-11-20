@@ -67,7 +67,7 @@ void main() {
         await tester.binding.handlePopRoute();
       } else {
         final button = find.ancestor(
-          of: find.byIcon(Icons.arrow_back_ios),
+          of: find.byIcon(Icons.arrow_back_ios_new_rounded),
           matching: find.byType(IconButton),
         );
         final rect = tester.getRect(button);
@@ -122,7 +122,7 @@ void main() {
               await tester.binding.handlePopRoute();
             } else {
               final button = find.ancestor(
-                of: find.byIcon(Icons.arrow_back_ios),
+                of: find.byIcon(Icons.arrow_back_ios_new_rounded),
                 matching: find.byType(IconButton),
               );
               final rect = tester.getRect(button);

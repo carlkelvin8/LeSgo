@@ -14,7 +14,9 @@ class MenuItemPolicy
     {
         $menuItem->loadMissing('partner');
 
-        return $user->id === $menuItem->partner?->user_id || $user->isAdmin();
+        return $user->id === $menuItem->partner?->user_id
+            || $user->isAdmin()
+            || $user->canEditStoreMenu((int) $menuItem->partner_id);
     }
 
     /**
@@ -24,7 +26,9 @@ class MenuItemPolicy
     {
         $menuItem->loadMissing('partner');
 
-        return $user->id === $menuItem->partner?->user_id || $user->isAdmin();
+        return $user->id === $menuItem->partner?->user_id
+            || $user->isAdmin()
+            || $user->canEditStoreMenu((int) $menuItem->partner_id);
     }
 }
 

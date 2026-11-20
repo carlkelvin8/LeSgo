@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/injection.dart';
@@ -116,10 +117,13 @@ class OffersNotifier extends StateNotifier<OffersState> {
 
     try {
       final response = await _voucherDataSource.getAvailableVouchers();
-      final offers = response.data.asMap().entries.map((entry) {
-        final voucher = entry.value;
-        return _mapVoucherToOffer(voucher, entry.key);
-      }).toList();
+      final offers = response.data
+          .where((voucher) => !_isExpired(voucher.expiresAt))
+          .toList()
+          .asMap()
+          .entries
+          .map((entry) => _mapVoucherToOffer(entry.value, entry.key))
+          .toList();
 
       state = state.copyWith(offers: offers, isLoading: false);
     } catch (e) {
@@ -198,6 +202,21 @@ class OffersNotifier extends StateNotifier<OffersState> {
     return null;
   }
 }
+
+/// True when [expiresAt] is a date that has already passed (the whole expiry
+/// day still counts as valid). Free-text values like "Limited time" are kept.
+bool _isExpired(String? expiresAt, {DateTime? now}) {
+  if (expiresAt == null) return false;
+  final parsed = DateTime.tryParse(expiresAt);
+  if (parsed == null) return false;
+  final local = parsed.isUtc ? parsed.toLocal() : parsed;
+  final endOfDay = DateTime(local.year, local.month, local.day, 23, 59, 59);
+  return (now ?? DateTime.now()).isAfter(endOfDay);
+}
+
+@visibleForTesting
+bool offerIsExpired(String? expiresAt, {DateTime? now}) =>
+    _isExpired(expiresAt, now: now);
 
 Offer _mapVoucherToOffer(VoucherDto voucher, int index) {
   final code = voucher.code;

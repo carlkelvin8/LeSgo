@@ -64,20 +64,27 @@ class _CustomerServiceChatScreenState
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(customerServiceChatProvider);
-    ref.listen(customerServiceChatProvider, (previous, next) => _scrollToBottom());
+    ref.listen(
+      customerServiceChatProvider,
+      (previous, next) => _scrollToBottom(),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.white),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
         elevation: 0,
         title: Row(
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.surface(context, Colors.white).withValues(alpha: 0.2),
-              child: const Icon(Icons.support_agent, color: Colors.white),
+              backgroundColor: AppColors.accent(
+                context,
+                const Color(0xFF5F2D82),
+              ).withValues(alpha: 0.14),
+              child: Icon(
+                Icons.support_agent,
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 10)),
             Column(
@@ -98,7 +105,7 @@ class _CustomerServiceChatScreenState
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -123,10 +130,7 @@ class _CustomerServiceChatScreenState
                 value: 'human',
                 child: Text('Talk to human support'),
               ),
-              PopupMenuItem(
-                value: 'clear',
-                child: Text('Clear chat'),
-              ),
+              PopupMenuItem(value: 'clear', child: Text('Clear chat')),
             ],
           ),
         ],
@@ -139,9 +143,7 @@ class _CustomerServiceChatScreenState
               color: AppColors.surface(context, Color(0xFFFFF8E1)),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
               child: Text(
-                kDebugMode
-                    ? 'Add GEMINI_API_KEY to secrets.json and restart the app to enable AI replies.'
-                    : 'AI replies are temporarily unavailable. Please use "Talk to human support".',
+                'AI replies are temporarily unavailable. Please use "Talk to human support".',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
@@ -199,10 +201,10 @@ class _CustomerServiceChatScreenState
           CircleAvatar(
             radius: 16,
             backgroundColor: AppColors.surface(context, Color(0xFFE8D9F5)),
-            child: const Icon(
+            child: Icon(
               Icons.support_agent,
               size: 16,
-              color: Color(0xFF5F2D82),
+              color: AppColors.accent(context, const Color(0xFF5F2D82)),
             ),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 8)),
@@ -218,9 +220,9 @@ class _CustomerServiceChatScreenState
             child: SizedBox(
               width: ResponsiveUtils.spacing(context, 20),
               height: ResponsiveUtils.spacing(context, 20),
-              child: const CircularProgressIndicator(
+              child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Color(0xFF5F2D82),
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
               ),
             ),
           ),
@@ -260,7 +262,7 @@ class _CustomerServiceChatScreenState
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
                 decoration: InputDecoration(
-                  hintText: 'LeSGo app help: orders, LesPay, vouchers...',
+                  hintText: 'LeSgo app help: orders, LesPay, vouchers...',
                   hintStyle: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),

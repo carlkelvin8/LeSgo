@@ -4,7 +4,7 @@ namespace App\Services;
 
 class LesPayTopUpFeeService
 {
-    public const DEFAULT_FEE_RATE = 0.015;
+    public const DEFAULT_FEE_RATE = 0.03;
 
     public static function rate(): float
     {

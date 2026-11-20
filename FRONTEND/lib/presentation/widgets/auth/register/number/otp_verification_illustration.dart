@@ -10,15 +10,17 @@ class OtpVerificationIllustration extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SvgPicture.asset(
-          'assets/images/register/8.svg',
-          width: ResponsiveUtils.imageHeight(context, 240),
-          height: ResponsiveUtils.imageHeight(context, 240),
-          fit: BoxFit.contain,
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: SvgPicture.asset(
+            'assets/images/register/8.svg',
+            width: ResponsiveUtils.imageHeight(context, 240),
+            height: ResponsiveUtils.imageHeight(context, 240),
+            fit: BoxFit.contain,
+          ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
       ],
     );
   }
 }
-

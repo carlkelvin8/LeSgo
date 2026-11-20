@@ -51,15 +51,24 @@ class ApiService {
 
   static Future<Map<String, dynamic>> login(
     String email,
-    String password,
-  ) async {
+    String password, {
+    String? twoFactorCode,
+  }) async {
     AppLogger.network('POST', ApiConstants.loginEndpoint);
     try {
+      // One name per install. Without it every session of the same account
+      // shared the server default ("api-token"), and a token refresh on one
+      // device deleted every other device's access token, logging riders out.
+      final deviceId = await SecureStorageService.getDeviceId();
       final res = await _dio.post(
         ApiConstants.loginEndpoint,
         data: {
           'email': email,
           'password': password,
+          'device_name':
+              'lesgo-rider-${deviceId.length > 24 ? deviceId.substring(0, 24) : deviceId}',
+          if (twoFactorCode != null && twoFactorCode.trim().isNotEmpty)
+            'two_factor_code': twoFactorCode.trim(),
         },
       );
       AppLogger.network(
@@ -153,8 +162,9 @@ class ApiService {
   static Future<List<dynamic>> getOrders({
     String? status,
     int perPage = 30,
+    bool mine = false,
   }) =>
-      OrdersApi.getOrders(status: status, perPage: perPage);
+      OrdersApi.getOrders(status: status, perPage: perPage, mine: mine);
 
   static Future<Map<String, dynamic>?> getOrderById(int orderId) =>
       OrdersApi.getOrderById(orderId);

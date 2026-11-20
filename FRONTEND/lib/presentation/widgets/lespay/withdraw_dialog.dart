@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,7 +44,7 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Available balance: Php ${lespayState.balance.toStringAsFixed(2)}',
+                'Available balance: ${Money.format(lespayState.balance)}',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -58,10 +59,13 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: 'Amount',
-                    prefixText: 'Php ',
+                    prefixText: '₱ ',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (value) => LespayValidator.withdrawAmount(value, lespayState.balance),
+                  validator: (value) => LespayValidator.withdrawAmount(
+                    value,
+                    lespayState.balance,
+                  ),
                 ),
               ),
             ],
@@ -96,13 +100,13 @@ class _WithdrawDialogState extends State<WithdrawDialog> {
                       } else {
                         SnackBarUtils.showSuccess(
                           context,
-                          'Withdrawal of Php ${amount.toStringAsFixed(2)} submitted.',
+                          'Withdrawal of ${Money.format(amount)} submitted.',
                         );
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5F2D82),
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.buttonFill(context),
+                foregroundColor: AppColors.onButton(context),
               ),
               child: Text(
                 'Withdraw',

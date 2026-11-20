@@ -22,7 +22,7 @@ class AuthHeader extends StatelessWidget {
       children: [
         IconButton(
           icon: Icon(
-            Icons.arrow_back_ios,
+            Icons.arrow_back_ios_new_rounded,
             size: ResponsiveUtils.fontSize(context, 20),
             color: iconColor ?? AppColors.foreground(context, Colors.black),
           ),
@@ -34,9 +34,8 @@ class AuthHeader extends StatelessWidget {
             title,
             style: TextStyle(
               fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+              fontSize: ResponsiveUtils.fontSize(context, 18),
+              fontWeight: FontWeight.w700,
               color: textColor ?? AppColors.foreground(context, Colors.black),
             ),
             textAlign: TextAlign.center,

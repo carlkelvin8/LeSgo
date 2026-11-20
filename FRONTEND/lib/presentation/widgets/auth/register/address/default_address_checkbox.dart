@@ -22,7 +22,7 @@ class DefaultAddressCheckbox extends StatelessWidget {
           child: Checkbox(
             value: isDefault,
             onChanged: onChanged,
-            activeColor: const Color(0xFF5F2D82),
+            activeColor: AppColors.accent(context, const Color(0xFF5F2D82)),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
             ),

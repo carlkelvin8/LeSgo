@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +31,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _amountController = TextEditingController();
   static const _quickAmounts = [100.0, 200.0, 500.0, 1000.0];
+  String? _submitError;
 
   double get _parsedAmount =>
       double.tryParse(_amountController.text.trim()) ?? 0;
@@ -45,18 +47,18 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
 
     final amount = double.parse(_amountController.text.trim());
     final rootNav = Navigator.of(context, rootNavigator: true);
+    setState(() => _submitError = null);
 
-    final checkout =
-        await ref.read(lespayProvider.notifier).startTopUp(amount);
+    final checkout = await ref.read(lespayProvider.notifier).startTopUp(amount);
 
     if (!mounted) return;
 
     if (checkout == null) {
+      // A snackbar would sit behind this dialog, so show the failure inside it.
       final error = ref.read(lespayProvider).error;
-      SnackBarUtils.showError(
-        context,
-        error ?? 'Could not start top-up. Please try again.',
-      );
+      setState(() {
+        _submitError = error ?? 'Could not start top-up. Please try again.';
+      });
       return;
     }
 
@@ -75,7 +77,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
       if (widget.parentContext.mounted) {
         SnackBarUtils.showSuccess(
           widget.parentContext,
-          '₱${amount.toStringAsFixed(2)} added to your wallet!',
+          '${Money.format(amount)} added to your wallet!',
         );
       }
     }
@@ -88,8 +90,8 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
     return AlertDialog(
       title: Text(
         widget.purpose == TopUpPurpose.qrPay
-            ? 'QR Pay (1.5% fee)'
-            : 'Top Up (1.5% fee)',
+            ? 'QR Pay (3% fee)'
+            : 'Top Up (3% fee)',
         style: TextStyle(
           fontFamily: 'TT Fors',
           fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -104,9 +106,9 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
           children: [
             Text(
               widget.purpose == TopUpPurpose.qrPay
-                  ? 'A 1.5% top-up fee applies. Pay the total below with QR Ph — '
-                      'scan the PayMongo QR code using GCash, Maya, or your banking app.'
-                  : 'A 1.5% top-up fee applies. You pay the total below using your credit or debit card.',
+                  ? 'A 3% top-up fee applies. Pay the total below with QR Ph. '
+                        'Scan the PayMongo QR code using GCash, Maya, or your banking app.'
+                  : 'A 3% top-up fee applies. You pay the total below using your credit or debit card.',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -116,8 +118,10 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             TextFormField(
               controller: _amountController,
-              onChanged: (_) => setState(() {}),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) => setState(() => _submitError = null),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Amount to add to wallet',
                 prefixText: '₱ ',
@@ -128,23 +132,53 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
             TopUpFeeSummary(walletAmount: _parsedAmount),
+            if (_submitError != null) ...[
+              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+              Text(
+                _submitError!,
+                key: const Key('top_up_error'),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 13),
+                  color: Colors.red.shade400,
+                ),
+              ),
+            ],
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _quickAmounts.map((value) {
-                return ChoiceChip(
-                  label: Text('₱${value.toStringAsFixed(0)}'),
-                  selected: _amountController.text == value.toStringAsFixed(0),
-                  onSelected: lespayState.isProcessingTopUp
-                      ? null
-                      : (_) {
-                          setState(() {
-                            _amountController.text = value.toStringAsFixed(0);
-                          });
-                        },
-                );
-              }).toList(),
+            // One even row of presets, so four amounts never wrap to a lonely
+            // second line.
+            Row(
+              children: [
+                for (var i = 0; i < _quickAmounts.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6),
+                  Expanded(
+                    child: ChoiceChip(
+                      padding: EdgeInsets.zero,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                      label: SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          Money.format(_quickAmounts[i], decimals: 0),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 12.5),
+                        ),
+                      ),
+                      selected:
+                          _amountController.text ==
+                          _quickAmounts[i].toStringAsFixed(0),
+                      onSelected: lespayState.isProcessingTopUp
+                          ? null
+                          : (_) {
+                              setState(() {
+                                _submitError = null;
+                                _amountController.text = _quickAmounts[i]
+                                    .toStringAsFixed(0);
+                              });
+                            },
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),
@@ -166,8 +200,8 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
         ElevatedButton(
           onPressed: lespayState.isProcessingTopUp ? null : _startTopUp,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5F2D82),
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.buttonFill(context),
+            foregroundColor: AppColors.onButton(context),
           ),
           child: lespayState.isProcessingTopUp
               ? const SizedBox(

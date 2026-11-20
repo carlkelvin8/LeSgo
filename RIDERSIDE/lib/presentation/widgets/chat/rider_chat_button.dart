@@ -136,7 +136,11 @@ class _FloatingRiderChatButtonState
       final newCount = chatState.unreadCount;
       if (newCount > _lastKnownCount && _lastKnownCount >= 0) {
         // New message arrived — show in-app notification
-        if (newCount > 0 && mounted) {
+        // Skip the toast while another route (e.g. the chat itself) is on top:
+        // the floating snackbar otherwise covers that screen's send button.
+        if (newCount > 0 &&
+            mounted &&
+            (ModalRoute.of(context)?.isCurrent ?? true)) {
           final messenger = ScaffoldMessenger.maybeOf(context);
           if (messenger != null) {
             messenger.clearSnackBars();

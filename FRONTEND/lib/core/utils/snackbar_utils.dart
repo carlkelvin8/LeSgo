@@ -38,7 +38,8 @@ class SnackBarUtils {
         content: Text(safe),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(milliseconds: 1500),
+        // Errors need time to be read.
+        duration: const Duration(seconds: 4),
       ),
     );
   }
@@ -60,7 +61,7 @@ class SnackBarUtils {
         content: Text(message),
         backgroundColor: Colors.orange,
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(milliseconds: 1500),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

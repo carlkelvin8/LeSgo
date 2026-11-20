@@ -12,6 +12,12 @@ bool isLesgoVoucher(VoucherDto voucher) =>
     isVoucherForService(voucher, BookingServiceIds.lesgo);
 
 bool isVoucherForService(VoucherDto voucher, int serviceId) {
+  // The API's own service list is authoritative: empty = every service.
+  final applicable = voucher.applicableServices;
+  if (applicable != null) {
+    return applicable.isEmpty || applicable.contains(serviceId);
+  }
+
   final fromApi = voucher.serviceId;
   if (fromApi != null) return fromApi == serviceId;
 

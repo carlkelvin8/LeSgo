@@ -10,16 +10,9 @@ use Illuminate\Http\Request;
 
 class RegistrationFeeAdminController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:sanctum');
-        $this->middleware(function ($request, $next) {
-            if (!$request->user() || !$request->user()->isAdmin()) {
-                return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
-            }
-            return $next($request);
-        });
-    }
+    // Auth + admin role are enforced by the route group (auth:sanctum + role:admin).
+    // A constructor calling $this->middleware() no longer exists on Laravel's base
+    // controller and made every request to this controller fail with a 500.
 
     public function index(Request $request): JsonResponse
     {
@@ -115,6 +108,19 @@ class RegistrationFeeAdminController extends Controller
         return $this->success($updated, $updated->is_active
             ? 'Registration fee waived by admin; approved account activated.'
             : 'Registration fee waived by admin; account remains restricted pending approval.');
+    }
+
+    public function exemptRenewal(Request $request, RegistrationFeePayment $registrationFee): JsonResponse
+    {
+        $validated = $request->validate(['reason' => 'nullable|string|max:1000']);
+
+        try {
+            $updated = RegistrationFeeService::exemptFromAnnualRenewal($registrationFee, $request->user(), $validated['reason'] ?? null);
+        } catch (\DomainException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        return $this->success($updated, 'Partner exempted from the annual renewal (long-time partner).');
     }
 
     public function reject(Request $request, RegistrationFeePayment $registrationFee): JsonResponse

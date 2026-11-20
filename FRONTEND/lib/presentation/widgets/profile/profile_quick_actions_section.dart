@@ -13,7 +13,7 @@ class ProfileQuickActionsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
-    final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
+    final horizontalPadding = ResponsiveUtils.screenPadding(context);
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
