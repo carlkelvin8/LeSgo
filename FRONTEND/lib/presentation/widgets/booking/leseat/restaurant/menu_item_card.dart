@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../common/media_image.dart';
@@ -117,7 +118,7 @@ class MenuItemCard extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              '₱${item.price.toStringAsFixed(0)}',
+                              Money.format(item.price, decimals: 0),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 16,

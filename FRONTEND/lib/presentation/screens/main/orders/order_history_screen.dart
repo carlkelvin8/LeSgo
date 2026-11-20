@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import '../../../widgets/common/refreshable_empty_state.dart';
 import 'package:flutter/material.dart';
@@ -137,44 +138,12 @@ class _OrderHistoryScreenState extends ConsumerState<OrderHistoryScreen> {
                       onRefresh: () => ref
                           .read(orderHistoryProvider.notifier)
                           .refreshOrders(),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.receipt_long_outlined,
-                            size: 64,
-                            color: AppColors.foreground(
-                              context,
-                              Colors.grey[400]!,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            orderState.selectedFilter == 'all'
-                                ? 'No orders yet'
-                                : 'No ${orderState.selectedFilter} orders',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 16,
-                              color: AppColors.foreground(
-                                context,
-                                Colors.grey[600]!,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Pull down to refresh',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 13,
-                              color: AppColors.foreground(
-                                context,
-                                Colors.grey[400]!,
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: EmptyStateView(
+                        icon: Icons.receipt_long_outlined,
+                        title: orderState.selectedFilter == 'all'
+                            ? 'No orders yet'
+                            : 'No ${orderState.selectedFilter} orders',
+                        message: 'Pull down to refresh.',
                       ),
                     )
                   : RefreshIndicator(

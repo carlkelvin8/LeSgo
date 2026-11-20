@@ -62,8 +62,8 @@ class RetryWidget extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: isLoading ? null : onRetry,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.buttonFill(context),
+                    foregroundColor: AppColors.onButton(context),
                     minimumSize: const Size(160, 48),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),

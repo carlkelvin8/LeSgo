@@ -52,8 +52,8 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
               AppRouter.push(context, MainRoutes.lespay);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
             ),
             child: const Text('Go to LesPay'),
           ),
@@ -392,8 +392,8 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
         ElevatedButton(
           onPressed: _submitting ? null : _submit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5F2D82),
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.buttonFill(context),
+            foregroundColor: AppColors.onButton(context),
             disabledBackgroundColor: const Color(
               0xFF5F2D82,
             ).withValues(alpha: 0.55),

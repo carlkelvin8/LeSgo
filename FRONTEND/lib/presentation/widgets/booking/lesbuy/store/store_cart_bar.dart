@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -18,7 +19,7 @@ class StoreCartBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
+        horizontal: ResponsiveUtils.screenPadding(context),
         vertical: ResponsiveUtils.spacing(context, 16),
       ),
       decoration: BoxDecoration(
@@ -75,7 +76,7 @@ class StoreCartBar extends StatelessWidget {
 
             // Total Price
             Text(
-              '₱${total.toStringAsFixed(2)}',
+              Money.format(total),
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 18),

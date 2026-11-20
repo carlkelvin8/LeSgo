@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -496,7 +497,7 @@ class _AvailableOrderCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '₱${order.estimatedFare.toStringAsFixed(0)}',
+                  Money.format(order.estimatedFare, decimals: 0),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 16,
@@ -683,7 +684,7 @@ class _OrderMeta extends StatelessWidget {
         const SizedBox(width: 8),
         _Chip(
           icon: Icons.attach_money,
-          label: '₱${order.estimatedFare.toStringAsFixed(0)}',
+          label: Money.format(order.estimatedFare, decimals: 0),
           color: Colors.green,
         ),
         const SizedBox(width: 8),

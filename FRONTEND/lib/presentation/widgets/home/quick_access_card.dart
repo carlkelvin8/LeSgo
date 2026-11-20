@@ -1,4 +1,5 @@
 import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -32,17 +33,7 @@ class QuickAccessCard extends StatelessWidget {
       child: Container(
         width: double.infinity,
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+        decoration: AppCard.decoration(context, radius: AppRadius.xl),
         child: Row(
           children: [
             Container(
@@ -50,20 +41,13 @@ class QuickAccessCard extends StatelessWidget {
               height: circle,
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
               decoration: BoxDecoration(
-                color: AppColors.surface(context, const Color(0xFFEEDDFD)),
+                color: AppColors.accent(context, const Color(0xFFEEDDFD))
+                    .withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.18
+                          : 1,
+                    ),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFA930D0).withValues(alpha: 0.20),
-                    blurRadius: 18,
-                    spreadRadius: 4,
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFFA930D0).withValues(alpha: 0.28),
-                    blurRadius: 7,
-                    spreadRadius: 2,
-                  ),
-                ],
               ),
               child: SvgPicture.asset(
                 iconPath,
@@ -137,17 +121,7 @@ class QuickAccessCard extends StatelessWidget {
             ResponsiveUtils.imageHeight(context, 160).clamp(160.0, 240.0) *
             MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0),
         padding: EdgeInsets.all(cardPadding),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+        decoration: AppCard.decoration(context, radius: AppRadius.xl),
         child: Stack(
           children: [
             // Static arrow (top right)

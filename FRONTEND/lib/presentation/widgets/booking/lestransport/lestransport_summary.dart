@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +9,7 @@ class LestransportSummary extends ConsumerWidget {
   const LestransportSummary({super.key});
 
   String _formatPrice(double price) {
-    return 'PHP ${price.toStringAsFixed(2)}';
+    return Money.format(price);
   }
 
   @override
@@ -39,7 +40,7 @@ class LestransportSummary extends ConsumerWidget {
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-          
+
           // Shipping Fee
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -63,7 +64,7 @@ class LestransportSummary extends ConsumerWidget {
             ],
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-          
+
           // Standard Delivery
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -86,17 +87,17 @@ class LestransportSummary extends ConsumerWidget {
               ),
             ],
           ),
-          
+
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-          
+
           // Dotted divider
           CustomPaint(
             painter: DottedLinePainter(),
             size: const Size(double.infinity, 1),
           ),
-          
+
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-          
+
           // Total Order
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -140,11 +141,7 @@ class DottedLinePainter extends CustomPainter {
     double startX = 0;
 
     while (startX < size.width) {
-      canvas.drawLine(
-        Offset(startX, 0),
-        Offset(startX + dashWidth, 0),
-        paint,
-      );
+      canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
       startX += dashWidth + dashSpace;
     }
   }

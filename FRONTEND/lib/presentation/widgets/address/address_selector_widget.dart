@@ -399,8 +399,8 @@ class _EmptyAddressState extends StatelessWidget {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

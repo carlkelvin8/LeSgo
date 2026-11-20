@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -101,7 +102,10 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.surface(context, Colors.white).withValues(alpha: 0.9),
+              color: AppColors.surface(
+                context,
+                Colors.white,
+              ).withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -190,7 +194,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                         _buildDetailRow(
                           context,
                           'Discount',
-                          'PHP ${discount.toStringAsFixed(2)}',
+                          Money.format(discount),
                         ),
                         if (fare != null) ...[
                           SizedBox(
@@ -199,7 +203,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                           _buildDetailRow(
                             context,
                             'Base fare (first 3 km)',
-                            'PHP ${fare.baseFare.toStringAsFixed(2)}',
+                            Money.format(fare.baseFare),
                           ),
                           if (fare.distanceFare > 0) ...[
                             SizedBox(
@@ -208,7 +212,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                             _buildDetailRow(
                               context,
                               'Additional distance',
-                              'PHP ${fare.distanceFare.toStringAsFixed(2)}',
+                              Money.format(fare.distanceFare),
                             ),
                           ],
                         ],
@@ -222,16 +226,22 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.foreground(context, Colors.black),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.black,
+                                ),
                               ),
                             ),
                             Text(
-                              'PHP ${totalFare.toStringAsFixed(2)}',
+                              Money.format(totalFare),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.foreground(context, Colors.black),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.black,
+                                ),
                               ),
                             ),
                           ],
@@ -298,7 +308,10 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: AppColors.foreground(context, Colors.black87),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.black87,
+                            ),
                             fontWeight: FontWeight.w400,
                           ),
                         ),

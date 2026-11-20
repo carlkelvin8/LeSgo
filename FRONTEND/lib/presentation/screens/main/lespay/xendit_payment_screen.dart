@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -90,7 +91,7 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
     if (success) {
       SnackBarUtils.showSuccess(
         context,
-        '₱${widget.checkout.walletAmount.toStringAsFixed(2)} added to your wallet!',
+        '${Money.format(widget.checkout.walletAmount)} added to your wallet!',
       );
       if (mounted) {
         final download = await showDialog<bool>(
@@ -115,8 +116,8 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5F2D82),
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.buttonFill(context),
+                  foregroundColor: AppColors.onButton(context),
                 ),
                 child: const Text('Download PDF'),
               ),
@@ -174,7 +175,7 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
             ),
           ),
           Text(
-            '₱${value.toStringAsFixed(2)}',
+            Money.format(value),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -202,14 +203,6 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w600,
           ),
-        ),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
         ),
       ),
       body: Column(
@@ -281,8 +274,8 @@ class _XenditPaymentScreenState extends ConsumerState<XenditPaymentScreen> {
                         ? null
                         : _confirmPayment,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5F2D82),
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.buttonFill(context),
+                      foregroundColor: AppColors.onButton(context),
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 14),
                       ),

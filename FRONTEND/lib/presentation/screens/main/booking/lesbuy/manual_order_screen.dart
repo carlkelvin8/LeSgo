@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import '../../../../provider/main/booking/lesbuy/store_detail_provider.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -555,7 +556,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                               Text(
                                 deliveryFeeUncertain
                                     ? 'Delivery fee: TBD'
-                                    : 'Estimated delivery fee: ₱${lesbuyCheckout.deliveryFee.toStringAsFixed(2)}',
+                                    : 'Estimated delivery fee: ${Money.format(lesbuyCheckout.deliveryFee)}',
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: ResponsiveUtils.fontSize(

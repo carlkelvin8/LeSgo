@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -69,7 +70,10 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
         leading: Container(
           margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
           decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.white).withValues(alpha: 0.9),
+            color: AppColors.surface(
+              context,
+              Colors.white,
+            ).withValues(alpha: 0.9),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -80,7 +84,10 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
             ],
           ),
           child: IconButton(
-            icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black)),
+            icon: Icon(
+              Icons.arrow_back,
+              color: AppColors.foreground(context, Colors.black),
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -113,8 +120,8 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                   // Fixed header - Title, Price, and Delivery Time
                   Padding(
                     padding: EdgeInsets.only(
-                      left: ResponsiveUtils.horizontalPadding(context),
-                      right: ResponsiveUtils.horizontalPadding(context),
+                      left: ResponsiveUtils.screenPadding(context),
+                      right: ResponsiveUtils.screenPadding(context),
                       top: ResponsiveUtils.spacing(context, 20),
                       bottom: ResponsiveUtils.spacing(context, 8),
                     ),
@@ -128,7 +135,10 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 24),
                             fontWeight: FontWeight.w700,
-                            color: AppColors.foreground(context, Colors.black87),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.black87,
+                            ),
                             height: 1.2,
                           ),
                         ),
@@ -137,36 +147,51 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                         Row(
                           children: [
                             Text(
-                              '₱${detailState.adjustedPrice.toStringAsFixed(2)}',
+                              Money.format(detailState.adjustedPrice),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 20),
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.accent(context, Color(0xFF5F2D82)),
+                                color: AppColors.accent(
+                                  context,
+                                  Color(0xFF5F2D82),
+                                ),
                               ),
                             ),
-                            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                            SizedBox(
+                              width: ResponsiveUtils.spacing(context, 8),
+                            ),
                             Container(
                               width: 4,
                               height: 4,
-                              decoration:  BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppColors.surface(context, Colors.grey),
                                 shape: BoxShape.circle,
                               ),
                             ),
-                            SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                            SizedBox(
+                              width: ResponsiveUtils.spacing(context, 8),
+                            ),
                             Icon(
                               Icons.access_time,
                               size: ResponsiveUtils.fontSize(context, 16),
-                              color: AppColors.foreground(context, Colors.grey[600]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
                             ),
-                            SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+                            SizedBox(
+                              width: ResponsiveUtils.spacing(context, 4),
+                            ),
                             Text(
                               '20-30 min',
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                             ),
                           ],
@@ -179,7 +204,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.horizontalPadding(context),
+                        horizontal: ResponsiveUtils.screenPadding(context),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,13 +216,18 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: AppColors.foreground(context, Colors.grey[700]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[700]!,
+                              ),
                               height: 1.5,
                               letterSpacing: 0.2,
                             ),
                           ),
 
-                          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 20),
+                          ),
 
                           // Options (sizes, flavors, add-ons)
                           if (widget.menuItem.hasOptions) ...[
@@ -211,7 +241,9 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                               onAddonQuantityChanged:
                                   detailNotifier.setAddonQuantity,
                             ),
-                            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 16),
+                            ),
                           ],
                         ],
                       ),
@@ -221,7 +253,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                   // Fixed bottom section - Quantity Selector and Add to Order Button
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: ResponsiveUtils.horizontalPadding(context),
+                      horizontal: ResponsiveUtils.screenPadding(context),
                       vertical: ResponsiveUtils.spacing(context, 16),
                     ),
                     decoration: BoxDecoration(

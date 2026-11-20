@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,7 +77,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
       if (widget.parentContext.mounted) {
         SnackBarUtils.showSuccess(
           widget.parentContext,
-          '₱${amount.toStringAsFixed(2)} added to your wallet!',
+          '${Money.format(amount)} added to your wallet!',
         );
       }
     }
@@ -149,7 +150,7 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
               runSpacing: 8,
               children: _quickAmounts.map((value) {
                 return ChoiceChip(
-                  label: Text('₱${value.toStringAsFixed(0)}'),
+                  label: Text(Money.format(value, decimals: 0)),
                   selected: _amountController.text == value.toStringAsFixed(0),
                   onSelected: lespayState.isProcessingTopUp
                       ? null
@@ -182,8 +183,8 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
         ElevatedButton(
           onPressed: lespayState.isProcessingTopUp ? null : _startTopUp,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5F2D82),
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.buttonFill(context),
+            foregroundColor: AppColors.onButton(context),
           ),
           child: lespayState.isProcessingTopUp
               ? const SizedBox(

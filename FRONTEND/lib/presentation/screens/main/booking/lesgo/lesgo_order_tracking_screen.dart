@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import '../../../../../core/utils/lesgo_status_text.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -1144,23 +1145,19 @@ class _LesgoOrderTrackingScreenState
           ),
           child: Column(
             children: [
-              _buildSummaryRow(
-                context,
-                'Base Fee',
-                'Php ${baseFee.toStringAsFixed(2)}',
-              ),
+              _buildSummaryRow(context, 'Base Fee', Money.format(baseFee)),
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               _buildSummaryRow(
                 context,
                 'Distance Fee',
-                'Php ${distanceFee.toStringAsFixed(2)}',
+                Money.format(distanceFee),
               ),
               if (serviceFee > 0) ...[
                 SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                 _buildSummaryRow(
                   context,
                   'Service Fee',
-                  'Php ${serviceFee.toStringAsFixed(2)}',
+                  Money.format(serviceFee),
                 ),
               ],
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -1169,7 +1166,7 @@ class _LesgoOrderTrackingScreenState
               _buildSummaryRow(
                 context,
                 'Total',
-                'Php ${total.toStringAsFixed(2)}',
+                Money.format(total),
                 isTotal: true,
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -192,17 +193,7 @@ class _SettingsSection extends StatelessWidget {
           ),
         ),
         Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.white),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
+          decoration: AppCard.decoration(context, radius: 12),
           child: Column(
             children: items.asMap().entries.map((entry) {
               final index = entry.key;

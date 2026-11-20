@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,26 +55,34 @@ class _MissionCardState extends ConsumerState<MissionCard>
     try {
       await ref.read(missionsProvider.notifier).claimMission(widget.mission.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-            'Reward claimed! ₱${widget.mission.rewardValue.toStringAsFixed(0)} ${widget.mission.rewardType}',
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Reward claimed! ${Money.format(widget.mission.rewardValue, decimals: 0)} ${widget.mission.rewardType}',
+            ),
+            backgroundColor: const Color(0xFF22A060),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-          backgroundColor: const Color(0xFF22A060),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(ApiErrorMapper.message(
-            e,
-            fallbackEn: 'Failed to claim reward.',
-            fallbackTl: 'Hindi ma-claim ang reward.',
-          )),
-          backgroundColor: Colors.red.shade700,
-          behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ApiErrorMapper.message(
+                e,
+                fallbackEn: 'Failed to claim reward.',
+                fallbackTl: 'Hindi ma-claim ang reward.',
+              ),
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -94,7 +103,10 @@ class _MissionCardState extends ConsumerState<MissionCard>
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               // Glassmorphism-style dark card
-              color: AppColors.surface(context, Colors.black).withValues(alpha: .30),
+              color: AppColors.surface(
+                context,
+                Colors.black,
+              ).withValues(alpha: .30),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isComplete
@@ -204,8 +216,10 @@ class _MissionCardState extends ConsumerState<MissionCard>
                                 borderRadius: BorderRadius.circular(8),
                                 child: LinearProgressIndicator(
                                   value: m.progressPercentage.clamp(0.0, 1.0),
-                                  backgroundColor:
-                                      AppColors.surface(context, Colors.white).withValues(alpha: .18),
+                                  backgroundColor: AppColors.surface(
+                                    context,
+                                    Colors.white,
+                                  ).withValues(alpha: .18),
                                   valueColor: AlwaysStoppedAnimation(
                                     isComplete
                                         ? const Color(0xFF44DD88)
@@ -240,7 +254,7 @@ class _MissionCardState extends ConsumerState<MissionCard>
                               ),
                               const SizedBox(width: 5),
                               Text(
-                                'Reward: ₱${m.rewardValue.toStringAsFixed(0)} ${m.rewardType}',
+                                'Reward: ${Money.format(m.rewardValue, decimals: 0)} ${m.rewardType}',
                                 style: const TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 10.5,

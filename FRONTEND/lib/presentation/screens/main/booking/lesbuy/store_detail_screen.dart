@@ -166,7 +166,7 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
                     // Category Title (Sticky)
                     Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.horizontalPadding(context),
+                        horizontal: ResponsiveUtils.screenPadding(context),
                         vertical: ResponsiveUtils.spacing(context, 12),
                       ),
                       child: Align(
@@ -207,8 +207,8 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
                     Expanded(
                       child: SingleChildScrollView(
                         padding: EdgeInsets.only(
-                          left: ResponsiveUtils.horizontalPadding(context),
-                          right: ResponsiveUtils.horizontalPadding(context),
+                          left: ResponsiveUtils.screenPadding(context),
+                          right: ResponsiveUtils.screenPadding(context),
                           bottom: ResponsiveUtils.spacing(context, 16),
                         ),
                         child: Column(
@@ -246,8 +246,8 @@ class _StoreDetailScreenState extends ConsumerState<StoreDetailScreen> {
                 // Info Card positioned at 0.45, same as RestaurantDetailScreen
                 Positioned(
                   top: headerHeight * 0.65,
-                  left: ResponsiveUtils.horizontalPadding(context),
-                  right: ResponsiveUtils.horizontalPadding(context),
+                  left: ResponsiveUtils.screenPadding(context),
+                  right: ResponsiveUtils.screenPadding(context),
                   child: StoreInfoCard(store: widget.store),
                 ),
               ],

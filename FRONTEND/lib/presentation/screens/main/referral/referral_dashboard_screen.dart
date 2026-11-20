@@ -20,14 +20,6 @@ class ReferralDashboardScreen extends ConsumerWidget {
       backgroundColor: AppColors.surface(context, Colors.grey[50]!),
       appBar: AppBar(
         title: const Text('Referral rewards'),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
       ),
       body: state.isLoading
           ? Center(
@@ -74,8 +66,8 @@ class ReferralDashboardScreen extends ConsumerWidget {
                     icon: const Icon(Icons.share),
                     label: const Text('Invite more friends'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF5F2D82),
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.buttonFill(context),
+                      foregroundColor: AppColors.onButton(context),
                       minimumSize: const Size.fromHeight(48),
                     ),
                   ),

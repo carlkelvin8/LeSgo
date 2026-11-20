@@ -72,24 +72,19 @@ class _CustomerServiceChatScreenState
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.white),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
         elevation: 0,
         title: Row(
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.surface(
+              backgroundColor: AppColors.accent(
                 context,
-                Colors.white,
-              ).withValues(alpha: 0.2),
-              child: const Icon(Icons.support_agent, color: Colors.white),
+                const Color(0xFF5F2D82),
+              ).withValues(alpha: 0.14),
+              child: Icon(
+                Icons.support_agent,
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 10)),
             Column(
@@ -110,7 +105,7 @@ class _CustomerServiceChatScreenState
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 11),
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

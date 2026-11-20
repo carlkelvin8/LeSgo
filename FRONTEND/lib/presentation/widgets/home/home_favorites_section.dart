@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,17 +92,7 @@ class HomeFavoritesSection extends ConsumerWidget {
     return Container(
       width: 140,
       margin: EdgeInsets.only(right: ResponsiveUtils.spacing(context, 12)),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: AppCard.decoration(context, radius: 12),
       child: InkWell(
         onTap: () => FavoriteNavigation.open(context, favorite),
         borderRadius: BorderRadius.circular(12),

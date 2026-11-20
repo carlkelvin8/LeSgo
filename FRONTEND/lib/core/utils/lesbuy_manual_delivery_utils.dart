@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import '../../data/data_source/dto/address/address_dto.dart';
 import 'booking_geo_utils.dart';
 
@@ -75,6 +76,6 @@ class LesbuyManualDeliveryUtils {
     required double deliveryFee,
   }) {
     if (isUncertain && deliveryFee <= 0) return pendingLabel;
-    return 'PHP ${deliveryFee.toStringAsFixed(2)}';
+    return Money.format(deliveryFee);
   }
 }

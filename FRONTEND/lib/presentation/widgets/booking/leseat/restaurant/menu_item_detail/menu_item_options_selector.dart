@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/menu_item_options.dart';
@@ -10,7 +11,8 @@ class MenuItemOptionsSelector extends StatelessWidget {
   final Map<String, int> addonQuantities;
   final ValueChanged<MenuOptionChoice> onSizeSelected;
   final ValueChanged<MenuOptionChoice> onFlavorSelected;
-  final void Function(MenuOptionChoice addon, int quantity) onAddonQuantityChanged;
+  final void Function(MenuOptionChoice addon, int quantity)
+  onAddonQuantityChanged;
 
   const MenuItemOptionsSelector({
     super.key,
@@ -118,7 +120,9 @@ class _OptionGroupSection extends StatelessWidget {
                   horizontal: ResponsiveUtils.spacing(context, 16),
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.surface(context, Colors.white),
+                  color: isSelected
+                      ? AppColors.accent(context, Color(0xFF5F2D82))
+                      : AppColors.surface(context, Colors.white),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected
@@ -129,13 +133,15 @@ class _OptionGroupSection extends StatelessWidget {
                 ),
                 child: Text(
                   choice.price > 0
-                      ? '${choice.label} (+₱${choice.price.toStringAsFixed(0)})'
+                      ? '${choice.label} (+${Money.format(choice.price, decimals: 0)})'
                       : choice.label,
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? AppColors.onAccent(context) : AppColors.foreground(context, Colors.black87),
+                    color: isSelected
+                        ? AppColors.onAccent(context)
+                        : AppColors.foreground(context, Colors.black87),
                   ),
                 ),
               ),
@@ -176,7 +182,7 @@ class _AddonRow extends StatelessWidget {
               ),
               if (choice.price > 0)
                 Text(
-                  '+₱${choice.price.toStringAsFixed(2)}',
+                  '+${Money.format(choice.price)}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 12),

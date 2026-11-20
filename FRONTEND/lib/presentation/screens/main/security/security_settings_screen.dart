@@ -19,14 +19,6 @@ class SecuritySettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Security'),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
       ),
       body: state.isLoading
           ? Center(

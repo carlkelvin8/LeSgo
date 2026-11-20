@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -46,7 +47,10 @@ class StoreCartItemCard extends StatelessWidget {
                         padding: const EdgeInsets.all(16.0),
                         child: Icon(
                           Icons.shopping_bag,
-                          color: AppColors.foreground(context, Colors.grey[400]!),
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[400]!,
+                          ),
                           size: ResponsiveUtils.fontSize(context, 32),
                         ),
                       ),
@@ -57,7 +61,10 @@ class StoreCartItemCard extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) {
                         return Icon(
                           Icons.shopping_bag,
-                          color: AppColors.foreground(context, Colors.grey[400]!),
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[400]!,
+                          ),
                           size: ResponsiveUtils.fontSize(context, 32),
                         );
                       },
@@ -83,7 +90,7 @@ class StoreCartItemCard extends StatelessWidget {
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                 Text(
-                  'PHP ${item.product.price.toStringAsFixed(2)}',
+                  Money.format(item.product.price),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -110,7 +117,9 @@ class StoreCartItemCard extends StatelessWidget {
               ),
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border(context, Colors.grey[300]!)),
+                  border: Border.all(
+                    color: AppColors.border(context, Colors.grey[300]!),
+                  ),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -125,8 +134,9 @@ class StoreCartItemCard extends StatelessWidget {
                           onRemove();
                         }
                       },
-                      padding:
-                          EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.spacing(context, 4),
+                      ),
                       constraints: const BoxConstraints(),
                     ),
                     Padding(
@@ -145,8 +155,9 @@ class StoreCartItemCard extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.add, size: 16),
                       onPressed: () => onQuantityChanged(item.quantity + 1),
-                      padding:
-                          EdgeInsets.all(ResponsiveUtils.spacing(context, 4)),
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.spacing(context, 4),
+                      ),
                       constraints: const BoxConstraints(),
                     ),
                   ],

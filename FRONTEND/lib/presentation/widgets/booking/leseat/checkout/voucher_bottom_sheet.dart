@@ -164,8 +164,8 @@ class _VoucherBottomSheetState extends ConsumerState<_VoucherBottomSheet> {
                     if (code.isNotEmpty) Navigator.pop(context, code);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.buttonFill(context),
+                    foregroundColor: AppColors.onButton(context),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 14,

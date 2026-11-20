@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import '../../../../core/utils/address_text_utils.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
@@ -596,17 +597,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
               right: ResponsiveUtils.spacing(context, 80),
             ),
             height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.surface(context, Colors.white),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
+            decoration: AppCard.decoration(context, radius: 12),
             alignment: Alignment.center,
             child: TextField(
               controller: _searchController,
@@ -677,17 +668,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 right: ResponsiveUtils.spacing(context, 80),
                 top: ResponsiveUtils.spacing(context, 4),
               ),
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.white),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
+              decoration: AppCard.decoration(context, radius: 12),
               constraints: BoxConstraints(
                 maxHeight: ResponsiveUtils.screenHeight(context) * 0.4,
               ),
@@ -704,17 +685,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 right: ResponsiveUtils.spacing(context, 80),
                 top: ResponsiveUtils.spacing(context, 4),
               ),
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.white),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
+              decoration: AppCard.decoration(context, radius: 12),
               constraints: BoxConstraints(
                 maxHeight: ResponsiveUtils.screenHeight(context) * 0.4,
               ),
@@ -766,17 +737,7 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
                 top: ResponsiveUtils.spacing(context, 4),
               ),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.white),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+              decoration: AppCard.decoration(context, radius: 12),
               child: Text(
                 _searchError!,
                 style: TextStyle(

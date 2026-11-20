@@ -35,7 +35,16 @@ class AppColors {
       : light;
 
   /// Foreground for a solid fill returned by [accent].
-  static Color onAccent(BuildContext context) => _dark(context)
-      ? Theme.of(context).colorScheme.onPrimary
-      : Colors.white;
+  static Color onAccent(BuildContext context) =>
+      _dark(context) ? Theme.of(context).colorScheme.onPrimary : Colors.white;
+
+  /// Fill for primary buttons: brand purple in light mode, the lighter lilac in
+  /// dark mode. Pair with [onButton] so every primary action looks the same.
+  static Color buttonFill(BuildContext context) => _dark(context)
+      ? Theme.of(context).colorScheme.primary
+      : const Color(0xFF5F2D82);
+
+  /// Label/icon colour on a [buttonFill].
+  static Color onButton(BuildContext context) =>
+      _dark(context) ? Theme.of(context).colorScheme.onPrimary : Colors.white;
 }

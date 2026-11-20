@@ -43,7 +43,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hp = ResponsiveUtils.horizontalPadding(context);
+    final hp = ResponsiveUtils.screenPadding(context);
 
     return Scaffold(
       backgroundColor: AppColors.surface(context, _canvas),

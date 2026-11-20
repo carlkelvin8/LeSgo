@@ -1,3 +1,4 @@
+import 'package:lesgo/core/constants/map_styles.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -221,8 +222,8 @@ class _LoadError extends StatelessWidget {
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5F2D82),
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.buttonFill(context),
+                foregroundColor: AppColors.onButton(context),
               ),
               child: const Text(
                 'Retry',
@@ -469,8 +470,8 @@ class _EmptyState extends StatelessWidget {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -690,6 +691,7 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
                           child: GoogleMap(
+                            style: MapStyles.darkIfDark(context),
                             initialCameraPosition: CameraPosition(
                               target:
                                   _selectedLocation ??
@@ -843,8 +845,8 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
                         child: ElevatedButton(
                           onPressed: _isSaving ? null : _save,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.buttonFill(context),
+                            foregroundColor: AppColors.onButton(context),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),

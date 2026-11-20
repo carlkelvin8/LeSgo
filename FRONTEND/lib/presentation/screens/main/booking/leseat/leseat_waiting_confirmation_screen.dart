@@ -140,7 +140,7 @@ class _LeseatWaitingConfirmationScreenState
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveUtils.horizontalPadding(context),
+                horizontal: ResponsiveUtils.screenPadding(context),
                 vertical: ResponsiveUtils.spacing(context, 24),
               ),
               child: Column(
@@ -301,8 +301,8 @@ class _LeseatWaitingConfirmationScreenState
                 child: ElevatedButton(
                   onPressed: _isCancelling ? null : _showCancelDialog,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.buttonFill(context),
+                    foregroundColor: AppColors.onButton(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

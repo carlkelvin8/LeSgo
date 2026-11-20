@@ -427,8 +427,8 @@ class _LesbuyOrderCompleteScreenState
                 child: ElevatedButton(
                   onPressed: _bookAnotherOrder,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF5F2D82),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.buttonFill(context),
+                    foregroundColor: AppColors.onButton(context),
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveUtils.spacing(context, 18),
                     ),

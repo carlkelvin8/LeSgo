@@ -60,7 +60,7 @@ class HomeServicesSection extends StatelessWidget {
             style: TextStyle(
               fontSize: ResponsiveUtils.fontSize(context, 20),
               fontWeight: FontWeight.bold,
-              color: AppColors.accent(context, Color(0xFF6B4CE6)),
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),

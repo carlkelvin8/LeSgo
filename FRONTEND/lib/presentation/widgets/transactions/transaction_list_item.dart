@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../domain/entities/transactions/transaction.dart';
@@ -25,17 +27,7 @@ class TransactionListItem extends StatelessWidget {
       child: Container(
         margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+        decoration: AppCard.decoration(context, radius: 12),
         child: Column(
           children: [
             Row(
@@ -247,8 +239,8 @@ class TransactionListItem extends StatelessWidget {
               children: [
                 Text(
                   transaction.isWallet
-                      ? '${(transaction.isWalletCredit ?? true) ? '+' : '-'}PHP ${transaction.amount.toStringAsFixed(2)}'
-                      : 'PHP ${transaction.amount.toStringAsFixed(2)}',
+                      ? '${(transaction.isWalletCredit ?? true) ? '+' : '-'}${Money.format(transaction.amount)}'
+                      : Money.format(transaction.amount),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 18),

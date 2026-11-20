@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -158,7 +159,7 @@ class LesrideFareSummary extends ConsumerWidget {
             ),
           ),
           Text(
-            '₱${amount.toStringAsFixed(2)}',
+            Money.format(amount),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),

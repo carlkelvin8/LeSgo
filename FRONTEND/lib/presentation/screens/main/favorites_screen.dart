@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -172,17 +174,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
   Widget _buildFavoriteCard(BuildContext context, FavoriteItem item) {
     return Container(
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: AppCard.decoration(context, radius: 12),
       child: ListTile(
         contentPadding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         leading: Container(
@@ -250,36 +242,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen>
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.favorite_border,
-            size: 64,
-            color: AppColors.foreground(context, Colors.grey[400]!),
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-          Text(
-            'No favorites yet',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 18),
-              fontWeight: FontWeight.w600,
-              color: AppColors.foreground(context, Colors.black87),
-            ),
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-          Text(
-            'Start adding your favorite places',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: AppColors.foreground(context, Colors.grey[600]!),
-            ),
-          ),
-        ],
-      ),
+    return const EmptyStateView(
+      icon: Icons.favorite_border_rounded,
+      title: 'No favorites yet',
+      message: 'Tap the heart on a restaurant or store to save it here.',
     );
   }
 

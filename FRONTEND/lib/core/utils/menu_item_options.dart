@@ -1,3 +1,5 @@
+import 'package:lesgo/core/utils/money.dart';
+
 /// Shared helpers for menu item sizes, flavors, and add-ons.
 class MenuOptionChoice {
   final String label;
@@ -15,10 +17,7 @@ class MenuOptionChoice {
     return MenuOptionChoice(label: value?.toString() ?? '');
   }
 
-  Map<String, dynamic> toJson() => {
-        'label': label,
-        'price': price,
-      };
+  Map<String, dynamic> toJson() => {'label': label, 'price': price};
 }
 
 class MenuItemOptionGroups {
@@ -78,10 +77,10 @@ class SelectedAddon {
   const SelectedAddon({required this.choice, this.quantity = 1});
 
   Map<String, dynamic> toJson() => {
-        'label': choice.label,
-        'price': choice.price,
-        'quantity': quantity,
-      };
+    'label': choice.label,
+    'price': choice.price,
+    'quantity': quantity,
+  };
 }
 
 class SelectedMenuOptions {
@@ -89,14 +88,9 @@ class SelectedMenuOptions {
   final MenuOptionChoice? flavor;
   final List<SelectedAddon> addons;
 
-  const SelectedMenuOptions({
-    this.size,
-    this.flavor,
-    this.addons = const [],
-  });
+  const SelectedMenuOptions({this.size, this.flavor, this.addons = const []});
 
-  bool get isEmpty =>
-      size == null && flavor == null && addons.isEmpty;
+  bool get isEmpty => size == null && flavor == null && addons.isEmpty;
 
   double get extrasTotal {
     var total = (size?.price ?? 0) + (flavor?.price ?? 0);
@@ -123,7 +117,7 @@ class SelectedMenuOptions {
     if (size != null) {
       var segment = 'Size: ${size!.label}';
       if (size!.price > 0) {
-        segment += ' (+₱${size!.price.toStringAsFixed(2)})';
+        segment += ' (+${Money.format(size!.price)})';
       }
       parts.add(segment);
     }
@@ -131,7 +125,7 @@ class SelectedMenuOptions {
     if (flavor != null) {
       var segment = 'Flavor: ${flavor!.label}';
       if (flavor!.price > 0) {
-        segment += ' (+₱${flavor!.price.toStringAsFixed(2)})';
+        segment += ' (+${Money.format(flavor!.price)})';
       }
       parts.add(segment);
     }
@@ -143,7 +137,7 @@ class SelectedMenuOptions {
             : addon.choice.label;
         final lineTotal = addon.choice.price * addon.quantity;
         if (lineTotal > 0) {
-          segment += ' (+₱${lineTotal.toStringAsFixed(2)})';
+          segment += ' (+${Money.format(lineTotal)})';
         }
         return segment;
       }).toList();
@@ -175,18 +169,18 @@ class SelectedMenuOptions {
     final rawAddons = map['addons'];
     final addons = rawAddons is List
         ? rawAddons
-            .whereType<Map>()
-            .map((entry) {
-              final choice = MenuOptionChoice.fromDynamic(entry);
-              if (choice.label.isEmpty) return null;
-              final qty = (entry['quantity'] as num?)?.toInt() ?? 1;
-              return SelectedAddon(
-                choice: choice,
-                quantity: qty < 1 ? 1 : qty,
-              );
-            })
-            .whereType<SelectedAddon>()
-            .toList()
+              .whereType<Map>()
+              .map((entry) {
+                final choice = MenuOptionChoice.fromDynamic(entry);
+                if (choice.label.isEmpty) return null;
+                final qty = (entry['quantity'] as num?)?.toInt() ?? 1;
+                return SelectedAddon(
+                  choice: choice,
+                  quantity: qty < 1 ? 1 : qty,
+                );
+              })
+              .whereType<SelectedAddon>()
+              .toList()
         : const <SelectedAddon>[];
 
     return SelectedMenuOptions(

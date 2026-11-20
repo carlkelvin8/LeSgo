@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -223,7 +224,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${isCredit ? '+' : '-'}PHP ${transaction.amount.toStringAsFixed(2)}',
+                  '${isCredit ? '+' : '-'}${Money.format(transaction.amount)}',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 22,
@@ -523,8 +524,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                                   .refreshTransactions();
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF5F2D82),
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppColors.buttonFill(context),
+                              foregroundColor: AppColors.onButton(context),
                             ),
                             child: const Text('Retry'),
                           ),
@@ -1004,8 +1005,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                 setState(() {});
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5F2D82),
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.buttonFill(context),
+                foregroundColor: AppColors.onButton(context),
               ),
               child: const Text('Clear filters'),
             ),

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lesgo/core/state/user_session_epoch.dart';
@@ -979,8 +980,8 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
               isLoading: false,
               error:
                   'Insufficient LesPay balance. '
-                  'Balance: ₱${wallet.balance.toStringAsFixed(2)}, '
-                  'required: ₱${order.total.toStringAsFixed(2)}. '
+                  'Balance: ${Money.format(wallet.balance)}, '
+                  'required: ${Money.format(order.total)}. '
                   'Please top up your wallet first.',
             );
             return false;

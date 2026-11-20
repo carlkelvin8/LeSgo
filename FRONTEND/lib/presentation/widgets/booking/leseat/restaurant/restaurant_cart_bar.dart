@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -22,7 +23,10 @@ class RestaurantCartBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.3),
+            color: AppColors.accent(
+              context,
+              Color(0xFF5F2D82),
+            ).withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -40,7 +44,7 @@ class RestaurantCartBar extends StatelessWidget {
                 // Cart Icon with Count
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration:  BoxDecoration(
+                  decoration: BoxDecoration(
                     color: AppColors.surface(context, Colors.white),
                     shape: BoxShape.circle,
                   ),
@@ -49,7 +53,10 @@ class RestaurantCartBar extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.shopping_bag,
-                        color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
                         size: 16,
                       ),
                       const SizedBox(width: 4),
@@ -59,7 +66,10 @@ class RestaurantCartBar extends StatelessWidget {
                           fontFamily: 'TT Fors',
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                          color: AppColors.accent(
+                            context,
+                            const Color(0xFF5F2D82),
+                          ),
                         ),
                       ),
                     ],
@@ -78,11 +88,13 @@ class RestaurantCartBar extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 12,
-                          color: AppColors.onAccent(context).withValues(alpha: 0.7),
+                          color: AppColors.onAccent(
+                            context,
+                          ).withValues(alpha: 0.7),
                         ),
                       ),
                       Text(
-                        '₱${total.toStringAsFixed(2)}',
+                        Money.format(total),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 18,

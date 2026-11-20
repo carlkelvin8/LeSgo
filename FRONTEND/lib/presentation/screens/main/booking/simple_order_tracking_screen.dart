@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
 
@@ -736,7 +737,7 @@ class _SimpleOrderTrackingScreenState
                 ),
               ),
               Text(
-                '₱${(order!.actualFare ?? order!.estimatedFare).toStringAsFixed(2)}',
+                Money.format(order!.actualFare ?? order!.estimatedFare),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
@@ -796,7 +797,7 @@ class _SimpleOrderTrackingScreenState
             ),
           ),
           Text(
-            '₱${amount.toStringAsFixed(2)}',
+            Money.format(amount),
             style: const TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,

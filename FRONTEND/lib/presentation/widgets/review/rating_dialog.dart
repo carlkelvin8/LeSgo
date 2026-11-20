@@ -177,8 +177,8 @@ class _RatingDialogState extends ConsumerState<RatingDialog> {
                   child: ElevatedButton(
                     onPressed: reviewState.isSubmitting ? null : _submitRating,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5F2D82),
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.buttonFill(context),
+                      foregroundColor: AppColors.onButton(context),
                       padding: EdgeInsets.symmetric(
                         vertical: ResponsiveUtils.spacing(context, 14),
                       ),

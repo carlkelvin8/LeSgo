@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -110,46 +111,28 @@ class StoreBranchSelector extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: hp),
-      child: Material(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: canSwitch ? () => _openPicker(context) : null,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.storefront_outlined,
-                  color: AppColors.accent(context, _purple),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Pickup branch',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.foreground(
-                            context,
-                            Colors.grey[600]!,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        branch.name,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (_distanceLabel(branch).isNotEmpty)
+      child: Container(
+        decoration: AppCard.decoration(context, radius: AppRadius.md),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: canSwitch ? () => _openPicker(context) : null,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.storefront_outlined,
+                    color: AppColors.accent(context, _purple),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          _distanceLabel(branch),
+                          'Pickup branch',
                           style: TextStyle(
                             fontSize: 12,
                             color: AppColors.foreground(
@@ -158,18 +141,38 @@ class StoreBranchSelector extends StatelessWidget {
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ),
-                if (canSwitch)
-                  Text(
-                    'Change',
-                    style: TextStyle(
-                      color: AppColors.accent(context, _purple),
-                      fontWeight: FontWeight.w600,
+                        const SizedBox(height: 2),
+                        Text(
+                          branch.name,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (_distanceLabel(branch).isNotEmpty)
+                          Text(
+                            _distanceLabel(branch),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-              ],
+                  if (canSwitch)
+                    Text(
+                      'Change',
+                      style: TextStyle(
+                        color: AppColors.accent(context, _purple),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

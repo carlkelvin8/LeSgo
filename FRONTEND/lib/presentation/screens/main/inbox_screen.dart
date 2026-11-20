@@ -1,3 +1,5 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -168,54 +170,13 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
                       ),
                       children: [
                         _buildAdminSupportItem(context),
-                        Padding(
-                          padding: EdgeInsets.all(
-                            ResponsiveUtils.spacing(context, 32),
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.chat_bubble_outline,
-                                size: 48,
-                                color: AppColors.foreground(
-                                  context,
-                                  Colors.grey[400]!,
-                                ),
-                              ),
-                              SizedBox(
-                                height: ResponsiveUtils.spacing(context, 12),
-                              ),
-                              Text(
-                                'No order chats yet',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(
-                                    context,
-                                    15,
-                                  ),
-                                  color: AppColors.foreground(
-                                    context,
-                                    Colors.grey[600]!,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                'Driver conversations appear here when you have active orders',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(
-                                    context,
-                                    13,
-                                  ),
-                                  color: AppColors.foreground(
-                                    context,
-                                    Colors.grey[500]!,
-                                  ),
-                                ),
-                              ),
-                            ],
+                        const Padding(
+                          padding: EdgeInsets.only(top: 48),
+                          child: EmptyStateView(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            title: 'No order chats yet',
+                            message:
+                                'Driver conversations appear here when you have active orders.',
                           ),
                         ),
                       ],
@@ -249,59 +210,52 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   }
 
   Widget _buildAdminSupportItem(BuildContext context) {
-    return Container(
-      color: AppColors.surface(context, Color(0xFFF3E8FF)),
-      child: InkWell(
-        onTap: _openCustomerService,
-        child: Padding(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: const Color(
-                  0xFF5F2D82,
-                ).withValues(alpha: 0.15),
-                child: Icon(
-                  Icons.support_agent,
-                  color: AppColors.accent(context, Color(0xFF5F2D82)),
-                  size: 28,
-                ),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'LeSgo Customer Service',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 16),
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.accent(context, Color(0xFF5F2D82)),
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    Text(
-                      'Chat with our support team anytime',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 13),
-                        color: AppColors.foreground(context, Colors.grey[700]!),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: AppColors.accent(context, Color(0xFF5F2D82)),
-              ),
-            ],
+    final accent = AppColors.accent(context, const Color(0xFF5F2D82));
+    final scheme = Theme.of(context).colorScheme;
+    return AppCard(
+      margin: EdgeInsets.fromLTRB(
+        ResponsiveUtils.screenPadding(context),
+        AppSpace.sm,
+        ResponsiveUtils.screenPadding(context),
+        AppSpace.sm,
+      ),
+      padding: const EdgeInsets.all(AppSpace.lg),
+      onTap: _openCustomerService,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: accent.withValues(alpha: 0.14),
+            child: Icon(Icons.support_agent, color: accent, size: 26),
           ),
-        ),
+          const SizedBox(width: AppSpace.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'LeSgo Customer Service',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 16),
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: AppSpace.xs),
+                Text(
+                  'Chat with our support team anytime',
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 13),
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+        ],
       ),
     );
   }

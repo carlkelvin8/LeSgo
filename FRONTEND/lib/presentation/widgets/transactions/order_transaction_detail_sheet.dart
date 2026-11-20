@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -177,7 +178,7 @@ class _OrderTransactionDetailSheetState
                           if (item.price != null) ...[
                             const SizedBox(width: 8),
                             Text(
-                              'PHP ${(item.price! * item.quantity).toStringAsFixed(2)}',
+                              Money.format(item.price! * item.quantity),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: 14,
@@ -225,7 +226,7 @@ class _OrderTransactionDetailSheetState
                                 ),
                               ),
                               Text(
-                                'PHP ${itemsTotal.toStringAsFixed(2)}',
+                                Money.format(itemsTotal),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 14,
@@ -254,7 +255,7 @@ class _OrderTransactionDetailSheetState
                                   ),
                                 ),
                                 Text(
-                                  'PHP ${deliveryFee.toStringAsFixed(2)}',
+                                  Money.format(deliveryFee),
                                   style: TextStyle(
                                     fontFamily: 'TT Fors',
                                     fontSize: 14,
@@ -282,7 +283,7 @@ class _OrderTransactionDetailSheetState
                                 ),
                               ),
                               Text(
-                                'PHP ${transaction.amount.toStringAsFixed(2)}',
+                                Money.format(transaction.amount),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 18,
@@ -315,7 +316,7 @@ class _OrderTransactionDetailSheetState
                         ),
                       ),
                       Text(
-                        'PHP ${transaction.amount.toStringAsFixed(2)}',
+                        Money.format(transaction.amount),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 18,

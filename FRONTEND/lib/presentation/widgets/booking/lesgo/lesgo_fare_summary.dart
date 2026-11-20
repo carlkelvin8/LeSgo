@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -214,7 +215,7 @@ class LesgoFareSummary extends ConsumerWidget {
             ),
           ),
           Text(
-            '${isDiscount ? "-" : ""}₱${amount.abs().toStringAsFixed(2)}',
+            '${isDiscount ? "-" : ""}${Money.format(amount.abs())}',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),

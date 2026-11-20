@@ -124,15 +124,7 @@ class _LoyaltyRedeemScreenState extends ConsumerState<LoyaltyRedeemScreen> {
       backgroundColor: AppColors.surface(context, const Color(0xFFF8F4FB)),
       appBar: AppBar(
         title: const Text('Redeem Points'),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
         elevation: 0,
-        titleTextStyle: const TextStyle(
-          fontFamily: 'TT Fors',
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
       ),
       body: loyaltyState.isLoading
           ? Center(

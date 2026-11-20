@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -80,7 +81,7 @@ class RestaurantOrderSection extends StatelessWidget {
                 ),
               ),
               Text(
-                'PHP ${subtotal.toStringAsFixed(2)}',
+                Money.format(subtotal),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -94,7 +95,10 @@ class RestaurantOrderSection extends StatelessWidget {
             padding: EdgeInsets.symmetric(
               vertical: ResponsiveUtils.spacing(context, 12),
             ),
-            child: Divider(height: 1, color: AppColors.border(context, Colors.grey[200]!)),
+            child: Divider(
+              height: 1,
+              color: AppColors.border(context, Colors.grey[200]!),
+            ),
           ),
 
           // Order Items

@@ -43,7 +43,7 @@ class SectionHeader extends StatelessWidget {
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 12),
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFA930D0), // Purple color
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
                 ),
               ),
             ),

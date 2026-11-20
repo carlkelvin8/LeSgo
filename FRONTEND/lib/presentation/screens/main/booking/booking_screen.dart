@@ -29,7 +29,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   @override
   Widget build(BuildContext context) {
     final bookingState = ref.watch(bookingProvider);
-    final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
+    final horizontalPadding = ResponsiveUtils.screenPadding(context);
 
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.white),

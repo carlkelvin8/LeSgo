@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import '../../../../../core/utils/leseat_status_text.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -927,7 +928,7 @@ class _LeseatOrderTrackingScreenState
             return _buildOrderItem(
               context,
               item.name,
-              'Php ${item.price.toStringAsFixed(2)}',
+              Money.format(item.price),
               item.quantity,
               itemTotal: itemTotal,
             );
@@ -989,9 +990,7 @@ class _LeseatOrderTrackingScreenState
             ),
           ),
           Text(
-            itemTotal != null && quantity > 1
-                ? 'Php ${itemTotal.toStringAsFixed(2)}'
-                : price,
+            itemTotal != null && quantity > 1 ? Money.format(itemTotal) : price,
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -1037,16 +1036,12 @@ class _LeseatOrderTrackingScreenState
           ),
           child: Column(
             children: [
-              _buildSummaryRow(
-                context,
-                'Subtotal',
-                'Php ${subtotal.toStringAsFixed(2)}',
-              ),
+              _buildSummaryRow(context, 'Subtotal', Money.format(subtotal)),
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               _buildSummaryRow(
                 context,
                 'Delivery Fee',
-                'Php ${deliveryFee.toStringAsFixed(2)}',
+                Money.format(deliveryFee),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 8)),
               Divider(color: AppColors.border(context, Colors.grey[300]!)),
@@ -1054,7 +1049,7 @@ class _LeseatOrderTrackingScreenState
               _buildSummaryRow(
                 context,
                 'Total',
-                'Php ${total.toStringAsFixed(2)}',
+                Money.format(total),
                 isTotal: true,
               ),
             ],

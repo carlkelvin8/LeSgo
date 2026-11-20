@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -879,7 +880,7 @@ class _LesbuyOrderTrackingScreenState
             return _buildOrderItem(
               context,
               item.name,
-              isManual ? 'Price TBD' : 'Php ${item.price.toStringAsFixed(2)}',
+              isManual ? 'Price TBD' : Money.format(item.price),
               item.quantity,
               isManual: isManual,
               itemTotal: isManual ? null : itemTotal,
@@ -957,7 +958,7 @@ class _LesbuyOrderTrackingScreenState
           ),
           Text(
             itemTotal != null && quantity > 1 && !isManual
-                ? 'Php ${itemTotal.toStringAsFixed(2)}'
+                ? Money.format(itemTotal)
                 : price,
             style: TextStyle(
               fontFamily: 'TT Fors',
@@ -1007,9 +1008,7 @@ class _LesbuyOrderTrackingScreenState
         _buildSummaryRow(
           context,
           'Subtotal',
-          orderValueUncertain && subtotal <= 0
-              ? 'TBD'
-              : 'Php ${subtotal.toStringAsFixed(2)}',
+          orderValueUncertain && subtotal <= 0 ? 'TBD' : Money.format(subtotal),
         ),
         if (orderValueUncertain && subtotal <= 0)
           Padding(
@@ -1029,7 +1028,7 @@ class _LesbuyOrderTrackingScreenState
           'Delivery',
           deliveryUncertain && deliveryFee <= 0
               ? 'TBD'
-              : 'Php ${deliveryFee.toStringAsFixed(2)}',
+              : Money.format(deliveryFee),
         ),
         if (deliveryUncertain && deliveryFee <= 0)
           Padding(
@@ -1052,7 +1051,7 @@ class _LesbuyOrderTrackingScreenState
               : 'Total',
           (orderValueUncertain || deliveryUncertain) && total <= 0
               ? 'TBD'
-              : 'PHP ${total.toStringAsFixed(2)}',
+              : Money.format(total),
           isTotal: true,
         ),
       ],

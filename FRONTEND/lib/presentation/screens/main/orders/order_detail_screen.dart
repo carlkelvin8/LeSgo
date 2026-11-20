@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import '../../../../core/utils/order_status_mapper.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -363,8 +364,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                         child: ElevatedButton(
                           onPressed: _handleTrackOrder,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.buttonFill(context),
+                            foregroundColor: AppColors.onButton(context),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -416,8 +417,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                         child: ElevatedButton(
                           onPressed: _isReordering ? null : _handleReorder,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.buttonFill(context),
+                            foregroundColor: AppColors.onButton(context),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -683,7 +684,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 ),
               ),
               Text(
-                '₱${(order.actualFare ?? order.effectiveTotalAmount).toStringAsFixed(2)}',
+                Money.format(order.actualFare ?? order.effectiveTotalAmount),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
@@ -791,7 +792,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             ),
           ),
           Text(
-            '${amount < 0 ? '-' : ''}₱${amount.abs().toStringAsFixed(2)}',
+            '${amount < 0 ? '-' : ''}${Money.format(amount.abs())}',
             style: const TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 13,

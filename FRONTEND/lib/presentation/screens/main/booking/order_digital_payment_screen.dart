@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -180,14 +181,6 @@ class _OrderDigitalPaymentScreenState
               fontWeight: FontWeight.w600,
             ),
           ),
-          backgroundColor: const Color(0xFF5F2D82),
-          foregroundColor: Colors.white,
-          titleTextStyle: const TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
         ),
         body: Column(
           children: [
@@ -205,7 +198,7 @@ class _OrderDigitalPaymentScreenState
                     ),
                   ),
                   Text(
-                    '₱${widget.amount.toStringAsFixed(2)}',
+                    Money.format(widget.amount),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -250,8 +243,8 @@ class _OrderDigitalPaymentScreenState
                       ? null
                       : _confirmPayment,
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.buttonFill(context),
+                    foregroundColor: AppColors.onButton(context),
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveUtils.spacing(context, 14),
                     ),

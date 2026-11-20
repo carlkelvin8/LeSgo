@@ -75,8 +75,8 @@ Future<String?> showTwoFactorCodeDialog(
               }
             },
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
             ),
             child: const Text('Verify'),
           ),

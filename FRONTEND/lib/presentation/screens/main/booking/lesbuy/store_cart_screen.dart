@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/utils/voucher_service_utils.dart';
 import 'package:lesgo/core/utils/lesbuy_pickup_selection.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
@@ -601,8 +602,8 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                           SnackBar(
                             content: Text(
                               'Insufficient LesPay balance. '
-                              'Your balance: ₱${lespayBalance.toStringAsFixed(2)}, '
-                              'required: ₱${walletMinimum.toStringAsFixed(2)}. '
+                              'Your balance: ${Money.format(lespayBalance)}, '
+                              'required: ${Money.format(walletMinimum)}. '
                               'Please top up your wallet first.',
                             ),
                             backgroundColor: Colors.red,
