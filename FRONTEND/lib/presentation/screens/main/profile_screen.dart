@@ -202,7 +202,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             if (state.error != null)
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 sliver: SliverToBoxAdapter(
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -242,9 +242,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             // ── Content ───────────────────────────────────────────────
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
-                24,
+                16,
                 0,
-                24,
+                16,
                 MediaQuery.of(context).padding.bottom + 36,
               ),
               sliver: SliverList(

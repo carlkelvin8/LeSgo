@@ -145,23 +145,40 @@ class _TopUpDialogState extends ConsumerState<TopUpDialog> {
               ),
             ],
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _quickAmounts.map((value) {
-                return ChoiceChip(
-                  label: Text(Money.format(value, decimals: 0)),
-                  selected: _amountController.text == value.toStringAsFixed(0),
-                  onSelected: lespayState.isProcessingTopUp
-                      ? null
-                      : (_) {
-                          setState(() {
-                            _submitError = null;
-                            _amountController.text = value.toStringAsFixed(0);
-                          });
-                        },
-                );
-              }).toList(),
+            // One even row of presets, so four amounts never wrap to a lonely
+            // second line.
+            Row(
+              children: [
+                for (var i = 0; i < _quickAmounts.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6),
+                  Expanded(
+                    child: ChoiceChip(
+                      padding: EdgeInsets.zero,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                      label: SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          Money.format(_quickAmounts[i], decimals: 0),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 12.5),
+                        ),
+                      ),
+                      selected:
+                          _amountController.text ==
+                          _quickAmounts[i].toStringAsFixed(0),
+                      onSelected: lespayState.isProcessingTopUp
+                          ? null
+                          : (_) {
+                              setState(() {
+                                _submitError = null;
+                                _amountController.text = _quickAmounts[i]
+                                    .toStringAsFixed(0);
+                              });
+                            },
+                    ),
+                  ),
+                ],
+              ],
             ),
           ],
         ),

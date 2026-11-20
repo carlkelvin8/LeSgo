@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,21 +44,35 @@ class _LanguageSettingsScreenState
           if (v != null) _select(v);
         },
         child: ListView(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
+          padding: EdgeInsets.all(ResponsiveUtils.screenPadding(context)),
           children: [
-            RadioListTile<AppLanguage>(
-              title: Text(tr(context, 'english')),
-              subtitle: const Text('Default app language'),
-              value: AppLanguage.english,
-              activeColor: AppColors.accent(context, const Color(0xFF5F2D82)),
-            ),
-            RadioListTile<AppLanguage>(
-              title: Text(tr(context, 'filipino')),
-              subtitle: const Text(
-                'Mas madaling maintindihan para sa mga user sa PH',
+            AppCard(
+              padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+              child: Column(
+                children: [
+                  RadioListTile<AppLanguage>(
+                    title: Text(tr(context, 'english')),
+                    subtitle: const Text('Default app language'),
+                    value: AppLanguage.english,
+                    activeColor: AppColors.accent(
+                      context,
+                      const Color(0xFF5F2D82),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: AppSpace.lg),
+                  RadioListTile<AppLanguage>(
+                    title: Text(tr(context, 'filipino')),
+                    subtitle: const Text(
+                      'Mas madaling maintindihan para sa mga user sa PH',
+                    ),
+                    value: AppLanguage.filipino,
+                    activeColor: AppColors.accent(
+                      context,
+                      const Color(0xFF5F2D82),
+                    ),
+                  ),
+                ],
               ),
-              value: AppLanguage.filipino,
-              activeColor: AppColors.accent(context, const Color(0xFF5F2D82)),
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
             Container(

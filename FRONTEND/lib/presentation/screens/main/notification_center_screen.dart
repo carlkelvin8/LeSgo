@@ -1,3 +1,6 @@
+import 'package:lesgo/core/utils/responsive_utils.dart';
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
@@ -47,9 +50,12 @@ class NotificationCenterScreen extends ConsumerWidget {
         title: const Text('Notifications'),
         actions: [
           if (state.unreadCount > 0)
-            TextButton(
-              onPressed: notifier.markAllAsRead,
-              child: const Text('Mark all read'),
+            Padding(
+              padding: const EdgeInsets.only(right: AppSpace.sm),
+              child: TextButton(
+                onPressed: notifier.markAllAsRead,
+                child: const Text('Mark all read'),
+              ),
             ),
         ],
       ),
@@ -57,56 +63,95 @@ class NotificationCenterScreen extends ConsumerWidget {
         onRefresh: notifier.refresh,
         child: state.isLoading && state.notifications.isEmpty
             ? ListView(
-                children: [
+                children: const [
                   SizedBox(height: 240),
                   Center(child: CircularProgressIndicator()),
                 ],
               )
             : state.notifications.isEmpty
             ? ListView(
-                children: [
-                  const SizedBox(height: 160),
-                  Icon(
-                    Icons.notifications_none,
-                    size: 52,
-                    color: AppColors.foreground(context, Colors.grey),
+                children: const [
+                  SizedBox(height: 120),
+                  EmptyStateView(
+                    icon: Icons.notifications_none_rounded,
+                    title: 'You’re all caught up',
+                    message: 'New order updates and offers will show up here.',
                   ),
-                  SizedBox(height: 12),
-                  Center(child: Text('You’re all caught up')),
                 ],
               )
             : ListView.separated(
+                padding: EdgeInsets.fromLTRB(
+                  ResponsiveUtils.screenPadding(context),
+                  AppSpace.sm,
+                  ResponsiveUtils.screenPadding(context),
+                  AppSpace.xl,
+                ),
                 itemCount: state.notifications.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpace.sm),
                 itemBuilder: (context, index) {
                   final notification = state.notifications[index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: notification.isRead
-                          ? AppColors.surface(context, Colors.grey.shade100)
-                          : AppColors.surface(context, Color(0xFFEDE5F4)),
-                      child: Icon(
-                        _iconFor(notification.type),
-                        color: AppColors.accent(context, Color(0xFF5F2D82)),
-                      ),
-                    ),
-                    title: Text(
-                      notification.title,
-                      style: TextStyle(
-                        fontWeight: notification.isRead
-                            ? FontWeight.w500
-                            : FontWeight.w700,
-                      ),
-                    ),
-                    subtitle: Text(notification.message),
-                    trailing: notification.isRead
-                        ? null
-                        : Icon(
-                            Icons.circle,
-                            size: 9,
-                            color: AppColors.accent(context, Color(0xFF5F2D82)),
-                          ),
+                  final accent = AppColors.accent(
+                    context,
+                    const Color(0xFF5F2D82),
+                  );
+                  final scheme = Theme.of(context).colorScheme;
+                  return AppCard(
+                    padding: const EdgeInsets.all(AppSpace.md),
                     onTap: () => _openNotification(context, ref, notification),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: accent.withValues(
+                            alpha: notification.isRead ? 0.08 : 0.16,
+                          ),
+                          child: Icon(
+                            _iconFor(notification.type),
+                            color: accent,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpace.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                notification.title,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: 15,
+                                  fontWeight: notification.isRead
+                                      ? FontWeight.w500
+                                      : FontWeight.w700,
+                                  color: scheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpace.xs),
+                              Text(
+                                notification.message,
+                                style: TextStyle(
+                                  fontFamily: 'TT Fors',
+                                  fontSize: 13,
+                                  height: 1.35,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!notification.isRead)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: AppSpace.sm,
+                              top: 6,
+                            ),
+                            child: Icon(Icons.circle, size: 9, color: accent),
+                          ),
+                      ],
+                    ),
                   );
                 },
               ),
