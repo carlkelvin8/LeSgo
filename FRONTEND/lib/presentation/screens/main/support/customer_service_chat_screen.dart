@@ -9,6 +9,7 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../provider/main/support/customer_service_chat_provider.dart';
 import '../../../widgets/support/customer_service_message_bubble.dart';
+import '../../../widgets/support/ibow_orbit_avatar.dart';
 
 class CustomerServiceChatScreen extends ConsumerStatefulWidget {
   const CustomerServiceChatScreen({super.key});
@@ -75,19 +76,10 @@ class _CustomerServiceChatScreenState
         elevation: 0,
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 21,
-              backgroundColor: const Color(0xFFEDE3F7),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/images/ai/ibow_orbit.png',
-                  width: 42,
-                  height: 42,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) =>
-                      const Icon(Icons.smart_toy_rounded),
-                ),
-              ),
+            IbowOrbitAvatar(
+              size: 42,
+              onTap: () =>
+                  SnackBarUtils.showSuccess(context, 'Hi! I’m IBOW 👋'),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 10)),
             Column(
@@ -201,20 +193,7 @@ class _CustomerServiceChatScreenState
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFFEDE3F7),
-            child: ClipOval(
-              child: Image.asset(
-                'assets/images/ai/ibow_orbit.png',
-                width: 32,
-                height: 32,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) =>
-                    const Icon(Icons.smart_toy_rounded, size: 16),
-              ),
-            ),
-          ),
+          IbowOrbitAvatar(size: 32, isThinking: true),
           SizedBox(width: ResponsiveUtils.spacing(context, 8)),
           Container(
             padding: EdgeInsets.symmetric(

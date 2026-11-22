@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/utils/responsive_utils.dart';
 import '../../provider/main/support/customer_service_chat_provider.dart';
+import 'ibow_orbit_avatar.dart';
 
 class CustomerServiceMessageBubble extends StatelessWidget {
   final CustomerServiceMessage message;
@@ -89,20 +90,7 @@ class CustomerServiceMessageBubble extends StatelessWidget {
 
   Widget _avatar(BuildContext context, bool isUser) {
     if (!isUser) {
-      return CircleAvatar(
-        radius: 16,
-        backgroundColor: const Color(0xFFEDE3F7),
-        child: ClipOval(
-          child: Image.asset(
-            'assets/images/ai/ibow_orbit.png',
-            width: 32,
-            height: 32,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) =>
-                const Icon(Icons.smart_toy_rounded, size: 16),
-          ),
-        ),
-      );
+      return IbowOrbitAvatar(size: 32);
     }
     return CircleAvatar(
       radius: 16,
