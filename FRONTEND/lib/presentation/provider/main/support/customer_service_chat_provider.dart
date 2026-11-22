@@ -49,7 +49,7 @@ class CustomerServiceChatState {
 }
 
 const _welcomeMessage =
-    'Hi! I\'m LeSgo Assistant. I only handle LeSgo app customer service: orders, deliveries, LesPay, vouchers, missions, and account help. What can I help you with?';
+    'Hi! I’m IBOW, your LeSgo AI assistant. I can help with orders, deliveries, LesPay, vouchers, missions, and account questions. What can I help you with?';
 
 class CustomerServiceChatNotifier
     extends StateNotifier<CustomerServiceChatState> {

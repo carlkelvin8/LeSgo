@@ -76,14 +76,17 @@ class _CustomerServiceChatScreenState
         title: Row(
           children: [
             CircleAvatar(
-              radius: 18,
-              backgroundColor: AppColors.accent(
-                context,
-                const Color(0xFF5F2D82),
-              ).withValues(alpha: 0.14),
-              child: Icon(
-                Icons.support_agent,
-                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              radius: 21,
+              backgroundColor: const Color(0xFFEDE3F7),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/ai/ibow_orbit.png',
+                  width: 42,
+                  height: 42,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) =>
+                      const Icon(Icons.smart_toy_rounded),
+                ),
               ),
             ),
             SizedBox(width: ResponsiveUtils.spacing(context, 10)),
@@ -91,7 +94,7 @@ class _CustomerServiceChatScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'LeSgo Support',
+                  'IBOW',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 16),
@@ -100,7 +103,7 @@ class _CustomerServiceChatScreenState
                 ),
                 Text(
                   chatState.isConfigured
-                      ? 'Customer Service'
+                      ? 'LeSgo AI · Customer Service'
                       : (kDebugMode ? 'Setup required' : 'Live support'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
@@ -200,11 +203,16 @@ class _CustomerServiceChatScreenState
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: AppColors.surface(context, Color(0xFFE8D9F5)),
-            child: Icon(
-              Icons.support_agent,
-              size: 16,
-              color: AppColors.accent(context, const Color(0xFF5F2D82)),
+            backgroundColor: const Color(0xFFEDE3F7),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/ai/ibow_orbit.png',
+                width: 32,
+                height: 32,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) =>
+                    const Icon(Icons.smart_toy_rounded, size: 16),
+              ),
             ),
           ),
           SizedBox(width: ResponsiveUtils.spacing(context, 8)),

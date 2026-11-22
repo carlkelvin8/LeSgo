@@ -88,6 +88,22 @@ class CustomerServiceMessageBubble extends StatelessWidget {
   }
 
   Widget _avatar(BuildContext context, bool isUser) {
+    if (!isUser) {
+      return CircleAvatar(
+        radius: 16,
+        backgroundColor: const Color(0xFFEDE3F7),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/images/ai/ibow_orbit.png',
+            width: 32,
+            height: 32,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) =>
+                const Icon(Icons.smart_toy_rounded, size: 16),
+          ),
+        ),
+      );
+    }
     return CircleAvatar(
       radius: 16,
       backgroundColor: isUser
