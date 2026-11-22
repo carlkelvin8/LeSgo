@@ -1,4 +1,4 @@
-import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/responsive_utils.dart';
@@ -55,32 +55,18 @@ class LesrideDetailsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration:  BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, -4),
-          ),
-        ],
+    return OrderBookingSheet(
+      title: 'Where are you headed?',
+      handle: const LesrideDragHandle(),
+      controller: scrollController,
+      action: PrimaryButton(
+        text: 'Book',
+        onPressed: onBook,
+        isLoading: isBooking,
       ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: ListView(
-          controller: scrollController,
-          physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            ResponsiveUtils.spacing(context, 16),
-            ResponsiveUtils.spacing(context, 12),
-            ResponsiveUtils.spacing(context, 16),
-            ResponsiveUtils.spacing(context, 24),
-          ),
+      children: [
+        OrderRouteGroup(
           children: [
-            const LesrideDragHandle(),
             LesrideLocationTile(
               title: 'Current Location',
               subtitle: locationState.pickupAddress != null
@@ -88,35 +74,30 @@ class LesrideDetailsPanel extends StatelessWidget {
                   : 'Fetching current location...',
               trailing: LesrideChangeButton(onPressed: onChangeCurrent),
             ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             LesrideLocationTile(
               title: 'Where are you going?',
+              isDestination: true,
               subtitle: locationState.destinationAddress != null
                   ? _formatAddress(locationState.destinationAddress!)
                   : 'Tap on the map to update destination',
               trailing: LesrideChangeButton(onPressed: onChangeDestination),
             ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            LesrideVehicleSelector(
-              selectedVehicle: selectedVehicle,
-              onSelected: onVehicleSelected,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            const LesrideFareSummary(),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            LesridePaymentSection(
-              paymentMethod: paymentMethod,
-              onPaymentChanged: onPaymentChanged,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            PrimaryButton(
-              text: 'Book',
-              onPressed: onBook,
-              isLoading: isBooking,
-            ),
           ],
         ),
-      ),
+        const SizedBox(height: 18),
+        LesrideVehicleSelector(
+          selectedVehicle: selectedVehicle,
+          onSelected: onVehicleSelected,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        const LesrideFareSummary(),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        LesridePaymentSection(
+          paymentMethod: paymentMethod,
+          onPaymentChanged: onPaymentChanged,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+      ],
     );
   }
 }

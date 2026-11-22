@@ -99,6 +99,7 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
           ? null
           : const BookingServiceHeader(
               title: 'LesGo',
+              orderStyle: true,
               action: SizedBox.shrink(),
             ),
       body: SafeArea(

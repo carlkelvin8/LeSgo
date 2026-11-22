@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -27,22 +28,11 @@ class StoreOrderSection extends StatelessWidget {
       margin: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: OrderDesign.receipt(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            storeName,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.w700,
-              color: AppColors.foreground(context, Colors.black87),
-            ),
-          ),
+          OrderSectionHeading(storeName, icon: Icons.storefront_outlined),
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
 
           // Order Items
@@ -79,9 +69,7 @@ class StoreOrderSection extends StatelessWidget {
                 color: AppColors.accent(context, Color(0xFF5F2D82)),
               ),
             ),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-            ),
+            style: TextButton.styleFrom(padding: EdgeInsets.zero),
           ),
         ],
       ),

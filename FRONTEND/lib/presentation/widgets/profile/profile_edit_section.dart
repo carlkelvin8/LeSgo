@@ -1,7 +1,6 @@
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/validators/profile_validator.dart';
 import '../../provider/main/profile/controller/profile.controller.notifier.dart';
 import '../../provider/main/profile/profile_provider.dart';
@@ -127,6 +126,25 @@ class ProfileEditSection extends ConsumerStatefulWidget {
   final ProfileControllers controllers;
   const ProfileEditSection({super.key, required this.controllers});
 
+  static Future<void> show(
+    BuildContext context,
+    ProfileControllers controllers,
+  ) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: false,
+      constraints: const BoxConstraints(maxWidth: 560),
+      backgroundColor: AppColors.surface(context, const Color(0xFFFAF7FC)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      builder: (_) => ProfileEditSection(controllers: controllers),
+    );
+  }
+
   @override
   ConsumerState<ProfileEditSection> createState() => _ProfileEditSectionState();
 }
@@ -155,99 +173,203 @@ class _ProfileEditSectionState extends ConsumerState<ProfileEditSection> {
     final busy =
         _saving || ref.watch(profileProvider.select((s) => s.isUpdating));
 
-    return Form(
-      key: _form,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _CardHeader(),
-
-          // Full name
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: _Field(
-              controller: widget.controllers.nameController,
-              label: 'Full name',
-              hint: 'e.g. Juan dela Cruz',
-              icon: Icons.person_outline_rounded,
-              enabled: !busy,
-              validator: (v) => ProfileValidator.name(v, isRequired: true),
-              textInputAction: TextInputAction.next,
-              onSubmitted: (_) => FocusScope.of(context).nextFocus(),
-              keyboardType: TextInputType.name,
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: Form(
+        key: _form,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Flexible(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _EditorHeader(),
+                    const SizedBox(height: 16),
+                    _FieldGroup(
+                      title: 'Profile name',
+                      children: [
+                        _Field(
+                          controller: widget.controllers.nameController,
+                          label: 'Full name',
+                          hint: 'e.g. Juan dela Cruz',
+                          icon: Icons.person_outline_rounded,
+                          enabled: !busy,
+                          validator: (v) =>
+                              ProfileValidator.name(v, isRequired: true),
+                          textInputAction: TextInputAction.next,
+                          onSubmitted: (_) =>
+                              FocusScope.of(context).nextFocus(),
+                          keyboardType: TextInputType.name,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _FieldGroup(
+                      title: 'Profile address',
+                      optional: true,
+                      children: [
+                        _AddressField(
+                          controller: widget.controllers.address1Controller,
+                          label: 'Street & barangay',
+                          hint: 'e.g. Mabini Street, Centro',
+                          icon: Icons.location_on_outlined,
+                          enabled: !busy,
+                          validator: (v) =>
+                              ProfileValidator.address(v, isRequired: false),
+                        ),
+                        const SizedBox(height: 12),
+                        _AddressField(
+                          controller: widget.controllers.address2Controller,
+                          label: 'City & province',
+                          hint: 'e.g. Claveria, Cagayan',
+                          icon: Icons.map_outlined,
+                          enabled: !busy,
+                          validator: (v) =>
+                              ProfileValidator.address(v, isRequired: false),
+                          isLast: true,
+                          onLastSubmitted: _save,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-
-          // Address 1 — with suggestions
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-            child: _AddressField(
-              controller: widget.controllers.address1Controller,
-              label: 'Street & barangay',
-              hint: 'Street, Barangay',
-              icon: Icons.location_on_outlined,
-              enabled: !busy,
-              validator: (v) => ProfileValidator.address(v, isRequired: false),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.surface(context, Colors.white),
+                border: Border(
+                  top: BorderSide(
+                    color: AppColors.border(context, const Color(0xFFEAE2EF)),
+                  ),
+                ),
+              ),
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                child: _SaveButton(busy: busy, onTap: busy ? null : _save),
+              ),
             ),
-          ),
-
-          // Address 2 — with suggestions
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-            child: _AddressField(
-              controller: widget.controllers.address2Controller,
-              label: 'City & province',
-              hint: 'City, Province',
-              icon: Icons.map_outlined,
-              enabled: !busy,
-              validator: (v) => ProfileValidator.address(v, isRequired: false),
-              isLast: true,
-              onLastSubmitted: _save,
-            ),
-          ),
-
-          // Save button
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-            child: _SaveButton(busy: busy, onTap: busy ? null : _save),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-// ─── Card header ──────────────────────────────────────────────────────────────
-class _CardHeader extends StatelessWidget {
+class _EditorHeader extends StatelessWidget {
+  const _EditorHeader();
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) {
+    final accent = AppColors.buttonFill(context);
+    return Column(
       children: [
-        Text(
-          'Make it yours',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 18),
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.6,
-            color: AppColors.foreground(context, Color(0xFF292235)),
+        Container(
+          width: 32,
+          height: 4,
+          decoration: BoxDecoration(
+            color: AppColors.border(context, const Color(0xFFD8CDDF)),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          'Your details. Your everyday destinations.',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 12),
-            height: 1.5,
-            color: AppColors.foreground(context, Color(0xFF82788D)),
-          ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: accent,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.badge_outlined,
+                color: AppColors.onButton(context),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Personal details',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              style: IconButton.styleFrom(
+                backgroundColor: accent.withValues(alpha: .08),
+                minimumSize: const Size(48, 48),
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close_rounded, size: 21),
+            ),
+          ],
         ),
       ],
-    ),
-  );
+    );
+  }
+}
+
+class _FieldGroup extends StatelessWidget {
+  const _FieldGroup({
+    required this.title,
+    required this.children,
+    this.optional = false,
+  });
+
+  final String title;
+  final List<Widget> children;
+  final bool optional;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface(context, Colors.white),
+        border: Border.all(
+          color: AppColors.border(context, const Color(0xFFEAE2EF)),
+        ),
+        borderRadius: BorderRadius.circular(21),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              if (optional)
+                Text(
+                  'Optional',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
 }
 
 // ─── Regular field ────────────────────────────────────────────────────────────
@@ -322,7 +444,7 @@ class _AddressFieldState extends State<_AddressField> {
   @override
   void initState() {
     super.initState();
-    _focus = FocusNode();
+    _focus = FocusNode()..addListener(_onFocusChanged);
     widget.controller.addListener(_onChanged);
   }
 
@@ -331,6 +453,10 @@ class _AddressFieldState extends State<_AddressField> {
     _focus.dispose();
     widget.controller.removeListener(_onChanged);
     super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onChanged() {
@@ -377,16 +503,17 @@ class _AddressFieldState extends State<_AddressField> {
             widget.label,
             widget.hint,
             widget.icon,
-            suffix: widget.controller.text.isNotEmpty
-                ? GestureDetector(
-                    onTap: () {
+            suffix: widget.enabled && widget.controller.text.isNotEmpty
+                ? IconButton(
+                    tooltip: 'Clear ${widget.label.toLowerCase()}',
+                    onPressed: () {
                       widget.controller.clear();
                       setState(() => _suggestions = []);
                     },
-                    child: Icon(
+                    icon: Icon(
                       Icons.close_rounded,
                       size: 16,
-                      color: AppColors.foreground(context, Color(0xFFBBAACC)),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   )
                 : null,
@@ -415,12 +542,14 @@ class _SuggestionList extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface(context, Colors.white),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border(context, Color(0xFFEDE9F1))),
+        border: Border.all(
+          color: AppColors.border(context, const Color(0xFFEDE9F1)),
+        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.accent(
               context,
-              Color(0xFF5F2D82),
+              const Color(0xFF5F2D82),
             ).withValues(alpha: .10),
             blurRadius: 16,
             offset: const Offset(0, 4),
@@ -464,7 +593,7 @@ class _SuggestionList extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                             color: AppColors.foreground(
                               context,
-                              Color(0xFF292235),
+                              const Color(0xFF292235),
                             ),
                           ),
                         ),
@@ -472,7 +601,10 @@ class _SuggestionList extends StatelessWidget {
                       Icon(
                         Icons.north_west_rounded,
                         size: 13,
-                        color: AppColors.foreground(context, Color(0xFFCCBBDD)),
+                        color: AppColors.foreground(
+                          context,
+                          const Color(0xFFCCBBDD),
+                        ),
                       ),
                     ],
                   ),
@@ -518,25 +650,22 @@ InputDecoration _decoration(
     ),
     hintStyle: TextStyle(
       fontFamily: 'TT Fors',
-      fontSize: 12,
-      color: AppColors.foreground(context, const Color(0xFFCCBBDD)),
+      fontSize: 14,
+      color: AppColors.foreground(context, const Color(0xFF716778)),
     ),
     prefixIcon: Padding(
       padding: const EdgeInsets.only(left: 12, right: 8),
       child: Icon(
         icon,
         size: 17,
-        color: AppColors.accent(context, const Color(0xFF9B70CC)),
+        color: AppColors.accent(context, const Color(0xFF5F2D82)),
       ),
     ),
     prefixIconConstraints: const BoxConstraints(minWidth: 42, minHeight: 46),
-    suffixIcon: suffix != null
-        ? Padding(padding: const EdgeInsets.only(right: 12), child: suffix)
-        : null,
-    suffixIconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+    suffixIcon: suffix,
     filled: true,
     fillColor: AppColors.surface(context, const Color(0xFFF7F6F9)),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
     errorMaxLines: 2,
     isDense: true,
     border: OutlineInputBorder(
@@ -580,63 +709,25 @@ class _SaveButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 52,
-        decoration: BoxDecoration(
-          gradient: busy
-              ? null
-              : const LinearGradient(
-                  colors: [Color(0xFF7546A0), Color(0xFF573275)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-          color: busy ? AppColors.foreground(context, Color(0xFFE0D4EE)) : null,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: busy
-              ? []
-              : [
-                  BoxShadow(
-                    color: AppColors.accent(
-                      context,
-                      Color(0xFF5F2D82),
-                    ).withValues(alpha: .32),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5),
-                    spreadRadius: -4,
-                  ),
-                ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (busy)
-              const SizedBox(
-                width: 17,
-                height: 17,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFF7B3FAA),
-                ),
-              )
-            else
-              const Icon(Icons.check_rounded, color: Colors.white, size: 19),
-            const SizedBox(width: 9),
-            Text(
-              busy ? 'Saving…' : 'Save changes',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 15),
-                fontWeight: FontWeight.w700,
-                color: busy ? const Color(0xFF7B3FAA) : Colors.white,
-                letterSpacing: .1,
-              ),
-            ),
-          ],
-        ),
+    return FilledButton.icon(
+      onPressed: onTap,
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.buttonFill(context),
+        foregroundColor: AppColors.onButton(context),
+        minimumSize: const Size(0, 54),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17)),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
       ),
+      icon: busy
+          ? SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.buttonFill(context),
+              ),
+            )
+          : const Icon(Icons.check_rounded, size: 20),
+      label: Text(busy ? 'Saving…' : 'Save changes'),
     );
   }
 }

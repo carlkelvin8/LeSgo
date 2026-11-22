@@ -1,7 +1,6 @@
-import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/utils/responsive_utils.dart';
 import '../../../../domain/entities/booking/lesride_vehicle_option.dart';
 
 class LesrideVehicleSelector extends StatelessWidget {
@@ -14,41 +13,39 @@ class LesrideVehicleSelector extends StatelessWidget {
   final LesrideVehicleOption selectedVehicle;
   final ValueChanged<LesrideVehicleOption> onSelected;
 
+  Widget _tile(LesrideVehicleOption vehicle) => _VehicleCard(
+    key: ValueKey('lesride_vehicle_${vehicle.code}'),
+    vehicle: vehicle,
+    isSelected: vehicle == selectedVehicle,
+    onTap: vehicle.isAvailable ? () => onSelected(vehicle) : null,
+  );
+
   @override
   Widget build(BuildContext context) {
+    final available = LesrideVehicleOption.values.where(
+      (vehicle) => vehicle.isAvailable,
+    );
+    final upcoming = LesrideVehicleOption.values
+        .where((vehicle) => !vehicle.isAvailable)
+        .toList();
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Choose vehicle',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 15),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
+        const OrderSectionHeading('Choose vehicle'),
+        const SizedBox(height: 10),
+        for (final vehicle in available) ...[
+          _tile(vehicle),
+          const SizedBox(height: 8),
+        ],
+        if (upcoming.isNotEmpty)
+          Row(
+            children: [
+              for (var i = 0; i < upcoming.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(child: _tile(upcoming[i])),
+              ],
+            ],
           ),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 10)),
-        Row(
-          children: LesrideVehicleOption.values.map((vehicle) {
-            final isSelected = vehicle == selectedVehicle;
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  right: vehicle == LesrideVehicleOption.sevenSeater
-                      ? 0
-                      : ResponsiveUtils.spacing(context, 8),
-                ),
-                child: _VehicleCard(
-                  key: ValueKey('lesride_vehicle_${vehicle.code}'),
-                  vehicle: vehicle,
-                  isSelected: isSelected,
-                  onTap: vehicle.isAvailable ? () => onSelected(vehicle) : null,
-                ),
-              ),
-            );
-          }).toList(),
-        ),
       ],
     );
   }
@@ -79,75 +76,66 @@ class _VehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final enabled = vehicle.isAvailable;
-    final borderColor = isSelected
-        ? AppColors.accent(context, const Color(0xFF5F2D82))
-        : AppColors.border(context, Colors.grey.shade300);
-
-    return Material(
-      color: isSelected
-          ? AppColors.surface(context, Color(0xFFF5EEFA))
-          : enabled
-          ? AppColors.surface(context, Colors.white)
-          : AppColors.surface(context, Colors.grey.shade100),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 96),
-          padding: EdgeInsets.symmetric(
-            horizontal: ResponsiveUtils.spacing(context, 6),
-            vertical: ResponsiveUtils.spacing(context, 10),
+    final foreground = isSelected ? const Color(0xFFFFF7FF) : colors.onSurface;
+    return Semantics(
+      selected: isSelected,
+      enabled: enabled,
+      child: Material(
+        color: isSelected ? const Color(0xFF38204E) : colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: OrderDesign.cardRadius,
+          side: BorderSide(
+            color: isSelected ? Colors.transparent : OrderDesign.line(context),
           ),
-          decoration: BoxDecoration(
-            border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                _icon,
-                size: 28,
-                color: enabled ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.grey),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 5)),
-              Text(
-                vehicle.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 12),
-                  fontWeight: FontWeight.w700,
-                  color: enabled ? AppColors.foreground(context, Colors.black87) : AppColors.foreground(context, Colors.grey.shade600),
-                ),
-              ),
-              if (!enabled) ...[
-                SizedBox(height: ResponsiveUtils.spacing(context, 3)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.lock, size: 10, color: AppColors.foreground(context, Colors.grey.shade600)),
-                    const SizedBox(width: 2),
-                    Flexible(
-                      child: Text(
-                        'Coming Soon',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: enabled ? 12 : 9,
+            ),
+            child: Row(
+              children: [
+                if (enabled)
+                  OrderIcon(_icon, mint: isSelected)
+                else
+                  Icon(_icon, size: 19, color: colors.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        vehicle.label,
                         style: TextStyle(
                           fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 8),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.foreground(context, Colors.grey.shade600),
+                          fontSize: enabled ? 16 : 12,
+                          fontWeight: FontWeight.w700,
+                          color: foreground,
                         ),
                       ),
-                    ),
-                  ],
+                      if (!enabled)
+                        Text(
+                          'Coming Soon',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
+                if (isSelected)
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: Color(0xFFCFF9EB),
+                  ),
               ],
-            ],
+            ),
           ),
         ),
       ),

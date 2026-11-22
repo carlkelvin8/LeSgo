@@ -2,7 +2,6 @@ import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../core/utils/media_url_utils.dart';
-import '../../../core/utils/responsive_utils.dart';
 
 class ProfileHeroSection extends StatelessWidget {
   final String name, email, phone, birthdate;
@@ -20,38 +19,83 @@ class ProfileHeroSection extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-    child: Column(
-      children: [
-        _Avatar(profileImageUrl: profileImageUrl, onTap: onImageTap),
-        const SizedBox(height: 12),
-        Text(
-          name.isEmpty
-              ? 'Hello there!'
-              : 'Hello, ${name.trim().split(' ').first}!',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 21),
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.5,
-            color: AppColors.foreground(context, Color(0xFF25232B)),
+  Widget build(BuildContext context) {
+    final firstName = name.trim().split(' ').first;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF271440), Color(0xFF492071), Color(0xFF65379B)],
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          email,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 13),
-            color: AppColors.foreground(context, Color(0xFF89858E)),
-          ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            PositionedDirectional(
+              top: -100,
+              end: -88,
+              child: IgnorePointer(
+                child: Container(
+                  width: 260,
+                  height: 260,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0x2667F4D0),
+                      width: 26,
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0x30F8DCFF)),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 24, 22, 26),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Avatar(profileImageUrl: profileImageUrl, onTap: onImageTap),
+                  const SizedBox(height: 18),
+                  Text(
+                    firstName.isEmpty ? 'Hello there!' : 'Hello, $firstName!',
+                    style: const TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.9,
+                      color: Color(0xFFFFF8FF),
+                    ),
+                  ),
+                  if (email.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      email,
+                      style: const TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: 14,
+                        height: 1.4,
+                        color: Color(0xFFF0E1FF),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }
 
 class _Avatar extends StatelessWidget {
@@ -61,50 +105,54 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imgSize = ResponsiveUtils.spacing(context, 64);
-    return GestureDetector(
-      onTap: onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2.5),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accent(
-                    context,
-                    Color(0xFF5F2D82),
-                  ).withValues(alpha: .10),
-                  blurRadius: 14,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: ClipOval(child: _buildImage(imgSize)),
-          ),
-          Positioned(
-            right: -2,
-            bottom: -2,
-            child: Container(
-              width: 24,
-              height: 24,
+    const size = 68.0;
+    const radius = BorderRadius.all(Radius.circular(24));
+    return Tooltip(
+      message: onTap == null ? 'Profile photo' : 'Change profile photo',
+      child: SizedBox.square(
+        dimension: 76,
+        child: Stack(
+          children: [
+            Container(
+              width: size,
+              height: size,
+              padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.white),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF8B3FC8), width: 2),
+                borderRadius: radius,
+                border: Border.all(color: const Color(0xB3F0E1FF)),
               ),
-              child: Icon(
-                Icons.camera_alt_rounded,
-                size: 11,
-                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(21),
+                child: _buildImage(size),
               ),
             ),
-          ),
-        ],
+            PositionedDirectional(
+              end: 0,
+              bottom: 0,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCFF9EC),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF492071), width: 2),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(7),
+                  child: Icon(
+                    Icons.camera_alt_outlined,
+                    size: 15,
+                    color: Color(0xFF163C35),
+                  ),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(onTap: onTap, borderRadius: radius),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -129,7 +177,7 @@ class _Avatar extends StatelessWidget {
                     ),
                   ),
                 ),
-          errorBuilder: (_, __, ___) => _placeholder(),
+          errorBuilder: (_, _, _) => _placeholder(),
         );
       }
       return Image.file(
@@ -137,7 +185,7 @@ class _Avatar extends StatelessWidget {
         fit: BoxFit.cover,
         width: size,
         height: size,
-        errorBuilder: (_, __, ___) => _placeholder(),
+        errorBuilder: (_, _, _) => _placeholder(),
       );
     }
     return _placeholder();

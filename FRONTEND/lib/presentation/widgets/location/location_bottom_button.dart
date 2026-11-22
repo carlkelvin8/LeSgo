@@ -1,34 +1,61 @@
-import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
-import '../../../core/utils/responsive_utils.dart';
-import '../global/primary_button.dart';
+import 'package:lesgo/core/theme/app_colors.dart';
 
 class LocationBottomButton extends StatelessWidget {
-  final VoidCallback? onPressed;
-  final bool isLoading;
-
   const LocationBottomButton({
     super.key,
     required this.onPressed,
     this.isLoading = false,
   });
 
+  final VoidCallback? onPressed;
+  final bool isLoading;
+
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
-
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Container(
+    return DecoratedBox(
+      decoration: BoxDecoration(
         color: AppColors.surface(context, Colors.white),
-        padding: EdgeInsets.all(horizontalPadding),
-        child: PrimaryButton(
-          text: 'Continue',
-          onPressed: onPressed,
-          backgroundColor: const Color(0xFF5F2D82),
-          isLoading: isLoading,
+        border: Border(
+          top: BorderSide(
+            color: AppColors.border(context, const Color(0xFFEAE2EF)),
+          ),
+        ),
+      ),
+      child: Center(
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: onPressed,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 54),
+                  backgroundColor: AppColors.buttonFill(context),
+                  foregroundColor: AppColors.onButton(context),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(17),
+                  ),
+                ),
+                child: isLoading
+                    ? const SizedBox.square(
+                        dimension: 21,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(child: Text('Continue')),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward_rounded, size: 20),
+                        ],
+                      ),
+              ),
+            ),
+          ),
         ),
       ),
     );

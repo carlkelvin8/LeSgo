@@ -1,4 +1,4 @@
-import 'package:lesgo/core/theme/app_tokens.dart';
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -112,7 +112,7 @@ class StoreBranchSelector extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: hp),
       child: Container(
-        decoration: AppCard.decoration(context, radius: AppRadius.md),
+        decoration: OrderDesign.card(context),
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
@@ -122,10 +122,7 @@ class StoreBranchSelector extends StatelessWidget {
               padding: const EdgeInsets.all(14),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.storefront_outlined,
-                    color: AppColors.accent(context, _purple),
-                  ),
+                  const OrderIcon(Icons.storefront_outlined, mint: true),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

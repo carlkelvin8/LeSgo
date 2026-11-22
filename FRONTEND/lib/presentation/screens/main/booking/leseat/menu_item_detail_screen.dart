@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +63,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Colors.white),
+      backgroundColor: OrderDesign.canvas(context),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -104,17 +105,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
           Expanded(
             flex: 4,
             child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.grey[50]!),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(
-                    ResponsiveUtils.spacing(context, 24),
-                  ),
-                  topRight: Radius.circular(
-                    ResponsiveUtils.spacing(context, 24),
-                  ),
-                ),
-              ),
+              decoration: OrderDesign.sheet(context),
               child: Column(
                 children: [
                   // Fixed header - Title, Price, and Delivery Time
@@ -256,16 +247,7 @@ class _MenuItemDetailScreenState extends ConsumerState<MenuItemDetailScreen> {
                       horizontal: ResponsiveUtils.screenPadding(context),
                       vertical: ResponsiveUtils.spacing(context, 16),
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface(context, Colors.grey[50]!),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
-                    ),
+                    decoration: OrderDesign.dock(context),
                     child: SafeArea(
                       top: false,
                       child: Row(

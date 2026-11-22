@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -96,32 +97,18 @@ class LesgoDetailsPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 10,
-            offset: Offset(0, -4),
-          ),
-        ],
+    return OrderBookingSheet(
+      title: 'Parcel route',
+      handle: const LesrideDragHandle(),
+      controller: scrollController,
+      action: PrimaryButton(
+        text: 'Book',
+        onPressed: isBooking ? null : onBook,
+        isLoading: isBooking,
       ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: ListView(
-          controller: scrollController,
-          physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            ResponsiveUtils.spacing(context, 16),
-            ResponsiveUtils.spacing(context, 12),
-            ResponsiveUtils.spacing(context, 16),
-            ResponsiveUtils.spacing(context, 24),
-          ),
+      children: [
+        OrderRouteGroup(
           children: [
-            const LesrideDragHandle(),
             LesrideLocationTile(
               title: 'Pick-up Location',
               subtitle: locationState.pickupAddress != null
@@ -136,8 +123,8 @@ class LesgoDetailsPanel extends ConsumerWidget {
               Padding(
                 padding: EdgeInsets.only(
                   top: ResponsiveUtils.spacing(context, 8),
-                  left: ResponsiveUtils.spacing(context, 4),
-                  right: ResponsiveUtils.spacing(context, 4),
+                  left: ResponsiveUtils.spacing(context, 49),
+                  right: ResponsiveUtils.spacing(context, 12),
                 ),
                 child: TextField(
                   controller: pickupNotesController,
@@ -197,6 +184,7 @@ class LesgoDetailsPanel extends ConsumerWidget {
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
             LesrideLocationTile(
               title: 'Drop-off Location',
+              isDestination: true,
               subtitle: locationState.destinationAddress != null
                   ? _formatAddress(locationState.destinationAddress!)
                   : locationState.destinationLocation != null
@@ -211,8 +199,8 @@ class LesgoDetailsPanel extends ConsumerWidget {
               Padding(
                 padding: EdgeInsets.only(
                   top: ResponsiveUtils.spacing(context, 8),
-                  left: ResponsiveUtils.spacing(context, 4),
-                  right: ResponsiveUtils.spacing(context, 4),
+                  left: ResponsiveUtils.spacing(context, 49),
+                  right: ResponsiveUtils.spacing(context, 12),
                 ),
                 child: TextField(
                   controller: dropoffNotesController,
@@ -269,36 +257,31 @@ class LesgoDetailsPanel extends ConsumerWidget {
                   ),
                 ),
               ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            LesgoItemDetailsSection(
-              itemLocationController: itemLocationController,
-              itemWeightController: itemWeightController,
-              onItemLocationChanged: onItemLocationChanged,
-              onItemWeightChanged: onItemWeightChanged,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            LesgoPaymentSection(
-              paymentMethod: paymentMethod,
-              onPaymentChanged: onPaymentChanged,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            const LesgoFareSummary(),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            VoucherSection(
-              enabled: voucherEnabled,
-              appliedVoucher: appliedVoucher,
-              onApplyTap: onApplyVoucher,
-              onRemoveTap: onRemoveVoucher,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            PrimaryButton(
-              text: 'Book',
-              onPressed: isBooking ? null : onBook,
-              isLoading: isBooking,
-            ),
           ],
         ),
-      ),
+        const SizedBox(height: 18),
+        LesgoItemDetailsSection(
+          itemLocationController: itemLocationController,
+          itemWeightController: itemWeightController,
+          onItemLocationChanged: onItemLocationChanged,
+          onItemWeightChanged: onItemWeightChanged,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+        LesgoPaymentSection(
+          paymentMethod: paymentMethod,
+          onPaymentChanged: onPaymentChanged,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        const LesgoFareSummary(),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+        VoucherSection(
+          enabled: voucherEnabled,
+          appliedVoucher: appliedVoucher,
+          onApplyTap: onApplyVoucher,
+          onRemoveTap: onRemoveVoucher,
+        ),
+        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+      ],
     );
   }
 }

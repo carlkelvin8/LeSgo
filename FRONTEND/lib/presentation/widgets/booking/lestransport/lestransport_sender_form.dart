@@ -1,4 +1,4 @@
-import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -19,19 +19,18 @@ class LestransportSenderForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.spacing(context, 16),
+      ),
+      decoration: OrderDesign.receipt(context),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const OrderSectionHeading(
             'Sender',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.w600,
-              color: AppColors.foreground(context, Colors.black87),
-            ),
+            icon: Icons.person_outline_rounded,
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           CustomTextField(

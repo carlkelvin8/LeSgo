@@ -9,9 +9,9 @@ class LesrideDragHandle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        width: 48,
-        height: 5,
-        margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
+        width: 36,
+        height: 4,
+        margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 6)),
         decoration: BoxDecoration(
           color: AppColors.border(context, Colors.grey.shade300),
           borderRadius: BorderRadius.circular(99),

@@ -1,266 +1,258 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../core/utils/responsive_utils.dart';
+
+import '../../../core/theme/app_colors.dart';
 import '../../provider/missions/missions_provider.dart';
-import '../../widgets/widgets.dart';
+import '../../widgets/missions/mission_card.dart';
 
 class MissionsScreen extends ConsumerWidget {
   const MissionsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final missionsState = ref.watch(missionsProvider);
+    final state = ref.watch(missionsProvider);
+    final missions = state.missions;
+    final completed = missions.where((mission) => mission.isCompleted).length;
+    final notifier = ref.read(missionsProvider.notifier);
+    final background = AppColors.surface(context, const Color(0xFFF8F5FB));
+    final accent = AppColors.buttonFill(context);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // ── Background SVG ─────────────────────────────────────────────
-          Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/images/mission/Background.svg',
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          // ── Darkening overlay for better readability ───────────────────
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: .25),
-                    Colors.black.withValues(alpha: .55),
-                  ],
-                ),
+      backgroundColor: background,
+      appBar: AppBar(
+        backgroundColor: background,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: false,
+        title: Text(
+          'Missions',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: RefreshIndicator(
+              color: accent,
+              onRefresh: notifier.refreshMissions,
+              child: ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                itemCount: missions.isEmpty ? 2 : missions.length + 2,
+                itemBuilder: (context, index) {
+                  if (index == 0) return const _MissionsHero();
+                  if (missions.isEmpty) {
+                    return _MissionsPlaceholder(
+                      state: state,
+                      onRetry: notifier.refreshMissions,
+                    );
+                  }
+                  if (index == 1) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(2, 20, 2, 12),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              'Your challenges',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              '$completed of ${missions.length} complete',
+                              textAlign: TextAlign.end,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.labelLarge?.copyWith(color: accent),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  final mission = missions[index - 2];
+                  return Padding(
+                    key: ValueKey(mission.id),
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: MissionCard(
+                      mission: mission,
+                      onTap:
+                          !mission.isCompleted &&
+                              mission.missionType == 'app_review'
+                          ? () => notifier.performMissionAction(mission)
+                          : null,
+                    ),
+                  );
+                },
               ),
             ),
           ),
-
-          // ── Content ────────────────────────────────────────────────────
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(
-                        ResponsiveUtils.spacing(context, 16),
-                      ),
-                      child: const AuthHeader(
-                        title: 'Mission',
-                        textColor: Colors.white,
-                        iconColor: Colors.white,
-                      ),
-                    ),
-                    Positioned(
-                      top: ResponsiveUtils.spacing(context, 35),
-                      left: ResponsiveUtils.spacing(context, 6),
-                      right: ResponsiveUtils.spacing(context, 6),
-                      // This decoration overlaps the header. Let taps reach
-                      // its Back button rather than the loaded SVG picture.
-                      child: IgnorePointer(
-                        child: SvgPicture.asset(
-                          'assets/images/mission/Banner.svg',
-                          height: ResponsiveUtils.imageHeight(context, 300),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: ResponsiveUtils.spacing(context, 248)),
-
-                // ── Section label ─────────────────────────────────────────
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveUtils.spacing(context, 20),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'EARN VOUCHERS!',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          fontStyle: FontStyle.italic,
-                          letterSpacing: .5,
-                          shadows: [
-                            Shadow(
-                              color: Color(0x88000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'Complete missions and get vouchers for your orders.',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: .75),
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // ── Mission list ──────────────────────────────────────────
-                Expanded(
-                  child: _buildBody(context, ref, missionsState),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildBody(
-      BuildContext context, WidgetRef ref, dynamic missionsState) {
-    if (missionsState.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
-    }
+class _MissionsHero extends StatelessWidget {
+  const _MissionsHero();
 
-    if (missionsState.error != null && missionsState.missions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .12),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Icon(
-                  Icons.wifi_off_rounded,
-                  color: Colors.white70,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                missionsState.error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 13,
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () =>
-                    ref.read(missionsProvider.notifier).refreshMissions(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: .18),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Retry',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(26),
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topRight,
+            colors: [Color(0xFF221035), Color(0xFF573285)],
           ),
         ),
-      );
-    }
-
-    if (missionsState.missions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Icon(
-                Icons.emoji_events_outlined,
-                color: Colors.white70,
-                size: 30,
+            Positioned(
+              right: -44,
+              top: -60,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0x226FDACD), width: 28),
+                ),
+                child: const SizedBox.square(dimension: 220),
               ),
             ),
-            const SizedBox(height: 14),
-            const Text(
-              'No missions yet',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Check back soon for new challenges!',
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: 12,
-                color: Colors.white.withValues(alpha: .65),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 17, 10, 17),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact =
+                      constraints.maxWidth < 300 ||
+                      MediaQuery.textScalerOf(context).scale(26) > 32;
+                  final artwork = ExcludeSemantics(
+                    child: SvgPicture.asset(
+                      'assets/images/mission/Banner.svg',
+                      height: compact ? 104 : 135,
+                    ),
+                  );
+                  const copy = _HeroCopy();
+                  return compact
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            copy,
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: artwork,
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            const Expanded(flex: 6, child: copy),
+                            Expanded(flex: 5, child: artwork),
+                          ],
+                        );
+                },
               ),
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
+}
 
-    return RefreshIndicator(
-      color: Colors.white,
-      backgroundColor: const Color(0xFF5F2D82),
-      onRefresh: () =>
-          ref.read(missionsProvider.notifier).refreshMissions(),
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: missionsState.missions.length,
-        itemBuilder: (context, index) {
-          final mission = missionsState.missions[index];
-          return MissionCard(
-            mission: mission,
-            index: index,
-            onTap: () {
-              if (mission.isCompleted) return;
-              if (mission.missionType == 'app_review') {
-                ref
-                    .read(missionsProvider.notifier)
-                    .performMissionAction(mission);
-              }
-            },
-          );
-        },
+class _HeroCopy extends StatelessWidget {
+  const _HeroCopy();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          Icons.confirmation_number_outlined,
+          color: Color(0xFFBFF0D9),
+          size: 24,
+        ),
+        SizedBox(height: 9),
+        Text(
+          'Earn vouchers',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            height: 1.12,
+          ),
+        ),
+        SizedBox(height: 7),
+        Text(
+          'Complete missions to unlock rewards for your orders.',
+          style: TextStyle(color: Color(0xFFEBDEF6), fontSize: 13, height: 1.4),
+        ),
+      ],
+    );
+  }
+}
+
+class _MissionsPlaceholder extends StatelessWidget {
+  const _MissionsPlaceholder({required this.state, required this.onRetry});
+
+  final MissionsState state;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final error = state.error;
+    final accent = AppColors.buttonFill(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface(context, Colors.white),
+          border: Border.all(
+            color: AppColors.border(context, const Color(0xFFE8DFED)),
+          ),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: state.isLoading
+            ? Center(child: CircularProgressIndicator(color: accent))
+            : Column(
+                children: [
+                  Icon(
+                    error == null
+                        ? Icons.emoji_events_outlined
+                        : Icons.wifi_off_rounded,
+                    color: accent,
+                    size: 30,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    error ?? 'No missions right now',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (error == null)
+                    const Text(
+                      'Check back for new challenges.',
+                      textAlign: TextAlign.center,
+                    )
+                  else
+                    TextButton(
+                      onPressed: onRetry,
+                      child: const Text('Try again'),
+                    ),
+                ],
+              ),
       ),
     );
   }

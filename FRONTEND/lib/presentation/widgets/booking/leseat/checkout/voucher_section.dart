@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -9,8 +10,8 @@ class VoucherSection extends StatelessWidget {
   final String? appliedVoucher;
 
   const VoucherSection({
-    super.key, 
-    this.onApplyTap, 
+    super.key,
+    this.onApplyTap,
     this.onRemoveTap,
     this.enabled = true,
     this.appliedVoucher,
@@ -28,18 +29,13 @@ class VoucherSection extends StatelessWidget {
             horizontal: ResponsiveUtils.spacing(context, 16),
             vertical: ResponsiveUtils.spacing(context, 8),
           ),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.white),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border(context, Colors.grey[300]!)),
+          decoration: OrderDesign.card(
+            context,
+            highlighted: appliedVoucher != null,
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.local_offer,
-                color: AppColors.accent(context, Color(0xFF5F2D82)),
-                size: ResponsiveUtils.fontSize(context, 20),
-              ),
+              const OrderIcon(Icons.local_offer_outlined),
               SizedBox(width: ResponsiveUtils.spacing(context, 12)),
               Expanded(
                 child: Text(

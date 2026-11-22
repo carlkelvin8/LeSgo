@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -34,21 +35,13 @@ class OrderSummarySection extends StatelessWidget {
       margin: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: OrderDesign.receipt(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const OrderSectionHeading(
             'Summary',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.w700,
-              color: AppColors.foreground(context, Colors.black87),
-            ),
+            icon: Icons.receipt_long_outlined,
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
@@ -115,8 +108,8 @@ class OrderSummarySection extends StatelessWidget {
           _buildSummaryRow(
             context,
             orderValueUncertain
-                ? 'Total ($itemCount items, est.)'
-                : 'Total ($itemCount items)',
+                ? 'Total ($itemCount ${itemCount == 1 ? 'item' : 'items'}, est.)'
+                : 'Total ($itemCount ${itemCount == 1 ? 'item' : 'items'})',
             orderValueUncertain && total <= 0 ? 'TBD' : Money.format(total),
             isTotal: true,
           ),

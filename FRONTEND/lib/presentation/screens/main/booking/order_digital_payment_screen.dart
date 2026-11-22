@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -172,6 +173,7 @@ class _OrderDigitalPaymentScreenState
         if (!didPop) _handleBack();
       },
       child: Scaffold(
+        backgroundColor: OrderDesign.canvas(context),
         appBar: AppBar(
           title: Text(
             'Pay for ${widget.serviceLabel}',
@@ -184,30 +186,10 @@ class _OrderDigitalPaymentScreenState
         ),
         body: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Order #${widget.orderId}',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: AppColors.foreground(context, Colors.grey[700]!),
-                    ),
-                  ),
-                  Text(
-                    Money.format(widget.amount),
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 18),
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.accent(context, Color(0xFF5F2D82)),
-                    ),
-                  ),
-                ],
-              ),
+            OrderIntro(
+              title: Money.format(widget.amount),
+              detail: 'Order #${widget.orderId}',
+              icon: Icons.lock_outline_rounded,
             ),
             Expanded(
               child: _webViewFailed
@@ -234,31 +216,35 @@ class _OrderDigitalPaymentScreenState
                     )
                   : WebViewWidget(controller: _webViewController),
             ),
-            Padding(
+            Container(
+              decoration: OrderDesign.dock(context),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: gatewayState.isCheckingStatus || _isConfirming
-                      ? null
-                      : _confirmPayment,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.buttonFill(context),
-                    foregroundColor: AppColors.onButton(context),
-                    padding: EdgeInsets.symmetric(
-                      vertical: ResponsiveUtils.spacing(context, 14),
+              child: SafeArea(
+                top: false,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: gatewayState.isCheckingStatus || _isConfirming
+                        ? null
+                        : _confirmPayment,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.buttonFill(context),
+                      foregroundColor: AppColors.onButton(context),
+                      padding: EdgeInsets.symmetric(
+                        vertical: ResponsiveUtils.spacing(context, 14),
+                      ),
                     ),
+                    child: gatewayState.isCheckingStatus || _isConfirming
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Confirm payment'),
                   ),
-                  child: gatewayState.isCheckingStatus || _isConfirming
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Confirm payment'),
                 ),
               ),
             ),

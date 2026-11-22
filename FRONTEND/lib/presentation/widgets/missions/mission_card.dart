@@ -2,7 +2,6 @@ import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/utils/api_error_mapper.dart';
 import '../../../domain/entities/missions/mission.dart';
 import '../../provider/missions/missions_provider.dart';
@@ -10,48 +9,19 @@ import '../../provider/missions/missions_provider.dart';
 class MissionCard extends ConsumerStatefulWidget {
   final Mission mission;
   final VoidCallback? onTap;
-  final int index;
 
-  const MissionCard({
-    super.key,
-    required this.mission,
-    this.onTap,
-    this.index = 0,
-  });
+  const MissionCard({super.key, required this.mission, this.onTap});
 
   @override
   ConsumerState<MissionCard> createState() => _MissionCardState();
 }
 
-class _MissionCardState extends ConsumerState<MissionCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _entryAnim;
-  late final Animation<double> _fade;
-  late final Animation<Offset> _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _entryAnim = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 350 + widget.index * 60),
-    );
-    _fade = CurvedAnimation(parent: _entryAnim, curve: Curves.easeOut);
-    _slide = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _entryAnim, curve: Curves.easeOutCubic));
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => _entryAnim.forward());
-  }
-
-  @override
-  void dispose() {
-    _entryAnim.dispose();
-    super.dispose();
-  }
+class _MissionCardState extends ConsumerState<MissionCard> {
+  bool _claiming = false;
 
   Future<void> _claimReward() async {
+    if (_claiming) return;
+    setState(() => _claiming = true);
     try {
       await ref.read(missionsProvider.notifier).claimMission(widget.mission.id);
       if (mounted) {
@@ -84,193 +54,150 @@ class _MissionCardState extends ConsumerState<MissionCard>
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _claiming = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final m = widget.mission;
-    final isComplete = m.isCompleted;
-    final isClaimed = m.rewardClaimed;
+    final mission = widget.mission;
+    final theme = Theme.of(context);
+    final accent = AppColors.buttonFill(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final (icon, color) = _missionStyle(mission.missionType);
+    final tone = AppColors.accent(context, color);
+    final progress = '${mission.currentProgress}/${mission.goalTarget}';
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(21),
+      side: BorderSide(
+        color: AppColors.border(context, const Color(0xFFE8DFED)),
+      ),
+    );
 
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(
-        position: _slide,
-        child: GestureDetector(
-          onTap: widget.onTap,
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              // Glassmorphism-style dark card
-              color: AppColors.surface(
-                context,
-                Colors.black,
-              ).withValues(alpha: .30),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isComplete
-                    ? const Color(0xFF44DD88).withValues(alpha: .50)
-                    : Colors.white.withValues(alpha: .14),
-                width: isComplete ? 1.5 : 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: .18),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-              child: Row(
+    return Material(
+      color: AppColors.surface(context, Colors.white),
+      shape: shape,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: widget.onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(13),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Star icon ───────────────────────────────────────
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 43,
+                    height: 43,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .10),
-                      borderRadius: BorderRadius.circular(13),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: .15),
-                        width: .8,
-                      ),
+                      color: tone.withValues(alpha: .10),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: SvgPicture.asset(
-                        'assets/images/mission/Star.svg',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+                    child: Icon(icon, color: tone, size: 23),
                   ),
-
-                  const SizedBox(width: 14),
-
-                  // ── Content ─────────────────────────────────────────
+                  const SizedBox(width: 11),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Title + badge row
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                m.title,
-                                style: const TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  height: 1.3,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Status badge
-                            if (isClaimed)
-                              _Badge(
-                                label: 'Claimed',
-                                bg: Colors.white.withValues(alpha: .18),
-                                textColor: Colors.white70,
-                              )
-                            else if (isComplete)
-                              GestureDetector(
-                                onTap: m.userId == 0 ? null : _claimReward,
-                                child: const _Badge(
-                                  label: 'Claim',
-                                  bg: Color(0xFF22A060),
-                                  textColor: Colors.white,
-                                  icon: Icons.card_giftcard_rounded,
-                                ),
-                              ),
-                          ],
+                        Text(
+                          mission.title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-
-                        // Description
-                        if (m.description?.isNotEmpty == true) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            m.description!,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 11,
-                              color: Colors.white.withValues(alpha: .65),
-                              height: 1.4,
+                        if (mission.description case final description?
+                            when description.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              description,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: muted,
+                              ),
                             ),
                           ),
-                        ],
-
-                        const SizedBox(height: 10),
-
-                        // Progress bar
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: LinearProgressIndicator(
-                                  value: m.progressPercentage.clamp(0.0, 1.0),
-                                  backgroundColor: AppColors.surface(
-                                    context,
-                                    Colors.white,
-                                  ).withValues(alpha: .18),
-                                  valueColor: AlwaysStoppedAnimation(
-                                    isComplete
-                                        ? const Color(0xFF44DD88)
-                                        : const Color(0xFFAA80FF),
-                                  ),
-                                  minHeight: 7,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              '${m.currentProgress}/${m.goalTarget}',
-                              style: const TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Reward label
-                        if (m.rewardValue > 0) ...[
-                          const SizedBox(height: 7),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.local_offer_rounded,
-                                size: 11,
-                                color: Color(0xFFFFDD55),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'Reward: ${Money.format(m.rewardValue, decimals: 0)} ${m.rewardType}',
-                                style: const TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFFFFDD55),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
                       ],
+                    ),
+                  ),
+                  if (widget.onTap != null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6, top: 4),
+                      child: Icon(
+                        Icons.open_in_new_rounded,
+                        size: 17,
+                        color: accent,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      value: mission.progressPercentage,
+                      minHeight: 6,
+                      borderRadius: BorderRadius.circular(10),
+                      color: accent,
+                      backgroundColor: accent.withValues(alpha: .11),
+                      semanticsLabel: 'Mission progress',
+                      semanticsValue:
+                          '${mission.currentProgress} of ${mission.goalTarget}',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    progress,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: muted,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
-            ),
+              if (mission.rewardValue > 0 ||
+                  mission.isCompleted ||
+                  mission.rewardClaimed) ...[
+                const SizedBox(height: 9),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (mission.rewardValue > 0)
+                      _MissionBadge(
+                        icon: Icons.confirmation_number_outlined,
+                        label:
+                            '${Money.format(mission.rewardValue, decimals: 0)} ${mission.rewardType}',
+                        color: accent,
+                      ),
+                    if (mission.rewardClaimed)
+                      _MissionBadge(
+                        icon: Icons.check_circle_outline_rounded,
+                        label: 'Claimed',
+                        color: muted,
+                      )
+                    else if (mission.isCompleted)
+                      FilledButton(
+                        onPressed: mission.userId == 0 || _claiming
+                            ? null
+                            : _claimReward,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accent,
+                          foregroundColor: AppColors.onButton(context),
+                          minimumSize: const Size(0, 44),
+                        ),
+                        child: Text(_claiming ? 'Claiming…' : 'Claim reward'),
+                      ),
+                  ],
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -278,45 +205,56 @@ class _MissionCardState extends ConsumerState<MissionCard>
   }
 }
 
-// ─── Badge ────────────────────────────────────────────────────────────────────
-class _Badge extends StatelessWidget {
-  final String label;
-  final Color bg;
-  final Color textColor;
-  final IconData? icon;
+(IconData, Color) _missionStyle(String type) {
+  if (type.contains('ride')) {
+    return (Icons.directions_car_outlined, const Color(0xFF006D61));
+  }
+  if (type.contains('refer')) {
+    return (Icons.group_add_outlined, const Color(0xFF3259A6));
+  }
+  if (type == 'app_review') {
+    return (Icons.star_border_rounded, const Color(0xFF895400));
+  }
+  return (Icons.flag_outlined, const Color(0xFF5F2D82));
+}
 
-  const _Badge({
+class _MissionBadge extends StatelessWidget {
+  const _MissionBadge({
+    required this.icon,
     required this.label,
-    required this.bg,
-    required this.textColor,
-    this.icon,
+    required this.color,
   });
+
+  final IconData icon;
+  final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: bg,
+        color: color.withValues(alpha: .09),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 11, color: textColor),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: textColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

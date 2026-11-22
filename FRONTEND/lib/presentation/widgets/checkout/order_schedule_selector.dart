@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -133,31 +134,19 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
         horizontal: ResponsiveUtils.spacing(context, 16),
         vertical: ResponsiveUtils.spacing(context, 8),
       ),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: OrderDesign.cardRadius,
+        side: BorderSide(color: OrderDesign.line(context)),
+      ),
       child: Padding(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.schedule,
-                  color: AppColors.accent(context, Color(0xFF5F2D82)),
-                  size: ResponsiveUtils.fontSize(context, 20),
-                ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                Text(
-                  'Delivery Schedule',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.foreground(context, Colors.black87),
-                  ),
-                ),
-              ],
+            const OrderSectionHeading(
+              'Delivery Schedule',
+              icon: Icons.schedule_rounded,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
 
@@ -169,7 +158,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                   _clearScheduledTime();
                 });
               },
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               child: Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                 decoration: BoxDecoration(
@@ -179,7 +168,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                         : AppColors.foreground(context, Colors.grey[300]!),
                     width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   color: _selectedSchedule == ScheduleType.now
                       ? AppColors.accent(
                           context,
@@ -246,7 +235,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                   _pickScheduledTime();
                 }
               },
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               child: Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                 decoration: BoxDecoration(
@@ -256,7 +245,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                         : AppColors.foreground(context, Colors.grey[300]!),
                     width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   color: _selectedSchedule == ScheduleType.scheduled
                       ? AppColors.accent(
                           context,
@@ -322,7 +311,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                     context,
                     Color(0xFF5F2D82),
                   ).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [

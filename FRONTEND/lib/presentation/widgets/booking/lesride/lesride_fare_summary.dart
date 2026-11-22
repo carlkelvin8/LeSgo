@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -22,27 +23,15 @@ class LesrideFareSummary extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Fare Estimate',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 15),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
-        ),
+        const OrderSectionHeading('Fare Estimate'),
         SizedBox(height: ResponsiveUtils.spacing(context, 10)),
         Container(
           width: double.infinity,
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.grey.shade50),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: error == null
-                  ? AppColors.foreground(context, Colors.grey.shade200)
-                  : Colors.red.shade200,
-            ),
+          decoration: OrderDesign.card(context, highlighted: true).copyWith(
+            border: error == null
+                ? null
+                : Border.all(color: Theme.of(context).colorScheme.error),
           ),
           child: isLoading
               ? _loading(context)

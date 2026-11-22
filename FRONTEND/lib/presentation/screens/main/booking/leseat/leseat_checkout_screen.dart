@@ -1,3 +1,5 @@
+import 'package:lesgo/core/utils/money.dart';
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +14,7 @@ import '../../../../provider/auth/auth_provider.dart';
 import '../../../../provider/main/booking/checkout_provider.dart';
 import '../../../../../core/utils/voucher_service_utils.dart';
 import '../../../../provider/main/address/address_provider.dart';
-import '../../../../widgets/address/address_selector_widget.dart';
+import '../../../../widgets/address/delivery_address_picker.dart';
 import '../../../../widgets/booking/common/store_branch_selector.dart';
 import '../../../../widgets/payment/booking_payment_method_section.dart';
 import '../../../../widgets/booking/leseat/checkout/voucher_bottom_sheet.dart';
@@ -77,57 +79,25 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
   }
 
   void _showAddressSelector(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Address selector
-            Expanded(
-              child: AddressSelectorWidget(
-                title: 'Select Delivery Address',
-                onAddressSelected: (address) {
-                  setState(() {
-                    _selectedAddress = address;
-                  });
-                  // Update checkout provider with new address
-                  ref
-                      .read(checkoutProvider.notifier)
-                      .updateDeliveryAddress(
-                        address.addressLine1,
-                        address.latitude,
-                        address.longitude,
-                        address.contactName ?? '',
-                        address.contactPhone ?? '',
-                      );
-                  Navigator.pop(context);
-                  SnackBarUtils.showSuccess(
-                    context,
-                    'Delivery address updated',
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+    showDeliveryAddressPicker(
+      context,
+      onSelected: (sheetContext, address) {
+        setState(() {
+          _selectedAddress = address;
+        });
+        // Update checkout provider with new address
+        ref
+            .read(checkoutProvider.notifier)
+            .updateDeliveryAddress(
+              address.addressLine1,
+              address.latitude,
+              address.longitude,
+              address.contactName ?? '',
+              address.contactPhone ?? '',
+            );
+        Navigator.pop(sheetContext);
+        SnackBarUtils.showSuccess(context, 'Delivery address updated');
+      },
     );
   }
 
@@ -237,11 +207,11 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
 
     if (order == null) {
       return Scaffold(
-        backgroundColor: AppColors.surface(context, Color(0xFFF5F5F5)),
+        backgroundColor: OrderDesign.canvas(context),
         body: SafeArea(
           child: Column(
             children: [
-              BookingServiceHeader(title: 'Checkout'),
+              BookingServiceHeader(title: 'Checkout', orderStyle: true),
               const Expanded(child: Center(child: CircularProgressIndicator())),
             ],
           ),
@@ -259,13 +229,14 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
     final total = isCartEmpty ? 0.0 : order.total;
 
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Color(0xFFF5F5F5)),
+      backgroundColor: OrderDesign.canvas(context),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             BookingServiceHeader(
               title: 'Checkout',
+              orderStyle: true,
               action: const SizedBox.shrink(),
             ),
 
@@ -275,7 +246,13 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                    OrderReceiptHeader(
+                      title: 'Your bag',
+                      detail:
+                          '${order.totalItems} ${order.totalItems == 1 ? 'item' : 'items'}',
+                      subtotal: !isCartEmpty ? Money.format(subtotal) : null,
+                      icon: Icons.restaurant_rounded,
+                    ),
 
                     // Delivery Address
                     DeliveryAddressSection(
@@ -381,17 +358,6 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
-                    // Payment Method Section
-                    BookingPaymentMethodSection(
-                      selectedMethod:
-                          checkoutState.selectedPaymentMethod ?? 'cash',
-                      onMethodChanged: checkoutNotifier.selectPaymentMethod,
-                      enabled: !isCartEmpty,
-                      minimumAmount: isCartEmpty ? null : total,
-                    ),
-
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-
                     // Voucher (scrolls with the page so small screens keep the items visible)
                     VoucherSection(
                       enabled: !isCartEmpty,
@@ -413,6 +379,18 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                       itemCount: isCartEmpty ? 0 : order.totalItems,
                     ),
 
+                    const SizedBox(height: 16),
+                    // Payment Method Section
+                    BookingPaymentMethodSection(
+                      selectedMethod:
+                          checkoutState.selectedPaymentMethod ?? 'cash',
+                      onMethodChanged: checkoutNotifier.selectPaymentMethod,
+                      enabled: !isCartEmpty,
+                      minimumAmount: isCartEmpty ? null : total,
+                    ),
+
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                   ],
                 ),
@@ -425,16 +403,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
       // Bottom Continue Button
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
+        decoration: OrderDesign.dock(context),
         child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -476,67 +445,76 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                   icon: const Icon(Icons.refresh),
                   label: const Text('Retry delivery fee'),
                 ),
-              PrimaryButton(
-                text: 'Checkout',
-                isLoading: checkoutState.isLoading,
-                backgroundColor: isCartEmpty
-                    ? Colors.grey
-                    : const Color(0xFF5F2D82),
-                onPressed:
-                    isCartEmpty ||
-                        checkoutState.isLoading ||
-                        checkoutState.isLoadingFare ||
-                        checkoutState.isValidatingVoucher ||
-                        !checkoutState.hasValidDeliveryFee
-                    ? null
-                    : () async {
-                        final success = await checkoutNotifier.placeOrder(
-                          context,
-                        );
-                        if (!context.mounted) return;
-                        if (success) {
-                          final checkoutState = ref.read(checkoutProvider);
-                          final createdId = checkoutState.createdOrderId;
-                          if (createdId == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Order was not created. Please try again.',
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-
-                          AppRouter.pushReplacement(
+              OrderActionWithTotal(
+                total:
+                    !isCartEmpty &&
+                        checkoutState.hasValidDeliveryFee &&
+                        !checkoutState.isLoadingFare &&
+                        !checkoutState.isValidatingVoucher
+                    ? total
+                    : null,
+                child: PrimaryButton(
+                  text: 'Checkout',
+                  isLoading: checkoutState.isLoading,
+                  backgroundColor: isCartEmpty
+                      ? Colors.grey
+                      : const Color(0xFF5F2D82),
+                  onPressed:
+                      isCartEmpty ||
+                          checkoutState.isLoading ||
+                          checkoutState.isLoadingFare ||
+                          checkoutState.isValidatingVoucher ||
+                          !checkoutState.hasValidDeliveryFee
+                      ? null
+                      : () async {
+                          final success = await checkoutNotifier.placeOrder(
                             context,
-                            BookingRoutes.leseatWaitingConfirmation,
-                            arguments: {
-                              'orderId': createdId,
-                              'address': order.deliveryAddress,
-                              'orderItems': order.items
-                                  .map(
-                                    (item) => {
-                                      'name': item.name,
-                                      'price': item.price,
-                                      'quantity': item.quantity,
-                                      'restaurantName': item.restaurantName,
-                                    },
-                                  )
-                                  .toList(),
-                            },
                           );
-                        } else {
-                          final raw =
-                              ref.read(checkoutProvider).error ??
-                              'Failed to place order. Please try again.';
-                          final errorMsg = raw.startsWith('Exception: ')
-                              ? raw.substring(11)
-                              : raw;
-                          SnackBarUtils.showError(context, errorMsg);
-                        }
-                      },
+                          if (!context.mounted) return;
+                          if (success) {
+                            final checkoutState = ref.read(checkoutProvider);
+                            final createdId = checkoutState.createdOrderId;
+                            if (createdId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Order was not created. Please try again.',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+
+                            AppRouter.pushReplacement(
+                              context,
+                              BookingRoutes.leseatWaitingConfirmation,
+                              arguments: {
+                                'orderId': createdId,
+                                'address': order.deliveryAddress,
+                                'orderItems': order.items
+                                    .map(
+                                      (item) => {
+                                        'name': item.name,
+                                        'price': item.price,
+                                        'quantity': item.quantity,
+                                        'restaurantName': item.restaurantName,
+                                      },
+                                    )
+                                    .toList(),
+                              },
+                            );
+                          } else {
+                            final raw =
+                                ref.read(checkoutProvider).error ??
+                                'Failed to place order. Please try again.';
+                            final errorMsg = raw.startsWith('Exception: ')
+                                ? raw.substring(11)
+                                : raw;
+                            SnackBarUtils.showError(context, errorMsg);
+                          }
+                        },
+                ),
               ),
             ],
           ),

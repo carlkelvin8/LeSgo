@@ -1,4 +1,4 @@
-import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../widgets.dart';
@@ -10,49 +10,49 @@ class LesrideLocationTile extends StatelessWidget {
     required this.subtitle,
     required this.trailing,
     this.isLoading = false,
+    this.isDestination = false,
   });
 
   final String title;
   final String subtitle;
   final Widget trailing;
   final bool isLoading;
+  final bool isDestination;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, const Color(0xFFF7F7F7)),
-        borderRadius: BorderRadius.circular(12),
-        border: Theme.of(context).brightness == Brightness.dark
-            ? Border.all(color: Theme.of(context).colorScheme.outlineVariant)
-            : null,
-      ),
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 3, 8, 3),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 14),
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.foreground(context, Colors.black87),
+          OrderIcon(
+            isDestination
+                ? Icons.location_on_outlined
+                : Icons.my_location_rounded,
+            mint: !isDestination,
+            size: 34,
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'TT Fors',
+                    fontSize: ResponsiveUtils.fontSize(context, 14),
+                    fontWeight: FontWeight.w700,
+                    color: colors.onSurface,
+                  ),
                 ),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-              SizedBox(
-                width: 180,
-                child: Row(
+                const SizedBox(height: 3),
+                Row(
                   children: [
                     if (isLoading) ...[
-                      MapLoadingIndicator(
-                        size: ResponsiveUtils.fontSize(context, 16),
-                      ),
-                      SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                      const MapLoadingIndicator(size: 16),
+                      const SizedBox(width: 6),
                     ],
                     Expanded(
                       child: Text(
@@ -60,19 +60,17 @@ class LesrideLocationTile extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 12),
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.foreground(context, Colors.grey[800]!),
+                          height: 1.35,
+                          color: colors.onSurfaceVariant,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const Spacer(),
+          const SizedBox(width: 4),
           trailing,
         ],
       ),

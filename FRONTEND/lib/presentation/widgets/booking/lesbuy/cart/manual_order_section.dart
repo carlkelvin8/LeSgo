@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -28,10 +29,7 @@ class ManualOrderSection extends StatelessWidget {
       margin: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: OrderDesign.receipt(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

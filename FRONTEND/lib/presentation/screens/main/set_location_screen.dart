@@ -2,7 +2,7 @@ import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/utils/responsive_utils.dart';
+import '../../../core/utils/api_error_mapper.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../provider/main/location/location_provider.dart';
 import '../../provider/main/location/controller/location_controller.notifier.dart';
@@ -27,14 +27,16 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
     super.initState();
     _controllers = LocationControllers();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final authState = ref.read(authProvider);
       final userId = int.tryParse(authState.user?.id ?? '0') ?? 0;
       ref.read(locationProvider.notifier).reset();
       if (userId > 0) {
         await ref.read(addressProvider.notifier).loadAddresses(userId);
+        if (!mounted) return;
         await ref.read(profileProvider.notifier).loadProfile();
       }
-      await _controllers.initialize(ref);
+      if (mounted) await _controllers.initialize(ref);
     });
   }
 
@@ -177,10 +179,13 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
         if (kDebugMode) {
           debugPrint('SetLocationScreen: Address saved successfully');
         }
-        await ref.read(profileProvider.notifier).updateProfile(
+        await ref
+            .read(profileProvider.notifier)
+            .updateProfile(
               address1: addressLine1,
               address2: addressLine2.isNotEmpty ? addressLine2 : null,
             );
+        if (!mounted) return;
         SnackBarUtils.showSuccess(context, 'Address saved successfully');
         Navigator.of(context).pop(true);
       } else {
@@ -188,17 +193,14 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
         if (kDebugMode) {
           debugPrint('SetLocationScreen: Failed to save address - $error');
         }
-        SnackBarUtils.showError(
-          context,
-          error ?? 'Failed to save address',
-        );
+        SnackBarUtils.showError(context, error ?? 'Failed to save address');
       }
     } catch (e) {
       if (kDebugMode) {
         debugPrint('SetLocationScreen: Error saving address - $e');
       }
       if (mounted) {
-        SnackBarUtils.showError(context, 'Error: $e');
+        SnackBarUtils.showError(context, ApiErrorMapper.message(e));
       }
     } finally {
       if (mounted) {
@@ -211,87 +213,107 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
   Widget build(BuildContext context) {
     final locationState = ref.watch(locationProvider);
 
+    final surface = AppColors.surface(context, const Color(0xFFFAF7FC));
+
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Colors.white),
-      resizeToAvoidBottomInset: true,
+      backgroundColor: surface,
       body: SafeArea(
         child: Stack(
           children: [
             Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Builder(
-                  builder: (context) {
-                    final horizontalPadding = ResponsiveUtils.horizontalPadding(
-                      context,
-                    );
-                    return Padding(
-                      padding: EdgeInsets.all(horizontalPadding),
-                      child: Column(
-                        children: [
-                          const AuthHeader(title: 'Set Location'),
-                          SizedBox(
-                            height: ResponsiveUtils.spacing(context, 16),
-                          ),
-                        ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 20, 4),
+                  child: Row(
+                    children: [
+                      const BackButton(),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'Set location',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
-
                 Expanded(
                   child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.only(
-                      bottom: ResponsiveUtils.spacing(context, 110) + MediaQuery.of(context).viewInsets.bottom,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        LocationMapSection(
-                          key: ValueKey(_controllers.isFullscreen),
-                          mapController: _controllers.mapController,
-                          showPickupDestination: false,
-                          onMapCreated: (controller) {
-                            _controllers.onMapCreated(controller);
-                            Future.delayed(
-                              const Duration(milliseconds: 50),
-                              () {
-                                _controllers.moveSmallMapToMarker(ref);
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Pin your location',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Tap the map where your rider should go.',
+                            ),
+                            const SizedBox(height: 14),
+                            LocationMapSection(
+                              key: ValueKey(_controllers.isFullscreen),
+                              mapController: _controllers.mapController,
+                              showPickupDestination: false,
+                              onMapCreated: (controller) {
+                                if (!mounted) return;
+                                setState(
+                                  () => _controllers.onMapCreated(controller),
+                                );
+                                Future.delayed(
+                                  const Duration(milliseconds: 50),
+                                  () {
+                                    if (mounted) {
+                                      _controllers.moveSmallMapToMarker(ref);
+                                    }
+                                  },
+                                );
                               },
-                            );
-                          },
-                          onUseCurrentLocation: () => _controllers
-                              .handleUseCurrentLocation(context, ref),
-                          onToggleFullscreen: () {
-                            _controllers.toggleFullscreen(ref);
-                            setState(() {});
-                          },
-                          onMapTap: (location) =>
-                              _controllers.handleMapTap(location, ref, context),
+                              onUseCurrentLocation: () => _controllers
+                                  .handleUseCurrentLocation(context, ref),
+                              onToggleFullscreen: () {
+                                _controllers.toggleFullscreen(ref);
+                                setState(() {});
+                              },
+                              onMapTap: (location) => _controllers.handleMapTap(
+                                location,
+                                ref,
+                                context,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            LocationFormSection(
+                              controllers: _controllers,
+                              onDefaultChanged: () {
+                                setState(() {
+                                  _controllers.setIsDefault(
+                                    !_controllers.isDefault,
+                                  );
+                                });
+                              },
+                            ),
+                          ],
                         ),
-                        SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                        LocationFormSection(
-                          controllers: _controllers,
-                          onDefaultChanged: () {
-                            setState(() {
-                              _controllers.setIsDefault(
-                                !_controllers.isDefault,
-                              );
-                            });
-                          },
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
+                LocationBottomButton(
+                  onPressed: (_isSaving || locationState.isLoading)
+                      ? null
+                      : _onContinue,
+                  isLoading: _isSaving || locationState.isLoading,
+                ),
               ],
-            ),
-
-            LocationBottomButton(
-              onPressed: (_isSaving || locationState.isLoading)
-                  ? null
-                  : _onContinue,
-              isLoading: _isSaving || locationState.isLoading,
             ),
 
             if (_controllers.isFullscreen &&
@@ -305,15 +327,12 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
                   setState(() {});
                   // Fit current and selected when exiting fullscreen
                   await Future.delayed(const Duration(milliseconds: 50));
-                  _controllers.moveSmallMapToMarker(ref);
+                  if (mounted) _controllers.moveSmallMapToMarker(ref);
                 },
                 onMapTap: (location) =>
                     _controllers.handleMapTap(location, ref, context),
-                onMarkerDragEnd: (location) => _controllers.handleMarkerDragEnd(
-                  location,
-                  ref,
-                  context,
-                ),
+                onMarkerDragEnd: (location) =>
+                    _controllers.handleMarkerDragEnd(location, ref, context),
                 showPickupDestination: false,
                 onAnimateToLocation: (location) =>
                     _controllers.animateOverlayToLocation(location),

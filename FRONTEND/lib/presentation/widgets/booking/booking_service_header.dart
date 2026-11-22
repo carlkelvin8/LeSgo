@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -10,33 +11,43 @@ class BookingServiceHeader extends StatelessWidget
   final String title;
   final VoidCallback? onProfileTap;
   final Widget? action;
+  final bool orderStyle;
 
   const BookingServiceHeader({
     super.key,
     required this.title,
     this.onProfileTap,
     this.action,
+    this.orderStyle = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: AppColors.surface(context, Colors.white),
+      backgroundColor: orderStyle
+          ? OrderDesign.canvas(context)
+          : AppColors.surface(context, Colors.white),
+      scrolledUnderElevation: orderStyle ? 0 : null,
+      titleSpacing: orderStyle ? 2 : null,
       elevation: 0,
       leading: IconButton(
-        icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black)),
+        icon: Icon(
+          orderStyle ? Icons.arrow_back_rounded : Icons.arrow_back,
+          color: AppColors.foreground(context, Colors.black),
+        ),
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: Text(
         title,
         style: TextStyle(
           fontFamily: 'TT Fors',
-          fontSize: ResponsiveUtils.fontSize(context, 18),
-          fontWeight: FontWeight.w600,
+          fontSize: ResponsiveUtils.fontSize(context, orderStyle ? 22 : 18),
+          fontWeight: orderStyle ? FontWeight.w700 : FontWeight.w600,
           color: AppColors.foreground(context, Colors.black),
         ),
       ),
-      centerTitle: true,
+      centerTitle: !orderStyle,
       actions: [
         if (action != null)
           action!

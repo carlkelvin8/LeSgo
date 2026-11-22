@@ -23,8 +23,8 @@ class OrderItemCard extends StatelessWidget {
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
       margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 12)),
       decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,10 +35,10 @@ class OrderItemCard extends StatelessWidget {
             height: ResponsiveUtils.spacing(context, 64),
             decoration: BoxDecoration(
               color: AppColors.surface(context, Colors.grey[200]!),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(13),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(13),
               child: MediaImage(
                 imagePath: item.imagePath,
                 fit: BoxFit.cover,
@@ -114,7 +114,7 @@ class OrderItemCard extends StatelessWidget {
                   border: Border.all(
                     color: AppColors.border(context, Colors.grey[300]!),
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

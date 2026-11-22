@@ -47,7 +47,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      backgroundColor: AppColors.surface(context, Color(0xFFFAF9FC)),
+      backgroundColor: AppColors.surface(context, const Color(0xFFFAF9FC)),
       builder: (sheetContext) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
@@ -108,7 +108,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (state.isLoading && state.user == null) {
       return Scaffold(
-        backgroundColor: AppColors.surface(context, Color(0xFFFEFDFE)),
+        backgroundColor: AppColors.surface(context, const Color(0xFFFAF8FC)),
         appBar: AppBar(title: const Text('Profile')),
         body: Center(
           child: CircularProgressIndicator(
@@ -120,7 +120,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (state.error != null && state.user == null) {
       return Scaffold(
-        backgroundColor: AppColors.surface(context, Color(0xFFFEFDFE)),
+        backgroundColor: AppColors.surface(context, const Color(0xFFFAF8FC)),
         appBar: AppBar(title: const Text('Profile')),
         body: RetryWidget(
           message: state.error!,
@@ -130,9 +130,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Color(0xFFFEFDFE)),
+      backgroundColor: AppColors.surface(context, const Color(0xFFFAF8FC)),
       body: RefreshIndicator(
-        color: AppColors.accent(context, Color(0xFF5F2D82)),
+        color: AppColors.accent(context, const Color(0xFF5F2D82)),
         displacement: 80,
         onRefresh: () async {
           if (!state.isUpdating) {
@@ -145,9 +145,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           slivers: [
             SliverAppBar(
               pinned: true,
-              backgroundColor: AppColors.surface(context, Color(0xFFFEFDFE)),
+              backgroundColor: AppColors.surface(
+                context,
+                const Color(0xFFFAF8FC),
+              ),
               surfaceTintColor: Colors.transparent,
-              centerTitle: true,
+              centerTitle: false,
+              titleSpacing: 4,
+              scrolledUnderElevation: 0,
               actions: [
                 IconButton(
                   tooltip: 'Settings',
@@ -155,24 +160,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   icon: Icon(
                     Icons.settings_outlined,
                     size: 21,
-                    color: AppColors.foreground(context, Color(0xFF292235)),
+                    color: AppColors.foreground(
+                      context,
+                      const Color(0xFF292235),
+                    ),
                   ),
                 ),
               ],
               leading: IconButton(
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                 onPressed: () => Navigator.maybePop(context),
                 icon: Icon(
                   Icons.arrow_back_rounded,
-                  color: AppColors.foreground(context, Color(0xFF292235)),
+                  color: AppColors.foreground(context, const Color(0xFF292235)),
                 ),
               ),
               title: Text(
                 'Profile',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 18),
+                  fontSize: ResponsiveUtils.fontSize(context, 22),
                   fontWeight: FontWeight.w700,
-                  color: AppColors.foreground(context, Color(0xFF292235)),
+                  color: AppColors.foreground(context, const Color(0xFF292235)),
                 ),
               ),
             ),
@@ -242,46 +251,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             // ── Content ───────────────────────────────────────────────
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
-                16,
+                20,
                 0,
-                16,
+                20,
                 MediaQuery.of(context).padding.bottom + 36,
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _MenuGroup(
-                    children: [
-                      _ProfileRow(
-                        icon: Icons.headset_mic_outlined,
-                        title: 'Let’s stay connected',
-                        subtitle: 'We’re here whenever you need us',
-                        onTap: () => _go(MainRoutes.customerServiceChat),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _Shortcut(
-                            icon: Icons.local_offer_outlined,
-                            title: 'Just for you',
-                            subtitle: 'Discover your offers',
-                            onTap: () => _go(MainRoutes.offers),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _Shortcut(
-                            icon: Icons.auto_awesome_outlined,
-                            title: '${state.points} points',
-                            subtitle: 'Your little rewards',
-                            onTap: () => _go(MainRoutes.loyaltyRedeem),
-                          ),
-                        ),
-                      ],
+                  _ShortcutGrid(
+                    offers: _Shortcut(
+                      icon: Icons.local_offer_outlined,
+                      title: 'Offers',
+                      subtitle: 'Discover your offers',
+                      onTap: () => _go(MainRoutes.offers),
+                    ),
+                    rewards: _Shortcut(
+                      icon: Icons.auto_awesome_outlined,
+                      title: '${state.points} points',
+                      subtitle: 'Rewards',
+                      isRewards: true,
+                      onTap: () => _go(MainRoutes.loyaltyRedeem),
                     ),
                   ),
                   const _SectionTitle('Personal information'),
@@ -290,11 +279,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       _ProfileRow(
                         icon: Icons.person_outline_rounded,
                         title: 'Personal details',
-                        subtitle: 'Your name and delivery addresses',
-                        onTap: () => _openSheet(
-                          'Personal details',
-                          ProfileEditSection(controllers: _controllers),
-                        ),
+                        subtitle: 'Edit your name and address details',
+                        onTap: () => ProfileEditSection.show(context, _controllers),
                       ),
                       _ProfileRow(
                         icon: Icons.phone_outlined,
@@ -315,18 +301,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       _ProfileRow(
                         icon: Icons.location_on_outlined,
                         title: 'Saved addresses',
-                        subtitle: 'Your everyday destinations',
+                        subtitle: 'Manage your delivery addresses',
                         onTap: () => _go(MainRoutes.addressManagement),
                       ),
                     ],
                   ),
-                  const _SectionTitle('A little extra'),
+                  const _SectionTitle('Wallet & referrals'),
                   _MenuGroup(
                     children: [
                       _ProfileRow(
                         icon: Icons.card_giftcard_outlined,
                         title: 'Invite your friends',
-                        subtitle: 'Share LeSgo. Earn together.',
+                        subtitle: 'Share your referral code',
                         onTap: () => _openSheet(
                           'Friends & rewards',
                           ProfileRewardsSection(
@@ -339,21 +325,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       _ProfileRow(
                         icon: Icons.account_balance_wallet_outlined,
                         title: 'LesPay wallet',
-                        subtitle: 'Payments, made simple',
+                        subtitle: 'Manage your wallet',
                         onTap: () => _go(MainRoutes.lespay),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 28),
-                  Center(
-                    child: Text(
-                      'A little easier. Every day.',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: AppColors.foreground(context, Color(0xFFA5A0AB)),
+                  const _SectionTitle('Support'),
+                  _MenuGroup(
+                    children: [
+                      _ProfileRow(
+                        icon: Icons.headset_mic_outlined,
+                        title: 'Chat with support',
+                        subtitle: 'Get help from LeSgo',
+                        onTap: () => _go(MainRoutes.customerServiceChat),
                       ),
-                    ),
+                    ],
                   ),
                 ]),
               ),
@@ -370,15 +356,15 @@ class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.title);
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(2, 24, 0, 10),
+    padding: const EdgeInsets.fromLTRB(2, 26, 0, 10),
     child: Text(
       title,
       style: TextStyle(
         fontFamily: 'TT Fors',
-        fontSize: ResponsiveUtils.fontSize(context, 14),
-        fontWeight: FontWeight.w600,
+        fontSize: ResponsiveUtils.fontSize(context, 18),
+        fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
-        color: AppColors.foreground(context, Color(0xFF25232B)),
+        color: AppColors.foreground(context, const Color(0xFF25232B)),
       ),
     ),
   );
@@ -389,8 +375,13 @@ class _MenuGroup extends StatelessWidget {
   const _MenuGroup({required this.children});
   @override
   Widget build(BuildContext context) => Material(
-    color: AppColors.surface(context, Color(0xFFF5F4F7)),
-    borderRadius: BorderRadius.circular(16),
+    color: Theme.of(context).colorScheme.surface,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(22),
+      side: BorderSide(
+        color: AppColors.border(context, const Color(0xFFECE5F1)),
+      ),
+    ),
     clipBehavior: Clip.antiAlias,
     child: Column(
       children: [
@@ -398,9 +389,9 @@ class _MenuGroup extends StatelessWidget {
           if (i > 0)
             Divider(
               height: 1,
-              indent: 46,
+              indent: 69,
               endIndent: 16,
-              color: Theme.of(context).colorScheme.outlineVariant,
+              color: AppColors.border(context, const Color(0xFFECE5F1)),
             ),
           children[i],
         ],
@@ -427,10 +418,18 @@ class _ProfileRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 19,
-            color: AppColors.foreground(context, Color(0xFF69626F)),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.surface(context, const Color(0xFFF3EBFA)),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              icon,
+              size: 21,
+              color: AppColors.accent(context, const Color(0xFF634185)),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -443,7 +442,10 @@ class _ProfileRow extends StatelessWidget {
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 15),
                     fontWeight: FontWeight.w600,
-                    color: AppColors.foreground(context, Color(0xFF302B36)),
+                    color: AppColors.foreground(
+                      context,
+                      const Color(0xFF302B36),
+                    ),
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -454,7 +456,10 @@ class _ProfileRow extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
                       height: 1.35,
-                      color: AppColors.foreground(context, Color(0xFF918A98)),
+                      color: AppColors.foreground(
+                        context,
+                        const Color(0xFF6C6077),
+                      ),
                     ),
                   ),
                 ],
@@ -466,7 +471,7 @@ class _ProfileRow extends StatelessWidget {
             Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: AppColors.foreground(context, Color(0xFF8F8798)),
+              color: AppColors.foreground(context, const Color(0xFF6C6077)),
             ),
           ],
         ],
@@ -475,73 +480,111 @@ class _ProfileRow extends StatelessWidget {
   );
 }
 
+class _ShortcutGrid extends StatelessWidget {
+  const _ShortcutGrid({required this.offers, required this.rewards});
+
+  final Widget offers, rewards;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+      if (constraints.maxWidth < 300 || textScale > 1.3) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [offers, const SizedBox(height: 12), rewards],
+        );
+      }
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: offers),
+            const SizedBox(width: 12),
+            Expanded(child: rewards),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 class _Shortcut extends StatelessWidget {
   final IconData icon;
   final String title, subtitle;
   final VoidCallback onTap;
+  final bool isRewards;
+
   const _Shortcut({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.isRewards = false,
   });
+
   @override
-  Widget build(BuildContext context) => Material(
-    color: AppColors.surface(context, Color(0xFFF5F4F7)),
-    borderRadius: BorderRadius.circular(16),
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface(context, Colors.white),
-                    borderRadius: BorderRadius.circular(10),
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final dark = scheme.brightness == Brightness.dark;
+    final fill = isRewards
+        ? (dark ? const Color(0xFF173832) : const Color(0xFFDCF5EB))
+        : (dark ? const Color(0xFF352447) : const Color(0xFFF0E4FA));
+    final ink = isRewards
+        ? (dark ? const Color(0xFFDBFFF2) : const Color(0xFF154638))
+        : (dark ? const Color(0xFFF6E8FF) : const Color(0xFF482362));
+
+    return Material(
+      color: fill,
+      borderRadius: BorderRadius.circular(22),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: ink.withValues(alpha: .10),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Icon(icon, size: 20, color: ink),
+                    ),
                   ),
-                  child: Icon(
-                    icon,
-                    size: 17,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.north_east_rounded,
-                  size: 14,
-                  color: AppColors.foreground(context, Color(0xFFA49BAE)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 14),
-                fontWeight: FontWeight.w600,
-                color: AppColors.foreground(context, Color(0xFF302B36)),
+                  const Spacer(),
+                  Icon(Icons.north_east_rounded, size: 16, color: ink),
+                ],
               ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontFamily: 'TT Fors',
-                fontSize: ResponsiveUtils.fontSize(context, 12),
-                height: 1.4,
-                color: AppColors.foreground(context, Color(0xFF918A98)),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                  color: ink,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 13,
+                  height: 1.3,
+                  color: ink,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/utils/money.dart';
 import '../../../../provider/main/booking/lesbuy/store_detail_provider.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
@@ -236,12 +237,13 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
-        backgroundColor: AppColors.surface(context, Color(0xFFF5F5F5)),
+        backgroundColor: OrderDesign.canvas(context),
         body: SafeArea(
           child: Column(
             children: [
               BookingServiceHeader(
                 title: 'Manual Order',
+                orderStyle: true,
                 action: const SizedBox.shrink(),
               ),
               Expanded(
@@ -253,83 +255,12 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                      Container(
-                        margin: EdgeInsets.symmetric(
-                          horizontal: ResponsiveUtils.horizontalPadding(
-                            context,
-                          ),
-                        ),
-                        padding: EdgeInsets.all(
-                          ResponsiveUtils.spacing(context, 16),
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface(context, Color(0xFFF3E8FF)),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF5F2D82),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.edit_note,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                            SizedBox(
-                              width: ResponsiveUtils.spacing(context, 12),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Create your custom list',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize: ResponsiveUtils.fontSize(
-                                        context,
-                                        14,
-                                      ),
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.accent(
-                                        context,
-                                        Color(0xFF5F2D82),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: ResponsiveUtils.spacing(context, 4),
-                                  ),
-                                  Text(
-                                    'Can\'t find what you need in the store? Add items manually below and our rider will find them for you.',
-                                    style: TextStyle(
-                                      fontFamily: 'TT Fors',
-                                      fontSize: ResponsiveUtils.fontSize(
-                                        context,
-                                        12,
-                                      ),
-                                      color: AppColors.accent(
-                                        context,
-                                        Color(0xFF5F2D82),
-                                      ),
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                      const OrderReceiptHeader(
+                        title: 'Build your shopping list',
+                        detail:
+                            'Add items below and your rider can find them for you.',
+                        icon: Icons.edit_note_rounded,
                       ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                       Padding(
                         padding: EdgeInsets.symmetric(
                           horizontal: ResponsiveUtils.horizontalPadding(
@@ -604,16 +535,7 @@ class _ManualOrderScreenState extends ConsumerState<ManualOrderScreen> {
         ),
         bottomNavigationBar: Container(
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.white),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
+          decoration: OrderDesign.dock(context),
           child: SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
