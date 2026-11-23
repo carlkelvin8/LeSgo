@@ -355,8 +355,14 @@ class OrderController extends Controller
         ], $data['items']);
         $saveAddresses = (bool) ($data['save_addresses'] ?? false);
 
+        $initialStatus = $serviceCode === 'LESEAT'
+            && $partner?->isFastFood()
+            && empty($meta['manual_assignment'])
+                ? 'searching_driver'
+                : 'pending';
+
         try {
-            $order = DB::transaction(function () use ($user, $data, $fareBreakdown, $meta, $saveAddresses, $voucherService, $branch) {
+            $order = DB::transaction(function () use ($user, $data, $fareBreakdown, $meta, $saveAddresses, $voucherService, $branch, $initialStatus) {
                 $pickupAddressId = null;
                 $dropoffAddressId = null;
 
@@ -414,7 +420,7 @@ class OrderController extends Controller
                     'passenger_name' => $data['passenger_name'] ?? $user->name,
                     'voucher_code' => $data['voucher_code'] ?? null,
                     'discount_amount' => 0,
-                    'status' => 'pending',
+                    'status' => $initialStatus,
                     'scheduled_at' => $data['scheduled_at'] ?? null,
                     'scheduled_delivery_time' => $data['scheduled_delivery_time'] ?? null,
                     'estimated_distance_m' => $data['estimated_distance_m'],

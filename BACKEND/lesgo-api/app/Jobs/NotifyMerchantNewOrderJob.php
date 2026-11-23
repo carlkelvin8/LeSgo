@@ -40,13 +40,17 @@ class NotifyMerchantNewOrderJob implements ShouldQueue
 
         $ref = $this->order->reference_number ?? '#'.$this->order->id;
 
+        $message = $this->order->status === 'pending'
+            ? "Order {$ref} is waiting for your acceptance."
+            : "Please check order {$ref} in your order queue.";
+
         foreach ($recipientIds as $userId) {
             try {
                 NotificationService::send(
                     user: (int) $userId,
                     type: 'new_merchant_order',
                     title: 'New Order!',
-                    body: "Order {$ref} is waiting for your acceptance.",
+                    body: $message,
                     data: [
                         'type' => 'new_merchant_order',
                         'order_id' => $this->order->id,

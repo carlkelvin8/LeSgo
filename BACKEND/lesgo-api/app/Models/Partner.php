@@ -11,6 +11,13 @@ class Partner extends Model
 {
     use HasFactory;
 
+    public function isFastFood(): bool
+    {
+        return collect(array_merge($this->tags ?? [], $this->cuisine_types ?? []))
+            ->contains(static fn ($category) => is_string($category)
+                && preg_replace('/[\s_-]+/', '', strtolower(trim($category))) === 'fastfood');
+    }
+
     protected $fillable = [
         'user_id',
         'name',

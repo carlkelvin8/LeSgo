@@ -4,7 +4,10 @@ namespace Tests\Feature;
 
 use App\Jobs\AutoAssignDriverJob;
 use App\Jobs\NotifyNearbyDriversNewOrderJob;
+use App\Models\MenuCategory;
+use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\Partner;
 use App\Models\Service;
 use App\Models\User;
 use App\Services\OrderWalletPaymentService;
@@ -58,6 +61,49 @@ class OrderTest extends TestCase
 
         $this->postJson('/api/v1/orders', $this->makeOrderPayload($service->id) + ['partner_id' => $partner->id])->assertCreated();
         Queue::assertPushed(\App\Jobs\NotifyMerchantNewOrderJob::class, 1);
+    }
+
+    public function test_fast_food_orders_start_rider_search_without_skipping_payment_or_pickup_readiness(): void
+    {
+        Queue::fake();
+        $service = Service::factory()->create(['code' => 'LESEAT']);
+        $partner = Partner::factory()->create([
+            'status' => 'active', 'is_open' => true, 'tags' => ['Fast Food'],
+        ]);
+        $category = MenuCategory::create(['partner_id' => $partner->id, 'name' => 'Meals']);
+        $item = MenuItem::create([
+            'partner_id' => $partner->id,
+            'menu_category_id' => $category->id,
+            'name' => 'Meal',
+            'price' => 100,
+            'is_available' => true,
+        ]);
+        $this->actingAsRole('customer');
+        $payload = $this->makeOrderPayload($service->id) + [
+            'partner_id' => $partner->id,
+            'items' => [[
+                'menu_item_id' => $item->id, 'name' => $item->name,
+                'quantity' => 1, 'estimated_price' => 100,
+            ]],
+        ];
+
+        $this->postJson('/api/v1/orders', $payload)->assertCreated()
+            ->assertJsonPath('data.status', 'searching_driver')
+            ->assertJsonPath('data.ready_for_pickup_at', null);
+        Queue::assertPushed(NotifyNearbyDriversNewOrderJob::class, 1);
+        Queue::assertPushed(\App\Jobs\NotifyMerchantNewOrderJob::class, 1);
+
+        $this->postJson('/api/v1/orders', array_replace($payload, ['payment_method' => 'card']))
+            ->assertCreated()->assertJsonPath('data.status', 'searching_driver')
+            ->assertJsonPath('data.payment_status', 'pending');
+        $this->postJson('/api/v1/orders', $payload + [
+            'scheduled_delivery_time' => now()->addHour()->toISOString(),
+        ])->assertCreated()->assertJsonPath('data.status', 'scheduled');
+        Queue::assertPushed(NotifyNearbyDriversNewOrderJob::class, 1);
+
+        $partner->update(['tags' => [], 'cuisine_types' => []]);
+        $this->postJson('/api/v1/orders', $payload + ['meta' => ['fast_food' => true]])
+            ->assertCreated()->assertJsonPath('data.status', 'pending');
     }
 
     public function test_order_and_quote_apply_the_same_fare_safety_cap(): void
