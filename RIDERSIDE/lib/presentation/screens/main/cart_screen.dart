@@ -1,3 +1,4 @@
+import '../../../core/utils/map_pins.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lezgo_rider/core/utils/address_utils.dart';
@@ -540,6 +541,8 @@ class CartScreen extends ConsumerWidget {
                     Marker(
                       markerId: const MarkerId('delivery_pin'),
                       position: selectedLatLng,
+                      icon: MapPins.icon(MapPinKind.customer),
+                      anchor: MapPins.anchor,
                       draggable: true,
                       onDragEnd: (latLng) async {
                         setState(() {

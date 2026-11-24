@@ -109,6 +109,7 @@ flutter:
     - assets/images/navbar/merchant/
     - assets/sounds/
     - assets/images/booking/
+    - assets/images/markers/
 
   fonts:
     - family: TT Fors

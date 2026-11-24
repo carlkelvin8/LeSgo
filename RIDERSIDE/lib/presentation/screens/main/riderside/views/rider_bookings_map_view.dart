@@ -1,4 +1,5 @@
-﻿import 'dart:async';
+﻿import '../../../../../core/utils/map_pins.dart';
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -171,7 +172,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         Marker(
           markerId: const MarkerId('current_location'),
           position: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          icon: MapPins.icon(MapPinKind.rider),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(title: AppLocalization.translate('your_location', ref.read(appLanguageProvider))),
         ),
       );
@@ -186,7 +188,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         Marker(
           markerId: MarkerId('pickup_${order.id}'),
           position: LatLng(order.pickupLat, order.pickupLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: MapPins.icon(order.serviceId == 3 || order.serviceId == 4 ? MapPinKind.store : MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
             snippet: order.pickupDisplay,
@@ -199,7 +202,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         Marker(
           markerId: MarkerId('dropoff_${order.id}'),
           position: LatLng(order.dropoffLat, order.dropoffLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          icon: MapPins.icon(order.serviceId == 3 || order.serviceId == 4 ? MapPinKind.customer : MapPinKind.destination),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: order.serviceId == 3 || order.serviceId == 4
                 ? AppLocalization.translate('delivery_address', ref.read(appLanguageProvider))
@@ -217,7 +221,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         Marker(
           markerId: MarkerId('available_${order.id}'),
           position: LatLng(order.pickupLat, order.pickupLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+          icon: MapPins.icon(order.serviceId == 3 || order.serviceId == 4 ? MapPinKind.store : MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: 'Order #${order.id}',
             snippet: '₱${order.displayEarnings.toStringAsFixed(0)} • ${order.distanceKm.toStringAsFixed(1)}km',

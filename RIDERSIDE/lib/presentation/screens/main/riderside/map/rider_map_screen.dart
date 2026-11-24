@@ -1,4 +1,5 @@
-﻿import 'dart:async';
+﻿import '../../../../../core/utils/map_pins.dart';
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -234,7 +235,8 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
         Marker(
           markerId: const MarkerId('current_location'),
           position: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          icon: MapPins.icon(MapPinKind.rider),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(title: AppLocalization.translate('your_location', ref.read(appLanguageProvider))),
         ),
       );
@@ -251,7 +253,8 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
           Marker(
             markerId: const MarkerId('pickup'),
             position: LatLng(order.pickupLat, order.pickupLng),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon: MapPins.icon(order.serviceId == 3 || order.serviceId == 4 ? MapPinKind.store : MapPinKind.customer),
+          anchor: MapPins.anchor,
             infoWindow: InfoWindow(title: '${AppLocalization.translate('pickup', ref.read(appLanguageProvider))}: ${order.pickupDisplay}'),
           ),
         );
@@ -261,7 +264,8 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
           Marker(
             markerId: const MarkerId('dropoff'),
             position: LatLng(order.dropoffLat, order.dropoffLng),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            icon: MapPins.icon(order.serviceId == 3 || order.serviceId == 4 ? MapPinKind.customer : MapPinKind.destination),
+          anchor: MapPins.anchor,
             infoWindow: InfoWindow(
               title: order.serviceId == 3 || order.serviceId == 4
                   ? AppLocalization.translate('delivery_address', ref.read(appLanguageProvider))

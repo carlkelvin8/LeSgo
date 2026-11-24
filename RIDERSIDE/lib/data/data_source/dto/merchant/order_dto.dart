@@ -44,8 +44,8 @@ Map? _metaBranch(Map json) {
 }
 
 Object? _readBranchId(Map json, String _) =>
-    int.tryParse(_metaBranch(json)?['id']?.toString() ?? '') ??
-    int.tryParse(json['partner_branch_id']?.toString() ?? '');
+    int.tryParse(json['partner_branch_id']?.toString() ?? '') ??
+    int.tryParse(_metaBranch(json)?['id']?.toString() ?? '');
 
 Object? _readBranchName(Map json, String _) {
   final name = _metaBranch(json)?['name']?.toString().trim();

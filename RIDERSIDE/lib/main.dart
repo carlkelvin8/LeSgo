@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'core/utils/app_localization.dart';
+import 'core/utils/map_pins.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/google_maps_platform_config.dart';
@@ -22,6 +24,7 @@ bool _bootstrapCompleted = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  unawaited(MapPins.preload());
   if (!_bootstrapCompleted) {
     await configureGoogleMapsForPlatform();
     await RememberMeService.init();

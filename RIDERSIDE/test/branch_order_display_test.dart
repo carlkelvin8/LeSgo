@@ -28,6 +28,12 @@ void main() {
     expect(order.branchName, 'Katipunan');
   });
 
+  test('merchant branch filter uses the stored branch ID', () {
+    final json = _order(branch: {'id': 7, 'name': 'Katipunan'});
+    json['partner_branch_id'] = 8;
+    expect(OrderDto.fromJson(json).branchId, 8);
+  });
+
   test('merchant order without branch keeps fields null', () {
     final order = OrderDto.fromJson(_order());
     expect(order.branchId, isNull);

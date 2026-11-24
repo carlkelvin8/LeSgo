@@ -1,3 +1,4 @@
+import '../../../../../core/utils/map_pins.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -140,6 +141,8 @@ class _MerchantLocationPinPickerState extends State<MerchantLocationPinPicker> {
                     Marker(
                       markerId: const MarkerId('restaurant_pin'),
                       position: _pin,
+                      icon: MapPins.icon(MapPinKind.store),
+                      anchor: MapPins.anchor,
                       draggable: true,
                       onDragEnd: (latLng) {
                         setState(() => _pin = latLng);

@@ -1,3 +1,4 @@
+import '../../../../../core/utils/map_pins.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -200,13 +201,16 @@ class _RiderBookingDetailMapSectionState
     final booking = widget.booking;
     final locationState = widget.locationState;
     final markers = <Marker>{};
+    final isFoodOrder = booking.category == BookingCategory.lesEat ||
+        booking.category == BookingCategory.lesBuy;
 
     if (locationState.hasLocation &&
         _validCoord(locationState.latitude, locationState.longitude)) {
       markers.add(Marker(
         markerId: const MarkerId('driver_location'),
         position: LatLng(locationState.latitude!, locationState.longitude!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        icon: MapPins.icon(MapPinKind.rider),
+          anchor: MapPins.anchor,
         infoWindow: const InfoWindow(title: 'Your Location'),
         zIndexInt: 2,
       ));
@@ -218,7 +222,8 @@ class _RiderBookingDetailMapSectionState
       markers.add(Marker(
         markerId: const MarkerId('pickup'),
         position: LatLng(booking.pickupLat!, booking.pickupLng!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        icon: MapPins.icon(isFoodOrder ? MapPinKind.store : MapPinKind.customer),
+          anchor: MapPins.anchor,
         infoWindow: InfoWindow(
           title: isFood ? 'Merchant' : 'Pickup Location',
           snippet: booking.pickupAddress,
@@ -230,7 +235,8 @@ class _RiderBookingDetailMapSectionState
       markers.add(Marker(
         markerId: const MarkerId('dropoff'),
         position: LatLng(booking.dropoffLat!, booking.dropoffLng!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        icon: MapPins.icon(isFoodOrder ? MapPinKind.customer : MapPinKind.destination),
+          anchor: MapPins.anchor,
         infoWindow: InfoWindow(
           title: 'Delivery Address',
           snippet: booking.deliveryAddress ?? booking.address,
