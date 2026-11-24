@@ -1,3 +1,4 @@
+import '../../../../core/utils/map_pins.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,9 +39,8 @@ class MapWidget extends ConsumerWidget {
               Marker(
                 markerId: const MarkerId('selected'),
                 position: registerState.selectedLocation!,
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueViolet,
-                ),
+                icon: MapPins.icon(MapPinKind.customer),
+                anchor: MapPins.anchor,
                 infoWindow: const InfoWindow(title: 'Selected Location'),
               ),
             }

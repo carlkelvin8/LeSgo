@@ -267,7 +267,7 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
                     // Pickup branch (multi-branch stores)
-                    if (checkoutState.selectedBranch != null) ...[
+                    if (checkoutState.branches.isNotEmpty) ...[
                       StoreBranchSelector(
                         branches: checkoutState.branches,
                         selected: checkoutState.selectedBranch,
@@ -486,24 +486,40 @@ class _LeseatCheckoutScreenState extends ConsumerState<LeseatCheckoutScreen> {
                               return;
                             }
 
-                            AppRouter.pushReplacement(
-                              context,
-                              BookingRoutes.leseatWaitingConfirmation,
-                              arguments: {
-                                'orderId': createdId,
-                                'address': order.deliveryAddress,
-                                'orderItems': order.items
-                                    .map(
-                                      (item) => {
-                                        'name': item.name,
-                                        'price': item.price,
-                                        'quantity': item.quantity,
-                                        'restaurantName': item.restaurantName,
-                                      },
-                                    )
-                                    .toList(),
-                              },
-                            );
+                            final items = [
+                              for (final item in order.items)
+                                {
+                                  'name': item.name,
+                                  'price': item.price,
+                                  'quantity': item.quantity,
+                                  'restaurantName': item.restaurantName,
+                                },
+                            ];
+                            if (checkoutState.canStartRiderSearch) {
+                              AppRouter.pushReplacement(
+                                context,
+                                BookingRoutes.driverFinding,
+                                arguments: {
+                                  'orderId': createdId.toString(),
+                                  'orderType': 'LesEat',
+                                  'orderData': {
+                                    'deliveryAddress': order.deliveryAddress,
+                                    'items': items,
+                                    'status': checkoutState.createdOrderStatus,
+                                  },
+                                },
+                              );
+                            } else {
+                              AppRouter.pushReplacement(
+                                context,
+                                BookingRoutes.leseatWaitingConfirmation,
+                                arguments: {
+                                  'orderId': createdId,
+                                  'address': order.deliveryAddress,
+                                  'orderItems': items,
+                                },
+                              );
+                            }
                           } else {
                             final raw =
                                 ref.read(checkoutProvider).error ??

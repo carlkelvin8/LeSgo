@@ -1,3 +1,4 @@
+import '../../../core/utils/map_pins.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -133,7 +134,8 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
         Marker(
           markerId: const MarkerId('rider'),
           position: LatLng(_driverLat!, _driverLng!),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          icon: MapPins.icon(MapPinKind.rider),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Rider'),
         ),
       );
@@ -145,9 +147,8 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
         Marker(
           markerId: const MarkerId('dropoff'),
           position: LatLng(widget.dropoffLat, widget.dropoffLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueGreen,
-          ),
+          icon: MapPins.icon(MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Delivery Location'),
         ),
       );
@@ -159,9 +160,8 @@ class _LiveRiderMapState extends State<LiveRiderMap> {
         Marker(
           markerId: const MarkerId('pickup'),
           position: LatLng(widget.pickupLat!, widget.pickupLng!),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueOrange,
-          ),
+          icon: MapPins.icon(MapPinKind.store),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Pickup Location'),
         ),
       );

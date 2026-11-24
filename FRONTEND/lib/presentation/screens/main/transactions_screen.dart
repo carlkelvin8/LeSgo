@@ -1,3 +1,4 @@
+import '../../widgets/common/segmented_filter_bar.dart';
 import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -5,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../provider/main/transactions/transactions_provider.dart';
 import '../../widgets/widgets.dart';
 import '../../widgets/common/payment_status_badge.dart';
+import '../../widgets/common/retry_widget.dart';
 import '../../widgets/transactions/order_transaction_detail_sheet.dart';
 import '../../../core/constants/order_status_constants.dart';
 import '../../../core/services/order_receipt_service.dart';
 import '../../../core/utils/api_error_mapper.dart';
+import '../../../core/utils/history_grouping.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import '../../../domain/entities/transactions/transaction.dart';
@@ -28,7 +31,6 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   final TextEditingController _searchController = TextEditingController();
-  bool _showFilters = false;
   bool _sharingReceipt = false;
 
   @override
@@ -300,55 +302,76 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final transactionsState = ref.watch(transactionsProvider);
-    final transactions = transactionsState.filteredTransactions;
+    final state = ref.watch(transactionsProvider);
+    final transactions = state.filteredTransactions;
+    final advancedFilterCount =
+        (state.selectedService != null ? 1 : 0) +
+        (state.selectedStatus != null ? 1 : 0) +
+        (state.selectedPaymentStatus != null &&
+                state.selectedPaymentStatus != 'refunded'
+            ? 1
+            : 0);
     final hasActiveFilters =
-        transactionsState.selectedService != null ||
-        transactionsState.selectedStatus != null ||
-        transactionsState.selectedKind != null ||
-        transactionsState.selectedPaymentStatus != null ||
-        transactionsState.searchQuery.isNotEmpty;
+        state.selectedService != null ||
+        state.selectedStatus != null ||
+        state.selectedKind != null ||
+        state.selectedPaymentStatus != null ||
+        state.searchQuery.isNotEmpty;
+    final accent = AppColors.accent(context, const Color(0xFF5F2D82));
 
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
+      backgroundColor: AppColors.surface(context, const Color(0xFFF8F7FB)),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               color: AppColors.surface(context, Colors.white),
-              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: Column(
+              padding: EdgeInsets.fromLTRB(
+                ResponsiveUtils.spacing(context, 16),
+                ResponsiveUtils.spacing(context, 16),
+                ResponsiveUtils.spacing(context, 8),
+                ResponsiveUtils.spacing(context, 8),
+              ),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      const Expanded(child: AuthHeader(title: 'Transactions')),
-                      // Filter toggle button
-                      IconButton(
-                        icon: Icon(
-                          _showFilters
-                              ? Icons.filter_alt
-                              : Icons.filter_alt_outlined,
-                          color: hasActiveFilters
-                              ? AppColors.accent(context, Color(0xFF5F2D82))
+                  const Expanded(child: AuthHeader(title: 'Transactions')),
+                  Semantics(
+                    button: true,
+                    label: advancedFilterCount == 0
+                        ? 'Filters'
+                        : 'Filters, $advancedFilterCount active',
+                    child: IconButton(
+                      tooltip: 'Filters',
+                      onPressed: () => _openFilterSheet(context),
+                      icon: Badge(
+                        isLabelVisible: advancedFilterCount > 0,
+                        label: Text('$advancedFilterCount'),
+                        backgroundColor: accent,
+                        child: Icon(
+                          advancedFilterCount > 0
+                              ? Icons.tune_rounded
+                              : Icons.tune_rounded,
+                          color: advancedFilterCount > 0
+                              ? accent
                               : AppColors.foreground(
                                   context,
                                   Colors.grey[600]!,
                                 ),
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _showFilters = !_showFilters;
-                          });
-                        },
                       ),
-                    ],
+                    ),
                   ),
-
-                  // Search bar
-                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                ],
+              ),
+            ),
+            Container(
+              color: AppColors.surface(context, Colors.white),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+              child: Column(
+                children: [
                   TextField(
                     controller: _searchController,
+                    textInputAction: TextInputAction.search,
                     decoration: InputDecoration(
                       hintText: 'Search orders, LesPay, reference...',
                       hintStyle: TextStyle(
@@ -357,35 +380,32 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         color: AppColors.foreground(context, Colors.grey[400]!),
                       ),
                       prefixIcon: Icon(
-                        Icons.search,
-                        color: AppColors.foreground(context, Colors.grey[400]!),
+                        Icons.search_rounded,
+                        color: AppColors.foreground(context, Colors.grey[500]!),
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: AppColors.foreground(
-                                  context,
-                                  Colors.grey,
-                                ),
-                              ),
+                              tooltip: 'Clear search',
+                              icon: const Icon(Icons.close_rounded),
                               onPressed: () {
                                 _searchController.clear();
                                 ref
                                     .read(transactionsProvider.notifier)
                                     .searchOrders('');
+                                setState(() {});
                               },
                             )
                           : null,
                       filled: true,
+                      isDense: true,
                       fillColor: AppColors.surface(context, Colors.grey[100]!),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.spacing(context, 16),
-                        vertical: ResponsiveUtils.spacing(context, 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
                     ),
                     onChanged: (value) {
@@ -395,217 +415,244 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                       setState(() {});
                     },
                   ),
-
-                  // Filters section
-                  if (_showFilters) ...[
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.of(context).size.height * 0.5,
-                      ),
-                      child: SingleChildScrollView(
-                        child: _buildFiltersSection(context, transactionsState),
-                      ),
+                  const SizedBox(height: 10),
+                  // Quick type filter; more filters live in the sheet.
+                  SegmentedFilterBar<String>(
+                    selected: state.selectedPaymentStatus == 'refunded'
+                        ? 'refunded'
+                        : (state.selectedKind ?? 'all'),
+                    onChanged: (v) {
+                      final n = ref.read(transactionsProvider.notifier);
+                      switch (v) {
+                        case 'all':
+                          n.filterByKind(null);
+                          n.filterByPaymentStatus(null);
+                        case 'refunded':
+                          n.filterByPaymentStatus(
+                            state.selectedPaymentStatus == 'refunded'
+                                ? null
+                                : 'refunded',
+                          );
+                        default:
+                          n.filterByKind(v);
+                      }
+                    },
+                    segments: const [
+                      FilterSegment('all', 'All'),
+                      FilterSegment('order', 'Orders'),
+                      FilterSegment('wallet', 'LesPay'),
+                      FilterSegment('refunded', 'Refunded'),
+                    ],
+                  ),
+                  if (advancedFilterCount > 0) ...[
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: _buildActiveFiltersChips(context, state),
                     ),
-                  ],
-
-                  // Active filters chips
-                  if (hasActiveFilters && !_showFilters) ...[
-                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    _buildActiveFiltersChips(context, transactionsState),
                   ],
                 ],
               ),
             ),
-
-            // Divider line
             Container(
               height: 1,
-              color: AppColors.surface(context, Colors.grey[300]!),
+              color: AppColors.border(context, Colors.grey[200]!),
             ),
-
-            // Results count
-            if (transactions.isNotEmpty)
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: ResponsiveUtils.spacing(context, 16),
-                  vertical: ResponsiveUtils.spacing(context, 8),
-                ),
-                color: AppColors.surface(context, Colors.grey[100]!),
-                child: Row(
-                  children: [
-                    Text(
-                      '${transactions.length} ${transactions.length == 1 ? 'transaction' : 'transactions'} found',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: AppColors.foreground(context, Colors.grey[600]!),
-                      ),
-                    ),
-                    if (hasActiveFilters) ...[
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          _searchController.clear();
-                          ref
-                              .read(transactionsProvider.notifier)
-                              .clearFilters();
-                          setState(() {});
-                        },
-                        child: Text(
-                          'Clear all',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(context, 12),
-                            color: AppColors.accent(context, Color(0xFF5F2D82)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-            // Transactions List
             Expanded(
-              child: transactionsState.isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Color(0xFF5F2D82),
-                        ),
-                      ),
-                    )
-                  : transactionsState.error != null
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.red[400],
-                          ),
-                          SizedBox(
-                            height: ResponsiveUtils.spacing(context, 16),
-                          ),
-                          Text(
-                            'Error loading transactions',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 16),
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.foreground(
-                                context,
-                                Colors.black87,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                          Text(
-                            transactionsState.error!,
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: AppColors.foreground(
-                                context,
-                                Colors.grey[600]!,
-                              ),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(
-                            height: ResponsiveUtils.spacing(context, 16),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              ref
-                                  .read(transactionsProvider.notifier)
-                                  .refreshTransactions();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.buttonFill(context),
-                              foregroundColor: AppColors.onButton(context),
-                            ),
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                  : transactions.isEmpty
-                  ? _buildEmptyState(context, hasActiveFilters)
-                  : RefreshIndicator(
-                      onRefresh: () => ref
-                          .read(transactionsProvider.notifier)
-                          .refreshTransactions(),
-                      color: AppColors.accent(context, Color(0xFF5F2D82)),
-                      child: ListView.builder(
-                        padding: EdgeInsets.all(
-                          ResponsiveUtils.spacing(context, 16),
-                        ),
-                        itemCount:
-                            transactions.length +
-                            (transactionsState.partialLoadFailed ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (transactionsState.partialLoadFailed) {
-                            if (index == 0) {
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Text(
-                                  "Some history couldn't load. Pull down to retry.",
-                                  key: const Key('transactions_partial_note'),
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    fontSize: ResponsiveUtils.fontSize(
-                                      context,
-                                      12,
-                                    ),
-                                    color: AppColors.foreground(
-                                      context,
-                                      Colors.grey[600]!,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                            index -= 1;
-                          }
-                          final transaction = transactions[index];
-                          return TransactionListItem(
-                            transaction: transaction,
-                            index: index + 1,
-                            onTap: () => _openOrderDetail(context, transaction),
-                            onReorder: () async {
-                              try {
-                                final placed = await ref
-                                    .read(transactionsProvider.notifier)
-                                    .reorderTransaction(transaction.id);
-                                if (placed && context.mounted) {
-                                  SnackBarUtils.showSuccess(
-                                    context,
-                                    'Order placed successfully!',
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  SnackBarUtils.showError(
-                                    context,
-                                    ApiErrorMapper.message(
-                                      e,
-                                      fallbackEn:
-                                          'Could not place the order again.',
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    ),
+              child: _buildBody(context, state, transactions, hasActiveFilters),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    TransactionsState state,
+    List<Transaction> transactions,
+    bool hasActiveFilters,
+  ) {
+    if (state.isLoading) return const _TransactionsSkeleton();
+    if (state.error != null) {
+      return RetryWidget(
+        message: state.error!,
+        isLoading: false,
+        onRetry: () =>
+            ref.read(transactionsProvider.notifier).refreshTransactions(),
+      );
+    }
+    if (transactions.isEmpty)
+      return _buildEmptyState(context, hasActiveFilters);
+
+    final now = DateTime.now();
+    final groups = HistoryGrouping.group<Transaction>(
+      transactions,
+      (t) => HistoryGrouping.parse(t.date),
+      (d) => HistoryGrouping.dayLabel(d, now),
+    );
+    final rows = <Object>[
+      if (state.partialLoadFailed) const _PartialNote(),
+      for (final g in groups) ...[g.label, ...g.items],
+    ];
+
+    return RefreshIndicator(
+      onRefresh: () =>
+          ref.read(transactionsProvider.notifier).refreshTransactions(),
+      color: AppColors.accent(context, const Color(0xFF5F2D82)),
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          ResponsiveUtils.spacing(context, 16),
+          ResponsiveUtils.spacing(context, 14),
+          ResponsiveUtils.spacing(context, 16),
+          ResponsiveUtils.spacing(context, 24),
+        ),
+        itemCount: rows.length,
+        itemBuilder: (context, index) {
+          final row = rows[index];
+          if (row is _PartialNote) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                "Some history couldn't load. Pull down to retry.",
+                key: const Key('transactions_partial_note'),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                  color: AppColors.foreground(context, Colors.grey[600]!),
+                ),
+              ),
+            );
+          }
+          if (row is String) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
+              child: Text(
+                row.toUpperCase(),
+                style: TextStyle(
+                  fontFamily: 'TT Fors',
+                  fontSize: 11,
+                  letterSpacing: 1.3,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.foreground(context, const Color(0xFF8B729C)),
+                ),
+              ),
+            );
+          }
+          final transaction = row as Transaction;
+          return TransactionListItem(
+            transaction: transaction,
+            index: index + 1,
+            onTap: () => _openOrderDetail(context, transaction),
+            onReorder: () async {
+              try {
+                final placed = await ref
+                    .read(transactionsProvider.notifier)
+                    .reorderTransaction(transaction.id);
+                if (placed && context.mounted) {
+                  SnackBarUtils.showSuccess(
+                    context,
+                    'Order placed successfully!',
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  SnackBarUtils.showError(
+                    context,
+                    ApiErrorMapper.message(
+                      e,
+                      fallbackEn: 'Could not place the order again.',
+                    ),
+                  );
+                }
+              }
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  /// Service / status / payment filters, in a bottom sheet so the list keeps
+  /// the whole screen.
+  void _openFilterSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: AppColors.surface(context, Colors.white),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => Consumer(
+        builder: (context, ref, _) {
+          final s = ref.watch(transactionsProvider);
+          return SafeArea(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Filters',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _searchController.clear();
+                            ref
+                                .read(transactionsProvider.notifier)
+                                .clearFilters();
+                            setState(() {});
+                          },
+                          child: const Text('Reset'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: _buildFiltersSection(context, s),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.buttonFill(context),
+                          foregroundColor: AppColors.onButton(context),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: Text(
+                          'Show ${s.filteredTransactions.length} '
+                          '${s.filteredTransactions.length == 1 ? 'result' : 'results'}',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -1012,6 +1059,91 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _PartialNote {
+  const _PartialNote();
+}
+
+/// Soft pulsing placeholders while the history loads.
+class _TransactionsSkeleton extends StatefulWidget {
+  const _TransactionsSkeleton();
+
+  @override
+  State<_TransactionsSkeleton> createState() => _TransactionsSkeletonState();
+}
+
+class _TransactionsSkeletonState extends State<_TransactionsSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (!(MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
+      _c.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final base = AppColors.surface(context, Colors.grey[200]!);
+    Widget block(double w, double h, {double r = 8}) => Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: base,
+        borderRadius: BorderRadius.circular(r),
+      ),
+    );
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) => Opacity(
+        opacity: 0.55 + 0.45 * _c.value,
+        child: ListView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            block(double.infinity, 150, r: 22),
+            const SizedBox(height: 18),
+            for (var i = 0; i < 5; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    block(44, 44, r: 14),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          block(120, 14),
+                          const SizedBox(height: 8),
+                          block(180, 10),
+                        ],
+                      ),
+                    ),
+                    block(60, 16),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

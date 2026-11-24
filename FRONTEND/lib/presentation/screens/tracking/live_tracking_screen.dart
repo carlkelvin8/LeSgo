@@ -229,7 +229,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                           ],
                         ),
                         child: Text(
-                          'Order #${widget.orderId}',
+                          'Track your order',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,

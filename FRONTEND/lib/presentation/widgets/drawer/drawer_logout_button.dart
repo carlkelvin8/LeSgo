@@ -1,4 +1,3 @@
-import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -15,8 +14,8 @@ class DrawerLogoutButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.spacing(context, 24),
-        vertical: ResponsiveUtils.spacing(context, 16),
+        horizontal: ResponsiveUtils.spacing(context, 20),
+        vertical: ResponsiveUtils.spacing(context, 10),
       ),
       child: ElevatedButton(
         onPressed: () {
@@ -33,7 +32,10 @@ class DrawerLogoutButton extends ConsumerWidget {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  final errorMessage = e.toString().replaceFirst('Exception: ', '');
+                  final errorMessage = e.toString().replaceFirst(
+                    'Exception: ',
+                    '',
+                  );
                   SnackBarUtils.showError(context, errorMessage);
                 }
               }
@@ -45,22 +47,29 @@ class DrawerLogoutButton extends ConsumerWidget {
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.surface(context, Colors.white).withValues(alpha: 0.2),
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.red.withValues(alpha: 0.08),
+          foregroundColor: Colors.red.shade700,
           padding: EdgeInsets.symmetric(
-            vertical: ResponsiveUtils.spacing(context, 14),
+            vertical: ResponsiveUtils.spacing(context, 12),
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(14),
           ),
           elevation: 0,
         ),
-        child: Text(
-          'Logout',
-          style: TextStyle(
-            fontSize: ResponsiveUtils.fontSize(context, 16),
-            fontWeight: FontWeight.w600,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.logout_rounded, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Log out',
+              style: TextStyle(
+                fontSize: ResponsiveUtils.fontSize(context, 15),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );

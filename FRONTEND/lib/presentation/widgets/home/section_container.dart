@@ -21,7 +21,7 @@ class SectionContainer extends StatelessWidget {
     );
     final defaultPadding = EdgeInsets.all(ResponsiveUtils.spacing(context, 16));
     final borderRadius = ResponsiveUtils.spacing(context, 12);
-    
+
     return Container(
       margin: margin ?? defaultMargin,
       padding: padding ?? defaultPadding,

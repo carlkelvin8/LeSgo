@@ -188,7 +188,7 @@ class _OrderDigitalPaymentScreenState
           children: [
             OrderIntro(
               title: Money.format(widget.amount),
-              detail: 'Order #${widget.orderId}',
+              detail: 'Secure payment',
               icon: Icons.lock_outline_rounded,
             ),
             Expanded(

@@ -60,6 +60,9 @@
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.TextInputPlugin.
     -->
     <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
         <package android:name="com.lesgo.rider" />
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

@@ -104,8 +104,8 @@ class StoreBranchSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final branch = selected;
-    if (branch == null) return const SizedBox.shrink();
-    final canSwitch = enabled && branches.length > 1;
+    if (branches.isEmpty) return const SizedBox.shrink();
+    final canSwitch = enabled && (branch == null || branches.length > 1);
     // Match the 16 pt side margin of the address and order cards around it.
     final hp = ResponsiveUtils.spacing(context, 16);
 
@@ -140,13 +140,13 @@ class StoreBranchSelector extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          branch.name,
+                          branch?.name ?? 'Choose a branch',
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (_distanceLabel(branch).isNotEmpty)
+                        if (branch != null && _distanceLabel(branch).isNotEmpty)
                           Text(
                             _distanceLabel(branch),
                             style: TextStyle(
@@ -160,7 +160,7 @@ class StoreBranchSelector extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (canSwitch)
+                  if (canSwitch && branch != null)
                     Text(
                       'Change',
                       style: TextStyle(

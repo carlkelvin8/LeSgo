@@ -14,6 +14,8 @@ import '../../../data/data_source/dto/wallet/wallet_dto.dart';
 import '../../../domain/entities/transactions/transaction.dart';
 import '../../provider/main/lespay/lespay_provider.dart';
 import '../common/payment_status_badge.dart';
+import '../orders/premium_order_widgets.dart';
+import '../../../core/utils/history_grouping.dart';
 
 class WalletTransactionsSection extends ConsumerWidget {
   const WalletTransactionsSection({super.key});
@@ -41,7 +43,8 @@ class WalletTransactionsSection extends ConsumerWidget {
                       context,
                       isDesktop ? 20 : 18,
                     ),
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
                     color: AppColors.foreground(context, Colors.black87),
                   ),
                   maxLines: 1,
@@ -222,35 +225,59 @@ class WalletTransactionsSection extends ConsumerWidget {
     BuildContext context,
     List<WalletTransactionDto> transactions,
   ) {
-    final displayTransactions = transactions.take(20).toList();
+    final now = DateTime.now();
+    final groups = HistoryGrouping.group<WalletTransactionDto>(
+      transactions.take(20).toList(),
+      (t) => HistoryGrouping.parse(t.createdAt),
+      (d) => HistoryGrouping.dayLabel(d, now),
+    );
     return Column(
-      children: displayTransactions.asMap().entries.map((entry) {
-        final index = entry.key;
-        final tx = entry.value;
-        return _AnimatedTransactionTile(transaction: tx, index: index);
-      }).toList(),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var g = 0; g < groups.length; g++)
+          Reveal(
+            index: g,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 0, 0, 8),
+                    child: SectionLabel(groups[g].label),
+                  ),
+                  PremiumCard(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    radius: 20,
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < groups[g].items.length; i++) ...[
+                          if (i > 0)
+                            Divider(
+                              height: 1,
+                              indent: 72,
+                              endIndent: 16,
+                              color: AppColors.border(
+                                context,
+                                const Color(0xFFF0EAF5),
+                              ),
+                            ),
+                          _TransactionTile(transaction: groups[g].items[i]),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
 
-class _AnimatedTransactionTile extends StatelessWidget {
-  final WalletTransactionDto transaction;
-  final int index;
-
-  const _AnimatedTransactionTile({
-    required this.transaction,
-    required this.index,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return _TransactionTile(transaction: transaction)
-        .animate()
-        .fadeIn(duration: 300.ms, delay: (50 * index).ms)
-        .slideX(begin: 0.1, end: 0);
-  }
-}
-
+/// One wallet movement: what it was, when, how much, and only a status chip
+/// when something is off (a settled payment needs no badge).
 class _TransactionTile extends StatelessWidget {
   const _TransactionTile({required this.transaction});
 
@@ -258,246 +285,136 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ResponsiveUtils.isDesktop(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
     final isCredit = transaction.type.toLowerCase() == 'credit';
-    final paymentStatus = PaymentStatusUtils.fromWalletTransaction(transaction);
-    final amountColor = _amountColor(paymentStatus, isCredit);
-    final prefix = isCredit ? '+' : '−';
-    final date = _formatDate(transaction.createdAt);
-    final padding = isDesktop ? 18.0 : (isTablet ? 16.0 : 14.0);
-    final avatarSize = isDesktop ? 52.0 : (isTablet ? 48.0 : 44.0);
-    final borderRadius = isDesktop ? 18.0 : 16.0;
-    final titleSize = isDesktop ? 15.0 : (isTablet ? 14.0 : 13.0);
-    final subtitleSize = isDesktop ? 12.0 : (isTablet ? 11.0 : 10.0);
-    final amountSize = isDesktop ? 17.0 : (isTablet ? 16.0 : 15.0);
+    final status = PaymentStatusUtils.fromWalletTransaction(transaction);
+    final accent = _accent(status, isCredit);
+    final time = HistoryGrouping.parse(transaction.createdAt);
+    final timeText = time == null ? '' : DateFormat('h:mm a').format(time);
+    final failed = status == PaymentStatus.failed;
+    final amountColor = switch (status) {
+      PaymentStatus.failed => const Color(0xFFE5484D),
+      PaymentStatus.refunded => const Color(0xFF1E88E5),
+      PaymentStatus.pending => const Color(0xFFEF8A1B),
+      PaymentStatus.paid =>
+        isCredit
+            ? const Color(0xFF2E9E5B)
+            : AppColors.foreground(context, Colors.black87),
+    };
+    final sign = isCredit ? '+' : '−';
+    final title = _title(context);
 
-    return Container(
-      margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 10)),
-      padding: EdgeInsets.all(padding),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: isDesktop ? 16 : 12,
-            offset: const Offset(0, 2),
-            spreadRadius: -1,
-          ),
-        ],
-        border: Border.all(
-          color: AppColors.foreground(
-            context,
-            Colors.grey,
-          ).withValues(alpha: 0.06),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _TransactionAvatar(
-            isCredit: isCredit,
-            status: paymentStatus,
-            color: amountColor,
-            size: avatarSize,
-          ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _getDescription(context, transaction, isCredit),
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(
-                            context,
-                            titleSize,
-                          ),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.foreground(context, Colors.black87),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+    return Semantics(
+      label: '$title, $sign${Money.format(transaction.amount)}',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(_icon(status, isCredit), color: accent, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'TT Fors',
+                      fontSize: ResponsiveUtils.fontSize(context, 14.5),
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                      letterSpacing: -0.1,
+                      color: AppColors.foreground(context, Colors.black87),
                     ),
-                    SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                    Flexible(
-                      child: PaymentStatusBadge(
-                        status: paymentStatus,
-                        compact: true,
-                      ),
-                    ),
-                  ],
-                ),
-                if (date.isNotEmpty) ...[
-                  SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                  Row(
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Icon(
-                        Icons.access_time_rounded,
-                        size: ResponsiveUtils.fontSize(context, subtitleSize),
-                        color: AppColors.foreground(context, Colors.grey[500]!),
-                      ),
-                      SizedBox(width: ResponsiveUtils.spacing(context, 4)),
-                      Flexible(
-                        child: Text(
-                          date,
+                      if (timeText.isNotEmpty)
+                        Text(
+                          timeText,
                           style: TextStyle(
                             fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(
-                              context,
-                              subtitleSize,
-                            ),
+                            fontSize: ResponsiveUtils.fontSize(context, 12),
                             color: AppColors.foreground(
                               context,
                               Colors.grey[500]!,
                             ),
-                            fontWeight: FontWeight.w500,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
+                      if (status != PaymentStatus.paid)
+                        PaymentStatusBadge(status: status, compact: true),
                     ],
                   ),
                 ],
-                if (transaction.reference != null &&
-                    transaction.reference!.isNotEmpty) ...[
-                  SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.receipt_rounded,
-                        size: ResponsiveUtils.fontSize(context, subtitleSize),
-                        color: AppColors.foreground(context, Colors.grey[400]!),
-                      ),
-                      SizedBox(width: ResponsiveUtils.spacing(context, 4)),
-                      Flexible(
-                        child: Text(
-                          'Ref: ${transaction.reference}',
-                          style: TextStyle(
-                            fontFamily: 'TT Fors',
-                            fontSize: ResponsiveUtils.fontSize(
-                              context,
-                              subtitleSize - 1,
-                            ),
-                            color: AppColors.foreground(
-                              context,
-                              Colors.grey[400]!,
-                            ),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
+              ),
             ),
-          ),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FittedBox(
+            const SizedBox(width: 10),
+            Flexible(
+              flex: 0,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.34,
+                ),
+                child: FittedBox(
                   fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
                   child: Text(
-                    '$prefix${Money.format(transaction.amount)}',
+                    '$sign${Money.format(transaction.amount)}',
+                    maxLines: 1,
                     style: TextStyle(
                       fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, amountSize),
-                      fontWeight: FontWeight.w700,
+                      fontSize: ResponsiveUtils.fontSize(context, 16),
+                      fontWeight: FontWeight.w800,
+                      decoration: failed ? TextDecoration.lineThrough : null,
                       color: amountColor,
                     ),
-                    maxLines: 1,
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getDescription(
-    BuildContext context,
-    WalletTransactionDto transaction,
-    bool isCredit,
-  ) {
-    if (transaction.description?.isNotEmpty ?? false) {
-      return transaction.description!;
-    }
-    if (isCredit) return tr(context, 'type_topup');
-    return tr(context, 'type_payment');
-  }
-
-  Color _amountColor(PaymentStatus status, bool isCredit) {
-    switch (status) {
-      case PaymentStatus.failed:
-        return Colors.red.shade700;
-      case PaymentStatus.refunded:
-        return Colors.blue.shade700;
-      case PaymentStatus.pending:
-        return Colors.orange.shade800;
-      case PaymentStatus.paid:
-        return isCredit ? Colors.green.shade700 : Colors.red.shade700;
-    }
-  }
-
-  String _formatDate(String raw) {
-    try {
-      final dt = DateTime.parse(raw);
-      return DateFormat('MMM d, yyyy • h:mm a').format(dt.toLocal());
-    } catch (_) {
-      return raw;
-    }
-  }
-}
-
-class _TransactionAvatar extends StatelessWidget {
-  final bool isCredit;
-  final PaymentStatus status;
-  final Color color;
-  final double size;
-
-  const _TransactionAvatar({
-    required this.isCredit,
-    required this.status,
-    required this.color,
-    this.size = 44,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: Icon(
-          _iconForStatus(status, isCredit),
-          color: color,
-          size: size * 0.45,
+          ],
         ),
       ),
     );
   }
 
-  IconData _iconForStatus(PaymentStatus status, bool isCredit) {
+  String _title(BuildContext context) {
+    // Never show order numbers (database ids) to the customer.
+    final d = (transaction.description ?? '')
+        .replaceAll(RegExp(r'\s*#\d+'), '')
+        .trim();
+    if (d.isNotEmpty) return d;
+    final isCredit = transaction.type.toLowerCase() == 'credit';
+    return tr(context, isCredit ? 'type_topup' : 'type_payment');
+  }
+
+  Color _accent(PaymentStatus status, bool isCredit) {
+    switch (status) {
+      case PaymentStatus.failed:
+        return const Color(0xFFE5484D);
+      case PaymentStatus.refunded:
+        return const Color(0xFF1E88E5);
+      case PaymentStatus.pending:
+        return const Color(0xFFEF8A1B);
+      case PaymentStatus.paid:
+        return isCredit ? const Color(0xFF2E9E5B) : const Color(0xFF5F2D82);
+    }
+  }
+
+  IconData _icon(PaymentStatus status, bool isCredit) {
     switch (status) {
       case PaymentStatus.failed:
         return Icons.close_rounded;
@@ -505,10 +422,8 @@ class _TransactionAvatar extends StatelessWidget {
         return Icons.replay_rounded;
       case PaymentStatus.pending:
         return Icons.schedule_rounded;
-      default:
-        return isCredit
-            ? Icons.arrow_downward_rounded
-            : Icons.arrow_upward_rounded;
+      case PaymentStatus.paid:
+        return isCredit ? Icons.south_west_rounded : Icons.north_east_rounded;
     }
   }
 }

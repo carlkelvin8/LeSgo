@@ -130,7 +130,7 @@ class _DriverFindingScreenState extends ConsumerState<DriverFindingScreen> {
           ),
           Expanded(
             child: Text(
-              'Order #${widget.orderId}',
+              'Finding your rider',
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 18),

@@ -6,6 +6,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesride_location_provider.dart';
 import '../../../provider/main/booking/lesride_provider.dart';
 import '../../../../core/utils/responsive_utils.dart';
+import '../../../../core/utils/ph_address.dart';
+import '../../location/address_details_sheet.dart';
 import '../../widgets.dart';
 
 class LesrideMainContent extends ConsumerWidget {
@@ -202,7 +204,30 @@ class LesrideMainContent extends ConsumerWidget {
             bottom: 32,
             child: PrimaryButton(
               text: 'Confirm location',
-              onPressed: () => notifier.confirmSelection(),
+              onPressed: () async {
+                // Pinned spots are often only city-level, so ask the customer
+                // to confirm and complete the exact address first.
+                final destination = lesrideState.selectingDestination;
+                final loc = ref.read(lesrideLocationProvider);
+                final current = destination
+                    ? loc.destinationAddress
+                    : loc.pickupAddress;
+                final result = await AddressDetailsSheet.show(
+                  context,
+                  initial: current?.asPh ?? const PhAddress(),
+                  title: destination
+                      ? 'Confirm destination address'
+                      : 'Confirm pickup address',
+                );
+                if (result == null || !context.mounted) return;
+                ref
+                    .read(lesrideLocationProvider.notifier)
+                    .setAddressDetails(
+                      destination: destination,
+                      details: result,
+                    );
+                notifier.confirmSelection();
+              },
             ),
           ),
       ],

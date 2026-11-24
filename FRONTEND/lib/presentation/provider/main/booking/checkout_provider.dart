@@ -70,6 +70,13 @@ class CheckoutState {
   final String? selectedPaymentMethod;
 
   final int? createdOrderId;
+  final String? createdOrderStatus;
+
+  bool get canStartRiderSearch => const {
+    'searching_driver',
+    'accepted',
+    'ready_for_pickup',
+  }.contains(createdOrderStatus?.toLowerCase());
 
   final double dropoffLat;
 
@@ -112,6 +119,7 @@ class CheckoutState {
     this.selectedPaymentMethod,
 
     this.createdOrderId,
+    this.createdOrderStatus,
 
     this.dropoffLat = BookingGeoUtils.defaultLat,
 
@@ -146,6 +154,7 @@ class CheckoutState {
     String? selectedPaymentMethod,
 
     int? createdOrderId,
+    String? createdOrderStatus,
 
     double? dropoffLat,
 
@@ -184,6 +193,7 @@ class CheckoutState {
           selectedPaymentMethod ?? this.selectedPaymentMethod,
 
       createdOrderId: createdOrderId ?? this.createdOrderId,
+      createdOrderStatus: createdOrderStatus ?? this.createdOrderStatus,
 
       dropoffLat: dropoffLat ?? this.dropoffLat,
 
@@ -327,12 +337,23 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         // Older stores without branches fall back to the store location.
       }
       if (!mounted || requestId != _initializeRequestId) return;
-      if (allBranches.isNotEmpty) {
-        final orderable = StoreBranch.orderableNearest(
-          allBranches,
-          state.dropoffLat,
-          state.dropoffLng,
+      final orderable = StoreBranch.orderableNearest(
+        allBranches,
+        state.dropoffLat,
+        state.dropoffLng,
+      );
+      if (preferredBranchId != null &&
+          !orderable.any((branch) => branch.id == preferredBranchId)) {
+        state = state.copyWith(
+          branches: orderable,
+          clearSelectedBranch: true,
+          hasValidPickupLocation: false,
+          fareError:
+              'The selected branch is unavailable. Choose another branch.',
         );
+        return;
+      }
+      if (allBranches.isNotEmpty) {
         if (orderable.isNotEmpty) {
           final wantedId = preferredBranchId ?? state.selectedBranchId;
           final keep = orderable.where((b) => b.id == wantedId);
@@ -363,6 +384,8 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       if (!mounted || requestId != _initializeRequestId) return;
       if (BookingGeoUtils.hasValidCoords(partner.latitude, partner.longitude)) {
         state = state.copyWith(
+          branches: const [],
+          clearSelectedBranch: true,
           pickupLat: partner.latitude!,
           pickupLng: partner.longitude!,
           hasValidPickupLocation: true,
@@ -413,7 +436,8 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
         isLoadingFare: false,
         fareError: missingDropoff
             ? kMissingDeliveryAddressMessage
-            : 'Select a valid restaurant and delivery location before checkout.',
+            : state.fareError ??
+                  'Select a valid restaurant and delivery location before checkout.',
       );
       return;
     }
@@ -1040,6 +1064,7 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
       state = state.copyWith(
         isLoading: false,
         createdOrderId: response.data.id,
+        createdOrderStatus: response.data.status,
       );
 
       return true;

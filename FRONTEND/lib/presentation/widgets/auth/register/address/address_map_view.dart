@@ -1,3 +1,4 @@
+import '../../../../../core/utils/map_pins.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -35,9 +36,8 @@ class AddressMapView extends StatelessWidget {
         Marker(
           markerId: const MarkerId('selected'),
           position: location!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueViolet,
-          ),
+          icon: MapPins.icon(MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Selected Address'),
         ),
       },

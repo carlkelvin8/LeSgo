@@ -118,8 +118,8 @@ class HeroBanner extends StatelessWidget {
                         iconAlignment: IconAlignment.end,
                         label: const Text('Book now'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFF2E4FF),
-                          foregroundColor: const Color(0xFF35134E),
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF5F2D82),
                           minimumSize: const Size(0, 48),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,

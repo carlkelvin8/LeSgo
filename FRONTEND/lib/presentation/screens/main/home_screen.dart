@@ -6,7 +6,6 @@ import '../../../core/di/injection.dart';
 import '../../../core/services/promo_notification_service.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../provider/main/offers/offers_provider.dart';
-import '../../widgets/home/home_favorites_section.dart';
 import '../../widgets/home/home_active_orders_section.dart';
 import '../../widgets/home/home_services_section.dart';
 
@@ -125,11 +124,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   
                   // Services showcase - animated
                   _buildAnimatedSection(2, const HomeServicesSection()),
-                  
-                  SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                  
-                  // Favorites - animated
-                  _buildAnimatedSection(3, const HomeFavoritesSection()),
                   
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                   

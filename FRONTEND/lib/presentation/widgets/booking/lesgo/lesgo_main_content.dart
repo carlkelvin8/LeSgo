@@ -7,6 +7,8 @@ import '../../../provider/main/booking/lesgo_location_provider.dart';
 import '../../../provider/main/booking/lesgo_provider.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/voucher_service_utils.dart';
+import '../../../../core/utils/ph_address.dart';
+import '../../location/address_details_sheet.dart';
 import '../../widgets.dart';
 import '../leseat/checkout/voucher_bottom_sheet.dart';
 
@@ -268,7 +270,29 @@ class LesgoMainContent extends ConsumerWidget {
             bottom: 32,
             child: PrimaryButton(
               text: 'Confirm location',
-              onPressed: () => notifier.confirmSelection(),
+              onPressed: () async {
+                // Pinned spots are often only city-level, so ask the customer
+                // to confirm and complete the exact address first.
+                final loc = ref.read(lesgoLocationProvider);
+                final current = selectingDestination
+                    ? loc.destinationAddress
+                    : loc.pickupAddress;
+                final result = await AddressDetailsSheet.show(
+                  context,
+                  initial: current?.asPh ?? const PhAddress(),
+                  title: selectingDestination
+                      ? 'Confirm drop-off address'
+                      : 'Confirm pick-up address',
+                );
+                if (result == null || !context.mounted) return;
+                ref
+                    .read(lesgoLocationProvider.notifier)
+                    .setAddressDetails(
+                      destination: selectingDestination,
+                      details: result,
+                    );
+                notifier.confirmSelection();
+              },
             ),
           ),
       ],

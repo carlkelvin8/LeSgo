@@ -10,6 +10,8 @@ import '../../provider/main/address/address_provider.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/main/profile/profile_provider.dart';
 import '../../widgets/widgets.dart';
+import '../../widgets/location/address_details_sheet.dart';
+import '../../../core/utils/ph_address.dart';
 
 class SetLocationScreen extends ConsumerStatefulWidget {
   const SetLocationScreen({super.key});
@@ -46,6 +48,38 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
     super.dispose();
   }
 
+  /// Opens the details sheet pre-filled from the pin's reverse geocode and
+  /// writes the confirmed values back into the form. Returns false if the
+  /// customer backed out.
+  Future<bool> _confirmAddressDetails() async {
+    final c = _controllers;
+    final pinned = ref.read(locationProvider).address?.asPh;
+    final initial =
+        pinned ??
+        PhAddress(
+          houseNumber: c.houseNumberController.text.trim(),
+          subdivision: c.subdivisionController.text.trim(),
+          city: c.cityController.text.split(',').first.trim(),
+          zip: c.zipCodeController.text.trim(),
+          landmark: c.landmarkController.text.trim(),
+        );
+    final result = await AddressDetailsSheet.show(
+      context,
+      initial: initial,
+      title: 'Confirm your exact address',
+    );
+    if (result == null || !mounted) return false;
+    c.houseNumberController.text = result.line1;
+    c.subdivisionController.text = result.barangay.trim();
+    c.cityController.text = [
+      result.city.trim(),
+      result.province.trim(),
+    ].where((s) => s.isNotEmpty).join(', ');
+    c.zipCodeController.text = result.zip.trim();
+    c.landmarkController.text = result.landmark.trim();
+    return true;
+  }
+
   Future<void> _onContinue() async {
     if (!_controllers.validateAndSave(ref)) {
       return;
@@ -66,6 +100,10 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
         }
         return;
       }
+
+      // Let the customer confirm block/lot/street/barangay/ZIP for this pin.
+      if (!await _confirmAddressDetails()) return;
+      if (!mounted) return;
 
       // Get location data
       final locationData = _controllers.getLocationData(ref);

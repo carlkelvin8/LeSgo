@@ -60,7 +60,11 @@ class LesrideDetailsPanel extends StatelessWidget {
       handle: const LesrideDragHandle(),
       controller: scrollController,
       action: PrimaryButton(
-        text: 'Book',
+        text: onBook != null || isBooking
+            ? 'Book'
+            : (locationState.destinationAddress == null
+                  ? 'Choose a destination to continue'
+                  : 'Calculating fare…'),
         onPressed: onBook,
         isLoading: isBooking,
       ),

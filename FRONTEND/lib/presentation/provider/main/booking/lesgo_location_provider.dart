@@ -1,13 +1,12 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../../core/utils/address_text_utils.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/services/address_geocoder.dart';
+import '../../../../core/utils/ph_address.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 import '../../../../core/utils/directions_route_service.dart';
 
@@ -254,7 +253,10 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
 
     if (addressComponents != null && addressComponents.isNotEmpty) {
       // Use structured address components from Google Places API
-      address = _parseAddressComponents(addressComponents);
+      address = _parseAddressComponents(
+        addressComponents,
+        formattedAddress: formattedAddress,
+      );
     } else if (formattedAddress != null && formattedAddress.isNotEmpty) {
       // Use formatted address from Google Places API
       address = _parseFormattedAddress(formattedAddress);
@@ -295,7 +297,10 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
 
     if (addressComponents != null && addressComponents.isNotEmpty) {
       // Use structured address components from Google Places API
-      address = _parseAddressComponents(addressComponents);
+      address = _parseAddressComponents(
+        addressComponents,
+        formattedAddress: formattedAddress,
+      );
     } else if (formattedAddress != null && formattedAddress.isNotEmpty) {
       // Use formatted address from Google Places API
       address = _parseFormattedAddress(formattedAddress);
@@ -324,35 +329,15 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
     );
   }
 
-  LocationAddress? _parseAddressComponents(Map<String, String> components) {
-    final houseNumber =
-        components['houseNumber'] ?? components['street_number'] ?? '';
-    final streetName = components['streetName'] ?? components['route'] ?? '';
-    final houseNumberStreet = houseNumber.isNotEmpty && streetName.isNotEmpty
-        ? '$houseNumber $streetName'
-        : streetName.isNotEmpty
-        ? streetName
-        : houseNumber;
-
-    final barangay = components['barangay'] ?? '';
-    final city = components['city'] ?? '';
-    final province = components['province'] ?? '';
-    final cityProvince = city.isNotEmpty && province.isNotEmpty
-        ? '$city, $province'
-        : city.isNotEmpty
-        ? city
-        : province;
-
-    final zipCode = components['zipCode'] ?? '';
-
-    return LocationAddress(
-      houseNumberStreet: houseNumberStreet.isNotEmpty
-          ? houseNumberStreet
-          : null,
-      subdivisionBarangay: barangay.isNotEmpty ? barangay : null,
-      cityProvince: cityProvince.isNotEmpty ? cityProvince : null,
-      zipCode: zipCode.isNotEmpty ? zipCode : null,
+  LocationAddress? _parseAddressComponents(
+    Map<String, String> components, {
+    String? formattedAddress,
+  }) {
+    final ph = PhAddressParser.fromComponentMap(
+      components,
+      formattedAddress: formattedAddress,
     );
+    return ph.isEmpty ? null : LocationAddress.fromPh(ph);
   }
 
   LocationAddress? _parseFormattedAddress(String formattedAddress) {
@@ -553,421 +538,20 @@ class LesgoLocationNotifier extends StateNotifier<LesgoLocationState> {
     }
   }
 
+  final _geocoder = AddressGeocoder();
+
   Future<LocationAddress?> _getAddressFromLocation(LatLng location) async {
-    try {
-      print('🔍 LesgoLocation: Reverse geocoding for: $location');
-
-      // Try Google Geocoding API first (more reliable for web)
-      final googleAddress = await _getAddressFromGoogleAPI(location);
-      if (googleAddress != null) {
-        return googleAddress;
-      }
-
-      // Fallback to geocoding package
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(
-            location.latitude,
-            location.longitude,
-          ).timeout(
-            const Duration(seconds: 5),
-            onTimeout: () {
-              print('🔴 LesgoLocation: Geocoding timeout');
-              return <Placemark>[];
-            },
-          );
-
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        print('🔍 LesgoLocation: Placemark data: ${place.toString()}');
-
-        // Try to build a detailed address with street info
-        List<String> addressParts = [];
-
-        // Add house/building number and street
-        if (place.subThoroughfare != null &&
-            place.subThoroughfare!.isNotEmpty) {
-          if (place.thoroughfare != null && place.thoroughfare!.isNotEmpty) {
-            addressParts.add('${place.subThoroughfare} ${place.thoroughfare}');
-          } else {
-            addressParts.add(place.subThoroughfare!);
-          }
-        } else if (place.thoroughfare != null &&
-            place.thoroughfare!.isNotEmpty) {
-          addressParts.add(place.thoroughfare!);
-        }
-
-        // Add sub-locality (barangay/subdivision)
-        if (place.subLocality != null && place.subLocality!.isNotEmpty) {
-          addressParts.add(place.subLocality!);
-        }
-
-        // Add locality (city/municipality)
-        if (place.locality != null && place.locality!.isNotEmpty) {
-          addressParts.add(place.locality!);
-        } else if (place.administrativeArea != null &&
-            place.administrativeArea!.isNotEmpty) {
-          addressParts.add(place.administrativeArea!);
-        }
-
-        // If we have detailed parts, combine them
-        if (addressParts.isNotEmpty) {
-          final detailedAddress = addressParts.join(', ');
-          print('🔍 LesgoLocation: Using detailed address: $detailedAddress');
-          return LocationAddress(
-            houseNumberStreet: addressParts.isNotEmpty ? addressParts[0] : null,
-            subdivisionBarangay: addressParts.length > 1
-                ? addressParts[1]
-                : null,
-            cityProvince: addressParts.length > 2
-                ? addressParts.sublist(2).join(', ')
-                : addressParts.length > 1
-                ? addressParts[1]
-                : addressParts.isNotEmpty
-                ? addressParts[0]
-                : null,
-            zipCode: place.postalCode,
-          );
-        }
-
-        // Fallback to just locality/city if no street info
-        String addressText = '';
-        if (place.locality != null && place.locality!.isNotEmpty) {
-          addressText = place.locality!;
-        } else if (place.administrativeArea != null &&
-            place.administrativeArea!.isNotEmpty) {
-          addressText = place.administrativeArea!;
-        } else if (place.subAdministrativeArea != null &&
-            place.subAdministrativeArea!.isNotEmpty) {
-          addressText = place.subAdministrativeArea!;
-        }
-
-        if (addressText.isNotEmpty) {
-          print('🔍 LesgoLocation: Using basic address: $addressText');
-          return LocationAddress(
-            houseNumberStreet: null,
-            subdivisionBarangay: null,
-            cityProvince: addressText,
-            zipCode: place.postalCode,
-          );
-        }
-      }
-
-      print('🔍 LesgoLocation: Using fallback address');
-    } catch (e) {
-      print('🔴 LesgoLocation: Geocoding error: $e');
-    }
-
-    // Always return a user-friendly fallback
-    return LocationAddress(
-      houseNumberStreet: null,
-      subdivisionBarangay: null,
-      cityProvince: 'Selected Location',
-      zipCode: null,
-    );
+    final ph = await _geocoder.reverse(location);
+    if (ph == null || ph.isEmpty) return null;
+    return LocationAddress.fromPh(ph);
   }
 
-  Future<LocationAddress?> _getAddressFromGoogleAPI(LatLng location) async {
-    try {
-      // Check if we have a Google Maps API key
-      if (!ApiConstants.isGoogleMapsConfigured) {
-        print('🔴 LesgoLocation: No Google Maps API key configured');
-        return null;
-      }
-
-      final url =
-          'https://maps.googleapis.com/maps/api/geocode/json'
-          '?latlng=${location.latitude},${location.longitude}'
-          '&key=${ApiConstants.googleMapsApiKey}';
-
-      print('🔍 LesgoLocation: Calling Google Geocoding API...');
-
-      final response = await http
-          .get(Uri.parse(url))
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              print('🔴 LesgoLocation: Google API timeout');
-              throw Exception('Timeout');
-            },
-          );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        print(
-          '🔍 LesgoLocation: Google API response status: ${data['status']}',
-        );
-
-        if (data['status'] == 'OK' &&
-            data['results'] != null &&
-            data['results'].isNotEmpty) {
-          final results = data['results'] as List<dynamic>;
-
-          // Try to find the most detailed result (with route/street information)
-          dynamic bestResult;
-          int bestScore = 0;
-
-          for (var result in results) {
-            final types = result['types'] as List<dynamic>?;
-            final addressComponents =
-                result['address_components'] as List<dynamic>?;
-            int score = 0;
-
-            // Prioritize results with street/route information
-            if (types != null) {
-              if (types.contains('street_address')) score += 100;
-              if (types.contains('premise')) score += 90;
-              if (types.contains('route')) score += 80;
-              if (types.contains('sublocality')) score += 70;
-              if (types.contains('locality')) score += 50;
-              // Deprioritize plus_code only results
-              if (types.contains('plus_code') && types.length == 1) score -= 50;
-            }
-
-            // Check if it has route/street in address components
-            if (addressComponents != null) {
-              for (var component in addressComponents) {
-                final componentTypes = component['types'] as List<dynamic>?;
-                if (componentTypes != null) {
-                  if (componentTypes.contains('route')) score += 30;
-                  if (componentTypes.contains('street_number')) score += 20;
-                  if (componentTypes.contains('sublocality_level_1'))
-                    score += 15;
-                  if (componentTypes.contains('sublocality_level_2'))
-                    score += 10;
-                }
-              }
-            }
-
-            if (score > bestScore) {
-              bestScore = score;
-              bestResult = result;
-            }
-          }
-
-          // Use the best result found
-          if (bestResult != null) {
-            final rawFormattedAddress = bestResult['formatted_address'] as String?;
-            // Never show a raw plus code ("J36M+FR5, ...") as the address.
-            final formattedAddress = rawFormattedAddress == null
-                ? null
-                : stripPlusCode(rawFormattedAddress);
-            final addressComponents =
-                bestResult['address_components'] as List<dynamic>?;
-
-            print(
-              '🔍 LesgoLocation: Using best result with score $bestScore: $formattedAddress',
-            );
-            print(
-              '🔍 LesgoLocation: Address components: ${json.encode(addressComponents)}',
-            );
-
-            // Try to extract detailed address from components first
-            if (addressComponents != null) {
-              final detailedAddress = _extractDetailedAddressFromComponents(
-                addressComponents,
-              );
-              if (detailedAddress != null) {
-                print(
-                  '🔍 LesgoLocation: Using detailed address from components',
-                );
-                return detailedAddress;
-              }
-            }
-
-            // Fallback to formatted address parsing
-            if (formattedAddress != null && formattedAddress.isNotEmpty) {
-              // Use the most detailed part of the formatted address
-              final addressParts = formattedAddress
-                  .split(',')
-                  .map((e) => e.trim())
-                  .toList();
-
-              // Remove "Philippines" if it's the last part
-              if (addressParts.isNotEmpty &&
-                  addressParts.last.toLowerCase().contains('philippines')) {
-                addressParts.removeLast();
-              }
-
-              // Take the first 2-3 most specific parts
-              String detailedAddress;
-              if (addressParts.length >= 3) {
-                detailedAddress = addressParts.take(3).join(', ');
-              } else if (addressParts.length >= 2) {
-                detailedAddress = addressParts.take(2).join(', ');
-              } else {
-                detailedAddress = addressParts.isNotEmpty
-                    ? addressParts[0]
-                    : formattedAddress;
-              }
-
-              print(
-                '🔍 LesgoLocation: Using detailed address from formatted: $detailedAddress',
-              );
-
-              return LocationAddress(
-                houseNumberStreet: null,
-                subdivisionBarangay: null,
-                cityProvince: detailedAddress,
-                zipCode: null,
-              );
-            }
-          }
-        } else {
-          print('🔴 LesgoLocation: Google API error: ${data['status']}');
-        }
-      } else {
-        print(
-          '🔴 LesgoLocation: Google API HTTP error: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      print('🔴 LesgoLocation: Google API exception: $e');
-    }
-
-    return null;
-  }
-
-  LocationAddress? _extractDetailedAddressFromComponents(
-    List<dynamic> components,
-  ) {
-    try {
-      String? streetNumber;
-      String? route;
-      String? subpremise; // For unit/lot numbers
-      String? premise; // For building numbers
-      String? locality;
-      String? sublocality;
-      String? sublocalityLevel1;
-      String? sublocalityLevel2;
-      String? sublocalityLevel3;
-      String? administrativeAreaLevel2; // City/Municipality
-      String? administrativeAreaLevel3; // District
-      String? postalCode;
-
-      print(
-        '🔍 LesgoLocation: Processing ${components.length} address components...',
-      );
-
-      for (var component in components) {
-        final types = component['types'] as List<dynamic>?;
-        final longName = component['long_name'] as String?;
-        final shortName = component['short_name'] as String?;
-
-        if (types != null && longName != null && longName.isNotEmpty) {
-          print(
-            '🔍 LesgoLocation: Component - types: $types, longName: $longName, shortName: $shortName',
-          );
-
-          if (types.contains('street_number')) {
-            streetNumber = longName;
-          } else if (types.contains('route')) {
-            route = longName;
-          } else if (types.contains('subpremise')) {
-            subpremise = longName; // Unit, Lot, etc.
-          } else if (types.contains('premise')) {
-            premise = longName; // Building number
-          } else if (types.contains('sublocality_level_1')) {
-            sublocalityLevel1 = longName;
-          } else if (types.contains('sublocality_level_2')) {
-            sublocalityLevel2 = longName;
-          } else if (types.contains('sublocality_level_3')) {
-            sublocalityLevel3 = longName;
-          } else if (types.contains('sublocality')) {
-            sublocality = longName;
-          } else if (types.contains('locality')) {
-            locality = longName;
-          } else if (types.contains('administrative_area_level_2')) {
-            administrativeAreaLevel2 = longName; // City/Municipality
-          } else if (types.contains('administrative_area_level_3')) {
-            administrativeAreaLevel3 = longName; // District
-          } else if (types.contains('postal_code')) {
-            postalCode = longName;
-          }
-        }
-      }
-
-      // Build detailed address parts
-      List<String> addressParts = [];
-
-      // Add most specific location details first
-      if (subpremise != null) {
-        addressParts.add(subpremise); // "Lot 32" or "Unit 5A"
-        print('🔍 LesgoLocation: Added subpremise: $subpremise');
-      }
-
-      if (premise != null) {
-        addressParts.add(premise); // "Blk 10"
-        print('🔍 LesgoLocation: Added premise: $premise');
-      }
-
-      // Add street information
-      if (streetNumber != null && route != null) {
-        addressParts.add('$streetNumber $route'); // "123 Main Street"
-        print('🔍 LesgoLocation: Added street: $streetNumber $route');
-      } else if (route != null) {
-        addressParts.add(route); // "Main Street"
-        print('🔍 LesgoLocation: Added route: $route');
-      } else if (streetNumber != null) {
-        addressParts.add(streetNumber);
-        print('🔍 LesgoLocation: Added street number: $streetNumber');
-      }
-
-      // Add subdivision/barangay information (most specific first)
-      if (sublocalityLevel3 != null) {
-        addressParts.add(sublocalityLevel3); // Most specific subdivision
-        print(
-          '🔍 LesgoLocation: Added sublocality level 3: $sublocalityLevel3',
-        );
-      } else if (sublocalityLevel2 != null) {
-        addressParts.add(sublocalityLevel2);
-        print(
-          '🔍 LesgoLocation: Added sublocality level 2: $sublocalityLevel2',
-        );
-      } else if (sublocalityLevel1 != null) {
-        addressParts.add(sublocalityLevel1);
-        print(
-          '🔍 LesgoLocation: Added sublocality level 1: $sublocalityLevel1',
-        );
-      } else if (sublocality != null) {
-        addressParts.add(sublocality);
-        print('🔍 LesgoLocation: Added sublocality: $sublocality');
-      }
-
-      // Add city/municipality
-      if (locality != null) {
-        addressParts.add(locality);
-        print('🔍 LesgoLocation: Added locality: $locality');
-      } else if (administrativeAreaLevel2 != null) {
-        addressParts.add(administrativeAreaLevel2);
-        print(
-          '🔍 LesgoLocation: Added admin area level 2: $administrativeAreaLevel2',
-        );
-      } else if (administrativeAreaLevel3 != null) {
-        addressParts.add(administrativeAreaLevel3);
-        print(
-          '🔍 LesgoLocation: Added admin area level 3: $administrativeAreaLevel3',
-        );
-      }
-
-      if (addressParts.isNotEmpty) {
-        final detailedAddress = addressParts.join(', ');
-        print('🔍 LesgoLocation: Final detailed address: $detailedAddress');
-
-        return LocationAddress(
-          houseNumberStreet: addressParts.isNotEmpty ? addressParts[0] : null,
-          subdivisionBarangay: addressParts.length > 1 ? addressParts[1] : null,
-          cityProvince: detailedAddress, // Store the full detailed address here
-          zipCode: postalCode,
-        );
-      }
-
-      print('🔍 LesgoLocation: No detailed address parts found');
-      return null;
-    } catch (e) {
-      print('🔴 LesgoLocation: Error extracting detailed address: $e');
-      return null;
-    }
+  /// Replaces the pin's address with the customer's confirmed details.
+  void setAddressDetails({required bool destination, required PhAddress details}) {
+    final address = LocationAddress.fromPh(details);
+    state = destination
+        ? state.copyWith(destinationAddress: address, address: address)
+        : state.copyWith(pickupAddress: address, address: address);
   }
 }
 

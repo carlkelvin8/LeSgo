@@ -250,7 +250,7 @@ class _SimpleOrderTrackingScreenState
                   ),
                   Expanded(
                     child: Text(
-                      'Order #${widget.orderId}',
+                      'Track your ride',
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 18),
@@ -556,7 +556,7 @@ class _SimpleOrderTrackingScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Order #${order!.id}',
+                  'Your LesRide trip',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 13,

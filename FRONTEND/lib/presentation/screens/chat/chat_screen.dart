@@ -17,7 +17,7 @@ class ChatScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat - Order #$orderId'),
+        title: const Text('Chat with your rider'),
       ),
       body: OrderChatWidget(
         orderId: orderId,

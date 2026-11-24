@@ -14,7 +14,7 @@ class AppInfo {
       'more convenient, while proudly serving communities across the Philippines.';
 
   static const String version = '1.1.8';
-  static const String buildNumber = '24';
+  static const String buildNumber = '33';
 
   // Updated contact details
   static const String supportEmail = 'lesgoclaveria@gmail.com';

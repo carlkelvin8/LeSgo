@@ -436,17 +436,29 @@ class _MapSearchBarState extends ConsumerState<MapSearchBar> {
       } else if (types.contains('route')) {
         addressComponents['route'] = longName;
         addressComponents['streetName'] = longName;
+      } else if (types.contains('subpremise')) {
+        addressComponents['subpremise'] ??= longName;
+      } else if (types.contains('premise')) {
+        addressComponents['premise'] ??= longName;
+      } else if (types.contains('neighborhood')) {
+        addressComponents['neighborhood'] ??= longName;
+      } else if (types.contains('sublocality_level_1') ||
+          types.contains('sublocality')) {
+        addressComponents['barangay'] ??= longName;
+      } else if (types.contains('sublocality_level_2') ||
+          types.contains('sublocality_level_3')) {
+        addressComponents['sublocality2'] ??= longName;
       } else if (types.contains('locality')) {
         addressComponents['city'] = longName;
       } else if (types.contains('administrative_area_level_1')) {
         addressComponents['province'] = longName;
+      } else if (types.contains('administrative_area_level_2')) {
+        addressComponents['admin2'] ??= longName;
       } else if (types.contains('country')) {
         addressComponents['country'] = longName;
       } else if (types.contains('postal_code')) {
         addressComponents['postal_code'] = longName;
-      } else if (types.contains('sublocality') ||
-          types.contains('sublocality_level_1')) {
-        addressComponents['barangay'] = longName;
+        addressComponents['zipCode'] = longName;
       }
     }
 

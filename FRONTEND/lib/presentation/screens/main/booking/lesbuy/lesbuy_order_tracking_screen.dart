@@ -1,3 +1,4 @@
+import '../../../../../core/utils/map_pins.dart';
 import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -54,6 +55,9 @@ class _LesbuyOrderTrackingScreenState
       ref
           .read(liveTrackingProvider(int.parse(widget.orderId)).notifier)
           .setContext(context);
+      ref
+          .read(liveTrackingProvider(int.parse(widget.orderId)).notifier)
+          .setPinKinds(pickup: MapPinKind.store, dropoff: MapPinKind.customer);
       _fitBounds();
     });
     _fetchCurrentOrderData();

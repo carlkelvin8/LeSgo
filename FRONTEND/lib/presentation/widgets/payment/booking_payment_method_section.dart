@@ -13,6 +13,8 @@ class BookingPaymentMethodSection extends ConsumerStatefulWidget {
     this.enabled = true,
     this.minimumAmount,
     this.allowDigitalPayments = true,
+    this.cashTitle = 'Cash on Delivery',
+    this.cashSubtitle = 'Pay with cash when order arrives',
   });
 
   final String selectedMethod;
@@ -22,6 +24,8 @@ class BookingPaymentMethodSection extends ConsumerStatefulWidget {
 
   /// Hide online payment when the amount to charge is not known yet.
   final bool allowDigitalPayments;
+  final String cashTitle;
+  final String cashSubtitle;
 
   @override
   ConsumerState<BookingPaymentMethodSection> createState() =>
@@ -51,6 +55,8 @@ class _BookingPaymentMethodSectionState
       walletBalance: lespayState.balance,
       walletBalanceVisible: lespayState.balanceVisible,
       minimumWalletAmount: widget.minimumAmount,
+      cashTitle: widget.cashTitle,
+      cashSubtitle: widget.cashSubtitle,
     );
   }
 }

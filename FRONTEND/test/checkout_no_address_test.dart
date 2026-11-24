@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lesgo/core/di/injection.dart';
+import 'package:lesgo/data/data_source/dto/partner/store_branch.dart';
 import 'package:lesgo/data/data_source/order_remote_datasource.dart';
 import 'package:lesgo/data/data_source/partner_remote_datasource.dart';
 import 'package:lesgo/data/data_source/voucher_remote_datasource.dart';
 import 'package:lesgo/presentation/provider/main/booking/checkout_provider.dart';
+import 'package:lesgo/presentation/provider/main/booking/restaurant_detail_provider.dart';
 import 'package:lesgo/presentation/provider/main/profile/profile_provider.dart';
 import 'package:lesgo/presentation/widgets/booking/leseat/checkout/delivery_address_section.dart';
 import 'package:lesgo/presentation/widgets/orders/cancel_order_dialog.dart';
@@ -32,6 +34,11 @@ class _Orders implements OrderRemoteDataSource {
 }
 
 class _Partners implements PartnerRemoteDataSource {
+  List<StoreBranch> branches = [];
+
+  @override
+  Future<List<StoreBranch>> getBranches(int partnerId) async => branches;
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -46,9 +53,27 @@ class _Profile extends ProfileNotifier {
   Future<void> loadProfile() async {}
 }
 
+class _Restaurant extends RestaurantDetailNotifier {
+  _Restaurant() {
+    state = RestaurantDetailState(
+      activeRestaurantId: '38',
+      activeBranchId: 51,
+    );
+  }
+}
+
 Widget _app(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
+  test('LesEat only skips confirmation after rider search has started', () {
+    for (final status in ['searching_driver', 'accepted', 'ready_for_pickup']) {
+      expect(CheckoutState(createdOrderStatus: status).canStartRiderSearch, isTrue);
+    }
+    for (final status in [null, 'pending', 'scheduled', 'cancelled']) {
+      expect(CheckoutState(createdOrderStatus: status).canStartRiderSearch, isFalse);
+    }
+  });
+
   group('DeliveryAddressSection', () {
     testWidgets('prompts to add an address instead of showing a made-up label',
         (tester) async {
@@ -116,6 +141,8 @@ void main() {
         (tester) async {
       await open(tester, (_) {});
 
+      // The reasons scroll inside the dialog on short screens.
+      await tester.ensureVisible(find.text('Other'));
       await tester.tap(find.text('Other'));
       await tester.pump();
       await tester.tap(find.widgetWithText(ElevatedButton, 'Cancel Order'));
@@ -143,6 +170,41 @@ void main() {
       await tester.pumpAndSettle();
       expect(result, 'Changed my mind');
     });
+  });
+
+  test('checkout keeps the selected branch and asks before switching', () async {
+    const other = StoreBranch(
+      id: 34, name: 'Abulug', address: 'Abulug',
+      latitude: 18.45, longitude: 121.45,
+    );
+    const selected = StoreBranch(
+      id: 51, name: 'Aparri', address: 'Aparri',
+      latitude: 18.36, longitude: 121.64,
+    );
+    final partners = _Partners()..branches = [other, selected];
+    getIt.registerSingleton<OrderRemoteDataSource>(_Orders());
+    getIt.registerSingleton<PartnerRemoteDataSource>(partners);
+    getIt.registerSingleton<VoucherRemoteDataSource>(_Vouchers());
+    addTearDown(getIt.reset);
+    final container = ProviderContainer(overrides: [
+      profileProvider.overrideWith((_) => _Profile()),
+      restaurantDetailProvider.overrideWith((_) => _Restaurant()),
+    ]);
+    addTearDown(container.dispose);
+
+    final notifier = container.read(checkoutProvider.notifier);
+    await notifier.initializeFromCart('Jollibee');
+    expect(container.read(checkoutProvider).selectedBranchId, 51);
+
+    partners.branches = [other];
+    await notifier.initializeFromCart('Jollibee');
+    final unavailable = container.read(checkoutProvider);
+    expect(unavailable.selectedBranchId, isNull);
+    expect(unavailable.hasValidPickupLocation, isFalse);
+    expect(unavailable.branches.single.id, 34);
+
+    await notifier.selectBranch(34);
+    expect(container.read(checkoutProvider).selectedBranchId, 34);
   });
 
   group('CheckoutNotifier without a saved address', () {

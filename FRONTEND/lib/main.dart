@@ -19,6 +19,7 @@ import 'core/services/notification_service.dart';
 import 'core/services/promo_notification_service.dart';
 import 'core/services/websocket_service.dart';
 import 'core/utils/app_localization.dart';
+import 'core/utils/map_pins.dart';
 import 'presentation/provider/theme_provider.dart';
 import 'presentation/widgets/common/offline_banner.dart';
 
@@ -26,6 +27,7 @@ AnalyticsRouteObserver? _analyticsRouteObserver;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  unawaited(MapPins.preload());
   runApp(const ProviderScope(child: _AppBootstrap()));
 }
 

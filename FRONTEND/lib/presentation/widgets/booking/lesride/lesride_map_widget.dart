@@ -5,7 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesride_location_provider.dart';
 import '../../../../core/constants/map_styles.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
-import '../../../../core/utils/marker_utils.dart';
+import '../../../../core/utils/map_pins.dart';
 import '../../global/googlemaps/map_route_info_banner.dart';
 
 class LesrideMapWidget extends ConsumerStatefulWidget {
@@ -34,9 +34,6 @@ class LesrideMapWidget extends ConsumerStatefulWidget {
 
 class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
   GoogleMapController? _mapController;
-  BitmapDescriptor? _purpleMarker;
-  BitmapDescriptor? _redMarker;
-  BitmapDescriptor? _roseMarker;
 
   @override
   void initState() {
@@ -45,15 +42,7 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
   }
 
   Future<void> _loadMarkers() async {
-    _purpleMarker = await MarkerUtils.violetMarker;
-    _redMarker = await MarkerUtils.redMarker;
-    _roseMarker = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
-      'assets/images/marker_rose.png',
-    ).catchError((_) async {
-      // Fallback to custom marker if asset doesn't exist
-      return MarkerUtils.createColoredMarker(const Color(0xFFFF69B4));
-    });
+    await MapPins.preload();
     if (mounted) setState(() {});
   }
 
@@ -91,12 +80,13 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
     
     // IMPORTANT: Only show markers if we have valid locations
     // This prevents showing stale markers during updates
-    if (widget.showPickupDestination && pickup != null && _purpleMarker != null) {
+    if (widget.showPickupDestination && pickup != null && MapPins.isReady) {
       markers.add(
         Marker(
           markerId: const MarkerId('pickup'),
           position: pickup,
-          icon: _purpleMarker!,
+          icon: MapPins.icon(MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Pickup Location'),
         ),
       );
@@ -106,13 +96,13 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
     // AND it's different from pickup (to avoid duplicate markers)
     if (widget.showPickupDestination &&
         destination != null &&
-        _redMarker != null &&
         destination != pickup) {
       markers.add(
         Marker(
           markerId: const MarkerId('destination'),
           position: destination,
-          icon: _redMarker!,
+          icon: MapPins.icon(MapPinKind.destination),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Destination'),
         ),
       );
@@ -122,7 +112,6 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
     // AND only if it's different from both pickup and destination
     if (selected != null &&
         widget.isFullscreen &&
-        _roseMarker != null &&
         selected != pickup &&
         selected != destination) {
       final draggable = widget.onMarkerDragEnd != null;
@@ -130,7 +119,8 @@ class _LesrideMapWidgetState extends ConsumerState<LesrideMapWidget> {
         Marker(
           markerId: const MarkerId('selected'),
           position: selected,
-          icon: _roseMarker!,
+          icon: MapPins.icon(MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: 'Selected Location',
             snippet: draggable ? 'Drag to adjust pin' : null,

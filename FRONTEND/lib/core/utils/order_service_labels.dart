@@ -60,14 +60,14 @@ class OrderServiceLabels {
     required int orderId,
   }) {
     if (serviceName != null && serviceName.trim().isNotEmpty) {
-      return '$serviceName Order #$orderId';
+      return '$serviceName order';
     }
     if (serviceType != null && serviceType.trim().isNotEmpty) {
-      return '${fromServiceType(serviceType)} Order #$orderId';
+      return '${fromServiceType(serviceType)} order';
     }
     if (serviceId != null) {
-      return '${fromServiceId(serviceId)} Order #$orderId';
+      return '${fromServiceId(serviceId)} order';
     }
-    return 'Order #$orderId';
+    return 'Order';
   }
 }

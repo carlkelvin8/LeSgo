@@ -1,8 +1,9 @@
+import '../../../core/utils/map_pins.dart';
 import 'package:lesgo/core/constants/map_styles.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import '../../../core/services/address_geocoder.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../core/utils/responsive_utils.dart';
 import '../../../core/utils/booking_geo_utils.dart';
@@ -532,23 +533,16 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
   Future<void> _fillAddressFromPin(LatLng location) async {
     if (_addressLine1Ctrl.text.trim().isNotEmpty) return;
     try {
-      final placemarks = await placemarkFromCoordinates(
-        location.latitude,
-        location.longitude,
-      ).timeout(const Duration(seconds: 8));
-      if (!mounted || placemarks.isEmpty) return;
-      final place = placemarks.first;
-      final parts = <String>[
-        for (final part in [
-          place.street,
-          place.subLocality,
-          place.locality,
-          place.administrativeArea,
-        ])
-          if (part != null && part.trim().isNotEmpty) part.trim(),
-      ];
-      if (parts.isEmpty || _addressLine1Ctrl.text.trim().isNotEmpty) return;
-      setState(() => _addressLine1Ctrl.text = parts.toSet().join(', '));
+      final ph = await AddressGeocoder().reverse(location);
+      if (!mounted || ph == null || ph.isEmpty) return;
+      // Don't overwrite anything the customer typed while we were looking.
+      if (_addressLine1Ctrl.text.trim().isNotEmpty) return;
+      setState(() {
+        _addressLine1Ctrl.text = ph.line1.isNotEmpty ? ph.line1 : ph.line2;
+        if (_addressLine2Ctrl.text.trim().isEmpty && ph.line1.isNotEmpty) {
+          _addressLine2Ctrl.text = ph.line2;
+        }
+      });
     } catch (_) {
       // Geocoding is a convenience; the user can still type the address.
     }
@@ -710,6 +704,8 @@ class _AddEditAddressSheetState extends ConsumerState<_AddEditAddressSheet> {
                                     Marker(
                                       markerId: const MarkerId('saved_address'),
                                       position: _selectedLocation!,
+                                      icon: MapPins.icon(MapPinKind.customer),
+                                      anchor: MapPins.anchor,
                                     ),
                                   },
                           ),

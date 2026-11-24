@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
+import '../../domain/entities/support/ibow_expression.dart';
 import '../config/secrets_config.dart';
 import '../constants/app_info.dart';
+import 'chat_agent.dart';
 
 class GeminiCustomerService {
   static const _modelCandidates = [
@@ -20,7 +22,7 @@ You are LeSgo Assistant, a customer service bot ONLY for the LeSgo mobile app in
 
 STRICT SCOPE: you may ONLY answer questions about:
 - LeSgo app usage, navigation, and features
-- Orders: ride booking, LeSeat food delivery, LesBuy shopping
+- Orders: LesRide, LesGo parcel delivery, LesEat, LesBuy, and LesTransport
 - Order tracking, cancellations, delays, missing/wrong items
 - LesPay wallet, top-ups, payments, refunds (process guidance only)
 - Vouchers, missions, loyalty rewards, referrals
@@ -39,13 +41,24 @@ Rules:
 - Be warm, concise, and professional. Reply in the customer's language (English or Filipino/Tagalog).
 - Never invent order IDs, tracking numbers, refund amounts, or exact peso prices.
 - For rates/pricing, always say the app shows the estimate before booking or checkout.
-- For order status, direct users to Transactions or active order tracking.
+- For order status, look it up with the get_orders tool instead of sending the user elsewhere.
 - For complex issues (refunds, disputes, payment failures, driver complaints), suggest Settings > Support Tickets.
 - Keep replies short: 1 to 4 sentences, or brief numbered steps when needed.
 - Write like a friendly human agent. Never use em dashes, en dashes, or double hyphens; use commas, periods, or colons instead.
 - Greetings like "hi" or "hello" are in scope, so respond briefly and ask how you can help with their LeSgo app concern.
+
+You are an agent with tools that use the customer's real account:
+- get_orders and get_wallet_balance read live data. Use them for status, items, totals, drivers and LesPay balance. Never guess these.
+- request_cancel_order and request_reorder only PROPOSE an action. They show the customer a button; nothing happens unless they tap it. Never say an order is cancelled or placed; say you have shown the button and ask them to confirm.
+- suggest_open_screen shows a button to open a screen. Use it to help start a ride, parcel delivery, food, shopping, or cargo order, or to reach LesPay, orders, offers, missions or support.
+- Order refs like "o1" are internal. Never show them to the customer. Never ask for or show database ids.
+- If a tool returns an error, apologise briefly and suggest Settings > Support Tickets.
+- Begin EVERY reply with exactly one mood tag that matches your tone, from this list: [mood:happy] [mood:neutral] [mood:sad] [mood:surprised] [mood:love] [mood:wink]. Example: "[mood:happy] Your food is on the way!"
 ''';
 
+  GeminiCustomerService({ChatAgent? agent}) : _agent = agent ?? ChatAgent();
+
+  final ChatAgent _agent;
   GenerativeModel? _model;
   ChatSession? _session;
   String _activeModel = _modelCandidates.first;
@@ -61,39 +74,80 @@ Rules:
     _resetSession(modelName: _modelCandidates.first);
   }
 
-  Future<String> sendMessage(String message) async {
+  /// Plain-text answer (kept for callers that only need the words).
+  Future<String> sendMessage(String message) async =>
+      (await respond(message)).text;
+
+  /// Forget the on-device order references when the chat is cleared.
+  void resetAgent() => _agent.tools.reset();
+
+  /// The full reply: text, how IBOW feels about it, and any buttons.
+  Future<AgentReply> respond(String message) async {
     final trimmed = message.trim();
     if (_isClearlyOffTopic(trimmed)) {
-      return _offTopicReply;
+      return const AgentReply(_offTopicReply, mood: IbowExpression.neutral);
     }
 
+    // 1. Things the agent can do on its own, deterministically.
+    final agentReply = await _agent.handle(trimmed);
+    if (agentReply != null) return agentReply;
+
+    // 2. Cheap canned answers for common how-to questions.
     final localAnswer = _tryLocalAnswer(trimmed);
     if (localAnswer != null) {
-      return localAnswer;
+      return AgentReply(localAnswer, mood: guessExpression(localAnswer));
     }
 
-    if (!_hasRemoteModel) {
-      return _tryLocalAnswer(trimmed, force: true)!;
+    // 3. The cloud model, with tools, for everything else.
+    if (_hasRemoteModel) {
+      final remote = await _askModel(trimmed);
+      if (remote != null) return remote;
     }
 
+    final fallback = _tryLocalAnswer(trimmed, force: true)!;
+    return AgentReply(fallback, mood: guessExpression(fallback));
+  }
+
+  Future<AgentReply?> _askModel(String trimmed) async {
     for (final modelName in _modelCandidates) {
       try {
         if (_activeModel != modelName) {
           _resetSession(modelName: modelName);
         }
         _session ??= _createSession(modelName);
+        _agent.tools.takeSideEffects(); // start clean
 
-        final response = await _session!.sendMessage(
+        var response = await _session!.sendMessage(
           Content.text(
             'LeSgo app customer support question: $trimmed\n'
             'Answer only if this is about LeSgo app customer service. Otherwise refuse briefly.',
           ),
         );
 
-        final text = _extractResponseText(response);
-        if (text != null && text.isNotEmpty) {
+        // Let the model call tools (read data, propose actions) a few times.
+        for (var i = 0; i < 5; i++) {
+          final calls = response.functionCalls.toList();
+          if (calls.isEmpty) break;
+          final results = <FunctionResponse>[];
+          for (final call in calls) {
+            results.add(
+              FunctionResponse(call.name, await _agent.tools.execute(call.name, call.args)),
+            );
+          }
+          response = await _session!.sendMessage(Content.functionResponses(results));
+        }
+
+        final raw = _extractResponseText(response);
+        if (raw != null && raw.isNotEmpty) {
           _activeModel = modelName;
-          return text;
+          final split = splitMoodTag(raw);
+          final fx = _agent.tools.takeSideEffects();
+          return AgentReply(
+            split.text,
+            mood: split.mood ?? guessExpression(split.text),
+            actions: fx.actions,
+            links: fx.links,
+          );
         }
       } on GenerativeAIException catch (e) {
         if (kDebugMode) {
@@ -112,11 +166,7 @@ Rules:
         }
       }
     }
-
-    final fallback = _tryLocalAnswer(trimmed, force: true);
-    if (fallback != null) return fallback;
-
-    return _tryLocalAnswer(trimmed, force: true)!;
+    return null;
   }
 
   bool _isQuotaError(GenerativeAIException error) {
@@ -160,6 +210,7 @@ Rules:
         temperature: 0.3,
         maxOutputTokens: 512,
       ),
+      tools: ChatAgentTools.declarations,
     );
     _session = _model!.startChat();
   }
@@ -173,6 +224,7 @@ Rules:
         temperature: 0.3,
         maxOutputTokens: 512,
       ),
+      tools: ChatAgentTools.declarations,
     );
     return _model!.startChat();
   }

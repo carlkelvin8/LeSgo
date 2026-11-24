@@ -1,9 +1,9 @@
+import '../../../core/utils/map_pins.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../core/constants/map_styles.dart';
-import '../../../core/utils/marker_utils.dart';
 import '../../../core/utils/booking_geo_utils.dart';
 import '../../provider/main/location/location_provider.dart';
 
@@ -32,8 +32,6 @@ class LocationMapWidget extends ConsumerStatefulWidget {
 }
 
 class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
-  BitmapDescriptor? _roseMarker;
-
   @override
   void initState() {
     super.initState();
@@ -41,12 +39,7 @@ class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
   }
 
   Future<void> _loadMarker() async {
-    _roseMarker = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
-      'assets/images/marker_rose.png',
-    ).catchError((_) async {
-      return MarkerUtils.createColoredMarker(const Color(0xFFFF69B4));
-    });
+    await MapPins.preload();
     if (mounted) setState(() {});
   }
 
@@ -60,9 +53,8 @@ class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
         Marker(
           markerId: const MarkerId('pickup'),
           position: locationState.pickupLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueViolet,
-          ),
+          icon: MapPins.icon(MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Pickup Location'),
         ),
       );
@@ -72,9 +64,8 @@ class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
         Marker(
           markerId: const MarkerId('destination'),
           position: locationState.destinationLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueAzure,
-          ),
+          icon: MapPins.icon(MapPinKind.destination),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Destination'),
         ),
       );
@@ -85,8 +76,8 @@ class _LocationMapWidgetState extends ConsumerState<LocationMapWidget> {
         Marker(
           markerId: const MarkerId('selected'),
           position: locationState.selectedLocation!,
-          icon: _roseMarker ??
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose),
+          icon: MapPins.icon(MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: 'Selected Location',
             snippet: draggable ? 'Drag to adjust pin' : null,

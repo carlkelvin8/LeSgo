@@ -18,6 +18,10 @@ class PaymentMethodSelector extends StatelessWidget {
   final bool showWallet;
   final bool showDigitalPayments;
 
+  /// Cash wording differs per service (a ride is paid to the driver, not on delivery).
+  final String cashTitle;
+  final String cashSubtitle;
+
   const PaymentMethodSelector({
     super.key,
     required this.selectedMethod,
@@ -28,6 +32,8 @@ class PaymentMethodSelector extends StatelessWidget {
     this.minimumWalletAmount,
     this.showWallet = false,
     this.showDigitalPayments = false,
+    this.cashTitle = 'Cash on Delivery',
+    this.cashSubtitle = 'Pay with cash when order arrives',
   });
 
   bool get _walletHasSufficientBalance {
@@ -71,8 +77,8 @@ class PaymentMethodSelector extends StatelessWidget {
             _buildPaymentOption(
               context: context,
               value: 'cash',
-              title: 'Cash on Delivery',
-              subtitle: 'Pay with cash when order arrives',
+              title: cashTitle,
+              subtitle: cashSubtitle,
               icon: Icons.local_atm_outlined,
               enabled: enabled,
             ),

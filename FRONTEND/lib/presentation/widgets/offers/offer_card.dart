@@ -1,5 +1,6 @@
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import '../common/service_icon.dart';
 
 import '../../../core/utils/responsive_utils.dart';
 import '../../provider/main/offers/offers_provider.dart';
@@ -40,15 +41,7 @@ class OfferCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(_serviceIcon(offer.service), color: accent),
-              ),
+              ServiceIcon(offer.service, size: 56),
               SizedBox(width: ResponsiveUtils.spacing(context, 12)),
               Expanded(
                 child: Column(
@@ -205,21 +198,6 @@ class OfferCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  IconData _serviceIcon(String service) {
-    switch (service) {
-      case 'LesRide':
-        return Icons.two_wheeler;
-      case 'LesEat':
-        return Icons.restaurant;
-      case 'LesPay':
-        return Icons.account_balance_wallet;
-      case 'LesBuy':
-        return Icons.shopping_bag;
-      default:
-        return Icons.local_shipping;
-    }
   }
 }
 

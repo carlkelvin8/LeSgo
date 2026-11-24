@@ -1,3 +1,4 @@
+import '../../../../../core/utils/map_pins.dart';
 import 'package:lesgo/core/utils/money.dart';
 import '../../../../../core/utils/leseat_status_text.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
@@ -20,6 +21,8 @@ import '../../../../../core/utils/booking_geo_utils.dart';
 import '../../../../widgets/chat/order_chat_widget.dart';
 import '../../../../widgets/chat/chat_button_widget.dart';
 import '../../../../widgets/tracking/live_rider_map.dart';
+import '../../../../widgets/orders/order_style.dart';
+import '../../../../widgets/orders/premium_order_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LeseatOrderTrackingScreen extends ConsumerStatefulWidget {
@@ -55,6 +58,9 @@ class _LeseatOrderTrackingScreenState
       ref
           .read(liveTrackingProvider(int.parse(widget.orderId)).notifier)
           .setContext(context);
+      ref
+          .read(liveTrackingProvider(int.parse(widget.orderId)).notifier)
+          .setPinKinds(pickup: MapPinKind.store, dropoff: MapPinKind.customer);
       _fitBounds();
     });
     _fetchCurrentOrderData();
@@ -97,8 +103,16 @@ class _LeseatOrderTrackingScreenState
         // Use effective total amount
         final grandTotal = order.effectiveTotalAmount;
 
-        // Restaurant name — backend stores it in pickup_contact_name for LesEat
+        final branch = meta?['branch'];
+        final branchName = branch is Map
+            ? branch['name']?.toString().trim()
+            : null;
+        final pickupContact = order.pickupContactName?.trim();
+        final pickupBranch = branchName?.isNotEmpty == true
+            ? (pickupContact?.isNotEmpty == true ? pickupContact : branchName)
+            : null;
         final restaurantName =
+            pickupBranch ??
             widget.orderData?['restaurantName'] ??
             meta?['restaurant_name'] ??
             order.pickupContactName ??
@@ -108,6 +122,8 @@ class _LeseatOrderTrackingScreenState
           _orderDriverInfo = DriverInfo.fromOrder(order);
           _currentOrderData = {
             'restaurantName': restaurantName,
+            if (pickupBranch != null)
+              'pickupBranchAddress': order.pickupAddress,
             'subtotal': foodSubtotal,
             'deliveryFee': deliveryFee,
             'total': grandTotal,
@@ -577,108 +593,49 @@ class _LeseatOrderTrackingScreenState
                           ],
 
                           // Delivery Status Banner
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(
-                              ResponsiveUtils.spacing(context, 16),
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface(
-                                context,
-                                const Color(0xFFFFF3CD),
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.border(
-                                  context,
-                                  const Color(0xFFFFE69C),
+                          Builder(
+                            builder: (_) {
+                              final raw = trackingState.orderStatus
+                                  .trim()
+                                  .toLowerCase();
+                              return StatusBanner(
+                                icon: OrderStyle.status(raw).icon,
+                                title: LesEatStatusText.title(
+                                  trackingState.orderStatus,
                                 ),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(
-                                    ResponsiveUtils.spacing(context, 8),
-                                  ),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFFFC107),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.restaurant,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
+                                subtitle: LesEatStatusText.subtext(
+                                  trackingState.orderStatus,
                                 ),
-                                SizedBox(
-                                  width: ResponsiveUtils.spacing(context, 12),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        LesEatStatusText.title(
-                                          trackingState.orderStatus,
-                                        ),
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          fontSize: ResponsiveUtils.fontSize(
-                                            context,
-                                            16,
-                                          ),
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.foreground(
-                                            context,
-                                            const Color(0xFF856404),
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        LesEatStatusText.subtext(
-                                          trackingState.orderStatus,
-                                        ),
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          fontSize: ResponsiveUtils.fontSize(
-                                            context,
-                                            12,
-                                          ),
-                                          color: AppColors.foreground(
-                                            context,
-                                            const Color(0xFF856404),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                                tone:
+                                    const {
+                                      'cancelled',
+                                      'canceled',
+                                      'failed',
+                                    }.contains(raw)
+                                    ? HeroTone.danger
+                                    : const {
+                                        'completed',
+                                        'delivered',
+                                      }.contains(raw)
+                                    ? HeroTone.success
+                                    : HeroTone.active,
+                              );
+                            },
                           ),
 
                           SizedBox(
-                            height: ResponsiveUtils.spacing(context, 20),
+                            height: ResponsiveUtils.spacing(context, 16),
                           ),
 
                           // Restaurant Section
                           _buildRestaurantSection(context, orderData),
 
                           SizedBox(
-                            height: ResponsiveUtils.spacing(context, 20),
+                            height: ResponsiveUtils.spacing(context, 16),
                           ),
 
-                          // Order Items Section
-                          _buildOrderItemsSection(context, orderData),
-
-                          SizedBox(
-                            height: ResponsiveUtils.spacing(context, 20),
-                          ),
-
-                          // Order Summary
-                          _buildOrderSummary(context, orderData),
+                          // Receipt: items, fees and total
+                          _buildReceipt(context, orderData),
 
                           SizedBox(
                             height: ResponsiveUtils.spacing(context, 20),
@@ -697,38 +654,10 @@ class _LeseatOrderTrackingScreenState
                           ),
 
                           // Contact Driver Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _contactDriver,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.surface(
-                                  context,
-                                  Colors.grey[600]!,
-                                ),
-                                padding: EdgeInsets.symmetric(
-                                  vertical: ResponsiveUtils.spacing(
-                                    context,
-                                    14,
-                                  ),
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Text(
-                                'Contact Driver',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(
-                                    context,
-                                    16,
-                                  ),
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                          PremiumButton(
+                            label: 'Contact driver',
+                            icon: Icons.chat_bubble_outline_rounded,
+                            onPressed: _contactDriver,
                           ),
 
                           // Cancel Order Button (if applicable)
@@ -738,45 +667,12 @@ class _LeseatOrderTrackingScreenState
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 12),
                             ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: OutlinedButton(
-                                onPressed: _isCancelling
-                                    ? null
-                                    : _handleCancelOrder,
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.red[700],
-                                  side: BorderSide(color: Colors.red[700]!),
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: ResponsiveUtils.spacing(
-                                      context,
-                                      14,
-                                    ),
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: _isCancelling
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Text(
-                                        'Cancel Order',
-                                        style: TextStyle(
-                                          fontFamily: 'TT Fors',
-                                          fontSize: ResponsiveUtils.fontSize(
-                                            context,
-                                            16,
-                                          ),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                              ),
+                            PremiumButton(
+                              label: 'Cancel order',
+                              danger: true,
+                              outlined: true,
+                              loading: _isCancelling,
+                              onPressed: _handleCancelOrder,
                             ),
                           ],
 
@@ -836,226 +732,45 @@ class _LeseatOrderTrackingScreenState
     BuildContext context,
     Map<String, dynamic> orderData,
   ) {
-    final restaurantName = orderData['restaurantName'] ?? 'Restaurant';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Restaurant',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 16),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-        Container(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.grey[50]!),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: AppColors.border(context, Colors.grey[200]!),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.orange[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.restaurant,
-                  color: Colors.orange[700],
-                  size: 20,
-                ),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              Expanded(
-                child: Text(
-                  restaurantName,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.foreground(context, Colors.black87),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+    final restaurantName = '${orderData['restaurantName'] ?? 'Restaurant'}';
+    final branchAddress = orderData['pickupBranchAddress'] as String?;
+    return PlaceCard(
+      label: branchAddress == null ? 'Restaurant' : 'Pickup branch',
+      name: restaurantName,
+      address: branchAddress,
     );
   }
 
-  Widget _buildOrderItemsSection(
-    BuildContext context,
-    Map<String, dynamic> orderData,
-  ) {
+  Widget _buildReceipt(BuildContext context, Map<String, dynamic> orderData) {
     final items = OrderLineItemsParser.fromOrderDataMap(orderData);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Your Order',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 16),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        if (items.isEmpty)
-          Text(
-            'Item details will appear once the restaurant confirms your order.',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: AppColors.foreground(context, Colors.grey[600]!),
-            ),
-          )
-        else
-          ...items.map((item) {
-            final itemTotal = item.price * item.quantity;
-            return _buildOrderItem(
-              context,
-              item.name,
-              Money.format(item.price),
-              item.quantity,
-              itemTotal: itemTotal,
-            );
-          }),
-      ],
-    );
-  }
-
-  Widget _buildOrderItem(
-    BuildContext context,
-    String name,
-    String price,
-    int quantity, {
-    double? itemTotal,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.grey[50]!),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: Colors.blue[100],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.fastfood, size: 12, color: Colors.blue[700]),
-          ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.foreground(context, Colors.black87),
-                  ),
-                ),
-                if (quantity > 1)
-                  Text(
-                    '$price x $quantity',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: AppColors.foreground(context, Colors.grey[600]!),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Text(
-            itemTotal != null && quantity > 1 ? Money.format(itemTotal) : price,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-              fontWeight: FontWeight.w600,
-              color: AppColors.foreground(context, Colors.black87),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderSummary(
-    BuildContext context,
-    Map<String, dynamic> orderData,
-  ) {
-    // Safely convert to double with proper type checking
     final subtotal = _safeToDouble(orderData['subtotal']);
     final deliveryFee = _safeToDouble(orderData['deliveryFee']);
     final total = _safeToDouble(orderData['total']);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Order Summary',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 16),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
+    final muted = AppColors.foreground(context, Colors.grey[600]!);
+    return ReceiptCard(
+      items: [
+        for (final item in items)
+          ReceiptItem(
+            qty: item.quantity,
+            name: item.name,
+            price: Money.format(item.price * item.quantity),
           ),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        Container(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.grey[50]!),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: AppColors.border(context, Colors.grey[200]!),
-            ),
-          ),
-          child: Column(
-            children: [
-              _buildSummaryRow(context, 'Subtotal', Money.format(subtotal)),
-              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-              _buildSummaryRow(
-                context,
-                'Delivery Fee',
-                Money.format(deliveryFee),
-              ),
-              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-              Divider(color: AppColors.border(context, Colors.grey[300]!)),
-              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-              _buildSummaryRow(
-                context,
-                'Total',
-                Money.format(total),
-                isTotal: true,
-              ),
-            ],
-          ),
-        ),
       ],
+      rows: [
+        ReceiptRow('Subtotal', Money.format(subtotal)),
+        ReceiptRow('Delivery fee', Money.format(deliveryFee)),
+      ],
+      total: Money.format(total),
+      footer: items.isEmpty
+          ? Text(
+              'Item details will appear once the restaurant confirms your order.',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 12.5),
+                color: muted,
+              ),
+            )
+          : null,
     );
   }
 
@@ -1067,40 +782,5 @@ class _LeseatOrderTrackingScreenState
       return double.tryParse(value) ?? 0.0;
     }
     return 0.0;
-  }
-
-  // Helper method to safely convert values to int
-
-  Widget _buildSummaryRow(
-    BuildContext context,
-    String label,
-    String value, {
-    bool isTotal = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, isTotal ? 16 : 14),
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, isTotal ? 16 : 14),
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-            color: isTotal
-                ? AppColors.accent(context, Color(0xFF5F2D82))
-                : AppColors.foreground(context, Colors.black87),
-          ),
-        ),
-      ],
-    );
   }
 }
