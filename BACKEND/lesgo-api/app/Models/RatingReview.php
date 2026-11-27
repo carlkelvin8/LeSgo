@@ -117,9 +117,13 @@ class RatingReview extends Model
     /**
      * Get average rating breakdown.
      */
-    public static function getAverageRatings($driverId = null, $serviceId = null): array
+    public static function getAverageRatings($driverId = null, $serviceId = null, $partnerId = null): array
     {
         $query = static::where('status', 'approved');
+
+        if ($partnerId) {
+            $query->whereHas('order', fn ($order) => $order->where('partner_id', $partnerId));
+        }
         
         if ($driverId) {
             $query->where('driver_id', $driverId);
@@ -143,9 +147,13 @@ class RatingReview extends Model
     /**
      * Get rating distribution.
      */
-    public static function getRatingDistribution($driverId = null, $serviceId = null): array
+    public static function getRatingDistribution($driverId = null, $serviceId = null, $partnerId = null): array
     {
         $query = static::where('status', 'approved');
+
+        if ($partnerId) {
+            $query->whereHas('order', fn ($order) => $order->where('partner_id', $partnerId));
+        }
         
         if ($driverId) {
             $query->where('driver_id', $driverId);
@@ -157,7 +165,7 @@ class RatingReview extends Model
 
         $distribution = [];
         for ($i = 1; $i <= 5; $i++) {
-            $distribution[$i] = $query->where('overall_rating', $i)->count();
+            $distribution[$i] = (clone $query)->where('overall_rating', $i)->count();
         }
 
         return $distribution;

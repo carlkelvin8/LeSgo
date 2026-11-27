@@ -7,6 +7,8 @@ import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../provider/main/merchantside/merchant_reviews_provider.dart';
 import 'merchant_rating_stars_display.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../core/utils/app_localization.dart';
 
 class MerchantReviewsPreviewCard extends ConsumerWidget {
   const MerchantReviewsPreviewCard({super.key});
@@ -29,7 +31,7 @@ class MerchantReviewsPreviewCard extends ConsumerWidget {
     );
 
     return Material(
-      color: const Color(0xFFF5F4F7),
+      color: context.surf(const Color(0xFFF5F4F7)),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: () => AppRouter.push(context, MainRoutes.merchantReviews),
@@ -44,7 +46,7 @@ class MerchantReviewsPreviewCard extends ConsumerWidget {
                   Container(
                     padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 7)),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -54,21 +56,21 @@ class MerchantReviewsPreviewCard extends ConsumerWidget {
                     ),
                   ),
                   const Spacer(),
-                  const Icon(
+                  Icon(
                     Icons.north_east_rounded,
                     size: 14,
-                    color: Color(0xFFA49BAE),
+                    color: context.sub(Color(0xFFA49BAE)),
                   ),
                 ],
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Text(
-                'Customer Reviews',
+                context.tr('Customer Reviews'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF302B36),
+                  color: context.txt(const Color(0xFF302B36)),
                 ),
               ),
               SizedBox(height: ResponsiveUtils.spacing(context, 6)),
@@ -85,7 +87,7 @@ class MerchantReviewsPreviewCard extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
-                      color: const Color(0xFF918A98),
+                      color: context.sub(const Color(0xFF918A98)),
                     ),
                   ),
                 ],

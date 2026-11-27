@@ -1,13 +1,13 @@
-import 'dart:convert';
+import '../../../../core/utils/address_text_utils.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:http/http.dart' as http;
 import '../../../../domain/models/location/location_address.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/services/address_geocoder.dart';
+import '../../../../core/utils/ph_address.dart';
 import '../../../../core/utils/directions_route_service.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
 
@@ -277,7 +277,10 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
 
     if (addressComponents != null && addressComponents.isNotEmpty) {
       // Use structured address components from Google Places API
-      address = _parseAddressComponents(addressComponents);
+      address = _parseAddressComponents(
+        addressComponents,
+        formattedAddress: formattedAddress,
+      );
     } else if (formattedAddress != null && formattedAddress.isNotEmpty) {
       // Use formatted address from Google Places API
       address = _parseFormattedAddress(formattedAddress);
@@ -319,7 +322,10 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
 
     if (addressComponents != null && addressComponents.isNotEmpty) {
       // Use structured address components from Google Places API
-      address = _parseAddressComponents(addressComponents);
+      address = _parseAddressComponents(
+        addressComponents,
+        formattedAddress: formattedAddress,
+      );
     } else if (formattedAddress != null && formattedAddress.isNotEmpty) {
       // Use formatted address from Google Places API
       address = _parseFormattedAddress(formattedAddress);
@@ -345,41 +351,23 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
     state = state.copyWith(routePolylines: {}, clearRouteMetrics: true);
   }
 
-  LocationAddress? _parseAddressComponents(Map<String, String> components) {
-    final houseNumber =
-        components['houseNumber'] ?? components['street_number'] ?? '';
-    final streetName = components['streetName'] ?? components['route'] ?? '';
-    final houseNumberStreet = houseNumber.isNotEmpty && streetName.isNotEmpty
-        ? '$houseNumber $streetName'
-        : streetName.isNotEmpty
-        ? streetName
-        : houseNumber;
-
-    final barangay = components['barangay'] ?? '';
-    final city = components['city'] ?? '';
-    final province = components['province'] ?? '';
-    final cityProvince = city.isNotEmpty && province.isNotEmpty
-        ? '$city, $province'
-        : city.isNotEmpty
-        ? city
-        : province;
-
-    final zipCode = components['zipCode'] ?? '';
-
-    return LocationAddress(
-      houseNumberStreet: houseNumberStreet.isNotEmpty
-          ? houseNumberStreet
-          : null,
-      subdivisionBarangay: barangay.isNotEmpty ? barangay : null,
-      cityProvince: cityProvince.isNotEmpty ? cityProvince : null,
-      zipCode: zipCode.isNotEmpty ? zipCode : null,
+  LocationAddress? _parseAddressComponents(
+    Map<String, String> components, {
+    String? formattedAddress,
+  }) {
+    final ph = PhAddressParser.fromComponentMap(
+      components,
+      formattedAddress: formattedAddress,
     );
+    return ph.isEmpty ? null : LocationAddress.fromPh(ph);
   }
 
   LocationAddress? _parseFormattedAddress(String formattedAddress) {
     // Parse formatted address like "Malolos, Bulacan, Philippines"
     // Split by comma and assign to appropriate fields
-    final parts = formattedAddress.split(',').map((e) => e.trim()).toList();
+    final parts = stripPlusCode(
+      formattedAddress,
+    ).split(',').map((e) => e.trim()).toList();
 
     if (parts.isEmpty) return null;
 
@@ -625,7 +613,6 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
           color: const Color(0xFF1976D2),
           width: 6,
           geodesic: true,
-          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
         );
 
         state = state.copyWith(
@@ -658,10 +645,6 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         color: const Color(0xFF1976D2), // Blue color
         width: 6, // Medium thickness
         geodesic: true, // Enable geodesic
-        patterns: [
-          PatternItem.dash(20),
-          PatternItem.gap(10),
-        ], // Dashed for error
       );
 
       state = state.copyWith(
@@ -680,189 +663,20 @@ class LesrideLocationNotifier extends StateNotifier<LesrideLocationState> {
         state.destinationLocation == destination;
   }
 
+  final _geocoder = AddressGeocoder();
+
   Future<LocationAddress?> _getAddressFromLocation(LatLng location) async {
-    try {
-      print('🔍 LesrideLocation: Reverse geocoding for: $location');
-
-      // Try Google Geocoding API first (more reliable and detailed)
-      final googleAddress = await _getAddressFromGoogleAPI(location);
-      if (googleAddress != null) {
-        return googleAddress;
-      }
-
-      // Fallback to geocoding package
-      final placemarks = await placemarkFromCoordinates(
-        location.latitude,
-        location.longitude,
-      );
-
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-
-        final streetName = place.thoroughfare ?? place.street ?? '';
-        final houseNumber = place.subThoroughfare ?? '';
-        final houseNumberStreet =
-            houseNumber.isNotEmpty && streetName.isNotEmpty
-            ? '$houseNumber $streetName'
-            : streetName;
-
-        final address = LocationAddress(
-          houseNumberStreet: houseNumberStreet,
-          subdivisionBarangay: place.subLocality ?? place.locality ?? '',
-          cityProvince:
-              '${place.locality ?? ''}, ${place.administrativeArea ?? ''}'
-                  .trim(),
-          zipCode: place.postalCode ?? '',
-        );
-
-        return address;
-      }
-    } catch (e) {
-      print('🔴 LesrideLocation: Geocoding error: $e');
-    }
-    return null;
+    final ph = await _geocoder.reverse(location);
+    if (ph == null || ph.isEmpty) return null;
+    return LocationAddress.fromPh(ph);
   }
 
-  Future<LocationAddress?> _getAddressFromGoogleAPI(LatLng location) async {
-    try {
-      // Check if we have a Google Maps API key
-      if (!ApiConstants.isGoogleMapsConfigured) {
-        print('🔴 LesrideLocation: No Google Maps API key configured');
-        return null;
-      }
-
-      final url =
-          'https://maps.googleapis.com/maps/api/geocode/json'
-          '?latlng=${location.latitude},${location.longitude}'
-          '&key=${ApiConstants.googleMapsApiKey}';
-
-      print('🔍 LesrideLocation: Calling Google Geocoding API...');
-
-      final response = await http
-          .get(Uri.parse(url))
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              print('🔴 LesrideLocation: Google API timeout');
-              throw Exception('Timeout');
-            },
-          );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        print(
-          '🔍 LesrideLocation: Google API response status: ${data['status']}',
-        );
-
-        if (data['status'] == 'OK' &&
-            data['results'] != null &&
-            data['results'].isNotEmpty) {
-          final results = data['results'] as List<dynamic>;
-
-          // Try to find the most detailed result (with route/street information)
-          dynamic bestResult;
-          int bestScore = 0;
-
-          for (var result in results) {
-            final types = result['types'] as List<dynamic>?;
-            final addressComponents =
-                result['address_components'] as List<dynamic>?;
-            int score = 0;
-
-            // Prioritize results with street/route information
-            if (types != null) {
-              if (types.contains('street_address')) score += 100;
-              if (types.contains('premise')) score += 90;
-              if (types.contains('route')) score += 80;
-              if (types.contains('sublocality')) score += 70;
-              if (types.contains('locality')) score += 50;
-              // Deprioritize plus_code only results
-              if (types.contains('plus_code') && types.length == 1) score -= 50;
-            }
-
-            // Check if it has route/street in address components
-            if (addressComponents != null) {
-              for (var component in addressComponents) {
-                final componentTypes = component['types'] as List<dynamic>?;
-                if (componentTypes != null) {
-                  if (componentTypes.contains('route')) score += 30;
-                  if (componentTypes.contains('street_number')) score += 20;
-                  if (componentTypes.contains('sublocality_level_1')) {
-                    score += 15;
-                  }
-                  if (componentTypes.contains('sublocality_level_2')) {
-                    score += 10;
-                  }
-                }
-              }
-            }
-
-            if (score > bestScore) {
-              bestScore = score;
-              bestResult = result;
-            }
-          }
-
-          // Use the best result found
-          if (bestResult != null) {
-            final formattedAddress = bestResult['formatted_address'] as String?;
-
-            print(
-              '🔍 LesrideLocation: Using best result with score $bestScore: $formattedAddress',
-            );
-
-            // Use formatted address parsing
-            if (formattedAddress != null && formattedAddress.isNotEmpty) {
-              // Use the most detailed part of the formatted address
-              final addressParts = formattedAddress
-                  .split(',')
-                  .map((e) => e.trim())
-                  .toList();
-
-              // Remove "Philippines" if it's the last part
-              if (addressParts.isNotEmpty &&
-                  addressParts.last.toLowerCase().contains('philippines')) {
-                addressParts.removeLast();
-              }
-
-              // Take the first 2-3 most specific parts
-              String detailedAddress;
-              if (addressParts.length >= 3) {
-                detailedAddress = addressParts.take(3).join(', ');
-              } else if (addressParts.length >= 2) {
-                detailedAddress = addressParts.take(2).join(', ');
-              } else {
-                detailedAddress = addressParts.isNotEmpty
-                    ? addressParts[0]
-                    : formattedAddress;
-              }
-
-              print(
-                '🔍 LesrideLocation: Using detailed address: $detailedAddress',
-              );
-
-              return LocationAddress(
-                houseNumberStreet: null,
-                subdivisionBarangay: null,
-                cityProvince: detailedAddress,
-                zipCode: null,
-              );
-            }
-          }
-        } else {
-          print('🔴 LesrideLocation: Google API error: ${data['status']}');
-        }
-      } else {
-        print(
-          '🔴 LesrideLocation: Google API HTTP error: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      print('🔴 LesrideLocation: Google API exception: $e');
-    }
-
-    return null;
+  /// Replaces the pin's address with the customer's confirmed details.
+  void setAddressDetails({required bool destination, required PhAddress details}) {
+    final address = LocationAddress.fromPh(details);
+    state = destination
+        ? state.copyWith(destinationAddress: address, address: address)
+        : state.copyWith(pickupAddress: address, address: address);
   }
 }
 

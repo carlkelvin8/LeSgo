@@ -94,17 +94,8 @@ class MerchantWithdrawalService
                 throw new \RuntimeException("Cannot cancel withdrawal in '{$locked->status}' status.");
             }
 
-            $partner = $locked->partner;
-
-            if ($partner && $partner->user) {
-                WalletService::credit(
-                    $partner->user,
-                    (float) $locked->amount,
-                    'Withdrawal cancelled ' . $locked->reference_number,
-                    MerchantWithdrawalRequest::class,
-                    $locked->id,
-                );
-            }
+            // Never mark it cancelled without giving the money back.
+            self::releaseReservedFunds($locked, 'Withdrawal cancelled ' . $locked->reference_number);
 
             $locked->update([
                 'status' => MerchantWithdrawalRequest::STATUS_CANCELLED,
@@ -112,5 +103,108 @@ class MerchantWithdrawalService
 
             return $locked->load(['user', 'wallet', 'partner']);
         });
+    }
+
+    /** Admin: accept a pending request and start paying it out. */
+    public static function approve(MerchantWithdrawalRequest $withdrawal, User $admin, ?string $notes = null): MerchantWithdrawalRequest
+    {
+        return self::transition($withdrawal, [MerchantWithdrawalRequest::STATUS_PENDING], function ($locked) use ($admin, $notes) {
+            $locked->update([
+                'status' => MerchantWithdrawalRequest::STATUS_PROCESSING,
+                'approved_by' => $admin->id,
+                'approved_at' => now(),
+                'admin_notes' => $notes ?? $locked->admin_notes,
+            ]);
+        });
+    }
+
+    /** Admin: the payout was sent. Funds stay debited. */
+    public static function complete(MerchantWithdrawalRequest $withdrawal, User $admin, ?string $notes = null): MerchantWithdrawalRequest
+    {
+        return self::transition($withdrawal, [
+            MerchantWithdrawalRequest::STATUS_PENDING,
+            MerchantWithdrawalRequest::STATUS_PROCESSING,
+        ], function ($locked) use ($admin, $notes) {
+            $locked->update([
+                'status' => MerchantWithdrawalRequest::STATUS_COMPLETED,
+                'approved_by' => $locked->approved_by ?? $admin->id,
+                'approved_at' => $locked->approved_at ?? now(),
+                'processed_by' => $admin->id,
+                'processed_at' => now(),
+                'completed_at' => now(),
+                'admin_notes' => $notes ?? $locked->admin_notes,
+            ]);
+        });
+    }
+
+    /** Admin: refuse the request. The reserved funds go back to the wallet. */
+    public static function reject(MerchantWithdrawalRequest $withdrawal, User $admin, string $reason): MerchantWithdrawalRequest
+    {
+        return self::transition($withdrawal, [
+            MerchantWithdrawalRequest::STATUS_PENDING,
+            MerchantWithdrawalRequest::STATUS_PROCESSING,
+        ], function ($locked) use ($admin, $reason) {
+            self::releaseReservedFunds($locked, 'Withdrawal rejected ' . $locked->reference_number);
+            $locked->update([
+                'status' => MerchantWithdrawalRequest::STATUS_REJECTED,
+                'rejection_reason' => $reason,
+                'processed_by' => $admin->id,
+                'processed_at' => now(),
+            ]);
+        });
+    }
+
+    /** Admin: the payout was attempted and failed. Funds go back to the wallet. */
+    public static function fail(MerchantWithdrawalRequest $withdrawal, User $admin, ?string $reason = null): MerchantWithdrawalRequest
+    {
+        return self::transition($withdrawal, [MerchantWithdrawalRequest::STATUS_PROCESSING], function ($locked) use ($admin, $reason) {
+            self::releaseReservedFunds($locked, 'Withdrawal failed ' . $locked->reference_number);
+            $locked->update([
+                'status' => MerchantWithdrawalRequest::STATUS_FAILED,
+                'rejection_reason' => $reason,
+                'processed_by' => $admin->id,
+                'processed_at' => now(),
+            ]);
+        });
+    }
+
+    /**
+     * Lock the request, check it is in an allowed state, run the change, return it.
+     *
+     * @param  array<int, string>  $allowedFrom
+     */
+    private static function transition(MerchantWithdrawalRequest $withdrawal, array $allowedFrom, \Closure $apply): MerchantWithdrawalRequest
+    {
+        return DB::transaction(function () use ($withdrawal, $allowedFrom, $apply) {
+            $locked = MerchantWithdrawalRequest::query()
+                ->whereKey($withdrawal->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! in_array($locked->status, $allowedFrom, true)) {
+                throw new \RuntimeException("Cannot change a withdrawal that is '{$locked->status}'.");
+            }
+
+            $apply($locked);
+
+            return $locked->fresh(['user', 'wallet', 'partner']);
+        });
+    }
+
+    /** Credit the reserved amount back once; refuses to silently skip. */
+    private static function releaseReservedFunds(MerchantWithdrawalRequest $locked, string $description): void
+    {
+        $owner = $locked->partner?->user;
+        if (! $owner) {
+            throw new \RuntimeException('Cannot release the funds: the merchant account was not found.');
+        }
+
+        WalletService::credit(
+            $owner,
+            (float) $locked->amount,
+            $description,
+            MerchantWithdrawalRequest::class,
+            $locked->id,
+        );
     }
 }

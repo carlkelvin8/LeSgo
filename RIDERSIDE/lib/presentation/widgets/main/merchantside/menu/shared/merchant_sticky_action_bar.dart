@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
 
 /// Shared bottom action bar padding for merchant form screens.
 class MerchantStickyActionBar extends StatelessWidget {
@@ -12,8 +13,8 @@ class MerchantStickyActionBar extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        color: context.surf(Colors.white),
+        border: Border(top: BorderSide(color: context.brd(Colors.grey.shade200))),
       ),
       padding: EdgeInsets.fromLTRB(
         ResponsiveUtils.horizontalPadding(context),

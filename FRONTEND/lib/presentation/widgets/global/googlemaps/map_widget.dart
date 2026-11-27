@@ -1,3 +1,4 @@
+import '../../../../core/utils/map_pins.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,9 +39,8 @@ class MapWidget extends ConsumerWidget {
               Marker(
                 markerId: const MarkerId('selected'),
                 position: registerState.selectedLocation!,
-                icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueViolet,
-                ),
+                icon: MapPins.icon(MapPinKind.customer),
+                anchor: MapPins.anchor,
                 infoWindow: const InfoWindow(title: 'Selected Location'),
               ),
             }
@@ -59,10 +59,7 @@ class MapWidget extends ConsumerWidget {
 class LocationButton extends StatelessWidget {
   final VoidCallback onUseCurrentLocation;
 
-  const LocationButton({
-    super.key,
-    required this.onUseCurrentLocation,
-  });
+  const LocationButton({super.key, required this.onUseCurrentLocation});
 
   @override
   Widget build(BuildContext context) {
@@ -80,10 +77,10 @@ class LocationButton extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.my_location,
                   size: 18,
-                  color: Color(0xFF5F2D82),
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
                 ),
                 const SizedBox(width: 6),
                 Text(

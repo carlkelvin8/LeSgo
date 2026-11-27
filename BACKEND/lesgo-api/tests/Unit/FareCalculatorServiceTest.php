@@ -58,7 +58,7 @@ class FareCalculatorServiceTest extends TestCase
         $this->assertSame(465.0, $fare['total']);
     }
 
-    public function test_lesgo_rates_are_unchanged(): void
+    public function test_lesgo_base_fare_covers_the_first_three_kilometers(): void
     {
         $lesgo = new Service([
             'code' => 'LESGO',
@@ -72,5 +72,23 @@ class FareCalculatorServiceTest extends TestCase
         $this->assertSame(40.0, $fare['base_fare']);
         $this->assertSame(19.0, $fare['distance_fare']);
         $this->assertSame(59.0, $fare['total']);
+    }
+
+    public function test_base_fare_of_60_covers_three_km_then_15_pesos_per_extra_km(): void
+    {
+        $leseat = new Service([
+            'code' => 'LESEAT',
+            'base_fare' => 60,
+            'per_km_rate' => 15,
+            'minimum_fare' => 60,
+        ]);
+
+        // Items worth up to 500 add the 15 peso service fee.
+        $this->assertSame(75.0, $this->calculator->calculate($leseat, 3, 100)['total']);
+        $this->assertSame(90.0, $this->calculator->calculate($leseat, 4, 100)['total']);
+        // 12.8 km: 60 + 9.8 x 15 = 207, + 15 service fee.
+        $this->assertSame(222.0, $this->calculator->calculate($leseat, 12.8, 100)['total']);
+        // 30 km (the maximum): 60 + 27 x 15 = 465, + 15 service fee = 480.
+        $this->assertSame(480.0, $this->calculator->calculate($leseat, 30, 100)['total']);
     }
 }

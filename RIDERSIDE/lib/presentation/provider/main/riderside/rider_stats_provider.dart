@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -58,7 +59,7 @@ final riderStatsProvider = FutureProvider.autoDispose<RiderStatsState>((ref) asy
       weeklyEarnings: 0,
       dailyTrendData: {},
       isLoaded: false,
-      error: e.toString(),
+      error: ApiErrorMapper.message(e),
     );
   }
 });

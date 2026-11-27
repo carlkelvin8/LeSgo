@@ -1,10 +1,8 @@
-import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../core/utils/responsive_utils.dart';
 
-class HeroBanner extends StatefulWidget {
-  final String userName;
+class HeroBanner extends StatelessWidget {
+  final String? userName;
   final bool showGreeting;
   final String backgroundImagePath;
   final String title;
@@ -22,212 +20,127 @@ class HeroBanner extends StatefulWidget {
   });
 
   @override
-  State<HeroBanner> createState() => _HeroBannerState();
-}
-
-class _HeroBannerState extends State<HeroBanner>
-    with SingleTickerProviderStateMixin {
-  bool _isPressed = false;
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200), // Faster pulse
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      // Bigger pulse
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final horizontalPadding = ResponsiveUtils.spacing(context, 16.0);
-    final bannerHeight = ResponsiveUtils.imageHeight(context, 220);
-    final borderRadius = ResponsiveUtils.spacing(context, 16);
-    final fontSize22 = ResponsiveUtils.fontSize(context, 22);
-    final fontSize12 = ResponsiveUtils.fontSize(context, 12);
-    final isSvg = widget.backgroundImagePath.toLowerCase().endsWith('.svg');
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surface = Theme.of(context).colorScheme.surface;
+    final isSvg = backgroundImagePath.toLowerCase().endsWith('.svg');
+    final greeting = showGreeting
+        ? (userName == null ? 'Welcome to LeSgo' : 'Hello, $userName!')
+        : null;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: bannerHeight),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: isSvg
-                    ? SvgPicture.asset(
-                        widget.backgroundImagePath,
-                        fit: BoxFit.cover,
-                      )
-                    : Image.asset(
-                        widget.backgroundImagePath,
-                        fit: BoxFit.cover,
-                      ),
-              ),
-              // Keep text readable while letting the artwork show through.
-              if (isDark || !isSvg)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        stops: isDark ? const [0.0, 0.5, 1.0] : null,
-                        colors: isDark
-                            ? [
-                                surface.withValues(alpha: 0.88),
-                                surface.withValues(alpha: 0.78),
-                                surface.withValues(alpha: 0.25),
-                              ]
-                            : [
-                                Colors.white.withValues(alpha: 0.85),
-                                const Color(0xFFF5EEFF).withValues(alpha: 0.7),
-                              ],
-                      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+        final wideCopy = textScale > 1.3 || constraints.maxWidth < 330;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            const ColoredBox(color: Color(0xFF241038)),
+            ExcludeSemantics(
+              child: isSvg
+                  ? SvgPicture.asset(
+                      backgroundImagePath,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                    )
+                  : Image.asset(
+                      backgroundImagePath,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
                     ),
-                  ),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: wideCopy
+                      ? const [
+                          Color(0xFF241038),
+                          Color(0xDE241038),
+                          Color(0xAC241038),
+                        ]
+                      : const [
+                          Color(0xFF241038),
+                          Color(0xE6241038),
+                          Color(0x19241038),
+                        ],
+                  stops: const [0, .40, 1],
                 ),
-
-              Padding(
-                padding: EdgeInsets.fromLTRB(ResponsiveUtils.spacing(context, 20), 20,
-                    ResponsiveUtils.spacing(context, 64), 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (widget.showGreeting) ...[
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: wideCopy
+                        ? (constraints.maxWidth - 36).clamp(0.0, 480.0)
+                        : (constraints.maxWidth * .62).clamp(0.0, 340.0),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (greeting != null) ...[
+                        Text(
+                          greeting,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFFE2CFFC),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                      ],
                       Text(
-                        'Hello, ${widget.userName}!',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: fontSize22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.foreground(context, Color(0xFF30213D)), // Dark purple text (matching profile)
-                          height: 1.15,
-                          letterSpacing: -0.5,
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          height: 1.12,
                         ),
                       ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                    ],
-                    Text(
-                      widget.title,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 16),
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.foreground(context, Color(0xFF30213D)), // Dark purple text
+                      const SizedBox(height: 6),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Color(0xFFF1E5FA),
+                          fontSize: 13,
+                          height: 1.35,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 2)),
-                    Text(
-                      widget.subtitle,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: AppColors.foreground(context, Color(0xFF57515E)), // Gray text (matching profile subtitle)
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-
-                    // Animated BOOK NOW button
-                    GestureDetector(
-                      onTapDown: (_) => setState(() => _isPressed = true),
-                      onTapUp: (_) {
-                        setState(() => _isPressed = false);
-                        widget.onBookNowPressed?.call();
-                      },
-                      onTapCancel: () => setState(() => _isPressed = false),
-                      child: AnimatedScale(
-                        scale: _isPressed ? 0.92 : 1.0,
-                        duration: const Duration(milliseconds: 100),
-                        curve: Curves.easeInOut,
-                        child: AnimatedBuilder(
-                          animation: _pulseAnimation,
-                          builder: (context, child) {
-                            return Transform.scale(
-                              scale: _pulseAnimation.value,
-                              child: child,
-                            );
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(
-                                ResponsiveUtils.spacing(context, 8),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  offset: const Offset(0, 4),
-                                  blurRadius: 8,
-                                  spreadRadius: 0,
-                                ),
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFFA930D0,
-                                  ).withValues(alpha: 0.4),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
-                                  spreadRadius: 0,
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: const Color(0xFFA930D0),
-                              borderRadius: BorderRadius.circular(
-                                ResponsiveUtils.spacing(context, 8),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: ResponsiveUtils.spacing(
-                                    context,
-                                    24,
-                                  ),
-                                  vertical: ResponsiveUtils.spacing(
-                                    context,
-                                    12,
-                                  ),
-                                ),
-                                child: Text(
-                                  'Book now',
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: fontSize12,
-                                    letterSpacing: 0.2,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: onBookNowPressed,
+                        icon: const Icon(Icons.arrow_forward_rounded, size: 17),
+                        iconAlignment: IconAlignment.end,
+                        label: const Text('Book now'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF5F2D82),
+                          minimumSize: const Size(0, 48),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

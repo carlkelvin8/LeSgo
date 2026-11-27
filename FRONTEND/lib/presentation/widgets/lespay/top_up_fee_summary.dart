@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -32,12 +33,7 @@ class TopUpFeeSummary extends StatelessWidget {
         children: [
           _row(context, 'Amount to wallet', pricing.walletAmount, textStyle),
           SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-          _row(
-            context,
-            'Top-up fee (1.5%)',
-            pricing.feeAmount,
-            textStyle,
-          ),
+          _row(context, 'Top-up fee (3%)', pricing.feeAmount, textStyle),
           Divider(height: ResponsiveUtils.spacing(context, 16)),
           _row(
             context,
@@ -66,7 +62,7 @@ class TopUpFeeSummary extends StatelessWidget {
       children: [
         Text(label, style: style),
         Text(
-          '₱${value.toStringAsFixed(2)}',
+          Money.format(value),
           style: style.copyWith(
             fontSize: isTotal
                 ? ResponsiveUtils.fontSize(context, 15)

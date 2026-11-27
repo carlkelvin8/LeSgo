@@ -69,7 +69,7 @@ class RiderBookingMapper {
     if (category == BookingCategory.lesRide) {
       return order.serviceName;
     }
-    return order.pickupAddress;
+    return order.pickupStoreLabel ?? order.pickupAddress;
   }
 
   static String _estimateTime(double distanceKm) {

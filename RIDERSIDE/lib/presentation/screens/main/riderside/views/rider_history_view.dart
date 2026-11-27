@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../provider/main/riderside/rider_history_provider.dart';
 import '../../../../widgets/widgets.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderHistoryView extends ConsumerStatefulWidget {
   const RiderHistoryView({super.key});
@@ -352,7 +353,7 @@ class _EmptyState extends StatelessWidget {
                     width: 8,
                   ),
                 ),
-                child: Icon(icon, size: 36, color: const Color(0xFF6D3EA0)),
+                child: Icon(icon, size: 36, color: context.acc(const Color(0xFF6D3EA0))),
               ),
             ),
             const SizedBox(height: 22),
@@ -402,17 +403,17 @@ class _EmptyState extends StatelessWidget {
                           ? Icons.filter_alt_off_outlined
                           : Icons.refresh_rounded,
                       size: 16,
-                      color: const Color(0xFF6D3EA0),
+                      color: context.acc(const Color(0xFF6D3EA0)),
                     ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
                         actionLabel,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF6D3EA0),
+                          color: context.acc(Color(0xFF6D3EA0)),
                         ),
                       ),
                     ),

@@ -1,6 +1,7 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import '../register_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../../domain/entities/auth/rider/rider_registration_info.dart';
 import '../../../../../domain/entities/auth/rider/rider_documents.dart';
@@ -185,17 +186,11 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     );
   }
 
-  Future<void> uploadSelfie() async {
+  Future<void> uploadSelfie(Future<XFile?> Function() capture) async {
     try {
       state = state.copyWith(isSelfieLoading: true, clearError: true);
 
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.front,
-        imageQuality: 85,
-        maxWidth: 1200,
-      );
+      final image = await capture();
 
       if (image != null) {
         state = state.copyWith(
@@ -208,20 +203,16 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isSelfieLoading: false,
-        errorMessage: 'Failed to capture selfie: ${e.toString()}',
+        errorMessage: 'Failed to capture selfie: ${ApiErrorMapper.message(e)}',
       );
     }
   }
 
-  Future<void> uploadSelfieWithMotorcycle() async {
+  Future<void> uploadSelfieWithMotorcycle(Future<XFile?> Function() capture) async {
     try {
       state = state.copyWith(isSelfieMotorcycleLoading: true, clearError: true);
 
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-      );
+      final image = await capture();
 
       if (image != null) {
         state = state.copyWith(
@@ -236,7 +227,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isSelfieMotorcycleLoading: false,
-        errorMessage: 'Failed to upload selfie: ${e.toString()}',
+        errorMessage: 'Failed to upload selfie: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -263,7 +254,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isResumeLoading: false,
-        errorMessage: 'Failed to upload resume: ${e.toString()}',
+        errorMessage: 'Failed to upload resume: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -290,7 +281,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isClearanceLoading: false,
-        errorMessage: 'Failed to upload clearance: ${e.toString()}',
+        errorMessage: 'Failed to upload clearance: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -317,7 +308,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isLicenseLoading: false,
-        errorMessage: 'Failed to upload license: ${e.toString()}',
+        errorMessage: 'Failed to upload license: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -344,7 +335,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isMotorcycleImageLoading: false,
-        errorMessage: 'Failed to upload OR/CR image: ${e.toString()}',
+        errorMessage: 'Failed to upload OR/CR image: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -371,7 +362,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isScannedORCRLoading: false,
-        errorMessage: 'Failed to upload scanned OR/CR: ${e.toString()}',
+        errorMessage: 'Failed to upload scanned OR/CR: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -398,7 +389,7 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     } catch (e) {
       state = state.copyWith(
         isSignatureLoading: false,
-        errorMessage: 'Failed to upload signature: ${e.toString()}',
+        errorMessage: 'Failed to upload signature: ${ApiErrorMapper.message(e)}',
       );
     }
   }

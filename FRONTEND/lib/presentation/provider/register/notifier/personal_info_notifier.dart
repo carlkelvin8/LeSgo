@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/phone_utils.dart';
 import 'register_state.dart';
-
 
 mixin PersonalInfoNotifier on StateNotifier<RegisterState> {
   void updatePersonalInfo({
@@ -19,7 +19,7 @@ mixin PersonalInfoNotifier on StateNotifier<RegisterState> {
         lastName: lastName,
         birthday: birthday,
         email: email,
-        phoneNumber: phoneNumber,
+        phoneNumber: PhoneUtils.normalizePh(phoneNumber),
         password: password,
         confirmPassword: confirmPassword,
         referralCode: referralCode ?? '',

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import '../../data/data_source/dto/address/address_dto.dart';
 import 'booking_geo_utils.dart';
 
@@ -19,7 +20,7 @@ class LesbuyManualDeliveryUtils {
   static const pendingHint =
       'Delivery fee will be calculated after your rider finds the items and uploads a photo at the store.';
   static const orderValuePendingHint =
-      'No minimum order — item prices and total are confirmed after your rider finds the products.';
+      'No minimum order. Item prices and total are confirmed after your rider finds the products.';
 
   static bool isManualOnlyCart({
     required bool hasStoreItems,
@@ -75,6 +76,6 @@ class LesbuyManualDeliveryUtils {
     required double deliveryFee,
   }) {
     if (isUncertain && deliveryFee <= 0) return pendingLabel;
-    return 'PHP ${deliveryFee.toStringAsFixed(2)}';
+    return Money.format(deliveryFee);
   }
 }

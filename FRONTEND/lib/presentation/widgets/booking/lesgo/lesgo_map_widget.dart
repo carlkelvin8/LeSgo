@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../provider/main/booking/lesgo_location_provider.dart';
 import '../../../../core/utils/booking_geo_utils.dart';
-import '../../../../core/utils/marker_utils.dart';
+import '../../../../core/utils/map_pins.dart';
 import '../../../../core/constants/map_styles.dart';
 import '../../global/googlemaps/map_route_info_banner.dart';
 
@@ -35,9 +35,6 @@ class LesgoMapWidget extends ConsumerStatefulWidget {
 
 class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
   GoogleMapController? _mapController;
-  BitmapDescriptor? _purpleMarker;
-  BitmapDescriptor? _redMarker;
-  BitmapDescriptor? _roseMarker;
 
   @override
   void initState() {
@@ -46,14 +43,7 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
   }
 
   Future<void> _loadMarkers() async {
-    _purpleMarker = await MarkerUtils.violetMarker;
-    _redMarker = await MarkerUtils.redMarker;
-    _roseMarker = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48, 48)),
-      'assets/images/marker_rose.png',
-    ).catchError((_) async {
-      return MarkerUtils.createColoredMarker(const Color(0xFFFF69B4));
-    });
+    await MapPins.preload();
     if (mounted) setState(() {});
   }
 
@@ -69,7 +59,7 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
     required LatLng? selected,
   }) {
     final markers = <Marker>{};
-    if (!widget.showPickupDestination || _purpleMarker == null) {
+    if (!widget.showPickupDestination || !MapPins.isReady) {
       return markers;
     }
 
@@ -78,20 +68,21 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
         Marker(
           markerId: const MarkerId('pickup'),
           position: pickup,
-          icon: _purpleMarker!,
+          icon: MapPins.icon(MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Pickup Location'),
         ),
       );
     }
 
     if (destination != null &&
-        _redMarker != null &&
         destination != pickup) {
       markers.add(
         Marker(
           markerId: const MarkerId('destination'),
           position: destination,
-          icon: _redMarker!,
+          icon: MapPins.icon(MapPinKind.destination),
+          anchor: MapPins.anchor,
           infoWindow: const InfoWindow(title: 'Destination'),
         ),
       );
@@ -99,7 +90,6 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
 
     if (widget.isFullscreen &&
         selected != null &&
-        _roseMarker != null &&
         selected != pickup &&
         selected != destination) {
       final draggable = widget.onMarkerDragEnd != null;
@@ -107,7 +97,8 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
         Marker(
           markerId: const MarkerId('selected'),
           position: selected,
-          icon: _roseMarker!,
+          icon: MapPins.icon(MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: 'Selected Location',
             snippet: draggable ? 'Drag to adjust pin' : null,
@@ -198,7 +189,12 @@ class _LesgoMapWidgetState extends ConsumerState<LesgoMapWidget> {
                 CameraUpdate.zoomOut(),
               ),
               onMyLocation: widget.onUseCurrentLocation,
-              onFitRoute: () => _fitMarkersInView(pickup!, destination!),
+              onFitRoute: () {
+                final p = pickup;
+                final d = destination;
+                if (p == null || d == null) return;
+                _fitMarkersInView(p, d);
+              },
             ),
           ),
         ],

@@ -37,9 +37,7 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
     final lesbuyNotifier = ref.read(lesbuyProvider.notifier);
     final profileState = ref.watch(profileProvider);
 
-    final userName = profileState.name.isNotEmpty
-        ? profileState.name
-        : 'Guest';
+    final userName = profileState.name.isNotEmpty ? profileState.name : 'Guest';
 
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.white),
@@ -48,7 +46,7 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
         action: IconButton(
           icon: Icon(
             Icons.shopping_cart_outlined,
-            color: Color(0xFFA930D0),
+            color: AppColors.accent(context, const Color(0xFF5F2D82)),
             size: 28,
           ),
           onPressed: () {
@@ -78,7 +76,7 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
             // Section Header
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveUtils.horizontalPadding(context),
+                horizontal: ResponsiveUtils.spacing(context, 16),
               ),
               child: Text(
                 'Explore stores',
@@ -98,36 +96,41 @@ class _LesbuyScreenState extends ConsumerState<LesbuyScreen> {
               child: lesbuyState.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : lesbuyState.error != null
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                lesbuyState.error!,
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 14),
-                                  color: AppColors.foreground(context, Colors.grey[600]!),
-                                ),
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            lesbuyState.error!,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 14),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
                               ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                              TextButton(
-                                onPressed: () => lesbuyNotifier.refresh(),
-                                child: const Text('Retry'),
-                              ),
-                            ],
+                            ),
                           ),
-                        )
-                      : StoreListSection(
-                          stores: lesbuyState.filteredStores,
-                          onStoreTap: (store) {
-                            AppRouter.push(
-                              context,
-                              BookingRoutes.lesbuyStoreDetail,
-                              arguments: store,
-                            );
-                          },
-                        ),
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 12),
+                          ),
+                          TextButton(
+                            onPressed: () => lesbuyNotifier.refresh(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : StoreListSection(
+                      stores: lesbuyState.filteredStores,
+                      onStoreTap: (store) {
+                        AppRouter.push(
+                          context,
+                          BookingRoutes.lesbuyStoreDetail,
+                          arguments: store,
+                        );
+                      },
+                    ),
             ),
 
             // Manual Order Section

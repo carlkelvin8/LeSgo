@@ -122,6 +122,21 @@ class LesrideFeatureTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_trip_beyond_thirty_km_is_rejected_instead_of_clamped(): void
+    {
+        $lesgo = Service::factory()->create(['code' => 'LESGO', 'is_active' => true]);
+        $payload = $this->payload(0, 'motor');
+        $payload['service_id'] = $lesgo->id;
+        // Pangasinan -> Cagayan, several hundred km apart.
+        $payload['pickup'] = ['address' => 'Pangasinan', 'lat' => 16.0430, 'lng' => 120.3333];
+        $payload['dropoff'] = ['address' => 'Cagayan', 'lat' => 17.6132, 'lng' => 121.7270];
+        unset($payload['estimated_distance_m']);
+
+        $this->postJson('/api/v1/orders/estimate', $payload)->assertStatus(422);
+        $this->postJson('/api/v1/orders', $payload)->assertStatus(422);
+        $this->assertDatabaseCount('orders', 0);
+    }
+
     public function test_tricycle_option_is_scoped_to_lesride(): void
     {
         $lesgo = Service::factory()->create([
@@ -298,7 +313,7 @@ class LesrideFeatureTest extends TestCase
             ->assertJsonPath('data.actual_fare', '97.50');
     }
 
-    public function test_lesride_rollout_does_not_change_existing_service_actual_fares(): void
+    public function test_actual_fare_follows_the_admin_service_rates_for_every_service(): void
     {
         $lesgo = Service::factory()->create([
             'code' => 'LESGO',
@@ -319,6 +334,8 @@ class LesrideFeatureTest extends TestCase
         $this->patchJson("/api/v1/orders/{$order->id}/status", [
             'actual_distance_m' => 5000,
         ])->assertOk()
-            ->assertJsonPath('data.actual_fare', '59.00');
+            // 75 base (covers 3 km) + 2 km x 20 + (20 kg - 5) x 10 weight surcharge. The final
+            // fare must use the admin's rates like the quote does, not hardcoded ones.
+            ->assertJsonPath('data.actual_fare', '265.00');
     }
 }

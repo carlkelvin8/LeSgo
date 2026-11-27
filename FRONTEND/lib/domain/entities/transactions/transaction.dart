@@ -64,7 +64,7 @@ class Transaction {
 
   String get displaySubtitle => isWallet
       ? (walletReference?.isNotEmpty == true ? walletReference! : 'Wallet')
-      : 'Order #$id';
+      : 'Order';
 }
 
 class TransactionItem {

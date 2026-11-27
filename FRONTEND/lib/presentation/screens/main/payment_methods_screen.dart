@@ -52,7 +52,8 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
               AppRouter.push(context, MainRoutes.lespay);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5F2D82),
+              backgroundColor: AppColors.buttonFill(context),
+              foregroundColor: AppColors.onButton(context),
             ),
             child: const Text('Go to LesPay'),
           ),
@@ -133,9 +134,14 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                         ResponsiveUtils.spacing(context, 12),
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: AppColors.surface(context, Colors.blue.shade50),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
+                        border: Border.all(
+                          color: AppColors.border(
+                            context,
+                            Colors.blue.shade200,
+                          ),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,19 +152,25 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12),
                               fontWeight: FontWeight.w600,
-                              color: Colors.blue.shade900,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.blue.shade900,
+                              ),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                           Text(
                             'GCash and PayMaya can be linked to your LesPay wallet. '
                             'Credit and debit cards are charged securely through PayMongo '
-                            'at checkout or top-up — your card details are never stored '
+                            'at checkout or top-up, and your card details are never stored '
                             'on our servers.',
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: Colors.blue.shade800,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.blue.shade800,
+                              ),
                               height: 1.4,
                             ),
                           ),
@@ -174,8 +186,14 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.surface(context, Colors.grey.shade200),
-                  foregroundColor: AppColors.foreground(context, Colors.black87),
+                  backgroundColor: AppColors.surface(
+                    context,
+                    Colors.grey.shade200,
+                  ),
+                  foregroundColor: AppColors.foreground(
+                    context,
+                    Colors.black87,
+                  ),
                   minimumSize: const Size.fromHeight(48),
                 ),
                 child: Text(
@@ -216,7 +234,9 @@ class _PaymentMethodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border(context, Colors.grey.shade300)),
+        border: Border.all(
+          color: AppColors.border(context, Colors.grey.shade300),
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
@@ -226,7 +246,11 @@ class _PaymentMethodCard extends StatelessWidget {
         ),
         leading: icon is String
             ? SvgPicture.asset(icon, width: 32, height: 32)
-            : Icon(icon as IconData, size: 32, color: AppColors.accent(context, Color(0xFF5F2D82))),
+            : Icon(
+                icon as IconData,
+                size: 32,
+                color: AppColors.accent(context, Color(0xFF5F2D82)),
+              ),
         title: Text(
           title,
           style: TextStyle(
@@ -251,7 +275,9 @@ class _PaymentMethodCard extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
               fontWeight: FontWeight.w600,
-              color: isLinked ? Colors.green : AppColors.accent(context, Color(0xFF5F2D82)),
+              color: isLinked
+                  ? Colors.green
+                  : AppColors.accent(context, Color(0xFF5F2D82)),
             ),
           ),
         ),
@@ -366,8 +392,8 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
         ElevatedButton(
           onPressed: _submitting ? null : _submit,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5F2D82),
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.buttonFill(context),
+            foregroundColor: AppColors.onButton(context),
             disabledBackgroundColor: const Color(
               0xFF5F2D82,
             ).withValues(alpha: 0.55),
@@ -410,7 +436,7 @@ class _AddWalletDialogState extends ConsumerState<_AddWalletDialog> {
       ),
       leading: Radio<String>(
         value: value,
-        activeColor: const Color(0xFF5F2D82),
+        activeColor: AppColors.accent(context, const Color(0xFF5F2D82)),
       ),
       onTap: () => setState(() => _selectedMethod = value),
     );

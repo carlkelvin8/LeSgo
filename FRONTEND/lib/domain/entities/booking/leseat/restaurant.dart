@@ -12,6 +12,9 @@ class Restaurant {
   final String? priceRange;
   final String? openingHours;
 
+  /// Branch this card stands for (null = the store's default listing).
+  final int? branchId;
+
   Restaurant({
     required this.id,
     required this.name,
@@ -25,6 +28,7 @@ class Restaurant {
     this.deliveryTime,
     this.priceRange,
     this.openingHours,
+    this.branchId,
   });
 
   Restaurant copyWith({
@@ -40,6 +44,7 @@ class Restaurant {
     String? deliveryTime,
     String? priceRange,
     String? openingHours,
+    int? branchId,
   }) {
     return Restaurant(
       id: id ?? this.id,
@@ -54,6 +59,7 @@ class Restaurant {
       deliveryTime: deliveryTime ?? this.deliveryTime,
       priceRange: priceRange ?? this.priceRange,
       openingHours: openingHours ?? this.openingHours,
+      branchId: branchId ?? this.branchId,
     );
   }
 }

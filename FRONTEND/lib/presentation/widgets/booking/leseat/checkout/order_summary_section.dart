@@ -1,3 +1,5 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -33,30 +35,22 @@ class OrderSummarySection extends StatelessWidget {
       margin: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: OrderDesign.receipt(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const OrderSectionHeading(
             'Summary',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 16),
-              fontWeight: FontWeight.w700,
-              color: AppColors.foreground(context, Colors.black87),
-            ),
+            icon: Icons.receipt_long_outlined,
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-          
+
           _buildSummaryRow(
             context,
             'Subtotal',
             orderValueUncertain && subtotal <= 0
                 ? 'TBD'
-                : 'PHP ${subtotal.toStringAsFixed(2)}',
+                : Money.format(subtotal),
           ),
           if (orderValueNote != null) ...[
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -71,13 +65,13 @@ class OrderSummarySection extends StatelessWidget {
             ),
           ],
           SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-          
+
           _buildSummaryRow(
             context,
             'Delivery',
             deliveryFeeUncertain && delivery <= 0
                 ? 'TBD'
-                : 'PHP ${delivery.toStringAsFixed(2)}',
+                : Money.format(delivery),
           ),
           if (deliveryFeeNote != null) ...[
             SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -96,24 +90,27 @@ class OrderSummarySection extends StatelessWidget {
             _buildSummaryRow(
               context,
               'Discount',
-              '-PHP ${discount.toStringAsFixed(2)}',
+              '-${Money.format(discount)}',
               isDiscount: true,
             ),
           ],
-          
+
           Padding(
             padding: EdgeInsets.symmetric(
               vertical: ResponsiveUtils.spacing(context, 12),
             ),
-            child: Divider(color: AppColors.border(context, Colors.grey[300]!), height: 1),
+            child: Divider(
+              color: AppColors.border(context, Colors.grey[300]!),
+              height: 1,
+            ),
           ),
-          
+
           _buildSummaryRow(
             context,
-            orderValueUncertain ? 'Total ($itemCount items, est.)' : 'Total ($itemCount items)',
-            orderValueUncertain && total <= 0
-                ? 'TBD'
-                : 'PHP ${total.toStringAsFixed(2)}',
+            orderValueUncertain
+                ? 'Total ($itemCount ${itemCount == 1 ? 'item' : 'items'}, est.)'
+                : 'Total ($itemCount ${itemCount == 1 ? 'item' : 'items'})',
+            orderValueUncertain && total <= 0 ? 'TBD' : Money.format(total),
             isTotal: true,
           ),
         ],
@@ -137,7 +134,11 @@ class OrderSummarySection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
             fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
-            color: isDiscount ? Colors.red : (isTotal ? AppColors.foreground(context, Colors.black87) : AppColors.foreground(context, Colors.grey[600]!)),
+            color: isDiscount
+                ? Colors.red
+                : (isTotal
+                      ? AppColors.foreground(context, Colors.black87)
+                      : AppColors.foreground(context, Colors.grey[600]!)),
           ),
         ),
         Text(
@@ -146,7 +147,9 @@ class OrderSummarySection extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),
             fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-            color: isDiscount ? Colors.red : AppColors.foreground(context, Colors.black87),
+            color: isDiscount
+                ? Colors.red
+                : AppColors.foreground(context, Colors.black87),
           ),
         ),
       ],

@@ -9,6 +9,13 @@ import '../../../core/services/remember_me_service.dart';
 import '../../provider/auth/auth_provider.dart';
 import '../../provider/auth/rider_auth_provider.dart';
 
+/// Merchants and partner staff share the merchant shell; everyone else is a
+/// rider. (Staff used to fall through to the rider shell after a restore.)
+String startupRouteFor(RiderUser? user) =>
+    user != null && (user.isMerchant || user.isStaff)
+        ? MainRoutes.merchantMain
+        : MainRoutes.riderMain;
+
 /// Restores a remembered rider/merchant session or opens the auth screen.
 class AuthStartupScreen extends ConsumerStatefulWidget {
   const AuthStartupScreen({super.key});
@@ -32,10 +39,7 @@ class _AuthStartupScreenState extends ConsumerState<AuthStartupScreen> {
 
       if (restored) {
         final user = ref.read(riderAuthProvider).user;
-        final route = user != null && user.isMerchant
-            ? MainRoutes.merchantMain
-            : MainRoutes.riderMain;
-        AppRouter.pushReplacement(context, route);
+        AppRouter.pushReplacement(context, startupRouteFor(user));
         return;
       }
 

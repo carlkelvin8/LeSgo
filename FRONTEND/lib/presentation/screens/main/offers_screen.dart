@@ -50,18 +50,18 @@ class OffersScreen extends ConsumerWidget {
               ),
             Expanded(
               child: offersState.isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF5F2D82),
+                        color: AppColors.accent(context, Color(0xFF5F2D82)),
                       ),
                     )
                   : offersState.error != null && offersState.offers.isEmpty
-                      ? Center(
-                          child: TextButton(
-                            onPressed: offersNotifier.loadOffers,
-                            child: const Text('Retry loading offers'),
-                          ),
-                        )
+                  ? Center(
+                      child: TextButton(
+                        onPressed: offersNotifier.loadOffers,
+                        child: const Text('Retry loading offers'),
+                      ),
+                    )
                   : filteredOffers.isEmpty
                   ? const OffersEmptyState()
                   : RefreshIndicator(
@@ -101,9 +101,9 @@ class OffersScreen extends ConsumerWidget {
                               } catch (e) {
                                 if (context.mounted) {
                                   final message = e.toString().replaceFirst(
-                                        'Exception: ',
-                                        '',
-                                      );
+                                    'Exception: ',
+                                    '',
+                                  );
                                   SnackBarUtils.showError(context, message);
                                 }
                               }

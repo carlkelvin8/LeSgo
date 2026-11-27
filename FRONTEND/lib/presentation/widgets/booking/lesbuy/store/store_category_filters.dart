@@ -21,7 +21,7 @@ class StoreCategoryFilters extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
+        horizontal: ResponsiveUtils.screenPadding(context),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,

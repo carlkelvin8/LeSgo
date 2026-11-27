@@ -138,6 +138,7 @@ class _HomePromosSectionState extends ConsumerState<HomePromosSection> {
                           child: PromoCard(
                             title: offer.title,
                             subtitle: offer.service,
+                            service: offer.service,
                             badge: offer.discountLabel,
                             accentColor: Color(offer.accentColor),
                             onTap: () => _openOffersScreen(context),

@@ -21,8 +21,8 @@ class AppleIdentityService
      */
     public function verifyIdToken(string $idToken, ?string $rawNonce = null, ?int $maxAgeSeconds = null): ?array
     {
-        $clientId = trim((string) config('services.apple.client_id'));
-        if ($clientId === '') {
+        $clientIds = $this->clientIds();
+        if ($clientIds === []) {
             Log::error('Apple identity verification is unavailable: APPLE_CLIENT_ID is not configured.');
 
             return null;
@@ -45,9 +45,18 @@ class AppleIdentityService
         }
 
         $audience = $claims['aud'] ?? null;
-        $audienceMatches = is_array($audience)
-            ? in_array($clientId, $audience, true)
-            : is_string($audience) && hash_equals($clientId, $audience);
+        $audiences = is_array($audience) ? $audience : [$audience];
+        $audienceMatches = false;
+        foreach ($audiences as $aud) {
+            if (! is_string($aud)) {
+                continue;
+            }
+            foreach ($clientIds as $clientId) {
+                if (hash_equals($clientId, $aud)) {
+                    $audienceMatches = true;
+                }
+            }
+        }
 
         if (($claims['iss'] ?? null) !== self::ISSUER || ! $audienceMatches || empty($claims['sub'])) {
             Log::warning('Apple token claims rejected');
@@ -89,15 +98,44 @@ class AppleIdentityService
      */
     public function revokeAuthorizationCode(string $authorizationCode): bool
     {
-        $secret = $this->clientSecret();
-        if ($secret === null) {
-            Log::info('Apple token revocation skipped: Apple key credentials are not configured.');
+        // The code was issued to one of our bundles; Apple rejects the
+        // exchange for the others, so try each until one is accepted.
+        foreach ($this->clientIds() as $clientId) {
+            $secret = $this->clientSecret($clientId);
+            if ($secret === null) {
+                Log::info('Apple token revocation skipped: Apple key credentials are not configured.');
 
-            return false;
+                return false;
+            }
+
+            if ($this->revokeFor($clientId, $secret, $authorizationCode)) {
+                return true;
+            }
         }
 
-        $clientId = trim((string) config('services.apple.client_id'));
+        return false;
+    }
 
+    /**
+     * Accepted Apple audiences: the primary client ID plus APPLE_CLIENT_IDS.
+     *
+     * @return list<string>
+     */
+    private function clientIds(): array
+    {
+        $ids = array_merge(
+            [(string) config('services.apple.client_id')],
+            (array) config('services.apple.client_ids', [])
+        );
+
+        return array_values(array_unique(array_filter(array_map(
+            fn ($id) => trim((string) $id),
+            $ids
+        ))));
+    }
+
+    private function revokeFor(string $clientId, string $secret, string $authorizationCode): bool
+    {
         try {
             $token = Http::asForm()->timeout(10)->post(self::ISSUER.'/auth/token', [
                 'client_id' => $clientId,
@@ -128,12 +166,11 @@ class AppleIdentityService
         }
     }
 
-    private function clientSecret(): ?string
+    private function clientSecret(string $clientId): ?string
     {
         $teamId = trim((string) config('services.apple.team_id'));
         $keyId = trim((string) config('services.apple.key_id'));
         $privateKey = str_replace('\\n', "\n", (string) config('services.apple.private_key'));
-        $clientId = trim((string) config('services.apple.client_id'));
 
         if ($teamId === '' || $keyId === '' || trim($privateKey) === '' || $clientId === '') {
             return null;

@@ -1,3 +1,5 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,33 +19,52 @@ class LesgoFareSummary extends ConsumerWidget {
     final fare = ref.watch(lesgoProvider.select((s) => s.fareEstimate));
     final discount = ref.watch(lesgoProvider.select((s) => s.discount));
 
-    // Don't render anything if we haven't fetched yet
-    if (fare == null && !isLoading) return const SizedBox.shrink();
+    final hasError = ref.watch(lesgoProvider.select((s) => s.fareError));
+
+    // Don't render anything if we haven't fetched yet (and nothing failed)
+    if (fare == null && !isLoading && !hasError) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Fare Estimate',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 15),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
-        ),
+        const OrderSectionHeading('Fare Estimate'),
         SizedBox(height: ResponsiveUtils.spacing(context, 10)),
         Container(
           width: double.infinity,
           padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.grey.shade50),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border(context, Colors.grey.shade200)),
-          ),
+          decoration: OrderDesign.card(context, highlighted: true),
           child: isLoading
               ? _buildLoadingState(context)
-              : _buildFareDetails(context, fare!, discount),
+              : fare == null
+              ? _buildErrorState(context, ref)
+              : _buildFareDetails(context, fare, discount),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, WidgetRef ref) {
+    return Row(
+      children: [
+        Icon(
+          Icons.error_outline,
+          size: 18,
+          color: AppColors.foreground(context, Colors.red.shade400),
+        ),
+        SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+        Expanded(
+          child: Text(
+            "Couldn't estimate the fare.",
+            style: TextStyle(
+              fontFamily: 'TT Fors',
+              fontSize: ResponsiveUtils.fontSize(context, 13),
+              color: AppColors.foreground(context, Colors.grey.shade700),
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: () => ref.read(lesgoProvider.notifier).fetchFareEstimate(),
+          child: const Text('Retry'),
         ),
       ],
     );
@@ -53,12 +74,14 @@ class LesgoFareSummary extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(
+        SizedBox(
           width: 16,
           height: 16,
           child: CircularProgressIndicator(
             strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              AppColors.accent(context, const Color(0xFF5F2D82)),
+            ),
           ),
         ),
         SizedBox(width: ResponsiveUtils.spacing(context, 10)),
@@ -74,6 +97,16 @@ class LesgoFareSummary extends ConsumerWidget {
     );
   }
 
+  double _minimumFareAdjustment(FareBreakdownResult fare) {
+    final parts =
+        fare.baseFare +
+        fare.distanceFare +
+        fare.serviceFee +
+        fare.weightSurcharge;
+    final gap = fare.total - parts;
+    return gap > 0.01 ? double.parse(gap.toStringAsFixed(2)) : 0;
+  }
+
   Widget _buildFareDetails(
     BuildContext context,
     FareBreakdownResult fare,
@@ -87,10 +120,17 @@ class LesgoFareSummary extends ConsumerWidget {
         _row(context, 'Base Fee', fare.baseFare),
         if (fare.distanceFare > 0)
           _row(context, 'Distance Fee', fare.distanceFare),
-        if (fare.serviceFee > 0)
-          _row(context, 'Service Fee', fare.serviceFee),
+        if (fare.serviceFee > 0) _row(context, 'Service Fee', fare.serviceFee),
         if (fare.weightSurcharge > 0)
           _row(context, 'Weight Surcharge', fare.weightSurcharge),
+        // The server raises the fare to the service's minimum fare; without
+        // this row the lines above would not add up to the Total.
+        if (_minimumFareAdjustment(fare) > 0)
+          _row(
+            context,
+            'Minimum fare adjustment',
+            _minimumFareAdjustment(fare),
+          ),
         if (discount > 0) ...[
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
           _row(context, 'Voucher Discount', -discount, isDiscount: true),
@@ -99,14 +139,21 @@ class LesgoFareSummary extends ConsumerWidget {
           padding: EdgeInsets.symmetric(
             vertical: ResponsiveUtils.spacing(context, 8),
           ),
-          child: Divider(color: AppColors.border(context, Colors.grey.shade300), height: 1),
+          child: Divider(
+            color: AppColors.border(context, Colors.grey.shade300),
+            height: 1,
+          ),
         ),
         _row(context, 'Total', displayTotal, isTotal: true),
         if (fare.estimatedDurationMinutes > 0) ...[
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           Row(
             children: [
-              Icon(Icons.access_time, size: 14, color: AppColors.foreground(context, Colors.grey.shade500)),
+              Icon(
+                Icons.access_time,
+                size: 14,
+                color: AppColors.foreground(context, Colors.grey.shade500),
+              ),
               SizedBox(width: ResponsiveUtils.spacing(context, 4)),
               Text(
                 'Est. ${fare.estimatedDurationMinutes.round()} min  •  ${fare.distanceKm.toStringAsFixed(1)} km',
@@ -132,11 +179,11 @@ class LesgoFareSummary extends ConsumerWidget {
   }) {
     final color = isDiscount
         ? (Theme.of(context).brightness == Brightness.dark
-            ? Colors.green.shade300
-            : Colors.green.shade700)
+              ? Colors.green.shade300
+              : Colors.green.shade700)
         : isTotal
-            ? AppColors.accent(context, const Color(0xFF5F2D82))
-            : AppColors.foreground(context, Colors.black87);
+        ? AppColors.accent(context, const Color(0xFF5F2D82))
+        : AppColors.foreground(context, Colors.black87);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -155,7 +202,7 @@ class LesgoFareSummary extends ConsumerWidget {
             ),
           ),
           Text(
-            '${isDiscount ? "-" : ""}₱${amount.abs().toStringAsFixed(2)}',
+            '${isDiscount ? "-" : ""}${Money.format(amount.abs())}',
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, isTotal ? 14 : 13),

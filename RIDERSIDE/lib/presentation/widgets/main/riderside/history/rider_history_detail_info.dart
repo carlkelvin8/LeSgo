@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderHistoryDetailInfo extends StatelessWidget {
   final Map<String, String> bookingData;
@@ -18,7 +19,7 @@ class RiderHistoryDetailInfo extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
             fontWeight: FontWeight.w400,
-            color: Colors.grey.shade500,
+            color: context.sub(Colors.grey.shade500),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -30,7 +31,7 @@ class RiderHistoryDetailInfo extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 16),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -42,7 +43,7 @@ class RiderHistoryDetailInfo extends StatelessWidget {
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 12),
             fontWeight: FontWeight.w400,
-            color: Colors.grey.shade500,
+            color: context.sub(Colors.grey.shade500),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
@@ -77,7 +78,7 @@ class RiderHistoryDetailInfo extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
           children: [
             if (label.isNotEmpty)

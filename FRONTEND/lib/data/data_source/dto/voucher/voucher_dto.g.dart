@@ -16,6 +16,10 @@ VoucherDto _$VoucherDtoFromJson(Map<String, dynamic> json) => VoucherDto(
   serviceId: _parseIntNullable(json['service_id']),
   eligible: _parseBool(json['eligible']),
   claimed: json['claimed'] == null ? false : _parseBool(json['claimed']),
+  applicableServices: _parseIntList(
+    _readApplicableServices(json, 'applicable_services'),
+  ),
+  reason: json['reason'] as String?,
 );
 
 Map<String, dynamic> _$VoucherDtoToJson(VoucherDto instance) =>
@@ -29,4 +33,6 @@ Map<String, dynamic> _$VoucherDtoToJson(VoucherDto instance) =>
       'service_id': instance.serviceId,
       'eligible': instance.eligible,
       'claimed': instance.claimed,
+      'applicable_services': instance.applicableServices,
+      'reason': instance.reason,
     };

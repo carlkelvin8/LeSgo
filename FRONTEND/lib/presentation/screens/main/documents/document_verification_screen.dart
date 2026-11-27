@@ -1,3 +1,5 @@
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,7 +34,7 @@ class DocumentVerificationScreen extends ConsumerWidget {
                   horizontal: ResponsiveUtils.spacing(context, 16),
                 ),
                 child: Text(
-                  'Status: ${state.status!.overallStatus} '
+                  'Status: ${_humanize(state.status!.overallStatus)} '
                   '(${state.status!.verifiedCount}/${state.status!.totalCount} verified)',
                   style: TextStyle(
                     fontFamily: 'TT Fors',
@@ -43,27 +45,48 @@ class DocumentVerificationScreen extends ConsumerWidget {
               ),
             Expanded(
               child: state.isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                     )
                   : state.error != null && state.documents.isEmpty
-                      ? RetryWidget(
-                          message: state.error!,
-                          onRetry: notifier.loadAll,
-                        )
-                      : RefreshIndicator(
-                          color: AppColors.accent(context, Color(0xFF5F2D82)),
-                          onRefresh: notifier.loadAll,
-                          child: ListView(
-                            padding: EdgeInsets.all(
-                              ResponsiveUtils.spacing(context, 16),
+                  ? RetryWidget(
+                      message: state.error!,
+                      onRetry: notifier.loadAll,
+                    )
+                  : RefreshIndicator(
+                      color: AppColors.accent(context, Color(0xFF5F2D82)),
+                      onRefresh: notifier.loadAll,
+                      child: ListView(
+                        padding: EdgeInsets.all(
+                          ResponsiveUtils.spacing(context, 16),
+                        ),
+                        children: [
+                          if (state.documents.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.only(top: AppSpace.xl),
+                              child: EmptyStateView(
+                                icon: Icons.badge_outlined,
+                                title: 'No documents yet',
+                                message:
+                                    'Submit a valid ID to get your account verified.',
+                              ),
                             ),
-                            children: [
-                              ...state.documents.map(
-                                (doc) => ListTile(
-                                  tileColor: AppColors.surface(context, Colors.grey.shade50),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                          ...state.documents.map(
+                            (doc) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpace.sm,
+                              ),
+                              child: AppCard(
+                                padding: EdgeInsets.zero,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpace.lg,
+                                    vertical: 4,
                                   ),
                                   title: Text(
                                     doc.documentType.replaceAll('_', ' '),
@@ -76,28 +99,37 @@ class DocumentVerificationScreen extends ConsumerWidget {
                                     '${doc.status} · ${doc.documentNumber}',
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
-                                      color: AppColors.foreground(context, Colors.grey.shade600),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
                               ),
-                              SizedBox(
-                                height: ResponsiveUtils.spacing(context, 16),
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: state.isSubmitting
-                                    ? null
-                                    : () => _showSubmitSheet(context, ref),
-                                icon: const Icon(Icons.upload_file),
-                                label: Text(
-                                  state.isSubmitting
-                                      ? 'Submitting...'
-                                      : 'Submit Document',
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 16),
+                          ),
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.buttonFill(context),
+                              foregroundColor: AppColors.onButton(context),
+                              minimumSize: const Size.fromHeight(52),
+                            ),
+                            onPressed: state.isSubmitting
+                                ? null
+                                : () => _showSubmitSheet(context, ref),
+                            icon: const Icon(Icons.upload_file),
+                            label: Text(
+                              state.isSubmitting
+                                  ? 'Submitting...'
+                                  : 'Submit Document',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
@@ -237,10 +269,7 @@ class _DocumentSubmitSheetState extends ConsumerState<_DocumentSubmitSheet> {
             initialValue: _selectedType,
             items: widget.types
                 .map(
-                  (t) => DropdownMenuItem(
-                    value: t.type,
-                    child: Text(t.label),
-                  ),
+                  (t) => DropdownMenuItem(value: t.type, child: Text(t.label)),
                 )
                 .toList(),
             onChanged: _submitting
@@ -292,4 +321,11 @@ class _DocumentSubmitSheetState extends ConsumerState<_DocumentSubmitSheet> {
       ),
     );
   }
+}
+
+/// `not_started` -> `Not started`, so raw API enums are never shown.
+String _humanize(String raw) {
+  final words = raw.replaceAll('_', ' ').trim();
+  if (words.isEmpty) return words;
+  return words[0].toUpperCase() + words.substring(1);
 }

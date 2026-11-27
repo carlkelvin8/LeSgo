@@ -145,6 +145,40 @@ class RegistrationFeeService
         });
     }
 
+    /**
+     * Long-time partners: exempt a merchant from the annual renewal without approving the application.
+     * Grandfathering clears the renewal date; an unpaid fee is waived (no renewal cycle) so activation holds.
+     */
+    public static function exemptFromAnnualRenewal(RegistrationFeePayment $payment, User $admin, ?string $reason = null): RegistrationFeePayment
+    {
+        if ($payment->account_type !== RegistrationFeePayment::TYPE_MERCHANT) {
+            throw new \DomainException('Only merchant partners have an annual renewal to exempt.');
+        }
+
+        return DB::transaction(function () use ($payment, $admin, $reason) {
+            $locked = RegistrationFeePayment::where('id', $payment->id)->lockForUpdate()->firstOrFail();
+
+            if (!$locked->is_grandfathered) {
+                $locked->update([
+                    'is_grandfathered' => true,
+                    'metadata' => array_merge($locked->metadata ?? [], [
+                        'renewal_exemption' => [
+                            'exempted_at' => now()->toIso8601String(),
+                            'exempted_by' => $admin->id,
+                            'reason' => $reason,
+                        ],
+                    ]),
+                ]);
+            }
+
+            if (!$locked->isPaid() && !$locked->isWaived()) {
+                return self::waiveFee($locked->fresh(), $admin, $reason ?: 'Long-time partner: annual renewal exempt');
+            }
+
+            return self::syncActivation($locked->fresh());
+        });
+    }
+
     public static function syncActivation(RegistrationFeePayment $payment): RegistrationFeePayment
     {
         $isActive = $payment->shouldBeActive();

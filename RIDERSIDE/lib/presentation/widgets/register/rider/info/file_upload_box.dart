@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 import '../../../../../core/utils/utils.dart';
 
 class RiderFileUploadBox extends StatelessWidget {
@@ -34,7 +35,7 @@ class RiderFileUploadBox extends StatelessWidget {
           border: Border.all(
             color: (showError && filePath == null)
                 ? Colors.red.shade300
-                : Colors.black26,
+                : context.brd(Colors.black26),
             width: 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -60,7 +61,7 @@ class RiderFileUploadBox extends StatelessWidget {
                 size: 20,
                 color: filePath != null
                     ? const Color(0xFF5F2D82)
-                    : Colors.black54,
+                    : context.sub(Colors.black54),
               ),
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
             Expanded(
@@ -72,7 +73,7 @@ class RiderFileUploadBox extends StatelessWidget {
                   fontWeight: FontWeight.w400,
                   color: filePath != null
                       ? const Color(0xFF5F2D82)
-                      : Colors.black54,
+                      : context.sub(Colors.black54),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

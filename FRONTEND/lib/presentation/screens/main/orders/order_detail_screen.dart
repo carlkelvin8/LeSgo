@@ -1,3 +1,6 @@
+import '../../../../core/utils/map_pins.dart';
+import 'package:lesgo/core/utils/money.dart';
+import '../../../../core/utils/order_status_mapper.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -5,12 +8,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/constants/map_styles.dart';
+import '../../../provider/main/orders/active_orders_provider.dart';
 import '../../../provider/main/orders/order_history_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/orders/cancel_order_dialog.dart';
+import '../../../widgets/orders/order_style.dart';
+import '../../../widgets/orders/premium_order_widgets.dart';
+import '../../../../core/utils/order_progress.dart';
+import '../../../../core/utils/order_service_labels.dart';
 import '../../../widgets/orders/proof_of_delivery_section.dart';
 import '../../../../data/data_source/order_remote_datasource.dart';
 import '../../../../core/utils/order_cancel_utils.dart';
+import '../../../../core/utils/order_payment_label.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../data/data_source/dto/order/order_dto.dart';
@@ -169,6 +178,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         setState(() => _isCancelling = false);
 
         if (success) {
+          // The home "Track your order" banner must drop the cancelled order.
+          ref.read(activeOrdersProvider.notifier).loadActiveOrders();
+          // Refresh from the server: the screen otherwise keeps showing the
+          // previously fetched (pre-cancel) status and buttons.
+          await _loadOrderDetails();
+          if (!mounted) return;
           SnackBarUtils.showSuccess(context, 'Order cancelled successfully');
         } else {
           final error = ref.read(orderHistoryProvider).error;
@@ -179,6 +194,27 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   }
 
   Future<void> _handleReorder() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reorder?'),
+        content: const Text(
+          'This will place a new order with the same items and addresses.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Place order'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
     setState(() => _isReordering = true);
 
     final success = await ref
@@ -189,10 +225,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       setState(() => _isReordering = false);
 
       if (success) {
+        ref.read(activeOrdersProvider.notifier).loadActiveOrders();
         SnackBarUtils.showSuccess(context, 'Order placed successfully!');
         Navigator.pop(context);
       } else {
-        SnackBarUtils.showError(context, 'Failed to reorder');
+        final error = ref.read(orderHistoryProvider).error;
+        SnackBarUtils.showError(context, error ?? 'Failed to reorder');
       }
     }
   }
@@ -219,7 +257,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 color: AppColors.surface(context, Colors.white),
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
                 child: Row(
-                  children: [const AuthHeader(title: 'Order Details')],
+                  children: [
+                    const Expanded(child: AuthHeader(title: 'Order Details')),
+                  ],
                 ),
               ),
               Expanded(
@@ -256,7 +296,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Colors.grey[50]!),
+      backgroundColor: AppColors.surface(context, Colors.white),
       body: SafeArea(
         child: Column(
           children: [
@@ -264,7 +304,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             Container(
               color: AppColors.surface(context, Colors.white),
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-              child: Row(children: [const AuthHeader(title: 'Order Details')]),
+              child: Row(
+                children: [
+                  const Expanded(child: AuthHeader(title: 'Order Details')),
+                ],
+              ),
             ),
 
             Container(
@@ -279,26 +323,42 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildStatusCard(order),
-                    const SizedBox(height: 16),
+                    Reveal(child: _buildStatusCard(order)),
+                    const SizedBox(height: 28),
+                    // Say why it was cancelled right under the status, not at
+                    // the very bottom of a long page.
+                    if (order.cancelReason != null) ...[
+                      Reveal(index: 1, child: _buildCancellationInfo(order)),
+                      const SizedBox(height: 28),
+                    ],
                     // Map preview for active orders
                     if (_shouldShowMap(order.status)) ...[
-                      _buildMapPreview(order),
-                      const SizedBox(height: 16),
+                      Reveal(index: 1, child: _buildMapPreview(order)),
+                      const SizedBox(height: 28),
                     ],
-                    _buildOrderInfo(order),
-                    const SizedBox(height: 16),
-                    _buildAddressInfo(order),
-                    const SizedBox(height: 16),
-                    _buildPriceBreakdown(order),
+                    Reveal(
+                      index: 2,
+                      child: RouteCard(
+                        flat: true,
+                        pickup: order.pickupAddress,
+                        dropoff: order.dropoffAddress,
+                        pickupLabel: _isFood(order) ? 'Restaurant' : 'Pickup',
+                        dropoffLabel: _isFood(order)
+                            ? 'Deliver to'
+                            : 'Drop-off',
+                        title: 'Route',
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Reveal(index: 3, child: _buildReceipt(order)),
                     if (_proofImages.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      ProofOfDeliverySection(imageUrls: _proofImages),
+                      const SizedBox(height: 28),
+                      Reveal(
+                        index: 4,
+                        child: ProofOfDeliverySection(imageUrls: _proofImages),
+                      ),
                     ],
-                    if (order.cancelReason != null) ...[
-                      const SizedBox(height: 16),
-                      _buildCancellationInfo(order),
-                    ],
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -307,101 +367,51 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             // Action buttons
             if (_canCancel || _canReorder || _canTrack)
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 decoration: BoxDecoration(
                   color: AppColors.surface(context, Colors.white),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  border: Border(
+                    top: BorderSide(
+                      color: AppColors.border(context, const Color(0xFFEEE8F3)),
                     ),
-                  ],
+                  ),
                 ),
                 child: Row(
                   children: [
-                    if (_canTrack)
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _handleTrackOrder,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Track Order',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (_canTrack && _canCancel) const SizedBox(width: 12),
                     if (_canCancel)
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: _isCancelling ? null : _handleCancelOrder,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red[700],
-                            side: BorderSide(color: Colors.red[700]!),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: _isCancelling
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  'Cancel Order',
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                        child: PremiumButton(
+                          flat: true,
+                          label: 'Cancel order',
+                          danger: true,
+                          outlined: true,
+                          loading: _isCancelling,
+                          onPressed: _handleCancelOrder,
+                        ),
+                      ),
+                    if (_canCancel && (_canTrack || _canReorder))
+                      const SizedBox(width: 12),
+                    if (_canTrack)
+                      Expanded(
+                        flex: _canCancel ? 1 : 2,
+                        child: PremiumButton(
+                          flat: true,
+                          label: 'Track order',
+                          icon: Icons.near_me_rounded,
+                          onPressed: _handleTrackOrder,
                         ),
                       ),
                     if (_canReorder)
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: _isReordering ? null : _handleReorder,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF5F2D82),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: _isReordering
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  'Reorder',
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                        child: PremiumButton(
+                          flat: true,
+                          label: 'Reorder',
+                          icon: Icons.replay_rounded,
+                          loading: _isReordering,
+                          onPressed: _handleReorder,
                         ),
                       ),
                   ],
@@ -413,332 +423,109 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     );
   }
 
-  Widget _buildStatusCard(OrderDto order) {
-    final statusColor = _getStatusColor(order.status);
-    final statusText = _getStatusText(order.status);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(_getStatusIcon(order.status), color: statusColor, size: 32),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  statusText,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Order #${order.id}',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 13,
-                    color: AppColors.foreground(context, Colors.grey[700]!),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  bool _isFood(OrderDto order) {
+    final service = OrderServiceLabels.labelForOrder(order);
+    return service == 'LesEat' || service == 'LesBuy';
   }
 
-  Widget _buildOrderInfo(OrderDto order) {
+  /// The first thing you see: which service, what is happening, and where it
+  /// is on its way. No database ids are shown anywhere on this screen.
+  Widget _buildStatusCard(OrderDto order) {
+    final service = OrderServiceLabels.labelForOrder(order);
+    final style = OrderStyle.status(order.status);
+    final raw = order.status.trim().toLowerCase();
+    final bad = const {'cancelled', 'canceled', 'failed'}.contains(raw);
+    final done = const {'completed', 'delivered'}.contains(raw);
+    final progress = OrderProgress.of(
+      service: service,
+      status: order.status,
+      scheduledAt: order.scheduledAt,
+    );
     final createdAt = DateTime.tryParse(
       order.createdAt ?? order.updatedAt ?? '',
-    );
-    final formattedDate = createdAt != null
-        ? DateFormat('MMMM dd, yyyy • hh:mm a').format(createdAt)
-        : 'Date unavailable';
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Order Information',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow('Service', _getServiceName(order.serviceId)),
-          _buildInfoRow('Order ID', '#${order.id}'),
-          _buildInfoRow('Date', formattedDate),
-          _buildInfoRow('Payment Method', order.paymentMethod.toUpperCase()),
-          _buildInfoRow(
-            'Payment Status',
-            order.paymentStatus.toUpperCase(),
-            valueColor: order.paymentStatus == 'paid'
-                ? Colors.green
-                : Colors.orange,
-          ),
-        ],
-      ),
+    )?.toLocal();
+    final date = createdAt != null
+        ? DateFormat('MMM d, yyyy • h:mm a').format(createdAt)
+        : null;
+    return OrderStatusHeader(
+      service: service,
+      date: date,
+      statusLabel: style.label,
+      tone: bad
+          ? HeroTone.danger
+          : done
+          ? HeroTone.success
+          : HeroTone.active,
+      headline: (bad || done) ? null : progress.headline,
+      stepLabels: (bad || done) ? const [] : progress.stepLabels,
+      stepIndex: progress.stepIndex,
     );
   }
 
-  Widget _buildAddressInfo(OrderDto order) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Addresses',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
+  /// Items, price lines, total and how it was paid, as one receipt.
+  Widget _buildReceipt(OrderDto order) {
+    final items = order.effectiveItems;
+    final subtotal = _itemsSubtotal(order);
+    final payment = orderPaymentLabel(
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+    );
+    final neutral = AppColors.foreground(context, Colors.grey[600]!);
+    final statusText = payment.text.isEmpty
+        ? ''
+        : payment.text[0].toUpperCase() +
+              payment.text.substring(1).toLowerCase();
+    return ReceiptCard(
+      flat: true,
+      items: [
+        for (final it in items)
+          ReceiptItem(
+            qty: it.quantity,
+            name: it.name,
+            price: (it.actualPrice ?? it.estimatedPrice) == null
+                ? null
+                : Money.format(
+                    (it.actualPrice ?? it.estimatedPrice!) * it.quantity,
                   ),
-                  Container(
-                    width: 2,
-                    height: 40,
-                    color: AppColors.surface(context, Colors.grey[300]!),
-                  ),
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pickup',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 12,
-                        color: AppColors.foreground(context, Colors.grey),
-                      ),
-                    ),
-                    Text(
-                      order.pickupAddress,
-                      style: const TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Dropoff',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 12,
-                        color: AppColors.foreground(context, Colors.grey),
-                      ),
-                    ),
-                    Text(
-                      order.dropoffAddress,
-                      style: const TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
-        ],
+      ],
+      rows: [
+        if (subtotal != null) ...[
+          // Food / store orders: show what the money is made of instead of
+          // calling the delivery fee the "fare".
+          ReceiptRow('Subtotal', Money.format(subtotal)),
+          ReceiptRow('Delivery fee', Money.format(order.effectiveDeliveryFee)),
+          if (order.discountAmount > 0)
+            ReceiptRow(
+              'Discount',
+              '-${Money.format(order.discountAmount)}',
+              color: const Color(0xFF2E9E5B),
+            ),
+        ] else
+          ReceiptRow('Estimated fare', Money.format(order.estimatedFare)),
+        if (order.actualFare != null)
+          ReceiptRow('Actual fare', Money.format(order.actualFare!)),
+      ],
+      total: Money.format(order.actualFare ?? order.effectiveTotalAmount),
+      footer: PaymentStrip(
+        method: OrderStyle.paymentMethodLabel(order.paymentMethod),
+        status: statusText,
+        statusColor: payment.color(neutral),
       ),
     );
   }
 
-  Widget _buildPriceBreakdown(OrderDto order) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Price Breakdown',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildPriceRow('Estimated Fare', order.estimatedFare),
-          if (order.actualFare != null)
-            _buildPriceRow('Actual Fare', order.actualFare!),
-          const Divider(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Total',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '₱${(order.actualFare ?? order.estimatedFare).toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF5F2D82),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+  /// Items subtotal recorded with the order (food/store), or null for rides
+  /// and parcels where the fare is the whole price.
+  double? _itemsSubtotal(OrderDto order) {
+    final raw = order.meta?['subtotal'];
+    final value = raw is num ? raw.toDouble() : double.tryParse('${raw ?? ''}');
+    return value != null && value > 0 ? value : null;
   }
 
-  Widget _buildCancellationInfo(OrderDto order) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.red[50]!),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border(context, Colors.red[200]!)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.cancel_outlined, color: Colors.red[700], size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Cancellation Reason',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red[900],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            order.cancelReason!,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 13,
-              color: Colors.red[800],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value, {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 13,
-              color: AppColors.foreground(context, Colors.grey[600]!),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color:
-                  valueColor ??
-                  AppColors.foreground(context, Colors.grey[800]!),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPriceRow(String label, double amount) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 13,
-              color: AppColors.foreground(context, Colors.grey[600]!),
-            ),
-          ),
-          Text(
-            '₱${amount.toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildCancellationInfo(OrderDto order) =>
+      CancellationNote(reason: order.cancelReason!);
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -775,7 +562,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       case 'failed':
         return 'Failed';
       default:
-        return status.toUpperCase();
+        // Never show a raw enum such as READY_FOR_PICKUP.
+        return OrderStatusMapper.toDisplayLabel(status);
     }
   }
 
@@ -796,23 +584,6 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         return Icons.cancel;
       default:
         return Icons.info;
-    }
-  }
-
-  String _getServiceName(int serviceId) {
-    switch (serviceId) {
-      case 1:
-        return 'LesGo';
-      case 2:
-        return 'LesRide';
-      case 3:
-        return 'LesEat';
-      case 4:
-        return 'LesBuy';
-      case 5:
-        return 'LesTransport';
-      default:
-        return 'Order';
     }
   }
 
@@ -870,10 +641,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               if (_isLoadingRoute)
                 Container(
                   color: Colors.black.withValues(alpha: 0.1),
-                  child: const Center(
+                  child: Center(
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFF5F2D82),
+                        AppColors.accent(context, const Color(0xFF5F2D82)),
                       ),
                     ),
                   ),
@@ -960,22 +731,23 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   Set<Marker> _buildMapMarkers(OrderDto order) {
     final markers = <Marker>{};
 
-    // Pickup marker (green)
+    final food = _isFood(order);
     markers.add(
       Marker(
         markerId: const MarkerId('pickup'),
         position: LatLng(order.pickupLat, order.pickupLng),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        icon: MapPins.icon(food ? MapPinKind.store : MapPinKind.customer),
+        anchor: MapPins.anchor,
         infoWindow: const InfoWindow(title: 'Pickup Location'),
       ),
     );
 
-    // Dropoff marker (red)
     markers.add(
       Marker(
         markerId: const MarkerId('dropoff'),
         position: LatLng(order.dropoffLat, order.dropoffLng),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        icon: MapPins.icon(food ? MapPinKind.customer : MapPinKind.destination),
+        anchor: MapPins.anchor,
         infoWindow: const InfoWindow(title: 'Dropoff Location'),
       ),
     );
@@ -1000,10 +772,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         points: points,
         color: AppColors.accent(context, Color(0xFF5F2D82)),
         width: 4,
-        // Use solid line for actual route, dashed for straight line
-        patterns: _routePolyline.isEmpty
-            ? [PatternItem.dash(20), PatternItem.gap(10)]
-            : [],
+        // Always solid: dashed polylines on long routes crash iOS.
       ),
     );
 

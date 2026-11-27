@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/responsive_utils.dart';
@@ -21,7 +22,7 @@ class ProfileAddressSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
+    final horizontalPadding = ResponsiveUtils.screenPadding(context);
 
     return Column(
       children: [
@@ -68,7 +69,8 @@ class ProfileAddressSection extends ConsumerWidget {
             child: ElevatedButton(
               onPressed: () => controllers.updateProfile(context, ref),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5F2D82),
+                backgroundColor: AppColors.buttonFill(context),
+                foregroundColor: AppColors.onButton(context),
                 padding: EdgeInsets.symmetric(
                   vertical: ResponsiveUtils.spacing(context, 16),
                 ),

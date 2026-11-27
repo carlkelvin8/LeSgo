@@ -19,6 +19,8 @@ class LesridePaymentSection extends StatelessWidget {
       selectedMethod: paymentMethod,
       onMethodChanged: (method) => onPaymentChanged(method),
       minimumAmount: minimumAmount,
+      cashTitle: 'Cash',
+      cashSubtitle: 'Pay your driver in cash at the end of the ride',
     );
   }
 }

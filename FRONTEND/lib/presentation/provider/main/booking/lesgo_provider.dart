@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -20,6 +22,47 @@ import '../../../../core/utils/booking_checkout_payment.dart';
 import '../../../../core/utils/network_guard.dart';
 import '../../../../core/utils/active_order_limit_guard.dart';
 
+/// Null for blank text so `a ?? fallback` falls through to the fallback.
+String? _nonEmpty(String? value) =>
+    (value == null || value.trim().isEmpty) ? null : value;
+
+/// Pure helpers for the LesGo booking form (unit-testable).
+class LesgoBookingRules {
+  LesgoBookingRules._();
+
+  static const double maxWeightKg = 100;
+
+  /// Parses the optional weight field. Returns null for empty/invalid input,
+  /// non-positive values and anything above [maxWeightKg].
+  static double? parseWeightKg(String raw) {
+    final text = raw.trim().replaceAll(',', '.');
+    final match = RegExp(r'^\d+(\.\d+)?').firstMatch(text);
+    if (match == null) return null;
+    final rest = text.substring(match.end).trim().toLowerCase();
+    if (rest.isNotEmpty && rest != 'kg' && rest != 'kgs') return null;
+    final value = double.tryParse(match.group(0)!);
+    if (value == null || !value.isFinite || value <= 0 || value > maxWeightKg) {
+      return null;
+    }
+    return value;
+  }
+
+  /// Weight is optional: empty is valid, anything else must parse.
+  static bool isWeightValid(String raw) =>
+      raw.trim().isEmpty || parseWeightKg(raw) != null;
+
+  /// Combines pickup/dropoff notes into the single `notes` field (max 500).
+  static String? buildNotes(String pickupNotes, String dropoffNotes) {
+    final parts = <String>[
+      if (pickupNotes.trim().isNotEmpty) 'Pickup: ${pickupNotes.trim()}',
+      if (dropoffNotes.trim().isNotEmpty) 'Dropoff: ${dropoffNotes.trim()}',
+    ];
+    if (parts.isEmpty) return null;
+    final joined = parts.join('\n');
+    return joined.length > 500 ? joined.substring(0, 500) : joined;
+  }
+}
+
 class LesgoState {
   final bool isFullscreen;
   final String paymentMethod;
@@ -37,6 +80,9 @@ class LesgoState {
   final bool isBooking;
   final FareBreakdownResult? fareEstimate;
   final bool isLoadingFare;
+  final bool fareError;
+  final String pickupNotes;
+  final String dropoffNotes;
 
   LesgoState({
     this.isFullscreen = false,
@@ -55,6 +101,9 @@ class LesgoState {
     this.isBooking = false,
     this.fareEstimate,
     this.isLoadingFare = false,
+    this.fareError = false,
+    this.pickupNotes = '',
+    this.dropoffNotes = '',
   });
 
   LesgoState copyWith({
@@ -79,6 +128,9 @@ class LesgoState {
     FareBreakdownResult? fareEstimate,
     bool clearFareEstimate = false,
     bool? isLoadingFare,
+    bool? fareError,
+    String? pickupNotes,
+    String? dropoffNotes,
   }) {
     return LesgoState(
       isFullscreen: isFullscreen ?? this.isFullscreen,
@@ -106,6 +158,9 @@ class LesgoState {
           ? null
           : (fareEstimate ?? this.fareEstimate),
       isLoadingFare: isLoadingFare ?? this.isLoadingFare,
+      fareError: fareError ?? this.fareError,
+      pickupNotes: pickupNotes ?? this.pickupNotes,
+      dropoffNotes: dropoffNotes ?? this.dropoffNotes,
     );
   }
 }
@@ -123,6 +178,57 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       0.28; // Default initial size - shows more map
 
   LesgoNotifier(this._ref) : super(LesgoState());
+
+  /// Bumped whenever a fare request starts or the inputs are invalidated so a
+  /// slower, older response cannot overwrite a newer one.
+  int _fareSeq = 0;
+  Timer? _weightDebounce;
+
+  @override
+  void dispose() {
+    _weightDebounce?.cancel();
+    super.dispose();
+  }
+
+  void setItemDescription(String value) {
+    if (value == state.itemDescription) return;
+    state = state.copyWith(itemDescription: value);
+  }
+
+  void setPickupNotes(String value) {
+    if (value == state.pickupNotes) return;
+    state = state.copyWith(pickupNotes: value);
+  }
+
+  void setDropoffNotes(String value) {
+    if (value == state.dropoffNotes) return;
+    state = state.copyWith(dropoffNotes: value);
+  }
+
+  /// Stores the weight and re-quotes the fare (debounced) when it changes.
+  void setItemWeight(String value) {
+    if (value == state.itemWeight) return;
+    state = state.copyWith(itemWeight: value);
+    _weightDebounce?.cancel();
+    final loc = _ref.read(lesgoLocationProvider);
+    if (loc.pickupLocation == null || loc.destinationLocation == null) return;
+    if (!LesgoBookingRules.isWeightValid(value)) return;
+    _weightDebounce = Timer(const Duration(milliseconds: 600), () {
+      if (mounted) fetchFareEstimate();
+    });
+  }
+
+  /// Distance for the estimate: routed distance, else straight-line distance.
+  int _estimatedDistanceM(LesgoLocationState loc) {
+    final km = loc.distanceInKm;
+    if (km != null && km > 0) return (km * 1000).round();
+    return BookingGeoUtils.distanceMeters(
+      lat1: loc.pickupLocation!.latitude,
+      lng1: loc.pickupLocation!.longitude,
+      lat2: loc.destinationLocation!.latitude,
+      lng2: loc.destinationLocation!.longitude,
+    );
+  }
 
   void setMapController(GoogleMapController? controller) {
     _mainMapController = controller;
@@ -158,7 +264,17 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
       clearVoucher: true,
       clearVoucherError: true,
       clearFareEstimate: true,
+      itemDescription: '',
+      itemWeight: '',
+      paymentMethod: 'cash',
+      pickupNotes: '',
+      dropoffNotes: '',
+      fareError: false,
+      isLoadingFare: false,
+      isBooking: false,
     );
+    _fareSeq++;
+    _weightDebounce?.cancel();
 
     await notifier.getCurrentLocation();
   }
@@ -407,23 +523,36 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     final pickup = locationState.pickupLocation;
     final dropoff = locationState.destinationLocation;
     if (pickup == null || dropoff == null) return;
+    if (!LesgoBookingRules.isWeightValid(state.itemWeight)) {
+      state = state.copyWith(isLoadingFare: false, clearFareEstimate: true);
+      return;
+    }
 
-    state = state.copyWith(isLoadingFare: true);
+    final seq = ++_fareSeq;
+    state = state.copyWith(isLoadingFare: true, fareError: false);
 
-    final distanceM = locationState.distanceInKm != null
-        ? (locationState.distanceInKm! * 1000).round()
-        : 5000;
+    FareBreakdownResult? result;
+    try {
+      result = await _orderDataSource.getFareBreakdownFull(
+        serviceId: BookingServiceIds.lesgo,
+        estimatedDistanceM: _estimatedDistanceM(locationState),
+        pickupLat: pickup.latitude,
+        pickupLng: pickup.longitude,
+        dropoffLat: dropoff.latitude,
+        dropoffLng: dropoff.longitude,
+        estimatedWeightKg: LesgoBookingRules.parseWeightKg(state.itemWeight),
+      );
+    } catch (_) {
+      result = null;
+    }
+    if (!mounted || seq != _fareSeq) return;
 
-    final result = await _orderDataSource.getFareBreakdownFull(
-      serviceId: BookingServiceIds.lesgo,
-      estimatedDistanceM: distanceM,
-      pickupLat: pickup.latitude,
-      pickupLng: pickup.longitude,
-      dropoffLat: dropoff.latitude,
-      dropoffLng: dropoff.longitude,
+    state = state.copyWith(
+      fareEstimate: result,
+      clearFareEstimate: result == null,
+      isLoadingFare: false,
+      fareError: result == null,
     );
-
-    state = state.copyWith(fareEstimate: result, isLoadingFare: false);
   }
 
   /// Auto-fetch route and fare when both locations are available (from saved addresses).
@@ -447,6 +576,14 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     ]);
   }
 
+  void updateItemDescription(String value) {
+    state = state.copyWith(itemDescription: value);
+  }
+
+  void updateItemWeight(String value) {
+    state = state.copyWith(itemWeight: value);
+  }
+
   void updatePaymentMethod(String method) {
     state = state.copyWith(paymentMethod: method);
   }
@@ -457,13 +594,10 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     final dropoff = locationState.destinationLocation;
     if (pickup == null || dropoff == null) return null;
 
-    final distanceM = locationState.distanceInKm != null
-        ? (locationState.distanceInKm! * 1000).round()
-        : 5000;
-
     return _orderDataSource.getFareEstimateRaw(
       serviceId: BookingServiceIds.lesgo,
-      estimatedDistanceM: distanceM,
+      estimatedDistanceM: _estimatedDistanceM(locationState),
+      estimatedWeightKg: LesgoBookingRules.parseWeightKg(state.itemWeight),
       pickupLat: pickup.latitude,
       pickupLng: pickup.longitude,
       dropoffLat: dropoff.latitude,
@@ -475,7 +609,16 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     final trimmed = voucherCode.trim();
     if (trimmed.isEmpty) return 'Enter a voucher code';
 
-    final orderValue = await _estimateOrderValue();
+    double? orderValue;
+    try {
+      orderValue = await _estimateOrderValue();
+    } catch (e) {
+      return ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not apply voucher. Please try again.',
+        fallbackTl: 'Hindi ma-apply ang voucher. Subukan muli.',
+      );
+    }
     if (orderValue == null) {
       return 'Select pickup and drop-off locations first';
     }
@@ -530,9 +673,12 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print(
       '🔍 LesGo: selectPickupAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
     );
+    _fareSeq++;
     state = state.copyWith(
       selectedPickupAddress: address,
       clearFareEstimate: true,
+      isLoadingFare: false,
+      fareError: false,
     );
     final coords = BookingGeoUtils.resolveCoords(
       lat: address.latitude,
@@ -555,9 +701,12 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
     print(
       '🔍 LesGo: selectDropoffAddress called with: ${address.addressLine1} (${address.latitude}, ${address.longitude})',
     );
+    _fareSeq++;
     state = state.copyWith(
       selectedDropoffAddress: address,
       clearFareEstimate: true,
+      isLoadingFare: false,
+      fareError: false,
     );
     final coords = BookingGeoUtils.resolveCoords(
       lat: address.latitude,
@@ -648,6 +797,21 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
   Future<void> handleBook(BuildContext context) async {
     // Double-tap guard
     if (state.isBooking) return;
+    if (state.isLoadingFare ||
+        _ref.read(lesgoLocationProvider).isLoadingRoute) {
+      SnackBarUtils.showWarning(
+        context,
+        'Still calculating your route and fare. Please wait a moment.',
+      );
+      return;
+    }
+    if (!LesgoBookingRules.isWeightValid(state.itemWeight)) {
+      SnackBarUtils.showWarning(
+        context,
+        'Enter an item weight between 0 and ${LesgoBookingRules.maxWeightKg.toInt()} kg.',
+      );
+      return;
+    }
     state = state.copyWith(isBooking: true);
 
     try {
@@ -727,16 +891,19 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
           final profileState = _ref.read(profileProvider);
           final user = profileState.user;
 
-          final estimatedDistanceM = (updatedLocationState.distanceInKm != null)
-              ? (updatedLocationState.distanceInKm! * 1000).round()
-              : 5000;
+          final estimatedDistanceM = _estimatedDistanceM(updatedLocationState);
+          final weightKg = LesgoBookingRules.parseWeightKg(state.itemWeight);
+          final userPhone = user?.phone?.trim();
+          final fallbackPhone = (userPhone != null && userPhone.isNotEmpty)
+              ? userPhone
+              : null;
 
           final createOrderRequest = CreateOrderRequestDto(
             serviceId: BookingServiceIds.lesgo,
             estimatedDistanceM: estimatedDistanceM,
             pickup: OrderAddressDto(
               address:
-                  updatedLocationState.pickupAddress?.toString() ??
+                  _nonEmpty(updatedLocationState.pickupAddress?.toString()) ??
                   state.selectedPickupAddress?.addressLine1 ??
                   'Pickup Location',
               lat: pickup.latitude,
@@ -748,11 +915,13 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
               contactPhone:
                   state.selectedPickupAddress?.contactPhone?.isNotEmpty == true
                   ? state.selectedPickupAddress!.contactPhone!
-                  : (user?.phone ?? '+639123456789'),
+                  : fallbackPhone,
             ),
             dropoff: OrderAddressDto(
               address:
-                  updatedLocationState.destinationAddress?.toString() ??
+                  _nonEmpty(
+                    updatedLocationState.destinationAddress?.toString(),
+                  ) ??
                   state.selectedDropoffAddress?.addressLine1 ??
                   'Destination',
               lat: dropoff.latitude,
@@ -764,9 +933,16 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
               contactPhone:
                   state.selectedDropoffAddress?.contactPhone?.isNotEmpty == true
                   ? state.selectedDropoffAddress!.contactPhone!
-                  : (user?.phone ?? '+639123456789'),
+                  : fallbackPhone,
             ),
-            notes: 'LesGo delivery booking',
+            notes: LesgoBookingRules.buildNotes(
+              state.pickupNotes,
+              state.dropoffNotes,
+            ),
+            itemDescription: state.itemDescription.trim().isEmpty
+                ? null
+                : state.itemDescription.trim(),
+            estimatedWeightKg: weightKg,
             paymentMethod: state.paymentMethod,
             voucherCode: state.voucherCode,
             discountAmount: state.discount > 0 ? state.discount : null,
@@ -779,28 +955,35 @@ class LesgoNotifier extends StateNotifier<LesgoState> {
             },
           );
 
-          final estimatedFare =
-              await orderDataSource.getFareEstimateRaw(
-                serviceId: BookingServiceIds.lesgo,
-                estimatedDistanceM: createOrderRequest.estimatedDistanceM,
-                pickupLat: pickup.latitude,
-                pickupLng: pickup.longitude,
-                dropoffLat: dropoff.latitude,
-                dropoffLng: dropoff.longitude,
-              ) ??
-              0.0;
+          // Client-side wallet pre-check only when we have a real quote; if
+          // the estimate is unavailable the server decides on createOrder.
+          double? estimatedFare;
+          try {
+            estimatedFare = await orderDataSource.getFareEstimateRaw(
+              serviceId: BookingServiceIds.lesgo,
+              estimatedDistanceM: createOrderRequest.estimatedDistanceM,
+              pickupLat: pickup.latitude,
+              pickupLng: pickup.longitude,
+              dropoffLat: dropoff.latitude,
+              dropoffLng: dropoff.longitude,
+              estimatedWeightKg: weightKg,
+            );
+          } catch (_) {
+            estimatedFare = null;
+          }
 
-          final payableFare =
-              (estimatedFare > 0 ? estimatedFare : 50.0) - state.discount;
-          final walletAmount = payableFare > 0 ? payableFare : 0.0;
+          if (estimatedFare != null && estimatedFare > 0) {
+            final payableFare = estimatedFare - state.discount;
+            final walletAmount = payableFare > 0 ? payableFare : 0.0;
 
-          final walletOk = await validateWalletBalanceForOrder(
-            _ref,
-            amount: walletAmount,
-            paymentMethod: state.paymentMethod,
-            context: context,
-          );
-          if (!walletOk) return;
+            final walletOk = await validateWalletBalanceForOrder(
+              _ref,
+              amount: walletAmount,
+              paymentMethod: state.paymentMethod,
+              context: context,
+            );
+            if (!walletOk) return;
+          }
 
           print('🔵 LesGo: Creating order with API...');
           final response = await orderDataSource.createOrder(

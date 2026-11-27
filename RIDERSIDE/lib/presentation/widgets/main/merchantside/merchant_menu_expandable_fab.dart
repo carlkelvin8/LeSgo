@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_localization.dart';
 
 class MerchantMenuExpandableFab extends StatefulWidget {
   final VoidCallback onAddMenu;
@@ -93,7 +94,7 @@ class _MerchantMenuExpandableFabState extends State<MerchantMenuExpandableFab> {
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       child: _buildQuickAction(
-                        label: 'Add Category',
+                        label: context.tr('Add Category'),
                         icon: Icons.category_outlined,
                         onPressed: widget.onAddCategory,
                       ),
@@ -113,7 +114,7 @@ class _MerchantMenuExpandableFabState extends State<MerchantMenuExpandableFab> {
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       child: _buildQuickAction(
-                        label: 'Add Menu',
+                        label: context.tr('Add Menu'),
                         icon: Icons.restaurant_menu_outlined,
                         onPressed: widget.onAddMenu,
                       ),

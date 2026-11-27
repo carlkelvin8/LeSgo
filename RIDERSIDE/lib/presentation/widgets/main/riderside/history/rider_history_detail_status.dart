@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderHistoryDetailStatus extends StatelessWidget {
   final int rating;
@@ -24,11 +25,11 @@ class RiderHistoryDetailStatus extends StatelessWidget {
           width: ResponsiveUtils.spacing(context, 120),
           height: ResponsiveUtils.spacing(context, 120),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.surf(Colors.white),
             borderRadius: BorderRadius.circular(
               ResponsiveUtils.spacing(context, 16),
             ),
-            border: Border.all(color: Colors.grey.shade200, width: 1),
+            border: Border.all(color: context.brd(Colors.grey.shade200), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -40,7 +41,7 @@ class RiderHistoryDetailStatus extends StatelessWidget {
           child: Icon(
             Icons.restaurant,
             size: ResponsiveUtils.imageHeight(context, 60),
-            color: Colors.grey.shade400,
+            color: context.sub(Colors.grey.shade400),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 16)),

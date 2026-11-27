@@ -2,6 +2,7 @@ import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/responsive_utils.dart';
+import '../common/service_icon.dart';
 
 class PromoCard extends StatelessWidget {
   final String title;
@@ -9,6 +10,9 @@ class PromoCard extends StatelessWidget {
   final String? badge;
   final Color? accentColor;
   final String? imageUrl;
+
+  /// Which service the offer is for; drives the artwork.
+  final String? service;
   final VoidCallback? onTap;
 
   const PromoCard({
@@ -18,6 +22,7 @@ class PromoCard extends StatelessWidget {
     this.badge,
     this.accentColor,
     this.imageUrl,
+    this.service,
     this.onTap,
   });
 
@@ -54,15 +59,7 @@ class PromoCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(Icons.local_offer, color: color, size: 24),
-                    ),
+                    ServiceIcon(service ?? subtitle ?? '', size: 52),
                     const Spacer(),
                     if (badge != null) ...[
                       Text(
@@ -96,7 +93,10 @@ class PromoCard extends StatelessWidget {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 11),
-                          color: AppColors.foreground(context, Colors.grey[500]!),
+                          color: AppColors.foreground(
+                            context,
+                            Colors.grey[500]!,
+                          ),
                           height: 1.2,
                         ),
                         maxLines: 2,

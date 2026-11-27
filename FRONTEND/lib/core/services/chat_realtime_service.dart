@@ -106,7 +106,7 @@ class ChatRealtimeService {
     _webSocket.addHandler(_webSocketHandler);
     final ok = await _webSocket.connect(userId: userId);
     if (!ok) {
-      debugPrint('WebSocket unavailable — using notification poll fallback');
+      debugPrint('WebSocket unavailable - using notification poll fallback');
     }
   }
 

@@ -12,7 +12,7 @@ class ProfileAccountSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Section label
-         Padding(
+        Padding(
           padding: EdgeInsets.only(left: 4, bottom: 12),
           child: Text(
             'Account settings',
@@ -32,7 +32,10 @@ class ProfileAccountSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: .03),
+                color: AppColors.accent(
+                  context,
+                  Color(0xFF5F2D82),
+                ).withValues(alpha: .03),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
                 spreadRadius: -4,
@@ -45,8 +48,8 @@ class ProfileAccountSection extends StatelessWidget {
                 icon: Icons.person_off_outlined,
                 title: 'Deactivate account',
                 subtitle: 'Temporarily disable your account',
-                iconBg: const Color(0xFFF0E8FF),
-                iconColor: const Color(0xFF7B3FAA),
+                iconBg: AppColors.surface(context, const Color(0xFFF0E8FF)),
+                iconColor: AppColors.accent(context, const Color(0xFF7B3FAA)),
                 onTap: () =>
                     AppRouter.push(context, MainRoutes.deactivateAccount),
               ),
@@ -59,7 +62,7 @@ class ProfileAccountSection extends StatelessWidget {
                 icon: Icons.delete_forever_outlined,
                 title: 'Delete account',
                 subtitle: 'Permanently remove your data from LeSgo',
-                iconBg: const Color(0xFFFFF0F0),
+                iconBg: AppColors.surface(context, const Color(0xFFFFF0F0)),
                 iconColor: Colors.red.shade600,
                 titleColor: Colors.red.shade700,
                 isDestructive: true,
@@ -125,13 +128,15 @@ class _AccountTile extends StatelessWidget {
                         fontFamily: 'TT Fors',
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: titleColor ?? AppColors.foreground(context, Color(0xFF1A0A2E)),
+                        color:
+                            titleColor ??
+                            AppColors.foreground(context, Color(0xFF1A0A2E)),
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style:  TextStyle(
+                      style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 11.5,
                         color: AppColors.foreground(context, Color(0xFF82788D)),

@@ -24,7 +24,7 @@ void main(){
   getIt.registerSingleton<MissionsRemoteDataSource>(FakeSource());addTearDown(getIt.reset);
   await tester.pumpWidget(ProviderScope(child:MaterialApp(home:Builder(builder:(c)=>Scaffold(body:TextButton(onPressed:()=>Navigator.push(c,MaterialPageRoute<void>(builder:(_)=>const MissionsScreen())),child:const Text('Open missions')))))));
   await tester.tap(find.text('Open missions'));await tester.pumpAndSettle();
-  final back=find.byIcon(Icons.arrow_back_ios);
+  final back=find.byIcon(Icons.arrow_back_ios_new_rounded);
   expect(back,findsOneWidget);
   await tester.tap(back);await tester.pumpAndSettle();
   expect(find.text('Open missions'),findsOneWidget);

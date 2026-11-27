@@ -112,9 +112,11 @@ class _FaqsScreenState extends ConsumerState<FaqsScreen>
 
             // ── Content ─────────────────────────────────────────────────
             if (faqState.isLoading)
-              const SliverFillRemaining(
+              SliverFillRemaining(
                 child: Center(
-                  child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+                  child: CircularProgressIndicator(
+                    color: AppColors.accent(context, Color(0xFF5F2D82)),
+                  ),
                 ),
               )
             else if (faqState.error != null && faqState.faqs.isEmpty)
@@ -444,10 +446,10 @@ class _EmptyState extends StatelessWidget {
                 color: AppColors.surface(context, Color(0xFFF3ECF9)),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.search_off_rounded,
                 size: 34,
-                color: Color(0xFF9B70CC),
+                color: AppColors.accent(context, Color(0xFF9B70CC)),
               ),
             ),
             const SizedBox(height: 20),
@@ -469,10 +471,10 @@ class _EmptyState extends StatelessWidget {
                   ? 'Pull down to refresh'
                   : 'Try a different search term',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 13,
-                color: Color(0xFFAA90C0),
+                color: AppColors.foreground(context, Color(0xFFAA90C0)),
               ),
             ),
           ],

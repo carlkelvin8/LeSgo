@@ -31,6 +31,27 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
     _itemWeightController = TextEditingController();
     _pickupNotesController = TextEditingController();
     _dropoffNotesController = TextEditingController();
+    // Keep the provider in sync so handleBook sends what the user typed.
+    _itemLocationController.addListener(
+      () => ref
+          .read(lesgoProvider.notifier)
+          .setItemDescription(_itemLocationController.text),
+    );
+    _itemWeightController.addListener(
+      () => ref
+          .read(lesgoProvider.notifier)
+          .setItemWeight(_itemWeightController.text),
+    );
+    _pickupNotesController.addListener(
+      () => ref
+          .read(lesgoProvider.notifier)
+          .setPickupNotes(_pickupNotesController.text),
+    );
+    _dropoffNotesController.addListener(
+      () => ref
+          .read(lesgoProvider.notifier)
+          .setDropoffNotes(_dropoffNotesController.text),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _notifier = ref.read(lesgoProvider.notifier);
@@ -78,6 +99,7 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
           ? null
           : const BookingServiceHeader(
               title: 'LesGo',
+              orderStyle: true,
               action: SizedBox.shrink(),
             ),
       body: SafeArea(
@@ -88,6 +110,8 @@ class _LesgoScreenState extends ConsumerState<LesgoScreen> {
           onCollapseSheet: _collapseSheet,
           itemLocationController: _itemLocationController,
           itemWeightController: _itemWeightController,
+          onItemLocationChanged: notifier.updateItemDescription,
+          onItemWeightChanged: notifier.updateItemWeight,
           pickupNotesController: _pickupNotesController,
           dropoffNotesController: _dropoffNotesController,
         ),

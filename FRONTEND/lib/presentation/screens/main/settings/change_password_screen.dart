@@ -69,9 +69,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface(context, Colors.grey[50]!),
-      appBar: AppBar(
-        title: const Text('Change Password'),
-      ),
+      appBar: AppBar(title: const Text('Change Password')),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
         child: Form(
@@ -152,7 +150,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     return TextFormField(
       controller: controller,
       obscureText: obscure,
-      validator: validator ??
+      validator:
+          validator ??
           (value) {
             if (value == null || value.isEmpty) {
               return '$label is required';
@@ -162,7 +161,11 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: AppColors.surface(context, Colors.white),
+        // Dark mode: let the theme's raised field fill show; the page's own
+        // surface colour would blend into the background and hide the field.
+        fillColor: Theme.of(context).brightness == Brightness.dark
+            ? null
+            : Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         suffixIcon: IconButton(
           icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),

@@ -497,11 +497,14 @@ class VoucherService
     /**
      * Get available vouchers for user
      */
-    public function getAvailableVouchers(User $user): array
+    public function getAvailableVouchers(User $user, ?int $serviceId = null): array
     {
         $availableVouchers = [];
 
         foreach ($this->allVoucherDefinitions() as $code => $voucher) {
+            if ($serviceId !== null && ! $this->appliesToService($voucher, $serviceId)) {
+                continue;
+            }
             $validation = $this->validateVoucherForUser($code, $user);
             $voucher['claimed'] = $this->isVoucherClaimed($user, $code);
             if ($validation['eligible']) {
@@ -514,6 +517,16 @@ class VoucherService
         }
 
         return $availableVouchers;
+    }
+
+    /**
+     * A voucher with no applicable_services works everywhere.
+     */
+    private function appliesToService(array $voucher, int $serviceId): bool
+    {
+        $services = $voucher['applicable_services'] ?? null;
+
+        return empty($services) || in_array($serviceId, array_map('intval', (array) $services), true);
     }
 
     /**

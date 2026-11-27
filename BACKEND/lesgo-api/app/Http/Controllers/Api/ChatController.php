@@ -7,6 +7,7 @@ use App\Models\ChatMessage;
 use App\Models\ChatReport;
 use App\Models\Order;
 use App\Models\SupportTicket;
+use App\Models\User;
 use App\Models\UserBlock;
 use App\Events\TypingIndicator;
 use App\Events\ReadReceipt;
@@ -33,12 +34,12 @@ class ChatController extends Controller
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
-        $query = ChatConversation::forUser($user->id)
+        $query = ChatConversation::forUserOrStore($user)
             ->with([
                 'customer:id,name,email,profile_photo_url',
                 'driver:id,name,email,profile_photo_url',
                 'latestMessage',
-                'order:id,status',
+                'order:id,status,partner_id',
             ]);
 
         if (!empty($validated['status'])) {
@@ -48,11 +49,14 @@ class ChatController extends Controller
         $perPage = (int) ($validated['per_page'] ?? 20);
         $conversations = $query->orderByDesc('last_message_at')->paginate($perPage);
 
-        // Add unread count to each conversation
-        $conversations->getCollection()->transform(function ($conversation) use ($user) {
-            $conversation->unread_count = $conversation->unreadMessages()
-                ->where('sender_id', '!=', $user->id)
-                ->count();
+        // Add unread count to each conversation (the store has its own read state)
+        $partnerId = $user->workingPartnerId();
+        $conversations->getCollection()->transform(function ($conversation) use ($user, $partnerId) {
+            $conversation->unread_count = $this->isStoreViewer($conversation, $user, $partnerId)
+                ? $conversation->messages()->unreadByStore()->count()
+                : $conversation->unreadMessages()
+                    ->where('sender_id', '!=', $user->id)
+                    ->count();
             return $conversation;
         });
 
@@ -75,14 +79,18 @@ class ChatController extends Controller
         // Check if user is part of this order
         $isCustomer = (int) $order->customer_id === (int) $user->id;
         $isDriver = $order->driverProfile && (int) $order->driverProfile->user_id === (int) $user->id;
+        $workingPartnerId = $user->workingPartnerId();
+        $isStore = $workingPartnerId !== null
+            && $order->partner_id !== null
+            && (int) $order->partner_id === $workingPartnerId;
 
-        if (!$isCustomer && !$isDriver && !$user->isAdmin()) {
+        if (!$isCustomer && !$isDriver && !$isStore && !$user->isAdmin()) {
             return $this->error('Forbidden', 403);
         }
 
         // Find or create conversation (search by order_id only to avoid duplicates)
         $conversation = ChatConversation::firstOrCreate(
-            ['order_id' => $orderId],
+            ['order_id' => (int) $orderId],
             [
                 'customer_id' => $order->customer_id,
                 'driver_id' => $order->driverProfile ? $order->driverProfile->user_id : null,
@@ -118,7 +126,7 @@ class ChatController extends Controller
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
 
-        $conversation = ChatConversation::forUser($user->id)->find($conversationId);
+        $conversation = ChatConversation::forUserOrStore($user)->find($conversationId);
 
         if (!$conversation) {
             return $this->error('Conversation not found.', 404);
@@ -132,11 +140,15 @@ class ChatController extends Controller
             ->orderByDesc('created_at')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        // Mark messages as read for the current user
-        $conversation->unreadMessages()
-            ->where('sender_id', '!=', $user->id)
-            ->get()
-            ->each->markAsRead();
+        // Mark messages as read for the current user (the store only touches store_read_at)
+        if ($this->isStoreViewer($conversation, $user)) {
+            $conversation->messages()->unreadByStore()->get()->each->markAsReadByStore();
+        } else {
+            $conversation->unreadMessages()
+                ->where('sender_id', '!=', $user->id)
+                ->get()
+                ->each->markAsRead();
+        }
 
         return $this->success($messages, 'Messages retrieved successfully');
     }
@@ -152,7 +164,7 @@ class ChatController extends Controller
             'attachments' => 'nullable|array',
         ]);
 
-        $conversation = ChatConversation::forUser($user->id)
+        $conversation = ChatConversation::forUserOrStore($user)
             ->where('status', 'active')
             ->find($conversationId);
 
@@ -196,7 +208,7 @@ class ChatController extends Controller
             'is_typing' => 'required|boolean',
         ]);
 
-        $conversation = ChatConversation::forUser($user->id)
+        $conversation = ChatConversation::forUserOrStore($user)
             ->where('status', 'active')
             ->find($conversationId);
 
@@ -225,22 +237,25 @@ class ChatController extends Controller
             'message_ids.*' => 'required|integer',
         ]);
 
-        $conversation = ChatConversation::forUser($user->id)->find($conversationId);
+        $conversation = ChatConversation::forUserOrStore($user)->find($conversationId);
 
         if (!$conversation) {
             return $this->error('Conversation not found.', 404);
         }
 
-        // Mark unread messages as read
-        $query = $conversation->unreadMessages()
-            ->where('sender_id', '!=', $user->id);
+        // Mark unread messages as read. The store keeps its own read state so it
+        // never marks the customer's/rider's messages read for each other.
+        $isStore = $this->isStoreViewer($conversation, $user);
+        $query = $isStore
+            ? $conversation->messages()->unreadByStore()
+            : $conversation->unreadMessages()->where('sender_id', '!=', $user->id);
 
         if (!empty($validated['message_ids'])) {
             $query->whereIn('id', $validated['message_ids']);
         }
 
         $messages = $query->get();
-        $messages->each->markAsRead();
+        $isStore ? $messages->each->markAsReadByStore() : $messages->each->markAsRead();
 
         // Broadcast read receipt for last message
         if ($messages->isNotEmpty()) {
@@ -475,7 +490,31 @@ class ChatController extends Controller
             return $conversation->customer_id ? (int) $conversation->customer_id : null;
         }
 
-        return null;
+        // The store (owner/staff) is neither customer nor rider: it talks to the customer.
+        return $conversation->customer_id ? (int) $conversation->customer_id : null;
+    }
+
+    /**
+     * Whether the user sees this conversation as the order's store (owner/staff)
+     * rather than as its customer or rider.
+     */
+    private function isStoreViewer(ChatConversation $conversation, User $user, ?int $partnerId = null): bool
+    {
+        if ((int) $conversation->customer_id === (int) $user->id
+            || (int) $conversation->driver_id === (int) $user->id) {
+            return false;
+        }
+
+        $partnerId ??= $user->workingPartnerId();
+        if (!$partnerId) {
+            return false;
+        }
+
+        $orderPartnerId = $conversation->relationLoaded('order')
+            ? $conversation->order?->partner_id
+            : Order::whereKey($conversation->order_id)->value('partner_id');
+
+        return $orderPartnerId !== null && (int) $orderPartnerId === (int) $partnerId;
     }
 
     private function appendBlockState(ChatConversation $conversation, int $userId): void
@@ -495,18 +534,28 @@ class ChatController extends Controller
     {
         $user = $request->user();
 
-        $count = ChatMessage::whereIn('conversation_id', function ($query) use ($user) {
-            $query->select('id')
-                ->from('chat_conversations')
-                ->where(function ($q) use ($user) {
-                    $q->where('customer_id', $user->id)
-                      ->orWhere('driver_id', $user->id);
-                })
-                ->where('status', 'active');
-        })
+        // Conversations the user is the customer or rider of: shared read_at.
+        $count = ChatMessage::whereIn(
+            'conversation_id',
+            ChatConversation::forUser($user->id)->where('status', 'active')->select('id')
+        )
             ->whereNull('read_at')
             ->where('sender_id', '!=', $user->id)
             ->count();
+
+        // Conversations of the user's store (not already counted above): store_read_at.
+        if ($partnerId = $user->workingPartnerId()) {
+            $count += ChatMessage::whereIn(
+                'conversation_id',
+                ChatConversation::where('status', 'active')
+                    ->whereHas('order', fn ($order) => $order->where('partner_id', $partnerId))
+                    ->where(fn ($q) => $q->whereNull('customer_id')->orWhere('customer_id', '!=', $user->id))
+                    ->where(fn ($q) => $q->whereNull('driver_id')->orWhere('driver_id', '!=', $user->id))
+                    ->select('id')
+            )
+                ->unreadByStore()
+                ->count();
+        }
 
         return $this->success([
             'count' => $count,

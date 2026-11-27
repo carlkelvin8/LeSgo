@@ -4,7 +4,10 @@ namespace Tests\Feature;
 
 use App\Jobs\AutoAssignDriverJob;
 use App\Jobs\NotifyNearbyDriversNewOrderJob;
+use App\Models\MenuCategory;
+use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\Partner;
 use App\Models\Service;
 use App\Models\User;
 use App\Services\OrderWalletPaymentService;
@@ -43,6 +46,91 @@ class OrderTest extends TestCase
             ->assertJsonStructure(['data' => ['id', 'status', 'estimated_fare']]);
 
         $this->assertDatabaseHas('orders', ['service_id' => $service->id, 'status' => 'pending']);
+    }
+
+    public function test_cash_order_for_a_partner_alerts_the_merchant_and_a_plain_order_does_not(): void
+    {
+        Queue::fake();
+        $service = Service::factory()->create(['code' => 'LESGO']);
+        $owner = User::factory()->create(['role' => 'partner_admin']);
+        $partner = \App\Models\Partner::factory()->create(['user_id' => $owner->id, 'status' => 'active', 'is_open' => true]);
+        $this->actingAsRole('customer');
+
+        $this->postJson('/api/v1/orders', $this->makeOrderPayload($service->id))->assertCreated();
+        Queue::assertNotPushed(\App\Jobs\NotifyMerchantNewOrderJob::class);
+
+        $this->postJson('/api/v1/orders', $this->makeOrderPayload($service->id) + ['partner_id' => $partner->id])->assertCreated();
+        Queue::assertPushed(\App\Jobs\NotifyMerchantNewOrderJob::class, 1);
+    }
+
+    public function test_fast_food_orders_start_rider_search_without_skipping_payment_or_pickup_readiness(): void
+    {
+        Queue::fake();
+        $service = Service::factory()->create(['code' => 'LESEAT']);
+        $partner = Partner::factory()->create([
+            'status' => 'active', 'is_open' => true, 'tags' => ['Fast Food'],
+        ]);
+        $category = MenuCategory::create(['partner_id' => $partner->id, 'name' => 'Meals']);
+        $item = MenuItem::create([
+            'partner_id' => $partner->id,
+            'menu_category_id' => $category->id,
+            'name' => 'Meal',
+            'price' => 100,
+            'is_available' => true,
+        ]);
+        $this->actingAsRole('customer');
+        $payload = $this->makeOrderPayload($service->id) + [
+            'partner_id' => $partner->id,
+            'items' => [[
+                'menu_item_id' => $item->id, 'name' => $item->name,
+                'quantity' => 1, 'estimated_price' => 100,
+            ]],
+        ];
+
+        $this->postJson('/api/v1/orders', $payload)->assertCreated()
+            ->assertJsonPath('data.status', 'searching_driver')
+            ->assertJsonPath('data.ready_for_pickup_at', null);
+        Queue::assertPushed(NotifyNearbyDriversNewOrderJob::class, 1);
+        Queue::assertPushed(\App\Jobs\NotifyMerchantNewOrderJob::class, 1);
+
+        $this->postJson('/api/v1/orders', array_replace($payload, ['payment_method' => 'card']))
+            ->assertCreated()->assertJsonPath('data.status', 'searching_driver')
+            ->assertJsonPath('data.payment_status', 'pending');
+        $this->postJson('/api/v1/orders', $payload + [
+            'scheduled_delivery_time' => now()->addHour()->toISOString(),
+        ])->assertCreated()->assertJsonPath('data.status', 'scheduled');
+        Queue::assertPushed(NotifyNearbyDriversNewOrderJob::class, 1);
+
+        $partner->update(['tags' => [], 'cuisine_types' => []]);
+        $this->postJson('/api/v1/orders', $payload + ['meta' => ['fast_food' => true]])
+            ->assertCreated()->assertJsonPath('data.status', 'pending');
+    }
+
+    public function test_order_and_quote_apply_the_same_fare_safety_cap(): void
+    {
+        Queue::fake();
+        $service = Service::factory()->create([
+            'code' => 'LESGO',
+            'base_fare' => 40,
+            'per_km_rate' => 1000,
+        ]);
+        $this->actingAsRole('customer');
+        $payload = $this->makeOrderPayload($service->id);
+
+        $quote = $this->postJson('/api/v1/orders/estimate', [
+            'service_id' => $service->id,
+            'pickup' => $payload['pickup'],
+            'dropoff' => $payload['dropoff'],
+            'estimated_distance_m' => $payload['estimated_distance_m'],
+        ])->assertOk();
+
+        $orderResponse = $this->postJson('/api/v1/orders', $payload)->assertCreated();
+        $order = Order::findOrFail($orderResponse->json('data.id'));
+
+        $this->assertSame(500.0, (float) $quote->json('data.estimated_fare'));
+        $this->assertSame(500.0, (float) $order->estimated_fare);
+        $this->assertSame(500.0, (float) $order->fare_breakdown['total']);
+        $this->assertSame(500.0, (float) $order->meta['delivery_fee']);
     }
 
     public function test_client_order_totals_cannot_override_server_payable_amount(): void
@@ -204,6 +292,25 @@ class OrderTest extends TestCase
         $response->assertStatus(200);
         $this->assertCount(1, $response->json('data'));
         $this->assertEquals('pending', $response->json('data.0.status'));
+    }
+
+    public function test_orders_can_be_filtered_by_each_rider_lifecycle_status(): void
+    {
+        $customer = $this->actingAsRole('customer');
+        $service = Service::factory()->create();
+
+        foreach (['driver_arrived_at_pickup', 'ready_for_pickup', 'in_progress'] as $status) {
+            Order::factory()->create([
+                'customer_id' => $customer->id,
+                'service_id' => $service->id,
+                'status' => $status,
+            ]);
+
+            $this->getJson('/api/v1/orders?status='.$status)
+                ->assertOk()
+                ->assertJsonCount(1, 'data')
+                ->assertJsonPath('data.0.status', $status);
+        }
     }
 
     // ── Show Order ────────────────────────────────────────────────────────────

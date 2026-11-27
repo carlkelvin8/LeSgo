@@ -109,6 +109,9 @@ void main() {
   testWidgets(
     'store search and dragged pin save pickup only; address alone cannot save',
     (tester) async {
+      tester.view.physicalSize = const Size(900, 2600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final container = await mount(tester);
       expect(tester.widget<GoogleMap>(find.byType(GoogleMap)).markers, isEmpty);
       await tester.enterText(
@@ -136,11 +139,24 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Save pickup point'));
       await tester.pumpAndSettle();
+      // The pin's exact address is confirmed before it is saved.
+      expect(find.text('Confirm pickup address'), findsOneWidget);
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Barangay'),
+        'Fairview',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'City / Municipality'),
+        'Quezon City',
+      );
+      await tester.tap(find.text('Confirm address'));
+      await tester.pumpAndSettle();
       final order = container.read(manualOrderProvider);
       expect(
         order.pickupLocationName,
-        'SM Fairview, Quirino Highway, Quezon City',
+        startsWith('SM Fairview, Quirino Highway, Quezon City'),
       );
+      expect(order.pickupLocationName, contains('Brgy. Fairview'));
       expect(order.pickupLat, 14.736);
       expect(order.pickupLng, 121.058);
       expect(

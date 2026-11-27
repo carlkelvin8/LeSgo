@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class ResendOTPButton extends StatelessWidget {
   final VoidCallback onPressed;
@@ -19,7 +20,7 @@ class ResendOTPButton extends StatelessWidget {
           text: TextSpan(
             style: TextStyle(
               fontSize: ResponsiveUtils.fontSize(context, 14),
-              color: Colors.black54,
+              color: context.sub(Colors.black54),
             ),
             children: [
               const TextSpan(
@@ -28,7 +29,7 @@ class ResendOTPButton extends StatelessWidget {
               TextSpan(
                 text: 'Resend OTP',
                 style: TextStyle(
-                  color: const Color(0xFF5F2D82),
+                  color: context.acc(const Color(0xFF5F2D82)),
                   fontWeight: FontWeight.w600,
                   fontSize: ResponsiveUtils.fontSize(context, 14),
                 ),

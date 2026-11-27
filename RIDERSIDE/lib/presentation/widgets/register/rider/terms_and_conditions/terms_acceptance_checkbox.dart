@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Checkbox row for accepting terms and conditions.
 class TermsAcceptanceCheckbox extends StatelessWidget {
@@ -36,7 +37,7 @@ class TermsAcceptanceCheckbox extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
               fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
             ),
           ),
         ),

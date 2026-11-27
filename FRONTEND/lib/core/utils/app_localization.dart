@@ -2,11 +2,14 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'api_error_mapper.dart';
+
 enum AppLanguage { english, filipino }
 
-final appLanguageProvider = StateNotifierProvider<AppLanguageNotifier, AppLanguage>(
-  (ref) => AppLanguageNotifier(),
-);
+final appLanguageProvider =
+    StateNotifierProvider<AppLanguageNotifier, AppLanguage>(
+      (ref) => AppLanguageNotifier(),
+    );
 
 class AppLanguageNotifier extends StateNotifier<AppLanguage> {
   AppLanguageNotifier() : super(AppLanguage.english) {
@@ -17,10 +20,14 @@ class AppLanguageNotifier extends StateNotifier<AppLanguage> {
     final prefs = await SharedPreferences.getInstance();
     final lang = prefs.getString('pref_app_language') ?? 'en';
     state = lang == 'tl' ? AppLanguage.filipino : AppLanguage.english;
+    ApiErrorMapper.preferredLanguage = lang == 'tl' ? 'tl' : 'en';
   }
 
   Future<void> setLanguage(AppLanguage lang) async {
     state = lang;
+    ApiErrorMapper.preferredLanguage = lang == AppLanguage.filipino
+        ? 'tl'
+        : 'en';
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       'pref_app_language',
@@ -31,7 +38,8 @@ class AppLanguageNotifier extends StateNotifier<AppLanguage> {
 
 class AppLocalization {
   static String translate(String key, AppLanguage lang) {
-    if (lang == AppLanguage.filipino && _filipinoTranslations.containsKey(key)) {
+    if (lang == AppLanguage.filipino &&
+        _filipinoTranslations.containsKey(key)) {
       return _filipinoTranslations[key]!;
     }
     return _englishTranslations[key] ?? key;
@@ -57,11 +65,16 @@ const Map<String, String> _englishTranslations = {
   'more': 'More',
   'inbox': 'Inbox',
   'transactions': 'Transactions',
+  'order_history': 'Order History',
   'favorites': 'Favorites',
   'offers': 'Offers',
   'missions': 'Missions',
   'support': 'Support',
   'settings': 'Settings',
+  'edit_profile': 'Edit profile',
+  'orders_shortcut': 'Orders',
+  'settings_preferences': 'Preferences',
+  'account_management': 'Account management',
   'history': 'History',
   'about': 'About',
   'account': 'Account',
@@ -151,10 +164,8 @@ const Map<String, String> _englishTranslations = {
   'manage_cards_wallets': 'Manage cards & wallets',
   'qr_pay': 'QR Pay',
   'pay_via_qr_ph': 'Pay via QR Ph',
-  'receive_messages_orders':
-      'Receive messages about your orders.',
-  'pay_orders_lespay':
-      'Pay your orders with your LesPay wallet.',
+  'receive_messages_orders': 'Receive messages about your orders.',
+  'pay_orders_lespay': 'Pay your orders with your LesPay wallet.',
   'manage_payment_methods': 'Payment Methods',
   'linked_accounts': 'Linked Accounts',
   'message_center': 'Messages',
@@ -163,6 +174,30 @@ const Map<String, String> _englishTranslations = {
 };
 
 const Map<String, String> _filipinoTranslations = {
+  // Settings screen subtitles (English text is the key; English falls back to it)
+  'Manage your delivery addresses': 'Pamahalaan ang iyong mga delivery address',
+  'Update your personal details': 'I-update ang iyong personal na detalye',
+  '2FA, biometrics, and login activity':
+      '2FA, biometrics, at aktibidad sa login',
+  'Update your login password': 'Palitan ang password ng iyong login',
+  'Temporarily disable your account':
+      'Pansamantalang i-disable ang iyong account',
+  'Permanently remove your data from LeSgo':
+      'Permanenteng burahin ang iyong data sa LeSgo',
+  'Notification center': 'Sentro ng Notipikasyon',
+  'View order updates and offers': 'Tingnan ang update sa order at mga alok',
+  'Promotions and order alert preferences':
+      'Mga preference sa promo at alerto sa order',
+  'English or Filipino': 'English o Filipino',
+  'Dark theme enabled': 'Naka-on ang dark theme',
+  'Light theme': 'Maliwanag na tema',
+  'Chat with our customer service team':
+      'Makipag-chat sa aming customer service',
+  'Get help from our support team': 'Humingi ng tulong sa aming support team',
+  'Submit and track your documents':
+      'Magsumite at subaybayan ang iyong mga dokumento',
+  'Frequently asked questions': 'Mga madalas itanong',
+  'App information and version': 'Impormasyon at bersyon ng app',
   // App & Navigation
   'app_name': 'LeSgo',
   'home': 'Home',
@@ -171,11 +206,16 @@ const Map<String, String> _filipinoTranslations = {
   'more': 'Iba Pa',
   'inbox': 'Inbox',
   'transactions': 'Mga Transaksyon',
+  'order_history': 'Kasaysayan ng Order',
   'favorites': 'Mga Paborito',
   'offers': 'Mga Alok',
   'missions': 'Mga Misyon',
   'support': 'Suporta',
   'settings': 'Settings',
+  'edit_profile': 'I-edit ang profile',
+  'orders_shortcut': 'Mga Order',
+  'settings_preferences': 'Mga Kagustuhan',
+  'account_management': 'Pamamahala ng account',
   'history': 'Kasaysayan',
   'about': 'Tungkol sa',
   'account': 'Account',
@@ -267,8 +307,7 @@ const Map<String, String> _filipinoTranslations = {
   'pay_via_qr_ph': 'Magbayad gamit ang QR Ph',
   'receive_messages_orders':
       'Makatanggap ng mga mensahe tungkol sa iyong mga order.',
-  'pay_orders_lespay':
-      'Bayaran ang iyong mga order gamit ang LesPay wallet.',
+  'pay_orders_lespay': 'Bayaran ang iyong mga order gamit ang LesPay wallet.',
   'manage_payment_methods': 'Mga Paraan ng Pagbabayad',
   'linked_accounts': 'Mga Naka-link na Account',
   'message_center': 'Mga Mensahe',

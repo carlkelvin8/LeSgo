@@ -4,6 +4,8 @@ import '../../../../../../core/utils/responsive_utils.dart';
 import '../../../../../../core/utils/screen_auto_refresh.dart';
 import '../../../../../mixins/auto_refresh_mixin.dart';
 import '../../../../../provider/main/merchantside/merchant_menu_provider.dart';
+import '../../../../../../core/utils/dark_aware_colors.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantItemCategorySection extends ConsumerStatefulWidget {
   final String selectedCategory;
@@ -49,12 +51,12 @@ class _MerchantItemCategorySectionState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Category',
+          context.tr('Category'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 8)),
@@ -63,9 +65,9 @@ class _MerchantItemCategorySectionState
             horizontal: ResponsiveUtils.spacing(context, 12),
           ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.surf(Colors.white),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
+            border: Border.all(color: context.brd(Colors.grey.shade300)),
           ),
           child: menuAsync.when(
             loading: () => DropdownButton<String>(
@@ -74,11 +76,11 @@ class _MerchantItemCategorySectionState
               onChanged: null,
               underline: const SizedBox(),
               hint: Text(
-                'Loading categories...',
+                context.tr('Loading categories...'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: Colors.grey.shade600,
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
               items: const [],
@@ -89,7 +91,7 @@ class _MerchantItemCategorySectionState
               onChanged: null,
               underline: const SizedBox(),
               hint: Text(
-                'Error loading categories',
+                context.tr('Error loading categories'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
@@ -106,11 +108,11 @@ class _MerchantItemCategorySectionState
                   onChanged: null,
                   underline: const SizedBox(),
                   hint: Text(
-                    'No categories available',
+                    context.tr('No categories available'),
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      color: Colors.grey.shade600,
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                   items: const [],
@@ -127,11 +129,11 @@ class _MerchantItemCategorySectionState
                 onChanged: widget.onChanged,
                 underline: const SizedBox(),
                 hint: Text(
-                  'Select a category',
+                  context.tr('Select a category'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 14),
-                    color: Colors.grey.shade600,
+                    color: context.sub(Colors.grey.shade600),
                   ),
                 ),
                 items: categoryNames.map((category) {
@@ -149,7 +151,7 @@ class _MerchantItemCategorySectionState
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 14),
-                  color: Colors.black,
+                  color: context.txt(Colors.black),
                 ),
               );
             },

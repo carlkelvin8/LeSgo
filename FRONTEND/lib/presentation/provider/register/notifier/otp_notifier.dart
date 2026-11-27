@@ -1,15 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../data/data_source/auth_remote_datasource.dart';
+import '../../../../core/utils/api_error_mapper.dart';
+import '../../../../core/utils/phone_utils.dart';
 import 'register_state.dart';
 
 mixin OtpNotifier on StateNotifier<RegisterState> {
   void updatePhoneNumber(String phoneNumber) {
-    state = state.copyWith(data: state.data.copyWith(phoneNumber: phoneNumber));
+    state = state.copyWith(
+      data: state.data.copyWith(
+        phoneNumber: PhoneUtils.normalizePh(phoneNumber),
+      ),
+    );
   }
 
   Future<bool> sendOtp(String phoneNumber) async {
+    phoneNumber = PhoneUtils.normalizePh(phoneNumber);
     state = state.copyWith(
       isLoading: true,
       error: null,
@@ -40,17 +46,11 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
         throw Exception(response.message);
       }
     } catch (e) {
-      String errorMessage = 'Failed to send OTP';
-
-      if (e is DioException) {
-        if (e.response?.data != null && e.response?.data['message'] != null) {
-          errorMessage = e.response?.data['message'];
-        } else if (e.message != null) {
-          errorMessage = e.message!;
-        }
-      } else {
-        errorMessage = e.toString();
-      }
+      final errorMessage = ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not send the verification code. Please try again.',
+        fallbackTl: 'Hindi maipadala ang verification code. Subukan muli.',
+      );
 
       state = state.copyWith(isLoading: false, error: errorMessage);
       return false;
@@ -97,17 +97,11 @@ mixin OtpNotifier on StateNotifier<RegisterState> {
         );
       }
     } catch (e) {
-      String errorMessage = 'OTP verification failed';
-
-      if (e is DioException) {
-        if (e.response?.data != null && e.response?.data['message'] != null) {
-          errorMessage = e.response?.data['message'];
-        } else if (e.message != null) {
-          errorMessage = e.message!;
-        }
-      } else {
-        errorMessage = e.toString();
-      }
+      final errorMessage = ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not verify the code. Please try again.',
+        fallbackTl: 'Hindi ma-verify ang code. Subukan muli.',
+      );
 
       state = state.copyWith(isLoading: false, error: errorMessage);
       return false;

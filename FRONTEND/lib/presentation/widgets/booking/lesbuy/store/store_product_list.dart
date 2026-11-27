@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../../core/utils/responsive_utils.dart';
@@ -55,7 +56,9 @@ class StoreProductList extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surface(context, Colors.white),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
+            border: Border.all(
+              color: AppColors.border(context, Colors.grey[200]!),
+            ),
           ),
           child: Material(
             color: Colors.transparent,
@@ -84,7 +87,10 @@ class StoreProductList extends StatelessWidget {
                           errorBuilder: (context, error, stackTrace) {
                             return Icon(
                               Icons.image_not_supported,
-                              color: AppColors.foreground(context, Colors.grey[400]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[400]!,
+                              ),
                               size: 24,
                             );
                           },
@@ -104,7 +110,10 @@ class StoreProductList extends StatelessWidget {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 16),
                               fontWeight: FontWeight.w600,
-                              color: AppColors.foreground(context, Colors.black87),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.black87,
+                              ),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -115,7 +124,10 @@ class StoreProductList extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12),
-                              color: AppColors.foreground(context, Colors.grey[600]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -125,12 +137,18 @@ class StoreProductList extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '₱${product.price.toStringAsFixed(2)}',
+                                Money.format(product.price),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
-                                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    14,
+                                  ),
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.accent(context, Color(0xFF5F2D82)),
+                                  color: AppColors.accent(
+                                    context,
+                                    Color(0xFF5F2D82),
+                                  ),
                                 ),
                               ),
                             ],

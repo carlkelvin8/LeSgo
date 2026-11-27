@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../../../core/utils/app_logger.dart';
@@ -8,51 +9,24 @@ final riderTripAnalyticsProvider = StateNotifierProvider.autoDispose<RiderTripAn
 );
 
 class RiderTripAnalyticsNotifier extends StateNotifier<RiderTripAnalyticsState> {
-  RiderTripAnalyticsNotifier() : super(const RiderTripAnalyticsState());
+  RiderTripAnalyticsNotifier() : super(const RiderTripAnalyticsState()) {
+    // The screen's ref.listen never fires for the initial state, so load here.
+    Future.microtask(() {
+      if (mounted) loadTripAnalytics();
+    });
+  }
 
   Future<void> loadTripAnalytics({String period = 'week'}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true, period: period);
     try {
-      final response = await ApiService.dio.get('/v1/drivers/me/trips/analytics', queryParameters: {
-        'period': period,
-      });
-      
-      final data = response.data['data'] ?? response.data;
-
-      final bestEarningDay = data['best_earning_day'] ?? '';
-      final bestEarningDayAmount = (data['best_earning_day_amount'] as num?)?.toDouble() ?? 0.0;
-      final peakHour = data['peak_hour'] ?? '';
-      final avgEarningsPerTrip = (data['avg_earnings_per_trip'] as num?)?.toDouble() ?? 0.0;
-      final totalDistanceTraveled = (data['total_distance_km'] as num?)?.toDouble() ?? 0.0;
-      final totalTrips = data['total_trips'] as int? ?? 0;
-      final totalEarnings = (data['total_earnings'] as num?)?.toDouble() ?? 0.0;
-
-      // Parse hourly breakdown
-      final hourlyList = (data['hourly_breakdown'] as List?)
-          ?.whereType<Map>()
-          .map((e) => HourlyBreakdown.fromJson(Map<String, dynamic>.from(e)))
-          .toList() ?? [];
-
-      // Parse daily breakdown
-      final dailyList = (data['daily_breakdown'] as List?)
-          ?.whereType<Map>()
-          .map((e) => DailyBreakdown.fromJson(Map<String, dynamic>.from(e)))
-          .toList() ?? [];
-
-      state = state.copyWith(
-        bestEarningDay: bestEarningDay,
-        bestEarningDayAmount: bestEarningDayAmount,
-        peakHour: peakHour,
-        avgEarningsPerTrip: avgEarningsPerTrip,
-        totalDistanceTraveled: totalDistanceTraveled,
-        totalTrips: totalTrips,
-        totalEarnings: totalEarnings,
-        hourlyBreakdown: hourlyList,
-        dailyBreakdown: dailyList,
-        isLoading: false,
-      );
+      // /v1/drivers/me/trips/analytics does not exist (404); build the same
+      // figures from the real earnings endpoint.
+      final data = await ApiService.getDriverEarnings(period: period);
+      if (!mounted) return;
+      state = buildTripAnalyticsState(data, period).copyWith(isLoading: false);
     } catch (e) {
       AppLogger.error('Failed to load trip analytics', e);
+      if (!mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to load analytics',
@@ -175,4 +149,99 @@ class DailyBreakdown {
       distance: (json['distance_km'] as num?)?.toDouble() ?? 0.0,
     );
   }
+}
+
+double _taNum(dynamic v) {
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v) ?? 0.0;
+  return 0.0;
+}
+
+/// Builds trip analytics from a `/v1/drivers/me/earnings` payload
+/// (`summary` + `entries`; `entries` may arrive as an empty `[]`).
+@visibleForTesting
+RiderTripAnalyticsState buildTripAnalyticsState(
+  Map<String, dynamic> data,
+  String period,
+) {
+  final summary = data['summary'] is Map ? data['summary'] as Map : const {};
+  final entries = data['entries'] is List
+      ? (data['entries'] as List).whereType<Map>().toList()
+      : <Map>[];
+
+  final byHour = <int, List<double>>{};
+  final byDay = <DateTime, List<double>>{};
+  var entryTotal = 0.0;
+  for (final e in entries) {
+    final earnings = _taNum(e['earnings']);
+    entryTotal += earnings;
+    final at = DateTime.tryParse(e['completed_at']?.toString() ?? '')?.toLocal();
+    if (at == null) continue;
+    (byHour[at.hour] ??= []).add(earnings);
+    (byDay[DateTime(at.year, at.month, at.day)] ??= []).add(earnings);
+  }
+
+  final totalTrips = summary['completed_trips'] != null
+      ? _taNum(summary['completed_trips']).toInt()
+      : entries.length;
+  final totalEarnings = summary['total_earnings'] != null
+      ? _taNum(summary['total_earnings'])
+      : entryTotal;
+  final avg = summary['average_per_trip'] != null
+      ? _taNum(summary['average_per_trip'])
+      : (totalTrips > 0 ? totalEarnings / totalTrips : 0.0);
+
+  double sum(List<double> l) => l.fold(0.0, (a, b) => a + b);
+  String hourLabel(int h) {
+    final h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$h12 ${h < 12 ? 'AM' : 'PM'}';
+  }
+
+  final hourly = (byHour.keys.toList()..sort())
+      .map((h) => HourlyBreakdown(
+            hour: hourLabel(h),
+            earnings: sum(byHour[h]!),
+            trips: byHour[h]!.length,
+          ))
+      .toList();
+  final days = byDay.keys.toList()..sort();
+  const names = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  final daily = days
+      .map((d) => DailyBreakdown(
+            day: '${names[d.weekday - 1]} ${d.month}/${d.day}',
+            earnings: sum(byDay[d]!),
+            trips: byDay[d]!.length,
+            distance: 0,
+          ))
+      .toList();
+
+  var bestDay = '';
+  var bestDayAmount = 0.0;
+  for (final d in daily) {
+    if (d.earnings > bestDayAmount) {
+      bestDayAmount = d.earnings;
+      bestDay = d.day;
+    }
+  }
+  var peakHour = '';
+  var peakEarn = 0.0;
+  for (final h in hourly) {
+    if (h.earnings > peakEarn) {
+      peakEarn = h.earnings;
+      peakHour = h.hour;
+    }
+  }
+
+  return RiderTripAnalyticsState(
+    bestEarningDay: bestDay,
+    bestEarningDayAmount: bestDayAmount,
+    peakHour: peakHour,
+    avgEarningsPerTrip: avg,
+    totalDistanceTraveled: 0,
+    totalTrips: totalTrips,
+    totalEarnings: totalEarnings,
+    hourlyBreakdown: hourly,
+    dailyBreakdown: daily,
+    period: period,
+  );
 }

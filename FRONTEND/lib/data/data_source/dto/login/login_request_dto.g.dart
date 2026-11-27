@@ -10,6 +10,7 @@ LoginRequestDto _$LoginRequestDtoFromJson(Map<String, dynamic> json) =>
     LoginRequestDto(
       email: json['email'] as String,
       password: json['password'] as String,
+      deviceName: json['device_name'] as String,
       twoFactorCode: json['two_factor_code'] as String?,
     );
 
@@ -17,5 +18,6 @@ Map<String, dynamic> _$LoginRequestDtoToJson(LoginRequestDto instance) =>
     <String, dynamic>{
       'email': instance.email,
       'password': instance.password,
+      'device_name': instance.deviceName,
       'two_factor_code': instance.twoFactorCode,
     };

@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../data/data_source/dto/merchant/withdrawal_request_dto.dart';
 import '../../../../data/data_source/merchant_withdrawal_datasource.dart';
+import '../../../../core/utils/app_localization.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 class MerchantWithdrawalHistoryScreen extends ConsumerStatefulWidget {
   const MerchantWithdrawalHistoryScreen({super.key});
@@ -45,7 +47,7 @@ class _MerchantWithdrawalHistoryScreenState
       });
     } catch (e) {
       setState(() {
-        _error = e.toString().replaceFirst('Exception: ', '');
+        _error = ApiErrorMapper.message(e);
         _isLoading = false;
       });
     }
@@ -55,7 +57,7 @@ class _MerchantWithdrawalHistoryScreenState
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel Withdrawal?'),
+        title: Text(context.tr('Cancel Withdrawal?')),
         content: Text(
           'Are you sure you want to cancel this withdrawal request for ${withdrawal.amount.toStringAsFixed(2)} PHP?',
         ),
@@ -67,7 +69,7 @@ class _MerchantWithdrawalHistoryScreenState
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Yes, Cancel'),
+            child: Text(context.tr('Yes, Cancel')),
           ),
         ],
       ),
@@ -79,8 +81,8 @@ class _MerchantWithdrawalHistoryScreenState
       await _dataSource.cancelWithdrawal(withdrawal.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Withdrawal cancelled successfully'),
+          SnackBar(
+            content: Text(context.tr('Withdrawal cancelled successfully')),
             backgroundColor: Colors.green,
           ),
         );
@@ -90,7 +92,7 @@ class _MerchantWithdrawalHistoryScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            content: Text(ApiErrorMapper.message(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -111,8 +113,8 @@ class _MerchantWithdrawalHistoryScreenState
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Withdrawal History',
+        title: Text(
+          context.tr('Withdrawal History'),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontWeight: FontWeight.w700,
@@ -128,29 +130,29 @@ class _MerchantWithdrawalHistoryScreenState
               _loadWithdrawals();
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'all',
-                child: Text('All Requests'),
+                child: Text(context.tr('All Requests')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'pending',
-                child: Text('Pending'),
+                child: Text(context.tr('Pending')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'processing',
-                child: Text('Processing'),
+                child: Text(context.tr('Processing')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'completed',
-                child: Text('Completed'),
+                child: Text(context.tr('Completed')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'rejected',
-                child: Text('Rejected'),
+                child: Text(context.tr('Rejected')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'cancelled',
-                child: Text('Cancelled'),
+                child: Text(context.tr('Cancelled')),
               ),
             ],
           ),
@@ -189,7 +191,7 @@ class _MerchantWithdrawalHistoryScreenState
                           const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: _loadWithdrawals,
-                            child: const Text('Retry'),
+                            child: Text(context.tr('Retry')),
                           ),
                         ],
                       ),
@@ -225,7 +227,7 @@ class _MerchantWithdrawalHistoryScreenState
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Your withdrawal requests will appear here',
+                                context.tr('Your withdrawal requests will appear here'),
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 13,
@@ -443,8 +445,8 @@ class _WithdrawalCard extends StatelessWidget {
                         foregroundColor: Colors.red,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
-                      child: const Text(
-                        'Cancel Request',
+                      child: Text(
+                        context.tr('Cancel Request'),
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 12,
@@ -512,7 +514,7 @@ class _WithdrawalDetailSheet extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Withdrawal Details',
+                context.tr('Withdrawal Details'),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 20,
@@ -541,7 +543,7 @@ class _WithdrawalDetailSheet extends StatelessWidget {
               if (withdrawal.rejectionReason != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Rejection Reason',
+                  context.tr('Rejection Reason'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 12,
@@ -568,8 +570,8 @@ class _WithdrawalDetailSheet extends StatelessWidget {
                   backgroundColor: const Color(0xFF5F2D82),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text(
-                  'Close',
+                child: Text(
+                  context.tr('Close'),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontWeight: FontWeight.w700,

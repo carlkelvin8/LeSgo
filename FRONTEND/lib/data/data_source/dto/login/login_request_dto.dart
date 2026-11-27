@@ -6,12 +6,15 @@ part 'login_request_dto.g.dart';
 class LoginRequestDto {
   final String email;
   final String password;
+  @JsonKey(name: 'device_name')
+  final String deviceName;
   @JsonKey(name: 'two_factor_code')
   final String? twoFactorCode;
 
   LoginRequestDto({
     required this.email,
     required this.password,
+    required this.deviceName,
     this.twoFactorCode,
   });
 

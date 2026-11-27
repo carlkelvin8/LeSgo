@@ -16,10 +16,7 @@ class DrawerLogo extends StatelessWidget {
         'assets/images/Logo.svg',
         height: ResponsiveUtils.imageHeight(context, 60),
         fit: BoxFit.contain,
-        colorFilter: const ColorFilter.mode(
-          Colors.white,
-          BlendMode.srcIn,
-        ),
+        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
       ),
     );
   }

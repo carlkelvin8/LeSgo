@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.8+24
+version: 1.1.8+37
 
 environment:
   sdk: ^3.8.1
@@ -86,9 +86,13 @@ dependencies:
   firebase_messaging: ^16.3.0
   firebase_crashlytics: ^5.2.3
   google_generative_ai: ^0.4.7
+  flutter_tts: ^4.2.5
+  sign_in_with_apple: ^7.0.1
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
   build_runner: ^2.5.4
@@ -123,6 +127,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/fonts/sora/OFL.txt
     - assets/images/
     - assets/images/register/
     - assets/images/homepage/
@@ -134,6 +139,7 @@ flutter:
     - assets/images/book/leseat/
     - assets/images/book/letstransport/
     - assets/images/book/lesbuy/
+    - assets/images/markers/
     
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -163,6 +169,16 @@ flutter:
   # see https://flutter.dev/to/font-from-package
   
   fonts:
+    - family: Sora
+      fonts:
+        - asset: assets/fonts/sora/Sora-400.ttf
+          weight: 400
+        - asset: assets/fonts/sora/Sora-500.ttf
+          weight: 500
+        - asset: assets/fonts/sora/Sora-600.ttf
+          weight: 600
+        - asset: assets/fonts/sora/Sora-700.ttf
+          weight: 700
     - family: TT Fors
       fonts:
         - asset: assets/fonts/TT Fors Trial Regular.ttf

@@ -1,10 +1,12 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../data/data_source/order_remote_datasource.dart';
 import '../../../domain/entities/transactions/transaction.dart';
-import '../common/payment_status_badge.dart';
+import '../orders/order_style.dart';
+import '../orders/premium_order_widgets.dart';
 import '../orders/proof_of_delivery_section.dart';
 
 class OrderTransactionDetailSheet extends StatefulWidget {
@@ -73,14 +75,45 @@ class _OrderTransactionDetailSheetState
     }
   }
 
+  /// What the payment actually is, in words that make sense: a cancelled order
+  /// that was never charged says so instead of "Pending".
+  ({String text, Color color}) _payment(Transaction t) {
+    switch (t.paymentStatus) {
+      case PaymentStatus.paid:
+        return (text: 'Paid', color: const Color(0xFF2E9E5B));
+      case PaymentStatus.refunded:
+        return (text: 'Refunded', color: const Color(0xFF1E88E5));
+      case PaymentStatus.failed:
+        return (text: 'Failed', color: const Color(0xFFE5484D));
+      case PaymentStatus.pending:
+        return t.status == TransactionStatus.cancelled
+            ? (text: 'Not charged', color: Colors.grey)
+            : (text: 'Pending', color: const Color(0xFFEF8A1B));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final transaction = widget.transaction;
+    final t = widget.transaction;
+    final cancelled = t.status == TransactionStatus.cancelled;
+    final done = t.status == TransactionStatus.completed;
+    final statusLabel = done
+        ? 'Completed'
+        : (cancelled ? 'Cancelled' : widget.statusLabel(t.rawStatus));
+    final pay = _payment(t);
+    final items = t.items ?? const <TransactionItem>[];
+    final itemsTotal = items.fold<double>(
+      0.0,
+      (sum, i) => sum + ((i.price ?? 0.0) * i.quantity),
+    );
+    final deliveryFee = t.amount - itemsTotal;
+    final food = t.serviceName == 'LesEat' || t.serviceName == 'LesBuy';
+    final failed = t.paymentStatus == PaymentStatus.failed;
 
     return Container(
-      decoration:  BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         children: [
@@ -89,359 +122,103 @@ class _OrderTransactionDetailSheetState
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.surface(context, Colors.grey[300]!),
+              color: AppColors.border(context, Colors.grey[300]!),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           Expanded(
             child: ListView(
               controller: widget.controller,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               children: [
-                Text(
-                  '${transaction.serviceName} — Order #${transaction.id}',
-                  style: const TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                // Who / when / how it ended. No database ids.
+                Reveal(
+                  child: OrderStatusHeader(
+                    service: t.serviceName,
+                    date: widget.formatDate(t.date),
+                    statusLabel: statusLabel,
+                    tone: (cancelled || failed)
+                        ? HeroTone.danger
+                        : done
+                        ? HeroTone.success
+                        : HeroTone.active,
+                    caption: cancelled
+                        ? 'Order total ${Money.format(t.amount)} · ${pay.text}'
+                        : pay.text,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.formatDate(transaction.date),
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: 13,
-                    color: AppColors.foreground(context, Colors.grey[500]!),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Divider(),
-                const SizedBox(height: 12),
-                _detailRow(
-                  Icons.circle,
-                  Colors.green,
-                  'Pickup',
-                  transaction.pickupLocation,
-                ),
-                const SizedBox(height: 12),
-                _detailRow(
-                  Icons.circle,
-                  Colors.red,
-                  'Dropoff',
-                  transaction.dropoffLocation,
-                ),
-                const SizedBox(height: 20),
-                const Divider(),
-                const SizedBox(height: 12),
-                if (transaction.items != null &&
-                    transaction.items!.isNotEmpty) ...[
-                  const Text(
-                    'Items',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                const SizedBox(height: 28),
+                if (t.pickupLocation.trim().isNotEmpty ||
+                    t.dropoffLocation.trim().isNotEmpty) ...[
+                  Reveal(
+                    index: 1,
+                    child: RouteCard(
+                      flat: true,
+                      pickup: t.pickupLocation,
+                      dropoff: t.dropoffLocation,
+                      pickupLabel: food ? 'Restaurant' : 'Pickup',
+                      dropoffLabel: food ? 'Deliver to' : 'Drop-off',
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  ...transaction.items!.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
+                  const SizedBox(height: 28),
+                ],
+                Reveal(
+                  index: 2,
+                  child: ReceiptCard(
+                    flat: true,
+                    items: [
+                      for (final item in items)
+                        ReceiptItem(
+                          qty: item.quantity,
+                          name:
                               '${item.name}${item.unit != null ? ' (${item.unit})' : ''}',
-                              style:  TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: 14,
-                                color: AppColors.foreground(context, Colors.black87),
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '${item.quantity}x',
-                            style: TextStyle(
-                              fontFamily: 'TT Fors',
-                              fontSize: 14,
-                              color: AppColors.foreground(context, Colors.grey[600]!),
-                            ),
-                          ),
-                          if (item.price != null) ...[
-                            const SizedBox(width: 8),
-                            Text(
-                              'PHP ${(item.price! * item.quantity).toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontFamily: 'TT Fors',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF5F2D82),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-                if (transaction.items != null &&
-                    transaction.items!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  Builder(
-                    builder: (context) {
-                      final itemsTotal = transaction.items!.fold<double>(
-                        0.0,
-                        (sum, item) =>
-                            sum + ((item.price ?? 0.0) * item.quantity),
-                      );
-                      final deliveryFee = transaction.amount - itemsTotal;
-
-                      return Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Subtotal',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 14,
-                                  color: AppColors.foreground(context, Colors.grey[600]!),
-                                ),
-                              ),
-                              Text(
-                                'PHP ${itemsTotal.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 14,
-                                  color: AppColors.foreground(context, Colors.grey[600]!),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          if (deliveryFee > 0) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Delivery Fee',
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    fontSize: 14,
-                                    color: AppColors.foreground(context, Colors.grey[600]!),
-                                  ),
-                                ),
-                                Text(
-                                  'PHP ${deliveryFee.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    fontSize: 14,
-                                    color: AppColors.foreground(context, Colors.grey[600]!),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            const Divider(),
-                            const SizedBox(height: 8),
-                          ],
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Total',
-                                style: TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                'PHP ${transaction.amount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontFamily: 'TT Fors',
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF5F2D82),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ] else ...[
-                  const SizedBox(height: 8),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          price: item.price == null
+                              ? null
+                              : Money.format(item.price! * item.quantity),
                         ),
-                      ),
-                      Text(
-                        'PHP ${transaction.amount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF5F2D82),
-                        ),
-                      ),
                     ],
-                  ),
-                ],
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                     Text(
-                      'Order status',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 14,
-                        color: AppColors.foreground(context, Colors.black54),
-                      ),
-                    ),
-                    Text(
-                      widget.statusLabel(transaction.rawStatus),
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: transaction.status == TransactionStatus.completed
-                            ? Colors.green
-                            : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                     Text(
-                      'Payment',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: 14,
-                        color: AppColors.foreground(context, Colors.black54),
-                      ),
-                    ),
-                    PaymentStatusBadge(status: transaction.paymentStatus),
-                  ],
-                ),
-                if (transaction.paymentMethod != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                       Text(
-                        'Method',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: 14,
-                          color: AppColors.foreground(context, Colors.black54),
-                        ),
-                      ),
-                      Text(
-                        transaction.paymentMethod!,
-                        style: const TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    rows: [
+                      if (items.isNotEmpty) ...[
+                        ReceiptRow('Subtotal', Money.format(itemsTotal)),
+                        if (deliveryFee > 0)
+                          ReceiptRow('Delivery fee', Money.format(deliveryFee)),
+                      ],
                     ],
+                    total: Money.format(t.amount),
+                    totalLabel: cancelled ? 'Order total' : 'Total',
+                    footer: PaymentStrip(
+                      method: t.paymentMethod == null
+                          ? 'Payment'
+                          : OrderStyle.paymentMethodLabel(t.paymentMethod),
+                      status: pay.text,
+                      statusColor: pay.color,
+                    ),
                   ),
-                ],
-                if (_loadingProof) ...[
-                  const SizedBox(height: 20),
+                ),
+                const SizedBox(height: 28),
+                if (_loadingProof)
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.all(12),
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
-                  ),
-                ] else if (_proofImages.isNotEmpty) ...[
-                  const SizedBox(height: 20),
+                  )
+                else if (_proofImages.isNotEmpty) ...[
                   ProofOfDeliverySection(imageUrls: _proofImages),
+                  const SizedBox(height: 28),
                 ],
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed:
-                        widget.sharingReceipt ? null : widget.onDownloadReceipt,
-                    icon: widget.sharingReceipt
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.picture_as_pdf_outlined),
-                    label: const Text('Download receipt (PDF)'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accent(context, Color(0xFF5F2D82)),
-                      side: const BorderSide(color: Color(0xFF5F2D82)),
-                    ),
-                  ),
+                PremiumButton(
+                  flat: true,
+                  label: 'Download receipt (PDF)',
+                  icon: Icons.picture_as_pdf_outlined,
+                  loading: widget.sharingReceipt,
+                  onPressed: widget.onDownloadReceipt,
                 ),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _detailRow(
-    IconData icon,
-    Color color,
-    String label,
-    String value,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 10, color: color),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 11,
-                  color: AppColors.foreground(context, Colors.grey[500]!),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style:  TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: 14,
-                  color: AppColors.foreground(context, Colors.black87),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

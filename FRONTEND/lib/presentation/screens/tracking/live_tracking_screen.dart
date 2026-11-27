@@ -1,3 +1,4 @@
+import '../../../core/utils/order_status_mapper.dart';
 import '../../../core/utils/snackbar_utils.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +30,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
   bool _isBottomSheetExpanded = false;
   bool _mapReady = false;
   bool _isCancelling = false;
+  // The map is created before the tracking data arrives, so the first fit is
+  // retried once the markers exist.
+  bool _didInitialFit = false;
 
   @override
   void initState() {
@@ -53,6 +57,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
         .read(liveTrackingProvider(widget.orderId).notifier)
         .getCameraBounds();
     if (bounds != null) {
+      _didInitialFit = true;
       try {
         _mapController!.animateCamera(
           CameraUpdate.newLatLngBounds(bounds, 100),
@@ -117,6 +122,12 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       previous,
       next,
     ) {
+      if (!_didInitialFit && next.markers.isNotEmpty) {
+        // Wait for the markers to be applied to the map before fitting.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _fitBounds();
+        });
+      }
       if (!next.followDriver) return;
       final target = next.displayedDriverLocation ?? next.driverLocation;
       if (previous?.displayedDriverLocation != next.displayedDriverLocation &&
@@ -134,7 +145,6 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
           ),
         );
       }
-
     });
 
     return Scaffold(
@@ -219,7 +229,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
                           ],
                         ),
                         child: Text(
-                          'Order #${widget.orderId}',
+                          'Track your order',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -608,7 +618,8 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> {
       case 'failed':
         return 'Failed';
       default:
-        return status.toUpperCase();
+        // Never show a raw enum such as READY_FOR_PICKUP.
+        return OrderStatusMapper.toDisplayLabel(status);
     }
   }
 

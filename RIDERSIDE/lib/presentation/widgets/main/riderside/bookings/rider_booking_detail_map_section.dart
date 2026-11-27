@@ -1,3 +1,4 @@
+import '../../../../../core/utils/map_pins.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import '../../../../../core/utils/rider_route_utils.dart';
 import '../../../../../domain/entities/rider_booking.dart';
 import '../../../../provider/main/riderside/rider_location_provider.dart';
 import '../../../../screens/main/riderside/map/rider_map_screen.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class RiderBookingDetailMapSection extends ConsumerStatefulWidget {
   const RiderBookingDetailMapSection({
@@ -38,15 +40,25 @@ class RiderBookingDetailMapSection extends ConsumerStatefulWidget {
   }) {
     if (controller == null) return;
 
+    bool valid(double? lat, double? lng) =>
+        lat != null &&
+        lng != null &&
+        lat.isFinite &&
+        lng.isFinite &&
+        lat.abs() <= 90 &&
+        lng.abs() <= 180 &&
+        !(lat == 0 && lng == 0);
+
     final points = <LatLng>[];
-    if (booking.pickupLat != null && booking.pickupLng != null) {
+    if (valid(booking.pickupLat, booking.pickupLng)) {
       points.add(LatLng(booking.pickupLat!, booking.pickupLng!));
     }
-    if (booking.dropoffLat != null && booking.dropoffLng != null) {
+    if (valid(booking.dropoffLat, booking.dropoffLng)) {
       points.add(LatLng(booking.dropoffLat!, booking.dropoffLng!));
     }
-    if (locationState?.hasLocation == true) {
-      points.add(LatLng(locationState!.latitude!, locationState.longitude!));
+    if (locationState?.hasLocation == true &&
+        valid(locationState!.latitude, locationState.longitude)) {
+      points.add(LatLng(locationState.latitude!, locationState.longitude!));
     }
     if (points.isEmpty) return;
 
@@ -61,17 +73,39 @@ class RiderBookingDetailMapSection extends ConsumerStatefulWidget {
       maxLng = math.max(maxLng, point.longitude);
     }
 
-    controller.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat, minLng),
-          northeast: LatLng(maxLat, maxLng),
+    try {
+      // A zero-area (or tiny) bounds can crash the native map SDK, so just
+      // centre on the point instead.
+      if ((maxLat - minLat).abs() < 0.0005 &&
+          (maxLng - minLng).abs() < 0.0005) {
+        controller.animateCamera(
+          CameraUpdate.newLatLngZoom(LatLng(minLat, minLng), 16),
+        );
+        return;
+      }
+      controller.animateCamera(
+        CameraUpdate.newLatLngBounds(
+          LatLngBounds(
+            southwest: LatLng(minLat, minLng),
+            northeast: LatLng(maxLat, maxLng),
+          ),
+          80,
         ),
-        80,
-      ),
-    );
+      );
+    } catch (_) {
+      // Camera moves are cosmetic; never let them take the screen down.
+    }
   }
 }
+
+bool _validCoord(double? lat, double? lng) =>
+    lat != null &&
+    lng != null &&
+    lat.isFinite &&
+    lng.isFinite &&
+    lat.abs() <= 90 &&
+    lng.abs() <= 180 &&
+    !(lat == 0 && lng == 0);
 
 class _RiderBookingDetailMapSectionState
     extends ConsumerState<RiderBookingDetailMapSection> {
@@ -95,29 +129,42 @@ class _RiderBookingDetailMapSectionState
   }
 
   Future<void> _refreshRoute() async {
+    if (!mounted) return;
     final booking = widget.booking;
     final location = widget.locationState;
     if (!location.hasLocation ||
-        booking.pickupLat == null ||
-        booking.pickupLng == null ||
-        booking.dropoffLat == null ||
-        booking.dropoffLng == null) {
+        !_validCoord(location.latitude, location.longitude) ||
+        !_validCoord(booking.pickupLat, booking.pickupLng) ||
+        !_validCoord(booking.dropoffLat, booking.dropoffLng)) {
       return;
     }
 
     setState(() => _loadingRoute = true);
-    final polylines = await RiderRouteUtils.buildNavigationPolylinesForBooking(
-      status: widget.currentApiStatus,
-      pickupLat: booking.pickupLat!,
-      pickupLng: booking.pickupLng!,
-      dropoffLat: booking.dropoffLat!,
-      dropoffLng: booking.dropoffLng!,
-      riderLat: location.latitude!,
-      riderLng: location.longitude!,
-    );
+    Set<Polyline>? polylines;
+    try {
+      polylines = await RiderRouteUtils.buildNavigationPolylinesForBooking(
+        status: widget.currentApiStatus,
+        pickupLat: booking.pickupLat!,
+        pickupLng: booking.pickupLng!,
+        dropoffLat: booking.dropoffLat!,
+        dropoffLng: booking.dropoffLng!,
+        riderLat: location.latitude!,
+        riderLng: location.longitude!,
+      );
+    } catch (_) {
+      // Route lookup is best-effort; never leave the spinner stuck.
+    }
     if (mounted) {
       setState(() {
-        _polylines = polylines;
+        if (polylines != null) {
+          _polylines = {
+            for (final p in polylines)
+              if (p.points.length >= 2 &&
+                  p.points.every(
+                      (pt) => _validCoord(pt.latitude, pt.longitude)))
+                p,
+          };
+        }
         _loadingRoute = false;
       });
     }
@@ -154,24 +201,29 @@ class _RiderBookingDetailMapSectionState
     final booking = widget.booking;
     final locationState = widget.locationState;
     final markers = <Marker>{};
+    final isFoodOrder = booking.category == BookingCategory.lesEat ||
+        booking.category == BookingCategory.lesBuy;
 
-    if (locationState.hasLocation) {
+    if (locationState.hasLocation &&
+        _validCoord(locationState.latitude, locationState.longitude)) {
       markers.add(Marker(
         markerId: const MarkerId('driver_location'),
         position: LatLng(locationState.latitude!, locationState.longitude!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        icon: MapPins.icon(MapPinKind.rider),
+          anchor: MapPins.anchor,
         infoWindow: const InfoWindow(title: 'Your Location'),
         zIndexInt: 2,
       ));
     }
 
-    if (booking.pickupLat != null && booking.pickupLng != null) {
+    if (_validCoord(booking.pickupLat, booking.pickupLng)) {
       final isFood = booking.category == BookingCategory.lesEat ||
           booking.category == BookingCategory.lesBuy;
       markers.add(Marker(
         markerId: const MarkerId('pickup'),
         position: LatLng(booking.pickupLat!, booking.pickupLng!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        icon: MapPins.icon(isFoodOrder ? MapPinKind.store : MapPinKind.customer),
+          anchor: MapPins.anchor,
         infoWindow: InfoWindow(
           title: isFood ? 'Merchant' : 'Pickup Location',
           snippet: booking.pickupAddress,
@@ -179,11 +231,12 @@ class _RiderBookingDetailMapSectionState
       ));
     }
 
-    if (booking.dropoffLat != null && booking.dropoffLng != null) {
+    if (_validCoord(booking.dropoffLat, booking.dropoffLng)) {
       markers.add(Marker(
         markerId: const MarkerId('dropoff'),
         position: LatLng(booking.dropoffLat!, booking.dropoffLng!),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        icon: MapPins.icon(isFoodOrder ? MapPinKind.customer : MapPinKind.destination),
+          anchor: MapPins.anchor,
         infoWindow: InfoWindow(
           title: 'Delivery Address',
           snippet: booking.deliveryAddress ?? booking.address,
@@ -309,7 +362,7 @@ class _RiderBookingDetailMapSectionState
           children: [
             GoogleMap(
               initialCameraPosition: CameraPosition(
-                target: booking.pickupLat != null && booking.pickupLng != null
+                target: _validCoord(booking.pickupLat, booking.pickupLng)
                     ? LatLng(booking.pickupLat!, booking.pickupLng!)
                     : const LatLng(8.4542, 124.6319),
                 zoom: 13,
@@ -328,10 +381,9 @@ class _RiderBookingDetailMapSectionState
               onMapCreated: (controller) {
                 widget.onMapCreated(controller);
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  Future.delayed(
-                    const Duration(milliseconds: 500),
-                    widget.onFitBounds,
-                  );
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (mounted) widget.onFitBounds();
+                  });
                 });
               },
             ),
@@ -344,7 +396,7 @@ class _RiderBookingDetailMapSectionState
                   color: Colors.green,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
@@ -352,7 +404,7 @@ class _RiderBookingDetailMapSectionState
                       height: 8,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: context.surf(Colors.white),
                           shape: BoxShape.circle,
                         ),
                       ),

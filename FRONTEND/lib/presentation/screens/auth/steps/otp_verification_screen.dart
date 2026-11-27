@@ -64,7 +64,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const AuthHeader(title: 'SIGN UP'),
+                      const AuthHeader(title: 'Sign up'),
                       SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                       const OtpVerificationIllustration(),
                       OtpContactSection(

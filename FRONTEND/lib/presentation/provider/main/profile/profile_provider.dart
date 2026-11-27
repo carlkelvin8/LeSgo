@@ -8,6 +8,7 @@ import '../../../../data/data_source/dto/user/user_profile_dto.dart';
 import '../../../../data/data_source/dto/user/update_user_request_dto.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/file_upload_service.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 import '../../../../core/utils/media_url_utils.dart';
 import '../../../../core/utils/referral_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
@@ -143,7 +144,13 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } catch (e, stackTrace) {
       print('🔴 ProfileProvider: Error - $e');
       print('🔴 ProfileProvider: StackTrace - $stackTrace');
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not load your profile.',
+        ),
+      );
     }
   }
 
@@ -231,12 +238,13 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         return false;
       }
     } catch (e) {
-      state = state.copyWith(isUpdating: false, error: e.toString());
+      final message = ApiErrorMapper.message(
+        e,
+        fallbackEn: 'Could not update your profile.',
+      );
+      state = state.copyWith(isUpdating: false, error: message);
       if (context != null && context.mounted) {
-        SnackBarUtils.showError(
-          context,
-          'Error updating profile: ${e.toString()}',
-        );
+        SnackBarUtils.showError(context, message);
       }
       return false;
     }
@@ -314,13 +322,33 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       debugPrint(
         '❌ ProfileProvider: Profile image upload error: $e\n$stackTrace',
       );
-      state = state.copyWith(isUpdating: false, error: e.toString());
+      state = state.copyWith(
+        isUpdating: false,
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not update your profile picture.',
+        ),
+      );
       return false;
     }
   }
 
   Future<void> refreshProfile() async {
     await loadProfile();
+  }
+
+  /// Quietly re-reads the loyalty points (e.g. when the Profile screen opens)
+  /// without touching the loading flag or any in-progress edits.
+  Future<void> refreshPoints() async {
+    try {
+      final response = await getIt<UserRemoteDataSource>().getMe();
+      // Don't clear an existing load error / revive a missing profile.
+      if (response.success && response.data != null && state.user != null) {
+        state = state.copyWith(points: response.data!.points ?? 0);
+      }
+    } catch (_) {
+      // Keep the last known value; the next open will retry.
+    }
   }
 }
 

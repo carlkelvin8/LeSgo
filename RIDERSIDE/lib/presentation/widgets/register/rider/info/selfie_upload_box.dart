@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/utils.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class SelfieUploadBox extends StatelessWidget {
   final String buttonText;
@@ -45,12 +46,12 @@ class SelfieUploadBox extends StatelessWidget {
               decoration: BoxDecoration(
                 color: showRequiredError
                     ? Colors.red.shade50
-                    : Colors.grey.shade100,
+                    : context.surf(Colors.grey.shade100),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: showRequiredError
                       ? Colors.red.shade400
-                      : Colors.grey.shade300,
+                      : context.brd(Colors.grey.shade300),
                   width: 2,
                   style: BorderStyle.solid,
                 ),
@@ -63,7 +64,7 @@ class SelfieUploadBox extends StatelessWidget {
                     size: ResponsiveUtils.fontSize(context, 64),
                     color: showRequiredError
                         ? Colors.red.shade300
-                        : Colors.grey.shade400,
+                        : context.sub(Colors.grey.shade400),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                   Text(
@@ -74,7 +75,7 @@ class SelfieUploadBox extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       color: showRequiredError
                           ? Colors.red.shade700
-                          : Colors.grey.shade600,
+                          : context.sub(Colors.grey.shade600),
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -83,7 +84,7 @@ class SelfieUploadBox extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 11),
-                      color: Colors.grey.shade500,
+                      color: context.sub(Colors.grey.shade500),
                     ),
                   ),
                   if (showRequiredError) ...[

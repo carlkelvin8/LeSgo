@@ -78,11 +78,11 @@ void main() {
   });
 
   group('LespayTopupFee', () {
-    test('calculate applies 1.5% fee', () {
+    test('calculate applies 3% fee', () {
       final pricing = LespayTopupFee.calculate(500);
       expect(pricing.walletAmount, 500);
-      expect(pricing.feeAmount, 7.5);
-      expect(pricing.totalCharge, 507.5);
+      expect(pricing.feeAmount, 15);
+      expect(pricing.totalCharge, 515);
     });
   });
 

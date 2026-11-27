@@ -1,5 +1,10 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
+import 'package:lesgo/core/utils/money.dart';
+import 'package:lesgo/core/utils/voucher_service_utils.dart';
 import 'package:lesgo/core/utils/lesbuy_pickup_selection.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
+import 'dart:math' show max;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
@@ -7,6 +12,7 @@ import '../../../../../core/constants/routers/booking/booking_routes.dart';
 import '../../../../../core/constants/routers/app_router.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/di/injection.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 import '../../../../../core/utils/booking_checkout_payment.dart';
 import '../../../../../core/utils/network_guard.dart';
 import '../../../../../core/utils/active_order_limit_guard.dart';
@@ -24,7 +30,8 @@ import '../../../../provider/main/address/address_provider.dart';
 import '../../../../widgets/booking/lesbuy/cart/manual_order_section.dart';
 import '../../../../widgets/booking/lesbuy/manual_order/manual_pickup_section.dart';
 import '../../../../widgets/booking/lesbuy/cart/store_order_section.dart';
-import '../../../../widgets/address/address_selector_widget.dart';
+import '../../../../widgets/address/delivery_address_picker.dart';
+import '../../../../widgets/booking/common/store_branch_selector.dart';
 import '../../../../provider/main/lespay/lespay_provider.dart';
 import '../../../../widgets/payment/booking_payment_method_section.dart';
 import '../../../../widgets/widgets.dart';
@@ -39,6 +46,7 @@ class StoreCartScreen extends ConsumerStatefulWidget {
 class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
   AddressDto? _selectedAddress;
   String _paymentMethod = 'cash';
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -52,9 +60,9 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
 
       final storeState = ref.read(storeDetailProvider);
       final deliveryAddr = ref.read(addressProvider).deliveryAddress;
-      await ref.read(lesbuyCheckoutProvider.notifier).initialize(
-            storePartnerId: storeState.partnerStoreId,
-          );
+      await ref
+          .read(lesbuyCheckoutProvider.notifier)
+          .initialize(storePartnerId: storeState.partnerStoreId);
       _syncDeliveryFeeQuote(ref, deliveryAddr);
     });
   }
@@ -62,7 +70,11 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
   Future<void> _showVoucherPicker(BuildContext context) async {
     final storeState = ref.read(storeDetailProvider);
     final subtotal = storeState.cartTotal;
-    final code = await showVoucherBottomSheet(context);
+    final code = await showVoucherBottomSheet(
+      context,
+      serviceId: BookingServiceIds.lesbuy,
+      orderValue: subtotal,
+    );
     if (code == null || !mounted) return;
 
     final error = await ref
@@ -88,13 +100,19 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
       hasStoreItems: hasStoreItems,
       hasManualItems: hasManualItems,
     )) {
-      ref.read(lesbuyCheckoutProvider.notifier).setManualDeliveryFeeUncertain(true);
+      ref
+          .read(lesbuyCheckoutProvider.notifier)
+          .setManualDeliveryFeeUncertain(true);
       return;
     }
 
-    ref.read(lesbuyCheckoutProvider.notifier).setManualDeliveryFeeUncertain(false);
+    ref
+        .read(lesbuyCheckoutProvider.notifier)
+        .setManualDeliveryFeeUncertain(false);
     if (deliveryAddr != null) {
-      ref.read(lesbuyCheckoutProvider.notifier).refreshDeliveryFee(
+      ref
+          .read(lesbuyCheckoutProvider.notifier)
+          .refreshDeliveryFee(
             dropoffLat: deliveryAddr.latitude,
             dropoffLng: deliveryAddr.longitude,
             hasManualItems: hasManualItems,
@@ -104,56 +122,39 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
   }
 
   void _showAddressSelector(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration:  BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Address selector
-            Expanded(
-              child: AddressSelectorWidget(
-                title: 'Select Delivery Address',
-                onAddressSelected: (address) {
-                  setState(() {
-                    _selectedAddress = address;
-                  });
-                  _syncDeliveryFeeQuote(ref, address);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Delivery address updated'),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+    showDeliveryAddressPicker(
+      context,
+      onSelected: (sheetContext, address) {
+        setState(() {
+          _selectedAddress = address;
+        });
+        _syncDeliveryFeeQuote(ref, address);
+        Navigator.pop(sheetContext);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Delivery address updated'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Drop the local selection if that saved address was deleted; the build
+    // below then falls back to deliveryAddress or the "add address" prompt.
+    ref.listen<List<AddressDto>>(
+      addressProvider.select((state) => state.addresses),
+      (previous, next) {
+        final selected = _selectedAddress;
+        if (selected != null && !next.any((a) => a.id == selected.id)) {
+          setState(() => _selectedAddress = null);
+          _syncDeliveryFeeQuote(ref, ref.read(addressProvider).deliveryAddress);
+        }
+      },
+    );
     ref.listen(manualOrderProvider, (previous, next) {
       if (previous?.confirmedItems.length != next.confirmedItems.length) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -163,6 +164,12 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
             _selectedAddress ?? ref.read(addressProvider).deliveryAddress,
           );
         });
+      }
+    });
+
+    ref.listen(storeDetailProvider.select((s) => s.cartTotal), (prev, next) {
+      if (prev != null && prev != next) {
+        ref.read(lesbuyCheckoutProvider.notifier).invalidateVoucher();
       }
     });
 
@@ -179,7 +186,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
     final double dropoffLat;
     final double dropoffLng;
     final String contactName;
-    final String contactPhone;
+    final String? contactPhone;
 
     if (_selectedAddress != null) {
       userAddress = _selectedAddress!.addressLine1;
@@ -190,7 +197,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
           : (profileState.user?.name ?? 'Customer');
       contactPhone = _selectedAddress!.contactPhone?.isNotEmpty == true
           ? _selectedAddress!.contactPhone!
-          : (profileState.user?.phone ?? '+639123456789');
+          : profileState.user?.phone;
     } else if (addressState.deliveryAddress != null) {
       final addr = addressState.deliveryAddress!;
       userAddress = addr.addressLine1;
@@ -201,7 +208,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
           : (profileState.user?.name ?? 'Customer');
       contactPhone = addr.contactPhone?.isNotEmpty == true
           ? addr.contactPhone!
-          : (profileState.user?.phone ?? '+639123456789');
+          : profileState.user?.phone;
     } else {
       userAddress = profileState.address1.isNotEmpty
           ? profileState.address1
@@ -209,7 +216,7 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
       dropoffLat = BookingGeoUtils.defaultLat;
       dropoffLng = BookingGeoUtils.defaultLng;
       contactName = profileState.user?.name ?? 'Customer';
-      contactPhone = profileState.user?.phone ?? '+639123456789';
+      contactPhone = profileState.user?.phone;
     }
 
     // Calculate totals
@@ -229,15 +236,16 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
     final discount = isCartEmpty ? 0.0 : lesbuyCheckout.discount;
     final total = manualOnly
         ? 0.0
-        : subtotal + deliveryFee - discount;
+        : max(0.0, subtotal + deliveryFee - discount);
     final orderValueUncertain = manualOnly;
     final deliveryNote = manualOnly
         ? LesbuyManualDeliveryUtils.pendingHint
         : (!isManualOrderEmpty && !isStoreCartEmpty)
-            ? 'Store delivery is estimated. Manual items may add delivery fee after rider uploads a photo at the shop.'
-            : null;
-    final orderValueNote =
-        orderValueUncertain ? LesbuyManualDeliveryUtils.orderValuePendingHint : null;
+        ? 'Store delivery is estimated. Manual items may add delivery fee after rider uploads a photo at the shop.'
+        : null;
+    final orderValueNote = orderValueUncertain
+        ? LesbuyManualDeliveryUtils.orderValuePendingHint
+        : null;
     final walletMinimum = LesbuyManualDeliveryUtils.walletMinimumAmount(
       orderValueUncertain: orderValueUncertain,
       checkoutTotal: total,
@@ -252,13 +260,14 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
     final totalItemCount = storeItemCount + manualItemCount;
 
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Color(0xFFF5F5F5)),
+      backgroundColor: OrderDesign.canvas(context),
       body: SafeArea(
         child: Column(
           children: [
             // Header
             const BookingServiceHeader(
               title: 'Checkout',
+              orderStyle: true,
               action: SizedBox.shrink(),
             ),
 
@@ -268,7 +277,15 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                    OrderReceiptHeader(
+                      title: 'Your shopping bag',
+                      detail:
+                          '${totalItemCount} ${totalItemCount == 1 ? 'item' : 'items'}',
+                      subtotal: !isStoreCartEmpty
+                          ? Money.format(subtotal)
+                          : null,
+                      icon: Icons.shopping_bag_outlined,
+                    ),
 
                     // Delivery Address
                     DeliveryAddressSection(
@@ -279,6 +296,31 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                     ),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+
+                    // Pickup branch (multi-branch stores)
+                    if (!isStoreCartEmpty &&
+                        lesbuyCheckout.selectedBranch != null) ...[
+                      StoreBranchSelector(
+                        branches: lesbuyCheckout.branches,
+                        selected: lesbuyCheckout.selectedBranch,
+                        dropoffLat:
+                            ref
+                                .watch(addressProvider)
+                                .deliveryAddress
+                                ?.latitude ??
+                            BookingGeoUtils.defaultLat,
+                        dropoffLng:
+                            ref
+                                .watch(addressProvider)
+                                .deliveryAddress
+                                ?.longitude ??
+                            BookingGeoUtils.defaultLng,
+                        onSelected: (id) => ref
+                            .read(lesbuyCheckoutProvider.notifier)
+                            .selectBranch(id),
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                    ],
 
                     // Empty State
                     if (isCartEmpty)
@@ -292,7 +334,10 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                             Icon(
                               Icons.shopping_cart_outlined,
                               size: 48,
-                              color: AppColors.foreground(context, Colors.grey[400]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[400]!,
+                              ),
                             ),
                             SizedBox(
                               height: ResponsiveUtils.spacing(context, 16),
@@ -302,7 +347,10 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
-                                color: AppColors.foreground(context, Colors.grey[600]!),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey[600]!,
+                                ),
                               ),
                             ),
                             TextButton(
@@ -316,7 +364,10 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                                     14,
                                   ),
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.accent(context, Color(0xFF5F2D82)),
+                                  color: AppColors.accent(
+                                    context,
+                                    Color(0xFF5F2D82),
+                                  ),
                                 ),
                               ),
                             ),
@@ -379,6 +430,32 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
+                    // Voucher (scrolls with the page so small screens keep the items visible)
+                    VoucherSection(
+                      enabled: !isCartEmpty && !orderValueUncertain,
+                      appliedVoucher: lesbuyCheckout.voucherCode,
+                      onApplyTap: () => _showVoucherPicker(context),
+                      onRemoveTap: () {
+                        ref
+                            .read(lesbuyCheckoutProvider.notifier)
+                            .removeVoucher();
+                      },
+                    ),
+
+                    // Order summary
+                    OrderSummarySection(
+                      subtotal: subtotal,
+                      delivery: deliveryFee,
+                      discount: discount,
+                      total: total,
+                      itemCount: totalItemCount,
+                      deliveryFeeUncertain: deliveryFeeUncertain,
+                      deliveryFeeNote: deliveryNote,
+                      orderValueUncertain: orderValueUncertain,
+                      orderValueNote: orderValueNote,
+                    ),
+
+                    const SizedBox(height: 16),
                     // Payment Method Section
                     BookingPaymentMethodSection(
                       selectedMethod: _paymentMethod,
@@ -387,35 +464,15 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
                       },
                       enabled: !isCartEmpty,
                       minimumAmount: isCartEmpty ? null : walletMinimum,
+                      allowDigitalPayments: !orderValueUncertain,
                     ),
+
+                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                   ],
                 ),
               ),
-            ),
-
-            // Fixed Voucher Section
-            VoucherSection(
-              enabled: !isCartEmpty && !orderValueUncertain,
-              appliedVoucher: lesbuyCheckout.voucherCode,
-              onApplyTap: () => _showVoucherPicker(context),
-              onRemoveTap: () {
-                ref.read(lesbuyCheckoutProvider.notifier).removeVoucher();
-              },
-            ),
-
-            // Fixed Order Summary
-            OrderSummarySection(
-              subtotal: subtotal,
-              delivery: deliveryFee,
-              discount: discount,
-              total: total,
-              itemCount: totalItemCount,
-              deliveryFeeUncertain: deliveryFeeUncertain,
-              deliveryFeeNote: deliveryNote,
-              orderValueUncertain: orderValueUncertain,
-              orderValueNote: orderValueNote,
             ),
           ],
         ),
@@ -424,256 +481,344 @@ class _StoreCartScreenState extends ConsumerState<StoreCartScreen> {
       // Bottom Continue Button
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
+        decoration: OrderDesign.dock(context),
         child: SafeArea(
-          child: PrimaryButton(
-            text: 'Checkout',
-            // isLoading: storeState.isLoading,
-            backgroundColor: isCartEmpty
-                ? Theme.of(context).disabledColor
+          child: OrderActionWithTotal(
+            total:
+                !isStoreCartEmpty &&
+                    isManualOrderEmpty &&
+                    lesbuyCheckout.deliveryFeeKnown &&
+                    !deliveryFeeUncertain &&
+                    !lesbuyCheckout.isLoadingFare &&
+                    !lesbuyCheckout.isValidatingVoucher
+                ? total
                 : null,
-            onPressed: isCartEmpty
-                ? null
-                : () async {
-                    if (!isStoreCartEmpty && !isManualOrderEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text(LesbuyPickupSelection.mixedCartMessage),
-                      ));
-                      return;
-                    }
-                    if (isStoreCartEmpty && !isManualOrderEmpty &&
-                        !LesbuyManualDeliveryUtils.hasDeliveryLocation(
-                          _selectedAddress ?? ref.read(addressProvider).deliveryAddress,
-                        )) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text(LesbuyManualDeliveryUtils.missingDeliveryMessage),
-                      ));
-                      return;
-                    }
-                    if (!await NetworkGuard.ensureOnline(context)) return;
-                    if (!await ActiveOrderLimitGuard.ensureCanBook(context)) {
-                      return;
-                    }
-
-                    // Validate pickup location for manual-only orders
-                    final isManualOnly = isStoreCartEmpty && !isManualOrderEmpty;
-                    if (isManualOnly && !manualOrderState.hasPickupLocation) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Enter the buying address and tap "Pin pickup location" above.',
-                          ),
-                          backgroundColor: Colors.orange,
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                      return;
-                    }
-
-                    // Pre-check wallet balance before API call
-                    if (_paymentMethod == 'wallet') {
-                      final lespayBalance = ref.read(lespayProvider).balance;
-                      if (lespayBalance < walletMinimum) {
+            child: PrimaryButton(
+              text: 'Checkout',
+              isLoading: _submitting,
+              backgroundColor: isCartEmpty
+                  ? Theme.of(context).disabledColor
+                  : null,
+              onPressed: isCartEmpty || _submitting
+                  ? null
+                  : () async {
+                      if (_submitting) return;
+                      if (!isStoreCartEmpty && !isManualOrderEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
+                          const SnackBar(
                             content: Text(
-                              'Insufficient LesPay balance. '
-                              'Your balance: ₱${lespayBalance.toStringAsFixed(2)}, '
-                              'required: ₱${walletMinimum.toStringAsFixed(2)}. '
-                              'Please top up your wallet first.',
+                              LesbuyPickupSelection.mixedCartMessage,
                             ),
-                            backgroundColor: Colors.red,
-                            duration: const Duration(seconds: 4),
                           ),
                         );
                         return;
                       }
-                    }
-
-                    // Create LesBuy order using API
-                    try {
-                      final orderDataSource = getIt<OrderRemoteDataSource>();
-                      final dropoffAddress = userAddress;
-                      final dropoffContactName = contactName;
-                      final dropoffContactPhone = contactPhone;
-
-                      // Prepare order items
-                      final orderItems = <OrderItemDto>[];
-
-                      // Add store items
-                      for (final item in storeState.cartItems) {
-                        orderItems.add(OrderItemDto(
-                          name: item.product.name,
-                          source: 'store',
-                          quantity: item.quantity,
-                          estimatedPrice: item.product.price,
-                          notes: 'Store item',
-                        ));
-                      }
-
-                      // Add manual items
-                      for (final item in manualOrderState.confirmedItems) {
-                        orderItems.add(OrderItemDto(
-                          name: item.name,
-                          source: 'manual',
-                          quantity: item.quantity,
-                          estimatedPrice: 0.0, // Manual items don't have price
-                          notes: item.description,
-                        ));
-                      }
-
-                      final checkoutQuote = ref.read(lesbuyCheckoutProvider);
-                      final isManualOnlyCheckout =
-                          isStoreCartEmpty && !isManualOrderEmpty;
-
-                      final createOrderRequest = CreateOrderRequestDto(
-                        serviceId: 4,
-                        estimatedDistanceM: isManualOnlyCheckout
-                            ? BookingGeoUtils.distanceMeters(
-                                lat1: manualOrderState.pickupLat!,
-                                lng1: manualOrderState.pickupLng!,
-                                lat2: dropoffLat,
-                                lng2: dropoffLng,
-                              )
-                            : checkoutQuote.estimatedDistanceM,
-                        pickup: LesbuyPickupSelection.select(
-                          hasStoreItems: !isStoreCartEmpty,
-                          hasManualItems: !isManualOrderEmpty,
-                          store: OrderAddressDto(
-                            address: storeState.storeName ?? 'Store',
-                            lat: checkoutQuote.pickupLat,
-                            lng: checkoutQuote.pickupLng,
-                            contactName: storeState.storeName ?? 'Store',
+                      if (!isCartEmpty &&
+                          !LesbuyManualDeliveryUtils.hasDeliveryLocation(
+                            _selectedAddress ??
+                                ref.read(addressProvider).deliveryAddress,
+                          )) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              LesbuyManualDeliveryUtils.missingDeliveryMessage,
+                            ),
                           ),
-                          manual: manualOrderState.hasPickupLocation ? OrderAddressDto(
-                            address: manualOrderState.pickupLocationName!,
-                            lat: manualOrderState.pickupLat!,
-                            lng: manualOrderState.pickupLng!,
-                          ) : null,
-                        ),
-                        dropoff: OrderAddressDto(
-                          address: dropoffAddress,
-                          lat: dropoffLat,
-                          lng: dropoffLng,
-                          contactName: dropoffContactName,
-                          contactPhone: dropoffContactPhone,
-                        ),
-                        notes: 'LesBuy order: ${orderItems.length} items',
-                        paymentMethod: _paymentMethod,
-                        voucherCode: isManualOnlyCheckout
-                            ? null
-                            : checkoutQuote.voucherCode,
-                        discountAmount:
-                            isManualOnlyCheckout ? 0 : discount,
-                        items: orderItems,
-                        meta: {
-                          'store_name': storeState.storeName,
-                          'subtotal': subtotal,
-                          'delivery_fee': deliveryFee,
-                          'delivery_fee_uncertain': isManualOnlyCheckout,
-                          'manual_items_delivery_uncertain':
-                              !isManualOrderEmpty && !isManualOnlyCheckout,
-                          'discount': discount,
-                          'voucher_code': checkoutQuote.voucherCode,
-                          'total': total,
-                          'grand_total': total,
-                          'order_type':
-                              isManualOnlyCheckout ? 'lesbuy_manual' : 'lesbuy',
-                          if (isManualOnlyCheckout) ...{
-                            'manual_pickup_source': 'customer_pin',
-                            'order_value_uncertain': true,
-                            'minimum_order_exempt': true,
-                          },
-                        },
-                      );
+                        );
+                        return;
+                      }
+                      if (!isStoreCartEmpty &&
+                          !ref.read(lesbuyCheckoutProvider).deliveryFeeKnown) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Could not get the delivery fee. Please retry.',
+                            ),
+                            action: SnackBarAction(
+                              label: 'Retry',
+                              onPressed: () => _syncDeliveryFeeQuote(
+                                ref,
+                                _selectedAddress ??
+                                    ref.read(addressProvider).deliveryAddress,
+                              ),
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      if (isStoreCartEmpty &&
+                          isDigitalPaymentMethod(_paymentMethod)) {
+                        setState(() => _paymentMethod = 'cash');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Online payment is not available while the order value is still to be confirmed. Switched to Cash on Delivery.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      if (!await NetworkGuard.ensureOnline(context)) return;
+                      if (!await ActiveOrderLimitGuard.ensureCanBook(context)) {
+                        return;
+                      }
 
-                      print('🔵 LesBuy: Creating order with API...');
-                      final response = await orderDataSource.createOrder(createOrderRequest);
-                      print('🟢 LesBuy: Order created successfully - ID: ${response.data.id}');
+                      // Validate pickup location for manual-only orders
+                      final isManualOnly =
+                          isStoreCartEmpty && !isManualOrderEmpty;
+                      if (isManualOnly && !manualOrderState.hasPickupLocation) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Enter the buying address and tap "Pin pickup location" above.',
+                            ),
+                            backgroundColor: Colors.orange,
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                        return;
+                      }
 
-                      final payAmount =
-                          LesbuyManualDeliveryUtils.resolveCheckoutPayAmount(
-                        orderValueUncertain: isManualOnlyCheckout,
-                        checkoutTotal: total,
-                        apiEffectiveTotal: response.data.effectiveTotalAmount,
-                      );
+                      // Pre-check wallet balance before API call
+                      if (_paymentMethod == 'wallet') {
+                        final lespayBalance = ref.read(lespayProvider).balance;
+                        if (lespayBalance < walletMinimum) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Insufficient LesPay balance. '
+                                'Your balance: ${Money.format(lespayBalance)}, '
+                                'required: ${Money.format(walletMinimum)}. '
+                                'Please top up your wallet first.',
+                              ),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                          return;
+                        }
+                      }
 
-                      if (!context.mounted) return;
+                      // Create LesBuy order using API
+                      setState(() => _submitting = true);
+                      try {
+                        final orderDataSource = getIt<OrderRemoteDataSource>();
+                        final dropoffAddress = userAddress;
+                        final dropoffContactName = contactName;
+                        final dropoffContactPhone = contactPhone;
 
-                      final paid = await completeBookingPayment(
-                        context: context,
-                        ref: ref,
-                        orderId: response.data.id,
-                        amount: payAmount,
-                        paymentMethod: _paymentMethod,
-                        serviceLabel: 'LesBuy',
-                      );
-                      if (!paid) return;
+                        // Prepare order items
+                        final orderItems = <OrderItemDto>[];
 
-                      await storeNotifier.clearCart();
-                      ref.read(manualOrderProvider.notifier).clearAll();
+                        // Add store items
+                        for (final item in storeState.cartItems) {
+                          orderItems.add(
+                            OrderItemDto(
+                              name: item.product.name,
+                              source: 'store',
+                              quantity: item.quantity,
+                              estimatedPrice: item.product.price,
+                              notes: 'Store item',
+                            ),
+                          );
+                        }
 
-                      if (context.mounted) {
-                        final orderId = response.data.id.toString();
+                        // Add manual items
+                        for (final item in manualOrderState.confirmedItems) {
+                          orderItems.add(
+                            OrderItemDto(
+                              name: item.name,
+                              source: 'manual',
+                              quantity: item.quantity,
+                              estimatedPrice:
+                                  0.0, // Manual items don't have price
+                              notes: item.description,
+                            ),
+                          );
+                        }
 
-                        // Navigate to driver finding screen
-                        AppRouter.pushReplacement(
-                          context,
-                          BookingRoutes.driverFinding,
-                          arguments: {
-                            'orderId': orderId,
-                            'orderType': 'LesBuy',
-                            'orderData': {
-                              'storeItems': storeState.cartItems.map((item) => {
-                                'productName': item.product.name,
-                                'quantity': item.quantity,
-                                'price': item.product.price,
-                              }).toList(),
-                              'manualItems': manualOrderState.confirmedItems.map((item) => {
-                                'name': item.name,
-                                'quantity': item.quantity,
-                                'description': item.description,
-                              }).toList(),
-                              'total': total,
-                              'subtotal': subtotal,
-                              'deliveryFee': deliveryFee,
-                              'deliveryFeeUncertain': isManualOnlyCheckout,
-                              'orderValueUncertain': isManualOnlyCheckout,
+                        final checkoutQuote = ref.read(lesbuyCheckoutProvider);
+                        final isManualOnlyCheckout =
+                            isStoreCartEmpty && !isManualOrderEmpty;
+
+                        final createOrderRequest = CreateOrderRequestDto(
+                          serviceId: 4,
+                          // Store orders name the store and branch so the
+                          // server sets the pickup point from that branch.
+                          partnerId: isStoreCartEmpty
+                              ? null
+                              : checkoutQuote.partnerId,
+                          partnerBranchId: isStoreCartEmpty
+                              ? null
+                              : checkoutQuote.selectedBranchId,
+                          estimatedDistanceM: isManualOnlyCheckout
+                              ? BookingGeoUtils.distanceMeters(
+                                  lat1: manualOrderState.pickupLat!,
+                                  lng1: manualOrderState.pickupLng!,
+                                  lat2: dropoffLat,
+                                  lng2: dropoffLng,
+                                )
+                              : checkoutQuote.estimatedDistanceM,
+                          pickup: LesbuyPickupSelection.select(
+                            hasStoreItems: !isStoreCartEmpty,
+                            hasManualItems: !isManualOrderEmpty,
+                            store: OrderAddressDto(
+                              address:
+                                  checkoutQuote
+                                          .selectedBranch
+                                          ?.address
+                                          .isNotEmpty ==
+                                      true
+                                  ? checkoutQuote.selectedBranch!.address
+                                  : storeState.storeName ?? 'Store',
+                              lat: checkoutQuote.pickupLat,
+                              lng: checkoutQuote.pickupLng,
+                              contactName: storeState.storeName ?? 'Store',
+                            ),
+                            manual: manualOrderState.hasPickupLocation
+                                ? OrderAddressDto(
+                                    address:
+                                        manualOrderState.pickupLocationName!,
+                                    lat: manualOrderState.pickupLat!,
+                                    lng: manualOrderState.pickupLng!,
+                                  )
+                                : null,
+                          ),
+                          dropoff: OrderAddressDto(
+                            address: dropoffAddress,
+                            lat: dropoffLat,
+                            lng: dropoffLng,
+                            contactName: dropoffContactName,
+                            contactPhone: dropoffContactPhone,
+                          ),
+                          notes: 'LesBuy order: ${orderItems.length} items',
+                          paymentMethod: _paymentMethod,
+                          voucherCode: isManualOnlyCheckout
+                              ? null
+                              : checkoutQuote.voucherCode,
+                          discountAmount: isManualOnlyCheckout ? 0 : discount,
+                          items: orderItems,
+                          meta: {
+                            'store_name': storeState.storeName,
+                            'subtotal': subtotal,
+                            'delivery_fee': deliveryFee,
+                            'delivery_fee_uncertain': isManualOnlyCheckout,
+                            'manual_items_delivery_uncertain':
+                                !isManualOrderEmpty && !isManualOnlyCheckout,
+                            'discount': discount,
+                            'voucher_code': checkoutQuote.voucherCode,
+                            'total': total,
+                            'grand_total': total,
+                            'order_type': isManualOnlyCheckout
+                                ? 'lesbuy_manual'
+                                : 'lesbuy',
+                            if (isManualOnlyCheckout) ...{
+                              'manual_pickup_source': 'customer_pin',
+                              'order_value_uncertain': true,
+                              'minimum_order_exempt': true,
                             },
                           },
                         );
-                      }
-                    } catch (e) {
-                      print('🔴 LesBuy: Error creating order - $e');
-                      // Debug: Print full error details
-                      if (e is DioException) {
-                        print('🔴 DioException status: ${e.response?.statusCode}');
-                        print('🔴 DioException data: ${e.response?.data}');
-                      }
-                      if (context.mounted) {
-                        final raw = e.toString();
-                        final msg = raw.startsWith('Exception: ')
-                            ? raw.substring(11)
-                            : raw;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(msg),
-                            backgroundColor: Colors.red,
-                            duration: const Duration(seconds: 4),
-                          ),
+
+                        print('🔵 LesBuy: Creating order with API...');
+                        final response = await orderDataSource.createOrder(
+                          createOrderRequest,
                         );
+                        print(
+                          '🟢 LesBuy: Order created successfully - ID: ${response.data.id}',
+                        );
+
+                        final payAmount =
+                            LesbuyManualDeliveryUtils.resolveCheckoutPayAmount(
+                              orderValueUncertain: isManualOnlyCheckout,
+                              checkoutTotal: total,
+                              apiEffectiveTotal:
+                                  response.data.effectiveTotalAmount,
+                            );
+
+                        if (!context.mounted) return;
+
+                        final paid = await completeBookingPayment(
+                          context: context,
+                          ref: ref,
+                          orderId: response.data.id,
+                          amount: payAmount,
+                          paymentMethod: _paymentMethod,
+                          serviceLabel: 'LesBuy',
+                        );
+                        if (!paid) return;
+
+                        await storeNotifier.clearCart();
+                        ref.read(manualOrderProvider.notifier).clearAll();
+
+                        if (context.mounted) {
+                          final orderId = response.data.id.toString();
+
+                          // Navigate to driver finding screen
+                          AppRouter.pushReplacement(
+                            context,
+                            BookingRoutes.driverFinding,
+                            arguments: {
+                              'orderId': orderId,
+                              'orderType': 'LesBuy',
+                              'orderData': {
+                                'storeItems': storeState.cartItems
+                                    .map(
+                                      (item) => {
+                                        'productName': item.product.name,
+                                        'quantity': item.quantity,
+                                        'price': item.product.price,
+                                      },
+                                    )
+                                    .toList(),
+                                'manualItems': manualOrderState.confirmedItems
+                                    .map(
+                                      (item) => {
+                                        'name': item.name,
+                                        'quantity': item.quantity,
+                                        'description': item.description,
+                                      },
+                                    )
+                                    .toList(),
+                                'total': total,
+                                'subtotal': subtotal,
+                                'deliveryFee': deliveryFee,
+                                'deliveryFeeUncertain': isManualOnlyCheckout,
+                                'orderValueUncertain': isManualOnlyCheckout,
+                              },
+                            },
+                          );
+                        }
+                      } catch (e) {
+                        print('🔴 LesBuy: Error creating order - $e');
+                        // Debug: Print full error details
+                        if (e is DioException) {
+                          print(
+                            '🔴 DioException status: ${e.response?.statusCode}',
+                          );
+                          print('🔴 DioException data: ${e.response?.data}');
+                        }
+                        if (context.mounted) {
+                          final msg = ApiErrorMapper.message(
+                            e,
+                            fallbackEn:
+                                'Could not place your order. Please try again.',
+                            fallbackTl:
+                                'Hindi mailagay ang order. Subukan muli.',
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(msg),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (mounted) setState(() => _submitting = false);
                       }
-                    }
-                  },
+                    },
+            ),
           ),
         ),
       ),

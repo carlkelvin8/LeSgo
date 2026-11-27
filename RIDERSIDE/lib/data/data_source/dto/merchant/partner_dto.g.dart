@@ -29,7 +29,7 @@ PartnerDto _$PartnerDtoFromJson(Map<String, dynamic> json) => PartnerDto(
       isFeatured: _parseBoolNullable(json['is_featured']),
       status: json['status'] as String?,
       acceptsOnlinePayment: _parseBoolNullable(json['accepts_online_payment']),
-      openingHours: json['opening_hours'] as Map<String, dynamic>?,
+      openingHours: _parseOpeningHours(json['opening_hours']),
       supportPhone: json['support_phone'] as String?,
       supportEmail: json['support_email'] as String?,
       referralCode: json['referral_code'] as String?,

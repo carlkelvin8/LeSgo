@@ -18,8 +18,7 @@ class FaqItem extends StatefulWidget {
   State<FaqItem> createState() => _FaqItemState();
 }
 
-class _FaqItemState extends State<FaqItem>
-    with SingleTickerProviderStateMixin {
+class _FaqItemState extends State<FaqItem> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _expand;
   late final Animation<double> _rotate;
@@ -34,8 +33,10 @@ class _FaqItemState extends State<FaqItem>
       duration: const Duration(milliseconds: 320),
     );
     _expand = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
-    _rotate = Tween<double>(begin: 0, end: .5)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    _rotate = Tween<double>(
+      begin: 0,
+      end: .5,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
 
     if (widget.isFirst) {
@@ -132,7 +133,7 @@ class _FaqItemState extends State<FaqItem>
                                   fontWeight: FontWeight.w800,
                                   color: isOpen
                                       ? Colors.white
-                                      : _accent,
+                                      : AppColors.accent(context, _accent),
                                   height: 1.0,
                                 ),
                               ),
@@ -148,8 +149,14 @@ class _FaqItemState extends State<FaqItem>
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,
                                 color: isOpen
-                                    ? AppColors.foreground(context, Color(0xFF1A0A2E))
-                                    : AppColors.foreground(context, Color(0xFF2E1A4A)),
+                                    ? AppColors.foreground(
+                                        context,
+                                        Color(0xFF1A0A2E),
+                                      )
+                                    : AppColors.foreground(
+                                        context,
+                                        Color(0xFF2E1A4A),
+                                      ),
                                 height: 1.4,
                               ),
                             ),
@@ -166,13 +173,16 @@ class _FaqItemState extends State<FaqItem>
                               decoration: BoxDecoration(
                                 color: isOpen
                                     ? _accent.withValues(alpha: .10)
-                                    : AppColors.surface(context, Color(0xFFF3ECF9)),
+                                    : AppColors.surface(
+                                        context,
+                                        Color(0xFFF3ECF9),
+                                      ),
                                 borderRadius: BorderRadius.circular(9),
                               ),
                               child: Icon(
                                 Icons.keyboard_arrow_down_rounded,
                                 size: 18,
-                                color: _accent,
+                                color: AppColors.accent(context, _accent),
                               ),
                             ),
                           ),
@@ -190,7 +200,9 @@ class _FaqItemState extends State<FaqItem>
                             // Divider
                             Container(
                               height: 1,
-                              margin: const EdgeInsets.symmetric(horizontal: 16),
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
@@ -203,14 +215,22 @@ class _FaqItemState extends State<FaqItem>
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(56, 12, 16, 18),
+                              padding: const EdgeInsets.fromLTRB(
+                                56,
+                                12,
+                                16,
+                                18,
+                              ),
                               child: Text(
                                 widget.faq.answer,
                                 style: TextStyle(
                                   fontFamily: 'TT Fors',
                                   fontSize: 13,
                                   fontWeight: FontWeight.w400,
-                                  color: AppColors.foreground(context, Color(0xFF4A3060)),
+                                  color: AppColors.foreground(
+                                    context,
+                                    Color(0xFF4A3060),
+                                  ),
                                   height: 1.65,
                                 ),
                               ),

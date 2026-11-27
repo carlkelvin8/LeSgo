@@ -48,6 +48,7 @@ class RestaurantListSection extends StatelessWidget {
       itemBuilder: (context, index) {
         final restaurant = restaurants[index];
         return RestaurantCard(
+          key: ValueKey((restaurant.id, restaurant.branchId)),
           restaurant: restaurant,
           onTap: onRestaurantTap != null
               ? () => onRestaurantTap!(restaurant)

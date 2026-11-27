@@ -1,180 +1,198 @@
 import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:lesgo/core/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../domain/entities/booking/lesbuy/store.dart';
 
+/// Compact horizontal store row (icon tile, name, address, rating, ETA).
 class StoreCard extends StatelessWidget {
   final Store store;
   final VoidCallback? onTap;
 
-  const StoreCard({
-    super.key,
-    required this.store,
-    this.onTap,
-  });
+  const StoreCard({super.key, required this.store, this.onTap});
+
+  static String _titleCase(String raw) {
+    return raw
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .map((w) => w[0].toUpperCase() + w.substring(1).toLowerCase())
+        .join(' ');
+  }
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = ResponsiveUtils.spacing(context, 12);
-    final imageHeight = ResponsiveUtils.imageHeight(context, 160);
+    final accent = AppColors.accent(context, const Color(0xFF5F2D82));
+    final tile = ResponsiveUtils.imageHeight(context, 88).clamp(80.0, 110.0);
+    final typeLabel = store.storeType == null || store.storeType!.isEmpty
+        ? null
+        : _titleCase(store.storeType!);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(
-          bottom: ResponsiveUtils.spacing(context, 16),
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Store Image
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(borderRadius),
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    height: imageHeight,
-                    color: AppColors.surface(context, Colors.grey[200]!),
-                    child: Center(
-                      child: Icon(
-                        _getStoreIcon(store.categories),
-                        size: ResponsiveUtils.fontSize(context, 64),
-                        color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ),
+    return Semantics(
+      button: true,
+      label: '${store.name}, rated ${store.rating.toStringAsFixed(1)}',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSpace.md),
+          padding: const EdgeInsets.all(AppSpace.sm),
+          decoration: AppCard.decoration(context, radius: AppRadius.lg),
+          child: Row(
+            children: [
+              Container(
+                width: tile,
+                height: tile,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
-                if (store.isNew)
-                  Positioned(
-                    top: ResponsiveUtils.spacing(context, 12),
-                    right: ResponsiveUtils.spacing(context, 12),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.spacing(context, 12),
-                        vertical: ResponsiveUtils.spacing(context, 6),
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'NEW',
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 10),
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                child: Icon(
+                  _getStoreIcon(store.categories),
+                  size: 40,
+                  color: accent,
+                ),
+              ),
+              const SizedBox(width: AppSpace.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            store.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 16),
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.foreground(
+                                context,
+                                Colors.black87,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                        if (store.isNew) ...[
+                          const SizedBox(width: AppSpace.sm),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE5484D),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.pill,
+                              ),
+                            ),
+                            child: const Text(
+                              'NEW',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ),
-              ],
-            ),
-
-            // Store Details
-            Padding(
-              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    store.name,
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 16),
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.foreground(context, Colors.black87),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                  Text(
-                    store.address,
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: AppColors.foreground(context, Colors.grey[600]!),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: ResponsiveUtils.fontSize(context, 16),
-                        color: Colors.amber,
-                      ),
-                      SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+                    if (typeLabel != null) ...[
+                      const SizedBox(height: 2),
                       Text(
-                        store.rating.toStringAsFixed(1),
-                        style: TextStyle(
-                          fontFamily: 'TT Fors',
-                          fontSize: ResponsiveUtils.fontSize(context, 13),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.foreground(context, Colors.black87),
-                        ),
-                      ),
-                      Text(
-                        ' (${store.reviewCount}+)',
+                        typeLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: ResponsiveUtils.fontSize(context, 12),
-                          color: AppColors.foreground(context, Colors.grey[500]!),
+                          fontWeight: FontWeight.w600,
+                          color: accent,
                         ),
                       ),
-                      const Spacer(),
-                      if (store.deliveryTime != null) ...[
-                        Icon(
-                          Icons.access_time,
-                          size: ResponsiveUtils.fontSize(context, 14),
-                          color: AppColors.foreground(context, Colors.grey[500]!),
+                    ],
+                    const SizedBox(height: 2),
+                    Text(
+                      store.address,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'TT Fors',
+                        fontSize: ResponsiveUtils.fontSize(context, 12),
+                        height: 1.25,
+                        color: AppColors.foreground(context, Colors.grey[600]!),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.sm),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 18,
+                          color: Color(0xFFF5A623),
                         ),
-                        SizedBox(width: ResponsiveUtils.spacing(context, 4)),
+                        const SizedBox(width: 2),
                         Text(
-                          store.deliveryTime!,
+                          store.rating.toStringAsFixed(1),
+                          style: TextStyle(
+                            fontFamily: 'TT Fors',
+                            fontSize: ResponsiveUtils.fontSize(context, 13),
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.foreground(
+                              context,
+                              Colors.black87,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          ' (${store.reviewCount}+)',
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 12),
-                            color: AppColors.foreground(context, Colors.grey[600]!),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[500]!,
+                            ),
                           ),
                         ),
+                        if (store.deliveryTime != null) ...[
+                          const Spacer(),
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey[500]!,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            store.deliveryTime!,
+                            style: TextStyle(
+                              fontFamily: 'TT Fors',
+                              fontSize: ResponsiveUtils.fontSize(context, 12),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                  if (store.storeType != null) ...[
-                    SizedBox(height: ResponsiveUtils.spacing(context, 6)),
-                    Text(
-                      store.storeType!,
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 11),
-                        color: AppColors.foreground(context, Colors.grey[500]!),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+              Icon(
+                Icons.chevron_right,
+                color: AppColors.foreground(context, Colors.grey[400]!),
+              ),
+            ],
+          ),
         ),
       ),
     );

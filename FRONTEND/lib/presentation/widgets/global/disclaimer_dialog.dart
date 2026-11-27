@@ -33,14 +33,16 @@ class DisclaimerDialog extends StatelessWidget {
               child: Container(
                 width: ResponsiveUtils.spacing(context, 48),
                 height: ResponsiveUtils.spacing(context, 48),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF9747FF), // Purple color
+                decoration: BoxDecoration(
+                  color: AppColors.buttonFill(context),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0x339747FF),
+                      color: AppColors.buttonFill(
+                        context,
+                      ).withValues(alpha: 0.2),
                       blurRadius: 10,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -51,7 +53,7 @@ class DisclaimerDialog extends StatelessWidget {
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 24),
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.onButton(context),
                     ),
                   ),
                 ),
@@ -90,18 +92,19 @@ class DisclaimerDialog extends StatelessWidget {
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
 
             // Order Now Button
-            PrimaryButton(
-              text: 'Order Now',
-              backgroundColor: const Color(0xFF9747FF),
-              onPressed: onOrderNow,
-            ),
+            PrimaryButton(text: 'Order Now', onPressed: onOrderNow),
 
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
 
             // Cancel Button
             TextButton(
               onPressed: onCancel,
-              style: TextButton.styleFrom(foregroundColor: AppColors.foreground(context, Colors.grey[600]!)),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.foreground(
+                  context,
+                  Colors.grey[600]!,
+                ),
+              ),
               child: Text(
                 'Cancel',
                 style: TextStyle(

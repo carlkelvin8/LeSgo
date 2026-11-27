@@ -17,9 +17,7 @@ class ChatScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat - Order #$orderId'),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
+        title: const Text('Chat with your rider'),
       ),
       body: OrderChatWidget(
         orderId: orderId,

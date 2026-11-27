@@ -1,3 +1,5 @@
+import 'package:camera/camera.dart';
+import '../../../widgets/register/registration_camera_screen.dart';
 import '../../../provider/register/register_provider.dart';
 import '../registration_terms_screen.dart';
 import '../registration_terms_gate.dart';
@@ -11,6 +13,7 @@ import '../../../../core/services/api_service.dart';
 import '../../../provider/register/riderside/rider_register_info_provider.dart';
 import '../../../widgets/widgets.dart';
 import '../../../widgets/register/rider/package/rider_package_selection_step.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RegisterInfoScreen extends ConsumerStatefulWidget {
   const RegisterInfoScreen({super.key});
@@ -263,7 +266,14 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
             SelfieUploadSection(
               label: 'Selfie for Verification',
               buttonText: 'Upload',
-              onUploadPressed: controller.uploadSelfie,
+              onUploadPressed: () => controller.uploadSelfie(
+                () => capturePhotoWithCamera(
+                  context,
+                  lensDirection: CameraLensDirection.front,
+                  title: 'Live selfie',
+                  helpText: 'Center your face and look directly at the camera.',
+                ),
+              ),
               isLoading: state.isSelfieLoading,
               imagePath: state.selfieImagePath,
               showError: state.hasAttemptedSubmit,
@@ -271,7 +281,14 @@ class _RegisterInfoScreenState extends ConsumerState<RegisterInfoScreen> {
             SelfieUploadSection(
               label: 'Selfie with motorcycle',
               buttonText: 'Upload',
-              onUploadPressed: controller.uploadSelfieWithMotorcycle,
+              onUploadPressed: () => controller.uploadSelfieWithMotorcycle(
+                () => capturePhotoWithCamera(
+                  context,
+                  lensDirection: CameraLensDirection.back,
+                  title: 'Selfie with motorcycle',
+                  helpText: 'Make sure your face and motorcycle are both visible.',
+                ),
+              ),
               isLoading: state.isSelfieMotorcycleLoading,
               imagePath: state.selfieWithMotorcycleImagePath,
               showError: state.hasAttemptedSubmit,
@@ -413,7 +430,7 @@ class _RiderOtpBottomSheetState extends State<_RiderOtpBottomSheet> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 14,
-              color: Colors.grey[600],
+              color: context.sub(Colors.grey[600]!),
             ),
           ),
           if (widget.fallbackOtp != null && AppConfig.isDevMode) ...[

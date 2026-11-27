@@ -25,16 +25,20 @@ class ChatBubbleWidget extends StatelessWidget {
         vertical: ResponsiveUtils.spacing(context, 4),
       ),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isCurrentUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isCurrentUser) ...[
-            _buildAvatar(),
+            _buildAvatar(context),
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isCurrentUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 _buildMessageBubble(context),
                 SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -44,17 +48,19 @@ class ChatBubbleWidget extends StatelessWidget {
           ),
           if (isCurrentUser) ...[
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-            _buildAvatar(),
+            _buildAvatar(context),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(BuildContext context) {
     return CircleAvatar(
       radius: 16,
-      backgroundColor: isCurrentUser ? const Color(0xFF5F2D82) : Colors.grey[400],
+      backgroundColor: isCurrentUser
+          ? const Color(0xFF5F2D82)
+          : AppColors.surface(context, Colors.grey[400]!),
       child: Icon(
         message.senderType == 'driver' ? Icons.directions_car : Icons.person,
         size: 16,
@@ -73,8 +79,8 @@ class ChatBubbleWidget extends StatelessWidget {
         vertical: ResponsiveUtils.spacing(context, 8),
       ),
       decoration: BoxDecoration(
-      color: _getBubbleColor(context),
-      borderRadius: BorderRadius.only(
+        color: _getBubbleColor(context),
+        borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(16),
           topRight: const Radius.circular(16),
           bottomLeft: Radius.circular(isCurrentUser ? 16 : 4),
@@ -127,11 +133,7 @@ class ChatBubbleWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.location_on,
-              color: _getTextColor(context),
-              size: 20,
-            ),
+            Icon(Icons.location_on, color: _getTextColor(context), size: 20),
             SizedBox(width: ResponsiveUtils.spacing(context, 8)),
             Flexible(
               child: Column(
@@ -167,11 +169,7 @@ class ChatBubbleWidget extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          Icons.info_outline,
-          color: _getTextColor(context),
-          size: 16,
-        ),
+        Icon(Icons.info_outline, color: _getTextColor(context), size: 16),
         SizedBox(width: ResponsiveUtils.spacing(context, 6)),
         Flexible(
           child: Text(
@@ -179,8 +177,8 @@ class ChatBubbleWidget extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 13),
-            fontStyle: FontStyle.italic,
-            color: _getTextColor(context),
+              fontStyle: FontStyle.italic,
+              color: _getTextColor(context),
             ),
           ),
         ),
@@ -191,7 +189,7 @@ class ChatBubbleWidget extends StatelessWidget {
   Widget _buildTimestamp(BuildContext context) {
     try {
       // Parse the string date from backend
-      final date = DateTime.parse(message.createdAt);
+      final date = DateTime.parse(message.createdAt).toLocal();
       return Text(
         DateFormat('HH:mm').format(date),
         style: TextStyle(
@@ -217,13 +215,17 @@ class ChatBubbleWidget extends StatelessWidget {
     if (message.messageType == 'system') {
       return AppColors.surface(context, Colors.grey[200]!);
     }
-    return isCurrentUser ? const Color(0xFF5F2D82) : AppColors.surface(context, Colors.grey[200]!);
+    return isCurrentUser
+        ? const Color(0xFF5F2D82)
+        : AppColors.surface(context, Colors.grey[200]!);
   }
 
   Color _getTextColor(BuildContext context) {
     if (message.messageType == 'system') {
       return AppColors.foreground(context, Colors.grey[700]!);
     }
-    return isCurrentUser ? Colors.white : AppColors.foreground(context, Colors.black87);
+    return isCurrentUser
+        ? Colors.white
+        : AppColors.foreground(context, Colors.black87);
   }
 }

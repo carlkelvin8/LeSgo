@@ -23,10 +23,11 @@
             text-align: center;
             margin-bottom: 30px;
         }
-        .logo h1 {
-            color: #5F2D82;
-            font-size: 32px;
-            margin: 0;
+        .logo img {
+            width: 220px;
+            max-width: 100%;
+            height: auto;
+            border: 0;
         }
         .otp-box {
             background-color: #f8f9fa;
@@ -63,7 +64,7 @@
 <body>
     <div class="container">
         <div class="logo">
-            <h1>🚀 LeSGo</h1>
+            <img src="{{ secure_url('images/lesgo-logo.png') }}" alt="LeSGo Courier Service" width="220">
         </div>
         
         <h2>Password Reset Request</h2>

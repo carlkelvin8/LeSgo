@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/routers/app_router.dart';
 import '../../core/constants/routers/auth/auth_routes.dart';
 import '../../core/constants/routers/main/main_routes.dart';
+import '../../core/utils/dark_aware_colors.dart';
 import '../../core/utils/snackbar_utils.dart';
 import '../../domain/entities/auth/registration_fee_status.dart';
 import '../provider/auth/auth_provider.dart';
@@ -141,9 +142,9 @@ class _RegistrationFeeScreenState extends ConsumerState<RegistrationFeeScreen>
     final status = feeState.status;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.surf(Colors.white),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
         leading: IconButton(
           onPressed: () => _logout(),
@@ -184,7 +185,7 @@ class _RegistrationFeeScreenState extends ConsumerState<RegistrationFeeScreen>
               Text(
                 feeState.error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black54),
+                style: TextStyle(color: context.sub(Colors.black54)),
               ),
             ],
             const SizedBox(height: 24),
@@ -311,7 +312,7 @@ class _RegistrationFeeScreenState extends ConsumerState<RegistrationFeeScreen>
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15, color: Colors.black54),
+            style: TextStyle(fontSize: 15, color: context.sub(Colors.black54)),
           ),
           const SizedBox(height: 24),
           if (status.amountValue > 0)
@@ -325,9 +326,9 @@ class _RegistrationFeeScreenState extends ConsumerState<RegistrationFeeScreen>
               ),
               child: Column(
                 children: [
-                  const Text(
+                  Text(
                     'Registration Fee',
-                    style: TextStyle(fontSize: 13, color: Colors.black54),
+                    style: TextStyle(fontSize: 13, color: context.sub(Colors.black54)),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -344,7 +345,7 @@ class _RegistrationFeeScreenState extends ConsumerState<RegistrationFeeScreen>
                         ? 'Annual partner registration'
                         : 'One-time rider registration',
                     style:
-                        const TextStyle(fontSize: 12, color: Colors.black45),
+                        TextStyle(fontSize: 12, color: context.sub(Colors.black45)),
                   ),
                 ],
               ),
@@ -400,7 +401,7 @@ class _RegistrationFeeScreenState extends ConsumerState<RegistrationFeeScreen>
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15, color: Colors.black54),
+            style: TextStyle(fontSize: 15, color: context.sub(Colors.black54)),
           ),
           const SizedBox(height: 28),
           ...actions.map(

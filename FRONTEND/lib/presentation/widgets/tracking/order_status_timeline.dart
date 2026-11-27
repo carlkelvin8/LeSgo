@@ -6,10 +6,8 @@ import 'package:intl/intl.dart';
 class OrderStatusTimeline extends StatelessWidget {
   final TrackingDto tracking;
 
-  const OrderStatusTimeline({
-    Key? key,
-    required this.tracking,
-  }) : super(key: key);
+  const OrderStatusTimeline({Key? key, required this.tracking})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,17 +18,13 @@ class OrderStatusTimeline extends StatelessWidget {
       children: [
         const Text(
           'Order Timeline',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        ...events.map((event) => _buildTimelineItem(
-              context,
-              event,
-              isLast: event == events.last,
-            )),
+        ...events.map(
+          (event) =>
+              _buildTimelineItem(context, event, isLast: event == events.last),
+        ),
       ],
     );
   }
@@ -39,70 +33,82 @@ class OrderStatusTimeline extends StatelessWidget {
     final events = <TimelineEvent>[];
 
     // Order created
-    events.add(TimelineEvent(
-      title: 'Order Placed',
-      subtitle: 'Your order has been placed',
-      time: tracking.createdAt,
-      icon: Icons.shopping_cart,
-      isCompleted: true,
-    ));
+    events.add(
+      TimelineEvent(
+        title: 'Order Placed',
+        subtitle: 'Your order has been placed',
+        time: tracking.createdAt,
+        icon: Icons.shopping_cart,
+        isCompleted: true,
+      ),
+    );
 
     // Driver assigned
     if (tracking.driver != null) {
-      events.add(TimelineEvent(
-        title: 'Driver Assigned',
-        subtitle: 'Driver ${tracking.driver!.name} accepted your order',
-        time: tracking.acceptedAt,
-        icon: Icons.person,
-        isCompleted: tracking.acceptedAt != null,
-      ));
+      events.add(
+        TimelineEvent(
+          title: 'Driver Assigned',
+          subtitle: 'Driver ${tracking.driver!.name} accepted your order',
+          time: tracking.acceptedAt,
+          icon: Icons.person,
+          isCompleted: tracking.acceptedAt != null,
+        ),
+      );
     }
 
     // Picked up
     if (tracking.status == 'picked_up' ||
         tracking.status == 'in_transit' ||
         tracking.status == 'completed') {
-      events.add(TimelineEvent(
-        title: 'Order Picked Up',
-        subtitle: 'Driver picked up your order',
-        time: tracking.pickedUpAt,
-        icon: Icons.shopping_bag,
-        isCompleted: tracking.pickedUpAt != null,
-      ));
+      events.add(
+        TimelineEvent(
+          title: 'Order Picked Up',
+          subtitle: 'Driver picked up your order',
+          time: tracking.pickedUpAt,
+          icon: Icons.shopping_bag,
+          isCompleted: tracking.pickedUpAt != null,
+        ),
+      );
     }
 
     // In transit
     if (tracking.status == 'in_transit' || tracking.status == 'completed') {
-      events.add(TimelineEvent(
-        title: 'On The Way',
-        subtitle: 'Driver is heading to your location',
-        time: tracking.inTransitAt,
-        icon: Icons.local_shipping,
-        isCompleted: tracking.inTransitAt != null,
-      ));
+      events.add(
+        TimelineEvent(
+          title: 'On The Way',
+          subtitle: 'Driver is heading to your location',
+          time: tracking.inTransitAt,
+          icon: Icons.local_shipping,
+          isCompleted: tracking.inTransitAt != null,
+        ),
+      );
     }
 
     // Completed
     if (tracking.status == 'completed') {
-      events.add(TimelineEvent(
-        title: 'Delivered',
-        subtitle: 'Order has been delivered',
-        time: tracking.completedAt,
-        icon: Icons.done_all,
-        isCompleted: tracking.completedAt != null,
-      ));
+      events.add(
+        TimelineEvent(
+          title: 'Delivered',
+          subtitle: 'Order has been delivered',
+          time: tracking.completedAt,
+          icon: Icons.done_all,
+          isCompleted: tracking.completedAt != null,
+        ),
+      );
     }
 
     // Cancelled
     if (tracking.status == 'cancelled') {
-      events.add(TimelineEvent(
-        title: 'Cancelled',
-        subtitle: 'Order was cancelled',
-        time: tracking.cancelledAt,
-        icon: Icons.cancel,
-        isCompleted: true,
-        isError: true,
-      ));
+      events.add(
+        TimelineEvent(
+          title: 'Cancelled',
+          subtitle: 'Order was cancelled',
+          time: tracking.cancelledAt,
+          icon: Icons.cancel,
+          isCompleted: true,
+          isError: true,
+        ),
+      );
     }
 
     return events;
@@ -116,8 +122,8 @@ class OrderStatusTimeline extends StatelessWidget {
     final color = event.isError
         ? Colors.red
         : event.isCompleted
-            ? Colors.green
-            : Colors.grey;
+        ? Colors.green
+        : Colors.grey;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,22 +139,17 @@ class OrderStatusTimeline extends StatelessWidget {
                     ? color.withValues(alpha: 0.1)
                     : AppColors.foreground(context, Colors.grey[100]!),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: color,
-                  width: 2,
-                ),
+                border: Border.all(color: color, width: 2),
               ),
-              child: Icon(
-                event.icon,
-                size: 20,
-                color: color,
-              ),
+              child: Icon(event.icon, size: 20, color: color),
             ),
             if (!isLast)
               Container(
                 width: 2,
                 height: 40,
-                color: event.isCompleted ? color : AppColors.foreground(context, Colors.grey[300]!),
+                color: event.isCompleted
+                    ? color
+                    : AppColors.foreground(context, Colors.grey[300]!),
               ),
           ],
         ),
@@ -166,7 +167,9 @@ class OrderStatusTimeline extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: event.isCompleted ? AppColors.foreground(context, Colors.black) : AppColors.foreground(context, Colors.grey),
+                    color: event.isCompleted
+                        ? AppColors.foreground(context, Colors.black)
+                        : AppColors.foreground(context, Colors.grey),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -198,7 +201,7 @@ class OrderStatusTimeline extends StatelessWidget {
 
   String _formatTime(String timestamp) {
     try {
-      final dateTime = DateTime.parse(timestamp);
+      final dateTime = DateTime.parse(timestamp).toLocal();
       final now = DateTime.now();
       final difference = now.difference(dateTime);
 
@@ -234,4 +237,3 @@ class TimelineEvent {
     this.isError = false,
   });
 }
-

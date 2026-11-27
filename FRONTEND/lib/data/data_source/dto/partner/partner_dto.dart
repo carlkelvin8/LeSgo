@@ -73,6 +73,12 @@ class PartnerDto {
   final Map<String, dynamic>? openingHours;
   final double? latitude;
   final double? longitude;
+  /// Set on per-branch store cards (`expand_branches`): the branch this card
+  /// represents. The card shares the store `id`, menu and orders.
+  @JsonKey(name: 'branch_id', fromJson: _parseIntNullable)
+  final int? branchId;
+  /// Branch street address on per-branch cards.
+  final String? address;
 
   PartnerDto({
     required this.id,
@@ -94,6 +100,8 @@ class PartnerDto {
     this.openingHours,
     this.latitude,
     this.longitude,
+    this.branchId,
+    this.address,
   });
 
   factory PartnerDto.fromJson(Map<String, dynamic> json) =>

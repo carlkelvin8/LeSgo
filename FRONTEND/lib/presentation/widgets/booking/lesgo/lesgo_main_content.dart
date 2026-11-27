@@ -7,6 +7,8 @@ import '../../../provider/main/booking/lesgo_location_provider.dart';
 import '../../../provider/main/booking/lesgo_provider.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/voucher_service_utils.dart';
+import '../../../../core/utils/ph_address.dart';
+import '../../location/address_details_sheet.dart';
 import '../../widgets.dart';
 import '../leseat/checkout/voucher_bottom_sheet.dart';
 
@@ -45,7 +47,14 @@ class LesgoMainContent extends ConsumerWidget {
     final paymentMethod = ref.watch(
       lesgoProvider.select((s) => s.paymentMethod),
     );
-    final isBooking = ref.watch(lesgoProvider.select((s) => s.isBooking));
+    // Book is disabled (spinner) while booking, or while the route/fare is
+    // still being calculated.
+    final isBooking = ref.watch(
+      lesgoProvider.select((s) => s.isBooking || s.isLoadingFare),
+    );
+    final isRouteLoading = ref.watch(
+      lesgoLocationProvider.select((s) => s.isLoadingRoute),
+    );
     final voucherCode = ref.watch(lesgoProvider.select((s) => s.voucherCode));
     final canApplyVoucher = ref.watch(
       lesgoLocationProvider.select(
@@ -119,7 +128,7 @@ class LesgoMainContent extends ConsumerWidget {
                 onChangeCurrent: () => notifier.openPickupSelection(),
                 onChangeDestination: () => notifier.openDestinationSelection(),
                 paymentMethod: paymentMethod,
-                isBooking: isBooking,
+                isBooking: isBooking || isRouteLoading,
                 onPaymentChanged: (val) {
                   if (val != null) {
                     notifier.updatePaymentMethod(val);
@@ -166,10 +175,16 @@ class LesgoMainContent extends ConsumerWidget {
                   child: InkWell(
                     onTap: () => notifier.toggleFullscreen(),
                     borderRadius: BorderRadius.circular(8),
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 40,
                       height: 40,
-                      child: Icon(Icons.close, color: Color(0xFF5F2D82)),
+                      child: Icon(
+                        Icons.close,
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -255,7 +270,29 @@ class LesgoMainContent extends ConsumerWidget {
             bottom: 32,
             child: PrimaryButton(
               text: 'Confirm location',
-              onPressed: () => notifier.confirmSelection(),
+              onPressed: () async {
+                // Pinned spots are often only city-level, so ask the customer
+                // to confirm and complete the exact address first.
+                final loc = ref.read(lesgoLocationProvider);
+                final current = selectingDestination
+                    ? loc.destinationAddress
+                    : loc.pickupAddress;
+                final result = await AddressDetailsSheet.show(
+                  context,
+                  initial: current?.asPh ?? const PhAddress(),
+                  title: selectingDestination
+                      ? 'Confirm drop-off address'
+                      : 'Confirm pick-up address',
+                );
+                if (result == null || !context.mounted) return;
+                ref
+                    .read(lesgoLocationProvider.notifier)
+                    .setAddressDetails(
+                      destination: selectingDestination,
+                      details: result,
+                    );
+                notifier.confirmSelection();
+              },
             ),
           ),
       ],

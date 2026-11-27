@@ -62,7 +62,7 @@ class _LesrideScreenState extends ConsumerState<LesrideScreen> {
       backgroundColor: AppColors.surface(context, Colors.white),
       appBar: lesrideState.isFullscreen
           ? null
-          : const BookingServiceHeader(title: 'LesRide'),
+          : const BookingServiceHeader(title: 'LesRide', orderStyle: true),
       body: SafeArea(
         child: LesrideMainContent(
           sheetController: _sheetController,

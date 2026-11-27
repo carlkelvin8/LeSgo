@@ -21,11 +21,12 @@ class PopularItemsSection extends StatelessWidget {
     }
 
     return GridView.builder(
+      padding: const EdgeInsets.only(top: 12),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.62,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),

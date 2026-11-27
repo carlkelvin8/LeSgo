@@ -152,7 +152,7 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
       AppLogger.debug('Fetching rider history from API');
       
       // Fetch completed, cancelled, and active assigned orders for history
-      final ordersRaw = await ApiService.getOrders(perPage: 100);
+      final ordersRaw = await ApiService.getOrders(perPage: 100, mine: true);
       AppLogger.debug('Received ${ordersRaw.length} orders from API');
 
       final rider = _ref.read(riderAuthProvider).user;
@@ -254,9 +254,16 @@ class RiderHistoryNotifier extends StateNotifier<RiderHistoryState> {
         totalBookings: bookings.length,
         performanceStars: stars,
         isLoading: false,
+        clearError: true,
       );
     } catch (e) {
       AppLogger.error('Error loading history', e);
+      // A failed background refresh must not replace history that is already
+      // on screen with the error state.
+      if (silent && state.allBookings.isNotEmpty) {
+        state = state.copyWith(isLoading: false);
+        return;
+      }
       state = state.copyWith(
         isLoading: false,
         error: ApiService.extractError(e),

@@ -2,7 +2,7 @@ name: lezgo_rider
 description: "LezGo Rider — driver and merchant app."
 publish_to: 'none'
 
-version: 1.1.7+18
+version: 1.1.8+44
 
 environment:
   sdk: ^3.10.3
@@ -24,6 +24,7 @@ dependencies:
 
   # Image Picker
   image_picker: ^1.0.7
+  camera: ^0.11.0+1
   cross_file: ^0.3.4+2
 
   # File Picker
@@ -79,6 +80,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
 
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.1
@@ -107,6 +110,7 @@ flutter:
     - assets/images/navbar/merchant/
     - assets/sounds/
     - assets/images/booking/
+    - assets/images/markers/
 
   fonts:
     - family: TT Fors

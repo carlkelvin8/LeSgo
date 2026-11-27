@@ -31,10 +31,10 @@ class _HomeHeaderSectionState extends ConsumerState<HomeHeaderSection> {
   @override
   Widget build(BuildContext context) {
     final addressState = ref.watch(addressProvider);
-    
+
     // Get default address using the provider's built-in getter
     final defaultAddress = addressState.defaultAddress;
-    
+
     // Format location text
     String locationText = 'Set your location';
     if (defaultAddress != null) {
@@ -52,10 +52,7 @@ class _HomeHeaderSectionState extends ConsumerState<HomeHeaderSection> {
         Scaffold.of(context).openDrawer();
       },
       onLocationTap: () async {
-        final updated = await AppRouter.push(
-          context,
-          MainRoutes.setLocation,
-        );
+        final updated = await AppRouter.push(context, MainRoutes.setLocation);
         if (updated == true && mounted) {
           final authState = ref.read(authProvider);
           final userId = int.tryParse(authState.user?.id ?? '0') ?? 0;
@@ -67,6 +64,7 @@ class _HomeHeaderSectionState extends ConsumerState<HomeHeaderSection> {
       onSupportTap: () {
         AppRouter.push(context, MainRoutes.customerServiceChat);
       },
+      onInboxTap: () => AppRouter.push(context, MainRoutes.inbox),
     );
   }
 }

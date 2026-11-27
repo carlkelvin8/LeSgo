@@ -1,3 +1,5 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
@@ -30,29 +32,14 @@ class RestaurantOrderSection extends StatelessWidget {
       margin: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.spacing(context, 16),
       ),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: OrderDesign.receipt(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: ResponsiveUtils.spacing(context, 34),
-                height: ResponsiveUtils.spacing(context, 34),
-                decoration: BoxDecoration(
-                  color: AppColors.surface(context, Color(0xFFEEDDFD)),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.storefront,
-                  color: AppColors.accent(context, Color(0xFF5F2D82)),
-                  size: ResponsiveUtils.fontSize(context, 18),
-                ),
-              ),
+              const OrderIcon(Icons.storefront_outlined, size: 38),
               SizedBox(width: ResponsiveUtils.spacing(context, 10)),
               Expanded(
                 child: Column(
@@ -80,7 +67,7 @@ class RestaurantOrderSection extends StatelessWidget {
                 ),
               ),
               Text(
-                'PHP ${subtotal.toStringAsFixed(2)}',
+                Money.format(subtotal),
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: ResponsiveUtils.fontSize(context, 13),
@@ -94,7 +81,10 @@ class RestaurantOrderSection extends StatelessWidget {
             padding: EdgeInsets.symmetric(
               vertical: ResponsiveUtils.spacing(context, 12),
             ),
-            child: Divider(height: 1, color: AppColors.border(context, Colors.grey[200]!)),
+            child: Divider(
+              height: 1,
+              color: AppColors.border(context, Colors.grey[200]!),
+            ),
           ),
 
           // Order Items

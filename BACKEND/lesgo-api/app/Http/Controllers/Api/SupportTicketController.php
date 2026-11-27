@@ -62,10 +62,15 @@ class SupportTicketController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Older app builds send "general"; the column only accepts the enum values.
+        if ($request->input('category') === 'general') {
+            $request->merge(['category' => 'general_inquiry']);
+        }
+
         $validated = $request->validate([
             'subject' => 'required|string|max:255',
             'description' => 'required|string|max:5000',
-            'category' => 'nullable|string|max:100',
+            'category' => 'nullable|string|in:order_issue,payment_issue,driver_complaint,app_bug,feature_request,account_issue,refund_request,general_inquiry,other',
             'priority' => 'nullable|in:low,medium,high,urgent',
             'order_id' => 'nullable|integer|exists:orders,id',
             'attachments' => 'nullable|array',
@@ -96,6 +101,7 @@ class SupportTicketController extends Controller
         $validated['user_id'] = $user->id;
         $validated['priority'] = $validated['priority'] ?? 'medium';
         $validated['status'] = 'open';
+        $validated['category'] = $validated['category'] ?? 'general_inquiry';
 
         try {
             $ticket = SupportTicket::create($validated);
@@ -117,7 +123,14 @@ class SupportTicketController extends Controller
 
             return $this->created($ticket, 'Support ticket created successfully');
         } catch (\Exception $e) {
-            // If table doesn't exist, return mock response
+            \Log::error('Support ticket creation failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+
+            // Only a missing table gets the legacy mock response. Any other failure
+            // used to be reported as success, silently dropping the user's message.
+            if (\Illuminate\Support\Facades\Schema::hasTable('support_tickets')) {
+                return $this->error('Could not create the support ticket. Please try again.', 500);
+            }
+
             return $this->success([
                 'id' => 0,
                 'ticket_number' => 'TKT-2026-000001',

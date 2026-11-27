@@ -1,6 +1,7 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 
 import '../../../../../domain/entities/auth/merchant/merchant_documents.dart';
 import '../../../../../domain/entities/auth/merchant/merchant_registration_info.dart';
@@ -162,43 +163,33 @@ class MerchantRegisterInfoNotifier
     state = state.copyWith(info: state.info.copyWith(confirmPassword: value));
   }
 
-  Future<void> uploadSelfie() async {
+  Future<void> uploadSelfie(Future<XFile?> Function() capture) async {
     state = state.copyWith(isSelfieLoading: true, clearError: true);
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.front,
-        imageQuality: 85,
-        maxWidth: 1200,
-      );
+      final image = await capture();
       if (image != null) {
         state = state.copyWith(
           documents: state.documents.copyWith(selfiePath: image.path),
         );
       }
     } catch (e) {
-      state = state.copyWith(errorMessage: 'Failed to capture selfie: $e');
+      state = state.copyWith(errorMessage: 'Failed to capture selfie: ${ApiErrorMapper.message(e)}');
     } finally {
       state = state.copyWith(isSelfieLoading: false);
     }
   }
 
-  Future<void> uploadValidId() async {
+  Future<void> uploadValidId(Future<XFile?> Function() capture) async {
     state = state.copyWith(isValidIdLoading: true, clearError: true);
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-      );
+      final image = await capture();
       if (image != null) {
         state = state.copyWith(
           documents: state.documents.copyWith(validIdPath: image.path),
         );
       }
     } catch (e) {
-      state = state.copyWith(errorMessage: 'Failed to upload valid ID: $e');
+      state = state.copyWith(errorMessage: 'Failed to upload valid ID: ${ApiErrorMapper.message(e)}');
     } finally {
       state = state.copyWith(isValidIdLoading: false);
     }
@@ -220,7 +211,7 @@ class MerchantRegisterInfoNotifier
       }
     } catch (e) {
       state = state.copyWith(
-        errorMessage: 'Failed to upload digital signature: $e',
+        errorMessage: 'Failed to upload digital signature: ${ApiErrorMapper.message(e)}',
       );
     } finally {
       state = state.copyWith(isSignatureLoading: false);
@@ -243,7 +234,7 @@ class MerchantRegisterInfoNotifier
       }
     } catch (e) {
       state = state.copyWith(
-        errorMessage: 'Failed to upload barangay permit: $e',
+        errorMessage: 'Failed to upload barangay permit: ${ApiErrorMapper.message(e)}',
       );
     } finally {
       state = state.copyWith(isBarangayPermitLoading: false);
@@ -266,7 +257,7 @@ class MerchantRegisterInfoNotifier
       }
     } catch (e) {
       state = state.copyWith(
-        errorMessage: 'Failed to upload mayor\'s permit: $e',
+        errorMessage: 'Failed to upload mayor\'s permit: ${ApiErrorMapper.message(e)}',
       );
     } finally {
       state = state.copyWith(isMayorsPermitLoading: false);
@@ -288,7 +279,7 @@ class MerchantRegisterInfoNotifier
         );
       }
     } catch (e) {
-      state = state.copyWith(errorMessage: 'Failed to upload DTI permit: $e');
+      state = state.copyWith(errorMessage: 'Failed to upload DTI permit: ${ApiErrorMapper.message(e)}');
     } finally {
       state = state.copyWith(isDtiPermitLoading: false);
     }

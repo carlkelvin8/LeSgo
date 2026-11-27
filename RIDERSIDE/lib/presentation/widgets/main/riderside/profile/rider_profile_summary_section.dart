@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../../core/constants/routers/app_router.dart';
-import '../../../../../core/constants/routers/main/main_routes.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../provider/main/riderside/rider_main_nav_provider.dart';
 import '../../../../provider/main/riderside/rider_mission_provider.dart';
@@ -75,19 +73,6 @@ class RiderProfileSummarySection extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
         ],
-
-        // Document verification quick link
-        MoreMenuGroup(
-          children: [
-            MoreMenuRow(
-              icon: Icons.verified_user_outlined,
-              title: t('document_verification'),
-              subtitle: t('rp_documents_hint'),
-              onTap: () =>
-                  AppRouter.push(context, MainRoutes.riderDocuments),
-            ),
-          ],
-        ),
       ],
     );
   }

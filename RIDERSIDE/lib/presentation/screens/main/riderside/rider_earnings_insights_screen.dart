@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/share_utils.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../provider/main/riderside/rider_earnings_insights_provider.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderEarningsInsightsScreen extends ConsumerWidget {
   const RiderEarningsInsightsScreen({super.key});
@@ -44,18 +46,18 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     final hp = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: context.bg(const Color(0xFFF8F9FA)),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF5F2D82)),
+        iconTheme: IconThemeData(color: context.acc(Color(0xFF5F2D82))),
         title: Text(
           AppLocalization.translate('earnings_insights', lang),
           style: TextStyle(
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF5F2D82),
+            color: context.acc(const Color(0xFF5F2D82)),
           ),
         ),
         centerTitle: true,
@@ -105,7 +107,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '$error',
+                      ApiErrorMapper.message(error),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.red.shade700),
                     ),
@@ -140,7 +142,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: 'TT Fors',
-                      color: Colors.grey.shade600,
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                 ),
@@ -215,9 +217,9 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,7 +271,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: 10,
-                              color: Colors.grey.shade600,
+                              color: context.sub(Colors.grey.shade600),
                             ),
                           ),
                         );
@@ -286,7 +288,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: 10,
-                            color: Colors.grey.shade600,
+                            color: context.sub(Colors.grey.shade600),
                           ),
                         );
                       },
@@ -304,7 +306,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                   drawVerticalLine: false,
                   horizontalInterval: ceiling / 4,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.shade200,
+                    color: context.brd(Colors.grey.shade200),
                     strokeWidth: 1,
                   ),
                 ),
@@ -402,9 +404,9 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,7 +431,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade600,
+                        color: context.sub(Colors.grey.shade600),
                       ),
                     ),
                     SizedBox(
@@ -441,7 +443,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 20),
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF5F2D82),
+                        color: context.acc(const Color(0xFF5F2D82)),
                       ),
                     ),
                   ],
@@ -456,7 +458,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 12),
-                        color: Colors.grey.shade600,
+                        color: context.sub(Colors.grey.shade600),
                       ),
                     ),
                     SizedBox(
@@ -496,7 +498,7 @@ class RiderEarningsInsightsScreen extends ConsumerWidget {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 12),
-              color: Colors.grey.shade600,
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
         ],
@@ -549,21 +551,21 @@ class _MetricCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: const Color(0xFF5F2D82), size: 22),
+          Icon(icon, color: context.acc(const Color(0xFF5F2D82)), size: 22),
           SizedBox(height: ResponsiveUtils.spacing(context, 8)),
           Text(
             label,
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 11),
-              color: Colors.grey.shade600,
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 4)),
@@ -573,7 +575,7 @@ class _MetricCard extends StatelessWidget {
               fontFamily: 'TT Fors',
               fontSize: ResponsiveUtils.fontSize(context, 16),
               fontWeight: FontWeight.w800,
-              color: Colors.black87,
+              color: context.txt(Colors.black87),
             ),
           ),
           if (unit.isNotEmpty)
@@ -582,7 +584,7 @@ class _MetricCard extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                color: Colors.grey.shade600,
+                color: context.sub(Colors.grey.shade600),
               ),
             ),
         ],

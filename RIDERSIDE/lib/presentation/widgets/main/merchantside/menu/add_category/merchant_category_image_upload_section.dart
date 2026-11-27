@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../../../common/menu_image_widget.dart';
+import '../../../../../../core/utils/app_localization.dart';
 
 class MerchantCategoryImageUploadSection extends StatefulWidget {
   final VoidCallback onTap;
@@ -116,14 +117,14 @@ class _MerchantCategoryImageUploadSectionState
                                   width: .8,
                                 ),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.edit_rounded,
                                       size: 13, color: Colors.white),
                                   SizedBox(width: 5),
                                   Text(
-                                    'Change',
+                                    context.tr('Change'),
                                     style: TextStyle(
                                       fontFamily: 'TT Fors',
                                       fontSize: 11,
@@ -184,7 +185,7 @@ class _EmptyState extends StatelessWidget {
         if (!compact) ...[
           const SizedBox(height: 4),
           Text(
-            'Recommended: 400×300px',
+            context.tr('Recommended: 400×300px'),
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 11,

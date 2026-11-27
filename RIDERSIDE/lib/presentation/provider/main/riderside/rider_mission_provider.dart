@@ -29,19 +29,39 @@ class RiderMission {
   });
 
   factory RiderMission.fromJson(Map<String, dynamic> json) {
+    final goal = _mInt(json['goal_target'], 1);
     return RiderMission(
-      id: json['id'] as int,
-      title: json['title'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      reward: json['reward'] as String? ?? '',
-      rewardAmount: (json['reward_amount'] as num?)?.toDouble() ?? 0.0,
-      currentProgress: json['current_progress'] as int? ?? 0,
-      goalTarget: json['goal_target'] as int? ?? 1,
-      progress: (json['progress'] as num?)?.toDouble() ?? 0.0,
-      isCompleted: json['is_completed'] as bool? ?? false,
-      rewardClaimed: json['reward_claimed'] as bool? ?? false,
+      id: _mInt(json['id'], 0),
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      reward: json['reward']?.toString() ?? '',
+      rewardAmount: _mDouble(json['reward_amount']),
+      currentProgress: _mInt(json['current_progress'], 0),
+      goalTarget: goal <= 0 ? 1 : goal,
+      progress: _mDouble(json['progress']),
+      isCompleted: _mBool(json['is_completed']),
+      rewardClaimed: _mBool(json['reward_claimed']),
     );
   }
+}
+
+int _mInt(dynamic v, int fallback) {
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v) ?? double.tryParse(v)?.toInt() ?? fallback;
+  return fallback;
+}
+
+double _mDouble(dynamic v) {
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v) ?? 0.0;
+  return 0.0;
+}
+
+bool _mBool(dynamic v) {
+  if (v is bool) return v;
+  if (v is num) return v != 0;
+  if (v is String) return v == '1' || v.toLowerCase() == 'true';
+  return false;
 }
 
 class RiderMissionState {
@@ -84,10 +104,12 @@ class RiderMissionNotifier extends StateNotifier<RiderMissionState> {
       AppLogger.debug('Fetching missions from API');
       
       final data = await ApiService.getDriverMissions();
-      final missionsData = data['missions'] as List<dynamic>? ?? [];
-      
+      final rawMissions = data['missions'];
+      final missionsData = rawMissions is List ? rawMissions : const [];
+
       final missions = missionsData
-          .map((m) => RiderMission.fromJson(m as Map<String, dynamic>))
+          .whereType<Map>()
+          .map((m) => RiderMission.fromJson(Map<String, dynamic>.from(m)))
           .toList();
 
       AppLogger.debug('Loaded ${missions.length} missions');

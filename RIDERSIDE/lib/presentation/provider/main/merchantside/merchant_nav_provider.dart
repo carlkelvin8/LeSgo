@@ -5,5 +5,6 @@ enum MerchantNavType { book, orders, profile, menu, lespay }
 
 /// Provider to manage the currently selected navigation index
 final merchantNavProvider = StateProvider<MerchantNavType>(
-  (ref) => MerchantNavType.book,
+  // Orders is what a merchant opens the app for.
+  (ref) => MerchantNavType.orders,
 );

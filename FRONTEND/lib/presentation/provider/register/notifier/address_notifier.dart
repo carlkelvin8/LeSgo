@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
+import '../../../../core/services/address_geocoder.dart';
 import 'register_state.dart';
 import '../../../../domain/entities/auth/register/address_request.dart';
 
@@ -172,40 +172,32 @@ mixin AddressNotifier on StateNotifier<RegisterState> {
       ),
     );
     try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        location.latitude,
-        location.longitude,
-      );
-
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
+      final ph = await AddressGeocoder(strict: true).reverse(location);
+      if (ph != null && !ph.isEmpty) {
         final currentAddress = state.data.address ?? Address();
-
-        final streetName = place.thoroughfare ?? place.street ?? '';
-        final houseNumber = place.subThoroughfare ?? '';
-
-        final province =
-            place.subAdministrativeArea ?? place.administrativeArea ?? '';
-        final city = place.locality ?? '';
-        final barangay = place.subLocality ?? '';
+        final houseNumber = [
+          ph.blockLot,
+          ph.houseNumber,
+        ].where((p) => p.isNotEmpty).join(' ');
 
         state = state.copyWith(
           data: state.data.copyWith(
             address: currentAddress.copyWith(
               houseNumber: houseNumber,
-              streetName: streetName,
-              barangay: barangay,
-              city: city,
-              municipality: city,
-              province: province,
-              zipCode: place.postalCode ?? '',
+              streetName: ph.street,
+              subdivision: ph.subdivision,
+              barangay: ph.barangay,
+              city: ph.city,
+              municipality: ph.city,
+              province: ph.province,
+              zipCode: ph.zip,
               latitude: location.latitude,
               longitude: location.longitude,
             ),
           ),
-          locationName: streetName.isNotEmpty
-              ? streetName
-              : (barangay.isNotEmpty ? barangay : 'Selected Location'),
+          locationName: ph.street.isNotEmpty
+              ? ph.street
+              : (ph.barangay.isNotEmpty ? ph.barangay : 'Selected Location'),
           isLoading: false,
         );
       }

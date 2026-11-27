@@ -1,3 +1,5 @@
+import 'package:camera/camera.dart';
+import '../../../widgets/register/registration_camera_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -14,6 +16,7 @@ import '../../../widgets/register/merchant/info/merchant_document_upload_list.da
 import '../../../widgets/register/merchant/info/merchant_info_form_fields.dart';
 import 'merchant_terms_screen.dart';
 import '../registration_terms_gate.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantRegisterScreen extends ConsumerStatefulWidget {
   const MerchantRegisterScreen({super.key});
@@ -257,8 +260,22 @@ class _MerchantRegisterScreenState
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
 
             MerchantDocumentUploadList(
-              onUploadSelfie: controller.uploadSelfie,
-              onUploadValidId: controller.uploadValidId,
+              onUploadSelfie: () => controller.uploadSelfie(
+                () => capturePhotoWithCamera(
+                  context,
+                  lensDirection: CameraLensDirection.front,
+                  title: 'Live selfie',
+                  helpText: 'Center your face and look directly at the camera.',
+                ),
+              ),
+              onUploadValidId: () => controller.uploadValidId(
+                () => capturePhotoWithCamera(
+                  context,
+                  lensDirection: CameraLensDirection.back,
+                  title: 'Valid ID',
+                  helpText: 'Keep all four corners visible and make sure the details are readable.',
+                ),
+              ),
               onUploadDigitalSignature: controller.uploadDigitalSignature,
               onUploadBarangayPermit: controller.uploadBarangayPermit,
               onUploadMayorsPermit: controller.uploadMayorsPermit,
@@ -287,7 +304,7 @@ class _MerchantRegisterScreenState
             ),
 
             SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-            const Center(
+            Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
@@ -296,7 +313,7 @@ class _MerchantRegisterScreenState
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: 12,
-                    color: Colors.grey,
+                    color: context.sub(Colors.grey),
                   ),
                 ),
               ),
@@ -408,7 +425,7 @@ class _OtpBottomSheetState extends State<_OtpBottomSheet> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 14,
-              color: Colors.grey[600],
+              color: context.sub(Colors.grey[600]!),
             ),
           ),
           if (widget.fallbackOtp != null && AppConfig.isDevMode) ...[

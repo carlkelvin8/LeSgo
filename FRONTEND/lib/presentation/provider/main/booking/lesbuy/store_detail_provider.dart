@@ -68,6 +68,22 @@ class StoreDetailState {
       0, (sum, item) => sum + (item.product.price * item.quantity));
 }
 
+/// Re-maps restored (cached) cart items onto the fresh menu so stale prices
+/// are replaced, and items that vanished or went out of stock are dropped.
+List<LesbuyCartItem> reconcileCartWithMenu(
+  List<LesbuyCartItem> restored,
+  List<Product> menu,
+) {
+  final byId = {for (final p in menu) p.id: p};
+  final out = <LesbuyCartItem>[];
+  for (final item in restored) {
+    final fresh = byId[item.product.id];
+    if (fresh == null || !fresh.inStock) continue;
+    out.add(item.copyWith(product: fresh));
+  }
+  return out;
+}
+
 class StoreDetailNotifier extends StateNotifier<StoreDetailState> {
   final PartnerRemoteDataSource _partnerDataSource = getIt<PartnerRemoteDataSource>();
 
@@ -166,7 +182,7 @@ class StoreDetailNotifier extends StateNotifier<StoreDetailState> {
         categoryNames: categoryNames,
         selectedCategoryId: 'popular',
         selectedCategoryName: 'Popular Items',
-        cartItems: restoredCart,
+        cartItems: reconcileCartWithMenu(restoredCart, allProducts),
         isLoading: false,
       );
       

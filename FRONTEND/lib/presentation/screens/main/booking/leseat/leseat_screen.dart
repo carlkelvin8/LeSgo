@@ -49,7 +49,7 @@ class _LeseatScreenState extends ConsumerState<LeseatScreen> {
         action: IconButton(
           icon: Icon(
             Icons.shopping_cart_outlined,
-            color: Color(0xFFA930D0),
+            color: AppColors.accent(context, const Color(0xFF5F2D82)),
             size: 28,
           ),
           onPressed: () async {

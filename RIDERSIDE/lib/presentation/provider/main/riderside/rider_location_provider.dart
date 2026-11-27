@@ -1,3 +1,4 @@
+import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -194,9 +195,12 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
 
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final position = await GeolocatorPlatform.instance.getCurrentPosition(
-        locationSettings: _buildLocationSettings(),
-      );
+      // Without a time limit a missing GPS fix (indoors, simulator without a
+      // location) never completes, which left the duty switch spinning on
+      // "Uploading..." forever and blocked going off duty.
+      final position = await GeolocatorPlatform.instance
+          .getCurrentPosition(locationSettings: _buildLocationSettings())
+          .timeout(const Duration(seconds: 15));
 
       state = state.copyWith(
         latitude: position.latitude,
@@ -209,7 +213,7 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to get location: $e',
+        error: 'Failed to get location: ${ApiErrorMapper.message(e)}',
       );
     }
   }
@@ -270,7 +274,7 @@ class RiderLocationNotifier extends StateNotifier<RiderLocationState> {
     } catch (e) {
       state = state.copyWith(
         isUpdating: false,
-        error: 'Failed to update location: $e',
+        error: 'Failed to update location: ${ApiErrorMapper.message(e)}',
       );
     }
   }

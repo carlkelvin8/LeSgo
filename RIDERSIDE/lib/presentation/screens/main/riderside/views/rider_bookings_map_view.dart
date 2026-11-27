@@ -1,10 +1,10 @@
-﻿import 'dart:async';
+﻿import '../../../../../core/utils/map_pins.dart';
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../../../provider/main/riderside/rider_orders_provider.dart';
 import '../../../../provider/main/riderside/rider_duty_provider.dart';
 import '../../../../provider/main/riderside/rider_location_provider.dart';
@@ -13,7 +13,6 @@ import '../../../../widgets/main/riderside/map/map_zoom_controls.dart';
 import '../../../../../core/config/secrets_config.dart';
 import '../../../../../core/utils/app_localization.dart';
 import '../../../../../core/utils/app_logger.dart';
-import '../../../../../core/utils/location_permission_utils.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../../core/utils/rider_booking_mapper.dart';
 import '../../../../../core/utils/rider_route_utils.dart';
@@ -21,6 +20,7 @@ import '../../../../../core/utils/rider_navigation_launcher.dart';
 import '../../../../../core/utils/offline_feedback_utils.dart';
 import '../rider_booking_detail_screen.dart';
 import '../../../../provider/main/riderside/rider_heatmap_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 /// Enhanced Bookings View with integrated Waze-style map and ongoing orders
 class RiderBookingsMapView extends ConsumerStatefulWidget {
@@ -45,7 +45,6 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   @override
   void initState() {
     super.initState();
-    _requestLocationPermission();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -107,7 +106,11 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
       final activeOrderId = ref.read(riderOrdersProvider).activeOrder?.id;
       final notifier = ref.read(riderLocationProvider.notifier);
       notifier.setActiveOrderId(activeOrderId);
-      if (!ref.read(riderLocationProvider).isTracking) {
+      // Location tracking is started by RiderDutyNotifier when the rider goes
+      // on duty. Avoid requesting GPS access just because the bookings map is
+      // visible while the rider is off duty.
+      if (ref.read(riderDutyProvider) &&
+          !ref.read(riderLocationProvider).isTracking) {
         notifier.startTracking(orderId: activeOrderId);
       }
     });
@@ -125,42 +128,12 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     super.dispose();
   }
 
-  Future<void> _requestLocationPermission() async {
-    final status = await Permission.locationWhenInUse.request();
-    if (status.isGranted) {
-      _getCurrentLocation();
-    } else if (mounted) {
-      await showLocationPermissionSnackBar(
-        context,
-        openSettings: permissionNeedsSettings(status),
-      );
-    }
-  }
-
   String _formatLastRefreshed(DateTime time) {
     final diff = DateTime.now().difference(time);
     if (diff.inSeconds < 10) return 'just now';
     if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     return '${diff.inHours}h ago';
-  }
-
-  Future<void> _getCurrentLocation() async {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      if (mounted) {
-        setState(() {
-          _currentPosition = position;
-        });
-        _updateMarkers();
-        _updateActiveOrderRoute();
-        _centerMapOnCurrentLocation();
-      }
-    } catch (e) {
-      AppLogger.error('Error getting location', e);
-    }
   }
 
   void _centerMapOnCurrentLocation() {
@@ -199,7 +172,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         Marker(
           markerId: const MarkerId('current_location'),
           position: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          icon: MapPins.icon(MapPinKind.rider),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(title: AppLocalization.translate('your_location', ref.read(appLanguageProvider))),
         ),
       );
@@ -214,10 +188,11 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         Marker(
           markerId: MarkerId('pickup_${order.id}'),
           position: LatLng(order.pickupLat, order.pickupLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: MapPins.icon(order.serviceId == 3 || order.serviceId == 4 ? MapPinKind.store : MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: AppLocalization.translate('pickup', ref.read(appLanguageProvider)),
-            snippet: order.pickupAddress,
+            snippet: order.pickupDisplay,
           ),
         ),
       );
@@ -227,7 +202,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         Marker(
           markerId: MarkerId('dropoff_${order.id}'),
           position: LatLng(order.dropoffLat, order.dropoffLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          icon: MapPins.icon(order.serviceId == 3 || order.serviceId == 4 ? MapPinKind.customer : MapPinKind.destination),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: order.serviceId == 3 || order.serviceId == 4
                 ? AppLocalization.translate('delivery_address', ref.read(appLanguageProvider))
@@ -245,7 +221,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
         Marker(
           markerId: MarkerId('available_${order.id}'),
           position: LatLng(order.pickupLat, order.pickupLng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+          icon: MapPins.icon(order.serviceId == 3 || order.serviceId == 4 ? MapPinKind.store : MapPinKind.customer),
+          anchor: MapPins.anchor,
           infoWindow: InfoWindow(
             title: 'Order #${order.id}',
             snippet: '₱${order.displayEarnings.toStringAsFixed(0)} • ${order.distanceKm.toStringAsFixed(1)}km',
@@ -395,8 +372,8 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
   }
 
   Widget _buildMapView() {
-    AppLogger.debug('ðŸ—ºï¸ Building map view with position: $_currentPosition');
-    AppLogger.debug('ðŸ”‘ Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+    AppLogger.debug('🗺️ Building map view with position: $_currentPosition');
+    AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
     
     return Container(
       child: GoogleMap(
@@ -438,18 +415,18 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                 _fitBounds();
               }
             });
-            AppLogger.debug('ðŸ—ºï¸ Bookings Map created and ready');
-            AppLogger.debug('ðŸ”‘ Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
-            AppLogger.debug('ðŸ“ Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+            AppLogger.debug('🗺️ Bookings Map created and ready');
+            AppLogger.debug('🔑 Google Maps: ${SecretsConfig.googleMapsConfigStatus}');
+            AppLogger.debug('📍 Initial position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
           }
         },
         
         onTap: (LatLng position) {
-          AppLogger.debug('ðŸ—ºï¸ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
+          AppLogger.debug('🗺️ Bookings Map tapped at: ${position.latitude}, ${position.longitude}');
         },
         
         onCameraMove: (CameraPosition position) {
-          AppLogger.debug('ðŸ“· Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
+          AppLogger.debug('📷 Bookings Map camera moved - Zoom: ${position.zoom.toStringAsFixed(2)}');
         },
       ),
     );
@@ -463,7 +440,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     if (!isOnDuty) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surf(Colors.white),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: ListView(
@@ -477,7 +454,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   Icon(
                     Icons.pause_circle_outline,
                     size: 48,
-                    color: Colors.grey.shade400,
+                    color: context.sub(Colors.grey.shade400),
                   ),
                   const SizedBox(height: 12),
                   Text(
@@ -486,7 +463,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       fontFamily: 'TT Fors',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
+                      color: context.sub(Colors.grey.shade700),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -496,7 +473,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: context.sub(Colors.grey.shade600),
                     ),
                   ),
                 ],
@@ -515,14 +492,14 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           width: 40,
           height: 4,
           decoration: BoxDecoration(
-            color: Colors.grey.shade300,
+            color: context.surf(Colors.grey.shade300),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
       ),
       if (ordersState.activeOrder != null) ...[
         _buildActiveOrderCard(ordersState.activeOrder!),
-        Divider(height: 1, color: Colors.grey.shade200),
+        Divider(height: 1, color: context.brd(Colors.grey.shade200)),
       ],
       Padding(
         padding: const EdgeInsets.all(16),
@@ -531,11 +508,11 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           children: [
             Text(
               AppLocalization.translate('available_orders', lang),
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF5F2D82),
+                color: context.acc(Color(0xFF5F2D82)),
               ),
             ),
             Row(
@@ -549,7 +526,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 10,
-                        color: Colors.grey.shade500,
+                        color: context.sub(Colors.grey.shade500),
                       ),
                     ),
                   ),
@@ -578,7 +555,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
             style: TextStyle(
               fontFamily: 'TT Fors',
               fontSize: 14,
-              color: Colors.grey.shade600,
+              color: context.sub(Colors.grey.shade600),
             ),
           ),
         ),
@@ -601,7 +578,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
@@ -683,7 +660,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     fontFamily: 'TT Fors',
                     fontSize: 16.0,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
                 const Spacer(),
@@ -720,15 +697,15 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                       Text(
-                        order.pickupAddress,
+                        order.pickupDisplay,
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 13.0,
-                          color: Colors.grey.shade800,
+                          color: context.txt(Colors.grey.shade800),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -737,7 +714,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.navigation, size: 20, color: const Color(0xFF5F2D82)),
+                  icon: Icon(Icons.navigation, size: 20, color: context.acc(const Color(0xFF5F2D82))),
                   onPressed: () => _openNavigation(
                     order.pickupLat,
                     order.pickupLng,
@@ -767,7 +744,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                       Text(
@@ -775,7 +752,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 13.0,
-                          color: Colors.grey.shade800,
+                          color: context.txt(Colors.grey.shade800),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -784,7 +761,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.navigation, size: 20, color: const Color(0xFF5F2D82)),
+                  icon: Icon(Icons.navigation, size: 20, color: context.acc(const Color(0xFF5F2D82))),
                   onPressed: () => _openNavigation(
                     order.dropoffLat,
                     order.dropoffLng,
@@ -837,9 +814,9 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
     return Container(
       padding: EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surf(Colors.white),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: context.brd(Colors.grey.shade200)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -868,7 +845,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     fontFamily: 'TT Fors',
                     fontSize: 10.0,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF5F2D82),
+                    color: context.acc(const Color(0xFF5F2D82)),
                   ),
                 ),
               ),
@@ -879,7 +856,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   fontFamily: 'TT Fors',
                   fontSize: 14.0,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
+                  color: context.txt(Colors.grey.shade800),
                 ),
               ),
               const Spacer(),
@@ -889,7 +866,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                   fontFamily: 'TT Fors',
                   fontSize: 16.0,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF5F2D82),
+                  color: context.acc(const Color(0xFF5F2D82)),
                 ),
               ),
             ],
@@ -899,14 +876,14 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
           // Distance, payment method, and customer name
           Row(
             children: [
-              Icon(Icons.straighten, size: 14, color: Colors.grey.shade600),
+              Icon(Icons.straighten, size: 14, color: context.sub(Colors.grey.shade600)),
               SizedBox(width: 4.0),
               Text(
                 '${order.distanceKm.toStringAsFixed(1)} km',
                 style: TextStyle(
                   fontFamily: 'TT Fors',
                   fontSize: 12.0,
-                  color: Colors.grey.shade600,
+                  color: context.sub(Colors.grey.shade600),
                 ),
               ),
               SizedBox(width: 12.0),
@@ -937,7 +914,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
               ),
               if (order.dropoffContactName.isNotEmpty) ...[
                 SizedBox(width: 12.0),
-                Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                Icon(Icons.person_outline, size: 14, color: context.sub(Colors.grey.shade600)),
                 SizedBox(width: 4.0),
                 Expanded(
                   child: Text(
@@ -945,7 +922,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: 12.0,
-                      color: Colors.grey.shade600,
+                      color: context.sub(Colors.grey.shade600),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -971,15 +948,15 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                     Text(
-                      order.pickupAddress,
+                      order.pickupDisplay,
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12.0,
-                        color: Colors.grey.shade700,
+                        color: context.sub(Colors.grey.shade700),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1006,7 +983,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                         style: TextStyle(
                           fontFamily: 'TT Fors',
                           fontSize: 10.0,
-                          color: Colors.grey.shade500,
+                          color: context.sub(Colors.grey.shade500),
                         ),
                       ),
                     Text(
@@ -1014,7 +991,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: 12.0,
-                        color: Colors.grey.shade700,
+                        color: context.sub(Colors.grey.shade700),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1120,7 +1097,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
@@ -1149,9 +1126,9 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                                   ),
                                 ),
                               )
-                            : const Icon(
+                            : Icon(
                                 Icons.refresh,
-                                color: Color(0xFF5F2D82),
+                                color: context.acc(Color(0xFF5F2D82)),
                                 size: 24,
                               ),
                       ),
@@ -1162,7 +1139,7 @@ class _RiderBookingsMapViewState extends ConsumerState<RiderBookingsMapView> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surf(Colors.white),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(

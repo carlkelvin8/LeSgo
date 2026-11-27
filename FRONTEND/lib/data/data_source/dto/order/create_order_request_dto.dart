@@ -8,6 +8,8 @@ class CreateOrderRequestDto {
   final int serviceId;
   @JsonKey(name: 'partner_id')
   final int? partnerId;
+  @JsonKey(name: 'partner_branch_id', includeIfNull: false)
+  final int? partnerBranchId;
   @JsonKey(name: 'estimated_distance_m')
   final int estimatedDistanceM;
   final OrderAddressDto pickup;
@@ -29,10 +31,15 @@ class CreateOrderRequestDto {
   final double? discountAmount;
   @JsonKey(name: 'scheduled_delivery_time')
   final String? scheduledDeliveryTime;
+  @JsonKey(name: 'item_description', includeIfNull: false)
+  final String? itemDescription;
+  @JsonKey(name: 'estimated_weight_kg', includeIfNull: false)
+  final double? estimatedWeightKg;
 
   CreateOrderRequestDto({
     required this.serviceId,
     this.partnerId,
+    this.partnerBranchId,
     required this.estimatedDistanceM,
     required this.pickup,
     required this.dropoff,
@@ -45,6 +52,8 @@ class CreateOrderRequestDto {
     this.voucherCode,
     this.discountAmount,
     this.scheduledDeliveryTime,
+    this.itemDescription,
+    this.estimatedWeightKg,
   });
 
   factory CreateOrderRequestDto.fromJson(Map<String, dynamic> json) =>

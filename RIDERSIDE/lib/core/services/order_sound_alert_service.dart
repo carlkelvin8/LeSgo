@@ -27,10 +27,10 @@ class OrderSoundAlertService {
 
   // Available sounds
   static const Map<String, String> availableSounds = {
-    'bell': 'assets/sounds/order_bell.mp3',
-    'chime': 'assets/sounds/order_chime.mp3',
-    'ping': 'assets/sounds/order_ping.mp3',
-    'notification': 'assets/sounds/order_notification.mp3',
+    'bell': 'assets/sounds/order_bell.wav',
+    'chime': 'assets/sounds/order_chime.wav',
+    'ping': 'assets/sounds/order_ping.wav',
+    'notification': 'assets/sounds/order_notification.wav',
   };
 
   // Getters

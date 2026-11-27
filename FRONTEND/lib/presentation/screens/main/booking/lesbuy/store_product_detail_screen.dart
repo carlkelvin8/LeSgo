@@ -1,3 +1,5 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +22,8 @@ class StoreProductDetailScreen extends ConsumerStatefulWidget {
       _StoreProductDetailScreenState();
 }
 
-class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScreen> {
+class _StoreProductDetailScreenState
+    extends ConsumerState<StoreProductDetailScreen> {
   // Use a unique provider family instance if needed, or better yet, auto-dispose the provider
   // Since storeProductDetailProvider is family, we use the product instance.
 
@@ -30,7 +33,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
 
     // Add item to cart with selected quantity
     for (int i = 0; i < detailState.quantity; i++) {
-        storeNotifier.addToCart(widget.product);
+      storeNotifier.addToCart(widget.product);
     }
 
     // Show success message
@@ -51,7 +54,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
     );
 
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Colors.white),
+      backgroundColor: OrderDesign.canvas(context),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -59,7 +62,10 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
         leading: Container(
           margin: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
           decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.white).withValues(alpha: 0.9),
+            color: AppColors.surface(
+              context,
+              Colors.white,
+            ).withValues(alpha: 0.9),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -70,7 +76,10 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
             ],
           ),
           child: IconButton(
-            icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black)),
+            icon: Icon(
+              Icons.arrow_back,
+              color: AppColors.foreground(context, Colors.black),
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -87,25 +96,15 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
           Expanded(
             flex: 4,
             child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface(context, Colors.grey[50]!),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(
-                    ResponsiveUtils.spacing(context, 24),
-                  ),
-                  topRight: Radius.circular(
-                    ResponsiveUtils.spacing(context, 24),
-                  ),
-                ),
-              ),
+              decoration: OrderDesign.sheet(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Fixed header - Title, Price
                   Padding(
                     padding: EdgeInsets.only(
-                      left: ResponsiveUtils.horizontalPadding(context),
-                      right: ResponsiveUtils.horizontalPadding(context),
+                      left: ResponsiveUtils.screenPadding(context),
+                      right: ResponsiveUtils.screenPadding(context),
                       top: ResponsiveUtils.spacing(context, 20),
                       bottom: ResponsiveUtils.spacing(context, 8),
                     ),
@@ -119,14 +118,17 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 24),
                             fontWeight: FontWeight.w700,
-                            color: AppColors.foreground(context, Colors.black87),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.black87,
+                            ),
                             height: 1.2,
                           ),
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                         // Price
                         Text(
-                          '₱${widget.product.price.toStringAsFixed(2)}',
+                          Money.format(widget.product.price),
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 20),
@@ -142,7 +144,7 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
                   Expanded(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.horizontalPadding(context),
+                        horizontal: ResponsiveUtils.screenPadding(context),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,12 +156,17 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
-                              color: AppColors.foreground(context, Colors.grey[700]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[700]!,
+                              ),
                               height: 1.5,
                               letterSpacing: 0.2,
                             ),
                           ),
-                          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 20),
+                          ),
                         ],
                       ),
                     ),
@@ -168,19 +175,10 @@ class _StoreProductDetailScreenState extends ConsumerState<StoreProductDetailScr
                   // Fixed bottom section - Quantity Selector and Add to Order Button
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: ResponsiveUtils.horizontalPadding(context),
+                      horizontal: ResponsiveUtils.screenPadding(context),
                       vertical: ResponsiveUtils.spacing(context, 16),
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface(context, Colors.grey[50]!),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
-                    ),
+                    decoration: OrderDesign.dock(context),
                     child: SafeArea(
                       top: false,
                       child: Row(

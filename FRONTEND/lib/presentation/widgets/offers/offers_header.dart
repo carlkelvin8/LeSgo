@@ -58,7 +58,10 @@ class OffersHeader extends StatelessWidget {
               color: AppColors.surface(context, Color(0xFFEEDDFD)),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.local_offer, color: Color(0xFF5F2D82)),
+            child: Icon(
+              Icons.local_offer,
+              color: AppColors.accent(context, const Color(0xFF5F2D82)),
+            ),
           ),
         ],
       ),

@@ -1,6 +1,8 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
+/// A quiet text link used in the footer of the side menu.
 class DrawerTextButton extends StatelessWidget {
   final String title;
   final VoidCallback onTap;
@@ -11,18 +13,20 @@ class DrawerTextButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: ResponsiveUtils.spacing(context, 24),
+          horizontal: ResponsiveUtils.spacing(context, 16),
           vertical: ResponsiveUtils.spacing(context, 12),
         ),
         child: Text(
           title,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontFamily: 'TT Fors',
-            color: Colors.white,
-            fontSize: ResponsiveUtils.fontSize(context, 14),
-            fontWeight: FontWeight.w400,
+            color: AppColors.foreground(context, const Color(0xFF6E6277)),
+            fontSize: ResponsiveUtils.fontSize(context, 13),
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

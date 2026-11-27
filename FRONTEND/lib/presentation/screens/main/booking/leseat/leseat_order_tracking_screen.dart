@@ -1,3 +1,6 @@
+import '../../../../../core/utils/map_pins.dart';
+import 'package:lesgo/core/utils/money.dart';
+import '../../../../../core/utils/leseat_status_text.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +21,8 @@ import '../../../../../core/utils/booking_geo_utils.dart';
 import '../../../../widgets/chat/order_chat_widget.dart';
 import '../../../../widgets/chat/chat_button_widget.dart';
 import '../../../../widgets/tracking/live_rider_map.dart';
+import '../../../../widgets/orders/order_style.dart';
+import '../../../../widgets/orders/premium_order_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LeseatOrderTrackingScreen extends ConsumerStatefulWidget {
@@ -33,10 +38,12 @@ class LeseatOrderTrackingScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<LeseatOrderTrackingScreen> createState() => _LeseatOrderTrackingScreenState();
+  ConsumerState<LeseatOrderTrackingScreen> createState() =>
+      _LeseatOrderTrackingScreenState();
 }
 
-class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingScreen> {
+class _LeseatOrderTrackingScreenState
+    extends ConsumerState<LeseatOrderTrackingScreen> {
   GoogleMapController? _mapController;
   bool _isBottomSheetExpanded = false;
   bool _mapReady = false;
@@ -48,7 +55,12 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(liveTrackingProvider(int.parse(widget.orderId)).notifier).setContext(context);
+      ref
+          .read(liveTrackingProvider(int.parse(widget.orderId)).notifier)
+          .setContext(context);
+      ref
+          .read(liveTrackingProvider(int.parse(widget.orderId)).notifier)
+          .setPinKinds(pickup: MapPinKind.store, dropoff: MapPinKind.customer);
       _fitBounds();
     });
     _fetchCurrentOrderData();
@@ -69,7 +81,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
 
         // Food subtotal: calculate from lesbuy_items if available
         double foodSubtotal = 0.0;
-        
+
         // Use the new helper methods for production compatibility
         final items = order.effectiveItems;
         if (items.isNotEmpty) {
@@ -81,7 +93,8 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
         } else {
           // Fallback to widget.orderData, then meta
           foodSubtotal = _safeToDouble(widget.orderData?['subtotal']);
-          if (foodSubtotal == 0) foodSubtotal = _safeToDouble(meta?['subtotal']);
+          if (foodSubtotal == 0)
+            foodSubtotal = _safeToDouble(meta?['subtotal']);
         }
 
         // Use effective delivery fee
@@ -90,16 +103,27 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
         // Use effective total amount
         final grandTotal = order.effectiveTotalAmount;
 
-        // Restaurant name — backend stores it in pickup_contact_name for LesEat
-        final restaurantName = widget.orderData?['restaurantName']
-            ?? meta?['restaurant_name']
-            ?? order.pickupContactName
-            ?? 'Restaurant';
+        final branch = meta?['branch'];
+        final branchName = branch is Map
+            ? branch['name']?.toString().trim()
+            : null;
+        final pickupContact = order.pickupContactName?.trim();
+        final pickupBranch = branchName?.isNotEmpty == true
+            ? (pickupContact?.isNotEmpty == true ? pickupContact : branchName)
+            : null;
+        final restaurantName =
+            pickupBranch ??
+            widget.orderData?['restaurantName'] ??
+            meta?['restaurant_name'] ??
+            order.pickupContactName ??
+            'Restaurant';
 
         setState(() {
           _orderDriverInfo = DriverInfo.fromOrder(order);
           _currentOrderData = {
             'restaurantName': restaurantName,
+            if (pickupBranch != null)
+              'pickupBranchAddress': order.pickupAddress,
             'subtotal': foodSubtotal,
             'deliveryFee': deliveryFee,
             'total': grandTotal,
@@ -108,13 +132,17 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
             'status': order.status,
             'driver_id': order.driverId,
             'pickup_contact_phone': order.pickupContactPhone,
-            'lesbuy_items': order.effectiveItems.map((item) => {
-              'id': item.id,
-              'name': item.name,
-              'quantity': item.quantity,
-              'estimated_price': item.estimatedPrice,
-              'actual_price': item.actualPrice,
-            }).toList(),
+            'lesbuy_items': order.effectiveItems
+                .map(
+                  (item) => {
+                    'id': item.id,
+                    'name': item.name,
+                    'quantity': item.quantity,
+                    'estimated_price': item.estimatedPrice,
+                    'actual_price': item.actualPrice,
+                  },
+                )
+                .toList(),
           };
         });
       }
@@ -153,7 +181,9 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
   }
 
   void _callDriver() {
-    final driverInfo = ref.read(liveTrackingProvider(int.parse(widget.orderId))).driverInfo;
+    final driverInfo = ref
+        .read(liveTrackingProvider(int.parse(widget.orderId)))
+        .driverInfo;
     if (driverInfo?.phone != null) {
       launchUrl(Uri.parse('tel:${driverInfo!.phone}'));
     }
@@ -182,7 +212,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
           );
           Navigator.pop(context);
         }
-    } catch (e) {
+      } catch (e) {
         if (mounted) {
           setState(() => _isCancelling = false);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -214,56 +244,11 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
     );
   }
 
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Finding Driver';
-      case 'accepted':
-        return 'Driver Accepted';
-      case 'picked_up':
-        return 'Order Picked Up';
-      case 'in_transit':
-        return 'On The Way';
-      case 'completed':
-        return 'Delivered';
-      case 'cancelled':
-        return 'Cancelled';
-      case 'failed':
-        return 'Failed';
-      default:
-        return status.toUpperCase();
-    }
-  }
-
-  String _getStatusSubtext(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Looking for a nearby rider';
-      case 'accepted':
-        return 'Your rider is on the way to the restaurant';
-      case 'driver_arrived_at_pickup':
-        return 'Rider arrived at the restaurant';
-      case 'in_progress':
-      case 'ready_for_pickup':
-        return 'Your food is being prepared';
-      case 'picked_up':
-        return 'Your order is on its way to you';
-      case 'in_transit':
-        return 'Your rider is heading to your location';
-      case 'completed':
-        return 'Your order has been delivered';
-      case 'cancelled':
-        return 'This order was cancelled';
-      case 'failed':
-        return 'Something went wrong with this order';
-      default:
-        return 'Your food is being prepared';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final trackingState = ref.watch(liveTrackingProvider(int.parse(widget.orderId)));
+    final trackingState = ref.watch(
+      liveTrackingProvider(int.parse(widget.orderId)),
+    );
     final driverInfo = trackingState.driverInfo ?? _orderDriverInfo;
     // Use current order data from backend if available, otherwise fallback to widget data
     final orderData = _currentOrderData ?? widget.orderData ?? {};
@@ -275,7 +260,9 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
         if (previous?.orderStatus != next.orderStatus && mounted) {
           _fetchCurrentOrderData();
         }
-        if (next.markers.isNotEmpty && _mapReady && previous?.markers != next.markers) {
+        if (next.markers.isNotEmpty &&
+            _mapReady &&
+            previous?.markers != next.markers) {
           _fitBounds();
         }
       },
@@ -296,7 +283,8 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
           GoogleMap(
             style: MapStyles.darkIfDark(context),
             initialCameraPosition: CameraPosition(
-              target: trackingState.pickupLocation ?? BookingGeoUtils.defaultLatLng,
+              target:
+                  trackingState.pickupLocation ?? BookingGeoUtils.defaultLatLng,
               zoom: 14,
             ),
             markers: trackingState.markers,
@@ -325,10 +313,15 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
           // Loading overlay
           if (trackingState.isLoading)
             Container(
-              color: AppColors.surface(context, Colors.black).withValues(alpha: 0.3),
-              child: const Center(
+              color: AppColors.surface(
+                context,
+                Colors.black,
+              ).withValues(alpha: 0.3),
+              child: Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF5F2D82)),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.accent(context, const Color(0xFF5F2D82)),
+                  ),
                 ),
               ),
             ),
@@ -356,7 +349,7 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
                         ],
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back),
+                        icon: Icon(Icons.arrow_back),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -385,7 +378,10 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
                             fontFamily: 'TT Fors',
                             fontWeight: FontWeight.w700,
                             fontSize: ResponsiveUtils.fontSize(context, 16),
-                            color: AppColors.foreground(context, Colors.black87),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.black87,
+                            ),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -400,11 +396,13 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
           // My location button
           Positioned(
             right: ResponsiveUtils.spacing(context, 16),
-            bottom: (_isBottomSheetExpanded
-                    ? (MediaQuery.sizeOf(context).height * 0.8)
-                        .clamp(440, 640)
-                    : (MediaQuery.sizeOf(context).height * 0.28)
-                        .clamp(160, 280)) +
+            bottom:
+                (_isBottomSheetExpanded
+                    ? (MediaQuery.sizeOf(context).height * 0.8).clamp(440, 640)
+                    : (MediaQuery.sizeOf(context).height * 0.28).clamp(
+                        160,
+                        280,
+                      )) +
                 8,
             child: Container(
               decoration: BoxDecoration(
@@ -418,7 +416,10 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
                 ],
               ),
               child: IconButton(
-                icon: const Icon(Icons.my_location, color: Color(0xFF5F2D82)),
+                icon: Icon(
+                  Icons.my_location,
+                  color: AppColors.accent(context, const Color(0xFF5F2D82)),
+                ),
                 onPressed: _fitBounds,
               ),
             ),
@@ -432,10 +433,8 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               height: _isBottomSheetExpanded
-                  ? (MediaQuery.sizeOf(context).height * 0.8)
-                      .clamp(440, 640)
-                  : (MediaQuery.sizeOf(context).height * 0.28)
-                      .clamp(160, 280),
+                  ? (MediaQuery.sizeOf(context).height * 0.8).clamp(440, 640)
+                  : (MediaQuery.sizeOf(context).height * 0.28).clamp(160, 280),
               decoration: BoxDecoration(
                 color: AppColors.surface(context, Colors.white),
                 borderRadius: const BorderRadius.vertical(
@@ -474,7 +473,10 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
                           width: 40,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: AppColors.surface(context, Colors.grey[300]!),
+                            color: AppColors.surface(
+                              context,
+                              Colors.grey[300]!,
+                            ),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -482,475 +484,293 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
                     ),
                   ),
 
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ETA Section (if available)
-                            if (trackingState.eta != null) ...[
-                              Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Colors.blue.shade400, Colors.blue.shade600],
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.spacing(context, 20),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ETA Section (if available)
+                          if (trackingState.eta != null) ...[
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(
+                                ResponsiveUtils.spacing(context, 16),
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.blue.shade400,
+                                    Colors.blue.shade600,
+                                  ],
                                 ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.2),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.access_time,
-                                        color: Colors.white,
-                                        size: 32,
-                                      ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(
+                                      ResponsiveUtils.spacing(context, 12),
                                     ),
-                                    SizedBox(width: ResponsiveUtils.spacing(context, 16)),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Estimated Arrival',
-                                            style: TextStyle(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.access_time,
+                                      color: Colors.white,
+                                      size: 32,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: ResponsiveUtils.spacing(context, 16),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Estimated Arrival',
+                                          style: TextStyle(
+                                            fontFamily: 'TT Fors',
+                                            color: Colors.white70,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: ResponsiveUtils.spacing(
+                                            context,
+                                            4,
+                                          ),
+                                        ),
+                                        Text(
+                                          trackingState.eta!,
+                                          style: TextStyle(
+                                            fontFamily: 'TT Fors',
+                                            color: Colors.white,
+                                            fontSize: ResponsiveUtils.fontSize(
+                                              context,
+                                              24,
+                                            ),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        if (trackingState.distance != null)
+                                          Text(
+                                            trackingState.distance!,
+                                            style: const TextStyle(
                                               fontFamily: 'TT Fors',
                                               color: Colors.white70,
                                               fontSize: 12,
                                             ),
                                           ),
-                                          SizedBox(height: ResponsiveUtils.spacing(context, 4)),
-                                          Text(
-                                            trackingState.eta!,
-                                            style: TextStyle(
-                                              fontFamily: 'TT Fors',
-                                              color: Colors.white,
-                                              fontSize: ResponsiveUtils.fontSize(context, 24),
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          if (trackingState.distance != null)
-                                            Text(
-                                              trackingState.distance!,
-                                              style: const TextStyle(
-                                                fontFamily: 'TT Fors',
-                                                color: Colors.white70,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    if (trackingState.isLoadingRoute)
-                                      const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                            ],
-
-                            // Delivery Status Banner
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface(context, const Color(0xFFFFF3CD)),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: AppColors.border(context, const Color(0xFFFFE69C)),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFFFC107),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.restaurant,
-                                      color: Colors.white,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          _getStatusText(trackingState.orderStatus),
-                                          style: TextStyle(
-                                            fontFamily: 'TT Fors',
-                                            fontSize: ResponsiveUtils.fontSize(context, 16),
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF856404),
-                                          ),
-                                        ),
-                                        Text(
-                                          _getStatusSubtext(trackingState.orderStatus),
-                                          style: TextStyle(
-                                            fontFamily: 'TT Fors',
-                                            fontSize: ResponsiveUtils.fontSize(context, 12),
-                                            color: const Color(0xFF856404),
-                                          ),
-                                        ),
                                       ],
                                     ),
                                   ),
+                                  if (trackingState.isLoadingRoute)
+                                    const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
-
-                            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-
-                            // Restaurant Section
-                            _buildRestaurantSection(context, orderData),
-
-                            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-
-                            // Order Items Section
-                            _buildOrderItemsSection(context, orderData),
-
-                            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-
-                            // Order Summary
-                            _buildOrderSummary(context, orderData),
-
-                            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-
-                            // Driver Info
-                            if (driverInfo != null)
-                              DriverInfoCard(
-                                driverInfo: driverInfo,
-                                onCall: _callDriver,
-                                onChat: _contactDriver,
-                              ),
-
-                            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-
-                            // Contact Driver Button
                             SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _contactDriver,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.surface(context, Colors.grey[600]!),
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: ResponsiveUtils.spacing(context, 14),
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                              height: ResponsiveUtils.spacing(context, 16),
+                            ),
+                          ],
+
+                          // Delivery Status Banner
+                          Builder(
+                            builder: (_) {
+                              final raw = trackingState.orderStatus
+                                  .trim()
+                                  .toLowerCase();
+                              return StatusBanner(
+                                icon: OrderStyle.status(raw).icon,
+                                title: LesEatStatusText.title(
+                                  trackingState.orderStatus,
                                 ),
-                                child: Text(
-                                  'Contact Driver',
-                                  style: TextStyle(
-                                    fontFamily: 'TT Fors',
-                                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
+                                subtitle: LesEatStatusText.subtext(
+                                  trackingState.orderStatus,
                                 ),
-                              ),
+                                tone:
+                                    const {
+                                      'cancelled',
+                                      'canceled',
+                                      'failed',
+                                    }.contains(raw)
+                                    ? HeroTone.danger
+                                    : const {
+                                        'completed',
+                                        'delivered',
+                                      }.contains(raw)
+                                    ? HeroTone.success
+                                    : HeroTone.active,
+                              );
+                            },
+                          ),
+
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 16),
+                          ),
+
+                          // Restaurant Section
+                          _buildRestaurantSection(context, orderData),
+
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 16),
+                          ),
+
+                          // Receipt: items, fees and total
+                          _buildReceipt(context, orderData),
+
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 20),
+                          ),
+
+                          // Driver Info
+                          if (driverInfo != null)
+                            DriverInfoCard(
+                              driverInfo: driverInfo,
+                              onCall: _callDriver,
+                              // Chat is available from the floating chat button.
                             ),
 
-                            // Cancel Order Button (if applicable)
-                            if (canCustomerCancelOrderStatus(
-                              trackingState.orderStatus,
-                            )) ...[
-                              SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: _isCancelling ? null : _handleCancelOrder,
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.red[700],
-                                    side: BorderSide(color: Colors.red[700]!),
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: ResponsiveUtils.spacing(context, 14),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: _isCancelling
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : Text(
-                                          'Cancel Order',
-                                          style: TextStyle(
-                                            fontFamily: 'TT Fors',
-                                            fontSize: ResponsiveUtils.fontSize(context, 16),
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ],
+                          SizedBox(
+                            height: ResponsiveUtils.spacing(context, 20),
+                          ),
 
-                            // Live Rider Map (when driver is assigned)
-                            if (['accepted', 'driver_arrived_at_pickup', 'in_progress', 'picked_up']
-                                .contains(trackingState.orderStatus.toLowerCase()) &&
-                                trackingState.dropoffLocation != null) ...[
-                              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-                              LiveRiderMap(
-                                orderId: int.parse(widget.orderId),
-                                dropoffLat: trackingState.dropoffLocation!.latitude,
-                                dropoffLng: trackingState.dropoffLocation!.longitude,
-                                pickupLat: trackingState.pickupLocation?.latitude,
-                                pickupLng: trackingState.pickupLocation?.longitude,
-                              ),
-                            ],
+                          // Contact Driver Button
+                          PremiumButton(
+                            label: 'Contact driver',
+                            icon: Icons.chat_bubble_outline_rounded,
+                            onPressed: _contactDriver,
+                          ),
 
-                            // Order Timeline (when expanded)
-                            if (_isBottomSheetExpanded) ...[
-                              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-                              const Divider(),
-                              SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-                              if (trackingState.tracking != null)
-                                OrderStatusTimeline(
-                                  tracking: trackingState.tracking!,
-                                ),
-                            ],
+                          // Cancel Order Button (if applicable)
+                          if (canCustomerCancelOrderStatus(
+                            trackingState.orderStatus,
+                          )) ...[
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 12),
+                            ),
+                            PremiumButton(
+                              label: 'Cancel order',
+                              danger: true,
+                              outlined: true,
+                              loading: _isCancelling,
+                              onPressed: _handleCancelOrder,
+                            ),
                           ],
-                        ),
+
+                          // Live Rider Map (when driver is assigned)
+                          if ([
+                                'accepted',
+                                'driver_arrived_at_pickup',
+                                'in_progress',
+                                'picked_up',
+                              ].contains(
+                                trackingState.orderStatus.toLowerCase(),
+                              ) &&
+                              trackingState.dropoffLocation != null) ...[
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 20),
+                            ),
+                            LiveRiderMap(
+                              orderId: int.parse(widget.orderId),
+                              dropoffLat:
+                                  trackingState.dropoffLocation!.latitude,
+                              dropoffLng:
+                                  trackingState.dropoffLocation!.longitude,
+                              pickupLat: trackingState.pickupLocation?.latitude,
+                              pickupLng:
+                                  trackingState.pickupLocation?.longitude,
+                            ),
+                          ],
+
+                          // Order Timeline (when expanded)
+                          if (_isBottomSheetExpanded) ...[
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 20),
+                            ),
+                            const Divider(),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 20),
+                            ),
+                            if (trackingState.tracking != null)
+                              OrderStatusTimeline(
+                                tracking: trackingState.tracking!,
+                              ),
+                          ],
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRestaurantSection(BuildContext context, Map<String, dynamic> orderData) {
-    final restaurantName = orderData['restaurantName'] ?? 'Restaurant';
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Restaurant',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 16),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-        Container(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.grey[50]!),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.orange[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.restaurant,
-                  color: Colors.orange[700],
-                  size: 20,
-                ),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-              Expanded(
-                child: Text(
-                  restaurantName,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.foreground(context, Colors.black87),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+  Widget _buildRestaurantSection(
+    BuildContext context,
+    Map<String, dynamic> orderData,
+  ) {
+    final restaurantName = '${orderData['restaurantName'] ?? 'Restaurant'}';
+    final branchAddress = orderData['pickupBranchAddress'] as String?;
+    return PlaceCard(
+      label: branchAddress == null ? 'Restaurant' : 'Pickup branch',
+      name: restaurantName,
+      address: branchAddress,
     );
   }
 
-  Widget _buildOrderItemsSection(BuildContext context, Map<String, dynamic> orderData) {
+  Widget _buildReceipt(BuildContext context, Map<String, dynamic> orderData) {
     final items = OrderLineItemsParser.fromOrderDataMap(orderData);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Your Order',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 16),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        if (items.isEmpty)
-          Text(
-            'Item details will appear once the restaurant confirms your order.',
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 13),
-              color: AppColors.foreground(context, Colors.grey[600]!),
-            ),
-          )
-        else
-          ...items.map((item) {
-            final itemTotal = item.price * item.quantity;
-            return _buildOrderItem(
-              context,
-              item.name,
-              'Php ${item.price.toStringAsFixed(2)}',
-              item.quantity,
-              itemTotal: itemTotal,
-            );
-          }),
-      ],
-    );
-  }
-
-  Widget _buildOrderItem(BuildContext context, String name, String price, int quantity, {double? itemTotal}) {
-    return Container(
-      margin: EdgeInsets.only(bottom: ResponsiveUtils.spacing(context, 8)),
-      padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.grey[50]!),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: Colors.blue[100],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.fastfood,
-              size: 12,
-              color: Colors.blue[700],
-            ),
-          ),
-          SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.foreground(context, Colors.black87),
-                  ),
-                ),
-                if (quantity > 1)
-                  Text(
-                    '$price x $quantity',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: AppColors.foreground(context, Colors.grey[600]!),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Text(
-            itemTotal != null && quantity > 1 
-                ? 'Php ${itemTotal.toStringAsFixed(2)}'
-                : price,
-            style: TextStyle(
-              fontFamily: 'TT Fors',
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-              fontWeight: FontWeight.w600,
-              color: AppColors.foreground(context, Colors.black87),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderSummary(BuildContext context, Map<String, dynamic> orderData) {
-    // Safely convert to double with proper type checking
     final subtotal = _safeToDouble(orderData['subtotal']);
     final deliveryFee = _safeToDouble(orderData['deliveryFee']);
     final total = _safeToDouble(orderData['total']);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Order Summary',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 16),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
+    final muted = AppColors.foreground(context, Colors.grey[600]!);
+    return ReceiptCard(
+      items: [
+        for (final item in items)
+          ReceiptItem(
+            qty: item.quantity,
+            name: item.name,
+            price: Money.format(item.price * item.quantity),
           ),
-        ),
-        SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        Container(
-          padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.grey[50]!),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border(context, Colors.grey[200]!)),
-          ),
-          child: Column(
-            children: [
-              _buildSummaryRow(context, 'Subtotal', 'Php ${subtotal.toStringAsFixed(2)}'),
-              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-              _buildSummaryRow(context, 'Delivery Fee', 'Php ${deliveryFee.toStringAsFixed(2)}'),
-              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-              Divider(color: AppColors.border(context, Colors.grey[300]!)),
-              SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-              _buildSummaryRow(
-                context, 
-                'Total', 
-                'Php ${total.toStringAsFixed(2)}',
-                isTotal: true,
-              ),
-            ],
-          ),
-        ),
       ],
+      rows: [
+        ReceiptRow('Subtotal', Money.format(subtotal)),
+        ReceiptRow('Delivery fee', Money.format(deliveryFee)),
+      ],
+      total: Money.format(total),
+      footer: items.isEmpty
+          ? Text(
+              'Item details will appear once the restaurant confirms your order.',
+              style: TextStyle(
+                fontFamily: 'TT Fors',
+                fontSize: ResponsiveUtils.fontSize(context, 12.5),
+                color: muted,
+              ),
+            )
+          : null,
     );
   }
 
@@ -963,33 +783,4 @@ class _LeseatOrderTrackingScreenState extends ConsumerState<LeseatOrderTrackingS
     }
     return 0.0;
   }
-
-  // Helper method to safely convert values to int
-
-  Widget _buildSummaryRow(BuildContext context, String label, String value, {bool isTotal = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, isTotal ? 16 : 14),
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, isTotal ? 16 : 14),
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-            color: isTotal ? AppColors.accent(context, Color(0xFF5F2D82)) : AppColors.foreground(context, Colors.black87),
-          ),
-        ),
-      ],
-    );
-  }
 }
-

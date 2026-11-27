@@ -5,6 +5,7 @@ import '../../../../core/services/app_preferences_service.dart';
 import '../../../../core/utils/app_localization.dart';
 import '../../../../core/utils/responsive_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/utils/dark_aware_colors.dart';
 
 class RiderNotificationSettingsScreen extends ConsumerStatefulWidget {
   const RiderNotificationSettingsScreen({super.key});
@@ -80,12 +81,12 @@ class _RiderNotificationSettingsScreenState
             fontFamily: 'TT Fors',
             fontSize: ResponsiveUtils.fontSize(context, 18),
             fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: context.txt(Colors.black87),
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: context.surf(Colors.white),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: context.txt(Colors.black87)),
         centerTitle: true,
       ),
       body: _loading

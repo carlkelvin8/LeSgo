@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,28 +25,23 @@ class LesgoItemDetailsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const OrderSectionHeading(
           'Item Details',
-          style: TextStyle(
-            fontFamily: 'TT Fors',
-            fontSize: ResponsiveUtils.fontSize(context, 15),
-            fontWeight: FontWeight.w700,
-            color: AppColors.foreground(context, Colors.black87),
-          ),
+          icon: Icons.inventory_2_outlined,
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        
+
         // Item Location Field
         _LesgoItemTextField(
           controller: itemLocationController,
           labelText: 'What are the items?',
           hintText: 'e.g., Books, Clothes, Electronics etc.',
-          prefixIcon: Icons.location_on_outlined,
+          prefixIcon: Icons.inventory_2_outlined,
           onChanged: onItemLocationChanged,
           maxLines: 2,
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-        
+
         // Item Weight Field
         _LesgoItemTextField(
           controller: itemWeightController,
@@ -107,14 +103,7 @@ class _LesgoItemTextField extends StatelessWidget {
         ),
         SizedBox(height: ResponsiveUtils.spacing(context, 6)),
         Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface(context, Colors.grey[50]!),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppColors.foreground(context, Colors.grey[300]!),
-              width: 1,
-            ),
-          ),
+          decoration: OrderDesign.card(context),
           child: TextField(
             controller: controller,
             onChanged: onChanged,
@@ -131,13 +120,10 @@ class _LesgoItemTextField extends StatelessWidget {
               hintStyle: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: fontSize,
-                color: AppColors.foreground(context, Colors.grey[400]!),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               prefixIcon: Padding(
-                padding: EdgeInsets.only(
-                  left: padding,
-                  right: padding * 0.5,
-                ),
+                padding: EdgeInsets.only(left: padding, right: padding * 0.5),
                 child: Icon(
                   prefixIcon,
                   size: ResponsiveUtils.spacing(context, 20),

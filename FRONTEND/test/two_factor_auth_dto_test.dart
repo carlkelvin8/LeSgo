@@ -7,9 +7,11 @@ void main() {
     final request = LoginRequestDto(
       email: 'customer@example.com',
       password: 'Secret123!',
+      deviceName: 'lesgo-customer-test-device',
       twoFactorCode: '123456',
     );
 
+    expect(request.toJson()['device_name'], 'lesgo-customer-test-device');
     expect(request.toJson()['two_factor_code'], '123456');
   });
 

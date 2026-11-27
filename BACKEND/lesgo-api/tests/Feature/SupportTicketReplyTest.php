@@ -40,4 +40,42 @@ class SupportTicketReplyTest extends TestCase
         ]);
         $this->assertSame('open', $ticket->fresh()->status);
     }
+
+    public function test_rider_app_ticket_with_legacy_general_category_is_actually_stored(): void
+    {
+        $rider = User::factory()->create(['role' => 'customer']);
+        Sanctum::actingAs($rider);
+
+        $this->postJson('/api/v1/support/tickets', [
+            'subject' => 'Rider support chat',
+            'description' => 'I need help with my earnings',
+            'category' => 'general',
+            'priority' => 'medium',
+        ])->assertCreated()
+            ->assertJsonPath('data.status', 'open');
+
+        $this->assertDatabaseHas('support_tickets', [
+            'user_id' => $rider->id,
+            'description' => 'I need help with my earnings',
+            'category' => 'general_inquiry',
+        ]);
+        $this->assertDatabaseHas('support_ticket_messages', [
+            'user_id' => $rider->id,
+            'message' => 'I need help with my earnings',
+        ]);
+    }
+
+    public function test_unknown_ticket_category_is_rejected_instead_of_faking_success(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'customer']));
+
+        $this->postJson('/api/v1/support/tickets', [
+            'subject' => 'x',
+            'description' => 'y',
+            'category' => 'definitely-not-a-category',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors('category');
+
+        $this->assertDatabaseCount('support_tickets', 0);
+    }
 }

@@ -75,6 +75,15 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
         ),
         child: Row(
           children: [
+            if (Navigator.of(context).canPop())
+              IconButton(
+                tooltip: 'Back',
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: AppColors.foreground(context, Colors.black87),
+                ),
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
             Container(
               padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 10)),
               decoration: BoxDecoration(
@@ -167,7 +176,10 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
           stops: const [0.0, 0.5, 1.0],
         ),
       ),
-    ).animate().shimmer(duration: 1200.ms, color: AppColors.foreground(context, Colors.grey[200]!));
+    ).animate().shimmer(
+      duration: 1200.ms,
+      color: AppColors.foreground(context, Colors.grey[200]!),
+    );
   }
 
   Widget _buildWalletSection(BuildContext context, LespayState state) {
@@ -188,21 +200,23 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 14)),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
+        color: AppColors.surface(context, Colors.orange.shade50),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.shade200),
+        border: Border.all(
+          color: AppColors.border(context, Colors.orange.shade200),
+        ),
       ),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
             decoration: BoxDecoration(
-              color: Colors.orange.shade100,
+              color: AppColors.surface(context, Colors.orange.shade100),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               Icons.warning_amber_rounded,
-              color: Colors.orange.shade700,
+              color: AppColors.foreground(context, Colors.orange.shade700),
               size: ResponsiveUtils.fontSize(context, 18),
             ),
           ),
@@ -215,7 +229,7 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
               style: TextStyle(
                 fontFamily: 'TT Fors',
                 fontSize: ResponsiveUtils.fontSize(context, 12),
-                color: Colors.orange.shade800,
+                color: AppColors.foreground(context, Colors.orange.shade800),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -224,7 +238,7 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
             onPressed: () => ref.read(lespayProvider.notifier).refreshBalance(),
             icon: Icon(
               Icons.refresh_rounded,
-              color: Colors.orange.shade700,
+              color: AppColors.foreground(context, Colors.orange.shade700),
               size: ResponsiveUtils.fontSize(context, 18),
             ),
             padding: EdgeInsets.zero,
@@ -235,4 +249,3 @@ class _LespayScreenState extends ConsumerState<LespayScreen> {
     ).animate().shake(duration: 500.ms).fadeIn(duration: 300.ms);
   }
 }
-

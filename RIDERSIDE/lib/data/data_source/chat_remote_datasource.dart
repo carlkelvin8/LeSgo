@@ -1,5 +1,6 @@
 import '../../core/network/dio_client.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/utils/json_parsers.dart';
 import 'dto/chat/chat_dto.dart';
 
 class ChatRemoteDataSource {
@@ -67,7 +68,12 @@ class ChatRemoteDataSource {
     final response = await _dioClient.dio.get(ApiConstants.chatUnreadCount);
     
     if (response.data['success'] == true && response.data['data'] != null) {
-      return response.data['data']['unread_count'] ?? 0;
+      final data = response.data['data'];
+      // PHP encodes an empty array as [] and counts may arrive as strings.
+      if (data is Map) {
+        return parseIntOrStringStrict(data['unread_count'] ?? data['count']);
+      }
+      return 0;
     }
     throw Exception(response.data['message'] ?? 'Failed to get unread count');
   }
@@ -95,5 +101,40 @@ class ChatRemoteDataSource {
     await _dioClient.dio.post(
       ApiConstants.chatEndConversation.replaceAll('{id}', conversationId.toString()),
     );
+  }
+
+  /// Reports the other participant (optionally a specific message) to admins.
+  Future<void> reportConversation(
+    int conversationId, {
+    required String reason,
+    String? details,
+    int? messageId,
+    bool block = false,
+  }) async {
+    await _dioClient.dio.post(
+      ApiConstants.chatReport.replaceAll('{id}', conversationId.toString()),
+      data: {
+        'reason': reason,
+        if (details != null && details.isNotEmpty) 'details': details,
+        'message_id': ?messageId,
+        'block': block,
+      },
+    );
+  }
+
+  /// Blocks the other participant. Returns the server's `can_message` flag.
+  Future<bool> blockUser(int conversationId) async {
+    final response = await _dioClient.dio.post(
+      ApiConstants.chatBlock.replaceAll('{id}', conversationId.toString()),
+    );
+    return response.data['data']?['can_message'] == true;
+  }
+
+  /// Removes the block. Returns the server's `can_message` flag.
+  Future<bool> unblockUser(int conversationId) async {
+    final response = await _dioClient.dio.delete(
+      ApiConstants.chatBlock.replaceAll('{id}', conversationId.toString()),
+    );
+    return response.data['data']?['can_message'] == true;
   }
 }

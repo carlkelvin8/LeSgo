@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lesgo/core/state/user_session_epoch.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -69,8 +71,8 @@ class MissionsNotifier extends StateNotifier<MissionsState> {
 
       state = state.copyWith(missions: missions, isLoading: false);
     } catch (e) {
+      // Keep the last good list on a failed refresh.
       state = state.copyWith(
-        missions: [],
         isLoading: false,
         error: ApiErrorMapper.message(
           e,
@@ -85,7 +87,11 @@ class MissionsNotifier extends StateNotifier<MissionsState> {
     await _loadMissions();
   }
 
+  final Set<int> _claiming = {};
+  bool _performingAction = false;
+
   Future<void> claimMission(int missionId) async {
+    if (!_claiming.add(missionId)) return;
     try {
       final matches = state.missions.where(
         (mission) => mission.id == missionId,
@@ -127,24 +133,48 @@ class MissionsNotifier extends StateNotifier<MissionsState> {
         ),
       );
       rethrow;
+    } finally {
+      _claiming.remove(missionId);
     }
   }
 
+  static const _playStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.lesgo_customer';
+  static const _appStoreUrl = 'https://apps.apple.com/app/lesgo';
+
   Future<void> performMissionAction(Mission mission) async {
-    switch (mission.missionType) {
-      case 'app_review':
-        await launchUrl(
-          Uri.parse(
-            'https://play.google.com/store/apps/details?id=com.lesgo_customer',
-          ),
-          mode: LaunchMode.externalApplication,
-        );
-        await _missionsDataSource.recordProgress(mission.id);
-        break;
-      default:
-        return;
+    if (_performingAction) return;
+    _performingAction = true;
+    try {
+      switch (mission.missionType) {
+        case 'app_review':
+          final launched = await launchUrl(
+            Uri.parse(Platform.isIOS ? _appStoreUrl : _playStoreUrl),
+            mode: LaunchMode.externalApplication,
+          );
+          if (!launched) {
+            state = state.copyWith(
+              error: 'Could not open the store page. Please try again.',
+            );
+            return;
+          }
+          await _missionsDataSource.recordProgress(mission.id);
+          break;
+        default:
+          return;
+      }
+      await refreshMissions();
+    } catch (e) {
+      state = state.copyWith(
+        error: ApiErrorMapper.message(
+          e,
+          fallbackEn: 'Could not complete this mission. Please try again.',
+          fallbackTl: 'Hindi makumpleto ang mission. Subukan muli.',
+        ),
+      );
+    } finally {
+      _performingAction = false;
     }
-    await refreshMissions();
   }
 }
 

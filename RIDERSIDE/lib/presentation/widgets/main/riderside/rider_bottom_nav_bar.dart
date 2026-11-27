@@ -14,12 +14,14 @@ class RiderBottomNavBar extends ConsumerWidget {
     final currentNav = ref.watch(riderNavProvider).last;
     final unreadCount = ref.watch(riderInboxProvider).unreadCount;
     final lang = ref.watch(appLanguageProvider);
-    final selectedColor = const Color(0xFF5F2D82);
-    final unselectedColor = Colors.grey.shade400;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final selectedColor =
+        dark ? const Color(0xFFB388FF) : const Color(0xFF5F2D82);
+    final unselectedColor = dark ? Colors.white54 : Colors.grey.shade400;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: dark ? const Color(0xFF1E1730) : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),

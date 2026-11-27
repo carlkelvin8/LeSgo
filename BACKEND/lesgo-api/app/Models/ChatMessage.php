@@ -9,6 +9,9 @@ class ChatMessage extends Model
 {
     use HasFactory;
 
+    /** sender_type values of messages sent by a store's owner or staff. */
+    public const STORE_SENDER_TYPES = ['partner_admin', 'partner_staff'];
+
     protected $fillable = [
         'conversation_id',
         'sender_id',
@@ -17,6 +20,7 @@ class ChatMessage extends Model
         'content',
         'attachments',
         'read_at',
+        'store_read_at',
         'is_system_message',
         'metadata',
     ];
@@ -24,6 +28,7 @@ class ChatMessage extends Model
     protected $casts = [
         'attachments' => 'array',
         'read_at' => 'datetime',
+        'store_read_at' => 'datetime',
         'is_system_message' => 'boolean',
         'metadata' => 'array',
         'created_at' => 'datetime',
@@ -49,6 +54,17 @@ class ChatMessage extends Model
         return $query->whereNull('read_at');
     }
 
+    /**
+     * Unread for the store (owner/staff) of the order: tracked in store_read_at,
+     * separate from the customer/rider read_at. The store's own messages never
+     * count as unread for the store.
+     */
+    public function scopeUnreadByStore($query)
+    {
+        return $query->whereNull('store_read_at')
+            ->whereNotIn('sender_type', self::STORE_SENDER_TYPES);
+    }
+
     public function scopeByType($query, string $type)
     {
         return $query->where('message_type', $type);
@@ -70,6 +86,13 @@ class ChatMessage extends Model
     {
         if (!$this->read_at) {
             $this->update(['read_at' => now()]);
+        }
+    }
+
+    public function markAsReadByStore(): void
+    {
+        if (!$this->store_read_at) {
+            $this->update(['store_read_at' => now()]);
         }
     }
 

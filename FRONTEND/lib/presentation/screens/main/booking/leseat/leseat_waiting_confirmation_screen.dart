@@ -93,10 +93,7 @@ class _LeseatWaitingConfirmationScreenState
 
     setState(() => _isCancelling = true);
     try {
-      await getIt<OrderRemoteDataSource>().cancelOrder(
-        widget.orderId,
-        result,
-      );
+      await getIt<OrderRemoteDataSource>().cancelOrder(widget.orderId, result);
       if (!mounted) return;
       SnackBarUtils.showSuccess(context, 'Order cancelled.');
       Navigator.of(context).popUntil((route) => route.isFirst);
@@ -121,7 +118,10 @@ class _LeseatWaitingConfirmationScreenState
         backgroundColor: AppColors.surface(context, Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF5F2D82)),
+          icon: Icon(
+            Icons.arrow_back,
+            color: AppColors.accent(context, Color(0xFF5F2D82)),
+          ),
           onPressed: _isCancelling ? null : () => Navigator.pop(context),
         ),
         title: Text(
@@ -140,7 +140,7 @@ class _LeseatWaitingConfirmationScreenState
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveUtils.horizontalPadding(context),
+                horizontal: ResponsiveUtils.screenPadding(context),
                 vertical: ResponsiveUtils.spacing(context, 24),
               ),
               child: Column(
@@ -176,7 +176,9 @@ class _LeseatWaitingConfirmationScreenState
                     decoration: BoxDecoration(
                       color: AppColors.surface(context, Colors.white),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border(context, Colors.grey.shade300)),
+                      border: Border.all(
+                        color: AppColors.border(context, Colors.grey.shade300),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,17 +195,23 @@ class _LeseatWaitingConfirmationScreenState
                                     18,
                                   ),
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.foreground(context, Colors.black),
+                                  color: AppColors.foreground(
+                                    context,
+                                    Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(
+                            SizedBox(
                               width: 24,
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF5F2D82),
+                                  AppColors.accent(
+                                    context,
+                                    const Color(0xFF5F2D82),
+                                  ),
                                 ),
                               ),
                             ),
@@ -225,11 +233,19 @@ class _LeseatWaitingConfirmationScreenState
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: AppColors.foreground(context, Colors.grey.shade600),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.grey.shade600,
+                            ),
                           ),
                         ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                        Divider(color: AppColors.border(context, Colors.grey.shade300)),
+                        Divider(
+                          color: AppColors.border(
+                            context,
+                            Colors.grey.shade300,
+                          ),
+                        ),
                         SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                         Text(
                           'Your Order',
@@ -251,7 +267,10 @@ class _LeseatWaitingConfirmationScreenState
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                color: AppColors.foreground(context, Colors.grey.shade600),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.grey.shade600,
+                                ),
                               ),
                             ),
                           );
@@ -282,7 +301,8 @@ class _LeseatWaitingConfirmationScreenState
                 child: ElevatedButton(
                   onPressed: _isCancelling ? null : _showCancelDialog,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5F2D82),
+                    backgroundColor: AppColors.buttonFill(context),
+                    foregroundColor: AppColors.onButton(context),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

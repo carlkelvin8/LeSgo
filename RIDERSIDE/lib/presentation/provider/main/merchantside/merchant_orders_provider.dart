@@ -5,7 +5,15 @@ import '../../auth/rider_auth_provider.dart';
 import 'merchant_prep_timer_provider.dart';
 import 'merchant_profile_provider.dart';
 
-enum MerchantOrderFilter { all, pending, pickUp, ready, forDelivery, completed, cancelled }
+enum MerchantOrderFilter {
+  all,
+  pending,
+  pickUp,
+  ready,
+  forDelivery,
+  completed,
+  cancelled,
+}
 
 extension MerchantOrderFilterX on MerchantOrderFilter {
   String get label {
@@ -51,13 +59,15 @@ final merchantOrderFiltersProvider = Provider<List<MerchantOrderFilter>>((ref) {
   return MerchantOrderFilter.values;
 });
 
-final selectedMerchantOrderFilterProvider =
-    StateProvider<MerchantOrderFilter>((ref) {
+final selectedMerchantOrderFilterProvider = StateProvider<MerchantOrderFilter>((
+  ref,
+) {
   return MerchantOrderFilter.all;
 });
 
-final merchantOrdersProvider =
-    FutureProvider.autoDispose<List<OrderDto>>((ref) async {
+final merchantOrdersProvider = FutureProvider.autoDispose<List<OrderDto>>((
+  ref,
+) async {
   final authState = ref.watch(riderAuthProvider);
   final partnerId = authState.user?.partnerId;
 
@@ -69,33 +79,53 @@ final merchantOrdersProvider =
   return dataSource.getPartnerOrders(partnerId);
 });
 
-final merchantOrderDetailProvider =
-    FutureProvider.autoDispose.family<OrderDto, int>((ref, orderId) async {
-  final dataSource = ref.read(merchantDataSourceProvider);
-  return dataSource.getOrderById(orderId);
-});
+final merchantOrderDetailProvider = FutureProvider.autoDispose
+    .family<OrderDto, int>((ref, orderId) async {
+      final dataSource = ref.read(merchantDataSourceProvider);
+      return dataSource.getOrderById(orderId);
+    });
+
+/// Whether the store has blocked the customer of this order.
+final merchantCustomerBlockedProvider = FutureProvider.autoDispose
+    .family<bool, int>((ref, orderId) async {
+      final dataSource = ref.read(merchantDataSourceProvider);
+      return dataSource.isCustomerBlocked(orderId);
+    });
 
 final merchantPendingOrderCountProvider = Provider<int>((ref) {
   final ordersAsync = ref.watch(merchantOrdersProvider);
   return ordersAsync.maybeWhen(
-    data: (orders) =>
-        orders.where((order) => MerchantOrderOpsUtils.isPending(order.status)).length,
+    data: (orders) => orders
+        .where((order) => MerchantOrderOpsUtils.isPending(order.status))
+        .length,
     orElse: () => 0,
   );
 });
 
+/// Branch to show orders for; null shows every branch.
+final selectedMerchantBranchFilterProvider = StateProvider<int?>((ref) => null);
+
 final filteredMerchantOrdersProvider = Provider<List<OrderDto>>((ref) {
   final ordersAsync = ref.watch(merchantOrdersProvider);
   final filter = ref.watch(selectedMerchantOrderFilterProvider);
+  final branchId = ref.watch(selectedMerchantBranchFilterProvider);
 
   return ordersAsync.when(
-    data: (orders) => filterMerchantOrders(orders, filter),
+    data: (orders) => filterMerchantOrders(
+      branchId == null
+          ? orders
+          : orders.where((order) => order.branchId == branchId).toList(),
+      filter,
+    ),
     loading: () => [],
     error: (_, __) => [],
   );
 });
 
-List<OrderDto> filterMerchantOrders(List<OrderDto> orders, MerchantOrderFilter filter) {
+List<OrderDto> filterMerchantOrders(
+  List<OrderDto> orders,
+  MerchantOrderFilter filter,
+) {
   if (filter == MerchantOrderFilter.all) return orders;
 
   return orders.where((order) {
@@ -103,28 +133,30 @@ List<OrderDto> filterMerchantOrders(List<OrderDto> orders, MerchantOrderFilter f
     switch (filter) {
       case MerchantOrderFilter.pending:
         return status == 'pending';
-      
+
       case MerchantOrderFilter.pickUp:
         // Orders waiting for pickup (after driver accepted, before ready)
-        return status == 'searching_driver' || 
-               status == 'accepted';
-      
+        return status == 'searching_driver' ||
+            (status == 'accepted' && order.readyForPickupAt == null);
+
       case MerchantOrderFilter.ready:
         // Ready and waiting for driver to pick up
-        return status == 'ready_for_pickup';
-      
+        return status != 'picked_up' &&
+            status != 'in_progress' &&
+            status != 'completed' &&
+            status != 'cancelled' &&
+            (status == 'ready_for_pickup' || order.readyForPickupAt != null);
+
       case MerchantOrderFilter.forDelivery:
         // Orders picked up by driver and in transit
-        return status == 'picked_up' || 
-               status == 'in_progress' ||
-               status == 'driver_arrived_at_pickup';
-      
+        return status == 'picked_up' || status == 'in_progress';
+
       case MerchantOrderFilter.completed:
         return status == 'completed';
-      
+
       case MerchantOrderFilter.cancelled:
         return status == 'cancelled';
-      
+
       case MerchantOrderFilter.all:
         return true;
     }
@@ -180,5 +212,30 @@ class MerchantOrderActionNotifier {
     await dataSource.updateOrderStatus(orderId, 'ready_for_pickup');
     await ref.read(merchantPrepTimerProvider.notifier).remove(orderId);
     await _refresh(orderId);
+  }
+
+  /// Report the order's customer; [block] also stops them ordering here.
+  Future<void> reportCustomer(
+    int orderId, {
+    required String reason,
+    String? details,
+    bool block = false,
+  }) async {
+    await ref
+        .read(merchantDataSourceProvider)
+        .reportCustomer(
+          orderId,
+          reason: reason,
+          details: details,
+          block: block,
+        );
+    ref.invalidate(merchantCustomerBlockedProvider(orderId));
+  }
+
+  Future<void> setCustomerBlocked(int orderId, bool block) async {
+    await ref
+        .read(merchantDataSourceProvider)
+        .setCustomerBlocked(orderId, block);
+    ref.invalidate(merchantCustomerBlockedProvider(orderId));
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/utils.dart';
 import 'top_bar.dart';
+import '../../../core/utils/dark_aware_colors.dart';
 
 /// A shared scaffold layout used across registration screens.
 /// Provides: white background, SafeArea, sticky TopBar header,
@@ -26,7 +27,7 @@ class RegisterScaffold extends StatelessWidget {
     final horizontalPadding = ResponsiveUtils.horizontalPadding(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.bg(Colors.white),
       body: SafeArea(
         child: Column(
           children: [

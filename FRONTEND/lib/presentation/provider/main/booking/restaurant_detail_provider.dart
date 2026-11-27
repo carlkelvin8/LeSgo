@@ -20,6 +20,9 @@ class RestaurantDetailState {
   final List<OrderItem> cartItems;
   final String? activeRestaurantId;
   final String? activeRestaurantName;
+  /// Branch card the customer opened (null = default). Orders are picked up
+  /// from this branch unless they change it at checkout.
+  final int? activeBranchId;
   final String? restaurantImagePath;
   final bool isLoading;
   final String? error;
@@ -33,6 +36,7 @@ class RestaurantDetailState {
     List<OrderItem>? cartItems,
     this.activeRestaurantId,
     this.activeRestaurantName,
+    this.activeBranchId,
     this.restaurantImagePath,
     this.isLoading = false,
     this.error,
@@ -72,6 +76,8 @@ class RestaurantDetailState {
     List<OrderItem>? cartItems,
     String? activeRestaurantId,
     String? activeRestaurantName,
+    int? activeBranchId,
+    bool clearActiveBranch = false,
     String? restaurantImagePath,
     bool? isLoading,
     String? error,
@@ -85,6 +91,8 @@ class RestaurantDetailState {
       cartItems: cartItems ?? this.cartItems,
       activeRestaurantId: activeRestaurantId ?? this.activeRestaurantId,
       activeRestaurantName: activeRestaurantName ?? this.activeRestaurantName,
+      activeBranchId:
+          clearActiveBranch ? null : (activeBranchId ?? this.activeBranchId),
       restaurantImagePath: restaurantImagePath ?? this.restaurantImagePath,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -112,8 +120,21 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     state = state.copyWith(
       activeRestaurantId: cached.restaurantId,
       activeRestaurantName: cached.restaurantName,
+      activeBranchId: cached.branchId,
       cartItems: cached.items,
     );
+  }
+
+  /// All cache writes run one at a time, in call order. Without this, a slow
+  /// persist from a quantity tap can land after (and overwrite) a later write
+  /// or the clear that follows a successful order.
+  Future<void> _cacheQueue = Future<void>.value();
+  int _persistSeq = 0;
+
+  Future<void> _enqueueCacheOp(Future<void> Function() op) {
+    final next = _cacheQueue.then((_) => op()).catchError((_) {});
+    _cacheQueue = next;
+    return next;
   }
 
   void _persistCart() {
@@ -122,32 +143,36 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
 
   Future<void> _persistCartAsync() async {
     final epoch = _cartEpoch;
+    final seq = ++_persistSeq;
     final items = List<OrderItem>.from(state.cartItems);
     final restaurantId = state.activeRestaurantId;
     final restaurantName = state.activeRestaurantName;
+    final branchId = state.activeBranchId;
 
-    if (items.isEmpty ||
-        restaurantId == null ||
-        restaurantId.isEmpty) {
-      await LeseatCartCache.clear();
-      return;
-    }
+    await _enqueueCacheOp(() async {
+      // Re-check right before touching storage: a newer persist supersedes
+      // this one and clearCart() invalidates it.
+      if (epoch != _cartEpoch || seq != _persistSeq) return;
 
-    await LeseatCartCache.save(
-      restaurantId: restaurantId,
-      restaurantName: restaurantName,
-      items: items,
-    );
+      if (items.isEmpty || restaurantId == null || restaurantId.isEmpty) {
+        await LeseatCartCache.clear();
+        return;
+      }
 
-    if (epoch != _cartEpoch) {
-      await LeseatCartCache.clear();
-    }
+      await LeseatCartCache.save(
+        restaurantId: restaurantId,
+        restaurantName: restaurantName,
+        branchId: branchId,
+        items: items,
+      );
+    });
   }
 
   Future<void> loadRestaurantDetails(
     String restaurantId,
     List<String> restaurantCategories, {
     String? restaurantName,
+    int? branchId,
   }) async {
     final epoch = _cartEpoch;
     final cached = await LeseatCartCache.load();
@@ -160,6 +185,8 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
     state = state.copyWith(
       activeRestaurantId: restaurantId,
       activeRestaurantName: restaurantName,
+      activeBranchId: branchId,
+      clearActiveBranch: branchId == null,
       isLoading: true,
       error: null,
     );
@@ -335,7 +362,7 @@ class RestaurantDetailNotifier extends StateNotifier<RestaurantDetailState> {
   Future<void> clearCart() async {
     _cartEpoch++;
     state = state.copyWith(cartItems: []);
-    await LeseatCartCache.clear();
+    await _enqueueCacheOp(LeseatCartCache.clear);
   }
 }
 

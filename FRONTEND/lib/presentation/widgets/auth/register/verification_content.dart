@@ -57,7 +57,7 @@ class VerificationContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AuthHeader(title: 'SIGN UP'),
+          const AuthHeader(title: 'Sign up'),
           SizedBox(height: spacing),
           Expanded(
             child: SingleChildScrollView(
@@ -78,7 +78,10 @@ class VerificationContent extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 13),
-                      color: AppColors.foreground(context, Colors.grey.shade700),
+                      color: AppColors.foreground(
+                        context,
+                        Colors.grey.shade700,
+                      ),
                       height: 1.35,
                     ),
                   ),
@@ -163,11 +166,17 @@ class VerificationContent extends StatelessWidget {
                       color: AppColors.surface(context, Color(0xFFF4E8FA)),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Row(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.lock_outline, color: Color(0xFF5F2D82)),
-                        SizedBox(width: 10),
+                        Icon(
+                          Icons.lock_outline,
+                          color: AppColors.accent(
+                            context,
+                            const Color(0xFF5F2D82),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             'Your photos are securely submitted for identity review and are not taken from the gallery.',
@@ -273,7 +282,11 @@ class _CaptureCard extends StatelessWidget {
                 color: AppColors.surface(context, Colors.grey.shade200),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 48, color: AppColors.foreground(context, Colors.grey.shade500)),
+              child: Icon(
+                icon,
+                size: 48,
+                color: AppColors.foreground(context, Colors.grey.shade500),
+              ),
             ),
           const SizedBox(height: 10),
           OutlinedButton.icon(

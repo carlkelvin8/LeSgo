@@ -9,7 +9,8 @@ import 'package:injectable/injectable.dart';
 import '../config/secrets_config.dart';
 import '../constants/api_constants.dart';
 
-/// Adds leaf-certificate pinning on top of the platform TLS trust checks.
+/// Restricts the API host to its pinned leaf certificate or its known CAs, on
+/// top of the platform TLS trust checks.
 ///
 /// Keep at least two comma-separated pins during certificate rotation. An
 /// untrusted certificate is rejected by the platform before this callback is
@@ -41,13 +42,18 @@ class SslPinningService {
         return true;
       }
 
-      if (certificate == null || _certificateFingerprints.isEmpty) {
-        debugPrint('SSL pinning rejected $host:$port: no usable pin.');
+      if (certificate == null) {
+        debugPrint('SSL pinning rejected $host:$port: no certificate.');
         return false;
       }
 
       final fingerprint = _sha256Fingerprint(certificate);
-      final accepted = validateCertificate(fingerprint);
+      // The API certificate is renewed automatically every ~90 days, so a
+      // leaf pin alone would lock every installed app out on renewal. Accept
+      // the pinned leaf, or any certificate issued by the CAs our host uses.
+      final accepted =
+          validateCertificate(fingerprint) ||
+          isTrustedIssuer(certificate.issuer);
       if (!accepted) {
         debugPrint(
           'SSL pinning rejected an unexpected certificate for $host:$port.',
@@ -69,6 +75,25 @@ class SslPinningService {
     return _certificateFingerprints.contains(
       _normalizeFingerprint(fingerprint),
     );
+  }
+
+  /// Certificate authorities the API host's provider issues from.
+  static const trustedIssuerOrganizations = [
+    'Google Trust Services',
+    "Let's Encrypt",
+    'SSL Corporation',
+    'Sectigo Limited',
+  ];
+
+  /// Whether [issuer] (an X.509 issuer DN) names one of our host's CAs.
+  /// The platform has already verified the chain before this is consulted.
+  static bool isTrustedIssuer(String issuer) {
+    final organization = RegExp(r'(?:^|[,/])\s*O=([^,/]+)')
+        .firstMatch(issuer)
+        ?.group(1)
+        ?.trim();
+    if (organization == null) return false;
+    return trustedIssuerOrganizations.contains(organization);
   }
 
   static String _normalizeFingerprint(String value) {

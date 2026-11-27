@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/common/empty_state_view.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,7 +50,10 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
         backgroundColor: AppColors.surface(context, Colors.white),
         elevation: 0,
         leading: IconButton(
-          icon:  Icon(Icons.arrow_back, color: AppColors.foreground(context, Colors.black87)),
+          icon: Icon(
+            Icons.arrow_back,
+            color: AppColors.foreground(context, Colors.black87),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -74,7 +78,10 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
                     Icon(
                       Icons.error_outline,
                       size: 64,
-                      color: AppColors.foreground(context, Colors.grey.shade400),
+                      color: AppColors.foreground(
+                        context,
+                        Colors.grey.shade400,
+                      ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                     Text(
@@ -82,7 +89,10 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
                       style: TextStyle(
                         fontFamily: 'TT Fors',
                         fontSize: ResponsiveUtils.fontSize(context, 16),
-                        color: AppColors.foreground(context, Colors.grey.shade600),
+                        color: AppColors.foreground(
+                          context,
+                          Colors.grey.shade600,
+                        ),
                       ),
                     ),
                     SizedBox(height: ResponsiveUtils.spacing(context, 16)),
@@ -96,7 +106,8 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
                             );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5F2D82),
+                        backgroundColor: AppColors.buttonFill(context),
+                        foregroundColor: AppColors.onButton(context),
                       ),
                       child: const Text('Retry'),
                     ),
@@ -105,33 +116,10 @@ class _ReviewsListScreenState extends ConsumerState<ReviewsListScreen> {
               )
             : reviewState.reviews.isEmpty
             ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.rate_review_outlined,
-                      size: 64,
-                      color: AppColors.foreground(context, Colors.grey.shade400),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-                    Text(
-                      'No reviews yet',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 16),
-                        color: AppColors.foreground(context, Colors.grey.shade600),
-                      ),
-                    ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                    Text(
-                      'Be the first to leave a review!',
-                      style: TextStyle(
-                        fontFamily: 'TT Fors',
-                        fontSize: ResponsiveUtils.fontSize(context, 14),
-                        color: AppColors.foreground(context, Colors.grey.shade500),
-                      ),
-                    ),
-                  ],
+                child: const EmptyStateView(
+                  icon: Icons.rate_review_outlined,
+                  title: 'No reviews yet',
+                  message: 'Be the first to leave a review!',
                 ),
               )
             : RefreshIndicator(

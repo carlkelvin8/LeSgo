@@ -71,7 +71,7 @@ class OrderTrackingController extends Controller
         }
 
         // Get latest driver location
-        $location = \App\Models\DriverLocation::where('driver_id', $order->driver_id)
+        $location = \App\Models\DriverLocation::where('driver_id', $order->driverProfile?->user_id)
             ->where('updated_at', '>=', now()->subMinutes(5))
             ->latest()
             ->first();

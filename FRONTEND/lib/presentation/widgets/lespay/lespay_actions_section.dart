@@ -69,17 +69,19 @@ class LespayActionsSection extends ConsumerWidget {
             clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side:  BorderSide(color: AppColors.border(context, Color(0xFFEDE7F2))),
+              side: BorderSide(
+                color: AppColors.border(context, Color(0xFFEDE7F2)),
+              ),
             ),
             child: Column(
               children: [
                 for (var i = 0; i < actions.length; i++) ...[
                   if (i > 0)
-                    const Divider(
+                    Divider(
                       height: 1,
                       indent: 76,
                       endIndent: 18,
-                      color: Color(0xFFF0EBF4),
+                      color: AppColors.border(context, const Color(0xFFF0EBF4)),
                     ),
                   _ActionCard(config: actions[i]),
                 ],
@@ -139,7 +141,7 @@ class _ActionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   config.subtitle,
-                  style:  TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     height: 1.4,
                     color: AppColors.foreground(context, Color(0xFF897D91)),
@@ -149,7 +151,7 @@ class _ActionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-           Icon(
+          Icon(
             Icons.chevron_right_rounded,
             color: AppColors.foreground(context, Color(0xFFB0A1BB)),
             size: 21,

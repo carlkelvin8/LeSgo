@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:injectable/injectable.dart';
 import '../../../core/utils/api_error_mapper.dart';
@@ -310,13 +312,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
 
       await _localStorageService.refreshRememberMeExpiry();
-      await getIt<PromoNotificationService>().registerDeviceToken();
-      await getIt<NotificationService>().refreshFromBackend();
+      // Notification availability must not block or reject a verified session.
+      unawaited(_refreshRestoredSessionNotifications());
       return true;
     } catch (_) {
       // Network / transient errors must not wipe the biometric preference.
       // Leave the stored session for the next attempt or an explicit logout.
       return false;
+    }
+  }
+
+  Future<void> _refreshRestoredSessionNotifications() async {
+    try {
+      await getIt<PromoNotificationService>().registerDeviceToken();
+      await getIt<NotificationService>().refreshFromBackend();
+    } catch (_) {
+      // A later app refresh can retry notification housekeeping.
     }
   }
 

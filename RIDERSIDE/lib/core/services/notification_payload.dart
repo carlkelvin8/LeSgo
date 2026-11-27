@@ -19,6 +19,24 @@ class NotificationPayload {
   final int? orderId;
   final int? conversationId;
 
+  /// Inverse of [parse]; null when the target cannot be addressed.
+  String? toRaw() {
+    switch (type) {
+      case NotificationTargetType.order:
+        return orderId == null ? null : 'order_$orderId';
+      case NotificationTargetType.chatByOrder:
+        return orderId == null ? null : 'chat_order_$orderId';
+      case NotificationTargetType.chatByConversation:
+        return conversationId == null ? null : 'chat_$conversationId';
+      case NotificationTargetType.merchantOrders:
+        return 'merchant_order';
+      case NotificationTargetType.inbox:
+        return 'inbox';
+      case NotificationTargetType.unknown:
+        return null;
+    }
+  }
+
   static NotificationPayload? parse(String? raw) {
     if (raw == null || raw.trim().isEmpty) return null;
     final value = raw.trim();

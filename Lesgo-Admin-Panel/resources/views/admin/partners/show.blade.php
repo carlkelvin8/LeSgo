@@ -111,6 +111,13 @@
                     <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm" onclick="return confirm('Waive the ₱1,000 annual fee for one year, approve this partner, and activate the account?')">Waive &amp; Activate</button>
                 </form>
                 @endif
+                @if($registrationFee->account_type === 'merchant' && !$registrationFee->is_grandfathered)
+                <form method="POST" action="{{ route('admin.registration-fees.exempt-renewal', $registrationFee) }}" class="flex flex-wrap gap-2">
+                    @csrf
+                    <input name="reason" maxlength="1000" placeholder="Reason (e.g. long-time partner)" class="rounded border px-3 py-2 text-sm">
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm" onclick="return confirm('Exempt this partner from the annual renewal? They will not be asked to renew.')">Exempt from Annual Renewal</button>
+                </form>
+                @endif
                 @if($registrationFee->application_status !== 'rejected')
                 <form method="POST" action="{{ route('admin.registration-fees.reject', $registrationFee) }}">@csrf<button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">Reject Application</button></form>
                 @endif

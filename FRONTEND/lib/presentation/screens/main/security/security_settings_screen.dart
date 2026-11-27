@@ -2,6 +2,7 @@ import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/utils/responsive_utils.dart';
@@ -18,12 +19,12 @@ class SecuritySettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Security'),
-        backgroundColor: const Color(0xFF5F2D82),
-        foregroundColor: Colors.white,
       ),
       body: state.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+          ? Center(
+              child: CircularProgressIndicator(
+                color: AppColors.accent(context, const Color(0xFF5F2D82)),
+              ),
             )
           : RefreshIndicator(
               color: AppColors.accent(context, Color(0xFF5F2D82)),
@@ -54,7 +55,10 @@ class SecuritySettingsScreen extends ConsumerWidget {
                           : 'Add an extra layer of protection',
                     ),
                     value: state.twoFactorEnabled,
-                    activeThumbColor: const Color(0xFF5F2D82),
+                    activeThumbColor: AppColors.accent(
+                      context,
+                      const Color(0xFF5F2D82),
+                    ),
                     onChanged: state.isProcessing || state.dashboard == null
                         ? null
                         : (enabled) async {
@@ -65,164 +69,201 @@ class SecuritySettingsScreen extends ConsumerWidget {
                                   .startTwoFactorSetup();
                               if (!context.mounted || setup == null) return;
                               final codeController = TextEditingController();
+                              String? codeError;
+                              var verifying = false;
                               await showDialog<void>(
                                 context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('2FA setup'),
-                                  content: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Connect Google Authenticator',
-                                        ),
-                                        const SizedBox(height: 8),
-                                        const Text(
-                                          'Open Google Authenticator automatically, or add the setup key manually.',
-                                        ),
-                                        const SizedBox(height: 12),
-                                        FilledButton.icon(
-                                          onPressed: () async {
-                                            var opened = false;
-                                            try {
-                                              opened = await launchUrl(
-                                                Uri.parse(setup.qrCode),
-                                                mode: LaunchMode
-                                                    .externalApplication,
-                                              );
-                                            } catch (_) {
-                                              opened = false;
-                                            }
-                                            if (!opened && context.mounted) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                    'Google Authenticator could not be opened. Use the setup key below.',
+                                builder: (ctx) => StatefulBuilder(
+                                  builder: (ctx, setDialogState) => AlertDialog(
+                                    title: const Text('2FA setup'),
+                                    content: SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Connect Google Authenticator',
+                                          ),
+                                          const SizedBox(height: 8),
+                                          const Text(
+                                            'Open Google Authenticator automatically, or add the setup key manually.',
+                                          ),
+                                          const SizedBox(height: 12),
+                                          FilledButton.icon(
+                                            onPressed: () async {
+                                              var opened = false;
+                                              try {
+                                                opened = await launchUrl(
+                                                  Uri.parse(setup.qrCode),
+                                                  mode: LaunchMode
+                                                      .externalApplication,
+                                                );
+                                              } catch (_) {
+                                                opened = false;
+                                              }
+                                              if (!opened && ctx.mounted) {
+                                                // A snackbar would sit behind the
+                                                // dialog, so show it inside it.
+                                                setDialogState(() {
+                                                  codeError =
+                                                      'Google Authenticator could not be opened. Use the setup key below.';
+                                                });
+                                              }
+                                            },
+                                            icon: const Icon(Icons.open_in_new),
+                                            label: const Text(
+                                              'Open Google Authenticator',
+                                            ),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFF5F2D82,
+                                              ),
+                                              foregroundColor: Colors.white,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          const Text('Setup key:'),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: SelectableText(
+                                                  setup.secret,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    letterSpacing: 1.2,
                                                   ),
                                                 ),
-                                              );
-                                            }
-                                          },
-                                          icon: const Icon(Icons.open_in_new),
-                                          label: const Text(
-                                            'Open Google Authenticator',
-                                          ),
-                                          style: FilledButton.styleFrom(
-                                            backgroundColor: const Color(
-                                              0xFF5F2D82,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        const Text('Setup key:'),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: SelectableText(
-                                                setup.secret,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: 1.2,
-                                                ),
                                               ),
-                                            ),
-                                            IconButton(
-                                              tooltip: 'Copy setup key',
+                                              IconButton(
+                                                tooltip: 'Copy setup key',
+                                                onPressed: () async {
+                                                  await Clipboard.setData(
+                                                    ClipboardData(
+                                                      text: setup.secret,
+                                                    ),
+                                                  );
+                                                },
+                                                icon: const Icon(Icons.copy),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 12),
+                                          const Text(
+                                            'Save these one-time backup codes:',
+                                          ),
+                                          ...setup.backupCodes.map(Text.new),
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: TextButton.icon(
                                               onPressed: () async {
                                                 await Clipboard.setData(
                                                   ClipboardData(
-                                                    text: setup.secret,
+                                                    text: setup.backupCodes
+                                                        .join('\n'),
                                                   ),
                                                 );
                                               },
                                               icon: const Icon(Icons.copy),
+                                              label: const Text(
+                                                'Copy backup codes',
+                                              ),
                                             ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 12),
-                                        const Text(
-                                          'Save these one-time backup codes:',
-                                        ),
-                                        ...setup.backupCodes.map(Text.new),
-                                        Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: TextButton.icon(
-                                            onPressed: () async {
-                                              await Clipboard.setData(
-                                                ClipboardData(
-                                                  text: setup.backupCodes.join(
-                                                    '\n',
-                                                  ),
-                                                ),
-                                              );
+                                          ),
+                                          const SizedBox(height: 12),
+                                          TextField(
+                                            controller: codeController,
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly,
+                                              LengthLimitingTextInputFormatter(
+                                                6,
+                                              ),
+                                            ],
+                                            onChanged: (_) {
+                                              if (codeError != null) {
+                                                setDialogState(
+                                                  () => codeError = null,
+                                                );
+                                              }
                                             },
-                                            icon: const Icon(Icons.copy),
-                                            label: const Text(
-                                              'Copy backup codes',
+                                            decoration: InputDecoration(
+                                              labelText: '6-digit code',
+                                              errorText: codeError,
+                                              errorMaxLines: 3,
                                             ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        TextField(
-                                          controller: codeController,
-                                          keyboardType: TextInputType.number,
-                                          decoration: const InputDecoration(
-                                            labelText: '6-digit code',
-                                          ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: verifying
+                                            ? null
+                                            : () async {
+                                                final code = codeController.text
+                                                    .trim();
+                                                if (code.length != 6) {
+                                                  setDialogState(() {
+                                                    codeError =
+                                                        'Enter the 6-digit code.';
+                                                  });
+                                                  return;
+                                                }
+                                                setDialogState(() {
+                                                  codeError = null;
+                                                  verifying = true;
+                                                });
+                                                final ok = await ref
+                                                    .read(
+                                                      securitySettingsProvider
+                                                          .notifier,
+                                                    )
+                                                    .verifyTwoFactor(code);
+                                                if (ctx.mounted && ok) {
+                                                  Navigator.pop(ctx);
+                                                  if (context.mounted) {
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text(
+                                                          '2FA enabled successfully',
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                } else if (ctx.mounted) {
+                                                  // Snackbars sit behind the dialog, so
+                                                  // show the failure inside it.
+                                                  setDialogState(() {
+                                                    verifying = false;
+                                                    codeError =
+                                                        ref
+                                                            .read(
+                                                              securitySettingsProvider,
+                                                            )
+                                                            .error ??
+                                                        'Invalid authenticator code.';
+                                                  });
+                                                }
+                                              },
+                                        child: const Text('Verify'),
+                                      ),
+                                    ],
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () async {
-                                        final ok = await ref
-                                            .read(
-                                              securitySettingsProvider.notifier,
-                                            )
-                                            .verifyTwoFactor(
-                                              codeController.text.trim(),
-                                            );
-                                        if (ctx.mounted && ok) {
-                                          Navigator.pop(ctx);
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  '2FA enabled successfully',
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        } else if (context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                ref
-                                                        .read(
-                                                          securitySettingsProvider,
-                                                        )
-                                                        .error ??
-                                                    'Invalid authenticator code.',
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      child: const Text('Verify'),
-                                    ),
-                                  ],
+                                ),
+                              );
+                              // The dialog's exit animation is still running when
+                              // showDialog completes; dispose after it is gone.
+                              WidgetsBinding.instance.addPostFrameCallback(
+                                (_) => Future<void>.delayed(
+                                  const Duration(milliseconds: 400),
+                                  codeController.dispose,
                                 ),
                               );
                             } else if (state.twoFactorEnabled) {
@@ -264,7 +305,10 @@ class SecuritySettingsScreen extends ConsumerWidget {
                         'Use fingerprint or Face ID to open the app',
                       ),
                       value: state.localBiometricEnabled,
-                      activeThumbColor: const Color(0xFF5F2D82),
+                      activeThumbColor: AppColors.accent(
+                        context,
+                        const Color(0xFF5F2D82),
+                      ),
                       onChanged: state.isProcessing
                           ? null
                           : (enabled) async {
@@ -281,7 +325,9 @@ class SecuritySettingsScreen extends ConsumerWidget {
                     if (state.dashboard!.lastLogin != null)
                       ListTile(
                         title: const Text('Last login'),
-                        subtitle: Text(state.dashboard!.lastLogin!),
+                        subtitle: Text(
+                          _formatTimestamp(state.dashboard!.lastLogin!),
+                        ),
                       ),
                   ],
                   if (state.registeredBiometrics.isNotEmpty) ...[
@@ -320,7 +366,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                       (log) => ListTile(
                         title: Text(log.action),
                         subtitle: Text(
-                          '${log.ipAddress ?? 'Unknown IP'} • ${log.createdAt}',
+                          '${log.ipAddress ?? 'Unknown IP'} • ${_formatTimestamp(log.createdAt)}',
                         ),
                       ),
                     ),
@@ -329,5 +375,12 @@ class SecuritySettingsScreen extends ConsumerWidget {
               ),
             ),
     );
+  }
+
+  /// Shows API timestamps (UTC ISO strings) as readable local time.
+  String _formatTimestamp(String raw) {
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) return raw;
+    return DateFormat('MMM d, yyyy • h:mm a').format(parsed.toLocal());
   }
 }

@@ -1,3 +1,4 @@
+import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -44,9 +45,11 @@ class _AuthStartupScreenState extends ConsumerState<AuthStartupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: CircularProgressIndicator(color: Color(0xFF5F2D82)),
+        child: CircularProgressIndicator(
+          color: AppColors.accent(context, const Color(0xFF5F2D82)),
+        ),
       ),
     );
   }

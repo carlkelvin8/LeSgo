@@ -1,12 +1,16 @@
+import '../../../../../core/utils/map_pins.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../../core/constants/map_styles.dart';
+import '../../../../../core/services/address_geocoder.dart';
 import '../../../../../core/utils/booking_geo_utils.dart';
+import '../../../../../core/utils/ph_address.dart';
 import '../../../../provider/main/address/address_provider.dart';
 import '../../../../provider/main/booking/lesbuy/manual_order_provider.dart';
 import '../../../global/googlemaps/map_search_bar.dart';
+import '../../../location/address_details_sheet.dart';
 
 /// The buying location belongs to this order, not the delivery address book.
 class ManualPickupSection extends ConsumerStatefulWidget {
@@ -156,7 +160,7 @@ class _ManualPickupScreenState extends ConsumerState<ManualPickupScreen> {
     });
   }
 
-  void _save() {
+  Future<void> _save() async {
     final validAddress = _formKey.currentState!.validate();
     final validPin = BookingGeoUtils.hasValidCoords(
       _pin?.latitude,
@@ -168,13 +172,27 @@ class _ManualPickupScreenState extends ConsumerState<ManualPickupScreen> {
           : 'Tap the map to set the store pickup pin.',
     );
     if (!validAddress || !validPin) return;
+    final pin = _pin!;
+    // Confirm the exact street/barangay/ZIP for this pin before saving it.
+    final pinned = await AddressGeocoder().reverse(pin);
+    if (!mounted) return;
+    final typed = _address.text.trim();
+    final confirmed = await AddressDetailsSheet.show(
+      context,
+      initial: pinned ?? PhAddress(landmark: typed),
+      title: 'Confirm pickup address',
+    );
+    if (confirmed == null || !mounted) return;
+    // Re-editing a saved pin must not append the same address twice.
+    final full = confirmed.full.trim();
+    final label = (full.isEmpty || typed.contains(full))
+        ? typed
+        : [typed, full]
+              .where((s) => s.trim().isNotEmpty)
+              .join(', ');
     ref
         .read(manualOrderProvider.notifier)
-        .setPickupLocation(
-          _address.text.trim(),
-          _pin!.latitude,
-          _pin!.longitude,
-        );
+        .setPickupLocation(label, pin.latitude, pin.longitude);
     Navigator.of(context).pop();
   }
 
@@ -239,6 +257,8 @@ class _ManualPickupScreenState extends ConsumerState<ManualPickupScreen> {
                         Marker(
                           markerId: const MarkerId('manual_store_pickup'),
                           position: _pin!,
+                          icon: MapPins.icon(MapPinKind.store),
+                          anchor: MapPins.anchor,
                           draggable: true,
                           onDragEnd: _selectPin,
                           infoWindow: const InfoWindow(

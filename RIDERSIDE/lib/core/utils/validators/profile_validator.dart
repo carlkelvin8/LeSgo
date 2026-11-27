@@ -1,4 +1,27 @@
 class ProfileValidator {
+  /// Optional phone number; mirrors the API rule (digits, spaces, + - ( ), max 20).
+  static String? phone(String? value) {
+    final v = value?.trim() ?? '';
+    if (v.isEmpty) return null;
+    if (!RegExp(r'^[\d\s\+\-\(\)]+$').hasMatch(v)) {
+      return 'Phone number can only contain digits, spaces, + - ( )';
+    }
+    final digits = v.replaceAll(RegExp(r'[^\d\+]'), '');
+    if (digits.length > 20) return 'Phone number must not exceed 20 characters';
+    if (digits.replaceAll('+', '').length < 7) {
+      return 'Enter a valid phone number';
+    }
+    return null;
+  }
+
+  /// Optional free-text with a max length (API: vehicle_type 100, plate 20).
+  static String? maxLength(String? value, int max, String fieldName) {
+    if ((value?.trim().length ?? 0) > max) {
+      return '$fieldName must not exceed $max characters';
+    }
+    return null;
+  }
+
   /// Validates profile name fields
   static String? name(String? value, {String fieldName = 'Name'}) {
     if (value == null || value.trim().isEmpty) {

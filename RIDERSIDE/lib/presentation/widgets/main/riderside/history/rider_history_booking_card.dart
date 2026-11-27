@@ -10,6 +10,7 @@ class RiderHistoryBookingCard extends StatefulWidget {
   final Color statusColor;
   final Color statusBackgroundColor;
   final int? proofImageCount;
+  final VoidCallback? onTap;
 
   const RiderHistoryBookingCard({
     super.key,
@@ -21,6 +22,7 @@ class RiderHistoryBookingCard extends StatefulWidget {
     required this.statusColor,
     required this.statusBackgroundColor,
     this.proofImageCount,
+    this.onTap,
   });
 
   @override
@@ -54,6 +56,9 @@ class _RiderHistoryBookingCardState extends State<RiderHistoryBookingCard>
           child: child,
         ),
         child: GestureDetector(
+          // The tap handler must live on THIS detector: an outer GestureDetector's
+          // onTap never fires because this inner tap recognizer wins the arena.
+          onTap: widget.onTap,
           onTapDown: (_) {
             HapticFeedback.selectionClick();
             _press.forward();

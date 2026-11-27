@@ -1,3 +1,5 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -96,29 +98,17 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
         vertical: ResponsiveUtils.spacing(context, 24),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: OrderDesign.cardRadius,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface(context, Colors.white).withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(16),
-            ),
+            decoration: OrderDesign.card(context),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Title
-                Padding(
-                  padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 20)),
-                  child: Text(
-                    'BOOKING SUMMARY',
-                    style: TextStyle(
-                      fontFamily: 'TT Fors',
-                      fontSize: ResponsiveUtils.fontSize(context, 18),
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.foreground(context, Colors.black),
-                    ),
-                  ),
+                const OrderIntro(
+                  title: 'Booking summary',
+                  icon: Icons.electric_rickshaw,
                 ),
 
                 // Content
@@ -190,7 +180,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                         _buildDetailRow(
                           context,
                           'Discount',
-                          'PHP ${discount.toStringAsFixed(2)}',
+                          Money.format(discount),
                         ),
                         if (fare != null) ...[
                           SizedBox(
@@ -199,7 +189,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                           _buildDetailRow(
                             context,
                             'Base fare (first 3 km)',
-                            'PHP ${fare.baseFare.toStringAsFixed(2)}',
+                            Money.format(fare.baseFare),
                           ),
                           if (fare.distanceFare > 0) ...[
                             SizedBox(
@@ -208,7 +198,7 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                             _buildDetailRow(
                               context,
                               'Additional distance',
-                              'PHP ${fare.distanceFare.toStringAsFixed(2)}',
+                              Money.format(fare.distanceFare),
                             ),
                           ],
                         ],
@@ -222,16 +212,22 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.foreground(context, Colors.black),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.black,
+                                ),
                               ),
                             ),
                             Text(
-                              'PHP ${totalFare.toStringAsFixed(2)}',
+                              Money.format(totalFare),
                               style: TextStyle(
                                 fontFamily: 'TT Fors',
                                 fontSize: ResponsiveUtils.fontSize(context, 16),
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.foreground(context, Colors.black),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.black,
+                                ),
                               ),
                             ),
                           ],
@@ -298,7 +294,10 @@ class LesrideBookingSummaryDialog extends ConsumerWidget {
                           style: TextStyle(
                             fontFamily: 'TT Fors',
                             fontSize: ResponsiveUtils.fontSize(context, 14),
-                            color: AppColors.foreground(context, Colors.black87),
+                            color: AppColors.foreground(
+                              context,
+                              Colors.black87,
+                            ),
                             fontWeight: FontWeight.w400,
                           ),
                         ),

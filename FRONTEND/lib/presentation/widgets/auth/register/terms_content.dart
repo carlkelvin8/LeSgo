@@ -1,3 +1,4 @@
+import '../apple_auth_button.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +27,7 @@ class TermsContent extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AuthHeader(title: 'SIGN UP'),
+          const AuthHeader(title: 'Sign up'),
           SizedBox(height: ResponsiveUtils.spacing(context, 40)),
           Expanded(
             child: Scrollbar(
@@ -108,6 +109,7 @@ class TermsContent extends ConsumerWidget {
               mode: GoogleAuthMode.signup,
             ),
           ),
+          const AppleAuthButton(mode: GoogleAuthMode.signup),
           SizedBox(height: ResponsiveUtils.spacing(context, 16)),
           DualActionButtons(
             primaryText: 'Accept',

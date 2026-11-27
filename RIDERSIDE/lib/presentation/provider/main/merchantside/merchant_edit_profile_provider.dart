@@ -80,6 +80,35 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
           logoUrl: logoUrl,
         ));
 
+  bool _hydrated = false;
+
+  /// Fills the form from the saved profile exactly once.
+  void hydrateFromProfile({
+    required String restaurantName,
+    required String contactNumber,
+    required String email,
+    required String referralCode,
+    String? logoUrl,
+    int? prepTime,
+    Map<String, dynamic>? openingHours,
+  }) {
+    if (_hydrated) return;
+    _hydrated = true;
+    state = state.copyWith(
+      restaurantName: restaurantName,
+      contactNumber: contactNumber,
+      email: email,
+      referralCode: referralCode.isEmpty ? state.referralCode : referralCode,
+      logoUrl: logoUrl,
+      prepTime: (prepTime != null && prepTime > 0)
+          ? prepTime.clamp(5, 180)
+          : null,
+      openingHours: (openingHours != null && openingHours.isNotEmpty)
+          ? Map<String, dynamic>.from(openingHours)
+          : null,
+    );
+  }
+
   void updateRestaurantName(String value) {
     state = state.copyWith(restaurantName: value);
   }
@@ -144,15 +173,21 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
       );
 
       final updated = await dataSource.updatePartnerProfile(partnerId, request);
-      _ref.invalidate(merchantProfileProvider);
 
-      state = state.copyWith(
-        isSubmitting: false,
-        logoUrl: updated.logoUrl ?? state.logoUrl,
-        clearLogoPath: true,
-      );
+      // Update our own state BEFORE invalidating the profile: this provider
+      // watches merchantProfileProvider, so invalidating it disposes this
+      // notifier and any later `state =` throws "used after dispose".
+      if (mounted) {
+        state = state.copyWith(
+          isSubmitting: false,
+          logoUrl: updated.logoUrl ?? state.logoUrl,
+          clearLogoPath: true,
+        );
+      }
+      _ref.invalidate(merchantProfileProvider);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         isSubmitting: false,
         errorMessage: ApiService.extractError(e),
@@ -168,39 +203,54 @@ class MerchantEditProfileNotifier extends StateNotifier<MerchantEditProfileState
 
 final merchantEditProfileProvider = StateNotifierProvider.autoDispose<
     MerchantEditProfileNotifier, MerchantEditProfileState>((ref) {
-  final profile = ref.watch(merchantProfileProvider).value;
-  final authState = ref.watch(riderAuthProvider);
-  final referralFromApi = ref.watch(merchantReferralCodeProvider).value;
-  final referralCode = (referralFromApi != null && referralFromApi.isNotEmpty)
-      ? referralFromApi
-      : (profile?.referralCode ?? '');
-
-  // Fall back to user's registration data if partner profile fields are empty
-  final contactNumber = (profile?.supportPhone != null && profile!.supportPhone!.isNotEmpty)
-      ? profile.supportPhone!
-      : (authState.user?.phone ?? '');
-  final email = (profile?.supportEmail != null && profile!.supportEmail!.isNotEmpty)
-      ? profile.supportEmail!
-      : (authState.user?.email ?? '');
-
+  // IMPORTANT: use read/listen, never watch, for the source providers. A watch
+  // rebuilt this notifier whenever the profile, referral code or auth state
+  // refreshed, wiping whatever the merchant had just typed or picked (the new
+  // logo, the prep time) and snapping it back to the saved values.
   final notifier = MerchantEditProfileNotifier(
     ref,
-    restaurantName: profile?.name ?? '',
-    contactNumber: contactNumber,
-    email: email,
-    referralCode: referralCode,
-    logoUrl: profile?.logoUrl,
+    restaurantName: '',
+    contactNumber: '',
+    email: '',
+    referralCode: '',
   );
 
-  final initialPrepTime = profile?.estimatedDeliveryMinutes;
-  if (initialPrepTime != null && initialPrepTime > 0) {
-    notifier.updatePrepTime(initialPrepTime);
+  void hydrate(dynamic profile) {
+    final authState = ref.read(riderAuthProvider);
+    final referralFromApi = ref.read(merchantReferralCodeProvider).value;
+    final referralCode = (referralFromApi != null && referralFromApi.isNotEmpty)
+        ? referralFromApi
+        : ((profile?.referralCode as String?) ?? '');
+
+    // Fall back to the user's registration data if partner fields are empty.
+    final phone = profile?.supportPhone as String?;
+    final mail = profile?.supportEmail as String?;
+    notifier.hydrateFromProfile(
+      restaurantName: (profile?.name as String?) ?? '',
+      contactNumber: (phone != null && phone.isNotEmpty)
+          ? phone
+          : (authState.user?.phone ?? ''),
+      email: (mail != null && mail.isNotEmpty)
+          ? mail
+          : (authState.user?.email ?? ''),
+      referralCode: referralCode,
+      logoUrl: profile?.logoUrl as String?,
+      prepTime: profile?.estimatedDeliveryMinutes as int?,
+      openingHours: profile?.openingHours == null
+          ? null
+          : Map<String, dynamic>.from(profile.openingHours as Map),
+    );
   }
 
-  final initialHours = profile?.openingHours;
-  if (initialHours != null && initialHours.isNotEmpty) {
-    notifier.updateOpeningHours(Map<String, dynamic>.from(initialHours));
-  }
+  final current = ref.read(merchantProfileProvider).value;
+  if (current != null) hydrate(current);
+
+  // Profile still loading: fill the form once when it arrives, but never
+  // overwrite a form the merchant has already started editing.
+  ref.listen(merchantProfileProvider, (previous, next) {
+    final value = next.value;
+    if (value != null) hydrate(value);
+  });
 
   ref.listen<AsyncValue<String>>(merchantReferralCodeProvider, (previous, next) {
     next.whenData(notifier.setReferralCode);

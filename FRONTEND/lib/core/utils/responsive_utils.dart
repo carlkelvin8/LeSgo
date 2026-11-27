@@ -27,6 +27,14 @@ class ResponsiveUtils {
     return 32.0;
   }
 
+  /// Side margin for card-based screens (lists, booking, checkout).
+  /// Forms on the auth flow keep the roomier [horizontalPadding].
+  static double screenPadding(BuildContext context) {
+    if (isDesktop(context)) return 48.0;
+    if (isTablet(context)) return 32.0;
+    return 16.0;
+  }
+
   static double fontSize(BuildContext context, double baseSize) {
     double width = screenWidth(context);
     if (width < 360) return baseSize * 0.85;

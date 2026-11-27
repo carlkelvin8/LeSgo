@@ -1,4 +1,4 @@
-import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../widgets/widgets.dart';
@@ -53,8 +53,9 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
   Future<void> _handleBooking() async {
     if (!_controllers.validate()) return;
 
-    final success =
-        await ref.read(lestransportProvider.notifier).bookTransport(context);
+    final success = await ref
+        .read(lestransportProvider.notifier)
+        .bookTransport(context);
 
     if (!success && mounted) {
       final error = ref.read(lestransportProvider).error;
@@ -70,8 +71,11 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
     final maxWidth = ResponsiveUtils.maxContentWidth(context);
 
     return Scaffold(
-      backgroundColor: AppColors.surface(context, Colors.white),
-      appBar: const BookingServiceHeader(title: 'LesTransport'),
+      backgroundColor: OrderDesign.canvas(context),
+      appBar: const BookingServiceHeader(
+        title: 'LesTransport',
+        orderStyle: true,
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -81,6 +85,11 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    const OrderReceiptHeader(
+                      title: 'Plan your shipment',
+                      detail: 'Sender and delivery details',
+                      icon: Icons.local_shipping_outlined,
+                    ),
                     LesportFormSection(controllers: _controllers),
                     BookingPaymentMethodSection(
                       selectedMethod: state.paymentMethod,
@@ -99,21 +108,15 @@ class _LesportScreenState extends ConsumerState<LesportScreen> {
       ),
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context, Colors.white),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
+        decoration: OrderDesign.dock(context),
         child: SafeArea(
-          child: PrimaryButton(
-            text: 'Book',
-            onPressed: state.isLoading ? null : _handleBooking,
-            isLoading: state.isLoading,
+          child: OrderActionWithTotal(
+            total: state.totalOrder,
+            child: PrimaryButton(
+              text: 'Book',
+              onPressed: state.isLoading ? null : _handleBooking,
+              isLoading: state.isLoading,
+            ),
           ),
         ),
       ),

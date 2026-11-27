@@ -16,7 +16,7 @@
             const method = document.createElement('input'); method.type = 'hidden'; method.name = '_method'; method.value = 'DELETE'; form.appendChild(method);
             document.body.appendChild(form); form.submit();
         }
-    })"><i class="fas fa-trash mr-1"></i> Delete Rider & Data</button>
+    })"><i class="fas fa-trash mr-1"></i> Delete Rider &amp; Data</button>
 <button type="button" class="bg-{{ $driver->status === 'active' ? 'red' : 'green' }}-500 text-white px-4 py-2 rounded-lg text-sm"
     x-data
     @click="$dispatch('confirm-modal', {

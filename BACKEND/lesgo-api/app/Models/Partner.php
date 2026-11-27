@@ -11,6 +11,13 @@ class Partner extends Model
 {
     use HasFactory;
 
+    public function isFastFood(): bool
+    {
+        return collect(array_merge($this->tags ?? [], $this->cuisine_types ?? []))
+            ->contains(static fn ($category) => is_string($category)
+                && preg_replace('/[\s_-]+/', '', strtolower(trim($category))) === 'fastfood');
+    }
+
     protected $fillable = [
         'user_id',
         'name',
@@ -157,6 +164,17 @@ class Partner extends Model
     public function menuItems()
     {
         return $this->hasManyThrough(MenuItem::class, MenuCategory::class, 'partner_id', 'menu_category_id');
+    }
+
+    /**
+     * Empty hours must read as null: PHP encodes an empty array as `[]`, and
+     * released apps expect an object here and fail the merchant's whole profile.
+     */
+    public function getOpeningHoursAttribute($value): ?array
+    {
+        $hours = is_string($value) ? json_decode($value, true) : $value;
+
+        return is_array($hours) && $hours !== [] ? $hours : null;
     }
 
     protected function logoUrl(): Attribute

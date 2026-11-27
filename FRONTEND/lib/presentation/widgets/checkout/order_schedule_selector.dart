@@ -1,3 +1,4 @@
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -26,14 +27,18 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
   @override
   void initState() {
     super.initState();
-    _selectedSchedule = widget.scheduledTime == null ? ScheduleType.now : ScheduleType.scheduled;
+    _selectedSchedule = widget.scheduledTime == null
+        ? ScheduleType.now
+        : ScheduleType.scheduled;
     _scheduledTime = widget.scheduledTime;
   }
 
   Future<void> _pickScheduledTime() async {
     // Pick date first
     final now = DateTime.now();
-    final firstDate = now.add(const Duration(hours: 1)); // At least 1 hour from now
+    final firstDate = now.add(
+      const Duration(hours: 1),
+    ); // At least 1 hour from now
     final lastDate = now.add(const Duration(days: 7)); // Up to 7 days ahead
 
     final date = await showDatePicker(
@@ -44,12 +49,14 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF5F2D82),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
+            colorScheme: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).colorScheme
+                : const ColorScheme.light(
+                    primary: Color(0xFF5F2D82),
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Colors.black,
+                  ),
           ),
           child: child!,
         );
@@ -67,12 +74,14 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF5F2D82),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
+            colorScheme: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).colorScheme
+                : const ColorScheme.light(
+                    primary: Color(0xFF5F2D82),
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Colors.black,
+                  ),
           ),
           child: child!,
         );
@@ -125,33 +134,19 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
         horizontal: ResponsiveUtils.spacing(context, 16),
         vertical: ResponsiveUtils.spacing(context, 8),
       ),
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: OrderDesign.cardRadius,
+        side: BorderSide(color: OrderDesign.line(context)),
       ),
       child: Padding(
         padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.schedule,
-                  color: AppColors.accent(context, Color(0xFF5F2D82)),
-                  size: ResponsiveUtils.fontSize(context, 20),
-                ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                Text(
-                  'Delivery Schedule',
-                  style: TextStyle(
-                    fontFamily: 'TT Fors',
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.foreground(context, Colors.black87),
-                  ),
-                ),
-              ],
+            const OrderSectionHeading(
+              'Delivery Schedule',
+              icon: Icons.schedule_rounded,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 12)),
 
@@ -163,7 +158,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                   _clearScheduledTime();
                 });
               },
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               child: Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                 decoration: BoxDecoration(
@@ -173,9 +168,12 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                         : AppColors.foreground(context, Colors.grey[300]!),
                     width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   color: _selectedSchedule == ScheduleType.now
-                      ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.05)
+                      ? AppColors.accent(
+                          context,
+                          Color(0xFF5F2D82),
+                        ).withValues(alpha: 0.05)
                       : Colors.transparent,
                 ),
                 child: Row(
@@ -199,7 +197,10 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
                               fontWeight: FontWeight.w600,
-                              color: AppColors.foreground(context, Colors.black87),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.black87,
+                              ),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -208,7 +209,10 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12),
-                              color: AppColors.foreground(context, Colors.grey[600]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
                             ),
                           ),
                         ],
@@ -231,7 +235,7 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                   _pickScheduledTime();
                 }
               },
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               child: Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                 decoration: BoxDecoration(
@@ -241,9 +245,12 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                         : AppColors.foreground(context, Colors.grey[300]!),
                     width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   color: _selectedSchedule == ScheduleType.scheduled
-                      ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.05)
+                      ? AppColors.accent(
+                          context,
+                          Color(0xFF5F2D82),
+                        ).withValues(alpha: 0.05)
                       : Colors.transparent,
                 ),
                 child: Row(
@@ -267,7 +274,10 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
                               fontWeight: FontWeight.w600,
-                              color: AppColors.foreground(context, Colors.black87),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.black87,
+                              ),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 2)),
@@ -276,7 +286,10 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 12),
-                              color: AppColors.foreground(context, Colors.grey[600]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[600]!,
+                              ),
                             ),
                           ),
                         ],
@@ -288,19 +301,23 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
             ),
 
             // Show selected time if scheduled
-            if (_selectedSchedule == ScheduleType.scheduled && _scheduledTime != null) ...[
+            if (_selectedSchedule == ScheduleType.scheduled &&
+                _scheduledTime != null) ...[
               SizedBox(height: ResponsiveUtils.spacing(context, 12)),
               Container(
                 padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
                 decoration: BoxDecoration(
-                  color: AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.accent(
+                    context,
+                    Color(0xFF5F2D82),
+                  ).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.event,
-                      color: Color(0xFF5F2D82),
+                      color: AppColors.accent(context, const Color(0xFF5F2D82)),
                       size: 20,
                     ),
                     SizedBox(width: ResponsiveUtils.spacing(context, 12)),
@@ -313,24 +330,38 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 11),
-                              color: AppColors.foreground(context, Colors.grey[700]!),
+                              color: AppColors.foreground(
+                                context,
+                                Colors.grey[700]!,
+                              ),
                             ),
                           ),
                           SizedBox(height: ResponsiveUtils.spacing(context, 2)),
                           Text(
-                            DateFormat('EEEE, MMM dd, yyyy \'at\' h:mm a').format(_scheduledTime!),
+                            DateFormat(
+                              'EEEE, MMM dd, yyyy \'at\' h:mm a',
+                            ).format(_scheduledTime!),
                             style: TextStyle(
                               fontFamily: 'TT Fors',
                               fontSize: ResponsiveUtils.fontSize(context, 14),
                               fontWeight: FontWeight.w600,
-                              color: AppColors.accent(context, Color(0xFF5F2D82)),
+                              color: AppColors.accent(
+                                context,
+                                Color(0xFF5F2D82),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Color(0xFF5F2D82)),
+                      icon: Icon(
+                        Icons.edit,
+                        color: AppColors.accent(
+                          context,
+                          const Color(0xFF5F2D82),
+                        ),
+                      ),
                       onPressed: _pickScheduledTime,
                       tooltip: 'Change time',
                     ),
@@ -344,4 +375,3 @@ class _OrderScheduleSelectorState extends State<OrderScheduleSelector> {
     );
   }
 }
-

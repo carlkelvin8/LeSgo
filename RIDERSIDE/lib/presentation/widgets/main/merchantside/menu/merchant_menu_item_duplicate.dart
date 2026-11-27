@@ -7,6 +7,7 @@ import '../../../../../data/data_source/merchant_remote_datasource.dart';
 import '../../../../provider/main/merchantside/merchant_menu_provider.dart';
 import '../../../../provider/main/merchantside/merchant_profile_provider.dart';
 import '../../../../provider/auth/rider_auth_provider.dart';
+import '../../../../../core/utils/api_error_mapper.dart';
 
 /// Duplicates a menu item with " (Copy)" appended to the name.
 Future<bool> duplicateMerchantMenuItem(
@@ -48,7 +49,7 @@ Future<bool> duplicateMerchantMenuItem(
     if (!context.mounted) return false;
     SnackBarUtils.showError(
       context,
-      'Failed to duplicate: ${e.toString().replaceFirst('Exception: ', '')}',
+      ApiErrorMapper.message(e, fallbackEn: 'Could not duplicate the item.', fallbackTl: 'Hindi ma-duplicate ang item.'),
     );
     return false;
   }

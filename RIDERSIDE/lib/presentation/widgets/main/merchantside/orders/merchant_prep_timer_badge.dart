@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/utils/responsive_utils.dart';
 import '../../../../provider/main/merchantside/merchant_prep_timer_provider.dart';
+import '../../../../../core/utils/dark_aware_colors.dart';
 
 class MerchantPrepTimerBadge extends StatelessWidget {
   final MerchantPrepTimerEntry? timer;
@@ -17,7 +18,7 @@ class MerchantPrepTimerBadge extends StatelessWidget {
     if (timer == null) return const SizedBox.shrink();
 
     final isOverdue = timer!.isOverdue;
-    final bgColor = isOverdue ? const Color(0xFFFFEBEE) : const Color(0xFFE8F5E9);
+    final bgColor = context.surf(isOverdue ? const Color(0xFFFFEBEE) : const Color(0xFFE8F5E9));
     final borderColor = isOverdue ? const Color(0xFFE53935) : const Color(0xFF43A047);
     final textColor = isOverdue ? const Color(0xFFC62828) : const Color(0xFF2E7D32);
 

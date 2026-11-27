@@ -1,4 +1,5 @@
-import 'package:lesgo/core/theme/app_colors.dart';
+import 'package:lesgo/presentation/widgets/booking/common/order_design.dart';
+import 'package:lesgo/core/utils/money.dart';
 import 'package:flutter/material.dart';
 import '../../../core/utils/responsive_utils.dart';
 
@@ -11,10 +12,15 @@ class PaymentMethodSelector extends StatelessWidget {
   final bool enabled;
   final double? walletBalance;
   final bool walletBalanceVisible;
+
   /// When set, LesPay is selectable only if balance >= this amount.
   final double? minimumWalletAmount;
   final bool showWallet;
   final bool showDigitalPayments;
+
+  /// Cash wording differs per service (a ride is paid to the driver, not on delivery).
+  final String cashTitle;
+  final String cashSubtitle;
 
   const PaymentMethodSelector({
     super.key,
@@ -26,6 +32,8 @@ class PaymentMethodSelector extends StatelessWidget {
     this.minimumWalletAmount,
     this.showWallet = false,
     this.showDigitalPayments = false,
+    this.cashTitle = 'Cash on Delivery',
+    this.cashSubtitle = 'Pay with cash when order arrives',
   });
 
   bool get _walletHasSufficientBalance {
@@ -38,29 +46,19 @@ class PaymentMethodSelector extends StatelessWidget {
     if (!walletBalanceVisible) return 'Balance: ••••••';
     final balance = walletBalance ?? 0;
     if (_walletHasSufficientBalance) {
-      return 'Balance: ₱${balance.toStringAsFixed(2)}';
+      return 'Balance: ${Money.format(balance)}';
     }
-    return 'Insufficient balance (₱${balance.toStringAsFixed(2)})';
+    return 'Insufficient balance (${Money.format(balance)})';
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: ResponsiveUtils.horizontalPadding(context),
+        horizontal: ResponsiveUtils.spacing(context, 16),
       ),
       padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 16)),
-      decoration: BoxDecoration(
-        color: AppColors.surface(context, Colors.white),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: OrderDesign.receipt(context),
       child: RadioGroup<String>(
         groupValue: selectedMethod,
         onChanged: (v) {
@@ -69,69 +67,50 @@ class PaymentMethodSelector extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          // Section Title
-          Row(
-            children: [
-              Icon(
-                Icons.payment,
-                size: ResponsiveUtils.fontSize(context, 20),
-                color: AppColors.accent(context, Color(0xFF5F2D82)),
-              ),
-              SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-              Text(
-                'Payment Method',
-                style: TextStyle(
-                  fontFamily: 'TT Fors',
-                  fontSize: ResponsiveUtils.fontSize(context, 16),
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.foreground(context, Colors.black87),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: ResponsiveUtils.spacing(context, 16)),
-
-          // Cash on Delivery (Primary Method)
-          _buildPaymentOption(
-            context: context,
-            value: 'cash',
-            title: 'Cash on Delivery',
-            subtitle: 'Pay with cash when order arrives',
-            icon: Icons.money,
-            iconColor: Colors.green,
-            enabled: enabled,
-          ),
-
-          // Wallet (Optional - for future use)
-          if (showWallet) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-            _buildPaymentOption(
-              context: context,
-              value: 'wallet',
-              title: 'LesPay Wallet',
-              subtitle: walletBalance != null
-                  ? _walletBalanceLabel
-                  : 'Digital wallet payment',
-              icon: Icons.account_balance_wallet,
-              iconColor: AppColors.accent(context, Color(0xFF5F2D82)),
-              enabled: enabled && _walletHasSufficientBalance,
+            const OrderSectionHeading(
+              'Payment Method',
+              icon: Icons.payments_outlined,
             ),
-          ],
+            SizedBox(height: ResponsiveUtils.spacing(context, 16)),
 
-          if (showDigitalPayments) ...[
-            SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+            // Cash on Delivery (Primary Method)
             _buildPaymentOption(
               context: context,
-              value: 'xendit',
-              title: 'Online Payment',
-              subtitle: 'Pay via GCash, Maya, or Credit/Debit Card',
-              icon: Icons.phone_android,
-              iconColor: const Color(0xFF0070F3),
+              value: 'cash',
+              title: cashTitle,
+              subtitle: cashSubtitle,
+              icon: Icons.local_atm_outlined,
               enabled: enabled,
             ),
+
+            // Wallet (Optional - for future use)
+            if (showWallet) ...[
+              Divider(height: 10, color: OrderDesign.line(context)),
+              _buildPaymentOption(
+                context: context,
+                value: 'wallet',
+                title: 'LesPay Wallet',
+                subtitle: walletBalance != null
+                    ? _walletBalanceLabel
+                    : 'Digital wallet payment',
+                icon: Icons.account_balance_wallet,
+                enabled: enabled && _walletHasSufficientBalance,
+              ),
+            ],
+
+            if (showDigitalPayments) ...[
+              Divider(height: 10, color: OrderDesign.line(context)),
+              _buildPaymentOption(
+                context: context,
+                value: 'xendit',
+                title: 'Online Payment',
+                subtitle: 'Pay via GCash, Maya, or Credit/Debit Card',
+                icon: Icons.credit_card_rounded,
+                enabled: enabled,
+              ),
+            ],
           ],
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -142,47 +121,25 @@ class PaymentMethodSelector extends StatelessWidget {
     required String title,
     required String subtitle,
     required IconData icon,
-    required Color iconColor,
     required bool enabled,
   }) {
     final isSelected = selectedMethod == value;
+    final emphasize = enabled && isSelected;
+
+    final colors = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: enabled ? () => onMethodChanged(value) : null,
       child: Container(
-        padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 12)),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.accent(context, Color(0xFF5F2D82)).withValues(alpha: 0.05)
-              : AppColors.surface(context, Colors.grey.shade50),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.accent(context, Color(0xFF5F2D82))
-                : AppColors.border(context, Colors.grey.shade300),
-            width: isSelected ? 2 : 1,
-          ),
+          color: emphasize ? OrderDesign.tint(context) : Colors.transparent,
+          borderRadius: BorderRadius.circular(13),
         ),
         child: Row(
           children: [
-            // Icon
-            Container(
-              padding: EdgeInsets.all(ResponsiveUtils.spacing(context, 8)),
-              decoration: BoxDecoration(
-                color: enabled
-                    ? iconColor.withValues(alpha: 0.1)
-                    : AppColors.surface(context, Colors.grey.shade200),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                size: ResponsiveUtils.fontSize(context, 24),
-                color: enabled ? iconColor : AppColors.foreground(context, Colors.grey),
-              ),
-            ),
-            SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-
-            // Title and Subtitle
+            OrderIcon(icon, muted: !enabled, size: 36),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,27 +149,43 @@ class PaymentMethodSelector extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 14),
-                      fontWeight: FontWeight.w600,
-                      color: enabled ? AppColors.foreground(context, Colors.black87) : AppColors.foreground(context, Colors.grey),
+                      fontWeight: FontWeight.w700,
+                      color: enabled
+                          ? colors.onSurface
+                          : colors.onSurfaceVariant,
                     ),
                   ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 4)),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: TextStyle(
                       fontFamily: 'TT Fors',
                       fontSize: ResponsiveUtils.fontSize(context, 12),
-                      color: enabled ? AppColors.foreground(context, Colors.grey.shade600) : AppColors.foreground(context, Colors.grey),
+                      height: 1.35,
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Radio Button
-            Radio<String>(
-              value: value,
-              activeColor: AppColors.accent(context, const Color(0xFF5F2D82)),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Radio<String>(
+                  value: value,
+                  activeColor: emphasize
+                      ? Colors.transparent
+                      : OrderDesign.accent(context),
+                ),
+                if (emphasize)
+                  IgnorePointer(
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      size: 22,
+                      color: OrderDesign.accent(context),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

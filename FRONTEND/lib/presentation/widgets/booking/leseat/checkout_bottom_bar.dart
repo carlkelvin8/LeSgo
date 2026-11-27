@@ -1,3 +1,4 @@
+import 'package:lesgo/core/utils/money.dart';
 import 'package:lesgo/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/utils/responsive_utils.dart';
@@ -6,11 +7,7 @@ class CheckoutBottomBar extends StatelessWidget {
   final double total;
   final VoidCallback? onCheckout;
 
-  const CheckoutBottomBar({
-    super.key,
-    required this.total,
-    this.onCheckout,
-  });
+  const CheckoutBottomBar({super.key, required this.total, this.onCheckout});
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +41,7 @@ class CheckoutBottomBar extends StatelessWidget {
                 ),
                 SizedBox(height: ResponsiveUtils.spacing(context, 4)),
                 Text(
-                  'PHP ${total.toStringAsFixed(2)}',
+                  Money.format(total),
                   style: TextStyle(
                     fontFamily: 'TT Fors',
                     fontSize: ResponsiveUtils.fontSize(context, 20),

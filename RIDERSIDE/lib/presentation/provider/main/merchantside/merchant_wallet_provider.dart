@@ -6,6 +6,7 @@ import '../../../../core/utils/merchant_transfer_commission_utils.dart';
 import '../../../../data/data_source/merchant_withdrawal_datasource.dart';
 import '../../../../data/data_source/dto/merchant/withdrawal_request_dto.dart';
 import '../../auth/rider_auth_provider.dart';
+import '../../../../core/utils/api_error_mapper.dart';
 
 class MerchantTopUpCheckout {
   final String invoiceId;
@@ -79,6 +80,7 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
 
   final Ref ref;
   final _withdrawalDataSource = MerchantWithdrawalDataSource();
+  int _loadRevision = 0;
 
   bool get canManageWallet {
     final user = ref.read(riderAuthProvider).user;
@@ -93,14 +95,17 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
   }
 
   Future<void> loadWallet({bool silent = false}) async {
-    if (!canManageWallet) return;
+    if (!mounted || !canManageWallet) return;
+    final revision = ++_loadRevision;
     if (!silent) {
       state = state.copyWith(isLoading: true, clearError: true);
     }
     try {
       final wallet = await MerchantWalletApi.getWallet();
+      if (!mounted || revision != _loadRevision) return;
       final transactions = await MerchantWalletApi.getTransactions();
-      
+      if (!mounted || revision != _loadRevision) return;
+
       // Load withdrawal summary
       WithdrawalSummaryDto? summary;
       try {
@@ -109,6 +114,8 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
         // Withdrawal summary is optional, don't fail if it errors
         print('Warning: Failed to load withdrawal summary: $e');
       }
+
+      if (!mounted || revision != _loadRevision) return;
 
       final balance = _toDouble(wallet['balance']);
       state = state.copyWith(
@@ -120,6 +127,7 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
         isLoading: false,
       );
     } catch (e) {
+      if (!mounted || revision != _loadRevision) return;
       state = state.copyWith(
         isLoading: false,
         error: MerchantWalletApi.extractError(e),
@@ -132,6 +140,7 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
     required double amount,
     String? note,
   }) async {
+    if (!mounted) return false;
     if (!canManageWallet) {
       state = state.copyWith(
         error: 'Your staff role cannot send LeSpay payments.',
@@ -155,9 +164,11 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
         note: note,
       );
       await loadWallet(silent: true);
+      if (!mounted) return false;
       state = state.copyWith(isTransferring: false);
       return true;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         isTransferring: false,
         error: MerchantWalletApi.extractError(e),
@@ -174,6 +185,7 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
     required String payoutAccountName,
     String? payoutBankName,
   }) async {
+    if (!mounted) return null;
     if (!canManageWallet) {
       state = state.copyWith(
         error: 'Your staff role cannot request withdrawals.',
@@ -226,12 +238,14 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
       // Reload wallet to update balances
       await loadWallet(silent: true);
 
+      if (!mounted) return withdrawal;
       state = state.copyWith(isWithdrawing: false);
       return withdrawal;
     } catch (e) {
+      if (!mounted) return null;
       state = state.copyWith(
         isWithdrawing: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
+        error: ApiErrorMapper.message(e),
       );
       return null;
     }
@@ -250,5 +264,5 @@ class MerchantWalletNotifier extends StateNotifier<MerchantWalletState> {
 
 final merchantWalletProvider =
     StateNotifierProvider<MerchantWalletNotifier, MerchantWalletState>(
-  (ref) => MerchantWalletNotifier(ref),
-);
+      (ref) => MerchantWalletNotifier(ref),
+    );
