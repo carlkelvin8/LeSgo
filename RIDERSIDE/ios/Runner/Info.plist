@@ -73,7 +73,7 @@
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>LeSgo Affiliates uses your location while on duty to navigate deliveries and share live tracking with customers.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>LeSgo Affiliates needs camera access to take attendance photos and upload delivery proof.</string>
+	<string>LeSgo Affiliates needs camera access to capture registration photos and IDs, take attendance photos, and upload delivery proof.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>LeSgo Affiliates plays order alert sounds. It does not record or transmit audio; microphone access is not used.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

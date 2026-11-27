@@ -1,7 +1,7 @@
 import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import '../register_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../../../domain/entities/auth/rider/rider_registration_info.dart';
 import '../../../../../domain/entities/auth/rider/rider_documents.dart';
@@ -186,17 +186,11 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     );
   }
 
-  Future<void> uploadSelfie() async {
+  Future<void> uploadSelfie(Future<XFile?> Function() capture) async {
     try {
       state = state.copyWith(isSelfieLoading: true, clearError: true);
 
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.front,
-        imageQuality: 85,
-        maxWidth: 1200,
-      );
+      final image = await capture();
 
       if (image != null) {
         state = state.copyWith(
@@ -214,15 +208,11 @@ class RegisterInfoNotifier extends StateNotifier<RegisterInfoState> {
     }
   }
 
-  Future<void> uploadSelfieWithMotorcycle() async {
+  Future<void> uploadSelfieWithMotorcycle(Future<XFile?> Function() capture) async {
     try {
       state = state.copyWith(isSelfieMotorcycleLoading: true, clearError: true);
 
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-      );
+      final image = await capture();
 
       if (image != null) {
         state = state.copyWith(

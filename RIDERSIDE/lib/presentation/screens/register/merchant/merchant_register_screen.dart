@@ -1,3 +1,5 @@
+import 'package:camera/camera.dart';
+import '../../../widgets/register/registration_camera_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -258,8 +260,22 @@ class _MerchantRegisterScreenState
             SizedBox(height: ResponsiveUtils.spacing(context, 24)),
 
             MerchantDocumentUploadList(
-              onUploadSelfie: controller.uploadSelfie,
-              onUploadValidId: controller.uploadValidId,
+              onUploadSelfie: () => controller.uploadSelfie(
+                () => capturePhotoWithCamera(
+                  context,
+                  lensDirection: CameraLensDirection.front,
+                  title: 'Live selfie',
+                  helpText: 'Center your face and look directly at the camera.',
+                ),
+              ),
+              onUploadValidId: () => controller.uploadValidId(
+                () => capturePhotoWithCamera(
+                  context,
+                  lensDirection: CameraLensDirection.back,
+                  title: 'Valid ID',
+                  helpText: 'Keep all four corners visible and make sure the details are readable.',
+                ),
+              ),
               onUploadDigitalSignature: controller.uploadDigitalSignature,
               onUploadBarangayPermit: controller.uploadBarangayPermit,
               onUploadMayorsPermit: controller.uploadMayorsPermit,

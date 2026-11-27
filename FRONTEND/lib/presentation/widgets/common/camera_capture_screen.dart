@@ -44,9 +44,10 @@ class CameraCaptureScreen extends StatefulWidget {
 class _CameraCaptureScreenState extends State<CameraCaptureScreen>
     with WidgetsBindingObserver {
   CameraController? _controller;
-  CameraDescription? _camera;
+  Future<void> _cameraOperation = Future<void>.value();
   String? _error;
   bool _isCapturing = false;
+  bool _inForeground = true;
 
   @override
   void initState() {
@@ -55,7 +56,19 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
     _initializeCamera();
   }
 
-  Future<void> _initializeCamera() async {
+  void _initializeCamera() {
+    _cameraOperation = _cameraOperation.then((_) async {
+      if (!mounted ||
+          !_inForeground ||
+          (_controller?.value.isInitialized == true && _error == null)) {
+        return;
+      }
+      await _releaseCamera();
+      if (mounted && _inForeground) await _openCamera();
+    });
+  }
+
+  Future<void> _openCamera() async {
     setState(() => _error = null);
 
     try {
@@ -73,14 +86,15 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
         );
       }
 
-      _camera = matches.first;
+      if (!mounted || !_inForeground) return;
       final controller = CameraController(
-        _camera!,
+        matches.first,
         ResolutionPreset.high,
         enableAudio: false,
       );
       _controller = controller;
       await controller.initialize();
+      if (!mounted || !_inForeground) return;
       try {
         await controller.setFlashMode(FlashMode.off);
       } on CameraException {
@@ -106,20 +120,33 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
-
-    if (state == AppLifecycleState.inactive) {
-      controller.dispose();
-      _controller = null;
-    } else if (state == AppLifecycleState.resumed && _camera != null) {
+    if (state == AppLifecycleState.resumed) {
+      _inForeground = true;
       _initializeCamera();
+    } else if (_inForeground) {
+      _inForeground = false;
+      _cameraOperation = _cameraOperation.then((_) => _releaseCamera());
     }
   }
 
-  Future<void> _takePicture() async {
+  Future<void> _releaseCamera() async {
     final controller = _controller;
+    _controller = null;
+    if (controller == null) return;
+    if (mounted) setState(() {});
+    try {
+      await controller.dispose();
+    } catch (error) {
+      debugPrint('Could not release the document camera: $error');
+    }
+  }
+
+  void _takePicture() {
+    final controller = _controller;
+    final route = ModalRoute.of(context);
     if (controller == null ||
+        !_inForeground ||
+        route?.isCurrent != true ||
         !controller.value.isInitialized ||
         controller.value.isTakingPicture ||
         _isCapturing) {
@@ -127,23 +154,39 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
     }
 
     setState(() => _isCapturing = true);
-    try {
-      final photo = await controller.takePicture();
-      if (mounted) Navigator.of(context).pop(photo);
-    } on CameraException catch (error) {
-      if (mounted) {
-        setState(() {
-          _isCapturing = false;
-          _error = error.description ?? 'Hindi makuha ang larawan.';
-        });
+    // Finish capture before disposing the controller. A late result belongs
+    // only to the camera route that started the capture.
+    _cameraOperation = _cameraOperation.then((_) async {
+      try {
+        if (!mounted ||
+            !_inForeground ||
+            route?.isCurrent != true ||
+            !identical(controller, _controller)) {
+          return;
+        }
+        final photo = await controller.takePicture();
+        if (mounted && _inForeground && route?.isCurrent == true) {
+          Navigator.of(context).pop(photo);
+        }
+      } catch (error) {
+        if (mounted && _inForeground && route?.isCurrent == true) {
+          setState(
+            () => _error = error is CameraException
+                ? error.description ?? 'Hindi makuha ang larawan.'
+                : 'Hindi makuha ang larawan.',
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isCapturing = false);
       }
-    }
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _controller?.dispose();
+    _inForeground = false;
+    _cameraOperation = _cameraOperation.then((_) => _releaseCamera());
     super.dispose();
   }
 
@@ -209,9 +252,12 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
                                   strokeWidth: 3,
                                 ),
                               )
-                            :  Icon(
+                            : Icon(
                                 Icons.camera_alt,
-                                color: AppColors.foreground(context, Colors.black),
+                                color: AppColors.foreground(
+                                  context,
+                                  Colors.black,
+                                ),
                                 size: 34,
                               ),
                       ),

@@ -1,7 +1,7 @@
 import 'package:lezgo_rider/core/utils/api_error_mapper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 
 import '../../../../../domain/entities/auth/merchant/merchant_documents.dart';
 import '../../../../../domain/entities/auth/merchant/merchant_registration_info.dart';
@@ -163,16 +163,10 @@ class MerchantRegisterInfoNotifier
     state = state.copyWith(info: state.info.copyWith(confirmPassword: value));
   }
 
-  Future<void> uploadSelfie() async {
+  Future<void> uploadSelfie(Future<XFile?> Function() capture) async {
     state = state.copyWith(isSelfieLoading: true, clearError: true);
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.front,
-        imageQuality: 85,
-        maxWidth: 1200,
-      );
+      final image = await capture();
       if (image != null) {
         state = state.copyWith(
           documents: state.documents.copyWith(selfiePath: image.path),
@@ -185,14 +179,10 @@ class MerchantRegisterInfoNotifier
     }
   }
 
-  Future<void> uploadValidId() async {
+  Future<void> uploadValidId(Future<XFile?> Function() capture) async {
     state = state.copyWith(isValidIdLoading: true, clearError: true);
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-      );
+      final image = await capture();
       if (image != null) {
         state = state.copyWith(
           documents: state.documents.copyWith(validIdPath: image.path),
